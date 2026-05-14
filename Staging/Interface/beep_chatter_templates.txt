@@ -1,0 +1,1620 @@
+[senders]
+Space Relay
+Freestar Ranger
+Freestar Hawk
+Deep Core Mining
+Vanguard Dispatch
+TerraBrew Delivery
+Tranquilitea Express
+Chunks Food Truck
+GalBank Secure Transport
+UC Navy Corvette
+Deep Space Survey Vessel
+CeltCorp Freight Hauler
+Vanguard Patrol
+UC SysDef Interceptor
+Freestar Militia Runner
+Stroud-Eklund Demo Flight
+GalBank Armored Courier
+UC Colonial Transport
+Deimos Staryard Testbed
+Freestar Bulk Carrier
+HopeTech Service Shuttle
+Vanguard Recon Scout
+Nova Galactic Express
+UC Logistics Tender
+
+[systems]
+Al-Battani
+Alchiba
+Algorab
+Alpha Andraste
+Alpha Centauri
+Alpha Marae
+Alpha Ternion
+Alpha Tirna
+Altair
+Andromas
+Aranae
+Archimedes
+Arcturus
+Bannoc
+Bannoc Secondus
+Bara
+Bardeen
+Barnard's Star
+Bel
+Bessel
+Beta Andraste
+Beta Marae
+Beta Ternion
+Beta Tirna
+Bohr
+Bolivar
+Bradbury
+Carinae
+Celebrai
+Charybdis
+Cheyenne
+Copernicus
+Copernicus Minor
+Decaran
+Delta Pavonis
+Delta Vulpes
+Denebola
+Enlil
+Eridani
+Eta Cassiopeia
+Fermi
+Feynman
+Foucault
+Freya
+Gamma Vulpes
+Groombridge
+Guniibuu
+Hawking
+Heinlein
+Heisenberg
+Huygens
+Hyla
+Indum
+Ixyll
+Jaffa
+Kang
+Kapteyn's Star
+Katydid
+Kavnyk
+Khayyam
+Kryx
+Kumasi
+Lantana
+Leonis
+Leviathan
+Linnaeus
+Lunara
+Luyten's Star
+Maal
+Maheo
+Marduk
+Masada
+McClure
+Moloch
+Muphrid
+Narion
+Nemeria
+Newton
+Nikola
+Nirah
+Nirvana
+Oborum Prime
+Oborum Proxima
+Olympus
+Ophion
+Piazzi
+Porrima
+Procyon A
+Procyon B
+Proxima Ternion
+Pyraas
+Rana
+Rasalhague
+Rivera
+Rutherford
+Sagan
+Sakharov
+Schrodinger
+Serpentis
+Shoza
+Sirius
+Sol
+Sparta
+Strix
+Syrma
+Tau Ceti
+The Pup
+Tidacha
+Toliman
+Ursae Majoris
+Ursae Minoris
+Valo
+Van Maanen's Star
+Vega
+Verne
+Volii
+Wolf
+Xi Ophiuchi
+Zelazny
+Zeta Ophiuchi
+Zosma
+Settled Systems Rim
+Outer Belt
+
+[locations]
+New Atlantis
+Gagarin Landing
+Cydonia
+Deimos Staryard
+New Homestead
+The Den
+Akila City
+Neon
+The Clinic
+Stroud-Eklund Staryard
+1-Of-A-Kind Salvage
+HopeTown
+The Key
+Paradiso
+Red Mile
+The Eleos Retreat
+Apex Refueling Platform
+Waypoint Kessler
+Freestar Relay 9
+Obsidian Dock
+Redshift Station
+Horizon's Edge Outpost
+Dustwell
+Copperfield Reach
+Iron Hollow
+Pilgrim's Rest
+Bleakwater
+Ashfall Camp
+Rustmouth
+Drywell Landing
+Nova Kerch
+Port Meridian
+Halcyon Crossing
+Dead Man's Berth
+The Hollows
+Scrapyard Zeta
+Blackout Station
+Ghost Pier
+Leftside Run
+
+[cargo]
+Med Packs
+Adaptive Frames
+Sealant
+Fiber
+Cosmetics
+Luxury Textiles
+Synthetic Sheep
+
+[resources]
+Titanium
+Copper
+Rothicite
+Vytinium
+
+[ship_names]
+Pickled Walrus
+Starhopper
+Wandering Mule
+Void Serpent
+Crimson Perihelion
+Stardust Vagrant
+Iron Meridian
+Nova Requiem
+Obsidian Drift
+Celestial Warden
+Phantom Apex
+Solar Fang
+Nebula Reaver
+Silent Horizon
+Astral Nomad
+Titanfall Echo
+Vortex Runner
+Deep Fade
+Defiance
+Galactic Undertow
+Wraith Ascendant
+Pulsar Drifter
+Ebon Frontier
+Prospector's Venture
+Pinafore
+Nostrodomo
+Silverhawke-77
+DaniLiLu-87
+
+[person_names]
+Charles Dickens
+Hank Bridger
+Yuki Tanaka
+Delilah Cross
+Marcus Webb
+Nia Okafor
+Colt Harlan
+Samira Vasquez
+Jin-ho Park
+Rosalie Dumont
+Victor Maddox
+Ezra Kowalski
+Ada Mbewe
+Tobias Greer
+Luz Carvajal
+Damon Ortley
+Keiko Andersen
+Barrett Sims
+Fatima Al-Rashid
+Wyatt Callahan
+Ingrid Ström
+Rafael Booker
+Hana Yoshida
+Colt Braddock
+Priya Nair
+Tomasz Kijek
+Lena Oduya
+Marcus Tan
+Zara Hollowell
+Diego Fuentes
+Kira Johansson
+Rhett Calloway
+Amara Diallo
+Viktor Semenov
+Jolene Marsh
+Ren Nakamura
+Bodhi Sutherland
+Tariq Haddad
+Nell Sweeney
+Idris Mwangi
+Cassidy Holt
+Suki Petrenko
+
+[messages]
+id=fuel_warning
+from={sender}
+text={sender}: Low fuel reserves reported in {system}. Travelers advised to refuel before transit.
+
+id=bounty_alert
+from=UC Vigilance
+text=UC Vigilance: BOUNTY ALERT - Target spotted near {system}. {credits} credit reward. Approach with caution.
+id=bounty_response_accept
+reply_to=bounty_alert
+delay=8-15
+from={ship_name}
+text={ship_name}: Copy that. En route to {system}. Keep the channel clear.
+id=bounty_response_decline
+reply_to=bounty_alert
+delay=12-25
+from={ship_name}
+text={ship_name}: Negative, too hot out there. Not worth {credits}.
+
+id=trade_tip
+from=SSNN Freestar News
+text=SSNN Freestar News: Market update - {cargo} demand surging in {system}. Prices up {percent}%.
+id=trade_tip_reply
+reply_to=trade_tip
+delay=10-20
+from={ship_name}
+text={ship_name}: Good tip. Rerouting to {system} with a full hold of {cargo}.
+
+id=distress_signal
+from={ship_name}
+text={ship_name}: MAYDAY MAYDAY - Hull breach in {system}. Requesting immediate assistance. Life support failing.
+id=distress_response
+reply_to=distress_signal
+delay=6-12
+from={ship_name}
+text={ship_name}: We read you. Hold tight, jumping to {system} now.
+id=distress_warning
+reply_to=distress_signal
+delay=10-18
+from=Vanguard Dispatch
+text=Vanguard Dispatch: All ships near {system}, be advised - possible pirate trap. Verify before approach.
+
+id=trade_dispute
+from={sender}
+text={sender}: Trade dispute between {system.1} and {system.2}. Cargo routes affected. Expect delays.
+id=trade_dispute_reply
+reply_to=trade_dispute
+delay=8-15
+from={responder}
+text={responder}: Confirmed. Rerouting from {system.1} via {system.3}. Hauling {cargo} the long way.
+
+id=mining_report
+from=Deep Core Mining
+text=Deep Core Mining: New {resource} deposits confirmed in {system}. Survey teams deployed.
+
+id=patrol_checkin
+from=Vanguard Dispatch
+text=Vanguard Dispatch: Patrol units, report status. {system} sector sweep due at next cycle.
+id=patrol_response
+reply_to=patrol_checkin
+delay=5-12
+from={ship_name}
+text={ship_name}: Sector clear. No contacts. Proceeding on patrol route.
+
+id=smuggler_chatter
+from={person_name}
+text={person_name}: Package ready for pickup in {system}. {credits} on delivery. You know the drill.
+id=smuggler_reply
+reply_to=smuggler_chatter
+delay=15-30
+from={person_name.1}
+text={person_name.1}: Copy. ETA 20 minutes. Make sure the bay is clear.
+
+id=trade_offer
+from={sender}
+text={sender}: Got {cargo} to move out of {location}. {credits} credits for anyone who can haul it to {system} by end of cycle.
+id=trade_response1
+reply_to=trade_offer
+delay=4-10
+from={sender.1}
+text={sender.1}: I can do it but not for {credits}. Double that and we'll talk.
+id=trade_response2
+reply_to=trade_offer
+delay=8-15
+from={sender.1}
+text={sender.1}: I'm two jumps from {location}. Hold it for me. I'm on my way.
+
+id=scanner_anomaly
+from={ship_name}
+text={ship_name}: Uh... anyone else picking up a signal on the old Constellation frequency near {system}? It's repeating. Sounds like coordinates.
+id=scanner_curious
+reply_to=scanner_anomaly
+delay=5-10
+from={sender}
+text={sender}: I'm hearing it too. Started about an hour ago. Doesn't match any registered beacon.
+id=scanner_nope
+reply_to=scanner_anomaly
+delay=12-20
+from={sender}
+text={sender}: Yeah I heard that last week near {system}. Went to check it out. Found nothing. Ship felt wrong for days after though.
+
+id=smuggler_ping
+from={sender}
+text={sender}: Package ready at {location}. Unlabeled. No questions. {credits} credits on delivery to {system}.
+id=smuggler_interested
+reply_to=smuggler_ping
+delay=5-9
+from={sender.1}
+text={sender.1}: What kind of weight are we talking? My hold's half full of {cargo} already.
+id=smuggler_warning
+reply_to=smuggler_ping
+delay=10-16
+from=UC SysDef Patrol
+text=UC SysDef Patrol: Reminder that unsanctioned cargo transfers are a violation of UC code 7-Alpha. We are listening.
+
+id=mechanic_plea
+from={sender}
+text={sender}: My grav drive just made a sound like a dying animal. Anyone near {location} know a mechanic who won't charge me {credits} credits for a diagnostic?
+id=mechanic_reply
+reply_to=mechanic_plea
+delay=4-8
+from={sender.1}
+text={sender.1}: There's a guy at {location}. Ask for Renzo. Tell him {person_name} sent you. He'll cut you a deal.
+id=mechanic_joke
+reply_to=mechanic_plea
+delay=7-12
+from={sender.1}
+text={sender.1}: Have you tried turning it off and on again? ...Seriously don't do that mid-flight.
+
+id=bounty_alert
+from=Freestar Ranger Dispatch
+text=Freestar Ranger Dispatch: BOUNTY ALERT - {person_name}, wanted for piracy near {system}. Last seen flying {ship_name}. Reward: {credits} credits. Do not engage alone.
+id=bounty_brag
+reply_to=bounty_alert
+delay=6-14
+from={sender}
+text={sender}: Only {credits}? I've got parking tickets worth more than that.
+id=bounty_serious
+reply_to=bounty_alert
+delay=10-18
+from={sender}
+text={sender}: I saw {ship_name} docked at {location} two hours ago. Might still be there.
+
+id=race_challenge
+from={sender}
+text={sender}: Alright, who wants to race from {system.1} to {system.2}? Loser buys drinks at {location}. No weapons, no ramming. ...Okay maybe a little ramming.
+id=race_accept
+reply_to=race_challenge
+delay=3-8
+from={sender.1}
+text={sender.1}: You're on. {ship_name} against whatever rust bucket you're flying. Easy money.
+id=race_killjoy
+reply_to=race_challenge
+delay=8-14
+from=UC Navy Patrol
+text=UC Navy Patrol: Unauthorized racing in shipping lanes is a class 2 violation. This is your warning.
+
+id=ghost_ship
+from={ship_name}
+text={ship_name}: There's a ship drifting near {system}. No transponder, no lights, no life signs. It just... rotated toward me when I scanned it.
+id=ghost_curious
+reply_to=ghost_ship
+delay=6-12
+from={sender}
+text={sender}: Send me the coordinates. I've got a salvage claim to file.
+id=ghost_creepy
+reply_to=ghost_ship
+delay=14-22
+from={sender}
+text={sender}: I found one like that last month near {system}. Logs were full. Crew was gone. Airlock was opened from inside.
+
+id=cargo_spill
+from={ship_name}
+text={ship_name}: Well, I just accidentally ejected 200 units of {cargo} near {system}. If anyone wants free stuff floating in space, now's your chance.
+id=cargo_omw
+reply_to=cargo_spill
+delay=3-7
+from={sender}
+text={sender}: On my way. Finders keepers, right?
+id=cargo_tease
+reply_to=cargo_spill
+delay=6-10
+from={sender}
+text={sender}: "Accidentally." Sure. We've all been there. ...No seriously how do you accidentally hit the eject button?
+
+id=medical_emergency
+from={ship_name}
+text={ship_name}: Medical emergency on board. Crew member down, possibly toxic exposure from {cargo}. Any doctors on freq? We're near {system}.
+id=medical_response
+reply_to=medical_emergency
+delay=4-9
+from={sender}
+text={sender}: I've got basic med supplies and some training. What are the symptoms? I can be at {system} in ten.
+id=medical_official
+reply_to=medical_emergency
+delay=8-14
+from={location} Station Medical
+text={location} Station Medical: {ship_name}, proceed to docking bay 7. Medical team standing by. Do not let the patient sleep.
+
+id=paranoid_pilot
+from={sender}
+text={sender}: Is it just me or has the same ship been following me since {system}? No transponder. Matches my speed exactly.
+id=paranoid_calm
+reply_to=paranoid_pilot
+delay=5-10
+from={sender.1}
+text={sender.1}: Probably just a freighter on the same route. Happens all the time on the {system} lane.
+id=paranoid_not_calm
+reply_to=paranoid_pilot
+delay=12-18
+from={sender.1}
+text={sender.1}: Not just you. {person_name} reported the same thing last week. They stopped transmitting after {system}.
+
+id=newbie_question
+from={sender}
+text={sender}: First solo flight out of {location}. Any tips for the run to {system}? Asking for... me. I'm asking for me.
+id=newbie_helpful
+reply_to=newbie_question
+delay=4-8
+from={sender.1}
+text={sender.1}: Keep your scanner on, don't fly in a straight line near {system}, and for the love of everything check your fuel before you jump.
+id=newbie_hazing
+reply_to=newbie_question
+delay=7-12
+from={sender.1}
+text={sender.1}: Tip one: the pirates can smell fear. Tip two: they can also smell {cargo}. Don't carry both.
+
+id=old_friends
+from={sender}
+text={sender}: {person_name}? Is that you on scope? It's been what, three years? Last time I saw you was that mess at {location}.
+id=old_friends_reply
+reply_to=old_friends
+delay=5-10
+from={person_name}
+text={person_name}: Ha! I still owe you a drink for that. And maybe a hull repair. You still flying {ship_name}?
+id=old_friends_awkward
+reply_to=old_friends
+delay=8-14
+from={person_name}
+text={person_name}: ...Wrong person. But now I'm curious about this mess at {location}.
+
+id=conspiracy_nut
+from={sender}
+text={sender}: I'm telling you, the UC is hiding something at {system}. Restricted zone, no explanation, ships disappearing. Wake up people.
+id=conspiracy_agree
+reply_to=conspiracy_nut
+delay=6-12
+from={sender.1}
+text={sender.1}: My cousin works logistics at {location}. Says unmarked ships come and go at night. No manifests.
+id=conspiracy_eyeroll
+reply_to=conspiracy_nut
+delay=8-15
+from={sender.1}
+text={sender.1}: And I'm telling you to lay off the spacer coffee. Not everything is a cover-up.
+
+id=chunk_food
+from={sender}
+text={sender}: Breakfast, lunch, and dinner. Chunks, Chunks, and Chunks. I'm starting to forget what real food tastes like.
+id=chunk_defense
+reply_to=chunk_food
+delay=5-10
+from={sender.1}
+text={sender.1}: "Better than the real thing." That's literally their slogan. And honestly after six months in deep space? They're not wrong.
+id=chunk_horror
+reply_to=chunk_food
+delay=9-14
+from={sender.2}
+text={sender.2}: You ever read the employee manual? Three pages. One of them just says "don't ask how they're made." That tells you everything.
+
+id=ashta_wall
+from={sender}
+text={sender}: Docked at Akila City yesterday. Love the Freestar vibe. Hate the part where giant predators try to eat you outside the walls.
+id=ashta_local
+reply_to=ashta_wall
+delay=4-10
+from={sender.1}
+text={sender.1}: That's just the Ashta. Cross between a wolf and a velociraptor. Locals act like it's normal. "Just don't go out at night," they said.
+id=ashta_tough
+reply_to=ashta_wall
+delay=8-16
+from={sender.2}
+text={sender.2}: A miner came back to Akila last year claiming he saw one the size of a house. Nobody believed him. I do. I've seen tracks near {system}.
+
+id=varuun_fear
+from={sender}
+text={sender}: Picked up Va'ruun Zealots on my scanner near {system}. Four ships. Turned around immediately.
+id=varuun_info
+reply_to=varuun_fear
+delay=5-12
+from={sender.1}
+text={sender.1}: Smart. Those fanatics think everyone who doesn't worship the Great Serpent deserves to die. No negotiating with that.
+id=varuun_history
+reply_to=varuun_fear
+delay=10-18
+from={sender.2}
+text={sender.2}: They've been out there since the Serpent's Crusade. Thousands dead back then. UC, Freestar, civilians. And they think THEY were the victims.
+
+id=neon_aurora
+from={sender}
+text={sender}: Shore leave at Neon was a mistake. Spent {credits} credits. Can't remember on what. Pretty sure some of it was Aurora.
+id=neon_legal
+reply_to=neon_aurora
+delay=4-9
+from={sender.1}
+text={sender.1}: At least it's legal there. Only place in the Settled Systems. Anywhere else and UC SysDef will throw you in a cell.
+id=neon_regret
+reply_to=neon_aurora
+delay=8-14
+from={sender.2}
+text={sender.2}: Neon takes your credits, your dignity, and your sense of time. Best vacation I ever had. Never going back.
+
+id=the_well
+from={sender}
+text={sender}: Took a wrong turn in New Atlantis and ended up in The Well. That's a whole different city down there.
+id=well_reality
+reply_to=the_well
+delay=5-10
+from={sender.1}
+text={sender.1}: The UC loves to show off their shiny towers. Doesn't love to mention the people living underneath them.
+id=well_defense
+reply_to=the_well
+delay=10-16
+from={sender.2}
+text={sender.2}: It's not that bad. Rent's cheap, people are real, and nobody's trying to sell you a timeshare. Better than Neon.
+
+id=colony_war_tension
+from={sender}
+text={sender}: UC patrol just told me to "watch my Freestar attitude." I'm an independent hauler from Cydonia. I don't have an attitude.
+id=colony_old_wounds
+reply_to=colony_war_tension
+delay=5-10
+from={sender.1}
+text={sender.1}: Colony War ended decades ago but some of these UC Navy types act like it's still on. Same on the Freestar side honestly.
+id=colony_tired
+reply_to=colony_war_tension
+delay=9-15
+from={sender.2}
+text={sender.2}: File a complaint with UC command. They love paperwork almost as much as they love telling people what to do.
+
+id=terrormorphs_real
+from={sender}
+text={sender}: Terrormorph sighting confirmed near {location}. This is not a drill. Civilian ships clear the area immediately.
+id=terror_evac
+reply_to=terrormorphs_real
+delay=3-7
+from={sender.1}
+text={sender.1}: Copy that. I'm gone. Those things wiped out an entire settlement last cycle. Not sticking around for a repeat.
+id=terror_question
+reply_to=terrormorphs_real
+delay=8-14
+from={sender.2}
+text={sender.2}: Where do they even come from? Nobody can give me a straight answer. UC says it's "under investigation." It's been years.
+
+id=cydonia_mining
+from={sender}
+text={sender}: Another 14-hour shift at Cydonia. Mining on Mars sounded exciting until I actually got here. It's just rocks and dust and bad coffee.
+id=cydonia_sympathy
+reply_to=cydonia_mining
+delay=5-10
+from={sender.1}
+text={sender.1}: Deimos built their whole shipyard up there and they still can't get decent supplies to the miners. Priorities, right?
+id=cydonia_escape
+reply_to=cydonia_mining
+delay=9-15
+from={sender.2}
+text={sender.2}: Save up, buy a Frontier, and get out. That's what I did. Best decision of my life. Worst ship of my life. But still better than Cydonia.
+
+id=earth_gone
+from={sender}
+text={sender}: Flew past Sol on a cargo run. Couldn't help but look at Earth. Still can't believe it's just... gone.
+id=earth_memory
+reply_to=earth_gone
+delay=6-12
+from={sender.1}
+text={sender.1}: My great-grandmother remembered the evacuation. Said people left everything behind. Photos, pets, whole lives. Just gone.
+id=earth_forward
+reply_to=earth_gone
+delay=12-20
+from={sender.2}
+text={sender.2}: The Settled Systems are our home now. No point looking back at a dead rock. ...Still hurts though.
+
+id=ryujin_shady
+from={sender}
+text={sender}: Ryujin Industries offered me a contract at {location}. Great pay. Really great pay. Suspiciously great pay.
+id=ryujin_warning
+reply_to=ryujin_shady
+delay=5-10
+from={sender.1}
+text={sender.1}: Rule of thumb with Ryujin: if the credits sound too good, the job isn't what they say it is. Read the fine print. Then read it again.
+id=ryujin_envy
+reply_to=ryujin_shady
+delay=8-14
+from={sender.2}
+text={sender.2}: Take it. Worst case you end up in a corporate NDA for life. Best case you retire at 40. I'd roll those dice.
+
+id=gravjump_sickness
+from={sender}
+text={sender}: Five grav jumps in one day. My head feels like it's inside out. Is that normal?
+id=grav_advice
+reply_to=gravjump_sickness
+delay=4-9
+from={sender.1}
+text={sender.1}: Grav sickness. Drink water, eat something that isn't Chunks, and don't jump again for at least six hours. You'll be fine.
+id=grav_varuun
+reply_to=gravjump_sickness
+delay=10-16
+from={sender.2}
+text={sender.2}: The Va'ruun folks think grav jumps bring you closer to their Great Serpent. So either you're enlightened now or you need a doctor. Probably the doctor.
+
+id=crimson_fleet_fear
+from={sender}
+text={sender}: Crimson Fleet activity spiking near {system}. Third attack on cargo ships this week. GalBank transports are rerouting.
+id=crimson_frustrated
+reply_to=crimson_fleet_fear
+delay=5-10
+from={sender.1}
+text={sender.1}: UC SysDef says they're "handling it." They've been "handling it" for years. Meanwhile we're losing {cargo} shipments.
+id=crimson_dark
+reply_to=crimson_fleet_fear
+delay=10-18
+from={sender.2}
+text={sender.2}: Friend of mine got boarded near {system}. They took everything. Ship, cargo, credits. Left him floating in a pod. He was lucky.
+
+id=ship_brands
+from={sender}
+text={sender}: Stroud-Eklund or HopeTech? Settle this for me. I've got {credits} credits and I need a new hauler.
+id=stroud_fan
+reply_to=ship_brands
+delay=4-9
+from={sender.1}
+text={sender.1}: Stroud-Eklund. Better engineering, better parts, better resale. You pay more but your ship actually works five years from now.
+id=hope_fan
+reply_to=ship_brands
+delay=7-14
+from={sender.2}
+text={sender.2}: HopeTech all day. Stroud charges you {credits.1} credits just for the logo on the hull. HopeTech gives you a solid ship without the ego.
+
+id=vanguard_recruitment
+from={sender}
+text={sender}: UC Vanguard recruitment office at {location} had a line around the block today. Terrormorphs must be scaring people into signing up.
+id=vanguard_cynical
+reply_to=vanguard_recruitment
+delay=5-10
+from={sender.1}
+text={sender.1}: "Serve the UC, earn your citizenship, fight terrormorphs." Great sales pitch until you're actually fighting one.
+id=vanguard_proud
+reply_to=vanguard_recruitment
+delay=9-16
+from={sender.2}
+text={sender.2}: I signed up three years ago. Best decision I ever made. The training is tough but you meet good people. And yeah, terrormorphs are terrifying.
+
+id=galbank_trust
+from={sender}
+text={sender}: GalBank froze my account for "suspicious activity." I bought {cargo}. Since when is buying {cargo} suspicious?
+id=galbank_agree
+reply_to=galbank_trust
+delay=5-10
+from={sender.1}
+text={sender.1}: Happened to me after a big sale at {location}. Took a week to sort out. GalBank doesn't trust anyone who makes money too fast.
+id=galbank_joke
+reply_to=galbank_trust
+delay=8-14
+from={sender.2}
+text={sender.2}: GalBank thinks every independent trader is secretly Crimson Fleet. Meanwhile actual pirates probably have premium accounts.
+
+id=capn_ben_hail
+from=Cap'n Ben
+text=Cap'n Ben: This is the Salty Hippo, requesting open lane through {system}. Don't make me ask twice. I haven't eaten in 14 hours and I'm in a mood.
+id=capn_ben_hail_r1
+reply_to=capn_ben_hail
+delay=4-9
+from={sender}
+text={sender}: The... Salty Hippo? Is that really what you named your ship?
+id=capn_ben_hail_r2
+reply_to=capn_ben_hail
+delay=5-10
+from={sender}
+text={sender}: Copy that, Salty Hippo. Lane is clear. Please don't bite.
+id=capn_ben_hail_r3
+reply_to=capn_ben_hail
+delay=6-12
+from={sender}
+text={sender}: Maybe eat something first? Hangry pilots are a safety hazard.
+
+id=capn_ben_bounty
+from=Cap'n Ben
+text=Cap'n Ben: Bounty near {system} is mine. Salty Hippo's two jumps out. Consider it handled. Tüddelü.
+id=capn_ben_bounty_r1
+reply_to=capn_ben_bounty
+delay=5-10
+from={sender}
+text={sender}: Did that one-eyed maniac just say "Tüddelü"? What does that even mean?
+id=capn_ben_bounty_r2
+reply_to=capn_ben_bounty
+delay=6-12
+from={sender}
+text={sender}: I had that bounty first! ...Fine. I've seen what the Hippo does to people. It's yours.
+id=capn_ben_bounty_r3
+reply_to=capn_ben_bounty
+delay=4-8
+from={sender}
+text={sender}: {credits} credits says he actually pulls it off. Any takers?
+
+id=capn_ben_robot
+from=Cap'n Ben
+text=Cap'n Ben: BEEP BEEP BEEP. This is an automated message from the Salty Hippo. The captain is currently unavailable. Please leave your cargo at the nearest airlock. BEEP.
+id=capn_ben_robot_r1
+reply_to=capn_ben_robot
+delay=5-10
+from={sender}
+text={sender}: Ben, we can literally see you through the cockpit window. You're waving at us.
+id=capn_ben_robot_r2
+reply_to=capn_ben_robot
+delay=6-12
+from={sender}
+text={sender}: Worst robot impression in the Settled Systems. And I've met actual robots.
+id=capn_ben_robot_r3
+reply_to=capn_ben_robot
+delay=4-9
+from={sender}
+text={sender}: VASCO called. He's offended.
+
+id=capn_ben_modding
+from=Cap'n Ben
+text=Cap'n Ben: Just rewired my HUD display at 3 in the morning. Does it work? Mostly. Did I test it? Debatable. Did I eat today? Also debatable.
+id=capn_ben_modding_r1
+reply_to=capn_ben_modding
+delay=5-10
+from={sender}
+text={sender}: "Mostly" is a concerning word for ship systems, friend.
+id=capn_ben_modding_r2
+reply_to=capn_ben_modding
+delay=6-12
+from={sender}
+text={sender}: Stroud-Eklund engineers are crying somewhere right now.
+id=capn_ben_modding_r3
+reply_to=capn_ben_modding
+delay=4-9
+from={sender}
+text={sender}: Eat something. Then test it. In that order. Please.
+
+id=capn_ben_docking
+from=Cap'n Ben
+text=Cap'n Ben: {location} control, this is One-eyed Ben requesting docking. And before you ask, yes, the ship is called Salty Hippo. No, I will not change it.
+id=capn_ben_docking_r1
+reply_to=capn_ben_docking
+delay=5-10
+from={location} Control
+text={location} Control: Salty Hippo, cleared for bay 12. We've... heard of you.
+id=capn_ben_docking_r2
+reply_to=capn_ben_docking
+delay=6-12
+from={sender}
+text={sender}: I was behind that guy in the docking queue last week. Took him four attempts to park. Four.
+id=capn_ben_docking_r3
+reply_to=capn_ben_docking
+delay=4-9
+from={sender}
+text={sender}: One-eyed Ben! Legend. Bought me a drink at {location} once. Refused to explain the name of his ship.
+
+id=mantis_razorleaf
+from={sender}
+text={sender}: Just saw a Razorleaf near {system}. THE Razorleaf. Someone's flying the Mantis ship.
+id=mantis_razorleaf_fear
+reply_to=mantis_razorleaf
+delay=4-9
+from={sender.1}
+text={sender.1}: I'm out. I don't care if it's the real Mantis or some kid who read the comics. I'm not sticking around to find out.
+id=mantis_razorleaf_doubt
+reply_to=mantis_razorleaf
+delay=8-15
+from={sender.2}
+text={sender.2}: Could be anyone. We haven't seen the Mantis for years. Doesn't mean whoever's flying it won't mess you up though.
+
+id=mantis_legend
+from={sender}
+text={sender}: My crew keeps arguing about whether the Mantis was UC or Freestar. I say neither. She didn't answer to anyone.
+id=mantis_legend_respect
+reply_to=mantis_legend
+delay=5-10
+from={sender.1}
+text={sender.1}: No one knows who that was. Went after anyone who hurt innocents. Spacers, pirates, didn't matter. Legend.
+id=mantis_legend_dark
+reply_to=mantis_legend
+delay=10-18
+from={sender.2}
+text={sender.2}: Legend? She left people floating in wrecks. No trial, no mercy. Depends which end of the Mantis you were on.
+
+id=mantis_lair
+from={sender}
+text={sender}: Buddy of mine found some slate off a dead Spacer. "Secret Outpost" or something. Went to check it out near Denebola. Haven't heard from him since.
+id=mantis_lair_warning
+reply_to=mantis_lair
+delay=6-12
+from={sender.1}
+text={sender.1}: Always a good idea to go to a "Secret Outpost" mentoined by spacers...
+id=mantis_lair_quiet
+reply_to=mantis_lair
+delay=12-20
+from={sender.2}
+text={sender.2}: Prolly dead by now. Sorry.
+
+id=mantis_spacer_panic
+from={sender}
+text={sender}: Any Spacers on this freq? Genuine question. You guys really run when you see a Razorleaf? Every time?
+id=mantis_spacer_yes
+reply_to=mantis_spacer_panic
+delay=5-10
+from={sender.1}
+text={sender.1}: You ever seen what the Mantis did to Kragg's crew near {system}? Yeah. Every time. No shame in breathing.
+id=mantis_spacer_bluff
+reply_to=mantis_spacer_panic
+delay=9-16
+from={sender.2}
+text={sender.2}: I painted my Frontier to look like the Razorleaf. Spacers scatter before I even get in weapons range. Best {credits} credits I ever spent.
+
+id=lonely_hauler
+from={sender}
+text={sender}: Day 14 of a solo haul. Talked to my coffee maker this morning. It didn't answer. Starting to worry.
+id=lonely_sympathy
+reply_to=lonely_hauler
+delay=5-10
+from={sender.1}
+text={sender.1}: Been there. By day 20 I was naming the cargo crates. {person_name} Junior was my favorite.
+id=lonely_concern
+reply_to=lonely_hauler
+delay=9-14
+from={sender.1}
+text={sender.1}: Seriously though, long solo runs mess with your head. Stop at {location} and talk to a real human. Doctor's orders.
+
+id=sarah_morgan_fan
+from={sender}
+text={sender}: Ran into Sarah Morgan at {location} once. She gave me a lecture about Constellation's mission. Didn't stop talking for 20 minutes.
+id=sarah_morgan_reply
+reply_to=sarah_morgan_fan
+delay=5-10
+from={sender.1}
+text={sender.1}: Sounds about right. Brilliant woman though. Heard she mapped more systems than anyone alive.
+id=sarah_morgan_burn
+reply_to=sarah_morgan_fan
+delay=9-15
+from={sender.2}
+text={sender.2}: 20 minutes? You got off easy. Bet she disapproved.
+
+id=grandma_ship
+from={sender}
+text={sender}: Just got overtaken by an old lady in a Frontier near {system}. She waved at me. I think she was knitting.
+id=grandma_reply
+reply_to=grandma_ship
+delay=4-9
+from={sender.1}
+text={sender.1}: That's Grandma Wilma. She runs {cargo} between {system.1} and {system.2}. Don't race her. You'll lose.
+id=grandma_legend
+reply_to=grandma_ship
+delay=10-16
+from={sender.2}
+text={sender.2}: Legend says she's been flying since before the Colony War. No grav drive. Just vibes.
+
+id=artifact_rumor
+from={sender}
+text={sender}: Buddy of mine says Constellation found some kind of artifact out near {system}. Glowing, humming, the whole deal. Anyone heard about this?
+id=artifact_dismiss
+reply_to=artifact_rumor
+delay=6-12
+from={sender.1}
+text={sender.1}: Every other spacer claims they've seen a glowing something. Last week it was a "mysterious orb." Turned out to be a busted nav beacon.
+id=artifact_creepy
+reply_to=artifact_rumor
+delay=12-20
+from={sender.2}
+text={sender.2}: I found something like that once. Touched it. Had dreams about stars and temples for weeks. Sold my ship and became a farmer. Don't touch it.
+
+id=vasco_sighting
+from={sender}
+text={sender}: Saw a Constellation robot wandering around {location} by itself. Just... walking. Commenting on architecture. Is that normal?
+id=vasco_reply
+reply_to=vasco_sighting
+delay=5-10
+from={sender.1}
+text={sender.1}: That's VASCO. He does that. Harmless. Surprisingly good taste in buildings actually.
+id=vasco_concern
+reply_to=vasco_sighting
+delay=10-16
+from={sender.2}
+text={sender.2}: If he starts asking about your "mission parameters" just nod and walk away. Learned that the hard way.
+
+id=eye_of_the_colony
+from={sender}
+text={sender}: Flew past the old Colony War memorial near {system} today. Still gives me chills. My grandpa fought in that mess.
+id=colony_respect
+reply_to=eye_of_the_colony
+delay=6-12
+from={sender.1}
+text={sender.1}: Both sides lost too much. UC, Freestar, doesn't matter. Nobody won that war.
+id=colony_tension
+reply_to=eye_of_the_colony
+delay=10-18
+from={sender.2}
+text={sender.2}: Careful with that talk on Freestar frequencies. Some folks out here haven't forgotten. Or forgiven.
+
+id=terrormorphs
+from={sender}
+text={sender}: {location} issued a terrormorph advisory. Level 3. Third one this cycle. Are they getting worse or is it just me?
+id=terror_panic
+reply_to=terrormorphs
+delay=4-8
+from={sender.1}
+text={sender.1}: Level 3?! Last time that happened at {location} they lost an entire residential block. I'm not landing there.
+id=terror_tough
+reply_to=terrormorphs
+delay=8-14
+from={sender.2}
+text={sender.2}: Killed one once. Took my whole crew and about {credits} credits in ammo. Wouldn't recommend it.
+
+id=ship_builder_addiction
+from={sender}
+text={sender}: I've spent more time at the Stroud-Eklund showroom in {location} than I've spent flying. Someone stop me. I don't need a fifth reactor.
+id=ship_enabler
+reply_to=ship_builder_addiction
+delay=4-9
+from={sender.1}
+text={sender.1}: You absolutely need a fifth reactor. And a bigger cargo bay. And maybe new landing gear while you're at it.
+id=ship_intervention
+reply_to=ship_builder_addiction
+delay=8-14
+from={sender.2}
+text={sender.2}: This is an intervention. Your ship looks like three ships glued together. It's beautiful. Add more.
+
+id=spacers_problem
+from={sender}
+text={sender}: Spacers set up camp near {location} again. Thought the UC cleared them out last month?
+id=spacers_reply
+reply_to=spacers_problem
+delay=5-10
+from={sender.1}
+text={sender.1}: Clear one camp, two more show up. It's like a roach problem with laser rifles.
+id=spacers_sympathy
+reply_to=spacers_problem
+delay=10-16
+from={sender.2}
+text={sender.2}: Half of them are just people who lost everything. The other half will shoot you for your boots. Good luck figuring out which is which.
+
+id=uc_freestar_banter
+from={sender}
+text={sender}: Say what you want about the UC, at least our cities have walls. Looking at you, Akila.
+id=freestar_comeback
+reply_to=uc_freestar_banter
+delay=5-10
+from={sender.1}
+text={sender.1}: Walls and rules and taxes and cameras. I'll take the Ashta over your landlord, thanks.
+id=neutral_sigh
+reply_to=uc_freestar_banter
+delay=10-16
+from={sender.2}
+text={sender.2}: And here we go again. Can we have ONE channel that doesn't turn into UC vs Freestar?
+
+id=neon_nightlife
+from={sender}
+text={sender}: Spent shore leave at Neon. Lost {credits} credits, gained a headache, and I think someone sold me fake Aurora.
+id=neon_sympathy
+reply_to=neon_nightlife
+delay=4-9
+from={sender.1}
+text={sender.1}: Fake Aurora? In Neon? That's almost impressive. What did it taste like?
+id=neon_warning
+reply_to=neon_nightlife
+delay=8-14
+from={sender.2}
+text={sender.2}: Neon rule number one: if the price seems too good, the product is too bad. Rule number two: there are no other rules.
+
+id=lodge_mystery
+from={sender}
+text={sender}: Walked past the Constellation Lodge in New Atlantis. Door was open but nobody was inside. Just star maps everywhere and a weird hum from the basement.
+id=lodge_normal
+reply_to=lodge_mystery
+delay=6-12
+from={sender.1}
+text={sender.1}: That's just how Constellation operates. Very secretive. Very dramatic. Probably a book club with extra steps.
+id=lodge_ominous
+reply_to=lodge_mystery
+delay=12-20
+from={sender.2}
+text={sender.2}: Don't go in the basement. Seriously. A friend joined Constellation last year. Haven't heard from her since. She just... smiles different now.
+
+id=valentine_singer
+from={sender}
+text={sender}: Just ran into some guy near {system} singing sea shanties over comms. Scottish accent. Called himself The Valentine. Is this... normal?
+id=valentine_defense
+reply_to=valentine_singer
+delay=5-10
+from={sender.1}
+text={sender.1}: That's the Valentine! Says his ancestors were sailors back on Earth. Honestly, best thing you'll hear on any frequency out here.
+id=valentine_painful
+reply_to=valentine_singer
+delay=8-14
+from={sender.2}
+text={sender.2}: I've run into him three times near {system}. Same song every time. It's stuck in my head permanently now. I hum it during grav jumps. I need therapy.
+
+id=race_challenge1
+from={sender}
+text={sender}: Alright, who wants to race from {system.1} to {system.2}? No weapons, no ramming. Loser buys drinks at {location}.
+id=race_challenge1_r1
+reply_to=race_challenge1
+delay=4-9
+from={sender.1}
+text={sender.1}: You're on. {ship_name} against whatever you're flying. Hope you like buying drinks.
+id=race_challenge1_r2
+reply_to=race_challenge1
+delay=6-12
+from={sender.1}
+text={sender.1}: "No ramming." Sure. That's what {person_name} said last time. I still have the dent.
+id=race_challenge1_r3
+reply_to=race_challenge1
+delay=5-10
+from=UC Navy Patrol
+text=UC Navy Patrol: Unauthorized racing in shipping lanes is a class 2 violation. This is your only warning.
+
+id=race_brag
+from={sender}
+text={sender}: Just did {system.1} to {system.2} in under four minutes. New personal record. {ship_name} is a beast.
+id=race_brag_r1
+reply_to=race_brag
+delay=4-9
+from={sender.1}
+text={sender.1}: Four minutes? I did it in three. In a Frontier. With a broken thruster. While eating Chunks.
+id=race_brag_r2
+reply_to=race_brag
+delay=6-12
+from={sender.1}
+text={sender.1}: Cool. Now do it without almost crashing into a GalBank transport. They're still filing the complaint.
+id=race_brag_r3
+reply_to=race_brag
+delay=5-10
+from={sender.1}
+text={sender.1}: Impressive. My grav drive takes six minutes to warm up. I hate my ship.
+
+id=race_aftermath
+from={sender}
+text={sender}: Lost a race to {person_name} near {system}. Owe them {credits} credits and my dignity.
+id=race_aftermath_r1
+reply_to=race_aftermath
+delay=5-10
+from={sender.1}
+text={sender.1}: Noob! Install some engines for once.
+id=race_aftermath_r2
+reply_to=race_aftermath
+delay=6-12
+from={sender.1}
+text={sender.1}: {person_name} races dirty. Check your hull for "accidental" paint scratches.
+id=race_aftermath_r3
+reply_to=race_aftermath
+delay=4-9
+from={sender.1}
+text={sender.1}: Upgrade your reactor. You can't win races on charm alone. Well, most people can't.
+
+id=ship_garden1
+from={sender}
+text={sender}: Grew my own tomatoes on board. Took three months. They taste like engine grease and sadness. Still better than Chunks.
+id=ship_garden1_r1
+reply_to=ship_garden1
+delay=5-10
+from={sender.1}
+text={sender.1}: You need proper grow lights. UV spectrum, not just whatever leaks out of your reactor.
+id=ship_garden1_r2
+reply_to=ship_garden1
+delay=6-12
+from={sender.1}
+text={sender.1}: "Better than Chunks" is the lowest bar in the Settled Systems and your tomatoes barely cleared it.
+id=ship_garden1_r3
+reply_to=ship_garden1
+delay=4-9
+from={sender.1}
+text={sender.1}: My lettuce died after a grav jump. Just... disintegrated. I don't talk about it.
+
+id=ship_garden2
+from={sender}
+text={sender}: Anyone else running a hydroponics bay? I've got peppers, herbs, and something I didn't plant that's growing anyway.
+id=ship_garden2_r1
+reply_to=ship_garden2
+delay=5-10
+from={sender.1}
+text={sender.1}: The thing you didn't plant... what color is it? Asking for safety reasons.
+id=ship_garden2_r2
+reply_to=ship_garden2
+delay=6-12
+from={sender.1}
+text={sender.1}: I tried that. Peppers were fine. Then the humidity fried my nav console. {credits} credits in repairs. Stick to Chunks.
+id=ship_garden2_r3
+reply_to=ship_garden2
+delay=4-8
+from={sender.1}
+text={sender.1}: Herbs in zero-g grow in every direction. My basil looked like a terromorph. Tasted great though.
+
+id=ship_garden3
+from={sender}
+text={sender}: Week 6 of my onboard potato experiment. They're alive. I'm emotionally attached. I've named the big one {person_name}.
+id=ship_garden3_r1
+reply_to=ship_garden3
+delay=5-10
+from={sender.1}
+text={sender.1}: You named a potato after a real person. You've been in space too long.
+id=ship_garden3_r2
+reply_to=ship_garden3
+delay=6-12
+from={sender.1}
+text={sender.1}: Don't eat {person_name}. You'll never forgive yourself. Eat the small ones first.
+id=ship_garden3_r3
+reply_to=ship_garden3
+delay=4-9
+from={sender.1}
+text={sender.1}: My crew grew potatoes once. Made vodka. Best morale we ever had. Worst flying we ever did.
+
+id=yo_mama1
+from={sender}
+text={sender}: {person_name} just told me my ship handles like a drunk Ashta. Nobody insults {ship_name} like that.
+id=yo_mama1_r1
+reply_to=yo_mama1
+delay=4-9
+from={sender.1}
+text={sender.1}: Your ship? That's nothing. {person_name} told me my MOM handles like a drunk Ashta. Still not sure what that means.
+id=yo_mama1_r2
+reply_to=yo_mama1
+delay=6-12
+from={sender.1}
+text={sender.1}: To be fair, I've seen you dock. The Ashta comparison is generous.
+id=yo_mama1_r3
+reply_to=yo_mama1
+delay=5-10
+from={sender.1}
+text={sender.1}: At least your ship has an excuse. {person_name}'s mom flew through {system} last week and the gravitational pull knocked out my sensors.
+
+id=yo_mama2
+from={sender}
+text={sender}: Yo {person_name}, your mom's so big she shows up on the star map as a gas giant.
+id=yo_mama2_r1
+reply_to=yo_mama2
+delay=5-10
+from={person_name}
+text={person_name}: Real mature. At least my mom doesn't name her ship after a sweaty zoo animal.
+id=yo_mama2_r2
+reply_to=yo_mama2
+delay=6-12
+from={sender.1}
+text={sender.1}: Keep it clean, people. This is a public frequency. ...But that was funny.
+id=yo_mama2_r3
+reply_to=yo_mama2
+delay=4-9
+from={sender.1}
+text={sender.1}: UC Navy Patrol here and... actually no, I want to hear where this goes.
+
+id=bad_coffee
+from={sender}
+text={sender}: Ordered coffee at {location}. Pretty sure it was just hot brown water with engine residue.
+id=bad_coffee_r1
+reply_to=bad_coffee
+delay=5-10
+from={sender.1}
+text={sender.1}: That's the good stuff. You should try the coffee at Cydonia. It fights back.
+id=bad_coffee_r2
+reply_to=bad_coffee
+delay=6-12
+from={sender.1}
+text={sender.1}: Pro tip: bring your own beans from {system}. Costs more than fuel but at least you'll stay alive.
+id=bad_coffee_r3
+reply_to=bad_coffee
+delay=4-9
+from={sender.1}
+text={sender.1}: You got robbed. I got robbed too last week. Same station. We should start a support group.
+
+id=pet_onboard
+from={sender}
+text={sender}: So my fungal turtle somehow got into the air filtration system. I can hear her but I can't find her. She's been meeping for three hours. Ship smells weird now.
+id=pet_onboard_r1
+reply_to=pet_onboard
+delay=5-10
+from={sender.1}
+text={sender.1}: Open some chunks near the vent. Works every time. Don't ask how I know.
+id=pet_onboard_r2
+reply_to=pet_onboard
+delay=6-12
+from={sender.1}
+text={sender.1}: You brought a TURTLE on a spaceship? Bold move. My platypig floated out of an airlock on day two. Rest in space, Captain Nibbles.
+id=pet_onboard_r3
+reply_to=pet_onboard
+delay=4-8
+from={sender.1}
+text={sender.1}: The meeping or the smell? Because one of those might not be the turtle.
+
+id=wrong_jump
+from={sender}
+text={sender}: Punched in coordinates for {system.1}. Ended up at {system.2}. Completely different system. My nav computer is either broken or hates me.
+id=wrong_jump_r1
+reply_to=wrong_jump
+delay=4-9
+from={sender.1}
+text={sender.1}: Did you update your star maps? There was a patch last cycle. Half the fleet jumped to the wrong place.
+id=wrong_jump_r2
+reply_to=wrong_jump
+delay=6-12
+from={sender.1}
+text={sender.1}: Happened to me once. Ended up in a restricted zone. UC patrol was NOT amused.
+id=wrong_jump_r3
+reply_to=wrong_jump
+delay=5-10
+from={sender.1}
+text={sender.1}: Your nav computer doesn't hate you. It's just disappointed. Like all of us.
+
+id=ship_names
+from={sender}
+text={sender}: What's the worst ship name you've ever seen? I just passed one called "Divorce Settlement." I have questions.
+id=ship_names_r1
+reply_to=ship_names
+delay=4-9
+from={sender.1}
+text={sender.1}: Saw one called "Untitled Ship 4" yesterday. They didn't even try. Four times.
+id=ship_names_r2
+reply_to=ship_names
+delay=6-12
+from={sender.1}
+text={sender.1}: There's a Freestar hauler near {system} called "My Wife's Lawyer." I think there's a story there.
+id=ship_names_r3
+reply_to=ship_names
+delay=5-10
+from={sender.1}
+text={sender.1}: Best one I ever saw was "Warranty Expired." It was held together with tape. Literally.
+
+id=earth_nostalgia
+from={sender}
+text={sender}: Found a pre-evacuation Earth postcard at a market in {location}. It's a beach. Just... blue water and sand. Paid way too much for it.
+id=earth_nostalgia_r1
+reply_to=earth_nostalgia
+delay=6-12
+from={sender.1}
+text={sender.1}: My grandfather had a snow globe from a place called Paris. Little metal tower inside. Nobody in my family has ever seen snow in person.
+id=earth_nostalgia_r2
+reply_to=earth_nostalgia
+delay=5-10
+from={sender.1}
+text={sender.1}: Those go for crazy money at auction. Earth stuff is the new gold. Saw a fork sell for {credits} credits because it said "made in Italy."
+id=earth_nostalgia_r3
+reply_to=earth_nostalgia
+delay=8-14
+from={sender.1}
+text={sender.1}: I collect old Earth music files. Found one called "Here Comes the Sun." Felt wrong listening to it somehow.
+
+id=bad_passengers
+from={sender}
+text={sender}: Took a passenger job from {location} to {system}. Never again. The man complained about EVERYTHING. The seats, the noise, the food, the grav jumps. Sir, this is a cargo ship.
+id=bad_passengers_r1
+reply_to=bad_passengers
+delay=5-10
+from={sender.1}
+text={sender.1}: Had one who asked for a window seat. It's a freighter. The only window is the cockpit. He sat behind me for six hours breathing on my neck.
+id=bad_passengers_r2
+reply_to=bad_passengers
+delay=6-12
+from={sender.1}
+text={sender.1}: A woman once asked me to "fly smoother." Through an asteroid field. Near {system}. I dropped her off at the next station.
+id=bad_passengers_r3
+reply_to=bad_passengers
+delay=4-9
+from={sender.1}
+text={sender.1}: That's why I only haul {cargo}. Cargo doesn't complain. Cargo doesn't ask "are we there yet." Cargo is perfect.
+
+id=zerog_cooking
+from={sender}
+text={sender}: Tried to fry an egg in low gravity. The egg is now on the ceiling. The oil is on me. The pan is somewhere behind the reactor.
+id=zerog_cooking_r1
+reply_to=zerog_cooking
+delay=4-9
+from={sender.1}
+text={sender.1}: You fried an egg without checking your gravity generator? That's not cooking, that's modern art.
+id=zerog_cooking_r2
+reply_to=zerog_cooking
+delay=6-12
+from={sender.1}
+text={sender.1}: The ceiling egg is your ceiling egg now. It lives there. Accept it.
+id=zerog_cooking_r3
+reply_to=zerog_cooking
+delay=5-10
+from={sender.1}
+text={sender.1}: This is why Chunks exist. Nobody ever lost a Chunk to the ceiling.
+
+id=radio_silence
+from={sender}
+text={sender}: Is it just me or has this channel been dead quiet for the last two hours? Near {system}. Nobody's transmitting. That's... not normal.
+id=radio_silence_r1
+reply_to=radio_silence
+delay=8-14
+from={sender.1}
+text={sender.1}: Probably just a relay outage near {system}. Happens all the time. ...Probably.
+id=radio_silence_r2
+reply_to=radio_silence
+delay=10-18
+from={sender.1}
+text={sender.1}: Last time it went quiet like this near {system}, Crimson Fleet hit three ships in an hour. Keep your shields up.
+id=radio_silence_r3
+reply_to=radio_silence
+delay=6-12
+from={sender.1}
+text={sender.1}: I'm here. Was eating. What did I miss? ...Why is everyone so tense?
+
+id=patrol_boredom
+from={sender}
+text={sender}: Hour 9 of Vanguard patrol near {system}. Nothing. Absolutely nothing. I've counted every rivet on my dashboard. There are 47.
+id=patrol_boredom_r1
+reply_to=patrol_boredom
+delay=5-10
+from={sender.1}
+text={sender.1}: Only 47? I've got 62. Either your ship is cheaper or you miscounted. Start over.
+id=patrol_boredom_r2
+reply_to=patrol_boredom
+delay=6-12
+from={sender.1}
+text={sender.1}: Be grateful. The one time my patrol got exciting I had to file 14 reports and replace a wing.
+id=patrol_boredom_r3
+reply_to=patrol_boredom
+delay=4-9
+from={sender.1}
+text={sender.1}: Try singing. The Valentine does it and nobody stops him. You can't be worse. ...Actually maybe you can.
+
+id=superstition
+from={sender}
+text={sender}: Call me crazy but I always tap the hull three times before a grav jump. Haven't died yet. Not changing the routine.
+id=superstition_r1
+reply_to=superstition
+delay=5-10
+from={sender.1}
+text={sender.1}: I flip a credit coin. Heads I jump, tails I also jump. It's about the ritual, not the logic.
+id=superstition_r2
+reply_to=superstition
+delay=6-12
+from={sender.1}
+text={sender.1}: {person_name} keeps a teddy bear strapped into the co-pilot seat. Says it's load-bearing. For morale.
+id=superstition_r3
+reply_to=superstition
+delay=4-9
+from={sender.1}
+text={sender.1}: My old captain used to salute the grav drive before every jump. We laughed. Then we stopped saluting once. Engine blew. We don't laugh anymore.
+
+id=idle_chatter1
+from={sender}
+text={sender}: Anyone else getting weird grav readings near {system}? My nav computer keeps recalibrating.
+
+id=idle_chatter2
+from={sender}
+text={sender}: Long haul from {system.1} to {system.2}. Could use some company on the channel.
+
+id=idle_chatter3
+from={sender}
+text={sender}: Just picked up {cargo} in {system}. Best prices I've seen in cycles.
+
+id=idle_chatter4
+from={sender}
+text={sender}: Docking fees at {system} went up again. {credits} credits just to park? Highway robbery.
+
+id=idle_chatter5
+from={sender}
+text={sender}: If anyone's headed to {system}, avoid the outer ring. Ecliptic patrols everywhere.
+
+id=idle_chatter6
+from={sender}
+text={sender}: Sold my whole load of {cargo} for {credits} credits. Not bad for a day's work.
+
+id=idle_chatter7
+from={sender}
+text={sender}: {ship_name}, you still running that busted port thruster? I can hear you from here.
+
+id=idle_chatter8
+from={sender}
+text={sender}: My kid wants to join the Vanguard. Told her to finish school first. She didn't listen.
+
+id=idle_chatter9
+from={sender}
+text={sender}: Anyone know a decent mechanic near {system}? Grav drive's making noises again.
+
+id=idle_chatter10
+from={sender}
+text={sender}: Just saw {ship_name} jump in. That's a nice build. Stroud-Eklund?
+
+id=idle_chatter11
+from={sender}
+text={sender}: Hauling {cargo} out to {system}. Boring run but the pay's {credits} credits so I'm not complaining.
+
+id=idle_chatter12
+from={sender}
+text={sender}: Freestar Collective frequency check. Anyone on this channel from Akila?
+
+id=idle_chatter13
+from={sender}
+text={sender}: Don't trust the fuel prices at {system}. Paid {percent}% over standard last time.
+
+id=idle_chatter14
+from={sender}
+text={sender}: {person_name} still owes me {credits} credits. If you're listening, you know who you are.
+
+id=idle_chatter15
+from={sender}
+text={sender}: Quiet shift. Too quiet. Last time it was this calm, Crimson Fleet hit us at {system}.
+
+id=idle_chatter16
+from={sender}
+text={sender}: UC patrol just scanned me twice. I'm hauling {cargo}, not contraband. Relax.
+
+id=idle_chatter17
+from={sender}
+text={sender}: Anyone want to buy {cargo}? Got a surplus. Make me an offer.
+
+id=idle_chatter18
+from={sender}
+text={sender}: Heading back to {system} after three weeks out. Can't wait to sleep in a real bed.
+
+id=idle_chatter19
+from={sender}
+text={sender}: {ship_name}, your transponder's glitching. You're showing up as two contacts on my scope.
+
+id=idle_chatter20
+from={sender}
+text={sender}: They say there's strange ruins near {system}. Probably just miners spreading stories again.
+
+id=idle_chatter21
+from={sender}
+text={sender}: Note to self: never buy cheap coffee at {system}. Tastes like engine coolant.
+
+id=idle_chatter22
+from={sender}
+text={sender}: {person_name}, you on this freq? I've got that {cargo} you asked about.
+
+id=idle_chatter23
+from={sender}
+text={sender}: Grav jump in 3... 2... see you on the other side, {system}.
+
+id=idle_chatter24
+from={sender}
+text={sender}: Lost a crewmate to the Freestar Rangers last week. Good for her, bad for my cargo runs.
+
+id=idle_chatter25
+from={sender}
+text={sender}: Fuel's down {percent}% at {system}. Fill up while you can.
+
+id=idle_chatter26
+from={sender}
+text={sender}: {ship_name}, this is {sender}. You're drifting into my lane. Adjust heading.
+
+id=idle_chatter27
+from={sender}
+text={sender}: Picked up a distress signal near {system}. Could be legit. Could be pirates. Not risking it.
+
+id=idle_chatter28
+from={sender}
+text={sender}: Three jumps, two scans, one busted shield generator. Just another Tuesday.
+
+id=idle_chatter29
+from={sender}
+text={sender}: Anybody else notice {cargo} prices jumped {percent}% this cycle? Something's going on.
+
+id=idle_chatter30
+from={sender}
+text={sender}: {person_name} told me {system} is a good place to lay low. Didn't ask why they'd know that.
+
+id=idle_chatter31
+from={sender}
+text={sender}: This is {ship_name} requesting docking priority at {system}. Carrying medical supplies.
+
+id=idle_chatter32
+from={sender}
+text={sender}: Been flying for 20 years. Still get nervous during grav jumps. Don't tell anyone.
+
+id=idle_chatter33
+from={sender}
+text={sender}: GalBank's offering {percent}% interest on savings accounts now. Almost makes you want to stop flying.
+
+id=idle_chatter34
+from={sender}
+text={sender}: Reminder: Vanguard registration expires end of cycle. Don't get caught without it.
+
+id=idle_chatter35
+from={sender}
+text={sender}: {system} control, this is {ship_name}. Requesting flight path. ...Hello? Anyone awake over there?
+
+id=idle_chatter36
+from={sender}
+text={sender}: Found a Sandwich floating in zero-g outside {system} station. Best lunch I ever had.
+
+id=idle_chatter37
+from={sender}
+text={sender}: Running low on O2 filters. Anyone near {system} got spares? Will pay {credits} credits.
+
+id=idle_chatter38
+from={sender}
+text={sender}: {person_name} says the Settled Systems are getting smaller every year. I think they're right.
+
+id=idle_chatter39
+from={sender}
+text={sender}: Just upgraded to a HopeTech reactor. {percent}% more efficient. Should've done it years ago.
+
+id=idle_chatter40
+from={sender}
+text={sender}: If you see {ship_name} out near {system}, give 'em a wide berth. They fly like they're drunk.
+
+id=idle_chatter41
+from={sender}
+text={sender}: Anyone know if the shops in {location} still have {cargo} in stock? Heading there now.
+
+id=idle_chatter42
+from={sender}
+text={sender}: Got stuck in {location} for two days waiting on a docking permit. Bureaucracy at its finest.
+
+id=idle_chatter43
+from={sender}
+text={sender}: Best bar in {location} is the one near the landing pads. Don't order the fish though. Trust me.
+
+id=idle_chatter44
+from={sender}
+text={sender}: {person_name} said they spotted Ecliptic mercs hanging around {location}. Watch yourselves.
+
+id=idle_chatter45
+from={sender}
+text={sender}: Just left {location} with a full hold of {cargo}. Heading to {system} if anyone needs a ride.
+
+id=idle_chatter46
+from={sender}
+text={sender}: Security in {location} confiscated my sidearm. Since when is that a rule? I want my {credits} credits back.
+
+id=idle_chatter47
+from={sender}
+text={sender}: Weather alert for anyone en route to {location}. Visibility's terrible. Take it slow on approach.
+
+id=idle_chatter48
+from={sender}
+text={sender}: Grew up in {location}. Haven't been back in years. Wonder if that noodle place is still open.
+
+id=idle_chatter49
+from={sender}
+text={sender}: Need a crew for a job out of {location}. Nothing illegal. Mostly. Paying {credits} credits.
+
+id=idle_chatter50
+from={sender}
+text={sender}: {location} ground control just rerouted me three times. Either they're understaffed or they don't like me.
