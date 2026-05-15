@@ -1,60 +1,36 @@
 [size=4][b][u]Overview[/u][/b][/size]
-This updates the open world caves and man made clutter so that they generate enemies for you to fight and now adds new open world lair like human camps. These new cave enemies get disabled if the cave is reserved by a random encounter quest so that it can proceed normally.
 
-[quote]
-NOTE: This is an ever-evolving creation additional encounters will be added over time. Some of theses changes may require a new save or a unity trip I will try and call them out in the change logs. 
+Uploading for some friends but this is a Trackers Alliance theme for HONKCORE. 
 
-WARNING: This new SFCK version is completely rewritten and requires free lanes. Also consider this a beta for now at least until I get DSE story mode and the caves reimplemented. 
-
-FAIR WARNING: The Spooky Cave and the hollows are meant to be very challenging at any level and shouldn't be tried less then level 50.[/quote]
-
-[size=4][b][u]Features[/u][/b][/size]
+[b][u]Known Issues[/u][/b]
 [list]
-[*]All random combat factions are used[/*]
-[*]Dynamic Scenes Engine is the glue that lets all this work see the documentation on the GitHub site if you want to leverage it in your creations. [/*]
+[*]The enemy health/name bar occasionally fails. I think this is something with the HONKCORE theme engine but I haven't had time to dig into it. [/*]
 [/list]
 
-[size=4][b][u]Planned Features[/u][/b][/size]
+[b][u]Planned Features[/u][/b]
 [list]
-[*]Additional open world encounters[/*]
-[*]Additional man made clutter[/*]
-[*]Reimplement the old caves using DSE[/*]
-[*]Develop faction themed clutter and chest for better immersion when say Crimson Fleet takes over a POI Crimson Fleet banners, clutters, and chest will show up (currently only chests work).[/*]
-[*]Implement DSE story mode using the old portal encounters as the first setup.[/*]
+[*]Custom flashing icons for status effect[/*]
 [/list]
 
-Linked below are the notes and description of the changes for the Open World Caves and Encounters updates. 
+[size=4][b][u]Social Presence[/u][/b][/size]
 [list]
-[*][url=https://github.com/monster-cookie/starfield-encounters-overhaul/blob/master/Documentation/Caves-ChangesAndNotes.md]Open World Encounters (Caves) - Changes and Notes[/url][/*]
-[*][url=https://github.com/monster-cookie/starfield-encounters-overhaul/blob/master/Documentation/PCMEncounters-ChangesAndNotes.md]Open World Encounters (New World Spaces) - Changes and Notes[/url][/*]
-[*][url=https://github.com/monster-cookie/starfield-encounters-overhaul/blob/master/Documentation/PCMManMadeClutter-ChangesAndNotes.md]Open World Encounters (Man Made Clutter) - Changes and Notes[/url][/*]
+[*]Big thanks to beepcmyk for both addons and all the SVG abuse I give them. [/*]
+[*]Also thanks to Targeteron for some hints[/*]
 [/list]
-
-[size=4][b][u]Usage[/u][/b][/size]
-Enter a random world cave, find modified man made clutter, or find the new surprises (though need to reimplement them) . 
-
-[size=4][b][u]Compatibility[/u][/b][/size]
-This mod will be incompatible with any mod that modifies PCM rules (probably this this is resolved i think) or Factions (definitely). The mods will need patch files in order to make them compatible with each other and using them together will break both sets of mods to varying degrees and is strongly recommended against. Please see the optional files section for any available patches. 
 
 [size=4][b][u]Installation [/u][/b][/size]
 
-[size=3][b]Via Vortex/MO2[/b][/size]
+[b]Via Vortex/MO2[/b]
 Install as normally would any mod mod. 
 
-[size=3][b]Installation Manually[/b][/size]
+[b]Installation Manually[/b]
 Really please use a mod manager :) 
 
 Download the current zip file. Please everything in the Data folder in the zip to the same place under <Game Install Dir aka where starfield.exe is>\Data.
 
-[size=3][b]Handling the plugins.txt file[/b][/size]
-You need to add Venworks-EncountersOverhaul.esm, VenworksFactionsOverhaul.esm, and VenpiCore.esm to your plugins.txt file see below for help. Should be ordered like this in the file. 
+[b]Handling the plugins.txt file[/b]
 
-Please see this guide, [url=https://github.com/monster-cookie/starfield-modding-notes/blob/master/LoadOrder.md]Load Order Findings and Help[/url], for help with proper load order setup.
-
-[code]
-*Venworks-EncountersOverhaul.esm
-...
-<any patches for Encounters Overhauls>[/code]
+This needs to be loaded after HONKCORE to let my interface win. 
 
 [size=4][b][u]Social Presence[/u][/b][/size]
 [list]
