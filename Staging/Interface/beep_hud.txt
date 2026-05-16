@@ -1,73 +1,89 @@
 # =============================================
 # HONKCORE - Dynamic Custom HUD Overhaul
 # =============================================
+# Trackers Alliance HUD palette (Venworks)
+#   Off White       F5F4F5
+#   Warm Off White  EDE4CC
+#   Dark Navy       171B25
+#   Deep Panel      0E1118
+#   Dark Grey       2B2E36
+#   Blue Grey       456485
+#   Crimson         E41335
+#   Maroon          5C0B16
+#   Dark Maroon     2A0710
+#   Shadow          090A0E
 id=default
 ignore_suit_power=true
-#
-# Can't use they break default enemy health bars:
-#   aizome
-#   cold
-# Seem to work fine
-#   default
-#   starfield
-#
 color_theme=default
 skip_condition_colors=true
-color_full=00FFFF
-color_mid=44EEFF
-color_low=CC44FF
-color_critical=FF0088
-color_damage=FFFF00
+color_full=F5F4F5
+color_mid=456485
+color_low=8A1A28
+color_critical=E41335
+color_damage=E41335
 glitch_interval_min=20
 glitch_interval_max=40
 glitch_duration=450
-glitch_color=00FFFF
-glitch_color_alt=FFFFFF
+glitch_color=F5F4F5
+glitch_color_alt=F5F4F5
 flicker_chance=0.005
 element_flicker_chance=0.005
 element_flicker_alpha=0.3
 scanline_spacing=3
 scanline_alpha=0.1
 scanline_speed=0.15
-panel_color=003030
+panel_color=0E1118
 panel_cell=12
 panel_cell_offset=0.2
 
 
-## Default UI Components setup
+## Default UI (Chronowatch)
 id=default.Chronowatch
 target=default.Chronowatch
 visible=never
 
+
+## Default UI (Crosshair)
 id=default.Crosshair
 target=default.Crosshair
 visibility_group=crosshair
 visible=weaponDrawn OR inVehicle
-color=FFFFFF
+color=F5F4F5
 
-## Hide the Vehicle UI, but keep button to exit vehicle working
+
+## Default UI (Weapons) - NOTE THIS IS REQUIRED TO EXIT VEHICLE
 id=default.Weapons
 target=default.Weapons
 visible=inVehicle
 forceVisible=inVehicle
 scale=0.001
 
+
+## Default UI (Vehicle)
 id=default.Vehicle
 target=default.Vehicle
 visible=inVehicle
 
+
+## Default UI (SneakMeter)
 id=default.SneakMeter
 target=default.SneakMeter
 visible=isSneaking
 
+
+## Default UI (HitIndicator)
 id=default.HitIndicator
 target=default.HitIndicator
 visible=inCombat
 
+
+## Default UI (EnemyHealth)
 id=default.EnemyHealth
 target=default.EnemyHealth
-visible=weaponDrawn or inCombat
+visible=weaponDrawn OR inCombat
 
+
+## Default UI (QuestMarkers)
 id=default.QuestMarkers
 target=default.QuestMarkers
 visible=always
@@ -84,9 +100,9 @@ height=200
 scanlines=true
 border_style=random
 border_seed=VB-782.3//A1
-color_bg=044a28
-color_border=00FFEE
-color_label=00FFEE
+color_bg=171B25
+color_border=F5F4F5
+color_label=F5F4F5
 glitch=true
 element_flicker=true
 panel=true
@@ -106,17 +122,17 @@ x=0
 y=142
 value={player.health}
 max={player.maxHealth}
-color_primary=!00827F
+color_primary=!F5F4F5
 alpha_primary=0.9
-color_secondary=!1C1C1C
+color_secondary=!2B2E36
 alpha_secondary=0.2
 use_threshold_color=false
 alpha_bg=0.5
 element_flicker=false
-color_full=!00827F
-color_mid=!045D5D
-color_low=!FBB117
-color_critical=!00FFFF
+color_full=!F5F4F5
+color_mid=!456485
+color_low=!5C0B16
+color_critical=!E41335
 perspective_x=-12
 perspective_y=-25
 scanlines=true
@@ -138,15 +154,15 @@ x=0
 y=112
 value={player.o2}
 max={player.maxO2}
-color_primary=!FF00FF
+color_primary=!456485
 alpha_primary=0.9
-color_secondary=!1C1C1C
+color_secondary=!2B2E36
 alpha_secondary=0.2
 use_threshold_color=false
-color_full=!FF00FF
-color_mid=!CC00FF
-color_low=!8800FF
-color_critical=!00FFFF
+color_full=!456485
+color_mid=!2F475F
+color_low=!5C0B16
+color_critical=!E41335
 perspective_x=-12
 perspective_y=-25
 scanlines=true
@@ -169,15 +185,15 @@ x=0
 y=82
 value={player.encumbrance}
 max={player.maxEncumbrance}
-color_primary=!008000
+color_primary=!456485
 alpha_primary=0.9
-color_secondary=!1C1C1C
+color_secondary=!2B2E36
 alpha_secondary=0.2
 use_threshold_color=false
-color_full=!800000
-color_mid=!FFA500
-color_low=!808000
-color_critical=!008000
+color_full=!E41335
+color_mid=!8A1A28
+color_low=!456485
+color_critical=!F5F4F5
 perspective_x=-12
 perspective_y=-25
 scanlines=true
@@ -185,7 +201,7 @@ scanline_alpha=0.12
 scanline_spacing=3
 
 
-## Weapon Display
+## Weapon Display (Holstered)
 id=weapon.holstered
 target=player.weapon
 visible=NOT weaponDrawn AND NOT thirdPerson
@@ -195,7 +211,7 @@ y=315
 width=40
 height=40
 fit_in_rect=CR
-tint=FFFF00
+tint=E41335
 alpha=0.4
 perspective_x=-12
 perspective_y=-25
@@ -206,8 +222,8 @@ visible=NOT weaponDrawn AND NOT thirdPerson
 text={player.weapon}
 font=$NB_Grotesk_Bold
 size=14
-color=FFFFFF
-shadow_color=!0A0A0A
+color=F5F4F5
+shadow_color=!090A0E
 shadow=true
 alpha_background=0
 anchor=BL
@@ -223,8 +239,8 @@ visible=NOT weaponDrawn AND NOT thirdPerson
 text={player.clip} / {player.ammo} | {player.explosiveCount}
 font=$NB_Grotesk_Bold
 size=20
-color=FFFFFF
-shadow_color=!0A0A0A
+color=F5F4F5
+shadow_color=!090A0E
 shadow=true
 alpha=0.4
 alpha_background=0
@@ -234,6 +250,8 @@ y=314
 perspective_x=-12
 perspective_y=-25
 
+
+## Weapon Display (Drawn)
 id=weapon.drawn
 target=player.weapon
 visible=weaponDrawn AND NOT thirdPerson
@@ -243,7 +261,7 @@ y=315
 width=40
 height=40
 fit_in_rect=CL
-tint=FFFF00
+tint=E41335
 alpha=1
 perspective_x=-12
 perspective_y=-25
@@ -254,8 +272,8 @@ visible=weaponDrawn AND NOT thirdPerson
 text={player.weapon}
 font=$NB_Grotesk_Bold
 size=14
-color=FFFFFF
-shadow_color=!0A0A0A
+color=F5F4F5
+shadow_color=!090A0E
 shadow=true
 alpha_background=0
 anchor=BL
@@ -264,46 +282,14 @@ y=336
 perspective_x=-12
 perspective_y=-25
 
-id=ammolabel.suit.drawn
+id=ammolabel.drawn
 target=label
-visible=weaponDrawn AND NOT isAiming AND NOT thirdPerson
+visible=weaponDrawn AND NOT thirdPerson
 text={player.clip} / {player.ammo} | {player.explosiveCount}
 font=$NB_Grotesk_Bold
 size=20
-color=FFFFFF
-shadow_color=!0A0A0A
-shadow=true
-alpha_background=0
-anchor=BL
-x=32
-y=314
-perspective_x=-12
-perspective_y=-25
-
-id=ammolabel.nosuit.holstered
-target=label
-visible=NOT isAiming AND NOT weaponDrawn AND NOT thirdPerson
-text={player.clip} | {player.explosiveCount}
-font=$NB_Grotesk_Bold
-size=20
-color=FFFFFF
-shadow_color=!0A0A0A
-shadow=true
-alpha_background=0
-anchor=BL
-x=32
-y=314
-perspective_x=-12
-perspective_y=-25
-
-id=ammolabel.nosuit.drawn
-target=label
-visible=isAiming AND weaponDrawn AND NOT thirdPerson
-text={player.clip} | {player.explosiveCount}
-font=$NB_Grotesk_Bold
-size=20
-color=FFFFFF
-shadow_color=!0A0A0A
+color=F5F4F5
+shadow_color=!090A0E
 shadow=true
 alpha_background=0
 anchor=BL
@@ -318,7 +304,7 @@ id=HUD Info Widget
 target=player.info
 anchor=BL
 visible=suitHasBooted AND NOT (inSpaceship AND isAiming)
-tint=FFFFFF
+tint=F5F4F5
 theme_colors=false
 x=-20
 y=190
@@ -330,8 +316,8 @@ corner_size=14
 scanlines=true
 glitch=true
 alpha_bg=0.3
-color_bg=044a28
-color_border=00FFEE
+color_bg=171B25
+color_border=F5F4F5
 perspective_x=-12
 perspective_y=-25
 
@@ -354,20 +340,20 @@ show_heading=none
 alpha_heading=0
 show_cardinal=true
 alpha_cardinal=0.8
-color_bar=0A0A0A
+color_bar=090A0E
 alpha_bar=0.2
 show_line=true
-color_line=00FFFF
+color_line=F5F4F5
 alpha_line=0.2
 line_thickness=2
-color_enemies=FF2D78
-color_quests=00FFEE
-color_markers=FF00FF
+color_enemies=E41335
+color_quests=F5F4F5
+color_markers=456485
 marker_size=22
 border_style=none
 corner_size=4
-update_interval = 0.03
-color_border=00FFFF
+update_interval=0.03
+color_border=F5F4F5
 alpha_border=0.4
 glitch=false
 flicker=true
@@ -386,15 +372,15 @@ min_distance=20
 max_distance=150
 show_range_bar=true
 range_bar_width=6
-color_bg=044a28
+color_bg=171B25
 alpha_bg=0.292
-color_border=00FFEE
+color_border=F5F4F5
 alpha_border=0.8
-update_interval = 0.05
-color_player=FFFF00
-color_enemies=FF2D78
-color_quests=00FFEE
-color_markers=FF00FF
+update_interval=0.05
+color_player=EDE4CC
+color_enemies=E41335
+color_quests=F5F4F5
+color_markers=456485
 marker_size=6
 border_style=random
 corner_size=14
@@ -402,9 +388,9 @@ scanlines=true
 flicker=true
 glitch=true
 element_flicker=true
-show_grid=true        
+show_grid=true
 grid_rings=3
-grid_spokes=8            
+grid_spokes=8
 alpha_grid=0.12
 show_sweep=true
 sweep_speed=0.25
@@ -415,7 +401,7 @@ star_count=8
 show_target_lock=true
 target_lock_mode=offset
 target_lock_max_offset=2
-color_target_lock=FF6A00
+color_target_lock=E41335
 alpha_target_lock=0.9
 perspective_x=0
 perspective_y=0
@@ -432,19 +418,19 @@ perspective_x=-12
 perspective_y=25
 width=360
 height=120
-color_bg=044a28
-color_title=00FFFF
-color_label=00FFFF
-color_active=FF2D78
-color_inactive=00FF88
-color_threat_bar=FF2D78
-color_scan= 00CC66
-color_bars= 00AA44
+color_bg=171B25
+color_title=F5F4F5
+color_label=F5F4F5
+color_active=E41335
+color_inactive=456485
+color_threat_bar=E41335
+color_scan=456485
+color_bars=2B2E36
 border_style=random
 border_seed=VB-426.2//E5
 corner_size=14
-color_border=00FFEE
-alpha_border= 0.55
+color_border=F5F4F5
+alpha_border=0.55
 alpha_bg=0.3
 scanlines=true
 glitch=true
@@ -460,8 +446,8 @@ y=185
 width=360
 height=60
 alpha_bg=0
-color_primary=00FFFF
-color_border=00FFEE
+color_primary=F5F4F5
+color_border=F5F4F5
 perspective_x=-12
 perspective_y=25
 border_style=none
@@ -478,24 +464,24 @@ x=-400
 y=-40
 text=VITALS.low
 anim_style=arrows
-color_anim=!FF6A00
-color_bg=!5c0b0b
-color=!FF0000
+color_anim=!E41335
+color_bg=!5C0B16
+color=!F5F4F5
 anim_speed=1.5
 width=160
 height=30
 border_style=random
 corner_size=14
-color_border=!FF0000
-alpha_border= 0.55
+color_border=!E41335
+alpha_border=0.55
 alpha_bg=0.3
 scanlines=true
 glitch=true
 blink=true
 blink_on=600
 blink_off=200
-glitch_color=cc4444
-glitch_color_alt=cc8888
+glitch_color=8A1A28
+glitch_color_alt=456485
 
 ## Dynamic warnings (O2 low)
 id=o2.warning
@@ -506,24 +492,24 @@ x=-400
 y=40
 text=O2.critical
 anim_style=arrows
-color_anim=!FF6A00
-color_bg=!5c0b0b
-color=!FF0000
+color_anim=!E41335
+color_bg=!5C0B16
+color=!F5F4F5
 anim_speed=1.5
 width=160
 height=30
 border_style=random
 corner_size=14
-color_border=!FF0000
-alpha_border= 0.55
+color_border=!E41335
+alpha_border=0.55
 alpha_bg=0.3
 scanlines=true
 glitch=true
 blink=true
 blink_on=600
 blink_off=200
-glitch_color=cc4444
-glitch_color_alt=cc8888
+glitch_color=8A1A28
+glitch_color_alt=456485
 
 
 ## Suit Power Indicators
@@ -538,9 +524,9 @@ y=150
 text=SUIT.systems ONLINE
 anim_style=cursor
 size=14
-color=00FFFF
-color_anim=00FF88
-color_bg=044a28
+color=F5F4F5
+color_anim=456485
+color_bg=171B25
 border_style=none
 alpha_bg=0
 flicker=false
@@ -556,9 +542,9 @@ y=150
 text=SUIT.systems OFFLINE
 anim_style=cursor
 size=14
-color=00FFFF
-color_anim=00FF88
-color_bg=044a28
+color=F5F4F5
+color_anim=E41335
+color_bg=171B25
 border_style=none
 alpha_bg=0
 flicker=false
@@ -574,8 +560,8 @@ x=-55
 y=185
 value={player.suitPower}
 max=1
-color_primary=00FFFF
-color_secondary=002424
+color_primary=F5F4F5
+color_secondary=0E1118
 use_threshold_color=false
 alpha_bg=0.5
 element_flicker=true
@@ -592,14 +578,14 @@ x=0
 y=140
 text=SCANNING
 anim_style=arrows
-color=00FFFF
-color_anim=00FF88
-color_bg=#044a28
+color=F5F4F5
+color_anim=456485
+color_bg=#171B25
 anim_speed=1.5
 border_style=random
 corner_size=14
-color_border=00FFEE
-alpha_border= 0.55
+color_border=F5F4F5
+alpha_border=0.55
 alpha_bg=0.3
 scanlines=true
 glitch=true
@@ -609,7 +595,7 @@ target=label
 text=SUIT//POWER OFFLINE
 font=$NB_Grotesk_Bold
 size=24
-color=#FF0000
+color=#E41335
 alpha_background=0
 anchor=VCC
 x=0
@@ -622,7 +608,7 @@ target=label
 text=readings inaccurate
 font=$NB_Grotesk_Bold
 size=16
-color=FF0000
+color=E41335
 alpha_background=0
 anchor=VCC
 x=0
@@ -641,13 +627,13 @@ y=-120
 text=SYS.SCAN
 anim_style=asm
 anim_seed=42
-color_bg=#044a28
-color=00FFFF
+color_bg=#171B25
+color=F5F4F5
 size=11
 border_style=random
 corner_size=14
-color_border=00FFEE
-alpha_border= 0.55
+color_border=F5F4F5
+alpha_border=0.55
 alpha_bg=0.3
 scanlines=true
 glitch=true
@@ -666,7 +652,7 @@ element_flicker=true
 
 
 ## Self-Propelled External Combat & Tactical Reconnaissance Probe // SPECTR
-## 3rd person view
+# 3rd person view
 id=spectr.camframe.effect
 target=shape
 shape=rect
@@ -674,11 +660,11 @@ visible=thirdPerson AND NOT inVehicle AND NOT inScanner
 anchor=VCC
 x=0
 y=-50
-color_fill=00FFFF
+color_fill=F5F4F5
 fill_alpha=0.02
 width=1000
 height=700
-stroke_width = 0
+stroke_width=0
 glitch=true
 glitch_interval_min=5
 glitch_interval_max=10
@@ -693,7 +679,7 @@ y=-400
 x2=600
 y2=0
 stroke_width=1.5
-color_stroke=FFFFFF
+color_stroke=F5F4F5
 stroke_alpha=0.9
 
 id=spectr.camframe2
@@ -706,7 +692,7 @@ y=-299
 x2=0
 y2=200
 stroke_width=2
-color_stroke=FFFFFF
+color_stroke=F5F4F5
 stroke_alpha=0.9
 
 id=spectr.camframe3
@@ -719,7 +705,7 @@ y=300
 x2=640
 y2=0
 stroke_width=2
-color_stroke=FFFFFF
+color_stroke=F5F4F5
 stroke_alpha=0.9
 
 id=spectr.camframe4
@@ -732,7 +718,7 @@ y=250
 x2=0
 y2=100
 stroke_width=2
-color_stroke=FFFFFF
+color_stroke=F5F4F5
 stroke_alpha=0.9
 
 id=spectr.camframe5
@@ -744,8 +730,8 @@ x=475
 y=300
 x2=50
 y2=0
-stroke_width = 2
-color_stroke=FFFFFF
+stroke_width=2
+color_stroke=F5F4F5
 stroke_alpha=0.9
 
 id=spectr.recbommel
@@ -757,7 +743,7 @@ x=-500
 y=-400
 stroke_width=0
 fill_alpha=1
-color_fill=!FF0000
+color_fill=!E41335
 width=20
 height=20
 blink=true
@@ -769,9 +755,8 @@ anchor=VCC
 text=REC
 font=$NB_Grotesk_Bold
 size=14
-color=!FFFFFF
+color=!F5F4F5
 alpha_background=0
-anchor=VCC
 x=-470
 y=-400
 
@@ -782,9 +767,8 @@ anchor=VCC
 text=/// SPECTR ///
 font=$NB_Grotesk_Bold
 size=14
-color=!FFFFFF
+color=!F5F4F5
 alpha_background=0
-anchor=VCC
 x=385
 y=300
 
@@ -795,9 +779,8 @@ anchor=VCC
 text=Self-Propelled External Combat & Tactical Reconnaissance Probe
 font=$NB_Grotesk_Bold
 size=9
-color=!FFFFFF
+color=!F5F4F5
 alpha_background=0
-anchor=VCC
 x=370
 y=312
 
@@ -811,13 +794,13 @@ anchor=CC
 vignette_hp_start=60
 vignette_alpha_max=0.95
 vignette_scale_min=0.95
-vignette_color=480707
+vignette_color=2A0710
 vignette_outer_w=6000
 vignette_outer_h=3000
 vignette_padding_y=100
 vignette_gradient_ratio=200
 dizzy=false
-dizzy_color=5e051a
+dizzy_color=5C0B16
 dizzy_speed_max=35
 dizzy_offset=120
 pulse=true
@@ -828,7 +811,7 @@ pulse_freq=800
 ## Quick Bar
 id=quickbar
 target=quickbar
-visible= suitHasBooted AND NOT isAiming AND NOT thirdPerson
+visible=suitHasBooted AND NOT isAiming AND NOT thirdPerson
 anchor=TR
 height=624
 width=48
@@ -840,7 +823,7 @@ show_name=Weapon,Power,Meds,Food,Grenade
 long_item_names=64
 
 
-## Experimental - Trackers Alliance Icon
+## Trackers Alliance Icon
 ## 
 ## DO NOT ATTEMPT TO MOVE OR RESIZE THESE. Until the underling renders allows for SVG grouping so they share the same coordinate space.
 ##
@@ -854,7 +837,7 @@ width=108
 height=108
 x=-52
 y=8
-color_fill=!171b25
+color_fill=!171B25
 fill_alpha=1
 stroke_alpha=0
 stroke_width=0
@@ -871,7 +854,7 @@ x=6
 y=54
 stroke_alpha=0
 stroke_width=0
-color_fill=!f5f4f5
+color_fill=!F5F4F5
 fill_alpha=1
 path=M150.0,99.0 L148.0,99.0 L134.0,113.0 L128.0,122.0 L126.0,129.0 L126.0,140.0 L127.0,141.0 L127.0,145.0 L130.0,150.0 L136.0,148.0 L142.0,144.0 L147.0,139.0 L152.0,131.0 L154.0,125.0 L155.0,115.0 L154.0,114.0 L154.0,108.0 Z
 path_scale=.5
@@ -888,7 +871,7 @@ x=-15
 y=45
 stroke_alpha=0
 stroke_width=0
-color_fill=!f5f4f5
+color_fill=!F5F4F5
 fill_alpha=1
 path=M141.0,89.0 L133.0,84.0 L126.0,82.0 L113.0,82.0 L107.0,84.0 L98.0,89.0 L90.0,98.0 L85.0,111.0 L86.0,127.0 L90.0,135.0 L93.0,133.0 L99.0,124.0 L114.0,109.0 L135.0,94.0 L141.0,91.0 Z
 path_scale=.5
@@ -905,7 +888,7 @@ x=-50
 y=10
 stroke_alpha=0
 stroke_width=0
-color_fill=!f5f4f5
+color_fill=!F5F4F5
 fill_alpha=0.9
 path=M113.0,12.0 L112.0,13.0 L105.0,13.0 L104.0,14.0 L94.0,15.0 L79.0,20.0 L62.0,29.0 L43.0,45.0 L32.0,59.0 L22.0,78.0 L17.0,95.0 L17.0,100.0 L16.0,101.0 L15.0,122.0 L16.0,123.0 L17.0,137.0 L23.0,156.0 L29.0,168.0 L35.0,177.0 L47.0,191.0 L64.0,204.0 L80.0,212.0 L100.0,218.0 L116.0,219.0 L115.0,215.0 L93.0,212.0 L81.0,208.0 L67.0,201.0 L56.0,193.0 L42.0,179.0 L33.0,166.0 L27.0,154.0 L24.0,145.0 L24.0,142.0 L22.0,138.0 L22.0,133.0 L21.0,132.0 L21.0,126.0 L20.0,125.0 L20.0,108.0 L21.0,107.0 L22.0,96.0 L26.0,83.0 L33.0,68.0 L43.0,54.0 L60.0,38.0 L77.0,28.0 L91.0,23.0 L94.0,23.0 L99.0,21.0 L104.0,21.0 L105.0,20.0 L131.0,20.0 L132.0,21.0 L141.0,22.0 L154.0,26.0 L159.0,29.0 L163.0,30.0 L165.0,32.0 L163.0,33.0 L144.0,25.0 L134.0,24.0 L133.0,23.0 L124.0,23.0 L123.0,22.0 L101.0,24.0 L84.0,29.0 L69.0,37.0 L61.0,43.0 L48.0,56.0 L39.0,69.0 L30.0,90.0 L29.0,98.0 L28.0,99.0 L28.0,104.0 L27.0,105.0 L27.0,128.0 L28.0,129.0 L28.0,134.0 L34.0,153.0 L45.0,172.0 L60.0,188.0 L73.0,197.0 L91.0,205.0 L94.0,205.0 L103.0,208.0 L110.0,208.0 L112.0,209.0 L106.0,201.0 L98.0,193.0 L86.0,189.0 L70.0,179.0 L57.0,166.0 L51.0,158.0 L44.0,144.0 L44.0,141.0 L42.0,138.0 L41.0,130.0 L40.0,129.0 L39.0,110.0 L40.0,109.0 L41.0,97.0 L50.0,75.0 L58.0,64.0 L72.0,51.0 L86.0,43.0 L97.0,39.0 L100.0,39.0 L105.0,37.0 L112.0,37.0 L113.0,36.0 L125.0,36.0 L126.0,37.0 L133.0,37.0 L134.0,38.0 L142.0,39.0 L151.0,43.0 L148.0,44.0 L141.0,41.0 L132.0,40.0 L131.0,39.0 L111.0,39.0 L110.0,40.0 L101.0,41.0 L90.0,46.0 L88.0,46.0 L74.0,55.0 L61.0,68.0 L51.0,86.0 L46.0,104.0 L46.0,126.0 L47.0,127.0 L47.0,131.0 L50.0,141.0 L54.0,150.0 L62.0,162.0 L74.0,174.0 L81.0,179.0 L88.0,182.0 L86.0,178.0 L75.0,165.0 L74.0,162.0 L66.0,151.0 L66.0,149.0 L60.0,139.0 L56.0,126.0 L56.0,110.0 L57.0,109.0 L57.0,105.0 L60.0,95.0 L66.0,83.0 L74.0,73.0 L85.0,64.0 L94.0,59.0 L107.0,55.0 L112.0,55.0 L113.0,54.0 L128.0,54.0 L129.0,55.0 L133.0,55.0 L143.0,58.0 L156.0,65.0 L167.0,75.0 L170.0,75.0 L174.0,73.0 L174.0,70.0 L169.0,66.0 L171.0,63.0 L183.0,62.0 L195.0,58.0 L201.0,59.0 L202.0,60.0 L201.0,66.0 L188.0,78.0 L183.0,85.0 L180.0,85.0 L179.0,84.0 L179.0,79.0 L178.0,78.0 L176.0,78.0 L172.0,81.0 L179.0,93.0 L183.0,107.0 L183.0,113.0 L184.0,114.0 L183.0,128.0 L179.0,140.0 L174.0,150.0 L163.0,167.0 L152.0,180.0 L149.0,185.0 L160.0,180.0 L169.0,174.0 L180.0,163.0 L187.0,153.0 L192.0,143.0 L195.0,133.0 L196.0,123.0 L197.0,122.0 L197.0,109.0 L198.0,108.0 L199.0,109.0 L199.0,123.0 L198.0,124.0 L198.0,130.0 L194.0,144.0 L184.0,162.0 L168.0,179.0 L158.0,186.0 L141.0,193.0 L130.0,205.0 L128.0,209.0 L146.0,206.0 L155.0,203.0 L169.0,196.0 L179.0,189.0 L192.0,176.0 L202.0,162.0 L210.0,143.0 L211.0,135.0 L212.0,134.0 L212.0,129.0 L213.0,128.0 L213.0,107.0 L214.0,106.0 L215.0,107.0 L215.0,116.0 L216.0,117.0 L216.0,120.0 L215.0,121.0 L215.0,131.0 L214.0,132.0 L213.0,141.0 L208.0,155.0 L203.0,165.0 L195.0,177.0 L189.0,184.0 L177.0,195.0 L165.0,203.0 L152.0,209.0 L143.0,212.0 L139.0,212.0 L133.0,214.0 L127.0,214.0 L124.0,216.0 L124.0,219.0 L130.0,219.0 L131.0,218.0 L137.0,218.0 L138.0,217.0 L146.0,216.0 L158.0,212.0 L168.0,207.0 L182.0,198.0 L189.0,192.0 L200.0,180.0 L210.0,165.0 L218.0,146.0 L220.0,134.0 L221.0,133.0 L221.0,125.0 L222.0,124.0 L222.0,107.0 L221.0,106.0 L221.0,99.0 L220.0,98.0 L219.0,89.0 L214.0,75.0 L209.0,65.0 L198.0,49.0 L186.0,37.0 L181.0,34.0 L177.0,30.0 L156.0,19.0 L147.0,17.0 L143.0,15.0 L133.0,14.0 L132.0,13.0 Z M154.0,46.0 L155.0,45.0 L157.0,46.0 L156.0,47.0 Z M152.0,45.0 L153.0,44.0 L155.0,45.0 L154.0,46.0 Z M150.0,44.0 L151.0,43.0 L153.0,44.0 L152.0,45.0 Z
 path_scale=.5
@@ -922,7 +905,7 @@ x=-10
 y=43
 stroke_alpha=0
 stroke_width=0
-color_fill=!e41335
+color_fill=!E41335
 fill_alpha=1
 path=M170.0,78.0 L164.0,80.0 L156.0,87.0 L151.0,87.0 L148.0,91.0 L141.0,93.0 L142.0,95.0 L141.0,96.0 L134.0,98.0 L132.0,101.0 L130.0,101.0 L127.0,103.0 L124.0,108.0 L120.0,110.0 L120.0,111.0 L116.0,114.0 L114.0,114.0 L114.0,116.0 L112.0,117.0 L111.0,119.0 L107.0,122.0 L107.0,124.0 L105.0,125.0 L105.0,128.0 L103.0,131.0 L103.0,133.0 L98.0,140.0 L96.0,146.0 L96.0,163.0 L97.0,164.0 L97.0,168.0 L101.0,175.0 L100.0,178.0 L103.0,182.0 L108.0,193.0 L107.0,195.0 L104.0,193.0 L104.0,196.0 L105.0,198.0 L113.0,205.0 L113.0,207.0 L117.0,210.0 L119.0,213.0 L118.0,214.0 L118.0,217.0 L119.0,217.0 L120.0,219.0 L121.0,219.0 L121.0,214.0 L120.0,213.0 L123.0,212.0 L123.0,210.0 L126.0,208.0 L129.0,202.0 L133.0,199.0 L132.0,197.0 L134.0,195.0 L136.0,195.0 L136.0,194.0 L143.0,188.0 L144.0,184.0 L146.0,182.0 L148.0,182.0 L148.0,180.0 L153.0,176.0 L153.0,175.0 L151.0,175.0 L148.0,177.0 L142.0,174.0 L140.0,174.0 L137.0,171.0 L132.0,169.0 L124.0,159.0 L124.0,157.0 L120.0,155.0 L121.0,149.0 L120.0,148.0 L121.0,124.0 L122.0,123.0 L123.0,125.0 L124.0,125.0 L128.0,119.0 L128.0,117.0 L133.0,108.0 L135.0,108.0 L138.0,104.0 L140.0,104.0 L141.0,102.0 L145.0,99.0 L145.0,97.0 L148.0,94.0 L156.0,90.0 L156.0,89.0 L163.0,83.0 L169.0,83.0 L168.0,81.0 L171.0,80.0 Z M136.0,190.0 L137.0,189.0 L138.0,190.0 L137.0,191.0 Z M133.0,106.0 L134.0,105.0 L135.0,106.0 L134.0,107.0 Z M131.0,103.0 L132.0,102.0 L133.0,103.0 L132.0,104.0 Z M140.0,101.0 L141.0,100.0 L142.0,101.0 L141.0,102.0 Z
 path_scale=.5
@@ -939,7 +922,7 @@ x=70
 y=-25
 stroke_alpha=0
 stroke_width=0
-color_fill=!e41335
+color_fill=!E41335
 fill_alpha=1
 path=M61.973,11.613 L44,29.586 L44,170.414 L61.973,188.387 L63.387,186.973 L46,169.586 L46,30.414 L63.387,13.027 Z
 path_scale=1

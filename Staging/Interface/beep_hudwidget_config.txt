@@ -1,14 +1,26 @@
+# Trackers Alliance HUD palette (Venworks)
+#   Off White       F5F4F5
+#   Warm Off White  EDE4CC
+#   Dark Navy       171B25
+#   Deep Panel      0E1118
+#   Dark Grey       2B2E36
+#   Blue Grey       456485
+#   Crimson         E41335
+#   Maroon          5C0B16
+#   Dark Maroon     2A0710
+#   Shadow          090A0E
+
 # Colors
-color_positive=00FF00
-color_negative=FF0000
-color_main=00FFFF
-color_stats=FFFFFF
-color_combat=FF0000
-color_credits=EBB434
-color_bar_critical=FF0000
-color_bar_low=FF6600
-color_bar_medium=FFFF00
-color_bar_full=00FF00
+color_positive=456485
+color_negative=E41335
+color_main=F5F4F5
+color_stats=F5F4F5
+color_combat=E41335
+color_credits=EDE4CC
+color_bar_critical=E41335
+color_bar_low=5C0B16
+color_bar_medium=456485
+color_bar_full=F5F4F5
 
 # Labels
 label_hungry=HUNGRY
@@ -47,12 +59,12 @@ info_x=0
 info_y=-150
 
 # Ship HUD
-color_fuel_background=00FFFF
-color_fuel_meter=FFFFFF
-color_fuel_full=00FF00
-color_fuel_mid=FFFF00
-color_fuel_low=FF6600
-color_fuel_critical=FF0000
+color_fuel_background=171B25
+color_fuel_meter=F5F4F5
+color_fuel_full=F5F4F5
+color_fuel_mid=456485
+color_fuel_low=5C0B16
+color_fuel_critical=E41335
 
 #fuel_style can either be animated or plain
 show_fuel=true
@@ -80,4 +92,4 @@ chatter_x=-4
 chatter_y=-200
 chatter_width=300
 chatter_height=150
-chatter_color=FE7C1A
+chatter_color=E41335
