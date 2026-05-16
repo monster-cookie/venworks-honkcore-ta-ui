@@ -1,4 +1,10 @@
-# Freestar Collective widget palette: ivory F5F0E6, badge gold D8A33A, dust gold F2C96B, desert amber C27A2C, marshal red B12A2F, leather brown 2A1A12.
+# Freestar Collective HUD palette (Venworks)
+#   Ivory          F5F0E6
+#   Badge Gold     D8A33A
+#   Dust Gold      F2C96B
+#   Desert Amber   C27A2C
+#   Marshal Red    B12A2F
+#   Leather Brown  2A1A12.
 
 # Colors
 color_positive=D8A33A

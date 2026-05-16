@@ -1,17 +1,16 @@
 # =============================================
 # HONKCORE - Dynamic Custom HUD Overhaul
 # =============================================
-# Freestar Collective palette: ivory F5F0E6, badge gold D8A33A, desert amber C27A2C, marshal red B12A2F, leather brown #2A1A12.
+# Freestar Collective HUD palette (Venworks)
+#   Ivory          F5F0E6
+#   Badge Gold     D8A33A
+#   Dust Gold      F2C96B
+#   Desert Amber   C27A2C
+#   Marshal Red    B12A2F
+#   Leather Brown  2A1A12.
+
 id=default
 ignore_suit_power=true
-#
-# Can't use they break default enemy health bars:
-#   aizome
-#   cold
-# Seem to work fine
-#   default
-#   starfield
-#
 color_theme=default
 skip_condition_colors=true
 color_full=D8A33A
@@ -35,40 +34,53 @@ panel_cell=12
 panel_cell_offset=0.2
 
 
-## Default UI Components setup
+## Default UI (Chronowatch)
 id=default.Chronowatch
 target=default.Chronowatch
 visible=never
 
+
+## Default UI (Crosshair)
 id=default.Crosshair
 target=default.Crosshair
 visibility_group=crosshair
 visible=weaponDrawn OR inVehicle
 color=F5F0E6
 
-## Hide the Vehicle UI, but keep button to exit vehicle working
+
+## Default UI (Weapons) - NOTE THIS IS REQUIRED TO EXIT VEHICLE
 id=default.Weapons
 target=default.Weapons
 visible=inVehicle
 forceVisible=inVehicle
 scale=0.001
 
+
+## Default UI (Vehicle)
 id=default.Vehicle
 target=default.Vehicle
 visible=inVehicle
 
+
+## Default UI (SneakMeter)
 id=default.SneakMeter
 target=default.SneakMeter
 visible=isSneaking
 
+
+## Default UI (HitIndicator)
 id=default.HitIndicator
 target=default.HitIndicator
 visible=inCombat
 
+
+## Default UI (EnemyHealth)
 id=default.EnemyHealth
 target=default.EnemyHealth
-visible=weaponDrawn or inCombat
+visible=weaponDrawn OR inCombat
 
+
+## Default UI (QuestMarkers)
 id=default.QuestMarkers
 target=default.QuestMarkers
 visible=always
@@ -186,7 +198,7 @@ scanline_alpha=0.12
 scanline_spacing=3
 
 
-## Weapon Display
+## Weapon Display (Holstered)
 id=weapon.holstered
 target=player.weapon
 visible=NOT weaponDrawn AND NOT thirdPerson
@@ -235,6 +247,8 @@ y=314
 perspective_x=-12
 perspective_y=-25
 
+
+## Weapon Display (Drawn)
 id=weapon.drawn
 target=player.weapon
 visible=weaponDrawn AND NOT thirdPerson
@@ -265,42 +279,10 @@ y=336
 perspective_x=-12
 perspective_y=-25
 
-id=ammolabel.nosuit.holstered
+id=ammolabel.drawn
 target=label
-visible=NOT isAiming AND NOT weaponDrawn AND NOT thirdPerson
-text={player.clip} | {player.explosiveCount}
-font=$NB_Grotesk_Bold
-size=20
-color=F5F0E6
-shadow_color=!140C08
-shadow=true
-alpha_background=0
-anchor=BL
-x=32
-y=314
-perspective_x=-12
-perspective_y=-25
-
-id=ammolabel.suit.drawn
-target=label
-visible=weaponDrawn AND NOT isAiming AND NOT thirdPerson
+visible=weaponDrawn AND NOT thirdPerson
 text={player.clip} / {player.ammo} | {player.explosiveCount}
-font=$NB_Grotesk_Bold
-size=20
-color=F5F0E6
-shadow_color=!140C08
-shadow=true
-alpha_background=0
-anchor=BL
-x=32
-y=314
-perspective_x=-12
-perspective_y=-25
-
-id=ammolabel.nosuit.drawn
-target=label
-visible=isAiming AND weaponDrawn AND NOT thirdPerson
-text={player.clip} | {player.explosiveCount}
 font=$NB_Grotesk_Bold
 size=20
 color=F5F0E6
@@ -367,7 +349,7 @@ color_markers=F5F0E6
 marker_size=22
 border_style=none
 corner_size=4
-update_interval = 0.03
+update_interval=0.03
 color_border=D8A33A
 alpha_border=0.4
 glitch=false
@@ -391,7 +373,7 @@ color_bg=2A1A12
 alpha_bg=0.292
 color_border=D8A33A
 alpha_border=0.8
-update_interval = 0.05
+update_interval=0.05
 color_player=F5F0E6
 color_enemies=B12A2F
 color_quests=D8A33A
@@ -403,9 +385,9 @@ scanlines=true
 flicker=true
 glitch=true
 element_flicker=true
-show_grid=true        
+show_grid=true
 grid_rings=3
-grid_spokes=8            
+grid_spokes=8
 alpha_grid=0.12
 show_sweep=true
 sweep_speed=0.25
@@ -445,7 +427,7 @@ border_style=random
 border_seed=VB-426.2//E5
 corner_size=14
 color_border=D8A33A
-alpha_border= 0.55
+alpha_border=0.55
 alpha_bg=0.3
 scanlines=true
 glitch=true
@@ -488,7 +470,7 @@ height=30
 border_style=random
 corner_size=14
 color_border=!E03A2E
-alpha_border= 0.55
+alpha_border=0.55
 alpha_bg=0.3
 scanlines=true
 glitch=true
@@ -516,7 +498,7 @@ height=30
 border_style=random
 corner_size=14
 color_border=!E03A2E
-alpha_border= 0.55
+alpha_border=0.55
 alpha_bg=0.3
 scanlines=true
 glitch=true
@@ -600,7 +582,7 @@ anim_speed=1.5
 border_style=random
 corner_size=14
 color_border=D8A33A
-alpha_border= 0.55
+alpha_border=0.55
 alpha_bg=0.3
 scanlines=true
 glitch=true
@@ -648,7 +630,7 @@ size=11
 border_style=random
 corner_size=14
 color_border=D8A33A
-alpha_border= 0.55
+alpha_border=0.55
 alpha_bg=0.3
 scanlines=true
 glitch=true
@@ -667,7 +649,7 @@ element_flicker=true
 
 
 ## Self-Propelled External Combat & Tactical Reconnaissance Probe // SPECTR
-## 3rd person view
+# 3rd person view
 id=spectr.camframe.effect
 target=shape
 shape=rect
@@ -679,7 +661,7 @@ color_fill=D8A33A
 fill_alpha=0.02
 width=1000
 height=700
-stroke_width = 0
+stroke_width=0
 glitch=true
 glitch_interval_min=5
 glitch_interval_max=10
@@ -745,7 +727,7 @@ x=475
 y=300
 x2=50
 y2=0
-stroke_width = 2
+stroke_width=2
 color_stroke=F5F0E6
 stroke_alpha=0.9
 
@@ -772,7 +754,6 @@ font=$NB_Grotesk_Bold
 size=14
 color=!F5F0E6
 alpha_background=0
-anchor=VCC
 x=-470
 y=-400
 
@@ -785,7 +766,6 @@ font=$NB_Grotesk_Bold
 size=14
 color=!F5F0E6
 alpha_background=0
-anchor=VCC
 x=385
 y=300
 
@@ -798,7 +778,6 @@ font=$NB_Grotesk_Bold
 size=9
 color=!F5F0E6
 alpha_background=0
-anchor=VCC
 x=370
 y=312
 
@@ -829,7 +808,7 @@ pulse_freq=800
 ## Quick Bar
 id=quickbar
 target=quickbar
-visible= suitHasBooted AND NOT isAiming AND NOT thirdPerson
+visible=suitHasBooted AND NOT isAiming AND NOT thirdPerson
 anchor=TR
 height=624
 width=48
@@ -841,10 +820,8 @@ show_name=Weapon,Power,Meds,Food,Grenade
 long_item_names=64
 
 
-## Experimental - Freestar Collective Icon
+## Freestar Collective Icon
 ## 
-## DO NOT ATTEMPT TO MOVE OR RESIZE THESE. Until the underlying renderer allows for SVG grouping so they share the same coordinate space.
-##
 
 # Main Eagle Icon
 id=eagleicon
