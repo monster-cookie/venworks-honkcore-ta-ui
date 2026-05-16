@@ -1,14 +1,16 @@
+# Freestar Collective widget palette: ivory F5F0E6, badge gold D8A33A, dust gold F2C96B, desert amber C27A2C, marshal red B12A2F, leather brown 2A1A12.
+
 # Colors
-color_positive=00FF00
-color_negative=FF0000
-color_main=00FFFF
-color_stats=FFFFFF
-color_combat=FF0000
-color_credits=EBB434
-color_bar_critical=FF0000
-color_bar_low=FF6600
-color_bar_medium=FFFF00
-color_bar_full=00FF00
+color_positive=D8A33A
+color_negative=B12A2F
+color_main=D8A33A
+color_stats=F5F0E6
+color_combat=B12A2F
+color_credits=D8A33A
+color_bar_critical=B12A2F
+color_bar_low=C27A2C
+color_bar_medium=F2C96B
+color_bar_full=D8A33A
 
 # Labels
 label_hungry=HUNGRY
@@ -31,7 +33,6 @@ show_background=true
 background_alpha=0.4
 show_suit_bar=true
 show_suit_percent=true
-# show_encumbrance=bar all label
 show_encumbrance=all
 show_in_scanner=true
 suit_sound_threshold=1.0
@@ -47,12 +48,12 @@ info_x=0
 info_y=-150
 
 # Ship HUD
-color_fuel_background=00FFFF
-color_fuel_meter=FFFFFF
-color_fuel_full=00FF00
-color_fuel_mid=FFFF00
-color_fuel_low=FF6600
-color_fuel_critical=FF0000
+color_fuel_background=2A1A12
+color_fuel_meter=F5F0E6
+color_fuel_full=D8A33A
+color_fuel_mid=F2C96B
+color_fuel_low=C27A2C
+color_fuel_critical=B12A2F
 
 #fuel_style can either be animated or plain
 show_fuel=true
@@ -80,4 +81,4 @@ chatter_x=-4
 chatter_y=-200
 chatter_width=300
 chatter_height=150
-chatter_color=FE7C1A
+chatter_color=C27A2C
