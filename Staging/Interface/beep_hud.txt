@@ -383,8 +383,10 @@ show_enemies=true
 show_quests=true
 show_markers=true
 show_bar=false
-show_heading=right
+show_heading=none
+alpha_heading=0
 show_cardinal=true
+alpha_cardinal=0.8
 color_bar=#0A0A0A
 alpha_bar=0.2
 show_line=true
@@ -860,13 +862,15 @@ pulse_freq=800
 id=quickbar
 target=quickbar
 visible= suitHasBooted AND NOT isAiming AND NOT thirdPerson
-anchor=BL
-height=48
-width=624
+anchor=TR
+height=624
+width=48
 x=-50
 y=-25
 show_slots=1,2,3,4,5,6,7,8,9,10,11,12,13
 hotkeys=1,2,3,4,5,6,7,8,9,-.=,[,]
+show_name=Weapon,Power,Meds,Food,Grenade
+long_item_names=64
 
 
 ## Experimental - Trackers Alliance Icon
