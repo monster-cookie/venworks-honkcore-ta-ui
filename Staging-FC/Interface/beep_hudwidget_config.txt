@@ -1,0 +1,90 @@
+# Freestar Collective HUD palette (Venworks)
+#   Ivory          F5F0E6
+#   Badge Gold     D8A33A
+#   Dust Gold      F2C96B
+#   Desert Amber   C27A2C
+#   Marshal Red    B12A2F
+#   Leather Brown  2A1A12.
+
+# Colors
+color_positive=D8A33A
+color_negative=B12A2F
+color_main=D8A33A
+color_stats=F5F0E6
+color_combat=B12A2F
+color_credits=D8A33A
+color_bar_critical=B12A2F
+color_bar_low=C27A2C
+color_bar_medium=F2C96B
+color_bar_full=D8A33A
+
+# Labels
+label_hungry=HUNGRY
+label_thirsty=THIRSTY
+label_fed=SATIATED
+label_hydrated=HYDRATED
+label_enumbrance=KG
+
+font_main=$MAIN_Font_Bold
+font_semi=$NB_Grotesk_Semibold
+
+# Options
+show_title=true
+show_enemy_markers=true
+show_quest_markers=true
+show_credits=true
+show_dots=true
+show_time=true
+show_background=true
+background_alpha=0.4
+show_suit_bar=true
+show_suit_percent=true
+show_encumbrance=all
+show_in_scanner=true
+suit_sound_threshold=1.0
+label_suit=S
+
+# Scaling
+scale=1.0
+fuel_scale=1.0
+chatter_scale=1.0
+
+# position offset, relative to watch
+info_x=0
+info_y=-150
+
+# Ship HUD
+color_fuel_background=2A1A12
+color_fuel_meter=F5F0E6
+color_fuel_full=D8A33A
+color_fuel_mid=F2C96B
+color_fuel_low=C27A2C
+color_fuel_critical=B12A2F
+
+#fuel_style can either be animated or plain
+show_fuel=true
+fuel_show_in_scanner=true
+fuel_show_in_cruisemode=true
+fuel_style=animated
+label_ship_fuel=FUEL
+label_ship_cargo=CARGO
+label_ship_repairitem=PARTS
+show_ship_cargo=true
+show_ship_repairitem=true
+
+fuel_x=0
+fuel_y=-400
+fuel_width=300
+
+# DeimosWave Options
+show_chatter=true
+chatter_show_in_cruisemode=true
+chatter_freq_min=45
+chatter_freq_max=120
+chatter_background_alpha=0.4
+chatter_show_in_scanner=true
+chatter_x=-4
+chatter_y=-200
+chatter_width=300
+chatter_height=150
+chatter_color=C27A2C
