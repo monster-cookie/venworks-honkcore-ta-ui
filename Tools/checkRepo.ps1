@@ -21,9 +21,11 @@ foreach ($variant in $Global:Variants) {
     Exit
   }
 
-if ([System.IO.Directory]::Exists($variant.StagingFolderPath) && (Get-Item -Path $variant.StagingFolderPath).LinkType -ne "Junction") {
-    Write-Host -ForegroundColor Red "$($variant.VariantName) variant Staging folder is no longer a Junction. Please delete it and rerun the setupRepo script."
-    Exit
+  if ([System.IO.Directory]::Exists("$($variant.StagingFolderPath)")) {
+    if ((Get-Item -Path "$($variant.StagingFolderPath)").LinkType -ne "Junction") {
+      Write-Host -ForegroundColor Red "$($variant.VariantName) variant Staging folder is no longer a Junction. Please delete it and rerun the setupRepo script."
+      Exit
+    }
   }
 }
 

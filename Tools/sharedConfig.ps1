@@ -57,7 +57,7 @@ $Global:Variants = @(
 
     [ModuleVariant]::new(
         "Freestar Collective",
-        "./Staging-TC",
+        "./Staging-FC",
         "$ENV:MODULE_VARIANT_FC_PATH"
     )
 )
