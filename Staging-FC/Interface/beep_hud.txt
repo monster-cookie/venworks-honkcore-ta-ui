@@ -44,7 +44,7 @@ visible=never
 id=default.Crosshair
 target=default.Crosshair
 visibility_group=crosshair
-visible=weaponDrawn OR inVehicle
+visible=(suitHasBooted OR weaponDrawn OR inVehicle) AND NOT isAiming AND NOT inScanner
 color=F5F0E6
 
 
