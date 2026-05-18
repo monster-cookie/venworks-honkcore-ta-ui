@@ -1,4 +1,9 @@
-# Venworks - HONKCORE - Trackers Alliance UI
+# Venworks - HONKCORE - UI Themes
+
+## Version 1.0.4
+
+- ALL: Fixed the default cursor problem I hope. I hate random issues. :)
+- Crimson Fleet: Initial Release
 
 ## Version 1.0.3
 
