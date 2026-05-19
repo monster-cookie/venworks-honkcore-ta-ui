@@ -18,8 +18,7 @@ foreach ($variant in $Global:Variants) {
 
   if ([System.IO.Directory]::Exists("$($variant.StagingFolderPath)")) {
     if ((Get-Item -Path "$($variant.StagingFolderPath)").LinkType -eq "Junction") {
-      Write-Host -ForegroundColor Red "ERROR: This can only be ran on a new clone. Please make sure the $($variant.StagingFolderPath) directory is delete."
-      Exit
+      Continue
     }
   }
 

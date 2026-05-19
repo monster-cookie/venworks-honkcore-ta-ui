@@ -60,6 +60,12 @@ $Global:Variants = @(
         "./Staging-FC",
         "$ENV:MODULE_VARIANT_FC_PATH"
     )
+
+    [ModuleVariant]::new(
+        "Crimson Fleet",
+        "./Staging-CF",
+        "$ENV:MODULE_VARIANT_CF_PATH"
+    )
 )
 
 $Global:SharedConfigurationLoaded=$true
