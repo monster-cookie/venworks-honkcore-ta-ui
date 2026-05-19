@@ -1,10 +1,16 @@
 # Freestar Collective HUD palette (Venworks)
-#   Ivory          F5F0E6
-#   Badge Gold     D8A33A
-#   Dust Gold      F2C96B
-#   Desert Amber   C27A2C
-#   Marshal Red    B12A2F
-#   Leather Brown  2A1A12.
+#   Primary Foreground:       Ivory          F5F0E6
+#   Secondary Accent:         Badge Gold     D8A33A
+#   Primary Background:       Leather Brown  2A1A12
+#   Secondary Background:     Deep Leather   140C08
+#   Ternary Color:            Dust Gold      F2C96B
+#   Optional Color 1:         Desert Amber   C27A2C
+#   Optional Color 2:         Marshal Red    B12A2F
+#   Threshold Color Full:     Badge Gold     D8A33A
+#   Threshold Color Mid:      Dust Gold      F2C96B
+#   Threshold Color Low:      Desert Amber   C27A2C
+#   Threshold Color Critical: Alert Red      E03A2E
+#   Threshold Color Damage:   Marshal Red    B12A2F
 
 # Colors
 color_positive=D8A33A

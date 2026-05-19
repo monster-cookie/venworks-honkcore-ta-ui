@@ -1,14 +1,16 @@
 # Trackers Alliance HUD palette (Venworks)
-#   Off White       F5F4F5
-#   Warm Off White  EDE4CC
-#   Dark Navy       171B25
-#   Deep Panel      0E1118
-#   Dark Grey       2B2E36
-#   Blue Grey       456485
-#   Crimson         E41335
-#   Maroon          5C0B16
-#   Dark Maroon     2A0710
-#   Shadow          090A0E
+#   Primary Foreground:       Off White      F5F4F5
+#   Secondary Accent:         Warm Off White EDE4CC
+#   Primary Background:       Dark Navy      171B25
+#   Secondary Background:     Deep Panel     0E1118
+#   Ternary Color:            Dark Grey      2B2E36
+#   Optional Color 1:         Blue Grey      456485
+#   Optional Color 2:         Crimson        E41335
+#   Threshold Color Full:     Off White      F5F4F5
+#   Threshold Color Mid:      Blue Grey      456485
+#   Threshold Color Low:      Maroon         5C0B16
+#   Threshold Color Critical: Crimson        E41335
+#   Threshold Color Damage:   Crimson        E41335
 
 # Colors
 color_positive=456485
