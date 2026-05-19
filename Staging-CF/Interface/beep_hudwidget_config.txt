@@ -1,0 +1,97 @@
+# Crimson Fleet HUD palette (Venworks)
+#   Primary Foreground:       Bone White       F2E8D4
+#   Secondary Accent:         Aged Brass        B88A3A
+#   Primary Background:       Blackened Crimson 12070A
+#   Secondary Background:     Void Black        080405
+#   Ternary Color:            Charcoal Iron     2B2426
+#   Optional Color 1:         Dried Blood       5A0711
+#   Optional Color 2:         Bilge Maroon      240206
+#   Threshold Color Full:     Bone White        F2E8D4
+#   Threshold Color Mid:      Sea Verdigris     6F8A82
+#   Threshold Color Low:      Muted Blood       7C0B1A
+#   Threshold Color Critical: Dark Crimson      A90F22
+#   Threshold Color Damage:   Dark Crimson      A90F22
+
+# Colors
+color_positive=6F8A82
+color_negative=A90F22
+color_main=F2E8D4
+color_stats=F2E8D4
+color_combat=A90F22
+color_credits=B88A3A
+color_bar_critical=A90F22
+color_bar_low=5A0711
+color_bar_medium=6F8A82
+color_bar_full=F2E8D4
+
+# Labels
+label_hungry=HUNGRY
+label_thirsty=THIRSTY
+label_fed=SATIATED
+label_hydrated=HYDRATED
+label_enumbrance=KG
+
+font_main=$MAIN_Font_Bold
+font_semi=$NB_Grotesk_Semibold
+
+# Options
+show_title=true
+show_enemy_markers=true
+show_quest_markers=true
+show_credits=true
+show_dots=true
+show_time=true
+show_background=true
+background_alpha=0.4
+show_suit_bar=true
+show_suit_percent=true
+# show_encumbrance=bar all label
+show_encumbrance=all
+show_in_scanner=true
+suit_sound_threshold=1.0
+label_suit=S
+
+# Scaling
+scale=1.0
+fuel_scale=1.0
+chatter_scale=1.0
+
+# position offset, relative to watch
+info_x=0
+info_y=-150
+
+# Ship HUD
+color_fuel_background=12070A
+color_fuel_meter=F2E8D4
+color_fuel_full=F2E8D4
+color_fuel_mid=6F8A82
+color_fuel_low=5A0711
+color_fuel_critical=A90F22
+
+#fuel_style can either be animated or plain
+show_fuel=true
+fuel_show_in_scanner=true
+fuel_show_in_cruisemode=true
+fuel_style=animated
+label_ship_fuel=FUEL
+label_ship_cargo=CARGO
+label_ship_repairitem=PARTS
+show_ship_cargo=true
+show_ship_repairitem=true
+
+fuel_x=0
+fuel_y=-400
+fuel_width=300
+
+# DeimosWave Options
+show_chatter=true
+chatter_show_in_cruisemode=true
+chatter_freq_min=45
+chatter_freq_max=120
+chatter_background_alpha=0.4
+chatter_show_in_scanner=true
+chatter_x=-4
+chatter_y=-200
+chatter_width=300
+chatter_height=150
+chatter_color=A90F22

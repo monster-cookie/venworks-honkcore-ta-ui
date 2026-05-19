@@ -1,0 +1,934 @@
+# =============================================
+# HONKCORE - Dynamic Custom HUD Overhaul
+# =============================================
+# Crimson Fleet HUD palette (Venworks)
+#   Primary Foreground:       Bone White       F2E8D4
+#   Secondary Accent:         Aged Brass        B88A3A
+#   Primary Background:       Blackened Crimson 12070A
+#   Secondary Background:     Void Black        080405
+#   Ternary Color:            Charcoal Iron     2B2426
+#   Optional Color 1:         Dried Blood       5A0711
+#   Optional Color 2:         Bilge Maroon      240206
+#   Threshold Color Full:     Bone White        F2E8D4
+#   Threshold Color Mid:      Sea Verdigris     6F8A82
+#   Threshold Color Low:      Muted Blood       7C0B1A
+#   Threshold Color Critical: Dark Crimson      A90F22
+#   Threshold Color Damage:   Dark Crimson      A90F22
+#
+id=default
+ignore_suit_power=true
+color_theme=default
+skip_condition_colors=true
+color_full=F2E8D4
+color_mid=6F8A82
+color_low=7C0B1A
+color_critical=A90F22
+color_damage=A90F22
+glitch_interval_min=20
+glitch_interval_max=40
+glitch_duration=450
+glitch_color=F2E8D4
+glitch_color_alt=F2E8D4
+flicker_chance=0.005
+element_flicker_chance=0.005
+element_flicker_alpha=0.3
+scanline_spacing=3
+scanline_alpha=0.1
+scanline_speed=0.15
+panel_color=080405
+panel_cell=12
+panel_cell_offset=0.2
+
+
+## Default UI (Chronowatch)
+id=default.Chronowatch
+target=default.Chronowatch
+visible=never
+
+
+## Default UI (Crosshair)
+id=default.Crosshair
+target=default.Crosshair
+visibility_group=crosshair
+visible=(suitHasBooted OR weaponDrawn OR inVehicle) AND NOT isAiming AND NOT inScanner
+color=F2E8D4
+
+
+## Default UI (Weapons) - NOTE THIS IS REQUIRED TO EXIT VEHICLE
+id=default.Weapons
+target=default.Weapons
+visible=inVehicle
+forceVisible=inVehicle
+scale=0.001
+
+
+## Default UI (Vehicle)
+id=default.Vehicle
+target=default.Vehicle
+visible=inVehicle
+
+
+## Default UI (SneakMeter)
+id=default.SneakMeter
+target=default.SneakMeter
+visible=isSneaking
+
+
+## Default UI (HitIndicator)
+id=default.HitIndicator
+target=default.HitIndicator
+visible=inCombat
+
+
+## Default UI (EnemyHealth)
+id=default.EnemyHealth
+target=default.EnemyHealth
+visible=weaponDrawn OR inCombat
+
+
+## Default UI (QuestMarkers)
+id=default.QuestMarkers
+target=default.QuestMarkers
+visible=always
+
+
+## BOOT Sequence (Shows when suit goes from no power -> powered)
+id=boot
+target=bootsequence
+anchor=CC
+alpha_bg=0.3
+alpha_border=0.8
+width=500
+height=200
+scanlines=true
+border_style=random
+border_seed=VB-782.3//A1
+color_bg=12070A
+color_border=F2E8D4
+color_label=F2E8D4
+glitch=true
+element_flicker=true
+panel=true
+
+
+## My Heath Bar
+id=custom.healthbar
+target=dynamicmeter
+visible=suitHasBooted AND NOT (inSpaceship AND isAiming)
+style=triangles
+tri_offset=3
+tri_gap=0
+anchor=BL
+width=250
+height=20
+x=0
+y=142
+value={player.health}
+max={player.maxHealth}
+color_primary=!F2E8D4
+alpha_primary=0.9
+color_secondary=!2B2426
+alpha_secondary=0.2
+use_threshold_color=false
+alpha_bg=0.5
+element_flicker=false
+color_full=!F2E8D4
+color_mid=!6F8A82
+color_low=!5A0711
+color_critical=!A90F22
+perspective_x=-12
+perspective_y=-25
+scanlines=true
+scanline_alpha=0.12
+scanline_spacing=3
+
+
+## My Oxygen Bar
+id=custom.oxygenbar
+target=dynamicmeter
+visible=suitHasBooted AND NOT (inSpaceship AND isAiming)
+style=parallelograms
+skew=auto
+seg_width=auto
+anchor=BL
+width=250
+height=20
+x=0
+y=112
+value={player.o2}
+max={player.maxO2}
+color_primary=!6F8A82
+alpha_primary=0.9
+color_secondary=!2B2426
+alpha_secondary=0.2
+use_threshold_color=false
+color_full=!6F8A82
+color_mid=!51665F
+color_low=!5A0711
+color_critical=!A90F22
+perspective_x=-12
+perspective_y=-25
+scanlines=true
+scanline_alpha=0.12
+scanline_spacing=3
+
+
+## My Inventory Bar
+id=custom.inventorybar
+target=dynamicmeter
+visible=suitHasBooted AND NOT (inSpaceship AND isAiming)
+style=bar
+skew_start=0
+skew_end=0
+skew_fill=0
+anchor=BL
+width=250
+height=20
+x=0
+y=82
+value={player.encumbrance}
+max={player.maxEncumbrance}
+color_primary=!6F8A82
+alpha_primary=0.9
+color_secondary=!2B2426
+alpha_secondary=0.2
+use_threshold_color=false
+color_full=!A90F22
+color_mid=!7C0B1A
+color_low=!6F8A82
+color_critical=!F2E8D4
+perspective_x=-12
+perspective_y=-25
+scanlines=true
+scanline_alpha=0.12
+scanline_spacing=3
+
+
+## Weapon Display (Holstered)
+id=weapon.holstered
+target=player.weapon
+visible=NOT weaponDrawn AND NOT thirdPerson
+anchor=BL
+x=-20
+y=315
+width=40
+height=40
+fit_in_rect=CR
+tint=A90F22
+alpha=0.4
+perspective_x=-12
+perspective_y=-25
+
+id=weapon_name.holstered
+target=label
+visible=NOT weaponDrawn AND NOT thirdPerson
+text={player.weapon}
+font=$NB_Grotesk_Bold
+size=14
+color=F2E8D4
+shadow_color=!030203
+shadow=true
+alpha_background=0
+anchor=BL
+alpha=0.4
+x=32
+y=336
+perspective_x=-12
+perspective_y=-25
+
+id=ammolabel.suit.holstered
+target=label
+visible=NOT weaponDrawn AND NOT thirdPerson
+text={player.clip} / {player.ammo} | {player.explosiveCount}
+font=$NB_Grotesk_Bold
+size=20
+color=F2E8D4
+shadow_color=!030203
+shadow=true
+alpha=0.4
+alpha_background=0
+anchor=BL
+x=32
+y=314
+perspective_x=-12
+perspective_y=-25
+
+
+## Weapon Display (Drawn)
+id=weapon.drawn
+target=player.weapon
+visible=weaponDrawn AND NOT thirdPerson
+anchor=BL
+x=-20
+y=315
+width=40
+height=40
+fit_in_rect=CL
+tint=A90F22
+alpha=1
+perspective_x=-12
+perspective_y=-25
+
+id=weapon_name.drawn
+target=label
+visible=weaponDrawn AND NOT thirdPerson
+text={player.weapon}
+font=$NB_Grotesk_Bold
+size=14
+color=F2E8D4
+shadow_color=!030203
+shadow=true
+alpha_background=0
+anchor=BL
+x=32
+y=336
+perspective_x=-12
+perspective_y=-25
+
+id=ammolabel.drawn
+target=label
+visible=weaponDrawn AND NOT thirdPerson
+text={player.clip} / {player.ammo} | {player.explosiveCount}
+font=$NB_Grotesk_Bold
+size=20
+color=F2E8D4
+shadow_color=!030203
+shadow=true
+alpha_background=0
+anchor=BL
+x=32
+y=314
+perspective_x=-12
+perspective_y=-25
+
+
+## Info Widget
+id=HUD Info Widget
+target=player.info
+anchor=BL
+visible=suitHasBooted AND NOT (inSpaceship AND isAiming)
+tint=F2E8D4
+theme_colors=false
+x=-20
+y=190
+width=320
+border_style=random
+show_seed_label=false
+border_seed=TYO-451.6//B6
+corner_size=14
+scanlines=true
+glitch=true
+alpha_bg=0.3
+color_bg=12070A
+color_border=F2E8D4
+perspective_x=-12
+perspective_y=-25
+
+
+## Heading & Environmental Azimuth Detection Readout // HEADR
+id=HEADR
+target=HEADR
+anchor=TC
+visible=always
+x=0
+y=20
+width=800
+height=20
+fov=90
+show_enemies=true
+show_quests=true
+show_markers=true
+show_bar=false
+show_heading=none
+alpha_heading=0
+show_cardinal=true
+alpha_cardinal=0.8
+color_bar=030203
+alpha_bar=0.2
+show_line=true
+color_line=F2E8D4
+alpha_line=0.2
+line_thickness=2
+color_enemies=A90F22
+color_quests=F2E8D4
+color_markers=6F8A82
+marker_size=22
+border_style=none
+corner_size=4
+update_interval=0.03
+color_border=F2E8D4
+alpha_border=0.4
+glitch=false
+flicker=true
+
+
+## Multiband Asynchronous Preemptive Radioscanner // MAPR
+id=MAPR
+target=MAPR
+anchor=TL
+visible=suitHasBooted
+x=90
+y=-10
+width=150
+height=150
+min_distance=20
+max_distance=150
+show_range_bar=true
+range_bar_width=6
+color_bg=12070A
+alpha_bg=0.292
+color_border=F2E8D4
+alpha_border=0.8
+update_interval=0.05
+color_player=B88A3A
+color_enemies=A90F22
+color_quests=F2E8D4
+color_markers=6F8A82
+marker_size=6
+border_style=random
+corner_size=14
+scanlines=true
+flicker=true
+glitch=true
+element_flicker=true
+show_grid=true
+grid_rings=3
+grid_spokes=8
+alpha_grid=0.12
+show_sweep=true
+sweep_speed=0.25
+sweep_trail=60
+alpha_sweep=0.45
+show_stars=true
+star_count=8
+show_target_lock=true
+target_lock_mode=offset
+target_lock_max_offset=2
+color_target_lock=A90F22
+alpha_target_lock=0.9
+perspective_x=0
+perspective_y=0
+
+
+## Thermal Airborne Corrosion Radiation // TACR
+id=TACR
+target=TACR
+visible=NOT isAiming
+anchor=BR
+x=50
+y=50
+perspective_x=-12
+perspective_y=25
+width=360
+height=120
+color_bg=12070A
+color_title=F2E8D4
+color_label=F2E8D4
+color_active=A90F22
+color_inactive=6F8A82
+color_threat_bar=A90F22
+color_scan=6F8A82
+color_bars=2B2426
+border_style=random
+border_seed=VB-426.2//E5
+corner_size=14
+color_border=F2E8D4
+alpha_border=0.55
+alpha_bg=0.3
+scanlines=true
+glitch=true
+
+
+## BOOST Jetpack fuel display
+id=boost
+target=player.boost
+visible=inVehicle OR (NOT isAiming AND (suitHasBooted AND NOT thirdPerson))
+anchor=BR
+x=45
+y=185
+width=360
+height=60
+alpha_bg=0
+color_primary=F2E8D4
+color_border=F2E8D4
+perspective_x=-12
+perspective_y=25
+border_style=none
+flicker=true
+element_flicker=true
+
+
+## Dynamic warnings (Health low)
+id=health.warning
+target=text.animated
+visible=suitHasBooted AND healthPercent<25
+anchor=VCC
+x=-400
+y=-40
+text=VITALS.low
+anim_style=arrows
+color_anim=!A90F22
+color_bg=!5A0711
+color=!F2E8D4
+anim_speed=1.5
+width=160
+height=30
+border_style=random
+corner_size=14
+color_border=!A90F22
+alpha_border=0.55
+alpha_bg=0.3
+scanlines=true
+glitch=true
+blink=true
+blink_on=600
+blink_off=200
+glitch_color=7C0B1A
+glitch_color_alt=6F8A82
+
+## Dynamic warnings (O2 low)
+id=o2.warning
+target=text.animated
+visible=suitHasBooted AND (o2Percent<25 OR co2Percent>75)
+anchor=VCC
+x=-400
+y=40
+text=O2.critical
+anim_style=arrows
+color_anim=!A90F22
+color_bg=!5A0711
+color=!F2E8D4
+anim_speed=1.5
+width=160
+height=30
+border_style=random
+corner_size=14
+color_border=!A90F22
+alpha_border=0.55
+alpha_bg=0.3
+scanlines=true
+glitch=true
+blink=true
+blink_on=600
+blink_off=200
+glitch_color=7C0B1A
+glitch_color_alt=6F8A82
+
+
+## Suit Power Indicators
+id=suit.online
+target=text.animated
+anchor=TL
+visible=suitHasBooted
+width=200
+height=30
+x=-55
+y=150
+text=SUIT.systems ONLINE
+anim_style=cursor
+size=14
+color=F2E8D4
+color_anim=6F8A82
+color_bg=12070A
+border_style=none
+alpha_bg=0
+flicker=false
+
+id=suit.offline
+target=text.animated
+anchor=TL
+visible=suitHasBooted AND NOT suitHasPower
+width=200
+height=30
+x=-55
+y=150
+text=SUIT.systems OFFLINE
+anim_style=cursor
+size=14
+color=F2E8D4
+color_anim=A90F22
+color_bg=12070A
+border_style=none
+alpha_bg=0
+flicker=false
+
+id=suit.battery
+target=dynamicmeter
+visible=suitHasBooted
+style=parallelograms
+anchor=TL
+width=140
+height=16
+x=-55
+y=185
+value={player.suitPower}
+max=1
+color_primary=F2E8D4
+color_secondary=080405
+use_threshold_color=false
+alpha_bg=0.5
+element_flicker=true
+
+
+## Scanner stuff, purely cosmetic // SCANR
+id=scanner.scanning
+target=text.animated
+visible=inScanner
+anchor=TC
+width=240
+height=30
+x=0
+y=140
+text=SCANNING
+anim_style=arrows
+color=F2E8D4
+color_anim=6F8A82
+color_bg=#12070A
+anim_speed=1.5
+border_style=random
+corner_size=14
+color_border=F2E8D4
+alpha_border=0.55
+alpha_bg=0.3
+scanlines=true
+glitch=true
+
+id=scanner.offline
+target=label
+text=SUIT//POWER OFFLINE
+font=$NB_Grotesk_Bold
+size=24
+color=#A90F22
+alpha_background=0
+anchor=VCC
+x=0
+y=-200
+visible=inScanner AND NOT suitHasPower
+rotation=0
+
+id=scanner.offline2
+target=label
+text=readings inaccurate
+font=$NB_Grotesk_Bold
+size=16
+color=A90F22
+alpha_background=0
+anchor=VCC
+x=0
+y=-175
+visible=inScanner AND NOT suitHasPower
+rotation=0
+
+id=scanner.codepanel
+target=text.animated
+visible=inScanner AND suitHasBooted
+anchor=VCC
+width=220
+height=160
+x=500
+y=-120
+text=SYS.SCAN
+anim_style=asm
+anim_seed=42
+color_bg=#12070A
+color=F2E8D4
+size=11
+border_style=random
+corner_size=14
+color_border=F2E8D4
+alpha_border=0.55
+alpha_bg=0.3
+scanlines=true
+glitch=true
+
+id=scanner.overlay
+target=scanner
+visible=inScanner AND suitHasBooted
+anchor=CC
+width=420
+height=420
+alpha_dim=0.3
+line_thickness=1.2
+flicker=true
+glitch=false
+element_flicker=true
+
+
+## Self-Propelled External Combat & Tactical Reconnaissance Probe // SPECTR
+# 3rd person view
+id=spectr.camframe.effect
+target=shape
+shape=rect
+visible=thirdPerson AND NOT inVehicle AND NOT inScanner
+anchor=VCC
+x=0
+y=-50
+color_fill=F2E8D4
+fill_alpha=0.02
+width=1000
+height=700
+stroke_width=0
+glitch=true
+glitch_interval_min=5
+glitch_interval_max=10
+
+id=spectr.camframe0
+target=shape
+shape=line
+visible=thirdPerson AND NOT inVehicle AND NOT inScanner
+anchor=VCC
+x=200
+y=-400
+x2=600
+y2=0
+stroke_width=1.5
+color_stroke=F2E8D4
+stroke_alpha=0.9
+
+id=spectr.camframe2
+target=shape
+shape=line
+visible=thirdPerson AND NOT inVehicle AND NOT inScanner
+anchor=VCC
+x=500
+y=-299
+x2=0
+y2=200
+stroke_width=2
+color_stroke=F2E8D4
+stroke_alpha=0.9
+
+id=spectr.camframe3
+target=shape
+shape=line
+visible=thirdPerson AND NOT inVehicle AND NOT inScanner
+anchor=VCC
+x=0
+y=300
+x2=640
+y2=0
+stroke_width=2
+color_stroke=F2E8D4
+stroke_alpha=0.9
+
+id=spectr.camframe4
+target=shape
+shape=line
+visible=thirdPerson AND NOT inVehicle AND NOT inScanner
+anchor=VCC
+x=500
+y=250
+x2=0
+y2=100
+stroke_width=2
+color_stroke=F2E8D4
+stroke_alpha=0.9
+
+id=spectr.camframe5
+target=shape
+shape=line
+visible=thirdPerson AND NOT inVehicle AND NOT inScanner
+anchor=VCC
+x=475
+y=300
+x2=50
+y2=0
+stroke_width=2
+color_stroke=F2E8D4
+stroke_alpha=0.9
+
+id=spectr.recbommel
+target=shape
+shape=circle
+visible=thirdPerson AND NOT inVehicle AND NOT inScanner
+anchor=VCC
+x=-500
+y=-400
+stroke_width=0
+fill_alpha=1
+color_fill=!A90F22
+width=20
+height=20
+blink=true
+
+id=spectr.reclabel
+target=label
+visible=thirdPerson AND NOT inVehicle AND NOT inScanner
+anchor=VCC
+text=REC
+font=$NB_Grotesk_Bold
+size=14
+color=!F2E8D4
+alpha_background=0
+x=-470
+y=-400
+
+id=spectr.label
+target=label
+visible=thirdPerson AND NOT inVehicle AND NOT inScanner
+anchor=VCC
+text=/// SPECTR ///
+font=$NB_Grotesk_Bold
+size=14
+color=!F2E8D4
+alpha_background=0
+x=385
+y=300
+
+id=spectr.label2
+target=label
+visible=thirdPerson AND NOT inVehicle AND NOT inScanner
+anchor=VCC
+text=Self-Propelled External Combat & Tactical Reconnaissance Probe
+font=$NB_Grotesk_Bold
+size=9
+color=!F2E8D4
+alpha_background=0
+x=370
+y=312
+
+
+## Vignette on low health
+id=vignette
+target=vignette
+visible=NOT thirdPerson
+ignore_gamestate_for_visibility=true
+anchor=CC
+vignette_hp_start=60
+vignette_alpha_max=0.95
+vignette_scale_min=0.95
+vignette_color=240206
+vignette_outer_w=6000
+vignette_outer_h=3000
+vignette_padding_y=100
+vignette_gradient_ratio=200
+dizzy=false
+dizzy_color=5A0711
+dizzy_speed_max=35
+dizzy_offset=120
+pulse=true
+pulse_alpha_max=0.7
+pulse_freq=800
+
+
+## Quick Bar
+id=quickbar
+target=quickbar
+visible=suitHasBooted AND NOT isAiming AND NOT thirdPerson
+anchor=TR
+height=624
+width=48
+x=-50
+y=-25
+show_slots=1,2,3,4,5,6,7,8,9,10,11,12,13
+hotkeys=1,2,3,4,5,6,7,8,9,-.=,[,]
+show_name=Weapon,Power,Meds,Food,Grenade
+long_item_names=64
+
+
+## Crimson Fleet Icon
+## 
+## DO NOT ATTEMPT TO MOVE OR RESIZE THESE. Until the underling renders allows for SVG grouping so they share the same coordinate space.
+##
+
+# Core skull
+id=cficon.skull
+target=shape
+shape=path
+visible=always
+anchor=TL
+height=128
+width=128
+x=0
+y=0
+stroke_alpha=0
+stroke_width=0
+color_fill=!F2E8D4
+fill_alpha=1
+path=M400,117 L623,252 L623,504 L549,548 L549,596 L400,686 L252,596 L252,548 L178,504 L178,252 Z
+path_scale=0.25
+
+# Left eye cutout
+id=cficon.eye.left
+target=shape
+shape=path
+visible=always
+anchor=TL
+height=128
+width=128
+x=0
+y=75
+stroke_alpha=0
+stroke_width=0
+color_fill=!030203
+fill_alpha=1
+path=M307,397 L362,430 L362,481 L307,514 L252,481 L252,430 Z
+path_scale=0.16
+
+# Right eye cutout
+id=cficon.eye.right
+target=shape
+shape=path
+visible=always
+anchor=TL
+height=128
+width=128
+x=-10
+y=43
+stroke_alpha=0
+stroke_width=0
+color_fill=!030203
+fill_alpha=1
+path=M495,397 L550,430 L550,481 L495,514 L440,481 L440,430 Z
+path_scale=0.16
+
+# Nose cutout
+id=cficon.nose
+target=shape
+shape=path
+visible=always
+anchor=TL
+height=128
+width=128
+x=-10
+y=43
+stroke_alpha=0
+stroke_width=0
+color_fill=!030203
+fill_alpha=1
+path=M400,519 L444,544 L444,600 L400,571 L356,600 L356,544 Z
+path_scale=0.16
+
+# Outer icon hexes
+id=cficon.hexes
+target=shape
+shape=path
+visible=always
+anchor=TL
+height=128
+width=128
+x=-10
+y=43
+stroke_alpha=0
+stroke_width=0
+color_fill=!F2E8D4
+fill_alpha=1
+path=M157,164 L179,177 L179,203 L157,216 L135,203 L135,177 Z M643,164 L665,177 L665,203 L643,216 L621,203 L621,177 Z M157,536 L179,549 L179,575 L157,588 L135,575 L135,549 Z M643,536 L665,549 L665,575 L643,588 L621,575 L621,549 Z
+path_scale=0.16
+
+# Icon Separator
+id=taicon.separator
+target=shape
+shape=path
+visible=always
+anchor=TL
+height=200
+width=90
+x=70
+y=-25
+stroke_alpha=0
+stroke_width=0
+color_fill=!E41335
+fill_alpha=1
+path=M61.973,11.613 L44,29.586 L44,170.414 L61.973,188.387 L63.387,186.973 L46,169.586 L46,30.414 L63.387,13.027 Z
+path_scale=1
