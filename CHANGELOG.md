@@ -1,5 +1,9 @@
 # Venworks - HONKCORE - UI Themes
 
+## Version 1.0.5
+
+- ALL: Support for Hud Info Widget 1.3.5
+
 ## Version 1.0.4
 
 - ALL: Fixed the default cursor problem I hope. I hate random issues. :)

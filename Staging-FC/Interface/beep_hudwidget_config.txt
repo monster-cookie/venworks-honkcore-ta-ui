@@ -12,7 +12,7 @@
 #   Threshold Color Critical: Alert Red      E03A2E
 #   Threshold Color Damage:   Marshal Red    B12A2F
 
-# Colors
+## Colors
 color_positive=D8A33A
 color_negative=B12A2F
 color_main=D8A33A
@@ -30,11 +30,30 @@ label_thirsty=THIRSTY
 label_fed=SATIATED
 label_hydrated=HYDRATED
 label_enumbrance=KG
+label_suit=S
+label_ship_fuel=FUEL
+label_ship_cargo=CARGO
+label_ship_repairitem=PARTS
 
+## Scaling
+scale=1.0
+fuel_scale=1.0
+chatter_scale=1.0
+
+## Fonts
 font_main=$MAIN_Font_Bold
 font_semi=$NB_Grotesk_Semibold
 
-# Options
+# Need to press this in addition to E to get up from the pilot seat inflight 
+# Great added feature lost many a battle cause I stood up for no reason lol
+getup_modifier=alt
+
+## HUD Info Widget
+
+# position offset, relative to watch
+info_x=0
+info_y=-150
+
 show_title=true
 show_enemy_markers=true
 show_quest_markers=true
@@ -48,18 +67,10 @@ show_suit_percent=true
 show_encumbrance=all
 show_in_scanner=true
 suit_sound_threshold=1.0
-label_suit=S
 
-# Scaling
-scale=1.0
-fuel_scale=1.0
-chatter_scale=1.0
 
-# position offset, relative to watch
-info_x=0
-info_y=-150
+## Ship HUD
 
-# Ship HUD
 color_fuel_background=2A1A12
 color_fuel_meter=F5F0E6
 color_fuel_full=D8A33A
@@ -67,20 +78,30 @@ color_fuel_mid=F2C96B
 color_fuel_low=C27A2C
 color_fuel_critical=B12A2F
 
-#fuel_style can either be animated or plain
+# Fuel Bar
 show_fuel=true
+fuel_attach_to=global
 fuel_show_in_scanner=true
 fuel_show_in_cruisemode=true
 fuel_style=animated
-label_ship_fuel=FUEL
-label_ship_cargo=CARGO
-label_ship_repairitem=PARTS
 show_ship_cargo=true
 show_ship_repairitem=true
 
 fuel_x=0
 fuel_y=-400
 fuel_width=300
+fuel_height=20
+
+fuel_threshold_crit=0.15
+fuel_threshold_low=0.3
+fuel_threshold_med=0.5
+
+fuel_background=true
+fuel_background_x=0
+fuel_background_y=0
+fuel_background_w=300
+fuel_background_h=70
+fuel_background_alpha=0.3
 
 # DeimosWave Options
 show_chatter=true
