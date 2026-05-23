@@ -2,7 +2,7 @@
 
 ## Version 1.0.5
 
-- ALL: Support for Hud Info Widget 1.3.5
+- ALL: Support for Hud Info Widget 1.5.3
 
 ## Version 1.0.4
 
