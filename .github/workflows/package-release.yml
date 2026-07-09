@@ -13,9 +13,8 @@ permissions:
 #
 # Using these instead of secrets cause they are not secret and shouldn't be hidden in the logs.
 #
-# That being said some repository secrets are required but only if env.UPLOAD_TO_NEXUSMODS is true:
 #   - NEXUSMODS_API_KEY the API key to use see https://www.nexusmods.com/settings/api-keys use the developer API key at the bottom of the page
-#   - NEXUSMODS_FILE_ID the FILE ID of to replace in the Mod's Files section:
+#   - NEXUSMODS_FILE_ID_FC, NEXUSMODS_FILE_ID_CF, and NEXUSMODS_FILE_ID_TA the FILE ID of to replace in the Mod's Files section:
 #       To get a file ID to use in this action, you need to have created a mod page on Nexus Mods and uploaded at least one file. The file ID
 #       can be found by checking the "API Info" option in the Files tab of the public-facing mod page, or in the edit menu of the Manage Files page.
 #
@@ -345,8 +344,8 @@ jobs:
       - name: Upload Freestar Collective release to Nexus Mods
         uses: Nexus-Mods/upload-action@v1.0.0-beta.8
         with:
-          api_key: ${{ secrets.NEXUSMODS_API_KEY }}
-          file_id: ${{ vars.NEXUSMODS_FILE_ID_FC }}
+          api_key: ${{ env.NEXUSMODS_API_KEY }}
+          file_id: ${{ env.NEXUSMODS_FILE_ID_FC }}
           filename: ${{ steps.release-package.outputs.fc_path }}
           version: ${{ env.PACKAGE_VERSION }}
           category: ${{ env.NEXUSMODS_CATEGORY }}
@@ -359,8 +358,8 @@ jobs:
       - name: Upload Crimson Fleet release to Nexus Mods
         uses: Nexus-Mods/upload-action@v1.0.0-beta.8
         with:
-          api_key: ${{ secrets.NEXUSMODS_API_KEY }}
-          file_id: ${{ vars.NEXUSMODS_FILE_ID_CF }}
+          api_key: ${{ env.NEXUSMODS_API_KEY }}
+          file_id: ${{ env.NEXUSMODS_FILE_ID_CF }}
           filename: ${{ steps.release-package.outputs.cf_path }}
           version: ${{ env.PACKAGE_VERSION }}
           category: ${{ env.NEXUSMODS_CATEGORY }}
@@ -373,8 +372,8 @@ jobs:
       - name: Upload Trackers Alliance release to Nexus Mods
         uses: Nexus-Mods/upload-action@v1.0.0-beta.8
         with:
-          api_key: ${{ secrets.NEXUSMODS_API_KEY }}
-          file_id: ${{ vars.NEXUSMODS_FILE_ID_TA }}
+          api_key: ${{ env.NEXUSMODS_API_KEY }}
+          file_id: ${{ env.NEXUSMODS_FILE_ID_TA }}
           filename: ${{ steps.release-package.outputs.ta_path }}
           version: ${{ env.PACKAGE_VERSION }}
           category: ${{ env.NEXUSMODS_CATEGORY }}
