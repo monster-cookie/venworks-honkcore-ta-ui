@@ -1,5 +1,9 @@
 # Venworks - HONKCORE - UI Themes
 
+## Unreleased
+
+- ALL: Removing SPECTR it causes issues with ladders and workbenches. Well I loved it for the immersion when in third person a lot it wears on you. I can probably be talked into making a second version of each theme with it but for now it goes.
+
 ## Version 1.0.5
 
 - ALL: Support for Hud Info Widget 1.5.3
