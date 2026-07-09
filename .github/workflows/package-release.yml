@@ -1,0 +1,385 @@
+name: Package HONKCORE Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+###############################################################################
+# CONFIG: Update these for this creation.
+#
+# Using these instead of secrets cause they are not secret and shouldn't be hidden in the logs.
+#
+# That being said some repository secrets are required but only if env.UPLOAD_TO_NEXUSMODS is true:
+#   - NEXUSMODS_API_KEY the API key to use see https://www.nexusmods.com/settings/api-keys use the developer API key at the bottom of the page
+#   - NEXUSMODS_FILE_ID the FILE ID of to replace in the Mod's Files section:
+#       To get a file ID to use in this action, you need to have created a mod page on Nexus Mods and uploaded at least one file. The file ID
+#       can be found by checking the "API Info" option in the Files tab of the public-facing mod page, or in the edit menu of the Manage Files page.
+#
+###############################################################################
+env:
+  NEXUSMODS_CATEGORY: main
+  NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
+
+  NEXUS_DISPLAY_NAME_FC: "Venworks - HONKCORE - Freestar Collective UI"
+  NEXUSMODS_FILE_ID_FC: ${{ secrets.NEXUSMODS_FILE_ID_FC }}
+
+  NEXUS_DISPLAY_NAME_CF: "Venworks - HONKCORE - Crimson Fleet UI"
+  NEXUSMODS_FILE_ID_CF: ${{ secrets.NEXUSMODS_FILE_ID_CF }}
+
+  NEXUS_DISPLAY_NAME_TA: "Venworks - HONKCORE - Trackers Alliance UI"
+  NEXUSMODS_FILE_ID_TA: ${{ secrets.NEXUSMODS_FILE_ID_TA }}
+
+
+jobs:
+  validate-tag-source:
+    name: Validate Tag Source
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.validate.outputs.version }}
+    steps:
+      - name: Verify tag and master HEAD
+        id: validate
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_CREATED: ${{ github.event.created }}
+          TAG_NAME: ${{ github.ref_name }}
+          TAG_SHA: ${{ github.sha }}
+        run: |
+          if [ "$TAG_CREATED" != "true" ]; then
+            echo "Release tag '$TAG_NAME' was updated instead of newly created."
+            exit 1
+          fi
+
+          if [[ ! "$TAG_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Release tag '$TAG_NAME' must use the vX.Y.Z format."
+            exit 1
+          fi
+
+          MASTER_SHA="$(gh api "repos/${{ github.repository }}/commits/master" --jq '.sha')"
+          if [ "$TAG_SHA" != "$MASTER_SHA" ]; then
+            echo "Tag is not on the current master HEAD."
+            echo "Tag SHA: $TAG_SHA"
+            echo "Master SHA: $MASTER_SHA"
+            exit 1
+          fi
+
+          echo "version=${TAG_NAME#v}" >> "$GITHUB_OUTPUT"
+
+  package-release:
+    name: Package Release
+    needs: validate-tag-source
+    runs-on: ubuntu-latest
+    env:
+      PACKAGE_VERSION: ${{ needs.validate-tag-source.outputs.version }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          lfs: true
+
+      - name: Prepare release packages
+        id: package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+          $releaseRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts/release'
+          New-Item -ItemType Directory -Force -Path $releaseRoot | Out-Null
+
+          $variants = @(
+            [pscustomobject]@{
+              Key = 'FC'
+              DisplayName = $env:NEXUS_DISPLAY_NAME_FC
+              SourceFolder = 'Staging-FC'
+              ZipName = "$($env:NEXUS_DISPLAY_NAME_FC).zip"
+            },
+            [pscustomobject]@{
+              Key = 'CF'
+              DisplayName = $env:NEXUS_DISPLAY_NAME_CF
+              SourceFolder = 'Staging-CF'
+              ZipName = "$($env:NEXUS_DISPLAY_NAME_CF).zip"
+            },
+            [pscustomobject]@{
+              Key = 'TA'
+              DisplayName = $env:NEXUS_DISPLAY_NAME_TA
+              SourceFolder = 'Staging-TA'
+              ZipName = "$($env:NEXUS_DISPLAY_NAME_TA).zip"
+            }
+          )
+
+          foreach ($variant in $variants) {
+            $sourcePath = Join-Path $env:GITHUB_WORKSPACE $variant.SourceFolder
+            if (-not [System.IO.Directory]::Exists($sourcePath)) {
+              throw "Required staging folder '$($variant.SourceFolder)' was not found."
+            }
+
+            $sourceFiles = @(Get-ChildItem -LiteralPath $sourcePath -File -Recurse -Force)
+            if ($sourceFiles.Count -eq 0) {
+              throw "Required staging folder '$($variant.SourceFolder)' does not contain any files."
+            }
+
+            $zipPath = Join-Path $releaseRoot $variant.ZipName
+            if ([System.IO.File]::Exists($zipPath)) {
+              Remove-Item -LiteralPath $zipPath -Force
+            }
+
+            Write-Host "Creating $($variant.DisplayName) from $($variant.SourceFolder)."
+            [System.IO.Compression.ZipFile]::CreateFromDirectory($sourcePath, $zipPath)
+          }
+
+          $blockedTopLevelFolders = @('Staging-FC', 'Staging-CF', 'Staging-TA')
+          foreach ($variant in $variants) {
+            $zipPath = Join-Path $releaseRoot $variant.ZipName
+            if (-not [System.IO.File]::Exists($zipPath)) {
+              throw "Generated archive '$zipPath' was not found."
+            }
+
+            $zipFile = Get-Item -LiteralPath $zipPath
+            if ($zipFile.Length -le 0) {
+              throw "Generated archive '$zipPath' is empty."
+            }
+
+            $archive = [System.IO.Compression.ZipFile]::OpenRead($zipPath)
+            try {
+              if ($archive.Entries.Count -eq 0) {
+                throw "Generated archive '$zipPath' does not contain any entries."
+              }
+
+              Write-Host "Contents of $($variant.ZipName):"
+              foreach ($entry in $archive.Entries) {
+                Write-Host "  $($entry.FullName)"
+
+                $firstSegment = ($entry.FullName -split '/')[0]
+                if ($blockedTopLevelFolders -contains $firstSegment) {
+                  throw "Archive '$($variant.ZipName)' contains staging folder '$firstSegment' at the archive root."
+                }
+              }
+            }
+            finally {
+              $archive.Dispose()
+            }
+          }
+
+          "release_root=$releaseRoot" >> $env:GITHUB_OUTPUT
+
+      - name: Upload release package artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: honkcore-release-${{ env.PACKAGE_VERSION }}
+          path: artifacts/release/*.zip
+          if-no-files-found: error
+
+  create-release:
+    name: Create GitHub and Nexus Releases
+    needs:
+      - validate-tag-source
+      - package-release
+    runs-on: ubuntu-latest
+    env:
+      PACKAGE_VERSION: ${{ needs.validate-tag-source.outputs.version }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Download release package artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: honkcore-release-${{ env.PACKAGE_VERSION }}
+          path: ./artifacts/release
+
+      - name: Extract release notes
+        id: release-notes
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $version = $env:PACKAGE_VERSION
+          $changeLogPath = Join-Path $env:GITHUB_WORKSPACE 'CHANGELOG.md'
+          $releaseNotesPath = Join-Path $env:GITHUB_WORKSPACE 'artifacts/release/release-notes.md'
+          $nexusDescriptionPath = Join-Path $env:GITHUB_WORKSPACE 'artifacts/release/nexus-description.bbcode'
+          $releaseNotes = "Release $version"
+
+          if ([System.IO.File]::Exists($changeLogPath)) {
+            $content = Get-Content -LiteralPath $changeLogPath -Raw
+            $escapedVersion = [Regex]::Escape($version)
+            $pattern = "(?ms)^## Version $escapedVersion\s*.*?(?=^## Version \d+\.\d+\.\d+|\z)"
+            $match = [Regex]::Match($content, $pattern)
+
+            if ($match.Success) {
+              $releaseNotes = $match.Value.Trim()
+            }
+            else {
+              Write-Warning "Unable to find release notes in CHANGELOG.md for version $version. Using fallback release notes."
+            }
+          }
+          else {
+            Write-Warning "CHANGELOG.md was not found. Using fallback release notes."
+          }
+
+          [System.IO.File]::WriteAllText($releaseNotesPath, $releaseNotes)
+
+          $lines = $releaseNotes -split "\r?\n"
+          $bbcodeLines = [System.Collections.Generic.List[string]]::new()
+          $inList = $false
+
+          foreach ($line in $lines) {
+            if ($line -match '^\s*-\s+(.*)$') {
+              if (-not $inList) {
+                $bbcodeLines.Add('[list]')
+                $inList = $true
+              }
+
+              $bbcodeLines.Add("[*]$($Matches[1])")
+              continue
+            }
+
+            if ($inList) {
+              $bbcodeLines.Add('[/list]')
+              $inList = $false
+            }
+
+            if ($line -match '^##\s+(.+)$') {
+              $bbcodeLines.Add("[b]$($Matches[1])[/b]")
+              continue
+            }
+
+            if ($line -match '^###\s+(.+)$') {
+              $bbcodeLines.Add("[b]$($Matches[1])[/b]")
+              continue
+            }
+
+            $convertedLine = $line -replace '\*\*(.+?)\*\*', '[b]$1[/b]'
+            $convertedLine = $convertedLine -replace '\*(.+?)\*', '[i]$1[/i]'
+            $convertedLine = $convertedLine -replace '`(.+?)`', '$1'
+            $bbcodeLines.Add($convertedLine)
+          }
+
+          if ($inList) {
+            $bbcodeLines.Add('[/list]')
+          }
+
+          $nexusDescription = ($bbcodeLines -join [Environment]::NewLine).Trim()
+          [System.IO.File]::WriteAllText($nexusDescriptionPath, $nexusDescription)
+
+          "release_notes_path=$releaseNotesPath" >> $env:GITHUB_OUTPUT
+          "nexus_description_path=$nexusDescriptionPath" >> $env:GITHUB_OUTPUT
+
+          $delimiter = [Guid]::NewGuid().ToString()
+          "nexus_description<<$delimiter" >> $env:GITHUB_OUTPUT
+          $nexusDescription >> $env:GITHUB_OUTPUT
+          $delimiter >> $env:GITHUB_OUTPUT
+
+      - name: Resolve release packages
+        id: release-package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $packages = @{
+            fc = "$($env:NEXUS_DISPLAY_NAME_FC).zip"
+            cf = "$($env:NEXUS_DISPLAY_NAME_CF).zip"
+            ta = "$($env:NEXUS_DISPLAY_NAME_TA).zip"
+          }
+
+          foreach ($package in $packages.GetEnumerator()) {
+            $packagePath = Join-Path $env:GITHUB_WORKSPACE "artifacts/release/$($package.Value)"
+            if (-not [System.IO.File]::Exists($packagePath)) {
+              throw "Unable to find release package '$($package.Value)' for version $env:PACKAGE_VERSION."
+            }
+
+            $packageFile = Get-Item -LiteralPath $packagePath
+            if ($packageFile.Length -le 0) {
+              throw "Release package '$($package.Value)' is empty."
+            }
+
+            "$($package.Key)_path=$packagePath" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body_path: ${{ steps.release-notes.outputs.release_notes_path }}
+          fail_on_unmatched_files: true
+          overwrite_files: true
+          files: |
+            ${{ steps.release-package.outputs.fc_path }}
+            ${{ steps.release-package.outputs.cf_path }}
+            ${{ steps.release-package.outputs.ta_path }}
+
+      - name: Validate Nexus Mods upload configuration
+        shell: bash
+        run: |
+          if [ -z "$NEXUSMODS_API_KEY" ]; then
+            echo "NEXUSMODS_API_KEY is required for Nexus Mods uploads."
+            exit 1
+          fi
+
+          if [ -z "$NEXUSMODS_FILE_ID_FC" ]; then
+            echo "NEXUSMODS_FILE_ID_FC is required for the Freestar Collective upload."
+            exit 1
+          fi
+
+          if [ -z "$NEXUSMODS_FILE_ID_CF" ]; then
+            echo "NEXUSMODS_FILE_ID_CF is required for the Crimson Fleet upload."
+            exit 1
+          fi
+
+          if [ -z "$NEXUSMODS_FILE_ID_TA" ]; then
+            echo "NEXUSMODS_FILE_ID_TA is required for the Trackers Alliance upload."
+            exit 1
+          fi
+
+          echo "Ready to upload $NEXUS_DISPLAY_NAME_FC."
+          echo "Ready to upload $NEXUS_DISPLAY_NAME_CF."
+          echo "Ready to upload $NEXUS_DISPLAY_NAME_TA."
+
+      - name: Upload Freestar Collective release to Nexus Mods
+        uses: Nexus-Mods/upload-action@v1.0.0-beta.8
+        with:
+          api_key: ${{ secrets.NEXUSMODS_API_KEY }}
+          file_id: ${{ vars.NEXUSMODS_FILE_ID_FC }}
+          filename: ${{ steps.release-package.outputs.fc_path }}
+          version: ${{ env.PACKAGE_VERSION }}
+          category: ${{ env.NEXUSMODS_CATEGORY }}
+          display_name: ${{ env.NEXUS_DISPLAY_NAME_FC }}
+          archive_existing_version: true
+          primary_mod_manager_download: false
+          allow_mod_manager_download: true
+          description: ${{ steps.release-notes.outputs.nexus_description }}
+
+      - name: Upload Crimson Fleet release to Nexus Mods
+        uses: Nexus-Mods/upload-action@v1.0.0-beta.8
+        with:
+          api_key: ${{ secrets.NEXUSMODS_API_KEY }}
+          file_id: ${{ vars.NEXUSMODS_FILE_ID_CF }}
+          filename: ${{ steps.release-package.outputs.cf_path }}
+          version: ${{ env.PACKAGE_VERSION }}
+          category: ${{ env.NEXUSMODS_CATEGORY }}
+          display_name: ${{ env.NEXUS_DISPLAY_NAME_CF }}
+          archive_existing_version: true
+          primary_mod_manager_download: false
+          allow_mod_manager_download: true
+          description: ${{ steps.release-notes.outputs.nexus_description }}
+
+      - name: Upload Trackers Alliance release to Nexus Mods
+        uses: Nexus-Mods/upload-action@v1.0.0-beta.8
+        with:
+          api_key: ${{ secrets.NEXUSMODS_API_KEY }}
+          file_id: ${{ vars.NEXUSMODS_FILE_ID_TA }}
+          filename: ${{ steps.release-package.outputs.ta_path }}
+          version: ${{ env.PACKAGE_VERSION }}
+          category: ${{ env.NEXUSMODS_CATEGORY }}
+          display_name: ${{ env.NEXUS_DISPLAY_NAME_TA }}
+          archive_existing_version: true
+          primary_mod_manager_download: false
+          allow_mod_manager_download: true
+          description: ${{ steps.release-notes.outputs.nexus_description }}
