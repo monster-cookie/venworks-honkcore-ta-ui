@@ -2,7 +2,7 @@
 
 ## Version 1.0.6
 
-- ALL: Removing SPECTR it causes issues with ladders and workbenches. Well I loved it for the immersion when in third person a lot it wears on you. I can probably be talked into making a second version of each theme with it but for now it goes.
+- ALL: Removing SPECTR it causes issues with ladders and workbenches. While I loved it for the immersion when in third person a lot it wears on you. I can probably be talked into making a second version of each theme with it but for now it goes.
 
 ## Version 1.0.5
 
