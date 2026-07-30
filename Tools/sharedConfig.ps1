@@ -47,6 +47,7 @@ Write-Host -ForegroundColor Yellow "Starfield data folder is set to $ENV:STEAM_D
 Write-Host -ForegroundColor Yellow "`nModule Settings:"
 Write-Host -ForegroundColor Yellow "Trackers Alliance Variant Folder is $ENV:MODULE_VARIANT_TA_PATH"
 Write-Host -ForegroundColor Yellow "Freestar Collective Variant Folder is $ENV:MODULE_VARIANT_FC_PATH"
+Write-Host -ForegroundColor Yellow "Venworks Variant Folder is $ENV:MODULE_VARIANT_VWKS_PATH"
 
 $Global:Variants = @(
     [ModuleVariant]::new(
@@ -65,6 +66,12 @@ $Global:Variants = @(
         "Crimson Fleet",
         "./Staging-CF",
         "$ENV:MODULE_VARIANT_CF_PATH"
+    )
+
+    [ModuleVariant]::new(
+        "Venworks",
+        "./Staging-VWKS",
+        "$ENV:MODULE_VARIANT_VWKS_PATH"
     )
 )
 

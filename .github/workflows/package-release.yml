@@ -11,12 +11,14 @@ permissions:
 ###############################################################################
 # CONFIG: Update these for this creation.
 #
-# Using these instead of secrets cause they are not secret and shouldn't be hidden in the logs.
+# Store the API key as a repository Actions secret. Store file IDs as repository Actions variables because they are not sensitive.
 #
 #   - NEXUSMODS_API_KEY the API key to use see https://www.nexusmods.com/settings/api-keys use the developer API key at the bottom of the page
-#   - NEXUSMODS_FILE_ID_FC, NEXUSMODS_FILE_ID_CF, and NEXUSMODS_FILE_ID_TA the FILE ID of to replace in the Mod's Files section:
+#   - NEXUSMODS_FILE_ID_FC, NEXUSMODS_FILE_ID_CF, NEXUSMODS_FILE_ID_TA, and NEXUSMODS_FILE_ID_VWKS the FILE ID to replace in the Mod's Files section:
 #       To get a file ID to use in this action, you need to have created a mod page on Nexus Mods and uploaded at least one file. The file ID
 #       can be found by checking the "API Info" option in the Files tab of the public-facing mod page, or in the edit menu of the Manage Files page.
+#       Configure file IDs as repository Actions variables. A missing file ID skips only that variant's Nexus upload so its first package can
+#       be uploaded manually. Existing repository secrets with the same names remain supported as fallbacks.
 #
 ###############################################################################
 env:
@@ -24,13 +26,16 @@ env:
   NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
 
   NEXUS_DISPLAY_NAME_FC: "Venworks - HONKCORE - Freestar Collective UI"
-  NEXUSMODS_FILE_ID_FC: ${{ secrets.NEXUSMODS_FILE_ID_FC }}
+  NEXUSMODS_FILE_ID_FC: ${{ vars.NEXUSMODS_FILE_ID_FC || secrets.NEXUSMODS_FILE_ID_FC }}
 
   NEXUS_DISPLAY_NAME_CF: "Venworks - HONKCORE - Crimson Fleet UI"
-  NEXUSMODS_FILE_ID_CF: ${{ secrets.NEXUSMODS_FILE_ID_CF }}
+  NEXUSMODS_FILE_ID_CF: ${{ vars.NEXUSMODS_FILE_ID_CF || secrets.NEXUSMODS_FILE_ID_CF }}
 
   NEXUS_DISPLAY_NAME_TA: "Venworks - HONKCORE - Trackers Alliance UI"
-  NEXUSMODS_FILE_ID_TA: ${{ secrets.NEXUSMODS_FILE_ID_TA }}
+  NEXUSMODS_FILE_ID_TA: ${{ vars.NEXUSMODS_FILE_ID_TA || secrets.NEXUSMODS_FILE_ID_TA }}
+
+  NEXUS_DISPLAY_NAME_VWKS: "Venworks - HONKCORE - Venworks UI"
+  NEXUSMODS_FILE_ID_VWKS: ${{ vars.NEXUSMODS_FILE_ID_VWKS || secrets.NEXUSMODS_FILE_ID_VWKS }}
 
 
 jobs:
@@ -110,6 +115,12 @@ jobs:
               DisplayName = $env:NEXUS_DISPLAY_NAME_TA
               SourceFolder = 'Staging-TA'
               ZipName = "$($env:NEXUS_DISPLAY_NAME_TA).zip"
+            },
+            [pscustomobject]@{
+              Key = 'VWKS'
+              DisplayName = $env:NEXUS_DISPLAY_NAME_VWKS
+              SourceFolder = 'Staging-VWKS'
+              ZipName = "$($env:NEXUS_DISPLAY_NAME_VWKS).zip"
             }
           )
 
@@ -133,7 +144,7 @@ jobs:
             [System.IO.Compression.ZipFile]::CreateFromDirectory($sourcePath, $zipPath)
           }
 
-          $blockedTopLevelFolders = @('Staging-FC', 'Staging-CF', 'Staging-TA')
+          $blockedTopLevelFolders = @('Staging-FC', 'Staging-CF', 'Staging-TA', 'Staging-VWKS')
           foreach ($variant in $variants) {
             $zipPath = Join-Path $releaseRoot $variant.ZipName
             if (-not [System.IO.File]::Exists($zipPath)) {
@@ -285,6 +296,7 @@ jobs:
             fc = "$($env:NEXUS_DISPLAY_NAME_FC).zip"
             cf = "$($env:NEXUS_DISPLAY_NAME_CF).zip"
             ta = "$($env:NEXUS_DISPLAY_NAME_TA).zip"
+            vwks = "$($env:NEXUS_DISPLAY_NAME_VWKS).zip"
           }
 
           foreach ($package in $packages.GetEnumerator()) {
@@ -313,35 +325,50 @@ jobs:
             ${{ steps.release-package.outputs.fc_path }}
             ${{ steps.release-package.outputs.cf_path }}
             ${{ steps.release-package.outputs.ta_path }}
+            ${{ steps.release-package.outputs.vwks_path }}
 
       - name: Validate Nexus Mods upload configuration
         shell: bash
         run: |
-          if [ -z "$NEXUSMODS_API_KEY" ]; then
+          configured_uploads=0
+
+          if [ -n "$NEXUSMODS_FILE_ID_FC" ]; then
+            echo "Ready to upload $NEXUS_DISPLAY_NAME_FC."
+            configured_uploads=$((configured_uploads + 1))
+          else
+            echo "::notice::Skipping $NEXUS_DISPLAY_NAME_FC because NEXUSMODS_FILE_ID_FC is not configured."
+          fi
+
+          if [ -n "$NEXUSMODS_FILE_ID_CF" ]; then
+            echo "Ready to upload $NEXUS_DISPLAY_NAME_CF."
+            configured_uploads=$((configured_uploads + 1))
+          else
+            echo "::notice::Skipping $NEXUS_DISPLAY_NAME_CF because NEXUSMODS_FILE_ID_CF is not configured."
+          fi
+
+          if [ -n "$NEXUSMODS_FILE_ID_TA" ]; then
+            echo "Ready to upload $NEXUS_DISPLAY_NAME_TA."
+            configured_uploads=$((configured_uploads + 1))
+          else
+            echo "::notice::Skipping $NEXUS_DISPLAY_NAME_TA because NEXUSMODS_FILE_ID_TA is not configured."
+          fi
+
+          if [ -n "$NEXUSMODS_FILE_ID_VWKS" ]; then
+            echo "Ready to upload $NEXUS_DISPLAY_NAME_VWKS."
+            configured_uploads=$((configured_uploads + 1))
+          else
+            echo "::notice::Skipping $NEXUS_DISPLAY_NAME_VWKS because NEXUSMODS_FILE_ID_VWKS is not configured."
+          fi
+
+          if [ "$configured_uploads" -gt 0 ] && [ -z "$NEXUSMODS_API_KEY" ]; then
             echo "NEXUSMODS_API_KEY is required for Nexus Mods uploads."
             exit 1
           fi
 
-          if [ -z "$NEXUSMODS_FILE_ID_FC" ]; then
-            echo "NEXUSMODS_FILE_ID_FC is required for the Freestar Collective upload."
-            exit 1
-          fi
-
-          if [ -z "$NEXUSMODS_FILE_ID_CF" ]; then
-            echo "NEXUSMODS_FILE_ID_CF is required for the Crimson Fleet upload."
-            exit 1
-          fi
-
-          if [ -z "$NEXUSMODS_FILE_ID_TA" ]; then
-            echo "NEXUSMODS_FILE_ID_TA is required for the Trackers Alliance upload."
-            exit 1
-          fi
-
-          echo "Ready to upload $NEXUS_DISPLAY_NAME_FC."
-          echo "Ready to upload $NEXUS_DISPLAY_NAME_CF."
-          echo "Ready to upload $NEXUS_DISPLAY_NAME_TA."
+          echo "$configured_uploads Nexus Mods upload(s) configured."
 
       - name: Upload Freestar Collective release to Nexus Mods
+        if: ${{ env.NEXUSMODS_FILE_ID_FC != '' }}
         uses: Nexus-Mods/upload-action@v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
@@ -356,6 +383,7 @@ jobs:
           description: ${{ steps.release-notes.outputs.nexus_description }}
 
       - name: Upload Crimson Fleet release to Nexus Mods
+        if: ${{ env.NEXUSMODS_FILE_ID_CF != '' }}
         uses: Nexus-Mods/upload-action@v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
@@ -370,6 +398,7 @@ jobs:
           description: ${{ steps.release-notes.outputs.nexus_description }}
 
       - name: Upload Trackers Alliance release to Nexus Mods
+        if: ${{ env.NEXUSMODS_FILE_ID_TA != '' }}
         uses: Nexus-Mods/upload-action@v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
@@ -378,6 +407,21 @@ jobs:
           version: ${{ env.PACKAGE_VERSION }}
           category: ${{ env.NEXUSMODS_CATEGORY }}
           display_name: ${{ env.NEXUS_DISPLAY_NAME_TA }}
+          archive_existing_version: true
+          primary_mod_manager_download: false
+          allow_mod_manager_download: true
+          description: ${{ steps.release-notes.outputs.nexus_description }}
+
+      - name: Upload Venworks release to Nexus Mods
+        if: ${{ env.NEXUSMODS_FILE_ID_VWKS != '' }}
+        uses: Nexus-Mods/upload-action@v1.0.0-beta.8
+        with:
+          api_key: ${{ env.NEXUSMODS_API_KEY }}
+          file_id: ${{ env.NEXUSMODS_FILE_ID_VWKS }}
+          filename: ${{ steps.release-package.outputs.vwks_path }}
+          version: ${{ env.PACKAGE_VERSION }}
+          category: ${{ env.NEXUSMODS_CATEGORY }}
+          display_name: ${{ env.NEXUS_DISPLAY_NAME_VWKS }}
           archive_existing_version: true
           primary_mod_manager_download: false
           allow_mod_manager_download: true
