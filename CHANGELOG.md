@@ -1,6 +1,6 @@
 # Venworks - HONKCORE - UI Themes
 
-## Unreleased
+## Version 1.0.7
 
 - Venworks: New blue themed UI for all my Venworks creations
 
