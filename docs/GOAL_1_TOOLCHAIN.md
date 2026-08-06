@@ -5,9 +5,11 @@ Date: 2026-08-06
 ## Outcome
 
 JPEXS Free Flash Decompiler 26.2.1 can parse and surgically rewrite the
-vanilla Starfield `hudmenu.gfx` and `hudmenu_lrg.gfx` artifacts without
-changing their normalized tag structure. Two bootstrap test movies replace the
-vanilla `Boost` text definition with a yellow `VENWORKS CUI TEST` label.
+vanilla Starfield `hudmenu.gfx` and `hudmenu_lrg.gfx` artifacts. The initial
+probe changed the vanilla `Boost` text definition, but in-game testing showed
+that Starfield replaces that initial value at runtime. The revised bootstrap
+movies instead add an independent, always-visible yellow `VENWORKS CUI TEST`
+label at bottom-center.
 
 Static validation passed. In-game validation is pending and remains the release
 gate for accepting this toolchain.
@@ -63,25 +65,25 @@ identifies it as `HUDMenu_LRG`.
 
 ## Modification
 
-Character ID 73 is an existing `DefineEditText` used by the vanilla `Boost`
-label. JPEXS's formatted-text importer changed only that definition in each
-movie:
+The revised probe starts from the clean vanilla movies and adds exactly three
+root tags to each movie:
 
-- text: `VENWORKS CUI TEST`;
-- color: `#ffff00`;
-- font class: `$MAIN_Font_Bold`;
-- font size: 18;
-- expanded text bounds to accommodate the probe label.
+- a `DefineEditText` using unused character ID 354;
+- a matching `CSMSettings` tag;
+- a `PlaceObject2` at unused depth 1000.
 
-No ActionScript source, bytecode, timeline placement, imported movie, provider
-contract, or root class was edited.
+The text uses `$MAIN_Font_Bold` at 18 pixels, color `#ffff00`, and centered
+alignment. Its 300-pixel-wide bounds are placed at `(810, 990)` on the
+1920-by-1080 stage, producing an always-visible bottom-center label. No
+existing text definition, ActionScript source, bytecode, imported movie,
+provider contract, or root class was edited.
 
 ## Bootstrap outputs
 
 | Artifact | Size | SHA-256 |
 |---|---:|---|
-| `Staging-CUI/Interface/hudmenu.gfx` | 262501 | `053FC4DC0BD55237F805AACD6D3C72F955A21CA18C76B01335103A48D1672825` |
-| `Staging-CUI/Interface/hudmenu_lrg.gfx` | 262684 | `DCE9D29DC7AF390283DDA5B064183F0B1500C369A41E4219F1C7A6C68BC62FDE` |
+| `Staging-CUI/Interface/hudmenu.gfx` | 262656 | `79858EEEF487CF4E177ACCAF8442FCF39CFBEBAF9020F2A331678525313FACCF` |
+| `Staging-CUI/Interface/hudmenu_lrg.gfx` | 262839 | `55F5331CD8003B7CF3161BD895FAEE135E9FA7797C12425B2E13327D17C22698` |
 
 The bootstrap staging path is temporarily a normal repository directory. After
 these files are committed, the user will move/copy its contents into the Vortex
@@ -89,19 +91,22 @@ mod folder and replace `Staging-CUI` with the normal repository junction.
 
 ## Static validation
 
-- JPEXS opened and dumped both vanilla GFX inputs successfully.
-- JPEXS reopened and dumped both outputs successfully.
-- Output headers retained GFX version, stage, frame count, and frame rate.
-- Formatted-text export from each output returned the expected label, style,
-  and bounds.
-- The standard normalized tag sequence retained all 4,628 dump entries.
-- The large normalized tag sequence retained all 4,620 dump entries.
-- Normalized source/output tag differences: zero for both variants.
+- JPEXS converted both clean vanilla inputs to XML successfully.
+- JPEXS rebuilt, reopened, and re-exported both revised outputs successfully.
+- Output headers retained the GFX signature, version, stage, frame count, and
+  frame rate.
+- The standard tag count changed from 17,183 to 17,186.
+- The large tag count changed from 17,175 to 17,178.
+- Each output contains exactly one probe text value, character ID 354
+  definition, character ID 354 placement, and depth 1000 placement.
+- After removing those three probe tags, the re-exported XML is identical to
+  vanilla after excluding calculated bit-width and byte-offset metadata.
 - JPEXS rendered frame 1 for both outputs without a parser/rendering failure.
 
-The static render does not supply live Starfield providers or menu state, so it
-does not display the conditional Boost label and cannot replace the in-game
-test.
+The static renderer does not resolve Starfield's imported `fonts_en.swf`
+assets, so it cannot render this or the other imported-font HUD text. It does
+confirm the bottom-center placement, but in-game testing remains required to
+confirm the imported font and final presentation.
 
 ## Required in-game validation
 
@@ -110,8 +115,8 @@ mod. Test both normal and large UI selection where possible.
 
 1. Start from a clean save/menu transition with no HONKCORE HUD movie active.
 2. Confirm the HUD loads without a missing-menu, freeze, or input failure.
-3. Equip/use a boost pack and trigger the vanilla Boost presentation.
-4. Confirm `VENWORKS CUI TEST` appears in yellow where `Boost` normally appears.
+3. Load any save; no boost pack or gameplay action is required.
+4. Confirm `VENWORKS CUI TEST` remains visible in yellow at bottom-center.
 5. Confirm health, oxygen/CO2, weapon/ammunition, crosshair, compass, enemy
    health, scanner, and notifications still update.
 6. Test first person, third person, scanner open/close, save load, death/reload,
