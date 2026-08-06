@@ -48,6 +48,7 @@ Write-Host -ForegroundColor Yellow "`nModule Settings:"
 Write-Host -ForegroundColor Yellow "Trackers Alliance Variant Folder is $ENV:MODULE_VARIANT_TA_PATH"
 Write-Host -ForegroundColor Yellow "Freestar Collective Variant Folder is $ENV:MODULE_VARIANT_FC_PATH"
 Write-Host -ForegroundColor Yellow "Venworks Variant Folder is $ENV:MODULE_VARIANT_VWKS_PATH"
+Write-Host -ForegroundColor Yellow "Customizable UI Variant Folder is $ENV:MODULE_VARIANT_CUI_PATH"
 
 $Global:Variants = @(
     [ModuleVariant]::new(
@@ -72,6 +73,12 @@ $Global:Variants = @(
         "Venworks",
         "./Staging-VWKS",
         "$ENV:MODULE_VARIANT_VWKS_PATH"
+    )
+
+    [ModuleVariant]::new(
+        "Customizable UI",
+        "./Staging-CUI",
+        "$ENV:MODULE_VARIANT_CUI_PATH"
     )
 )
 
