@@ -280,8 +280,8 @@ try {
       -OutputPath $patchedScriptPath
 
     $authoredScripts = @(Get-ChildItem -LiteralPath $actionScriptSourcePath -Recurse -File -Filter "*.as")
-    if ($authoredScripts.Count -ne 12) {
-      throw "Expected 12 authored component classes; found $($authoredScripts.Count) in $actionScriptSourcePath."
+    if ($authoredScripts.Count -ne 13) {
+      throw "Expected 13 authored component classes; found $($authoredScripts.Count) in $actionScriptSourcePath."
     }
 
     foreach ($authoredScript in $authoredScripts) {
@@ -320,8 +320,8 @@ try {
 
     $originalScripts = @(Get-ChildItem -LiteralPath $exportedScriptsDirectory -Recurse -File -Filter "*.as")
     $validationScripts = @(Get-ChildItem -LiteralPath $validationScriptsDirectory -Recurse -File -Filter "*.as")
-    if ($originalScripts.Count -ne 179 -or $validationScripts.Count -ne $originalScripts.Count) {
-      throw "Expected 179 seeded and reopened classes; found $($originalScripts.Count) before import and $($validationScripts.Count) after import."
+    if ($originalScripts.Count -ne 180 -or $validationScripts.Count -ne $originalScripts.Count) {
+      throw "Expected 180 seeded and reopened classes; found $($originalScripts.Count) before import and $($validationScripts.Count) after import."
     }
 
     foreach ($originalScript in $originalScripts) {
@@ -357,6 +357,9 @@ try {
     }) -join "`n"
     foreach ($requiredValue in @(
       'VenworksCUI/layout.xml',
+      'getDefinitionByName',
+      'registerFont',
+      '$MAIN_Font_Bold',
       'CUI LAYOUT MISSING',
       'CUI LAYOUT MALFORMED',
       'CUI LAYOUT UNSUPPORTED',

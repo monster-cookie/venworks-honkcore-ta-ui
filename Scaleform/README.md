@@ -35,11 +35,15 @@ from the validation records.
 
 The build injects the Venworks-only ABC seed, exports Bethesda ActionScript only
 into ignored temporary storage, verifies the authored `HUDMenu` patch anchors,
-and imports the patched document class plus the 12 repository-authored CUI
+and imports the patched document class plus the 13 repository-authored CUI
 classes. It confirms that every other exported class remains textually
 identical and that the reopened output contains the required layout and
 diagnostic contracts. Full exported Bethesda classes are never repository
 source.
+
+Dynamic CUI text resolves Starfield's locale-linked font classes at runtime,
+registers the resolved embedded font, and uses its actual locale-specific name.
+The repository does not bundle or hardcode Bethesda font files.
 
 `decompileScaleform.ps1` is a lower-level helper for producing a temporary
 JPEXS XML file during patch development. Its output must not be committed.

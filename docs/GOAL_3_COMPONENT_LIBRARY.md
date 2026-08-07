@@ -57,7 +57,7 @@ colors, nonfinite values, negative bounds, and out-of-range opacity.
 
 JPEXS command-line script import can replace an existing ActionScript class but
 does not add a new class to a vanilla movie. The build therefore injects one
-small Venworks-authored ABC seed containing placeholder definitions for the 12
+small Venworks-authored ABC seed containing placeholder definitions for the 13
 owned runtime classes. JPEXS then replaces only those placeholders and the
 patched vanilla `HUDMenu` document class from temporary source exports.
 
@@ -67,9 +67,9 @@ outside Git. During each build, the script verifies that:
 
 1. the vanilla input hash matches the recorded game artifact;
 2. exactly one named Venworks ABC seed is inserted;
-3. all 12 authored classes compile and reopen;
-4. the class count increases from 167 to 179;
-5. every class other than `HUDMenu` and the 12 Venworks classes remains
+3. all 13 authored classes compile and reopen;
+4. the class count increases from 167 to 180;
+5. every class other than `HUDMenu` and the 13 Venworks classes remains
    textually identical to the vanilla export;
 6. the runtime contains the required layout and diagnostic contracts;
 7. Goal 2 success-probe strings are absent; and
@@ -79,8 +79,8 @@ outside Git. During each build, the script verifies that:
 
 | Artifact | Size | SHA-256 |
 |---|---:|---|
-| `Staging-CUI/Interface/hudmenu.gfx` | 278457 | `F2565D25F822EBF75630D9B4BD0A55A3E633482F56D040D6B04C388048B74E12` |
-| `Staging-CUI/Interface/hudmenu_lrg.gfx` | 278640 | `33F3E8D392CA52E4F5981E990B5C41E303E626523D8539CD8E7B6F117FCA928D` |
+| `Staging-CUI/Interface/hudmenu.gfx` | 279184 | `2EB3ECD4F109E1C2A89D9B14E14AD1FC7F516BC8204E4CE5F3E38BDBD7F254BF` |
+| `Staging-CUI/Interface/hudmenu_lrg.gfx` | 279367 | `E5DBF7FEC83E8BDDEC326B55D48F004E3FFDBCE8EDE4721C969E9E8979C6E635` |
 | `Staging-CUI/Interface/VenworksCUI/layout.xml` | 4714 | `06FAB39C4621C194E3407A649C846B0008D7B18719E518B84E3A980AE27CF8EB` |
 
 ## First in-game result
@@ -91,12 +91,15 @@ and partial final-triangle clipping all rendered correctly while the vanilla
 HUD remained functional.
 
 The first build displayed gallery text as missing-glyph blocks. Vanilla HUD
-text fields are timeline-defined, while the CUI fields are created dynamically.
-The initial CUI implementation incorrectly required embedded glyphs that were
-not attached to those dynamic fields. The corrected build uses Scaleform's
-runtime font resolution for `$MAIN_Font_Bold` in both component and diagnostics
-text. This correction compiled, reopened, preserved all other vanilla classes,
-and reproduced the hashes above. Its visible result remains an in-game gate.
+text fields reference locale-linked font classes, while the CUI fields are
+created dynamically. Setting `embedFonts` to false did not resolve that class
+alias and produced the same result in-game. The current build resolves
+`$MAIN_Font_Bold` through `getDefinitionByName`, registers the linked class,
+and reads its actual locale-specific font name before enabling embedded glyphs.
+This preserves Japanese and Simplified Chinese mappings instead of hardcoding
+the English `NB Architekt` name. The correction compiled, reopened, preserved
+all other vanilla classes, and reproduced the hashes above. Its visible result
+remains an in-game gate.
 
 ## In-game validation plan
 

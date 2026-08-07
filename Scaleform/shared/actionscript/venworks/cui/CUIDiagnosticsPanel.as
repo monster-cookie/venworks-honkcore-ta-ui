@@ -53,8 +53,8 @@ package venworks.cui
          field.height = param4;
          field.selectable = false;
          field.mouseEnabled = false;
-         field.embedFonts = false;
-         field.defaultTextFormat = new TextFormat("$MAIN_Font_Bold",param5,param6,param7);
+         field.embedFonts = true;
+         field.defaultTextFormat = new TextFormat(CUIFontResolver.resolve("$MAIN_Font_Bold"),param5,param6,param7);
          return field;
       }
    }
