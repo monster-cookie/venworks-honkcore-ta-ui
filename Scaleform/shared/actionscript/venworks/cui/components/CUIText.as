@@ -17,7 +17,7 @@ package venworks.cui.components
          label.mouseEnabled = false;
          label.multiline = false;
          label.wordWrap = false;
-         label.embedFonts = true;
+         label.embedFonts = false;
          label.defaultTextFormat = new TextFormat(
             String(param1.@font),
             this.readNumber(param1,"fontSize",18),

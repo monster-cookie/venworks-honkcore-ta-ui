@@ -4,7 +4,8 @@ Date: 2026-08-06
 
 ## Outcome
 
-Implementation and static validation passed. In-game validation is pending.
+Implementation and static validation passed. The first in-game pass confirmed
+the layout and geometric components. Corrected text rendering awaits retest.
 
 Goal 3 establishes a clean-room, component-first runtime before any real HUD
 surface is converted. Both player HUD variants now load
@@ -20,7 +21,7 @@ renderers without changing vanilla HUD behavior.
 ## Implemented components
 
 - nested group with transforms, opacity, visibility, and z-order;
-- embedded-font text;
+- runtime-resolved Starfield-font text;
 - filled/stroked rectangular panel;
 - rectangle or ellipse shape;
 - horizontal, vertical, or diagonal divider;
@@ -78,9 +79,24 @@ outside Git. During each build, the script verifies that:
 
 | Artifact | Size | SHA-256 |
 |---|---:|---|
-| `Staging-CUI/Interface/hudmenu.gfx` | 278457 | `FD1BF67A980EB011ECC7A9D87E5726F833C818FB1A6A9870EF8E7599863276DC` |
-| `Staging-CUI/Interface/hudmenu_lrg.gfx` | 278640 | `038C4DD93EF54B40AAC16E9E1472947CF5389AD0E8BF48C1064EF44F1B8D006D` |
+| `Staging-CUI/Interface/hudmenu.gfx` | 278457 | `F2565D25F822EBF75630D9B4BD0A55A3E633482F56D040D6B04C388048B74E12` |
+| `Staging-CUI/Interface/hudmenu_lrg.gfx` | 278640 | `33F3E8D392CA52E4F5981E990B5C41E303E626523D8539CD8E7B6F117FCA928D` |
 | `Staging-CUI/Interface/VenworksCUI/layout.xml` | 4714 | `06FAB39C4621C194E3407A649C846B0008D7B18719E518B84E3A980AE27CF8EB` |
+
+## First in-game result
+
+The normal-HUD test displayed the gallery at the expected position. The panel,
+divider, ellipse, continuous bar, triangle bar, empty segments, full segments,
+and partial final-triangle clipping all rendered correctly while the vanilla
+HUD remained functional.
+
+The first build displayed gallery text as missing-glyph blocks. Vanilla HUD
+text fields are timeline-defined, while the CUI fields are created dynamically.
+The initial CUI implementation incorrectly required embedded glyphs that were
+not attached to those dynamic fields. The corrected build uses Scaleform's
+runtime font resolution for `$MAIN_Font_Bold` in both component and diagnostics
+text. This correction compiled, reopened, preserved all other vanilla classes,
+and reproduced the hashes above. Its visible result remains an in-game gate.
 
 ## In-game validation plan
 
@@ -88,8 +104,8 @@ Test without another mod overriding `hudmenu.gfx` or `hudmenu_lrg.gfx`. Fully
 restart Starfield between configuration cases.
 
 1. Deploy the staged files and load a save.
-2. Confirm the component gallery appears near the middle of the screen and the
-   normal vanilla HUD remains functional.
+2. Confirm the component gallery appears near the middle of the screen, every
+   heading and label is readable, and the normal vanilla HUD remains functional.
 3. Confirm there is no success message or diagnostics panel after a valid load.
 4. Inspect the continuous 65-percent bar and triangle bars at partial, 0, 50,
    and 100 percent. The partial bar should show a clipped final triangle rather
