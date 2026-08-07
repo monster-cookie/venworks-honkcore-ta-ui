@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scaleformBuild name="hudmenu_lrg"
+                inputFile="hudmenu_lrg.gfx"
+                outputFile="hudmenu_lrg.gfx"
+                vanillaHashFile="vanilla.sha256"
+                expectedHashFile="validation/expected.sha256"
+                patch="../shared/patches/cui-test-probe.xml" />
