@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080"
+             safeLeft="64" safeTop="36" safeRight="64" safeBottom="36">
+  <definitions>
+    <meterStyle id="gallery.continuous" renderer="continuous"
+                fillColor="#35E6E6" emptyColor="#183B48"
+                fillOpacity="1" emptyOpacity="0.7" />
+    <meterStyle id="gallery.triangles" renderer="triangles"
+                fillColor="#35E6E6" emptyColor="#183B48"
+                fillOpacity="1" emptyOpacity="0.7" segmentCount="12" gap="3" />
+  </definitions>
+  <components>
+    <group id="gallery" x="530" y="300" width="860" height="465" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="100">
+      <panel id="gallery.panel" x="0" y="0" width="860" height="465" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0"
+             fillColor="#071923" fillOpacity="0.94" strokeColor="#35E6E6" strokeOpacity="0.9" strokeWidth="2" />
+      <text id="gallery.title" x="26" y="18" width="808" height="42" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1"
+            value="VENWORKS CUI COMPONENT GALLERY" font="$MAIN_Font_Bold" fontSize="22" color="#F7FCFF" bold="true" align="left" />
+      <divider id="gallery.divider" x="26" y="68" width="808" height="0" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+               color="#35E6E6" strokeOpacity="0.8" strokeWidth="2" />
+      <shape id="gallery.shape" x="790" y="17" width="30" height="30" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+             shape="ellipse" fillColor="#35E6E6" fillOpacity="0.8" strokeColor="#F7FCFF" strokeOpacity="1" strokeWidth="1" />
+      <text id="gallery.continuous.label" x="26" y="88" width="250" height="30" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+            value="CONTINUOUS BAR — 65%" font="$MAIN_Font_Bold" fontSize="17" color="#F7FCFF" bold="false" align="left" />
+      <meter id="gallery.continuous.meter" x="300" y="92" width="520" height="20" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+             style="gallery.continuous" value="65" max="100" />
+      <text id="gallery.triangles.label" x="26" y="138" width="250" height="30" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+            value="TRIANGLES — PARTIAL" font="$MAIN_Font_Bold" fontSize="17" color="#F7FCFF" bold="false" align="left" />
+      <meter id="gallery.triangles.partial" x="300" y="140" width="520" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+             style="gallery.triangles" value="54" max="100" />
+      <text id="gallery.zero.label" x="26" y="194" width="250" height="30" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+            value="TRIANGLES — 0%" font="$MAIN_Font_Bold" fontSize="17" color="#F7FCFF" bold="false" align="left" />
+      <meter id="gallery.zero" x="300" y="196" width="520" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+             style="gallery.triangles" value="0" max="100" />
+      <text id="gallery.half.label" x="26" y="250" width="250" height="30" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+            value="TRIANGLES — 50%" font="$MAIN_Font_Bold" fontSize="17" color="#F7FCFF" bold="false" align="left" />
+      <meter id="gallery.half" x="300" y="252" width="520" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+             style="gallery.triangles" value="50" max="100" />
+      <text id="gallery.full.label" x="26" y="306" width="250" height="30" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+            value="TRIANGLES — 100%" font="$MAIN_Font_Bold" fontSize="17" color="#F7FCFF" bold="false" align="left" />
+      <meter id="gallery.full" x="300" y="308" width="520" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+             style="gallery.triangles" value="100" max="100" />
+      <panel id="gallery.footer" x="26" y="372" width="808" height="62" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1"
+             fillColor="#102C38" fillOpacity="0.9" strokeColor="#35E6E6" strokeOpacity="0.45" strokeWidth="1" />
+      <text id="gallery.footer.text" x="46" y="389" width="768" height="30" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+            value="FIXED TEST VALUES — VANILLA HUD DATA IS UNCHANGED" font="$MAIN_Font_Bold" fontSize="16" color="#35E6E6" bold="false" align="center" />
+    </group>
+  </components>
+</venworksCUI>

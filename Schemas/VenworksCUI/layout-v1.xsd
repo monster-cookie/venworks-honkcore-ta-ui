@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <xs:simpleType name="idType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[A-Za-z][A-Za-z0-9._-]{0,63}" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="colorType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="#[0-9A-Fa-f]{6}" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="opacityType">
+    <xs:restriction base="xs:decimal">
+      <xs:minInclusive value="0" />
+      <xs:maxInclusive value="1" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="strictBooleanType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="true" />
+      <xs:enumeration value="false" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:attributeGroup name="componentAttributes">
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="x" type="xs:decimal" use="required" />
+    <xs:attribute name="y" type="xs:decimal" use="required" />
+    <xs:attribute name="width" type="xs:nonNegativeInteger" use="required" />
+    <xs:attribute name="height" type="xs:nonNegativeInteger" use="required" />
+    <xs:attribute name="opacity" type="opacityType" default="1" />
+    <xs:attribute name="visible" type="strictBooleanType" default="true" />
+    <xs:attribute name="rotation" type="xs:decimal" default="0" />
+    <xs:attribute name="scaleX" type="xs:decimal" default="1" />
+    <xs:attribute name="scaleY" type="xs:decimal" default="1" />
+    <xs:attribute name="z" type="xs:integer" use="required" />
+  </xs:attributeGroup>
+
+  <xs:complexType name="textType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="value" type="xs:string" use="required" />
+    <xs:attribute name="font" type="xs:string" use="required" />
+    <xs:attribute name="fontSize" type="xs:positiveInteger" use="required" />
+    <xs:attribute name="color" type="colorType" use="required" />
+    <xs:attribute name="bold" type="strictBooleanType" default="false" />
+    <xs:attribute name="align" use="required">
+      <xs:simpleType><xs:restriction base="xs:string"><xs:enumeration value="left" /><xs:enumeration value="center" /><xs:enumeration value="right" /></xs:restriction></xs:simpleType>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="panelType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="fillColor" type="colorType" use="required" />
+    <xs:attribute name="fillOpacity" type="opacityType" use="required" />
+    <xs:attribute name="strokeColor" type="colorType" use="required" />
+    <xs:attribute name="strokeOpacity" type="opacityType" use="required" />
+    <xs:attribute name="strokeWidth" type="xs:nonNegativeInteger" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="shapeType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="shape" use="required"><xs:simpleType><xs:restriction base="xs:string"><xs:enumeration value="rectangle" /><xs:enumeration value="ellipse" /></xs:restriction></xs:simpleType></xs:attribute>
+    <xs:attribute name="fillColor" type="colorType" use="required" />
+    <xs:attribute name="fillOpacity" type="opacityType" use="required" />
+    <xs:attribute name="strokeColor" type="colorType" use="required" />
+    <xs:attribute name="strokeOpacity" type="opacityType" use="required" />
+    <xs:attribute name="strokeWidth" type="xs:nonNegativeInteger" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="dividerType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="color" type="colorType" use="required" />
+    <xs:attribute name="strokeOpacity" type="opacityType" use="required" />
+    <xs:attribute name="strokeWidth" type="xs:positiveInteger" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="meterType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="style" type="idType" use="required" />
+    <xs:attribute name="value" type="xs:decimal" use="required" />
+    <xs:attribute name="max" type="xs:decimal" use="required" />
+  </xs:complexType>
+
+  <xs:group name="componentChoice">
+    <xs:choice>
+      <xs:element name="group" type="groupType" />
+      <xs:element name="text" type="textType" />
+      <xs:element name="panel" type="panelType" />
+      <xs:element name="shape" type="shapeType" />
+      <xs:element name="divider" type="dividerType" />
+      <xs:element name="meter" type="meterType" />
+    </xs:choice>
+  </xs:group>
+
+  <xs:complexType name="groupType">
+    <xs:sequence><xs:group ref="componentChoice" minOccurs="0" maxOccurs="unbounded" /></xs:sequence>
+    <xs:attributeGroup ref="componentAttributes" />
+  </xs:complexType>
+
+  <xs:complexType name="meterStyleType">
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="renderer" use="required"><xs:simpleType><xs:restriction base="xs:string"><xs:enumeration value="continuous" /><xs:enumeration value="triangles" /></xs:restriction></xs:simpleType></xs:attribute>
+    <xs:attribute name="fillColor" type="colorType" use="required" />
+    <xs:attribute name="emptyColor" type="colorType" use="required" />
+    <xs:attribute name="fillOpacity" type="opacityType" use="required" />
+    <xs:attribute name="emptyOpacity" type="opacityType" use="required" />
+    <xs:attribute name="segmentCount" type="xs:positiveInteger" />
+    <xs:attribute name="gap" type="xs:nonNegativeInteger" />
+  </xs:complexType>
+
+  <xs:element name="venworksCUI">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="definitions"><xs:complexType><xs:sequence><xs:element name="meterStyle" type="meterStyleType" minOccurs="1" maxOccurs="unbounded" /></xs:sequence></xs:complexType></xs:element>
+        <xs:element name="components"><xs:complexType><xs:sequence><xs:group ref="componentChoice" minOccurs="1" maxOccurs="unbounded" /></xs:sequence></xs:complexType></xs:element>
+      </xs:sequence>
+      <xs:attribute name="schemaVersion" fixed="1" use="required" />
+      <xs:attribute name="runtimeVersion" fixed="1" use="required" />
+      <xs:attribute name="designWidth" type="xs:positiveInteger" fixed="1920" use="required" />
+      <xs:attribute name="designHeight" type="xs:positiveInteger" fixed="1080" use="required" />
+      <xs:attribute name="safeLeft" type="xs:nonNegativeInteger" use="required" />
+      <xs:attribute name="safeTop" type="xs:nonNegativeInteger" use="required" />
+      <xs:attribute name="safeRight" type="xs:nonNegativeInteger" use="required" />
+      <xs:attribute name="safeBottom" type="xs:nonNegativeInteger" use="required" />
+    </xs:complexType>
+    <xs:key name="definitionIds"><xs:selector xpath="definitions/meterStyle" /><xs:field xpath="@id" /></xs:key>
+    <xs:key name="componentIds"><xs:selector xpath=".//group | .//text | .//panel | .//shape | .//divider | .//meter" /><xs:field xpath="@id" /></xs:key>
+    <xs:keyref name="meterStyleReferences" refer="definitionIds"><xs:selector xpath=".//meter" /><xs:field xpath="@style" /></xs:keyref>
+  </xs:element>
+</xs:schema>

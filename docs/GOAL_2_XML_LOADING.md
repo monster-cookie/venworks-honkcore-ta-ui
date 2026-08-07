@@ -4,7 +4,7 @@ Date: 2026-08-06
 
 ## Outcome
 
-Static implementation and validation passed. In-game validation is pending.
+Static and in-game validation passed.
 
 Both player HUD variants now retain the Goal 1 bottom-center probe and add a
 small loader to their `HUDMenu` document class. The loader requests the
@@ -13,8 +13,9 @@ relative path `VenworksCUI/probe.xml`, parses it with native ActionScript 3
 are caught and displayed without intentionally changing the vanilla HUD
 lifecycle or provider subscriptions.
 
-The probe format and path are provisional. They prove or reject external XML
-loading only; they do not define the Goal 3 layout and palette schemas.
+The probe proved that Starfield can load adjacent XML through the relative
+`Interface/VenworksCUI` path. Goal 3 has superseded the provisional probe with
+`layout.xml` and an error-only component runtime.
 
 ## Clean-room implementation
 
@@ -67,7 +68,10 @@ The root name, schema version, and exactly one nonempty `label` are required.
 All loader event listeners are removed after completion or failure. Repeated
 HUD lifecycle callbacks do not create duplicate loaders.
 
-## Outputs
+## Goal 2 outputs
+
+These are the historical artifacts used for Goal 2 validation. The staging
+folder now contains the newer Goal 3 component-library artifacts.
 
 | Artifact | Size | SHA-256 |
 |---|---:|---|
@@ -75,7 +79,7 @@ HUD lifecycle callbacks do not create duplicate loaders.
 | `Staging-CUI/Interface/hudmenu_lrg.gfx` | 264750 | `72D9749218B38D441C527051BF9D0D518EE330C00C485C91F8D06EBC5536993B` |
 | `Staging-CUI/Interface/VenworksCUI/probe.xml` | 133 | runtime configuration input |
 
-## Static validation
+## Validation
 
 - JPEXS 26.2.1 compiled and imported the patched class for both movies.
 - Both generated files reopened and exported successfully.
@@ -89,33 +93,23 @@ HUD lifecycle callbacks do not create duplicate loaders.
 - Per-build temporary XML and ActionScript directories were removed
   automatically.
 
-Static validation cannot prove that Starfield permits the XML request or how
-it resolves the relative path. In-game testing remains the acceptance gate.
+User-provided in-game screenshots confirmed all Goal 2 acceptance cases on the
+normal player HUD:
 
-## Required in-game validation
+| Case | Confirmed result |
+|---|---|
+| Valid XML | Configured `VENWORKS XML LOADED` label rendered. |
+| Missing XML | Red `CUI XML MISSING` diagnostic rendered; HUD remained functional. |
+| Malformed XML | Red `CUI XML MALFORMED` diagnostic rendered; HUD remained functional. |
+| Unsupported schema | Red `CUI XML UNSUPPORTED` diagnostic rendered; HUD remained functional. |
+| Restored valid XML | Configured success label rendered again. |
 
-Test with no HONKCORE HUD movie active. Fully restart Starfield between cases
-so the one-shot HUD loader is recreated.
-
-1. Deploy the staged GFX files and valid `probe.xml`.
-2. Load a save and confirm yellow `VENWORKS XML LOADED` appears.
-3. Remove the deployed `probe.xml`, restart, and confirm red
-   `CUI XML MISSING` appears while the HUD remains functional.
-4. Deploy `Scaleform/shared/fixtures/probe-malformed.xml` as
-   `Interface/VenworksCUI/probe.xml`, restart, and confirm red
-   `CUI XML MALFORMED` appears.
-5. Deploy `Scaleform/shared/fixtures/probe-unsupported.xml` as
-   `Interface/VenworksCUI/probe.xml`, restart, and confirm red
-   `CUI XML UNSUPPORTED` appears.
-6. Restore the valid staged document and confirm successful loading again.
-7. Exercise health, oxygen/CO2, weapon/ammunition, compass, crosshair,
-   notifications, scanner, first/third person, save load, and ship transitions.
-8. Test the normal and large UI selection where possible.
+The deployed file was also confirmed at
+`Data/Interface/VenworksCUI/probe.xml`, establishing the relative-path
+resolution used by Goal 3.
 
 ## Acceptance rule
 
-Accept XML as the runtime configuration foundation only if the configured
-value loads through Starfield's file opener and every tested failure remains
-diagnostic and nonfatal. If XML loading or relative-path resolution fails,
-stop before implementing Goal 3 and prepare a separately approved fallback
-comparison.
+Accepted. XML is the runtime configuration foundation because the configured
+value loaded through Starfield's file opener and the tested failures remained
+diagnostic and nonfatal.

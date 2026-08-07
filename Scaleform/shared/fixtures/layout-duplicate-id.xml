@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080"
+             safeLeft="64" safeTop="36" safeRight="64" safeBottom="36">
+  <definitions>
+    <meterStyle id="test" renderer="continuous"
+                fillColor="#FFFFFF" emptyColor="#000000"
+                fillOpacity="1" emptyOpacity="1" />
+  </definitions>
+  <components>
+    <shape id="duplicate" x="0" y="0" width="10" height="10" z="0"
+           shape="rectangle" fillColor="#FFFFFF" fillOpacity="1"
+           strokeColor="#FFFFFF" strokeOpacity="1" strokeWidth="0" />
+    <shape id="duplicate" x="20" y="0" width="10" height="10" z="1"
+           shape="ellipse" fillColor="#FFFFFF" fillOpacity="1"
+           strokeColor="#FFFFFF" strokeOpacity="1" strokeWidth="0" />
+  </components>
+</venworksCUI>

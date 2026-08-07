@@ -41,6 +41,22 @@ function Resolve-RequiredFile {
   return (Resolve-Path -LiteralPath $Path).Path
 }
 
+function Resolve-RequiredDirectory {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Path,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Description
+  )
+
+  if (!(Test-Path -LiteralPath $Path -PathType Container)) {
+    throw "$Description does not exist: $Path"
+  }
+
+  return (Resolve-Path -LiteralPath $Path).Path
+}
+
 function Read-Sha256File {
   param(
     [Parameter(Mandatory = $true)]
@@ -165,9 +181,12 @@ try {
     $expectedHashPath = Resolve-RequiredFile `
       -Path (Join-Path $manifestDirectory ([string]$build.expectedHashFile)) `
       -Description "Expected output hash file"
-    $patchPath = Resolve-RequiredFile `
-      -Path (Join-Path $manifestDirectory ([string]$build.patch)) `
-      -Description "Scaleform patch"
+    $abcSeedPatchPath = Resolve-RequiredFile `
+      -Path (Join-Path $manifestDirectory ([string]$build.abcSeedPatch)) `
+      -Description "Scaleform ABC seed patch"
+    $actionScriptSourcePath = Resolve-RequiredDirectory `
+      -Path (Join-Path $manifestDirectory ([string]$build.actionScriptSource)) `
+      -Description "Authored ActionScript source directory"
     $actionScriptPatchPath = Resolve-RequiredFile `
       -Path (Join-Path $manifestDirectory ([string]$build.actionScriptPatch)) `
       -Description "ActionScript patch"
@@ -196,30 +215,17 @@ try {
       -OutputXmlPath $decompiledXmlPath
 
     [xml]$scaleform = Get-Content -LiteralPath $decompiledXmlPath -Raw
-    [xml]$patch = Get-Content -LiteralPath $patchPath -Raw
-    $preconditions = $patch.scaleformPatch.preconditions
+    [xml]$abcSeedPatch = Get-Content -LiteralPath $abcSeedPatchPath -Raw
     $displayRect = $scaleform.SelectSingleNode('/swf/displayRect')
 
     if (!$displayRect) {
       throw "Scaleform display rectangle is missing from $inputPath."
     }
 
-    if ($displayRect.Xmax -ne $preconditions.stageWidthTwips -or
-        $displayRect.Ymax -ne $preconditions.stageHeightTwips -or
+    if ($displayRect.Xmax -ne "38400" -or
+        $displayRect.Ymax -ne "21600" -or
         $displayRect.Xmin -ne "0" -or $displayRect.Ymin -ne "0") {
       throw "Unexpected Scaleform stage geometry in $inputPath."
-    }
-
-    $characterId = [string]$preconditions.characterId
-    $rootDepth = [string]$preconditions.rootDepth
-    $existingCharacter = $scaleform.SelectNodes("//*[@characterID='$characterId' or @characterId='$characterId' or @textID='$characterId']")
-    if ($existingCharacter.Count -ne 0) {
-      throw "Character ID $characterId is already in use in $inputPath."
-    }
-
-    $existingRootDepth = $scaleform.SelectNodes("/swf/tags/item[@depth='$rootDepth']")
-    if ($existingRootDepth.Count -ne 0) {
-      throw "Root depth $rootDepth is already in use in $inputPath."
     }
 
     $rootShowFrames = $scaleform.SelectNodes('/swf/tags/item[@type="ShowFrameTag"]')
@@ -227,13 +233,19 @@ try {
       throw "Expected exactly one root ShowFrameTag in $inputPath; found $($rootShowFrames.Count)."
     }
 
-    $patchTags = $patch.SelectNodes('/scaleformPatch/tags/item')
-    if ($patchTags.Count -eq 0) {
-      throw "Patch contains no tags: $patchPath"
+    if ($scaleform.SelectNodes('/swf/tags/item[@type="DoABC2Tag" and @name="venworks.cui.components.seed"]').Count -ne 0) {
+      throw "Vanilla input unexpectedly contains the Venworks CUI ABC seed."
     }
 
-    foreach ($patchTag in $patchTags) {
-      $importedTag = $scaleform.ImportNode($patchTag, $true)
+    $abcSeedTags = $abcSeedPatch.SelectNodes('/scaleformAbcPatch/tags/item')
+    if ($abcSeedTags.Count -ne 1 -or
+        $abcSeedTags[0].type -ne 'DoABC2Tag' -or
+        $abcSeedTags[0].name -ne 'venworks.cui.components.seed') {
+      throw "ABC seed patch must contain exactly one named Venworks DoABC2Tag: $abcSeedPatchPath"
+    }
+
+    foreach ($abcSeedTag in $abcSeedTags) {
+      $importedTag = $scaleform.ImportNode($abcSeedTag, $true)
       [void]$rootShowFrames[0].ParentNode.InsertBefore($importedTag, $rootShowFrames[0])
     }
 
@@ -267,6 +279,22 @@ try {
       -PatchPath $actionScriptPatchPath `
       -OutputPath $patchedScriptPath
 
+    $authoredScripts = @(Get-ChildItem -LiteralPath $actionScriptSourcePath -Recurse -File -Filter "*.as")
+    if ($authoredScripts.Count -ne 12) {
+      throw "Expected 12 authored component classes; found $($authoredScripts.Count) in $actionScriptSourcePath."
+    }
+
+    foreach ($authoredScript in $authoredScripts) {
+      $relativeScriptPath = $authoredScript.FullName.Substring($actionScriptSourcePath.Length).TrimStart(
+        [System.IO.Path]::DirectorySeparatorChar,
+        [System.IO.Path]::AltDirectorySeparatorChar
+      )
+      $importScriptPath = Join-Path $importScriptsDirectory $relativeScriptPath
+      $importScriptParent = Split-Path -Parent $importScriptPath
+      New-Item -ItemType Directory -Force -Path $importScriptParent | Out-Null
+      Copy-Item -LiteralPath $authoredScript.FullName -Destination $importScriptPath
+    }
+
     Invoke-Jpexs `
       -Arguments @('-onerror', 'abort', '-importScript', $timelineGfxPath, $generatedGfxPath, $importScriptsDirectory) `
       -Description "importing the $($build.name) ActionScript probe"
@@ -281,9 +309,8 @@ try {
     }
 
     [xml]$reopened = Get-Content -LiteralPath $reopenedXmlPath -Raw
-    if ($reopened.SelectNodes("/swf/tags/item[@characterID='$characterId']").Count -ne 1 -or
-        $reopened.SelectNodes("/swf/tags/item[@characterId='$characterId' and @depth='$rootDepth']").Count -ne 1) {
-      throw "Generated output does not contain the expected probe definition and placement."
+    if ($reopened.SelectNodes('/swf/tags/item[@type="DoABC2Tag" and @name="venworks.cui.components.seed"]').Count -ne 1) {
+      throw "Generated output does not contain exactly one Venworks CUI ABC seed tag."
     }
 
     $validationScriptMatches = @(Get-ChildItem -LiteralPath $validationScriptsDirectory -Recurse -File -Filter "$scriptName.as")
@@ -291,18 +318,60 @@ try {
       throw "Expected one reopened $scriptName.as; found $($validationScriptMatches.Count)."
     }
 
-    $validationScript = Get-Content -LiteralPath $validationScriptMatches[0].FullName -Raw
-    foreach ($requiredValue in @(
-      'VenworksCUI/probe.xml',
-      'CUI XML MISSING',
-      'CUI XML MALFORMED',
-      'CUI XML UNSUPPORTED',
-      'CUI XML SECURITY ERROR',
-      'VenworksCuiTest_txt'
-    )) {
-      if (!$validationScript.Contains($requiredValue)) {
-        throw "Generated $scriptName class is missing required value '$requiredValue'."
+    $originalScripts = @(Get-ChildItem -LiteralPath $exportedScriptsDirectory -Recurse -File -Filter "*.as")
+    $validationScripts = @(Get-ChildItem -LiteralPath $validationScriptsDirectory -Recurse -File -Filter "*.as")
+    if ($originalScripts.Count -ne 179 -or $validationScripts.Count -ne $originalScripts.Count) {
+      throw "Expected 179 seeded and reopened classes; found $($originalScripts.Count) before import and $($validationScripts.Count) after import."
+    }
+
+    foreach ($originalScript in $originalScripts) {
+      $relativeOriginalPath = $originalScript.FullName.Substring($exportedScriptsDirectory.Length).TrimStart(
+        [System.IO.Path]::DirectorySeparatorChar,
+        [System.IO.Path]::AltDirectorySeparatorChar
+      )
+      if ($originalScript.Name -eq "$scriptName.as" -or
+          $relativeOriginalPath -match '(^|[\\/])venworks[\\/]cui[\\/]') {
+        continue
       }
+      $reopenedScriptPath = Join-Path $validationScriptsDirectory $relativeOriginalPath
+      if (!(Test-Path -LiteralPath $reopenedScriptPath -PathType Leaf) -or
+          (Get-FileHash -LiteralPath $originalScript.FullName -Algorithm SHA256).Hash -ne
+          (Get-FileHash -LiteralPath $reopenedScriptPath -Algorithm SHA256).Hash) {
+        throw "Unexpected change to vanilla ActionScript class: $relativeOriginalPath"
+      }
+    }
+
+    foreach ($authoredScript in $authoredScripts) {
+      $relativeAuthoredPath = $authoredScript.FullName.Substring($actionScriptSourcePath.Length).TrimStart(
+        [System.IO.Path]::DirectorySeparatorChar,
+        [System.IO.Path]::AltDirectorySeparatorChar
+      )
+      $reopenedAuthoredPath = Join-Path (Join-Path $validationScriptsDirectory "scripts") $relativeAuthoredPath
+      if (!(Test-Path -LiteralPath $reopenedAuthoredPath -PathType Leaf)) {
+        throw "Generated output is missing authored class: $relativeAuthoredPath"
+      }
+    }
+
+    $validationSource = ($validationScripts | ForEach-Object {
+      Get-Content -LiteralPath $_.FullName -Raw
+    }) -join "`n"
+    foreach ($requiredValue in @(
+      'VenworksCUI/layout.xml',
+      'CUI LAYOUT MISSING',
+      'CUI LAYOUT MALFORMED',
+      'CUI LAYOUT UNSUPPORTED',
+      'CUI LAYOUT INVALID',
+      'VenworksCUIComponentLayer',
+      'VenworksCUIDiagnosticsPanel'
+    )) {
+      if (!$validationSource.Contains($requiredValue)) {
+        throw "Generated ActionScript is missing required value '$requiredValue'."
+      }
+    }
+
+    if ($validationSource.Contains('VENWORKS XML LOADED') -or
+        $validationSource.Contains('VenworksCuiTest_txt')) {
+      throw "Generated ActionScript still contains the Goal 2 success probe."
     }
 
     $expectedOutputHash = Read-Sha256File -Path $expectedHashPath

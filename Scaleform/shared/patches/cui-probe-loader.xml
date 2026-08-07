@@ -1,104 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<actionScriptPatch name="cui-probe-loader" version="1" script="HUDMenu">
+<actionScriptPatch name="cui-runtime-bootstrap" version="1" script="HUDMenu">
   <insertions>
     <insertion position="after"><anchor><![CDATA[   import flash.net.URLRequest;]]></anchor><content><![CDATA[
-   import flash.events.IOErrorEvent;
-   import flash.events.SecurityErrorEvent;
-   import flash.net.URLLoader;
-   import flash.text.TextField;]]></content></insertion>
+   import venworks.cui.CUIRuntime;]]></content></insertion>
     <insertion position="after"><anchor><![CDATA[      private var SkillPatchLoader:Loader = null;]]></anchor><content><![CDATA[
       
-      private static const VENWORKS_CUI_PROBE_PATH:String = "VenworksCUI/probe.xml";
-      
-      private var VenworksCUIConfigLoader:URLLoader = null;]]></content></insertion>
+      private var VenworksCUIRuntimeInstance:CUIRuntime = null;]]></content></insertion>
     <insertion position="after"><anchor><![CDATA[         super.onAddedToStage();]]></anchor><content><![CDATA[
-         this.LoadVenworksCUIProbe();]]></content></insertion>
-    <insertion position="before"><anchor><![CDATA[      public function ProcessUserEvent(param1:String, param2:Boolean) : Boolean]]></anchor><content><![CDATA[      private function LoadVenworksCUIProbe() : void
-      {
-         if(this.VenworksCUIConfigLoader != null)
+         if(this.VenworksCUIRuntimeInstance == null)
          {
-            return;
+            this.VenworksCUIRuntimeInstance = new CUIRuntime(this);
+            this.VenworksCUIRuntimeInstance.load();
          }
-         this.SetVenworksCUIProbeText("CUI XML LOADING",16776960);
-         this.VenworksCUIConfigLoader = new URLLoader();
-         this.VenworksCUIConfigLoader.addEventListener(Event.COMPLETE,this.OnVenworksCUIProbeLoaded);
-         this.VenworksCUIConfigLoader.addEventListener(IOErrorEvent.IO_ERROR,this.OnVenworksCUIProbeMissing);
-         this.VenworksCUIConfigLoader.addEventListener(SecurityErrorEvent.SECURITY_ERROR,this.OnVenworksCUIProbeSecurityError);
-         try
-         {
-            this.VenworksCUIConfigLoader.load(new URLRequest(VENWORKS_CUI_PROBE_PATH));
-         }
-         catch(param1:Error)
-         {
-            this.ClearVenworksCUIProbeListeners();
-            this.SetVenworksCUIProbeText("CUI XML LOAD ERROR",16728128);
-         }
-      }
-      
-      private function OnVenworksCUIProbeLoaded(param1:Event) : void
-      {
-         var config:XML = null;
-         var configuredLabel:String = null;
-         this.ClearVenworksCUIProbeListeners();
-         try
-         {
-            config = new XML(this.VenworksCUIConfigLoader.data);
-            if(String(config.name()) != "venworksCUIProbe" || config.label.length() != 1)
-            {
-               this.SetVenworksCUIProbeText("CUI XML MALFORMED",16728128);
-               return;
-            }
-            if(String(config.@schemaVersion) != "1")
-            {
-               this.SetVenworksCUIProbeText("CUI XML UNSUPPORTED",16728128);
-               return;
-            }
-            configuredLabel = String(config.label[0]);
-            if(configuredLabel.replace(/\s/g,"").length == 0)
-            {
-               this.SetVenworksCUIProbeText("CUI XML MALFORMED",16728128);
-               return;
-            }
-            this.SetVenworksCUIProbeText(configuredLabel,16776960);
-         }
-         catch(param2:Error)
-         {
-            this.SetVenworksCUIProbeText("CUI XML MALFORMED",16728128);
-         }
-      }
-      
-      private function OnVenworksCUIProbeMissing(param1:IOErrorEvent) : void
-      {
-         this.ClearVenworksCUIProbeListeners();
-         this.SetVenworksCUIProbeText("CUI XML MISSING",16728128);
-      }
-      
-      private function OnVenworksCUIProbeSecurityError(param1:SecurityErrorEvent) : void
-      {
-         this.ClearVenworksCUIProbeListeners();
-         this.SetVenworksCUIProbeText("CUI XML SECURITY ERROR",16728128);
-      }
-      
-      private function ClearVenworksCUIProbeListeners() : void
-      {
-         if(this.VenworksCUIConfigLoader != null)
-         {
-            this.VenworksCUIConfigLoader.removeEventListener(Event.COMPLETE,this.OnVenworksCUIProbeLoaded);
-            this.VenworksCUIConfigLoader.removeEventListener(IOErrorEvent.IO_ERROR,this.OnVenworksCUIProbeMissing);
-            this.VenworksCUIConfigLoader.removeEventListener(SecurityErrorEvent.SECURITY_ERROR,this.OnVenworksCUIProbeSecurityError);
-         }
-      }
-      
-      private function SetVenworksCUIProbeText(param1:String, param2:uint) : void
-      {
-         var probeText:TextField = getChildByName("VenworksCuiTest_txt") as TextField;
-         if(probeText != null)
-         {
-            probeText.text = param1;
-            probeText.textColor = param2;
-         }
-      }
-      
 ]]></content></insertion>
   </insertions>
 </actionScriptPatch>

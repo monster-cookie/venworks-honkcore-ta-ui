@@ -107,48 +107,48 @@ compare an embedded JSON/default configuration or another vanilla-supported
 data-only path. Do not implement TOML parsing in ActionScript without a new
 approved plan.
 
-## Goal 3: Define the versioned layout and palette schemas
+## Goal 3: Establish the reusable component library
 
-Define strict XML schemas for:
+Define the full component catalog before converting individual HUD surfaces.
+Implement the first strict layout subset and prove reusable primitives with a
+fixed, unbound gallery:
 
-- a layout root and schema/runtime versions;
-- design resolution and safe area;
-- palette reference;
-- modules and nodes;
-- anchors, bounds, transforms, z-order, and visibility;
-- labels, meters, images, shapes, and SVG paths;
-- bounded bindings and expressions;
-- palette colors, typography, opacity, strokes, and state values;
-- a defined extension area for forward-compatible optional metadata.
+- group, text, panel, shape, and divider;
+- a shared meter contract;
+- continuous and stacked-triangle meter renderers;
+- strict IDs, bounds, transforms, z-order, visibility, and style references;
+- actionable, error-only diagnostics in a dedicated upper panel.
 
-Unknown required elements and attributes fail with actionable diagnostics.
-Arbitrary ActionScript, JavaScript, network resources, method calls, and
-executable extensions are prohibited.
+Unknown elements, attributes, renderers, duplicate IDs, invalid references,
+and invalid bounds fail safely. Arbitrary ActionScript, JavaScript, network
+resources, method calls, and executable extensions are prohibited. No live HUD
+provider is connected during this goal.
 
-## Goal 4: Implement the minimal configurable player HUD runtime
+## Goal 4: Complete layout composition and asset primitives
 
-Load one core layout and referenced palette, then render:
+Extend the versioned layout schema and runtime with the remaining low-level
+composition features needed by multiple surfaces:
 
-- one static shape;
-- one text field;
-- one proven HUD-provider binding;
-- one conditionally visible node;
-- one transparent PNG;
-- one SVG path.
+- anchors, safe-area behavior, reusable templates, repeaters, and bounded state
+  selection;
+- segmented rectangles, dots/circles, and radial meter renderers;
+- transparent PNG and local SVG assets;
+- authored SVG paths, masks, and permitted embedded symbols;
+- composite button and information-panel foundations.
 
-Ship at least three distinct palette examples. Validate reload, save load,
-first/third person, scanner, death/reload, ladder, and workbench transitions.
+Validate each component in a gallery before it is connected to live data.
+Font Awesome Pro may be evaluated as an explicitly approved, licensed icon
+source, but it is not required when native vector geometry is sufficient.
 
-## Goal 5: Migrate the four existing variants
+## Goal 5: Implement the first configurable player HUD surface
 
-Create clean-room palette packages for Freestar Collective, Crimson Fleet,
-Trackers Alliance, and Venworks. Recreate shared layout behavior independently
-against vanilla provider contracts. Existing HONKCORE configuration may supply
-only observable requirements, labels, coordinates, colors, and user-authored
-art intent; it is not parser or runtime source material.
+Choose one low-risk vanilla-owned surface after provider discovery. Apply
+layout, visibility, and the reusable meter renderers to real data without
+changing the vanilla input, lifecycle, or data-provider contract. Health is a
+candidate, but the exact first surface is a separate approval decision.
 
-Exclude SPECTR and TACR during migration. Every migrated behavior is either
-validated against Starfield or explicitly marked unavailable/unknown.
+Validate reload, save load, first/third person, scanner, death/reload, ladder,
+workbench, and ship transitions before expanding the runtime.
 
 ## Goal 6: Reimplement approved player HUD configurability
 
@@ -158,11 +158,13 @@ Implement in bounded batches:
 2. health, oxygen/CO2, boost, inventory, weapon, ammo, and explosives;
 3. warnings and state transitions;
 4. scanner, enemy, hit, sneak, crosshair, quest, and quick-access surfaces;
-5. bounded effects and animations;
-6. status effects only to the level proven available in an always-loaded HUD.
+5. compass, permitted minimap/radar behavior, panels, and notifications;
+6. bounded effects and animations;
+7. status effects only to the level proven available in an always-loaded HUD.
 
 Each component requires a schema representation, vanilla provider contract,
-default layout, palette hooks, static checks, and Starfield lifecycle tests.
+default layout, future palette hooks, static checks, and Starfield lifecycle
+tests.
 
 ## Goal 7: Implement approved ship UI configurability
 
@@ -179,7 +181,23 @@ Pause between noninteractive and interactive work. Preserve controller and
 keyboard/mouse navigation, warning priority, critical information, and menu
 lifecycle.
 
-## Goal 8: Packaging and release integration
+## Goal 8: Define palettes and migrate the four existing variants
+
+After the approved player and ship component work is stable, define the strict
+palette schema and reference it from the core layout. Palette configuration
+covers named colors, typography, opacity, strokes, states, and permitted asset
+choices without changing component structure or bindings.
+
+Ship three or four example palettes with the customizable base. Create
+clean-room configurations for Freestar Collective, Crimson Fleet, Trackers
+Alliance, and Venworks. Existing owned configuration may supply only observable
+requirements, labels, coordinates, colors, and user-authored art intent; it is
+not parser or runtime source material.
+
+Exclude SPECTR and TACR during migration. Every migrated behavior is either
+validated against Starfield or explicitly marked unavailable/unknown.
+
+## Goal 9: Packaging and release integration
 
 Add `Staging-CUI` and the four migrated staging variants when their required
 runtime artifacts exist. Update the existing release workflow rather than
