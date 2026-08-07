@@ -233,6 +233,47 @@ try {
       throw "Expected exactly one root ShowFrameTag in $inputPath; found $($rootShowFrames.Count)."
     }
 
+    $promptSymbolIds = @()
+    foreach ($symbolClassTag in $scaleform.SelectNodes('/swf/tags/item[@type="SymbolClassTag"]')) {
+      $symbolIds = @($symbolClassTag.tags.item)
+      $symbolNames = @($symbolClassTag.names.item)
+      if ($symbolIds.Count -ne $symbolNames.Count) {
+        throw "SymbolClass ID/name count mismatch in $inputPath."
+      }
+      for ($symbolIndex = 0; $symbolIndex -lt $symbolNames.Count; $symbolIndex++) {
+        if ([string]$symbolNames[$symbolIndex] -eq 'PromptMessageWidget') {
+          $promptSymbolIds += [string]$symbolIds[$symbolIndex]
+        }
+      }
+    }
+    if ($promptSymbolIds.Count -ne 1) {
+      throw "Expected exactly one PromptMessageWidget SymbolClass in $inputPath; found $($promptSymbolIds.Count)."
+    }
+
+    $promptSprite = $scaleform.SelectSingleNode(
+      "/swf/tags/item[@type='DefineSpriteTag' and @spriteId='$($promptSymbolIds[0])']"
+    )
+    if (!$promptSprite) {
+      throw "PromptMessageWidget sprite $($promptSymbolIds[0]) is missing from $inputPath."
+    }
+    $promptTextPlacements = @($promptSprite.SelectNodes(
+      "./subTags/item[@name='textField' and @placeFlagHasCharacter='true']"
+    ))
+    if ($promptTextPlacements.Count -ne 1) {
+      throw "Expected one PromptMessageWidget textField placement in $inputPath; found $($promptTextPlacements.Count)."
+    }
+
+    $promptTextId = [string]$promptTextPlacements[0].characterId
+    $promptTextDefinition = $scaleform.SelectSingleNode(
+      "/swf/tags/item[@type='DefineEditTextTag' and @characterID='$promptTextId']"
+    )
+    if (!$promptTextDefinition -or
+        $promptTextDefinition.fontClass -ne '$MAIN_Font_Bold' -or
+        $promptTextDefinition.hasFontClass -ne 'true' -or
+        $promptTextDefinition.useOutlines -ne 'true') {
+      throw "PromptMessageWidget textField does not have the expected linked `$MAIN_Font_Bold outline font in $inputPath."
+    }
+
     if ($scaleform.SelectNodes('/swf/tags/item[@type="DoABC2Tag" and @name="venworks.cui.components.seed"]').Count -ne 0) {
       throw "Vanilla input unexpectedly contains the Venworks CUI ABC seed."
     }
@@ -358,8 +399,9 @@ try {
     foreach ($requiredValue in @(
       'VenworksCUI/layout.xml',
       'getDefinitionByName',
-      'registerFont',
-      '$MAIN_Font_Bold',
+      'PromptMessageWidget',
+      'CUITextFieldHost',
+      'textField',
       'CUI LAYOUT MISSING',
       'CUI LAYOUT MALFORMED',
       'CUI LAYOUT UNSUPPORTED',

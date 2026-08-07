@@ -21,7 +21,7 @@ renderers without changing vanilla HUD behavior.
 ## Implemented components
 
 - nested group with transforms, opacity, visibility, and z-order;
-- runtime-resolved Starfield-font text;
+- Starfield timeline-linked text hosted by a reusable Venworks component;
 - filled/stroked rectangular panel;
 - rectangle or ellipse shape;
 - horizontal, vertical, or diagonal divider;
@@ -79,8 +79,8 @@ outside Git. During each build, the script verifies that:
 
 | Artifact | Size | SHA-256 |
 |---|---:|---|
-| `Staging-CUI/Interface/hudmenu.gfx` | 279184 | `2EB3ECD4F109E1C2A89D9B14E14AD1FC7F516BC8204E4CE5F3E38BDBD7F254BF` |
-| `Staging-CUI/Interface/hudmenu_lrg.gfx` | 279367 | `E5DBF7FEC83E8BDDEC326B55D48F004E3FFDBCE8EDE4721C969E9E8979C6E635` |
+| `Staging-CUI/Interface/hudmenu.gfx` | 279294 | `AC70BA5B5676732B614B19DF3E82AC734D86798460C736983F1394B90EA9055D` |
+| `Staging-CUI/Interface/hudmenu_lrg.gfx` | 279477 | `34B8AF60BFCD739EEF5920CA1D3AA92827DE5501C5C8E860C188D8A41D371D4D` |
 | `Staging-CUI/Interface/VenworksCUI/layout.xml` | 4714 | `06FAB39C4621C194E3407A649C846B0008D7B18719E518B84E3A980AE27CF8EB` |
 
 ## First in-game result
@@ -90,16 +90,20 @@ divider, ellipse, continuous bar, triangle bar, empty segments, full segments,
 and partial final-triangle clipping all rendered correctly while the vanilla
 HUD remained functional.
 
-The first build displayed gallery text as missing-glyph blocks. Vanilla HUD
-text fields reference locale-linked font classes, while the CUI fields are
-created dynamically. Setting `embedFonts` to false did not resolve that class
-alias and produced the same result in-game. The current build resolves
-`$MAIN_Font_Bold` through `getDefinitionByName`, registers the linked class,
-and reads its actual locale-specific font name before enabling embedded glyphs.
-This preserves Japanese and Simplified Chinese mappings instead of hardcoding
-the English `NB Architekt` name. The correction compiled, reopened, preserved
-all other vanilla classes, and reproduced the hashes above. Its visible result
-remains an in-game gate.
+The first build displayed gallery text as missing-glyph blocks. Setting
+`embedFonts` to false did not resolve the font-class alias, and resolving plus
+registering the linked class at runtime produced the same in-game result.
+Starfield therefore does not expose the imported font glyphs to fields created
+with `new TextField()` in the authored ABC.
+
+The current build no longer creates CUI text fields. It instantiates the
+vanilla `PromptMessageWidget` exported by both HUD variants, retains the whole
+symbol, and styles its timeline-created `textField` child without replacing its
+font. The compiler verifies the complete SymbolClass, child placement, and
+`$MAIN_Font_Bold` outline linkage before building. This preserves locale font
+selection without copying a Bethesda asset or hardcoding the English font
+name. The correction compiled, reopened, preserved all other vanilla classes,
+and reproduced the hashes above. Its visible result remains an in-game gate.
 
 ## In-game validation plan
 

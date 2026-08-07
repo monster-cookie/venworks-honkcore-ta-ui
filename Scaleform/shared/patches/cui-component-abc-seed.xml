@@ -26,9 +26,9 @@
             <item>CUIDiagnosticsPanel</item>
             <item>CUIDiagnosticsPanel$0</item>
             <item>venworks.cui:CUIDiagnosticsPanel</item>
-            <item>CUIFontResolver</item>
-            <item>CUIFontResolver$0</item>
-            <item>venworks.cui:CUIFontResolver</item>
+            <item>CUITextFieldHost</item>
+            <item>CUITextFieldHost$0</item>
+            <item>venworks.cui:CUITextFieldHost</item>
             <item>venworks.cui.components</item>
             <item>CUIComponent</item>
             <item>CUIComponent$0</item>
@@ -512,7 +512,7 @@
           <item type="ScriptInfo" init_index="0">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="0104010c" class_info="12" deleted="false" fileOffset="1406" kindFlags="0" kindType="4" name_index="1" slot_id="1">
+                <item type="TraitClass" bytes="0104010c" class_info="12" deleted="false" fileOffset="1409" kindFlags="0" kindType="4" name_index="1" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -521,7 +521,7 @@
           <item type="ScriptInfo" init_index="3">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="0404010b" class_info="11" deleted="false" fileOffset="1412" kindFlags="0" kindType="4" name_index="4" slot_id="1">
+                <item type="TraitClass" bytes="0404010b" class_info="11" deleted="false" fileOffset="1415" kindFlags="0" kindType="4" name_index="4" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -530,7 +530,7 @@
           <item type="ScriptInfo" init_index="6">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="0604010a" class_info="10" deleted="false" fileOffset="1418" kindFlags="0" kindType="4" name_index="6" slot_id="1">
+                <item type="TraitClass" bytes="0604010a" class_info="10" deleted="false" fileOffset="1421" kindFlags="0" kindType="4" name_index="6" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -539,7 +539,7 @@
           <item type="ScriptInfo" init_index="9">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="08040109" class_info="9" deleted="false" fileOffset="1424" kindFlags="0" kindType="4" name_index="8" slot_id="1">
+                <item type="TraitClass" bytes="08040109" class_info="9" deleted="false" fileOffset="1427" kindFlags="0" kindType="4" name_index="8" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -548,7 +548,7 @@
           <item type="ScriptInfo" init_index="12">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="0a040108" class_info="8" deleted="false" fileOffset="1430" kindFlags="0" kindType="4" name_index="10" slot_id="1">
+                <item type="TraitClass" bytes="0a040108" class_info="8" deleted="false" fileOffset="1433" kindFlags="0" kindType="4" name_index="10" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -557,7 +557,7 @@
           <item type="ScriptInfo" init_index="15">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="0c040107" class_info="7" deleted="false" fileOffset="1436" kindFlags="0" kindType="4" name_index="12" slot_id="1">
+                <item type="TraitClass" bytes="0c040107" class_info="7" deleted="false" fileOffset="1439" kindFlags="0" kindType="4" name_index="12" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -566,7 +566,7 @@
           <item type="ScriptInfo" init_index="18">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="0e040106" class_info="6" deleted="false" fileOffset="1442" kindFlags="0" kindType="4" name_index="14" slot_id="1">
+                <item type="TraitClass" bytes="0e040106" class_info="6" deleted="false" fileOffset="1445" kindFlags="0" kindType="4" name_index="14" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -575,7 +575,7 @@
           <item type="ScriptInfo" init_index="21">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="10040105" class_info="5" deleted="false" fileOffset="1448" kindFlags="0" kindType="4" name_index="16" slot_id="1">
+                <item type="TraitClass" bytes="10040105" class_info="5" deleted="false" fileOffset="1451" kindFlags="0" kindType="4" name_index="16" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -584,7 +584,7 @@
           <item type="ScriptInfo" init_index="24">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="12040104" class_info="4" deleted="false" fileOffset="1454" kindFlags="0" kindType="4" name_index="18" slot_id="1">
+                <item type="TraitClass" bytes="12040104" class_info="4" deleted="false" fileOffset="1457" kindFlags="0" kindType="4" name_index="18" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -593,7 +593,7 @@
           <item type="ScriptInfo" init_index="27">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="14040103" class_info="3" deleted="false" fileOffset="1460" kindFlags="0" kindType="4" name_index="20" slot_id="1">
+                <item type="TraitClass" bytes="14040103" class_info="3" deleted="false" fileOffset="1463" kindFlags="0" kindType="4" name_index="20" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -602,7 +602,7 @@
           <item type="ScriptInfo" init_index="30">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="16040102" class_info="2" deleted="false" fileOffset="1466" kindFlags="0" kindType="4" name_index="22" slot_id="1">
+                <item type="TraitClass" bytes="16040102" class_info="2" deleted="false" fileOffset="1469" kindFlags="0" kindType="4" name_index="22" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -611,7 +611,7 @@
           <item type="ScriptInfo" init_index="33">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="18040101" class_info="1" deleted="false" fileOffset="1472" kindFlags="0" kindType="4" name_index="24" slot_id="1">
+                <item type="TraitClass" bytes="18040101" class_info="1" deleted="false" fileOffset="1475" kindFlags="0" kindType="4" name_index="24" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -620,7 +620,7 @@
           <item type="ScriptInfo" init_index="36">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="1a040100" class_info="0" deleted="false" fileOffset="1478" kindFlags="0" kindType="4" name_index="26" slot_id="1">
+                <item type="TraitClass" bytes="1a040100" class_info="0" deleted="false" fileOffset="1481" kindFlags="0" kindType="4" name_index="26" slot_id="1">
                   <metadata />
                 </item>
               </traits>

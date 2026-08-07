@@ -41,9 +41,10 @@ identical and that the reopened output contains the required layout and
 diagnostic contracts. Full exported Bethesda classes are never repository
 source.
 
-Dynamic CUI text resolves Starfield's locale-linked font classes at runtime,
-registers the resolved embedded font, and uses its actual locale-specific name.
-The repository does not bundle or hardcode Bethesda font files.
+Dynamic CUI text retains Starfield's exported `PromptMessageWidget` symbol and
+styles its timeline-created `textField` child. The build verifies that this
+vanilla field remains linked to the locale-specific `$MAIN_Font_Bold` outline
+font. The repository does not copy or bundle the vanilla symbol or font files.
 
 `decompileScaleform.ps1` is a lower-level helper for producing a temporary
 JPEXS XML file during patch development. Its output must not be committed.

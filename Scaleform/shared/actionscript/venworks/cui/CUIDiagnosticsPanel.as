@@ -25,8 +25,6 @@ package venworks.cui
          detailField = this.createField(20,54,580,78,17,16777215,false);
          detailField.multiline = true;
          detailField.wordWrap = true;
-         addChild(titleField);
-         addChild(detailField);
          visible = false;
       }
 
@@ -46,15 +44,20 @@ package venworks.cui
 
       private function createField(param1:Number, param2:Number, param3:Number, param4:Number, param5:Number, param6:uint, param7:Boolean) : TextField
       {
-         var field:TextField = new TextField();
-         field.x = param1;
-         field.y = param2;
+         var host:CUITextFieldHost = new CUITextFieldHost();
+         var field:TextField = host.field;
+         var format:TextFormat = field.defaultTextFormat;
+         host.x = param1;
+         host.y = param2;
          field.width = param3;
          field.height = param4;
          field.selectable = false;
          field.mouseEnabled = false;
-         field.embedFonts = true;
-         field.defaultTextFormat = new TextFormat(CUIFontResolver.resolve("$MAIN_Font_Bold"),param5,param6,param7);
+         format.size = param5;
+         format.color = param6;
+         format.bold = param7;
+         field.defaultTextFormat = format;
+         addChild(host);
          return field;
       }
    }
