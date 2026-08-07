@@ -27,6 +27,24 @@ inspected and tested.
 
 ## Foundation primitives
 
+### Layout composition
+
+| Capability | Status | Required behavior |
+|---|---|---|
+| Absolute positioning | Implemented | Preserve parent-relative `x` and `y` behavior when no anchor is configured. |
+| Nine-point anchoring | Implemented | Align transformed configured bounds to top, center, or bottom and left, center, or right parent points with signed offsets. |
+| Root safe area | Implemented | Anchor root components inside Starfield's visible rectangle after applying four independent design-space insets. |
+| Nested anchoring | Implemented | Anchor children to their parent group's configured bounds. |
+| Reusable template | Future | Instantiate an allowlisted component tree with bounded data-only parameters. |
+| Repeater/list layout | Future | Lay out bounded items vertically, horizontally, or in a grid. |
+| Bounded state selection | Future | Select one declared child state without expressions or arbitrary method calls. |
+
+Goal 4A keeps a fixed 1920-by-1080 design coordinate system and relies on
+Starfield's `Extensions.visibleRect` for viewport boundaries. It does not
+apply nonuniform screen scaling. Runtime acceptance at standard and ultrawide
+aspect ratios remains required before the capability is used by a live HUD
+surface.
+
 | Component | Status | Required behavior |
 |---|---|---|
 | Group | Implemented | Nest children and apply bounds, transforms, opacity, visibility, and z-order. |

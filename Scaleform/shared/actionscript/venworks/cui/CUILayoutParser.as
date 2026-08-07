@@ -23,7 +23,7 @@ package venworks.cui
          }
          if(Number(param1.@designWidth) != 1920 || Number(param1.@designHeight) != 1080)
          {
-            throw new Error("INVALID|Goal 3 requires a 1920x1080 design space.");
+            throw new Error("INVALID|The layout design space must be 1920x1080.");
          }
          this.requireFiniteNonNegative(param1,"safeLeft");
          this.requireFiniteNonNegative(param1,"safeTop");
@@ -120,12 +120,12 @@ package venworks.cui
             type = String(child.name());
             if(type == "group")
             {
-               this.validateBase(child,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z"]);
+               this.validateBase(child,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor"]);
                this.validateChildren(child);
             }
             else if(type == "text")
             {
-               this.validateBase(child,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","value","font","fontSize","color","bold","align"]);
+               this.validateBase(child,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor","value","font","fontSize","color","bold","align"]);
                if(String(child.@value).length == 0)
                {
                   throw new Error("INVALID|Text value cannot be empty: " + String(child.@id));
@@ -141,7 +141,7 @@ package venworks.cui
             }
             else if(type == "panel")
             {
-               this.validateBase(child,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","fillColor","fillOpacity","strokeColor","strokeOpacity","strokeWidth"]);
+               this.validateBase(child,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor","fillColor","fillOpacity","strokeColor","strokeOpacity","strokeWidth"]);
                this.requireColor(child,"fillColor");
                this.requireColor(child,"strokeColor");
                this.requireUnitInterval(child,"fillOpacity");
@@ -150,7 +150,7 @@ package venworks.cui
             }
             else if(type == "shape")
             {
-               this.validateBase(child,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","shape","fillColor","fillOpacity","strokeColor","strokeOpacity","strokeWidth"]);
+               this.validateBase(child,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor","shape","fillColor","fillOpacity","strokeColor","strokeOpacity","strokeWidth"]);
                if(String(child.@shape) != "rectangle" && String(child.@shape) != "ellipse")
                {
                   throw new Error("INVALID|Unsupported shape: " + String(child.@shape));
@@ -163,14 +163,14 @@ package venworks.cui
             }
             else if(type == "divider")
             {
-               this.validateBase(child,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","color","strokeOpacity","strokeWidth"]);
+               this.validateBase(child,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor","color","strokeOpacity","strokeWidth"]);
                this.requireColor(child,"color");
                this.requireUnitInterval(child,"strokeOpacity");
                this.requirePositive(child,"strokeWidth");
             }
             else if(type == "meter")
             {
-               this.validateBase(child,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","style","value","max"]);
+               this.validateBase(child,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor","style","value","max"]);
                style = this.getMeterStyle(String(child.@style));
                this.requireFinite(child,"value");
                this.requireFinite(child,"max");
@@ -209,6 +209,23 @@ package venworks.cui
          this.requireOptionalFinite(param1,"scaleX");
          this.requireOptionalFinite(param1,"scaleY");
          this.requireInteger(param1,"z");
+         this.requireOptionalAnchor(param1);
+      }
+
+      private function requireOptionalAnchor(param1:XML) : void
+      {
+         var value:String = null;
+         if(param1.@anchor.length() == 0)
+         {
+            return;
+         }
+         value = String(param1.@anchor);
+         if(value != "top-left" && value != "top-center" && value != "top-right" &&
+            value != "center-left" && value != "center" && value != "center-right" &&
+            value != "bottom-left" && value != "bottom-center" && value != "bottom-right")
+         {
+            throw new Error("INVALID|Unsupported component anchor: " + value);
+         }
       }
 
       private function requireAttributes(param1:XML, param2:Array) : void

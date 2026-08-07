@@ -140,6 +140,15 @@ Validate each component in a gallery before it is connected to live data.
 Font Awesome Pro may be evaluated as an explicitly approved, licensed icon
 source, but it is not required when native vector geometry is sufficient.
 
+Goal 4 is divided into bounded review gates. Goal 4A implements only the
+backward-compatible responsive layout foundation: optional nine-point
+anchoring, operational root safe-area insets, group-relative anchoring, and
+unchanged absolute positioning. It uses Starfield's vanilla
+`Extensions.visibleRect` contract and retains fixed 1920-by-1080 design
+proportions. Templates, repeaters, state selection, additional meter
+renderers, assets, masks, symbols, and composite foundations remain later Goal
+4 gates.
+
 ## Goal 5: Implement the first configurable player HUD surface
 
 Choose one low-risk vanilla-owned surface after provider discovery. Apply

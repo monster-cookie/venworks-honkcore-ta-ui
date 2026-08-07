@@ -35,7 +35,7 @@ from the validation records.
 
 The build injects the Venworks-only ABC seed, exports Bethesda ActionScript only
 into ignored temporary storage, verifies the authored `HUDMenu` patch anchors,
-and imports the patched document class plus the 13 repository-authored CUI
+and imports the patched document class plus the 14 repository-authored CUI
 classes. It confirms that every other exported class remains textually
 identical and that the reopened output contains the required layout and
 diagnostic contracts. Full exported Bethesda classes are never repository
@@ -50,6 +50,17 @@ font. The repository does not copy or bundle the vanilla symbol or font files.
 JPEXS XML file during patch development. Its output must not be committed.
 
 Files under `shared/fixtures` are developer test inputs. The Goal 3 component
-gallery is the staged `layout.xml`; malformed fixtures are intentionally not
-well-formed XML. See `../docs/GOAL_3_COMPONENT_LIBRARY.md` and
+gallery remains the absolute-positioning compatibility fixture. The Goal 4A
+anchor gallery is the staged `layout.xml` and exercises all nine root anchors,
+nested group anchors, safe-area insets, and an absolute-positioned control.
+Malformed fixtures are intentionally not well-formed XML. See
+`../docs/GOAL_3_COMPONENT_LIBRARY.md`,
+`../docs/GOAL_4A_RESPONSIVE_LAYOUT.md`, and
 `../docs/COMPONENT_CATALOG.md`.
+
+An optional component `anchor` uses one of `top-left`, `top-center`,
+`top-right`, `center-left`, `center`, `center-right`, `bottom-left`,
+`bottom-center`, or `bottom-right`. Without `anchor`, `x` and `y` retain their
+absolute parent-relative meaning. Root anchors use Starfield's
+`Extensions.visibleRect` with the four configured safe-area insets; nested
+anchors use the parent group's configured bounds.

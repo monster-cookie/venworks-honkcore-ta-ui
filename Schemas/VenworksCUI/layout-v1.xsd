@@ -26,6 +26,20 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="anchorType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="top-left" />
+      <xs:enumeration value="top-center" />
+      <xs:enumeration value="top-right" />
+      <xs:enumeration value="center-left" />
+      <xs:enumeration value="center" />
+      <xs:enumeration value="center-right" />
+      <xs:enumeration value="bottom-left" />
+      <xs:enumeration value="bottom-center" />
+      <xs:enumeration value="bottom-right" />
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:attributeGroup name="componentAttributes">
     <xs:attribute name="id" type="idType" use="required" />
     <xs:attribute name="x" type="xs:decimal" use="required" />
@@ -38,6 +52,7 @@
     <xs:attribute name="scaleX" type="xs:decimal" default="1" />
     <xs:attribute name="scaleY" type="xs:decimal" default="1" />
     <xs:attribute name="z" type="xs:integer" use="required" />
+    <xs:attribute name="anchor" type="anchorType" />
   </xs:attributeGroup>
 
   <xs:complexType name="textType">

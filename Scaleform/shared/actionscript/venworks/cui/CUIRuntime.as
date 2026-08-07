@@ -26,6 +26,7 @@ package venworks.cui
       private var diagnostics:CUIDiagnosticsPanel;
       private var loader:URLLoader;
       private var parser:CUILayoutParser;
+      private var layoutEngine:CUILayoutEngine;
 
       public function CUIRuntime(param1:DisplayObjectContainer)
       {
@@ -79,7 +80,8 @@ package venworks.cui
          {
             parser = new CUILayoutParser();
             parser.parse(config);
-            this.renderChildren(parser.components,componentLayer);
+            layoutEngine = new CUILayoutEngine(componentLayer,config);
+            this.renderChildren(parser.components,componentLayer,parser.components);
             diagnostics.clear();
          }
          catch(param3:Error)
@@ -119,7 +121,7 @@ package venworks.cui
          }
       }
 
-      private function renderChildren(param1:XML, param2:DisplayObjectContainer) : void
+      private function renderChildren(param1:XML, param2:DisplayObjectContainer, param3:XML) : void
       {
          var entries:Array = [];
          var node:XML = null;
@@ -135,9 +137,10 @@ package venworks.cui
             node = entry.xml as XML;
             component = this.createComponent(node);
             param2.addChild(component);
+            layoutEngine.position(component,node,param2,param3);
             if(String(node.name()) == "group")
             {
-               this.renderChildren(node,component);
+               this.renderChildren(node,component,node);
             }
          }
       }
