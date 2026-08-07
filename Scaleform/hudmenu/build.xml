@@ -4,4 +4,5 @@
                 outputFile="hudmenu.gfx"
                 vanillaHashFile="vanilla.sha256"
                 expectedHashFile="validation/expected.sha256"
-                patch="../shared/patches/cui-test-probe.xml" />
+                patch="../shared/patches/cui-test-probe.xml"
+                actionScriptPatch="../shared/patches/cui-probe-loader.xml" />

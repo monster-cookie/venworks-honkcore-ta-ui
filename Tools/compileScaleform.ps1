@@ -74,6 +74,60 @@ function Invoke-Jpexs {
   }
 }
 
+function Apply-ActionScriptPatch {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$SourcePath,
+
+    [Parameter(Mandatory = $true)]
+    [string]$PatchPath,
+
+    [Parameter(Mandatory = $true)]
+    [string]$OutputPath
+  )
+
+  [xml]$actionScriptPatch = Get-Content -LiteralPath $PatchPath -Raw
+  $patchRoot = $actionScriptPatch.actionScriptPatch
+  if (!$patchRoot -or !$patchRoot.script) {
+    throw "Invalid ActionScript patch: $PatchPath"
+  }
+
+  $source = Get-Content -LiteralPath $SourcePath -Raw
+  $insertions = $actionScriptPatch.SelectNodes('/actionScriptPatch/insertions/insertion')
+  if ($insertions.Count -eq 0) {
+    throw "ActionScript patch contains no insertions: $PatchPath"
+  }
+
+  foreach ($insertion in $insertions) {
+    $anchor = [string]$insertion.anchor.InnerText
+    $content = [string]$insertion.content.InnerText
+    $position = [string]$insertion.position
+    $anchorMatches = [regex]::Matches($source, [regex]::Escape($anchor)).Count
+
+    if ($anchorMatches -ne 1) {
+      throw "Expected one '$anchor' anchor in $SourcePath; found $anchorMatches."
+    }
+
+    if ($position -eq 'before') {
+      $replacement = $content + $anchor
+    }
+    elseif ($position -eq 'after') {
+      $replacement = $anchor + $content
+    }
+    else {
+      throw "Unsupported ActionScript insertion position '$position' in $PatchPath."
+    }
+
+    $source = $source.Replace($anchor, $replacement)
+  }
+
+  [System.IO.File]::WriteAllText(
+    $OutputPath,
+    $source,
+    [System.Text.UTF8Encoding]::new($false)
+  )
+}
+
 $script:ResolvedJavaPath = Resolve-RequiredFile -Path $JavaPath -Description "Java executable"
 $script:ResolvedJpexsJarPath = Resolve-RequiredFile -Path $JpexsJarPath -Description "JPEXS JAR"
 $resolvedVanillaInterfacePath = (Resolve-Path -LiteralPath $VanillaInterfacePath).Path
@@ -114,6 +168,9 @@ try {
     $patchPath = Resolve-RequiredFile `
       -Path (Join-Path $manifestDirectory ([string]$build.patch)) `
       -Description "Scaleform patch"
+    $actionScriptPatchPath = Resolve-RequiredFile `
+      -Path (Join-Path $manifestDirectory ([string]$build.actionScriptPatch)) `
+      -Description "ActionScript patch"
 
     $expectedVanillaHash = Read-Sha256File -Path $vanillaHashPath
     $actualVanillaHash = (Get-FileHash -LiteralPath $inputPath -Algorithm SHA256).Hash
@@ -125,8 +182,12 @@ try {
     New-Item -ItemType Directory -Path $movieWorkDirectory | Out-Null
     $decompiledXmlPath = Join-Path $movieWorkDirectory "vanilla.xml"
     $patchedXmlPath = Join-Path $movieWorkDirectory "patched.xml"
+    $timelineGfxPath = Join-Path $movieWorkDirectory "timeline.gfx"
     $generatedGfxPath = Join-Path $movieWorkDirectory ([string]$build.outputFile)
     $reopenedXmlPath = Join-Path $movieWorkDirectory "reopened.xml"
+    $exportedScriptsDirectory = Join-Path $movieWorkDirectory "exported-scripts"
+    $importScriptsDirectory = Join-Path $movieWorkDirectory "import-scripts"
+    $validationScriptsDirectory = Join-Path $movieWorkDirectory "validation-scripts"
 
     & $decompileScript `
       -JavaPath $script:ResolvedJavaPath `
@@ -187,8 +248,32 @@ try {
       $xmlWriter.Dispose()
     }
 
-    Invoke-Jpexs -Arguments @('-xml2swf', $patchedXmlPath, $generatedGfxPath) -Description "building $($build.name)"
+    Invoke-Jpexs -Arguments @('-xml2swf', $patchedXmlPath, $timelineGfxPath) -Description "building the $($build.name) timeline"
+    Invoke-Jpexs `
+      -Arguments @('-format', 'script:as', '-export', 'script', $exportedScriptsDirectory, $timelineGfxPath) `
+      -Description "exporting $($build.name) ActionScript"
+
+    [xml]$actionScriptPatch = Get-Content -LiteralPath $actionScriptPatchPath -Raw
+    $scriptName = [string]$actionScriptPatch.actionScriptPatch.script
+    $exportedScriptMatches = @(Get-ChildItem -LiteralPath $exportedScriptsDirectory -Recurse -File -Filter "$scriptName.as")
+    if ($exportedScriptMatches.Count -ne 1) {
+      throw "Expected one exported $scriptName.as; found $($exportedScriptMatches.Count)."
+    }
+
+    New-Item -ItemType Directory -Path $importScriptsDirectory | Out-Null
+    $patchedScriptPath = Join-Path $importScriptsDirectory "$scriptName.as"
+    Apply-ActionScriptPatch `
+      -SourcePath $exportedScriptMatches[0].FullName `
+      -PatchPath $actionScriptPatchPath `
+      -OutputPath $patchedScriptPath
+
+    Invoke-Jpexs `
+      -Arguments @('-onerror', 'abort', '-importScript', $timelineGfxPath, $generatedGfxPath, $importScriptsDirectory) `
+      -Description "importing the $($build.name) ActionScript probe"
     Invoke-Jpexs -Arguments @('-swf2xml', $generatedGfxPath, $reopenedXmlPath) -Description "reopening $($build.name)"
+    Invoke-Jpexs `
+      -Arguments @('-format', 'script:as', '-export', 'script', $validationScriptsDirectory, $generatedGfxPath) `
+      -Description "validating $($build.name) ActionScript"
 
     $generatedBytes = [System.IO.File]::ReadAllBytes($generatedGfxPath)
     if ($generatedBytes.Length -lt 3 -or [System.Text.Encoding]::ASCII.GetString($generatedBytes, 0, 3) -ne 'GFX') {
@@ -199,6 +284,25 @@ try {
     if ($reopened.SelectNodes("/swf/tags/item[@characterID='$characterId']").Count -ne 1 -or
         $reopened.SelectNodes("/swf/tags/item[@characterId='$characterId' and @depth='$rootDepth']").Count -ne 1) {
       throw "Generated output does not contain the expected probe definition and placement."
+    }
+
+    $validationScriptMatches = @(Get-ChildItem -LiteralPath $validationScriptsDirectory -Recurse -File -Filter "$scriptName.as")
+    if ($validationScriptMatches.Count -ne 1) {
+      throw "Expected one reopened $scriptName.as; found $($validationScriptMatches.Count)."
+    }
+
+    $validationScript = Get-Content -LiteralPath $validationScriptMatches[0].FullName -Raw
+    foreach ($requiredValue in @(
+      'VenworksCUI/probe.xml',
+      'CUI XML MISSING',
+      'CUI XML MALFORMED',
+      'CUI XML UNSUPPORTED',
+      'CUI XML SECURITY ERROR',
+      'VenworksCuiTest_txt'
+    )) {
+      if (!$validationScript.Contains($requiredValue)) {
+        throw "Generated $scriptName class is missing required value '$requiredValue'."
+      }
     }
 
     $expectedOutputHash = Read-Sha256File -Path $expectedHashPath
