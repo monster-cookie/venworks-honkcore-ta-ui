@@ -79,7 +79,7 @@ package venworks.cui
 
       private function resolveInstance(param1:XML, param2:XML) : void
       {
-         this.requireAttributes(param1,["id","template","x","y","anchor","visible","z"]);
+         this.requireAttributes(param1,["id","template","x","y","anchor","visible","visibleWhen","z"]);
          this.validatePlacement(param1,true);
          var instance:XML = this.createTemplateInstance(
             String(param1.@template),
@@ -118,7 +118,7 @@ package venworks.cui
          var instance:XML = null;
          var container:XML = <group />;
 
-         this.requireAttributes(param1,["id","template","x","y","width","height","anchor","visible","z","flow","gapX","gapY","columns"]);
+         this.requireAttributes(param1,["id","template","x","y","width","height","anchor","visible","visibleWhen","z","flow","gapX","gapY","columns"]);
          this.validatePlacement(param1,true);
          this.requireFiniteNonNegative(param1,"width");
          this.requireFiniteNonNegative(param1,"height");
@@ -164,6 +164,7 @@ package venworks.cui
          container.@z = String(param1.@z);
          this.copyOptionalAttribute(param1,container,"anchor");
          this.copyOptionalAttribute(param1,container,"visible");
+         this.copyOptionalAttribute(param1,container,"visibleWhen");
 
          for each(item in param1.children())
          {
@@ -176,7 +177,7 @@ package venworks.cui
             {
                throw new Error("INVALID|Repeater " + repeaterId + " exceeds the 64-item limit.");
             }
-            this.requireAttributes(item,["id","visible"]);
+            this.requireAttributes(item,["id","visible","visibleWhen"]);
             itemId = this.requireId(item);
             if(itemIds[itemId] != null)
             {
@@ -216,6 +217,7 @@ package venworks.cui
             placement.@x = itemX;
             placement.@y = itemY;
             placement.@z = visibleIndex;
+            this.copyOptionalAttribute(item,placement,"visibleWhen");
             instance = this.createTemplateInstance(
                templateId,
                String(placement.@id),
@@ -244,7 +246,7 @@ package venworks.cui
          var templateId:String = null;
          var selectedOption:XML = null;
          var instance:XML = null;
-         this.requireAttributes(param1,["id","selected","x","y","anchor","visible","z"]);
+         this.requireAttributes(param1,["id","selected","x","y","anchor","visible","visibleWhen","z"]);
          this.validatePlacement(param1,false);
          stateId = String(param1.@id);
          selected = this.requireAttribute(param1,"selected");
@@ -313,6 +315,7 @@ package venworks.cui
          {
             root.@visible = String(param3.@visible).toLowerCase();
          }
+         this.combineVisibleWhen(root,param3);
          this.prefixDescendantIds(root,param2);
          return root;
       }
@@ -339,7 +342,7 @@ package venworks.cui
             {
                throw new Error("INVALID|" + String(param2.name()) + " may contain only override elements.");
             }
-            this.requireAttributes(override,["target","text","meterValue","visible"]);
+            this.requireAttributes(override,["target","text","meterValue","visible","visibleWhen"]);
             target = this.requireNamedValue(override,"target");
             targetNode = nodes[target] as XML;
             if(targetNode == null)
@@ -373,6 +376,12 @@ package venworks.cui
                this.readOptionalBoolean(override,"visible",true);
                this.recordOverride(applied,target,"visible");
                targetNode.@visible = String(override.@visible).toLowerCase();
+               ++modificationCount;
+            }
+            if(override.@visibleWhen.length() == 1)
+            {
+               this.recordOverride(applied,target,"visibleWhen");
+               targetNode.@visibleWhen = String(override.@visibleWhen);
                ++modificationCount;
             }
             if(modificationCount == 0)
@@ -442,6 +451,28 @@ package venworks.cui
             {
                param2.@visible = String(param1.@visible).toLowerCase();
             }
+            else if(param3 == "visibleWhen")
+            {
+               param2.@visibleWhen = String(param1.@visibleWhen);
+            }
+         }
+      }
+
+      private function combineVisibleWhen(param1:XML, param2:XML) : void
+      {
+         var existing:String = String(param1.@visibleWhen);
+         var placement:String = String(param2.@visibleWhen);
+         if(param2.@visibleWhen.length() == 0)
+         {
+            return;
+         }
+         if(existing.length == 0)
+         {
+            param1.@visibleWhen = placement;
+         }
+         else
+         {
+            param1.@visibleWhen = "(" + existing + ") AND (" + placement + ")";
          }
       }
 

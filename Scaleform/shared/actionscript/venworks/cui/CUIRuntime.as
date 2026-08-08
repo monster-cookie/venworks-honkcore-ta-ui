@@ -27,6 +27,10 @@ package venworks.cui
       private var loader:URLLoader;
       private var parser:CUILayoutParser;
       private var layoutEngine:CUILayoutEngine;
+      private var conditionParser:CUIConditionParser;
+      private var conditionContext:CUIConditionContext;
+      private var visibilityBindings:Array;
+      private var vanillaAdapters:Array;
 
       public function CUIRuntime(param1:DisplayObjectContainer)
       {
@@ -80,12 +84,20 @@ package venworks.cui
          {
             parser = new CUILayoutParser();
             parser.parse(config);
+            conditionParser = new CUIConditionParser();
+            visibilityBindings = [];
+            vanillaAdapters = [];
+            conditionContext = new CUIConditionContext();
+            conditionContext.addEventListener(Event.CHANGE,this.onConditionChanged);
             layoutEngine = new CUILayoutEngine(componentLayer,config);
             this.renderChildren(parser.components,componentLayer,parser.components);
+            this.createVanillaAdapters(parser.vanillaVisibility);
+            this.applyConditions();
             diagnostics.clear();
          }
          catch(param3:Error)
          {
+            this.clearComponentLayer();
             message = param3.message;
             separator = message.indexOf("|");
             if(message.indexOf("UNSUPPORTED|") == 0)
@@ -138,6 +150,14 @@ package venworks.cui
             component = this.createComponent(node);
             param2.addChild(component);
             layoutEngine.position(component,node,param2,param3);
+            if(node.@visibleWhen.length() == 1)
+            {
+               visibilityBindings.push(new CUIVisibilityBinding(
+                  component,
+                  conditionParser.compile(String(node.@visibleWhen)),
+                  node.@visible.length() == 0 || String(node.@visible).toLowerCase() == "true"
+               ));
+            }
             if(String(node.name()) == "group")
             {
                this.renderChildren(node,component,node);
@@ -179,6 +199,48 @@ package venworks.cui
             return new CUITriangleBar(param1,style);
          }
          throw new Error("INVALID|Unknown component: " + type);
+      }
+
+      private function createVanillaAdapters(param1:XML) : void
+      {
+         var target:XML = null;
+         for each(target in param1.children())
+         {
+            vanillaAdapters.push(new CUIVanillaVisibilityAdapter(
+               owner,
+               String(target.@id),
+               conditionParser.compile(String(target.@visibleWhen))
+            ));
+         }
+      }
+
+      private function onConditionChanged(param1:Event) : void
+      {
+         this.applyConditions();
+      }
+
+      private function applyConditions() : void
+      {
+         var binding:CUIVisibilityBinding = null;
+         var adapter:CUIVanillaVisibilityAdapter = null;
+         for each(binding in visibilityBindings)
+         {
+            binding.apply(conditionContext);
+         }
+         for each(adapter in vanillaAdapters)
+         {
+            adapter.apply(conditionContext);
+         }
+      }
+
+      private function clearComponentLayer() : void
+      {
+         while(componentLayer.numChildren > 0)
+         {
+            componentLayer.removeChildAt(componentLayer.numChildren - 1);
+         }
+         visibilityBindings = [];
+         vanillaAdapters = [];
       }
    }
 }

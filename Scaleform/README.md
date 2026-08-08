@@ -52,14 +52,19 @@ JPEXS XML file during patch development. Its output must not be committed.
 Files under `shared/fixtures` are developer test inputs. The Goal 3 component
 gallery remains the absolute-positioning compatibility fixture, and the Goal
 4A anchor gallery exercises responsive placement. The Goal 4B composition
-gallery is the staged `layout.xml`; it exercises reusable templates, approved
-overrides, vertical/horizontal/grid repeaters, collapsed hidden items, and
-static state selection. Malformed fixtures are intentionally not well-formed
+gallery exercises reusable templates, approved overrides,
+vertical/horizontal/grid repeaters, collapsed hidden items, and static state
+selection. The Goal 4C condition gallery is the staged `layout.xml`; it
+exercises case-insensitive visibility expressions, confirmed HUD providers,
+composition visibility, and dynamic repeater-item gates. The separate vanilla
+visibility gallery hides only the allowlisted top-center group for an isolated
+adapter test. Malformed fixtures are intentionally not well-formed
 XML, while other negative fixtures may be schema-valid and rejected by runtime
 semantic checks. See
 `../docs/GOAL_3_COMPONENT_LIBRARY.md`,
 `../docs/GOAL_4A_RESPONSIVE_LAYOUT.md`, and
-`../docs/GOAL_4B_COMPOSITION.md`, and
+`../docs/GOAL_4B_COMPOSITION.md`,
+`../docs/GOAL_4C_CONDITIONS.md`, and
 `../docs/COMPONENT_CATALOG.md`.
 
 An optional component `anchor` uses one of `top-left`, `top-center`,
@@ -73,4 +78,11 @@ Templates are declared in `definitions` and contain exactly one primitive-only
 root group. `instance`, `repeater`, and `state` elements expand those templates
 before ordinary component validation and rendering. The runtime permits only
 text, meter-value, and visibility overrides; it does not evaluate scripts,
-expressions, interpolation, live bindings, or conditions in Goal 4B.
+expressions, interpolation, or arbitrary live bindings in Goal 4B.
+
+Goal 4C adds the bounded `visibleWhen` language described in
+`../docs/GOAL_4C_CONDITIONS.md`. Identifiers and keywords are case-insensitive,
+underscores are ignored, and provider values remain unknown/hidden until their
+first confirmed vanilla update. An optional `vanillaVisibility` section accepts
+only the hardcoded target allowlist; configuration cannot provide display paths
+or ActionScript method names. Engine-sensitive controls remain blocked.

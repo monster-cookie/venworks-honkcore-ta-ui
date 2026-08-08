@@ -38,8 +38,8 @@ inspected and tested.
 | Reusable template | Implemented | Instantiate a primitive-only component tree with bounded text, meter-value, and visibility overrides. |
 | Repeater/list layout | Implemented | Lay out up to 64 declared items vertically, horizontally, or in a grid; hidden items collapse. |
 | Bounded state selection | Implemented | Select one of up to 16 declared templates without expressions or arbitrary method calls. |
-| Data-only conditions | Next | Evaluate an allowlisted condition vocabulary against verified vanilla state. |
-| Vanilla visibility adapter | Next | Hide or show only explicitly mapped default UI pieces in the owning movie. |
+| Data-only conditions | Implemented; acceptance pending | Evaluate bounded, case-insensitive visibility expressions against verified vanilla state with fail-hidden unknown initialization. |
+| Vanilla visibility adapter | Implemented; acceptance pending | Apply alpha presentation gates only to explicitly mapped default UI pieces while preserving vanilla visibility and lifecycle behavior. |
 
 Goal 4A keeps a fixed 1920-by-1080 design coordinate system and relies on
 Starfield's `Extensions.visibleRect` for viewport boundaries. It does not
@@ -174,6 +174,9 @@ Goal 4B adds primitive-only templates, instances, fixed repeaters, static state
 selection, and small text/meter-value/visibility overrides. These remain fixed
 configuration and do not connect to live Starfield data.
 
-Goal 4C is next: data-only conditions and per-movie allowlisted visibility
-adapters for verified vanilla UI pieces. Additional meter renderers, assets,
-masks, symbols, and composite components remain later Goal 4 gates.
+Goal 4C adds `visibleWhen` to components and composition placements, a bounded
+Boolean/numeric expression evaluator, confirmed player-HUD provider adapters,
+and a hardcoded initial vanilla target allowlist. Ship values, named effects,
+and engine-sensitive vanilla targets remain unavailable pending owner-specific
+discovery and isolated tests. Additional meter renderers, assets, masks,
+symbols, and composite components remain later Goal 4 gates.

@@ -7,6 +7,8 @@ package venworks.cui
       private var definitionIds:Object;
       private var componentIds:Object;
       private var componentRoot:XML;
+      private var vanillaVisibilityRoot:XML;
+      private var conditionParser:CUIConditionParser;
 
       public function CUILayoutParser()
       {
@@ -19,6 +21,8 @@ package venworks.cui
          templates = {};
          definitionIds = {};
          componentIds = {};
+         conditionParser = new CUIConditionParser();
+         vanillaVisibilityRoot = <vanillaVisibility />;
          this.requireName(param1,"venworksCUI");
          this.requireAttributes(param1,["schemaVersion","runtimeVersion","designWidth","designHeight","safeLeft","safeTop","safeRight","safeBottom"]);
          if(String(param1.@schemaVersion) != "1" || String(param1.@runtimeVersion) != "1")
@@ -38,20 +42,25 @@ package venworks.cui
          {
             throw new Error("INVALID|Safe-area insets exceed the design space.");
          }
-         if(param1.definitions.length() != 1 || param1.components.length() != 1)
+         if(param1.definitions.length() != 1 || param1.components.length() != 1 || param1.vanillaVisibility.length() > 1)
          {
-            throw new Error("INVALID|Exactly one definitions and one components element are required.");
+            throw new Error("INVALID|Exactly one definitions and one components element are required; vanillaVisibility is optional.");
          }
-         if(param1.children().length() != 2)
+         if(param1.children().length() != 2 && param1.children().length() != 3)
          {
             throw new Error("INVALID|Unknown layout root element.");
          }
          if(String(param1.children()[0].name()) != "definitions" ||
-            String(param1.children()[1].name()) != "components")
+            String(param1.children()[param1.children().length() - 1].name()) != "components" ||
+            param1.children().length() == 3 && String(param1.children()[1].name()) != "vanillaVisibility")
          {
-            throw new Error("INVALID|definitions must precede components.");
+            throw new Error("INVALID|Root order must be definitions, optional vanillaVisibility, then components.");
          }
          this.parseDefinitions(param1.definitions[0]);
+         if(param1.vanillaVisibility.length() == 1)
+         {
+            this.parseVanillaVisibility(param1.vanillaVisibility[0]);
+         }
          componentRoot = new CUICompositionResolver(templates).resolve(param1.components[0]);
          componentIds = {};
          this.validateChildren(componentRoot);
@@ -60,6 +69,11 @@ package venworks.cui
       public function get components() : XML
       {
          return componentRoot;
+      }
+
+      public function get vanillaVisibility() : XML
+      {
+         return vanillaVisibilityRoot;
       }
 
       public function getMeterStyle(param1:String) : XML
@@ -111,6 +125,46 @@ package venworks.cui
          for each(definition in templateDefinitions)
          {
             this.parseTemplate(definition,String(definition.@id));
+         }
+      }
+
+      private function parseVanillaVisibility(param1:XML) : void
+      {
+         var target:XML = null;
+         var id:String = null;
+         var normalized:String = null;
+         var targets:Object = {};
+         var count:int = 0;
+         this.requireAttributes(param1,[]);
+         for each(target in param1.children())
+         {
+            if(String(target.name()) != "target")
+            {
+               throw new Error("INVALID|vanillaVisibility may contain only target elements.");
+            }
+            ++count;
+            if(count > 16)
+            {
+               throw new Error("INVALID|vanillaVisibility exceeds the 16-target limit.");
+            }
+            this.requireAttributes(target,["id","visibleWhen"]);
+            id = this.requireId(target);
+            normalized = CUIVanillaVisibilityAdapter.normalizeTarget(id);
+            if(targets[normalized] != null)
+            {
+               throw new Error("INVALID|Duplicate vanilla visibility target: " + id);
+            }
+            if(!CUIVanillaVisibilityAdapter.isAllowlisted(id))
+            {
+               throw new Error("INVALID|Vanilla visibility target is not allowlisted: " + id);
+            }
+            targets[normalized] = true;
+            this.requireCondition(target,"visibleWhen");
+            vanillaVisibilityRoot.appendChild(target.copy());
+         }
+         if(count == 0)
+         {
+            throw new Error("INVALID|vanillaVisibility requires at least one target.");
          }
       }
 
@@ -176,12 +230,12 @@ package venworks.cui
          var style:XML = null;
          if(type == "group")
          {
-            this.validateBase(param1,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor"]);
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor"]);
             this.validateChildren(param1,true);
          }
          else if(type == "text")
          {
-            this.validateBase(param1,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor","value","font","fontSize","color","bold","align"]);
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","value","font","fontSize","color","bold","align"]);
             if(String(param1.@value).length == 0)
             {
                throw new Error("INVALID|Text value cannot be empty: " + String(param1.@id));
@@ -197,7 +251,7 @@ package venworks.cui
          }
          else if(type == "panel")
          {
-            this.validateBase(param1,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor","fillColor","fillOpacity","strokeColor","strokeOpacity","strokeWidth"]);
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","fillColor","fillOpacity","strokeColor","strokeOpacity","strokeWidth"]);
             this.requireColor(param1,"fillColor");
             this.requireColor(param1,"strokeColor");
             this.requireUnitInterval(param1,"fillOpacity");
@@ -206,7 +260,7 @@ package venworks.cui
          }
          else if(type == "shape")
          {
-            this.validateBase(param1,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor","shape","fillColor","fillOpacity","strokeColor","strokeOpacity","strokeWidth"]);
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","shape","fillColor","fillOpacity","strokeColor","strokeOpacity","strokeWidth"]);
             if(String(param1.@shape) != "rectangle" && String(param1.@shape) != "ellipse")
             {
                throw new Error("INVALID|Unsupported shape: " + String(param1.@shape));
@@ -219,14 +273,14 @@ package venworks.cui
          }
          else if(type == "divider")
          {
-            this.validateBase(param1,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor","color","strokeOpacity","strokeWidth"]);
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","color","strokeOpacity","strokeWidth"]);
             this.requireColor(param1,"color");
             this.requireUnitInterval(param1,"strokeOpacity");
             this.requirePositive(param1,"strokeWidth");
          }
          else if(type == "meter")
          {
-            this.validateBase(param1,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor","style","value","max"]);
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","style","value","max"]);
             style = this.getMeterStyle(String(param1.@style));
             this.requireFinite(param1,"value");
             this.requireFinite(param1,"max");
@@ -260,6 +314,10 @@ package venworks.cui
             this.requireUnitInterval(param1,"opacity");
          }
          this.requireOptionalBoolean(param1,"visible");
+         if(param1.@visibleWhen.length() == 1)
+         {
+            this.requireCondition(param1,"visibleWhen");
+         }
          this.requireOptionalFinite(param1,"rotation");
          this.requireOptionalFinite(param1,"scaleX");
          this.requireOptionalFinite(param1,"scaleY");
@@ -329,6 +387,15 @@ package venworks.cui
          {
             throw new Error("INVALID|" + param2 + " cannot be empty.");
          }
+      }
+
+      private function requireCondition(param1:XML, param2:String) : void
+      {
+         if(param1.attribute(param2).length() != 1)
+         {
+            throw new Error("INVALID|Missing " + param2 + " on " + String(param1.name()) + ".");
+         }
+         conditionParser.compile(String(param1.attribute(param2)));
       }
 
       private function requireOptionalBoolean(param1:XML, param2:String) : void

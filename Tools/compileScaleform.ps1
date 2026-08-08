@@ -321,8 +321,8 @@ try {
       -OutputPath $patchedScriptPath
 
     $authoredScripts = @(Get-ChildItem -LiteralPath $actionScriptSourcePath -Recurse -File -Filter "*.as")
-    if ($authoredScripts.Count -ne 15) {
-      throw "Expected 15 authored component classes; found $($authoredScripts.Count) in $actionScriptSourcePath."
+    if ($authoredScripts.Count -ne 20) {
+      throw "Expected 20 authored CUI classes; found $($authoredScripts.Count) in $actionScriptSourcePath."
     }
 
     foreach ($authoredScript in $authoredScripts) {
@@ -361,8 +361,8 @@ try {
 
     $originalScripts = @(Get-ChildItem -LiteralPath $exportedScriptsDirectory -Recurse -File -Filter "*.as")
     $validationScripts = @(Get-ChildItem -LiteralPath $validationScriptsDirectory -Recurse -File -Filter "*.as")
-    if ($originalScripts.Count -ne 182 -or $validationScripts.Count -ne $originalScripts.Count) {
-      throw "Expected 182 seeded and reopened classes; found $($originalScripts.Count) before import and $($validationScripts.Count) after import."
+    if ($originalScripts.Count -ne 187 -or $validationScripts.Count -ne $originalScripts.Count) {
+      throw "Expected 187 seeded and reopened classes; found $($originalScripts.Count) before import and $($validationScripts.Count) after import."
     }
 
     foreach ($originalScript in $originalScripts) {
@@ -409,6 +409,11 @@ try {
       'VenworksCUIComponentLayer',
       'VenworksCUIDiagnosticsPanel',
       'CUICompositionResolver',
+      'CUIConditionParser',
+      'CUIConditionExpression',
+      'CUIConditionContext',
+      'CUIVisibilityBinding',
+      'CUIVanillaVisibilityAdapter',
       'CUILayoutEngine',
       'Extensions.visibleRect',
       'top-left',
@@ -417,7 +422,14 @@ try {
       'Unsupported repeater flow',
       'Unknown template reference',
       'content exceeds its configured bounds',
-      'selects unknown option'
+      'selects unknown option',
+      'Condition exceeds the 8-level nesting limit',
+      'Condition provider unavailable in hudmenu.gfx',
+      'Vanilla visibility target is not allowlisted',
+      'HudCrosshairData',
+      'HUDStealthData',
+      'HudCompassData',
+      'HUDVehicleData'
     )) {
       if (!$validationSource.Contains($requiredValue)) {
         throw "Generated ActionScript is missing required value '$requiredValue'."

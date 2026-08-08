@@ -150,10 +150,13 @@ Goal 4 is divided into bounded review gates:
 - **Goal 4B — fixed-data composition:** primitive-only reusable templates,
   instances with small gamer-facing overrides, bounded vertical/horizontal/grid
   repeaters, and configuration-selected states. No live providers are connected.
-- **Goal 4C — conditions and vanilla visibility adapters (next):** define a
-  data-only condition model and a per-movie allowlist for hiding or showing
-  verified default UI pieces. Unknown provider, target, property, or operation
-  names fail safely; arbitrary method calls and expressions remain prohibited.
+- **Goal 4C — conditions and vanilla visibility adapters:** bounded,
+  case-insensitive visibility expressions, tri-state provider initialization,
+  and hardcoded per-movie presentation adapters for independently verified
+  default UI pieces. The implementation is complete and awaits in-game
+  acceptance. Unknown or unavailable providers and unsafe targets fail safely;
+  arbitrary provider names, display paths, properties, and methods remain
+  prohibited.
 - **Goal 4D — remaining meter renderers:** segmented rectangles, dots/circles,
   and radial renderers.
 - **Goal 4E — assets and vector primitives:** transparent PNG, local SVG,
@@ -162,7 +165,7 @@ Goal 4 is divided into bounded review gates:
   panel, warning, and related foundations assembled from approved primitives.
 
 Each gate requires a gallery and failure fixtures before use on a live HUD
-surface. Goal 4C is the immediate next plan; palettes remain deferred until the
+surface. Goal 4D follows Goal 4C acceptance; palettes remain deferred until the
 UI work is complete.
 
 ## Goal 5: Implement the first configurable player HUD surface
