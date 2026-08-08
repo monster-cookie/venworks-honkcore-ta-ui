@@ -100,6 +100,64 @@
     <xs:attribute name="max" type="xs:decimal" use="required" />
   </xs:complexType>
 
+  <xs:complexType name="overrideType">
+    <xs:attribute name="target" type="idType" use="required" />
+    <xs:attribute name="text" type="xs:string" />
+    <xs:attribute name="meterValue" type="xs:decimal" />
+    <xs:attribute name="visible" type="strictBooleanType" />
+  </xs:complexType>
+
+  <xs:complexType name="instanceType">
+    <xs:sequence><xs:element name="override" type="overrideType" minOccurs="0" maxOccurs="unbounded" /></xs:sequence>
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="template" type="idType" use="required" />
+    <xs:attribute name="x" type="xs:decimal" use="required" />
+    <xs:attribute name="y" type="xs:decimal" use="required" />
+    <xs:attribute name="anchor" type="anchorType" />
+    <xs:attribute name="visible" type="strictBooleanType" />
+    <xs:attribute name="z" type="xs:integer" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="repeaterItemType">
+    <xs:sequence><xs:element name="override" type="overrideType" minOccurs="0" maxOccurs="unbounded" /></xs:sequence>
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="visible" type="strictBooleanType" default="true" />
+  </xs:complexType>
+
+  <xs:complexType name="repeaterType">
+    <xs:sequence><xs:element name="item" type="repeaterItemType" minOccurs="1" maxOccurs="64" /></xs:sequence>
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="template" type="idType" use="required" />
+    <xs:attribute name="x" type="xs:decimal" use="required" />
+    <xs:attribute name="y" type="xs:decimal" use="required" />
+    <xs:attribute name="width" type="xs:nonNegativeInteger" use="required" />
+    <xs:attribute name="height" type="xs:nonNegativeInteger" use="required" />
+    <xs:attribute name="anchor" type="anchorType" />
+    <xs:attribute name="visible" type="strictBooleanType" default="true" />
+    <xs:attribute name="z" type="xs:integer" use="required" />
+    <xs:attribute name="flow" use="required"><xs:simpleType><xs:restriction base="xs:string"><xs:enumeration value="vertical" /><xs:enumeration value="horizontal" /><xs:enumeration value="grid" /></xs:restriction></xs:simpleType></xs:attribute>
+    <xs:attribute name="gapX" type="xs:nonNegativeInteger" use="required" />
+    <xs:attribute name="gapY" type="xs:nonNegativeInteger" use="required" />
+    <xs:attribute name="columns" type="xs:positiveInteger" />
+  </xs:complexType>
+
+  <xs:complexType name="stateOptionType">
+    <xs:sequence><xs:element name="override" type="overrideType" minOccurs="0" maxOccurs="unbounded" /></xs:sequence>
+    <xs:attribute name="name" type="idType" use="required" />
+    <xs:attribute name="template" type="idType" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="stateType">
+    <xs:sequence><xs:element name="option" type="stateOptionType" minOccurs="1" maxOccurs="16" /></xs:sequence>
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="selected" type="idType" use="required" />
+    <xs:attribute name="x" type="xs:decimal" use="required" />
+    <xs:attribute name="y" type="xs:decimal" use="required" />
+    <xs:attribute name="anchor" type="anchorType" />
+    <xs:attribute name="visible" type="strictBooleanType" />
+    <xs:attribute name="z" type="xs:integer" use="required" />
+  </xs:complexType>
+
   <xs:group name="componentChoice">
     <xs:choice>
       <xs:element name="group" type="groupType" />
@@ -108,12 +166,36 @@
       <xs:element name="shape" type="shapeType" />
       <xs:element name="divider" type="dividerType" />
       <xs:element name="meter" type="meterType" />
+      <xs:element name="instance" type="instanceType" />
+      <xs:element name="repeater" type="repeaterType" />
+      <xs:element name="state" type="stateType" />
     </xs:choice>
   </xs:group>
 
   <xs:complexType name="groupType">
     <xs:sequence><xs:group ref="componentChoice" minOccurs="0" maxOccurs="unbounded" /></xs:sequence>
     <xs:attributeGroup ref="componentAttributes" />
+  </xs:complexType>
+
+  <xs:group name="templateComponentChoice">
+    <xs:choice>
+      <xs:element name="group" type="templateGroupType" />
+      <xs:element name="text" type="textType" />
+      <xs:element name="panel" type="panelType" />
+      <xs:element name="shape" type="shapeType" />
+      <xs:element name="divider" type="dividerType" />
+      <xs:element name="meter" type="meterType" />
+    </xs:choice>
+  </xs:group>
+
+  <xs:complexType name="templateGroupType">
+    <xs:sequence><xs:group ref="templateComponentChoice" minOccurs="0" maxOccurs="unbounded" /></xs:sequence>
+    <xs:attributeGroup ref="componentAttributes" />
+  </xs:complexType>
+
+  <xs:complexType name="templateType">
+    <xs:sequence><xs:element name="group" type="templateGroupType" /></xs:sequence>
+    <xs:attribute name="id" type="idType" use="required" />
   </xs:complexType>
 
   <xs:complexType name="meterStyleType">
@@ -130,7 +212,7 @@
   <xs:element name="venworksCUI">
     <xs:complexType>
       <xs:sequence>
-        <xs:element name="definitions"><xs:complexType><xs:sequence><xs:element name="meterStyle" type="meterStyleType" minOccurs="1" maxOccurs="unbounded" /></xs:sequence></xs:complexType></xs:element>
+        <xs:element name="definitions"><xs:complexType><xs:choice minOccurs="1" maxOccurs="unbounded"><xs:element name="meterStyle" type="meterStyleType" /><xs:element name="template" type="templateType" /></xs:choice></xs:complexType></xs:element>
         <xs:element name="components"><xs:complexType><xs:sequence><xs:group ref="componentChoice" minOccurs="1" maxOccurs="unbounded" /></xs:sequence></xs:complexType></xs:element>
       </xs:sequence>
       <xs:attribute name="schemaVersion" fixed="1" use="required" />
@@ -142,8 +224,10 @@
       <xs:attribute name="safeRight" type="xs:nonNegativeInteger" use="required" />
       <xs:attribute name="safeBottom" type="xs:nonNegativeInteger" use="required" />
     </xs:complexType>
-    <xs:key name="definitionIds"><xs:selector xpath="definitions/meterStyle" /><xs:field xpath="@id" /></xs:key>
-    <xs:key name="componentIds"><xs:selector xpath=".//group | .//text | .//panel | .//shape | .//divider | .//meter" /><xs:field xpath="@id" /></xs:key>
-    <xs:keyref name="meterStyleReferences" refer="definitionIds"><xs:selector xpath=".//meter" /><xs:field xpath="@style" /></xs:keyref>
+    <xs:key name="definitionIds"><xs:selector xpath="definitions/meterStyle | definitions/template" /><xs:field xpath="@id" /></xs:key>
+    <xs:key name="meterStyleIds"><xs:selector xpath="definitions/meterStyle" /><xs:field xpath="@id" /></xs:key>
+    <xs:key name="templateIds"><xs:selector xpath="definitions/template" /><xs:field xpath="@id" /></xs:key>
+    <xs:keyref name="meterStyleReferences" refer="meterStyleIds"><xs:selector xpath=".//meter" /><xs:field xpath="@style" /></xs:keyref>
+    <xs:keyref name="templateReferences" refer="templateIds"><xs:selector xpath=".//instance | .//repeater | .//option" /><xs:field xpath="@template" /></xs:keyref>
   </xs:element>
 </xs:schema>

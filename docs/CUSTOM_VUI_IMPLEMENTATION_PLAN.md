@@ -124,13 +124,14 @@ and invalid bounds fail safely. Arbitrary ActionScript, JavaScript, network
 resources, method calls, and executable extensions are prohibited. No live HUD
 provider is connected during this goal.
 
-## Goal 4: Complete layout composition and asset primitives
+## Goal 4: Complete composition, conditions, and asset primitives
 
-Extend the versioned layout schema and runtime with the remaining low-level
-composition features needed by multiple surfaces:
+Extend the versioned layout schema and runtime through bounded review gates:
 
 - anchors, safe-area behavior, reusable templates, repeaters, and bounded state
   selection;
+- data-only conditions and allowlisted adapters that control verified vanilla
+  HUD visibility without exposing arbitrary providers or methods;
 - segmented rectangles, dots/circles, and radial meter renderers;
 - transparent PNG and local SVG assets;
 - authored SVG paths, masks, and permitted embedded symbols;
@@ -140,14 +141,29 @@ Validate each component in a gallery before it is connected to live data.
 Font Awesome Pro may be evaluated as an explicitly approved, licensed icon
 source, but it is not required when native vector geometry is sufficient.
 
-Goal 4 is divided into bounded review gates. Goal 4A implements only the
-backward-compatible responsive layout foundation: optional nine-point
-anchoring, operational root safe-area insets, group-relative anchoring, and
-unchanged absolute positioning. It uses Starfield's vanilla
-`Extensions.visibleRect` contract and retains fixed 1920-by-1080 design
-proportions. Templates, repeaters, state selection, additional meter
-renderers, assets, masks, symbols, and composite foundations remain later Goal
-4 gates.
+Goal 4 is divided into bounded review gates:
+
+- **Goal 4A — responsive layout:** optional nine-point anchoring, operational
+  root safe-area insets, group-relative anchoring, and unchanged absolute
+  positioning. It uses Starfield's vanilla `Extensions.visibleRect` contract
+  and retains fixed 1920-by-1080 design proportions.
+- **Goal 4B — fixed-data composition:** primitive-only reusable templates,
+  instances with small gamer-facing overrides, bounded vertical/horizontal/grid
+  repeaters, and configuration-selected states. No live providers are connected.
+- **Goal 4C — conditions and vanilla visibility adapters (next):** define a
+  data-only condition model and a per-movie allowlist for hiding or showing
+  verified default UI pieces. Unknown provider, target, property, or operation
+  names fail safely; arbitrary method calls and expressions remain prohibited.
+- **Goal 4D — remaining meter renderers:** segmented rectangles, dots/circles,
+  and radial renderers.
+- **Goal 4E — assets and vector primitives:** transparent PNG, local SVG,
+  authored SVG paths, masks, and permitted embedded symbols.
+- **Goal 4F — composite foundations:** reusable button, quick-bar, information
+  panel, warning, and related foundations assembled from approved primitives.
+
+Each gate requires a gallery and failure fixtures before use on a live HUD
+surface. Goal 4C is the immediate next plan; palettes remain deferred until the
+UI work is complete.
 
 ## Goal 5: Implement the first configurable player HUD surface
 

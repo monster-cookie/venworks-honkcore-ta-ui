@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080"
+             safeLeft="64" safeTop="36" safeRight="64" safeBottom="36">
+  <definitions>
+    <template id="known.template">
+      <group id="root" x="0" y="0" width="240" height="60" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0">
+        <text id="label" x="0" y="0" width="240" height="30" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1"
+              value="KNOWN TEMPLATE" font="$MAIN_Font_Bold" fontSize="16" color="#F7FCFF" bold="false" align="center" />
+      </group>
+    </template>
+  </definitions>
+  <components>
+    <instance id="unknown.template.test" template="missing.template" x="0" y="0" anchor="center" z="100" />
+  </components>
+</venworksCUI>

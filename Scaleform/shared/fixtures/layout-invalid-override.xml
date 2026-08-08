@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080"
+             safeLeft="64" safeTop="36" safeRight="64" safeBottom="36">
+  <definitions>
+    <template id="override.template">
+      <group id="root" x="0" y="0" width="240" height="60" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0">
+        <panel id="panel" x="0" y="0" width="240" height="60" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0"
+               fillColor="#071923" fillOpacity="1" strokeColor="#35E6E6" strokeOpacity="1" strokeWidth="1" />
+      </group>
+    </template>
+  </definitions>
+  <components>
+    <instance id="invalid.override.test" template="override.template" x="0" y="0" anchor="center" z="100">
+      <override target="panel" text="PANELS DO NOT ACCEPT TEXT OVERRIDES" />
+    </instance>
+  </components>
+</venworksCUI>

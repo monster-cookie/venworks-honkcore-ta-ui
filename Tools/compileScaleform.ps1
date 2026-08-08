@@ -321,8 +321,8 @@ try {
       -OutputPath $patchedScriptPath
 
     $authoredScripts = @(Get-ChildItem -LiteralPath $actionScriptSourcePath -Recurse -File -Filter "*.as")
-    if ($authoredScripts.Count -ne 14) {
-      throw "Expected 14 authored component classes; found $($authoredScripts.Count) in $actionScriptSourcePath."
+    if ($authoredScripts.Count -ne 15) {
+      throw "Expected 15 authored component classes; found $($authoredScripts.Count) in $actionScriptSourcePath."
     }
 
     foreach ($authoredScript in $authoredScripts) {
@@ -361,8 +361,8 @@ try {
 
     $originalScripts = @(Get-ChildItem -LiteralPath $exportedScriptsDirectory -Recurse -File -Filter "*.as")
     $validationScripts = @(Get-ChildItem -LiteralPath $validationScriptsDirectory -Recurse -File -Filter "*.as")
-    if ($originalScripts.Count -ne 181 -or $validationScripts.Count -ne $originalScripts.Count) {
-      throw "Expected 181 seeded and reopened classes; found $($originalScripts.Count) before import and $($validationScripts.Count) after import."
+    if ($originalScripts.Count -ne 182 -or $validationScripts.Count -ne $originalScripts.Count) {
+      throw "Expected 182 seeded and reopened classes; found $($originalScripts.Count) before import and $($validationScripts.Count) after import."
     }
 
     foreach ($originalScript in $originalScripts) {
@@ -408,11 +408,16 @@ try {
       'CUI LAYOUT INVALID',
       'VenworksCUIComponentLayer',
       'VenworksCUIDiagnosticsPanel',
+      'CUICompositionResolver',
       'CUILayoutEngine',
       'Extensions.visibleRect',
       'top-left',
       'bottom-right',
-      'Unsupported component anchor'
+      'Unsupported component anchor',
+      'Unsupported repeater flow',
+      'Unknown template reference',
+      'content exceeds its configured bounds',
+      'selects unknown option'
     )) {
       if (!$validationSource.Contains($requiredValue)) {
         throw "Generated ActionScript is missing required value '$requiredValue'."

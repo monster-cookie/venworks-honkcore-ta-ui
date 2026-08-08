@@ -3,6 +3,8 @@ package venworks.cui
    public final class CUILayoutParser
    {
       private var meterStyles:Object;
+      private var templates:Object;
+      private var definitionIds:Object;
       private var componentIds:Object;
       private var componentRoot:XML;
 
@@ -14,6 +16,8 @@ package venworks.cui
       public function parse(param1:XML) : void
       {
          meterStyles = {};
+         templates = {};
+         definitionIds = {};
          componentIds = {};
          this.requireName(param1,"venworksCUI");
          this.requireAttributes(param1,["schemaVersion","runtimeVersion","designWidth","designHeight","safeLeft","safeTop","safeRight","safeBottom"]);
@@ -48,8 +52,8 @@ package venworks.cui
             throw new Error("INVALID|definitions must precede components.");
          }
          this.parseDefinitions(param1.definitions[0]);
-         componentRoot = param1.components[0];
-         this.requireAttributes(componentRoot,[]);
+         componentRoot = new CUICompositionResolver(templates).resolve(param1.components[0]);
+         componentIds = {};
          this.validateChildren(componentRoot);
       }
 
@@ -69,120 +73,171 @@ package venworks.cui
 
       private function parseDefinitions(param1:XML) : void
       {
-         var style:XML = null;
+         var definition:XML = null;
+         var templateDefinitions:Array = [];
          var id:String = null;
+         var type:String = null;
          this.requireAttributes(param1,[]);
          if(param1.children().length() == 0)
          {
-            throw new Error("INVALID|At least one meterStyle is required.");
+            throw new Error("INVALID|At least one definition is required.");
          }
-         for each(style in param1.children())
+         for each(definition in param1.children())
          {
-            this.requireName(style,"meterStyle");
-            this.requireAttributes(style,["id","renderer","fillColor","emptyColor","fillOpacity","emptyOpacity","segmentCount","gap"]);
-            id = this.requireId(style);
-            if(meterStyles[id] != null)
+            type = String(definition.name());
+            if(type != "meterStyle" && type != "template")
+            {
+               throw new Error("INVALID|Unknown definition: " + type);
+            }
+            id = this.requireId(definition);
+            if(definitionIds[id] != null)
             {
                throw new Error("INVALID|Duplicate definition id: " + id);
             }
-            if(String(style.@renderer) != "continuous" && String(style.@renderer) != "triangles")
+            definitionIds[id] = true;
+            if(type == "meterStyle")
             {
-               throw new Error("INVALID|Unsupported meter renderer: " + String(style.@renderer));
+               this.parseMeterStyle(definition,id);
             }
-            this.requireColor(style,"fillColor");
-            this.requireColor(style,"emptyColor");
-            this.requireUnitInterval(style,"fillOpacity");
-            this.requireUnitInterval(style,"emptyOpacity");
-            if(String(style.@renderer) == "triangles")
+            else
             {
-               this.requirePositiveInteger(style,"segmentCount");
-               if(int(style.@segmentCount) > 64)
-               {
-                  throw new Error("INVALID|Triangle segmentCount must be between 1 and 64.");
-               }
-               this.requireFiniteNonNegative(style,"gap");
+               templateDefinitions.push(definition);
             }
-            meterStyles[id] = style;
+         }
+         if(templateDefinitions.length > 64)
+         {
+            throw new Error("INVALID|The layout exceeds the 64-template limit.");
+         }
+         for each(definition in templateDefinitions)
+         {
+            this.parseTemplate(definition,String(definition.@id));
          }
       }
 
-      private function validateChildren(param1:XML) : void
+      private function parseMeterStyle(param1:XML, param2:String) : void
+      {
+         this.requireAttributes(param1,["id","renderer","fillColor","emptyColor","fillOpacity","emptyOpacity","segmentCount","gap"]);
+         if(String(param1.@renderer) != "continuous" && String(param1.@renderer) != "triangles")
+         {
+            throw new Error("INVALID|Unsupported meter renderer: " + String(param1.@renderer));
+         }
+         this.requireColor(param1,"fillColor");
+         this.requireColor(param1,"emptyColor");
+         this.requireUnitInterval(param1,"fillOpacity");
+         this.requireUnitInterval(param1,"emptyOpacity");
+         if(String(param1.@renderer) == "triangles")
+         {
+            this.requirePositiveInteger(param1,"segmentCount");
+            if(int(param1.@segmentCount) > 64)
+            {
+               throw new Error("INVALID|Triangle segmentCount must be between 1 and 64.");
+            }
+            this.requireFiniteNonNegative(param1,"gap");
+         }
+         meterStyles[param2] = param1;
+      }
+
+      private function parseTemplate(param1:XML, param2:String) : void
+      {
+         var savedComponentIds:Object = componentIds;
+         var root:XML = null;
+         this.requireAttributes(param1,["id"]);
+         if(param1.children().length() != 1 || String(param1.children()[0].name()) != "group")
+         {
+            throw new Error("INVALID|Template " + param2 + " requires exactly one root group.");
+         }
+         root = param1.children()[0];
+         if(root.children().length() == 0)
+         {
+            throw new Error("INVALID|Template " + param2 + " cannot be empty.");
+         }
+         componentIds = {};
+         this.validateComponent(root);
+         componentIds = savedComponentIds;
+         templates[param2] = param1;
+      }
+
+      private function validateChildren(param1:XML, param2:Boolean = false) : void
       {
          var child:XML = null;
-         var type:String = null;
-         var style:XML = null;
-         if(param1.children().length() == 0)
+         if(param1.children().length() == 0 && !param2)
          {
             throw new Error("INVALID|Each component container must have at least one child.");
          }
          for each(child in param1.children())
          {
-            type = String(child.name());
-            if(type == "group")
+            this.validateComponent(child);
+         }
+      }
+
+      private function validateComponent(param1:XML) : void
+      {
+         var type:String = String(param1.name());
+         var style:XML = null;
+         if(type == "group")
+         {
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor"]);
+            this.validateChildren(param1,true);
+         }
+         else if(type == "text")
+         {
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor","value","font","fontSize","color","bold","align"]);
+            if(String(param1.@value).length == 0)
             {
-               this.validateBase(child,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor"]);
-               this.validateChildren(child);
+               throw new Error("INVALID|Text value cannot be empty: " + String(param1.@id));
             }
-            else if(type == "text")
+            this.requireNonEmpty(param1,"font");
+            this.requirePositiveInteger(param1,"fontSize");
+            this.requireColor(param1,"color");
+            this.requireOptionalBoolean(param1,"bold");
+            if(String(param1.@align) != "left" && String(param1.@align) != "center" && String(param1.@align) != "right")
             {
-               this.validateBase(child,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor","value","font","fontSize","color","bold","align"]);
-               if(String(child.@value).length == 0)
-               {
-                  throw new Error("INVALID|Text value cannot be empty: " + String(child.@id));
-               }
-               this.requireNonEmpty(child,"font");
-               this.requirePositiveInteger(child,"fontSize");
-               this.requireColor(child,"color");
-               this.requireOptionalBoolean(child,"bold");
-               if(String(child.@align) != "left" && String(child.@align) != "center" && String(child.@align) != "right")
-               {
-                  throw new Error("INVALID|Text align must be left, center, or right: " + String(child.@id));
-               }
+               throw new Error("INVALID|Text align must be left, center, or right: " + String(param1.@id));
             }
-            else if(type == "panel")
+         }
+         else if(type == "panel")
+         {
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor","fillColor","fillOpacity","strokeColor","strokeOpacity","strokeWidth"]);
+            this.requireColor(param1,"fillColor");
+            this.requireColor(param1,"strokeColor");
+            this.requireUnitInterval(param1,"fillOpacity");
+            this.requireUnitInterval(param1,"strokeOpacity");
+            this.requireFiniteNonNegative(param1,"strokeWidth");
+         }
+         else if(type == "shape")
+         {
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor","shape","fillColor","fillOpacity","strokeColor","strokeOpacity","strokeWidth"]);
+            if(String(param1.@shape) != "rectangle" && String(param1.@shape) != "ellipse")
             {
-               this.validateBase(child,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor","fillColor","fillOpacity","strokeColor","strokeOpacity","strokeWidth"]);
-               this.requireColor(child,"fillColor");
-               this.requireColor(child,"strokeColor");
-               this.requireUnitInterval(child,"fillOpacity");
-               this.requireUnitInterval(child,"strokeOpacity");
-               this.requireFiniteNonNegative(child,"strokeWidth");
+               throw new Error("INVALID|Unsupported shape: " + String(param1.@shape));
             }
-            else if(type == "shape")
+            this.requireColor(param1,"fillColor");
+            this.requireColor(param1,"strokeColor");
+            this.requireUnitInterval(param1,"fillOpacity");
+            this.requireUnitInterval(param1,"strokeOpacity");
+            this.requireFiniteNonNegative(param1,"strokeWidth");
+         }
+         else if(type == "divider")
+         {
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor","color","strokeOpacity","strokeWidth"]);
+            this.requireColor(param1,"color");
+            this.requireUnitInterval(param1,"strokeOpacity");
+            this.requirePositive(param1,"strokeWidth");
+         }
+         else if(type == "meter")
+         {
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor","style","value","max"]);
+            style = this.getMeterStyle(String(param1.@style));
+            this.requireFinite(param1,"value");
+            this.requireFinite(param1,"max");
+            if(Number(param1.@max) <= 0)
             {
-               this.validateBase(child,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor","shape","fillColor","fillOpacity","strokeColor","strokeOpacity","strokeWidth"]);
-               if(String(child.@shape) != "rectangle" && String(child.@shape) != "ellipse")
-               {
-                  throw new Error("INVALID|Unsupported shape: " + String(child.@shape));
-               }
-               this.requireColor(child,"fillColor");
-               this.requireColor(child,"strokeColor");
-               this.requireUnitInterval(child,"fillOpacity");
-               this.requireUnitInterval(child,"strokeOpacity");
-               this.requireFiniteNonNegative(child,"strokeWidth");
+               throw new Error("INVALID|Meter max must be greater than zero: " + String(param1.@id));
             }
-            else if(type == "divider")
-            {
-               this.validateBase(child,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor","color","strokeOpacity","strokeWidth"]);
-               this.requireColor(child,"color");
-               this.requireUnitInterval(child,"strokeOpacity");
-               this.requirePositive(child,"strokeWidth");
-            }
-            else if(type == "meter")
-            {
-               this.validateBase(child,["id","x","y","width","height","opacity","visible","rotation","scaleX","scaleY","z","anchor","style","value","max"]);
-               style = this.getMeterStyle(String(child.@style));
-               this.requireFinite(child,"value");
-               this.requireFinite(child,"max");
-               if(Number(child.@max) <= 0)
-               {
-                  throw new Error("INVALID|Meter max must be greater than zero: " + String(child.@id));
-               }
-            }
-            else
-            {
-               throw new Error("INVALID|Unknown component: " + type);
-            }
+         }
+         else
+         {
+            throw new Error("INVALID|Unknown component: " + type);
          }
       }
 

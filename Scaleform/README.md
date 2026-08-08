@@ -35,7 +35,7 @@ from the validation records.
 
 The build injects the Venworks-only ABC seed, exports Bethesda ActionScript only
 into ignored temporary storage, verifies the authored `HUDMenu` patch anchors,
-and imports the patched document class plus the 14 repository-authored CUI
+and imports the patched document class plus the 15 repository-authored CUI
 classes. It confirms that every other exported class remains textually
 identical and that the reopened output contains the required layout and
 diagnostic contracts. Full exported Bethesda classes are never repository
@@ -50,12 +50,16 @@ font. The repository does not copy or bundle the vanilla symbol or font files.
 JPEXS XML file during patch development. Its output must not be committed.
 
 Files under `shared/fixtures` are developer test inputs. The Goal 3 component
-gallery remains the absolute-positioning compatibility fixture. The Goal 4A
-anchor gallery is the staged `layout.xml` and exercises all nine root anchors,
-nested group anchors, safe-area insets, and an absolute-positioned control.
-Malformed fixtures are intentionally not well-formed XML. See
+gallery remains the absolute-positioning compatibility fixture, and the Goal
+4A anchor gallery exercises responsive placement. The Goal 4B composition
+gallery is the staged `layout.xml`; it exercises reusable templates, approved
+overrides, vertical/horizontal/grid repeaters, collapsed hidden items, and
+static state selection. Malformed fixtures are intentionally not well-formed
+XML, while other negative fixtures may be schema-valid and rejected by runtime
+semantic checks. See
 `../docs/GOAL_3_COMPONENT_LIBRARY.md`,
 `../docs/GOAL_4A_RESPONSIVE_LAYOUT.md`, and
+`../docs/GOAL_4B_COMPOSITION.md`, and
 `../docs/COMPONENT_CATALOG.md`.
 
 An optional component `anchor` uses one of `top-left`, `top-center`,
@@ -64,3 +68,9 @@ An optional component `anchor` uses one of `top-left`, `top-center`,
 absolute parent-relative meaning. Root anchors use Starfield's
 `Extensions.visibleRect` with the four configured safe-area insets; nested
 anchors use the parent group's configured bounds.
+
+Templates are declared in `definitions` and contain exactly one primitive-only
+root group. `instance`, `repeater`, and `state` elements expand those templates
+before ordinary component validation and rendering. The runtime permits only
+text, meter-value, and visibility overrides; it does not evaluate scripts,
+expressions, interpolation, live bindings, or conditions in Goal 4B.

@@ -19,7 +19,7 @@ inspected and tested.
 
 ## Status vocabulary
 
-- **Implemented:** available in the Goal 3 runtime and schema.
+- **Implemented:** available in the current runtime and schema.
 - **Next:** expected in the next component-library or layout goal.
 - **Future:** required before the corresponding UI surface can ship.
 - **Research:** visible requirement identified; exact vanilla owner or provider
@@ -35,9 +35,11 @@ inspected and tested.
 | Nine-point anchoring | Implemented | Align transformed configured bounds to top, center, or bottom and left, center, or right parent points with signed offsets. |
 | Root safe area | Implemented | Anchor root components inside Starfield's visible rectangle after applying four independent design-space insets. |
 | Nested anchoring | Implemented | Anchor children to their parent group's configured bounds. |
-| Reusable template | Future | Instantiate an allowlisted component tree with bounded data-only parameters. |
-| Repeater/list layout | Future | Lay out bounded items vertically, horizontally, or in a grid. |
-| Bounded state selection | Future | Select one declared child state without expressions or arbitrary method calls. |
+| Reusable template | Implemented | Instantiate a primitive-only component tree with bounded text, meter-value, and visibility overrides. |
+| Repeater/list layout | Implemented | Lay out up to 64 declared items vertically, horizontally, or in a grid; hidden items collapse. |
+| Bounded state selection | Implemented | Select one of up to 16 declared templates without expressions or arbitrary method calls. |
+| Data-only conditions | Next | Evaluate an allowlisted condition vocabulary against verified vanilla state. |
+| Vanilla visibility adapter | Next | Hide or show only explicitly mapped default UI pieces in the owning movie. |
 
 Goal 4A keeps a fixed 1920-by-1080 design coordinate system and relies on
 Starfield's `Extensions.visibleRect` for viewport boundaries. It does not
@@ -53,8 +55,8 @@ surface.
 | Shape | Implemented | Render rectangle and ellipse primitives with independent fill and stroke styling. |
 | Divider | Implemented | Render configurable horizontal, vertical, or diagonal line geometry. |
 | Error panel | Implemented | Show actionable load/schema errors in the upper center/right region and remain hidden after a valid load. |
-| Repeater/list | Future | Lay out a bounded collection vertically, horizontally, or in a grid with spacing and item limits. |
-| State container | Future | Select one child state without allowing arbitrary expressions or method calls. |
+| Repeater/list | Implemented | Lay out a bounded fixed collection vertically, horizontally, or in a grid with spacing and item limits. |
+| State container | Implemented | Select one fixed configuration state without allowing arbitrary expressions or method calls. |
 | Mask/clip | Future | Bound child rendering to rectangular, circular, or approved vector geometry. |
 
 ## Meter and bar family
@@ -164,3 +166,14 @@ Goal 3 deliberately implements only the foundation needed to prove the model:
 group, text, panel, rectangle/ellipse shape, divider, the shared meter contract,
 continuous bar, and stacked-triangle bar. The fixed gallery uses static values;
 it does not replace health or bind to live game data.
+
+## Goal 4 implemented subset and next gate
+
+Goal 4A adds nine-point root and nested anchoring plus root safe-area insets.
+Goal 4B adds primitive-only templates, instances, fixed repeaters, static state
+selection, and small text/meter-value/visibility overrides. These remain fixed
+configuration and do not connect to live Starfield data.
+
+Goal 4C is next: data-only conditions and per-movie allowlisted visibility
+adapters for verified vanilla UI pieces. Additional meter renderers, assets,
+masks, symbols, and composite components remain later Goal 4 gates.
