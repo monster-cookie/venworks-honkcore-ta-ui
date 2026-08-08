@@ -2,27 +2,31 @@
 
 ## Scope
 
-Goal 4E adds packaged transparent PNG images, a restricted local SVG subset,
+Goal 4E adds packaged DDS images, a restricted local SVG subset,
 authored SVG path geometry, nested masks, and allowlisted symbols already
 embedded in the owning vanilla movie. These primitives use fixed gallery data;
 they do not replace a live HUD surface or introduce network access.
 
-All file-backed assets resolve below `Interface/VenworksCUI/Assets`. A layout
-supplies only a relative filename such as `gallery-alpha.png`; absolute paths,
-drive-qualified paths, URI schemes, query strings, fragments, and `..` path
-segments are rejected. Every referenced PNG and SVG is loaded and validated
-before any CUI component renders. A failed preload leaves the normal vanilla
-HUD intact and shows the upper red `CUI ASSET LOAD ERROR` diagnostics panel.
+DDS images resolve below `Textures/Interface/VenworksCUI/Assets`; SVG files
+resolve below `Interface/VenworksCUI/Assets`. A layout supplies only a relative
+filename such as `venworks-logo.dds`; absolute paths, drive-qualified paths,
+URI schemes, query strings, fragments, and `..` path segments are rejected.
+Every referenced DDS and SVG is loaded and validated before any CUI component
+renders. A failed preload leaves the normal vanilla HUD intact and shows the
+upper red `CUI ASSET LOAD ERROR` diagnostics panel.
 
 ## Image contract
 
-`image` loads a packaged transparent PNG. `svg` uses the same placement
-contract after parsing the packaged SVG into native Scaleform vector geometry.
+`image` loads a packaged DDS through Starfield's `img://textures/` protocol.
+`svg` uses the same placement contract after parsing the packaged SVG into
+native Scaleform vector geometry. Direct PNG and JPEG probes were found at
+their expected loose-file paths but rejected by the image protocol, so raster
+source art must be converted to DDS before packaging.
 
 ```xml
 <image id="brand.logo" x="40" y="40" width="320" height="120"
        opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
-       src="brand-logo.png" fit="contain" alignX="center" alignY="center" />
+       src="brand-logo.dds" fit="contain" alignX="center" alignY="center" />
 ```
 
 The supported fit modes are:
@@ -78,7 +82,7 @@ and participate in templates, but an empty mask is invalid.
       shape="ellipse">
   <image id="portrait" x="0" y="0" width="180" height="180"
          opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1"
-         src="portrait.png" fit="cover" alignX="center" alignY="center" />
+         src="portrait.dds" fit="cover" alignX="center" alignY="center" />
 </mask>
 ```
 
@@ -86,31 +90,52 @@ and participate in templates, but an empty mask is invalid.
 
 Configuration uses semantic symbol names, never ActionScript class names. The
 runtime owns a hardcoded allowlist and resolves only symbols confirmed in both
-vanilla HUD movies. Goal 4E permits one initial mapping:
+vanilla HUD movies. Movie-specific class names remain hidden behind the same
+configuration name:
 
-| Configuration name | Vanilla symbol |
-|---|---|
-| `skill-tech` | `Skill_Tech` |
+| Configuration name | Normal HUD symbol | Large HUD symbol |
+|---|---|---|
+| `environment-alert` | `HUDMenu_fla.envAlertIcon_174` | `HUDMenu_LRG_fla.envAlertIcon_174` |
+| `quest-door-marker` | `QuestDoorMarker` | `QuestDoorMarker` |
+| `boost-fill` | `HUDMenu_fla.BoostBarFill_mc_139` | `HUDMenu_LRG_fla.BoostBarFill_mc_139` |
 
 Unknown names fail the complete layout before rendering. This keeps arbitrary
-class lookup out of gamer-authored configuration.
+class lookup out of gamer-authored configuration. Multi-frame symbols stop on
+their declared initial frame for deterministic rendering. `Skill_Tech` was
+removed because it is an empty engine-populated container that requires a later
+`SetClipData(...)` call before it has renderable dimensions.
+
+## DDS conversion
+
+The committed `venworks-logo.dds` is generated from the canonical Venworks PNG
+with Starfield's `xtexconv` build using BC7 sRGB, one mip level, preserved alpha,
+and deterministic CPU compression:
+
+```powershell
+xtexconv.exe -f BC7_UNORM_SRGB -m 1 -nogpu -y -of venworks-logo.dds Venworks-Logo.png
+```
+
+The converter writes the `-of` filename in its working directory. The
+executable and its machine-specific installation path are developer
+prerequisites and are not distributed by this repository.
 
 ## Fixtures
 
-- `asset-primitives-gallery.xml` exercises PNG transparency and all four fit
-  modes, packaged SVG, a cubic authored path, ellipse and nested path masks,
-  and the `skill-tech` embedded symbol in two upper panels.
+- `asset-primitives-gallery.xml` exercises DDS transparency and all four fit
+  modes, the generic and Venworks-logo packaged SVGs, a cubic authored path,
+  ellipse and nested path masks, and all three embedded symbols in two upper
+  panels.
 - `layout-invalid-asset-path.xml` attempts path traversal and is rejected by
   both the schema and runtime path guard.
-- `layout-missing-asset.xml` references a valid but absent packaged PNG.
+- `layout-missing-asset.xml` references a valid but absent packaged DDS.
 - `layout-invalid-svg.xml` loads a packaged SVG containing a prohibited script.
 - `layout-invalid-svg-path.xml` uses the unsupported SVG arc command.
 - `layout-invalid-mask.xml` omits required path-mask geometry.
 - `layout-unknown-symbol.xml` requests a symbol outside the allowlist.
 
 The build stages the positive gallery as `Interface/VenworksCUI/layout.xml`,
-copies the Venworks-owned transparent PNG to `Assets/gallery-alpha.png`, and
-copies both SVG fixtures to the same asset directory.
+copies SVG fixtures to `Interface/VenworksCUI/Assets`, and copies the committed
+Venworks DDS to `Textures/Interface/VenworksCUI/Assets`.
 
 ## Automated validation
 
@@ -131,10 +156,10 @@ The Goal 4E build must prove:
 
 1. Deploy the positive gallery and confirm both upper panels render while the
    normal player HUD remains usable.
-2. Confirm PNG transparency plus `contain`, `cover`, `stretch`, and `none`
+2. Confirm DDS transparency plus `contain`, `cover`, `stretch`, and `none`
    placement; verify the `none` example clips at right/bottom.
-3. Confirm the packaged SVG, authored path, both masks, nested mask, and
-   `skill-tech` symbol render.
+3. Confirm both packaged SVGs, the authored path, both masks, the nested mask,
+   and `environment-alert`, `quest-door-marker`, and `boost-fill` render.
 4. Deploy each negative fixture individually and confirm the upper red panel
    reports the intended error with no partial gallery.
 5. Restore `asset-primitives-gallery.xml` as `layout.xml` and smoke-test both

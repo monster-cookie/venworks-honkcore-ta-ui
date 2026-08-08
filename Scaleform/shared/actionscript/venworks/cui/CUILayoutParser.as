@@ -464,13 +464,15 @@ package venworks.cui
       {
          var value:String = String(param1.@src);
          var lowerValue:String = value.toLowerCase();
+         var rootDescription:String = param2 == "image" ?
+            "Textures/Interface/VenworksCUI/Assets" : "Interface/VenworksCUI/Assets";
          var segments:Array = null;
          var segment:String = null;
          if(param1.@src.length() != 1 || value.length < 5 || value.length > 128 ||
             !/^[A-Za-z0-9][A-Za-z0-9._\/-]*$/.test(value) || value.indexOf("//") >= 0 ||
             value.indexOf(":") >= 0 || value.indexOf("\\") >= 0 || value.charAt(0) == "/")
          {
-            throw new Error("INVALID|Asset path must be a relative path below Interface/VenworksCUI/Assets.");
+            throw new Error("INVALID|Asset path must be a relative path below " + rootDescription + ".");
          }
          segments = value.split("/");
          for each(segment in segments)
@@ -482,9 +484,9 @@ package venworks.cui
          }
          if(param2 == "image")
          {
-            if(lowerValue.substr(-4) != ".png" && lowerValue.substr(-4) != ".jpg" && lowerValue.substr(-5) != ".jpeg")
+            if(lowerValue.substr(-4) != ".dds")
             {
-               throw new Error("INVALID|Image assets must use .png, .jpg, or .jpeg: " + value);
+               throw new Error("INVALID|Image assets must use .dds: " + value);
             }
          }
          else if(lowerValue.substr(-4) != ".svg")

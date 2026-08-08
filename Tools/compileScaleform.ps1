@@ -11,6 +11,8 @@ param(
 
   [string]$OutputDirectory = (Join-Path $PSScriptRoot "..\Staging-CUI\Interface"),
 
+  [string]$TextureOutputDirectory = (Join-Path $PSScriptRoot "..\Staging-CUI\Textures"),
+
   [string]$WorkDirectory = (Join-Path $PSScriptRoot "..\Scaleform\.work"),
 
   [string[]]$ManifestPath = @(
@@ -170,17 +172,21 @@ $script:ResolvedJavaPath = Resolve-RequiredFile -Path $JavaPath -Description "Ja
 $script:ResolvedJpexsJarPath = Resolve-RequiredFile -Path $JpexsJarPath -Description "JPEXS JAR"
 $resolvedVanillaInterfacePath = (Resolve-Path -LiteralPath $VanillaInterfacePath).Path
 $resolvedOutputDirectory = [System.IO.Path]::GetFullPath($OutputDirectory)
+$resolvedTextureOutputDirectory = [System.IO.Path]::GetFullPath($TextureOutputDirectory)
 $resolvedWorkDirectory = [System.IO.Path]::GetFullPath($WorkDirectory)
 $decompileScript = Resolve-RequiredFile -Path (Join-Path $PSScriptRoot "decompileScaleform.ps1") -Description "Scaleform decompile helper"
 $galleryLayoutSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\fixtures\asset-primitives-gallery.xml") `
   -Description "Goal 4E asset gallery"
-$galleryJpegSource = Resolve-RequiredFile `
-  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\gallery-alpha.jpg") `
-  -Description "Owned Venworks JPEG gallery asset"
+$galleryDdsSource = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\venworks-logo.dds") `
+  -Description "Owned Venworks DDS gallery asset"
 $gallerySvgSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\gallery-vector.svg") `
   -Description "Owned SVG gallery asset"
+$venworksLogoSvgSource = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\venworks-logo.svg") `
+  -Description "Owned Venworks logo SVG asset"
 $invalidSvgSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\gallery-invalid.svg") `
   -Description "Goal 4E invalid SVG fixture"
@@ -489,13 +495,21 @@ try {
       'CUIMask',
       'CUISymbol',
       'VenworksCUI/Assets/',
+      'img://textures/interface/VenworksCUI/Assets/',
+      'Image assets must use .dds',
       'CUI ASSET LOAD ERROR',
       'Asset path traversal is prohibited',
       'Unsupported SVG element',
       'SVG arc path commands are not supported',
       'Embedded symbol is not allowlisted',
-      'skill-tech',
-      'Skill_Tech',
+      'environment-alert',
+      'HUDMenu_fla.envAlertIcon_174',
+      'HUDMenu_LRG_fla.envAlertIcon_174',
+      'quest-door-marker',
+      'QuestDoorMarker',
+      'boost-fill',
+      'HUDMenu_fla.BoostBarFill_mc_139',
+      'HUDMenu_LRG_fla.BoostBarFill_mc_139',
       'CUISegmentedBar',
       'CUIDotBar',
       'CUIRadialMeter',
@@ -544,12 +558,16 @@ try {
 
   $cuiOutputDirectory = Join-Path $resolvedOutputDirectory "VenworksCUI"
   $assetOutputDirectory = Join-Path $cuiOutputDirectory "Assets"
+  $textureAssetOutputDirectory = Join-Path $resolvedTextureOutputDirectory "Interface\VenworksCUI\Assets"
   New-Item -ItemType Directory -Force -Path $assetOutputDirectory | Out-Null
+  New-Item -ItemType Directory -Force -Path $textureAssetOutputDirectory | Out-Null
   Copy-Item -LiteralPath $galleryLayoutSource -Destination (Join-Path $cuiOutputDirectory "layout.xml") -Force
-  Copy-Item -LiteralPath $galleryJpegSource -Destination (Join-Path $assetOutputDirectory "gallery-alpha.jpg") -Force
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
+  Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
   Copy-Item -LiteralPath $invalidSvgSource -Destination (Join-Path $assetOutputDirectory "gallery-invalid.svg") -Force
-  Write-Host -ForegroundColor Green "Staged Goal 4E layout and assets in $cuiOutputDirectory"
+  Copy-Item -LiteralPath $galleryDdsSource -Destination (Join-Path $textureAssetOutputDirectory "venworks-logo.dds") -Force
+  Write-Host -ForegroundColor Green "Staged Goal 4E interface assets in $cuiOutputDirectory"
+  Write-Host -ForegroundColor Green "Staged Goal 4E DDS assets in $textureAssetOutputDirectory"
 }
 finally {
   if ($KeepWork) {

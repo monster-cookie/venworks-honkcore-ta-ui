@@ -87,11 +87,11 @@ vanilla owner and provider contract.
 
 | Component | Status | Required behavior |
 |---|---|---|
-| Built-in symbol/icon | Implemented; acceptance pending | Reference a semantic name from a hardcoded allowlist of symbols embedded in the owning vanilla movie; Goal 4E initially permits `skill-tech`. |
+| Built-in symbol/icon | Implemented; acceptance pending | Reference a semantic name from a movie-aware hardcoded allowlist of symbols embedded in the owning vanilla movie; initial mappings are `environment-alert`, `quest-door-marker`, and `boost-fill`. |
 | SVG path | Implemented; acceptance pending | Render a bounded authored path with fill, stroke, transform, and view box; arc commands are rejected. |
-| SVG asset | Implemented; acceptance pending | Load and validate a restricted local SVG through the fixed `Interface/VenworksCUI/Assets` root; no network URLs, scripts, text, or external references. |
-| PNG image | Implemented; acceptance pending | Atomically preload a local transparent PNG through the fixed asset root with contain, cover, stretch, or intrinsic/clipped placement. |
-| JPEG image | Future | Load an opaque local image where transparency is not needed. |
+| SVG asset | Implemented; in-game loading confirmed | Load and validate a restricted local SVG through the fixed `Interface/VenworksCUI/Assets` root; no network URLs, scripts, text, or external references. |
+| DDS image | Implemented; acceptance pending | Atomically preload a local DDS through `img://textures/interface/VenworksCUI/Assets/` with contain, cover, stretch, or intrinsic/clipped placement. |
+| PNG/JPEG image | Unsupported for direct runtime loading | Convert raster source artwork to DDS; direct `img://` PNG and JPEG probes were found and attempted but rejected by Starfield Scaleform. |
 | Font icon | Future | Render an approved glyph from a packaged font subset with a stable semantic icon name. |
 
 A local Font Awesome Pro installation is available and may simplify future
@@ -185,9 +185,10 @@ rectangles, dots/circles, alternating triangles, four linear fill directions,
 optional partial segments, and bounded continuous radial arcs. These renderers
 remain independent of live Starfield providers.
 
-Goal 4E adds atomic packaged PNG/SVG loading, restricted static SVG parsing,
-authored SVG paths, rectangle/ellipse/path masks with nesting, and a semantic
-allowlist for embedded vanilla symbols. Assets are confined to
-`Interface/VenworksCUI/Assets`; unsupported or missing content fails the entire
+Goal 4E adds atomic packaged DDS/SVG loading, restricted static SVG parsing,
+authored SVG paths, rectangle/ellipse/path masks with nesting, and a
+movie-aware semantic allowlist for embedded vanilla symbols. DDS textures are
+confined to `Textures/Interface/VenworksCUI/Assets`; SVG files are confined to
+`Interface/VenworksCUI/Assets`. Unsupported or missing content fails the entire
 CUI layer with an actionable diagnostic. Composite components remain the next
 Goal 4 gate.

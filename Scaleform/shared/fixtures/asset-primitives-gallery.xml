@@ -12,7 +12,7 @@
              rotation="0" scaleX="1" scaleY="1" z="0" fillColor="#071923" fillOpacity="0.92"
              strokeColor="#35E6E6" strokeOpacity="0.9" strokeWidth="2" />
       <text id="asset.gallery.left.title" x="22" y="14" width="656" height="34" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="1" value="CUI ASSETS — SVG-ONLY DIAGNOSTIC"
+            rotation="0" scaleX="1" scaleY="1" z="1" value="CUI ASSETS — DDS FIT MODES"
             font="$MAIN_Font_Bold" fontSize="19" color="#F7FCFF" bold="true" align="left" />
       <divider id="asset.gallery.left.divider" x="22" y="54" width="656" height="0" opacity="1" visible="true"
                rotation="0" scaleX="1" scaleY="1" z="1" color="#35E6E6" strokeOpacity="0.8" strokeWidth="2" />
@@ -20,10 +20,8 @@
       <panel id="asset.fit.contain.frame" x="24" y="96" width="300" height="140" opacity="1" visible="true"
              rotation="0" scaleX="1" scaleY="1" z="1" fillColor="#183B48" fillOpacity="0.55"
              strokeColor="#35E6E6" strokeOpacity="0.7" strokeWidth="1" />
-      <!-- SVG-only diagnostic: image loading is intentionally disabled.
       <image id="asset.fit.contain" x="34" y="106" width="280" height="120" opacity="1" visible="true"
-             rotation="0" scaleX="1" scaleY="1" z="2" src="gallery-alpha.jpg" fit="contain" alignX="center" alignY="center" />
-      -->
+             rotation="0" scaleX="1" scaleY="1" z="2" src="venworks-logo.dds" fit="contain" alignX="center" alignY="center" />
       <text id="asset.fit.contain.label" x="24" y="66" width="300" height="26" opacity="1" visible="true"
             rotation="0" scaleX="1" scaleY="1" z="2" value="CONTAIN — TRANSPARENCY"
             font="$MAIN_Font_Bold" fontSize="14" color="#35E6E6" bold="false" align="center" />
@@ -31,10 +29,8 @@
       <panel id="asset.fit.cover.frame" x="376" y="96" width="300" height="140" opacity="1" visible="true"
              rotation="0" scaleX="1" scaleY="1" z="1" fillColor="#183B48" fillOpacity="0.55"
              strokeColor="#FFB51B" strokeOpacity="0.8" strokeWidth="1" />
-      <!-- SVG-only diagnostic: image loading is intentionally disabled.
       <image id="asset.fit.cover" x="386" y="106" width="280" height="120" opacity="0.8" visible="true"
-             rotation="0" scaleX="1" scaleY="1" z="2" src="gallery-alpha.jpg" fit="cover" alignX="center" alignY="center" />
-      -->
+             rotation="0" scaleX="1" scaleY="1" z="2" src="venworks-logo.dds" fit="cover" alignX="center" alignY="center" />
       <text id="asset.fit.cover.label" x="376" y="66" width="300" height="26" opacity="1" visible="true"
             rotation="0" scaleX="1" scaleY="1" z="2" value="COVER — 80% OPACITY"
             font="$MAIN_Font_Bold" fontSize="14" color="#FFB51B" bold="false" align="center" />
@@ -42,10 +38,8 @@
       <panel id="asset.fit.stretch.frame" x="24" y="304" width="300" height="140" opacity="1" visible="true"
              rotation="0" scaleX="1" scaleY="1" z="1" fillColor="#183B48" fillOpacity="0.55"
              strokeColor="#F39CDE" strokeOpacity="0.8" strokeWidth="1" />
-      <!-- SVG-only diagnostic: image loading is intentionally disabled.
       <image id="asset.fit.stretch" x="34" y="314" width="280" height="120" opacity="1" visible="true"
-             rotation="0" scaleX="1" scaleY="1" z="2" src="gallery-alpha.jpg" fit="stretch" alignX="center" alignY="center" />
-      -->
+             rotation="0" scaleX="1" scaleY="1" z="2" src="venworks-logo.dds" fit="stretch" alignX="center" alignY="center" />
       <text id="asset.fit.stretch.label" x="24" y="274" width="300" height="26" opacity="1" visible="true"
             rotation="0" scaleX="1" scaleY="1" z="2" value="STRETCH"
             font="$MAIN_Font_Bold" fontSize="14" color="#F39CDE" bold="false" align="center" />
@@ -53,49 +47,53 @@
       <panel id="asset.fit.none.frame" x="376" y="304" width="300" height="140" opacity="1" visible="true"
              rotation="0" scaleX="1" scaleY="1" z="1" fillColor="#183B48" fillOpacity="0.55"
              strokeColor="#FFD800" strokeOpacity="0.8" strokeWidth="1" />
-      <!-- SVG-only diagnostic: image loading is intentionally disabled.
       <image id="asset.fit.none" x="386" y="314" width="280" height="120" opacity="1" visible="true"
-             rotation="0" scaleX="1" scaleY="1" z="2" src="gallery-alpha.jpg" fit="none" alignX="right" alignY="bottom" />
-      -->
+             rotation="0" scaleX="1" scaleY="1" z="2" src="venworks-logo.dds" fit="none" alignX="right" alignY="bottom" />
       <text id="asset.fit.none.label" x="376" y="274" width="300" height="26" opacity="1" visible="true"
             rotation="0" scaleX="1" scaleY="1" z="2" value="NONE — RIGHT/BOTTOM CLIP"
             font="$MAIN_Font_Bold" fontSize="14" color="#FFD800" bold="false" align="center" />
     </group>
 
-    <group id="asset.gallery.right" x="0" y="12" width="700" height="570" opacity="1" visible="true"
+    <group id="asset.gallery.right" x="0" y="12" width="700" height="640" opacity="1" visible="true"
            rotation="0" scaleX="1" scaleY="1" z="100" anchor="top-right">
-      <panel id="asset.gallery.right.panel" x="0" y="0" width="700" height="570" opacity="1" visible="true"
+      <panel id="asset.gallery.right.panel" x="0" y="0" width="700" height="640" opacity="1" visible="true"
              rotation="0" scaleX="1" scaleY="1" z="0" fillColor="#071923" fillOpacity="0.92"
              strokeColor="#35E6E6" strokeOpacity="0.9" strokeWidth="2" />
       <text id="asset.gallery.right.title" x="22" y="14" width="656" height="34" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="1" value="LOCAL SVG + PATHS + MASKS + SYMBOL"
+            rotation="0" scaleX="1" scaleY="1" z="1" value="SVG + PATHS + MASKS + BETHESDA SYMBOLS"
             font="$MAIN_Font_Bold" fontSize="19" color="#F7FCFF" bold="true" align="left" />
       <divider id="asset.gallery.right.divider" x="22" y="54" width="656" height="0" opacity="1" visible="true"
                rotation="0" scaleX="1" scaleY="1" z="1" color="#35E6E6" strokeOpacity="0.8" strokeWidth="2" />
 
-      <text id="asset.svg.label" x="24" y="72" width="270" height="26" opacity="1" visible="true"
+      <text id="asset.svg.label" x="24" y="72" width="190" height="26" opacity="1" visible="true"
             rotation="0" scaleX="1" scaleY="1" z="2" value="PACKAGED SVG"
             font="$MAIN_Font_Bold" fontSize="14" color="#35E6E6" bold="false" align="center" />
-      <svg id="asset.svg" x="24" y="102" width="270" height="180" opacity="1" visible="true"
+      <svg id="asset.svg" x="24" y="102" width="190" height="130" opacity="1" visible="true"
            rotation="0" scaleX="1" scaleY="1" z="2" src="gallery-vector.svg" fit="contain" alignX="center" alignY="center" />
 
-      <text id="asset.path.label" x="334" y="72" width="340" height="26" opacity="1" visible="true"
+      <text id="asset.logo.label" x="245" y="72" width="210" height="26" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="2" value="VENWORKS SVG"
+            font="$MAIN_Font_Bold" fontSize="14" color="#F7FCFF" bold="false" align="center" />
+      <svg id="asset.logo" x="255" y="102" width="190" height="170" opacity="1" visible="true"
+           rotation="0" scaleX="1" scaleY="1" z="2" src="venworks-logo.svg" fit="contain" alignX="center" alignY="center" />
+
+      <text id="asset.path.label" x="476" y="72" width="200" height="26" opacity="1" visible="true"
             rotation="0" scaleX="1" scaleY="1" z="2" value="AUTHORED CUBIC PATH"
             font="$MAIN_Font_Bold" fontSize="14" color="#FFB51B" bold="false" align="center" />
-      <path id="asset.path" x="374" y="116" width="260" height="150" opacity="1" visible="true"
+      <path id="asset.path" x="486" y="116" width="180" height="120" opacity="1" visible="true"
             rotation="0" scaleX="1" scaleY="1" z="2" data="M 5 10 L 55 10 L 35 50 L 20 50 Z M 65 30 C 65 5 115 5 115 30 C 115 55 65 55 65 30 Z"
             viewBoxX="0" viewBoxY="0" viewBoxWidth="120" viewBoxHeight="60"
             fillColor="#FFB51B" fillOpacity="0.85" strokeColor="#F7FCFF" strokeOpacity="0.9" strokeWidth="2" />
 
-      <text id="asset.mask.label" x="24" y="310" width="430" height="26" opacity="1" visible="true"
+      <text id="asset.mask.label" x="24" y="284" width="430" height="26" opacity="1" visible="true"
             rotation="0" scaleX="1" scaleY="1" z="2" value="ELLIPSE + NESTED PATH MASK"
             font="$MAIN_Font_Bold" fontSize="14" color="#F39CDE" bold="false" align="center" />
-      <mask id="asset.mask.ellipse" x="34" y="346" width="190" height="160" opacity="1" visible="true"
+      <mask id="asset.mask.ellipse" x="34" y="320" width="190" height="160" opacity="1" visible="true"
             rotation="0" scaleX="1" scaleY="1" z="2" shape="ellipse">
         <svg id="asset.mask.ellipse.svg" x="0" y="0" width="190" height="160" opacity="1" visible="true"
              rotation="0" scaleX="1" scaleY="1" z="1" src="gallery-vector.svg" fit="cover" alignX="center" alignY="center" />
       </mask>
-      <mask id="asset.mask.path" x="260" y="346" width="190" height="160" opacity="1" visible="true"
+      <mask id="asset.mask.path" x="260" y="320" width="190" height="160" opacity="1" visible="true"
             rotation="0" scaleX="1" scaleY="1" z="2" shape="path"
             data="M 50 0 L 100 35 L 82 100 L 18 100 L 0 35 Z" viewBoxX="0" viewBoxY="0" viewBoxWidth="100" viewBoxHeight="100">
         <mask id="asset.mask.path.inner" x="12" y="12" width="166" height="136" opacity="1" visible="true"
@@ -105,11 +103,24 @@
         </mask>
       </mask>
 
-      <text id="asset.symbol.label" x="484" y="310" width="190" height="26" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="2" value="SYMBOL: SKILL-TECH"
+      <text id="asset.symbols.label" x="474" y="284" width="202" height="26" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="2" value="EMBEDDED SYMBOLS"
             font="$MAIN_Font_Bold" fontSize="13" color="#FFD800" bold="false" align="center" />
-      <symbol id="asset.symbol" x="504" y="350" width="150" height="150" opacity="1" visible="true"
-              rotation="0" scaleX="1" scaleY="1" z="2" name="skill-tech" fit="contain" alignX="center" alignY="center" />
+      <symbol id="asset.symbol.environment" x="480" y="320" width="78" height="78" opacity="1" visible="true"
+              rotation="0" scaleX="1" scaleY="1" z="2" name="environment-alert" fit="contain" alignX="center" alignY="center" />
+      <text id="asset.symbol.environment.label" x="566" y="342" width="110" height="26" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="2" value="ENV ALERT"
+            font="$MAIN_Font_Bold" fontSize="12" color="#35E6E6" bold="false" align="left" />
+      <symbol id="asset.symbol.quest" x="480" y="410" width="78" height="78" opacity="1" visible="true"
+              rotation="0" scaleX="1" scaleY="1" z="2" name="quest-door-marker" fit="contain" alignX="center" alignY="center" />
+      <text id="asset.symbol.quest.label" x="566" y="432" width="110" height="26" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="2" value="QUEST DOOR"
+            font="$MAIN_Font_Bold" fontSize="12" color="#F7FCFF" bold="false" align="left" />
+      <symbol id="asset.symbol.boost" x="480" y="500" width="78" height="78" opacity="1" visible="true"
+              rotation="0" scaleX="1" scaleY="1" z="2" name="boost-fill" fit="contain" alignX="center" alignY="center" />
+      <text id="asset.symbol.boost.label" x="566" y="522" width="110" height="26" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="2" value="BOOST FILL"
+            font="$MAIN_Font_Bold" fontSize="12" color="#FFB51B" bold="false" align="left" />
     </group>
   </components>
 </venworksCUI>

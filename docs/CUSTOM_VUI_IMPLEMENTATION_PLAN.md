@@ -29,8 +29,8 @@ runtime and supported UI surfaces have shipped.
   XML file through its actual file opener.
 - Themes are selected before Starfield launches. Runtime palette switching is
   optional and must not delay the install-time workflow.
-- SVG path rendering and PNG support are required. JPEG remains useful for
-  opaque photographic art.
+- SVG path rendering and DDS support are required. PNG and JPEG remain useful
+  source formats but must be converted before packaging.
 - Exclude SPECTR, TACR, and rear-view/secondary-camera rendering.
 - Support the player HUD and the approved ship UI surfaces, but preserve each
   vanilla movie's input, lifecycle, data-provider, and root contracts.
@@ -47,6 +47,8 @@ Interface/VenworksCUI/layout.xml
           +--> Interface/VenworksCUI/Palettes/<selected>.xml
           |
           +--> Interface/VenworksCUI/Assets/...
+          |
+          +--> Textures/Interface/VenworksCUI/Assets/...
           |
           v
 modified vanilla-derived Starfield Scaleform movies
@@ -133,7 +135,7 @@ Extend the versioned layout schema and runtime through bounded review gates:
 - data-only conditions and allowlisted adapters that control verified vanilla
   HUD visibility without exposing arbitrary providers or methods;
 - segmented rectangles, dots/circles, and radial meter renderers;
-- transparent PNG and local SVG assets;
+- transparent DDS and local SVG assets;
 - authored SVG paths, masks, and permitted embedded symbols;
 - composite button and information-panel foundations.
 
@@ -162,7 +164,7 @@ Goal 4 is divided into bounded review gates:
   alternating triangles, four linear fill directions, optional partial
   segments, and bounded continuous radial renderers. The implementation and
   positive/negative in-game gallery checks are accepted.
-- **Goal 4E — assets and vector primitives:** transparent PNG, local SVG,
+- **Goal 4E — assets and vector primitives:** transparent DDS, local SVG,
   authored SVG paths, masks, and permitted embedded symbols. The implementation
   is complete and awaits in-game acceptance.
 - **Goal 4F — composite foundations:** reusable button, quick-bar, information

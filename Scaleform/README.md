@@ -61,8 +61,8 @@ visibility gallery hides only the allowlisted top-center group for an isolated
 adapter test. The Goal 4D meter gallery uses two compact top panels to exercise
 continuous, rectangle, dot, uniform-triangle, alternating-triangle, vertical,
 reverse, and radial renderers without live HUD data. The Goal 4E asset gallery
-is the staged `layout.xml`; it exercises PNG placement, packaged SVG, authored
-paths, masks, and an allowlisted embedded symbol. Malformed fixtures are
+is the staged `layout.xml`; it exercises DDS placement, packaged SVG, authored
+paths, masks, and movie-aware allowlisted embedded symbols. Malformed fixtures are
 intentionally not well-formed XML, while other negative fixtures may be
 schema-valid and rejected by runtime semantic checks. See
 `../docs/GOAL_3_COMPONENT_LIBRARY.md`,
@@ -100,11 +100,12 @@ segment, and triangle styles may select `uniform` or `alternating` orientation.
 Radial styles use a bounded start angle, sweep angle, direction, and stroke
 thickness. See `../docs/GOAL_4D_METER_RENDERERS.md` for the exact XML contract.
 
-Goal 4E adds `image`, `svg`, `path`, `mask`, and `symbol` primitives. File
-assets resolve only below `Interface/VenworksCUI/Assets` and preload atomically
-before the CUI layer renders. PNG and SVG placement supports `contain`,
-`cover`, `stretch`, or `none` fit plus bounded alignment. The SVG parser accepts
-only a small static vector subset, authored paths reject arc commands, masks
-use rectangle/ellipse/path geometry, and semantic embedded-symbol names are
-hardcoded in the runtime allowlist. See
+Goal 4E adds `image`, `svg`, `path`, `mask`, and `symbol` primitives. DDS image
+assets resolve below `Textures/Interface/VenworksCUI/Assets`; SVG files resolve
+below `Interface/VenworksCUI/Assets`. Both preload atomically before the CUI
+layer renders. DDS and SVG placement supports `contain`, `cover`, `stretch`, or
+`none` fit plus bounded alignment. The SVG parser accepts only a small static
+vector subset, authored paths reject arc commands, masks use
+rectangle/ellipse/path geometry, and semantic embedded-symbol names resolve
+through a movie-aware runtime allowlist. See
 `../docs/GOAL_4E_ASSET_PRIMITIVES.md` for the full contract and test fixtures.

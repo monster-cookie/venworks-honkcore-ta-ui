@@ -2,6 +2,6 @@
 <venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080" safeLeft="0" safeTop="0" safeRight="0" safeBottom="0">
   <definitions><meterStyle id="unused" renderer="continuous" fillColor="#FFFFFF" emptyColor="#000000" fillOpacity="1" emptyOpacity="1" /></definitions>
   <components>
-    <image id="test" x="0" y="0" width="100" height="100" z="1" src="../secret.png" fit="contain" alignX="center" alignY="center" />
+    <image id="test" x="0" y="0" width="100" height="100" z="1" src="../secret.dds" fit="contain" alignX="center" alignY="center" />
   </components>
 </venworksCUI>

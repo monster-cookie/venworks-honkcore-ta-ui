@@ -12,8 +12,8 @@ package venworks.cui
 
    public final class CUIAssetManager extends EventDispatcher
    {
-      private static const ASSET_ROOT:String = "VenworksCUI/Assets/";
-      private static const IMAGE_ASSET_ROOT:String = "img://VenworksCUI/Assets/";
+      private static const SVG_ASSET_ROOT:String = "VenworksCUI/Assets/";
+      private static const IMAGE_ASSET_ROOT:String = "img://textures/interface/VenworksCUI/Assets/";
 
       private var records:Array;
       private var assets:Object;
@@ -128,7 +128,7 @@ package venworks.cui
          loader.addEventListener(SecurityErrorEvent.SECURITY_ERROR,this.onAssetSecurityError);
          try
          {
-            loader.load(new URLRequest(ASSET_ROOT + record.src));
+            loader.load(new URLRequest(SVG_ASSET_ROOT + record.src));
          }
          catch(param2:Error)
          {
