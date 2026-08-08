@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080" safeLeft="64" safeTop="36" safeRight="64" safeBottom="36">
+  <definitions><meterStyle id="invalid.style" renderer="radial" startAngle="-90" sweepAngle="270" clockwise="true" thickness="80" fillColor="#FFFFFF" emptyColor="#222222" fillOpacity="1" emptyOpacity="0.5" /></definitions>
+  <components><meter id="test" x="0" y="0" width="60" height="60" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" style="invalid.style" value="50" max="100" /></components>
+</venworksCUI>

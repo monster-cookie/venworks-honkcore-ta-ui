@@ -4,12 +4,26 @@ package venworks.cui.components
    {
       public function CUIContinuousBar(param1:XML, param2:XML)
       {
+         var fillWidth:Number = NaN;
+         var fillHeight:Number = NaN;
+         var fillX:Number = 0;
+         var fillY:Number = 0;
          super(param1,param2);
          graphics.beginFill(emptyColor,emptyOpacity);
          graphics.drawRect(0,0,componentWidth,componentHeight);
          graphics.endFill();
+         fillWidth = horizontal ? componentWidth * fraction : componentWidth;
+         fillHeight = horizontal ? componentHeight : componentHeight * fraction;
+         if(meterDirection == "left")
+         {
+            fillX = componentWidth - fillWidth;
+         }
+         else if(meterDirection == "up")
+         {
+            fillY = componentHeight - fillHeight;
+         }
          graphics.beginFill(fillColor,fillOpacity);
-         graphics.drawRect(0,0,componentWidth * fraction,componentHeight);
+         graphics.drawRect(fillX,fillY,fillWidth,fillHeight);
          graphics.endFill();
       }
    }

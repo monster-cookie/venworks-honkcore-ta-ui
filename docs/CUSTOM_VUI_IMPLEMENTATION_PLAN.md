@@ -153,19 +153,22 @@ Goal 4 is divided into bounded review gates:
 - **Goal 4C — conditions and vanilla visibility adapters:** bounded,
   case-insensitive visibility expressions, tri-state provider initialization,
   and hardcoded per-movie presentation adapters for independently verified
-  default UI pieces. The implementation is complete and awaits in-game
-  acceptance. Unknown or unavailable providers and unsafe targets fail safely;
+  default UI pieces. The implementation is accepted, with the combat transition
+  smoke test deferred until the Venworks UI duplication. Unknown or unavailable
+  providers and unsafe targets fail safely;
   arbitrary provider names, display paths, properties, and methods remain
   prohibited.
 - **Goal 4D — remaining meter renderers:** segmented rectangles, dots/circles,
-  and radial renderers.
+  alternating triangles, four linear fill directions, optional partial
+  segments, and bounded continuous radial renderers. The implementation is
+  complete and awaits in-game acceptance.
 - **Goal 4E — assets and vector primitives:** transparent PNG, local SVG,
   authored SVG paths, masks, and permitted embedded symbols.
 - **Goal 4F — composite foundations:** reusable button, quick-bar, information
   panel, warning, and related foundations assembled from approved primitives.
 
 Each gate requires a gallery and failure fixtures before use on a live HUD
-surface. Goal 4D follows Goal 4C acceptance; palettes remain deferred until the
+surface. Goal 4E follows Goal 4D acceptance; palettes remain deferred until the
 UI work is complete.
 
 ## Goal 5: Implement the first configurable player HUD surface

@@ -170,25 +170,99 @@ package venworks.cui
 
       private function parseMeterStyle(param1:XML, param2:String) : void
       {
-         this.requireAttributes(param1,["id","renderer","fillColor","emptyColor","fillOpacity","emptyOpacity","segmentCount","gap"]);
-         if(String(param1.@renderer) != "continuous" && String(param1.@renderer) != "triangles")
+         var renderer:String = String(param1.@renderer);
+         this.requireAttributes(param1,["id","renderer","fillColor","emptyColor","fillOpacity","emptyOpacity",
+                                        "segmentCount","gap","direction","partialSegments","trianglePattern",
+                                        "startAngle","sweepAngle","clockwise","thickness"]);
+         if(renderer != "continuous" && renderer != "triangles" && renderer != "segments" &&
+            renderer != "dots" && renderer != "radial")
          {
-            throw new Error("INVALID|Unsupported meter renderer: " + String(param1.@renderer));
+            throw new Error("INVALID|Unsupported meter renderer: " + renderer);
          }
          this.requireColor(param1,"fillColor");
          this.requireColor(param1,"emptyColor");
          this.requireUnitInterval(param1,"fillOpacity");
          this.requireUnitInterval(param1,"emptyOpacity");
-         if(String(param1.@renderer) == "triangles")
+         if(renderer == "continuous")
+         {
+            this.requireLinearDirection(param1);
+            this.rejectMeterAttributes(param1,["segmentCount","gap","partialSegments","trianglePattern",
+                                               "startAngle","sweepAngle","clockwise","thickness"]);
+         }
+         else if(renderer == "radial")
+         {
+            this.rejectMeterAttributes(param1,["segmentCount","gap","direction","partialSegments","trianglePattern"]);
+            this.requirePositive(param1,"thickness");
+            if(param1.@startAngle.length() == 1)
+            {
+               this.requireFinite(param1,"startAngle");
+               if(Number(param1.@startAngle) < -360 || Number(param1.@startAngle) > 360)
+               {
+                  throw new Error("INVALID|Radial startAngle must be between -360 and 360.");
+               }
+            }
+            if(param1.@sweepAngle.length() == 1)
+            {
+               this.requirePositive(param1,"sweepAngle");
+               if(Number(param1.@sweepAngle) > 360)
+               {
+                  throw new Error("INVALID|Radial sweepAngle must be greater than 0 and no more than 360.");
+               }
+            }
+            this.requireOptionalBoolean(param1,"clockwise");
+         }
+         else
          {
             this.requirePositiveInteger(param1,"segmentCount");
             if(int(param1.@segmentCount) > 64)
             {
-               throw new Error("INVALID|Triangle segmentCount must be between 1 and 64.");
+               throw new Error("INVALID|Meter segmentCount must be between 1 and 64.");
             }
             this.requireFiniteNonNegative(param1,"gap");
+            this.requireLinearDirection(param1);
+            this.requireOptionalBoolean(param1,"partialSegments");
+            this.rejectMeterAttributes(param1,["startAngle","sweepAngle","clockwise","thickness"]);
+            if(renderer == "triangles")
+            {
+               if(param1.@trianglePattern.length() == 1 && String(param1.@trianglePattern) != "uniform" &&
+                  String(param1.@trianglePattern) != "alternating")
+               {
+                  throw new Error("INVALID|trianglePattern must be uniform or alternating.");
+               }
+            }
+            else
+            {
+               this.rejectMeterAttributes(param1,["trianglePattern"]);
+            }
          }
          meterStyles[param2] = param1;
+      }
+
+      private function requireLinearDirection(param1:XML) : void
+      {
+         var value:String = null;
+         if(param1.@direction.length() == 0)
+         {
+            return;
+         }
+         value = String(param1.@direction);
+         if(value != "right" && value != "left" && value != "down" && value != "up")
+         {
+            throw new Error("INVALID|Meter direction must be right, left, down, or up.");
+         }
+      }
+
+      private function rejectMeterAttributes(param1:XML, param2:Array) : void
+      {
+         var attributeName:String = null;
+         for each(attributeName in param2)
+         {
+            if(param1.attribute(attributeName).length() == 1)
+            {
+               throw new Error("INVALID|Meter attribute '" + attributeName + "' does not apply to renderer " +
+                               String(param1.@renderer) + ".");
+            }
+         }
       }
 
       private function parseTemplate(param1:XML, param2:String) : void
@@ -287,6 +361,11 @@ package venworks.cui
             if(Number(param1.@max) <= 0)
             {
                throw new Error("INVALID|Meter max must be greater than zero: " + String(param1.@id));
+            }
+            if(String(style.@renderer) == "radial" && Number(style.@thickness) >
+               Math.min(Number(param1.@width),Number(param1.@height)))
+            {
+               throw new Error("INVALID|Radial thickness exceeds meter bounds: " + String(param1.@id));
             }
          }
          else

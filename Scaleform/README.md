@@ -35,7 +35,7 @@ from the validation records.
 
 The build injects the Venworks-only ABC seed, exports Bethesda ActionScript only
 into ignored temporary storage, verifies the authored `HUDMenu` patch anchors,
-and imports the patched document class plus the 15 repository-authored CUI
+and imports the patched document class plus the 23 repository-authored CUI
 classes. It confirms that every other exported class remains textually
 identical and that the reopened output contains the required layout and
 diagnostic contracts. Full exported Bethesda classes are never repository
@@ -58,13 +58,17 @@ selection. The Goal 4C condition gallery is the staged `layout.xml`; it
 exercises case-insensitive visibility expressions, confirmed HUD providers,
 composition visibility, and dynamic repeater-item gates. The separate vanilla
 visibility gallery hides only the allowlisted top-center group for an isolated
-adapter test. Malformed fixtures are intentionally not well-formed
+adapter test. The Goal 4D meter gallery is the staged `layout.xml`; two compact
+top panels exercise continuous, rectangle, dot, uniform-triangle,
+alternating-triangle, vertical, reverse, and radial renderers without using
+live HUD data. Malformed fixtures are intentionally not well-formed
 XML, while other negative fixtures may be schema-valid and rejected by runtime
 semantic checks. See
 `../docs/GOAL_3_COMPONENT_LIBRARY.md`,
 `../docs/GOAL_4A_RESPONSIVE_LAYOUT.md`, and
 `../docs/GOAL_4B_COMPOSITION.md`,
 `../docs/GOAL_4C_CONDITIONS.md`, and
+`../docs/GOAL_4D_METER_RENDERERS.md`, and
 `../docs/COMPONENT_CATALOG.md`.
 
 An optional component `anchor` uses one of `top-left`, `top-center`,
@@ -86,3 +90,10 @@ underscores are ignored, and provider values remain unknown/hidden until their
 first confirmed vanilla update. An optional `vanillaVisibility` section accepts
 only the hardcoded target allowlist; configuration cannot provide display paths
 or ActionScript method names. Engine-sensitive controls remain blocked.
+
+Goal 4D extends the shared meter-style contract with `segments`, `dots`, and
+`radial` renderers. Linear meters accept `right`, `left`, `down`, or `up`
+directions. Segmented renderers optionally preserve a partially filled final
+segment, and triangle styles may select `uniform` or `alternating` orientation.
+Radial styles use a bounded start angle, sweep angle, direction, and stroke
+thickness. See `../docs/GOAL_4D_METER_RENDERERS.md` for the exact XML contract.

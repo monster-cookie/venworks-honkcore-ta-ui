@@ -9,10 +9,13 @@ package venworks.cui
    import flash.net.URLRequest;
    import venworks.cui.components.CUIComponent;
    import venworks.cui.components.CUIContinuousBar;
+   import venworks.cui.components.CUIDotBar;
    import venworks.cui.components.CUIDivider;
    import venworks.cui.components.CUIGroup;
    import venworks.cui.components.CUIMeter;
    import venworks.cui.components.CUIPanel;
+   import venworks.cui.components.CUIRadialMeter;
+   import venworks.cui.components.CUISegmentedBar;
    import venworks.cui.components.CUIShape;
    import venworks.cui.components.CUIText;
    import venworks.cui.components.CUITriangleBar;
@@ -196,7 +199,19 @@ package venworks.cui
             {
                return new CUIContinuousBar(param1,style);
             }
-            return new CUITriangleBar(param1,style);
+            if(String(style.@renderer) == "triangles")
+            {
+               return new CUITriangleBar(param1,style);
+            }
+            if(String(style.@renderer) == "segments")
+            {
+               return new CUISegmentedBar(param1,style);
+            }
+            if(String(style.@renderer) == "dots")
+            {
+               return new CUIDotBar(param1,style);
+            }
+            return new CUIRadialMeter(param1,style);
          }
          throw new Error("INVALID|Unknown component: " + type);
       }

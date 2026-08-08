@@ -321,8 +321,8 @@ try {
       -OutputPath $patchedScriptPath
 
     $authoredScripts = @(Get-ChildItem -LiteralPath $actionScriptSourcePath -Recurse -File -Filter "*.as")
-    if ($authoredScripts.Count -ne 20) {
-      throw "Expected 20 authored CUI classes; found $($authoredScripts.Count) in $actionScriptSourcePath."
+    if ($authoredScripts.Count -ne 23) {
+      throw "Expected 23 authored CUI classes; found $($authoredScripts.Count) in $actionScriptSourcePath."
     }
 
     foreach ($authoredScript in $authoredScripts) {
@@ -361,8 +361,8 @@ try {
 
     $originalScripts = @(Get-ChildItem -LiteralPath $exportedScriptsDirectory -Recurse -File -Filter "*.as")
     $validationScripts = @(Get-ChildItem -LiteralPath $validationScriptsDirectory -Recurse -File -Filter "*.as")
-    if ($originalScripts.Count -ne 187 -or $validationScripts.Count -ne $originalScripts.Count) {
-      throw "Expected 187 seeded and reopened classes; found $($originalScripts.Count) before import and $($validationScripts.Count) after import."
+    if ($originalScripts.Count -ne 190 -or $validationScripts.Count -ne $originalScripts.Count) {
+      throw "Expected 190 seeded and reopened classes; found $($originalScripts.Count) before import and $($validationScripts.Count) after import."
     }
 
     foreach ($originalScript in $originalScripts) {
@@ -414,6 +414,9 @@ try {
       'CUIConditionContext',
       'CUIVisibilityBinding',
       'CUIVanillaVisibilityAdapter',
+      'CUISegmentedBar',
+      'CUIDotBar',
+      'CUIRadialMeter',
       'CUILayoutEngine',
       'Extensions.visibleRect',
       'top-left',
@@ -426,6 +429,11 @@ try {
       'Condition exceeds the 8-level nesting limit',
       'Condition provider unavailable in hudmenu.gfx',
       'Vanilla visibility target is not allowlisted',
+      'Meter direction must be right, left, down, or up',
+      'Meter segmentCount must be between 1 and 64',
+      'Radial thickness exceeds meter bounds',
+      'alternating',
+      'clockwise',
       'HudCrosshairData',
       'HUDStealthData',
       'HudCompassData',

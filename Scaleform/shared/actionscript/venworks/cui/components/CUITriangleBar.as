@@ -10,50 +10,81 @@ package venworks.cui.components
       {
          var segmentCount:int = 0;
          var gap:Number = NaN;
-         var segmentWidth:Number = NaN;
-         var filled:Number = NaN;
+         var segmentExtent:Number = NaN;
+         var visualIndex:int = 0;
+         var segmentX:Number = NaN;
+         var segmentY:Number = NaN;
          var index:int = 0;
          var segmentFraction:Number = NaN;
+         var alternating:Boolean = false;
          super(param1,param2);
          segmentCount = int(this.readNumber(param2,"segmentCount",12));
          gap = this.readNumber(param2,"gap",2);
-         segmentWidth = (componentWidth - gap * (segmentCount - 1)) / segmentCount;
-         filled = fraction * segmentCount;
+         alternating = String(param2.@trianglePattern) == "alternating";
+         segmentExtent = (axisLength - gap * (segmentCount - 1)) / segmentCount;
          index = 0;
          while(index < segmentCount)
          {
-            this.drawTriangle(graphics,index * (segmentWidth + gap),segmentWidth,emptyColor,emptyOpacity);
-            segmentFraction = Math.max(0,Math.min(1,filled - index));
+            visualIndex = this.displayIndex(index,segmentCount);
+            segmentX = horizontal ? visualIndex * (segmentExtent + gap) : 0;
+            segmentY = horizontal ? 0 : visualIndex * (segmentExtent + gap);
+            this.drawTriangle(graphics,segmentX,segmentY,
+                              horizontal ? segmentExtent : componentWidth,
+                              horizontal ? componentHeight : segmentExtent,
+                              alternating && visualIndex % 2 == 0,emptyColor,emptyOpacity);
+            segmentFraction = this.segmentFraction(index,segmentCount);
             if(segmentFraction > 0)
             {
-               this.drawFilledSegment(index * (segmentWidth + gap),segmentWidth,segmentFraction);
+               this.drawFilledSegment(segmentX,segmentY,
+                                      horizontal ? segmentExtent : componentWidth,
+                                      horizontal ? componentHeight : segmentExtent,
+                                      alternating && visualIndex % 2 == 0,segmentFraction);
             }
             index++;
          }
       }
 
-      private function drawFilledSegment(param1:Number, param2:Number, param3:Number) : void
+      private function drawFilledSegment(param1:Number, param2:Number, param3:Number,
+                                         param4:Number, param5:Boolean, param6:Number) : void
       {
          var fill:Sprite = new Sprite();
          var clippingMask:Shape = new Shape();
-         this.drawTriangle(fill.graphics,0,param2,fillColor,fillOpacity);
-         clippingMask.graphics.beginFill(16777215,1);
-         clippingMask.graphics.drawRect(0,0,param2 * param3,componentHeight);
-         clippingMask.graphics.endFill();
-         fill.x = param1;
-         clippingMask.x = param1;
+         this.drawTriangle(fill.graphics,param1,param2,param3,param4,param5,fillColor,fillOpacity);
+         this.drawDirectionalMask(clippingMask,param1,param2,param3,param4,param6);
          addChild(fill);
          addChild(clippingMask);
          fill.mask = clippingMask;
       }
 
-      private function drawTriangle(param1:Graphics, param2:Number, param3:Number, param4:uint, param5:Number) : void
+      private function drawTriangle(param1:Graphics, param2:Number, param3:Number,
+                                    param4:Number, param5:Number, param6:Boolean,
+                                    param7:uint, param8:Number) : void
       {
-         param1.beginFill(param4,param5);
-         param1.moveTo(param2,0);
-         param1.lineTo(param2 + param3,0);
-         param1.lineTo(param2 + param3 / 2,componentHeight);
-         param1.lineTo(param2,0);
+         param1.beginFill(param7,param8);
+         if(horizontal && param6)
+         {
+            param1.moveTo(param2 + param4 / 2,param3);
+            param1.lineTo(param2 + param4,param3 + param5);
+            param1.lineTo(param2,param3 + param5);
+         }
+         else if(horizontal)
+         {
+            param1.moveTo(param2,param3);
+            param1.lineTo(param2 + param4,param3);
+            param1.lineTo(param2 + param4 / 2,param3 + param5);
+         }
+         else if(param6)
+         {
+            param1.moveTo(param2,param3 + param5 / 2);
+            param1.lineTo(param2 + param4,param3);
+            param1.lineTo(param2 + param4,param3 + param5);
+         }
+         else
+         {
+            param1.moveTo(param2,param3);
+            param1.lineTo(param2 + param4,param3 + param5 / 2);
+            param1.lineTo(param2,param3 + param5);
+         }
          param1.endFill();
       }
    }

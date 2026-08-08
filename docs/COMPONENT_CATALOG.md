@@ -68,12 +68,12 @@ Values clamp to the range from zero through `max`.
 
 | Renderer | Status | Primary uses |
 |---|---|---|
-| Continuous bar | Implemented | Health, oxygen, boost, enemy health, ship hull/shields, and other linear values. |
-| Stacked triangles | Implemented | Venworks health style and other segmented linear values; supports partial final-segment fill. |
-| Segmented rectangles | Next | Discrete or visually stepped meters. |
-| Dots/circles | Next | Compact counters and alternate meter styling. |
+| Continuous bar | Implemented | Health, oxygen, boost, enemy health, ship hull/shields, and other linear values; supports four fill directions. |
+| Stacked triangles | Implemented | Uniform or alternating-orientation segments, four fill directions, and optional partial final-segment fill. |
+| Segmented rectangles | Implemented | Discrete or visually stepped meters with whole or partial final segments. |
+| Dots/circles | Implemented | Compact counters and alternate meter styling with whole or partial final dots. |
 | Chevrons/notches | Future | Directional or technical segmented meters. |
-| Radial/circular arc | Future | Oxygen/CO2, cooldown, progress, and compact gauges. |
+| Radial/circular arc | Implemented | Bounded continuous clockwise/counterclockwise arcs for oxygen/CO2, cooldown, progress, and compact gauges. |
 | Image-masked meter | Future | Theme-authored fills bounded by an approved image or vector mask. |
 | Bipolar/center-origin bar | Future | Signed values or opposing states where the neutral point is centered. |
 
@@ -178,5 +178,10 @@ Goal 4C adds `visibleWhen` to components and composition placements, a bounded
 Boolean/numeric expression evaluator, confirmed player-HUD provider adapters,
 and a hardcoded initial vanilla target allowlist. Ship values, named effects,
 and engine-sensitive vanilla targets remain unavailable pending owner-specific
-discovery and isolated tests. Additional meter renderers, assets, masks,
-symbols, and composite components remain later Goal 4 gates.
+discovery and isolated tests.
+
+Goal 4D completes the current fixed-data meter renderer family with segmented
+rectangles, dots/circles, alternating triangles, four linear fill directions,
+optional partial segments, and bounded continuous radial arcs. These renderers
+remain independent of live Starfield providers. Assets, masks, symbols, and
+composite components remain later Goal 4 gates.

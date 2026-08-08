@@ -26,6 +26,42 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="meterDirectionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="right" />
+      <xs:enumeration value="left" />
+      <xs:enumeration value="down" />
+      <xs:enumeration value="up" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="trianglePatternType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="uniform" />
+      <xs:enumeration value="alternating" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="radialStartAngleType">
+    <xs:restriction base="xs:decimal">
+      <xs:minInclusive value="-360" />
+      <xs:maxInclusive value="360" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="radialSweepAngleType">
+    <xs:restriction base="xs:decimal">
+      <xs:minExclusive value="0" />
+      <xs:maxInclusive value="360" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="positiveDecimalType">
+    <xs:restriction base="xs:decimal">
+      <xs:minExclusive value="0" />
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:simpleType name="anchorType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="top-left" />
@@ -206,13 +242,20 @@
 
   <xs:complexType name="meterStyleType">
     <xs:attribute name="id" type="idType" use="required" />
-    <xs:attribute name="renderer" use="required"><xs:simpleType><xs:restriction base="xs:string"><xs:enumeration value="continuous" /><xs:enumeration value="triangles" /></xs:restriction></xs:simpleType></xs:attribute>
+    <xs:attribute name="renderer" use="required"><xs:simpleType><xs:restriction base="xs:string"><xs:enumeration value="continuous" /><xs:enumeration value="triangles" /><xs:enumeration value="segments" /><xs:enumeration value="dots" /><xs:enumeration value="radial" /></xs:restriction></xs:simpleType></xs:attribute>
     <xs:attribute name="fillColor" type="colorType" use="required" />
     <xs:attribute name="emptyColor" type="colorType" use="required" />
     <xs:attribute name="fillOpacity" type="opacityType" use="required" />
     <xs:attribute name="emptyOpacity" type="opacityType" use="required" />
     <xs:attribute name="segmentCount" type="xs:positiveInteger" />
     <xs:attribute name="gap" type="xs:nonNegativeInteger" />
+    <xs:attribute name="direction" type="meterDirectionType" />
+    <xs:attribute name="partialSegments" type="strictBooleanType" />
+    <xs:attribute name="trianglePattern" type="trianglePatternType" />
+    <xs:attribute name="startAngle" type="radialStartAngleType" />
+    <xs:attribute name="sweepAngle" type="radialSweepAngleType" />
+    <xs:attribute name="clockwise" type="strictBooleanType" />
+    <xs:attribute name="thickness" type="positiveDecimalType" />
   </xs:complexType>
 
   <xs:complexType name="vanillaVisibilityTargetType">
