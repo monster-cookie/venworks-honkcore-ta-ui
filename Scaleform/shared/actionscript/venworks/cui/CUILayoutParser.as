@@ -372,7 +372,7 @@ package venworks.cui
          {
             this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","src","fit","alignX","alignY"]);
             this.requirePositiveBounds(param1);
-            this.requireAssetPath(param1,type == "image" ? "png" : "svg");
+            this.requireAssetPath(param1,type);
             this.requireAssetFit(param1);
          }
          else if(type == "path")
@@ -463,6 +463,7 @@ package venworks.cui
       private function requireAssetPath(param1:XML, param2:String) : void
       {
          var value:String = String(param1.@src);
+         var lowerValue:String = value.toLowerCase();
          var segments:Array = null;
          var segment:String = null;
          if(param1.@src.length() != 1 || value.length < 5 || value.length > 128 ||
@@ -479,9 +480,16 @@ package venworks.cui
                throw new Error("INVALID|Asset path traversal is prohibited: " + value);
             }
          }
-         if(value.toLowerCase().substr(-(param2.length + 1)) != "." + param2)
+         if(param2 == "image")
          {
-            throw new Error("INVALID|" + String(param1.name()) + " assets must use ." + param2 + ": " + value);
+            if(lowerValue.substr(-4) != ".png" && lowerValue.substr(-4) != ".jpg" && lowerValue.substr(-5) != ".jpeg")
+            {
+               throw new Error("INVALID|Image assets must use .png, .jpg, or .jpeg: " + value);
+            }
+         }
+         else if(lowerValue.substr(-4) != ".svg")
+         {
+            throw new Error("INVALID|SVG assets must use .svg: " + value);
          }
       }
 

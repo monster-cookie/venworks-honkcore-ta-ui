@@ -175,9 +175,9 @@ $decompileScript = Resolve-RequiredFile -Path (Join-Path $PSScriptRoot "decompil
 $galleryLayoutSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\fixtures\asset-primitives-gallery.xml") `
   -Description "Goal 4E asset gallery"
-$galleryPngSource = Resolve-RequiredFile `
-  -Path (Join-Path $PSScriptRoot "..\MarketingSites\Images\Venworks-Logo.png") `
-  -Description "Owned Venworks PNG gallery asset"
+$galleryJpegSource = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\gallery-alpha.jpg") `
+  -Description "Owned Venworks JPEG gallery asset"
 $gallerySvgSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\gallery-vector.svg") `
   -Description "Owned SVG gallery asset"
@@ -546,7 +546,7 @@ try {
   $assetOutputDirectory = Join-Path $cuiOutputDirectory "Assets"
   New-Item -ItemType Directory -Force -Path $assetOutputDirectory | Out-Null
   Copy-Item -LiteralPath $galleryLayoutSource -Destination (Join-Path $cuiOutputDirectory "layout.xml") -Force
-  Copy-Item -LiteralPath $galleryPngSource -Destination (Join-Path $assetOutputDirectory "gallery-alpha.png") -Force
+  Copy-Item -LiteralPath $galleryJpegSource -Destination (Join-Path $assetOutputDirectory "gallery-alpha.jpg") -Force
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $invalidSvgSource -Destination (Join-Path $assetOutputDirectory "gallery-invalid.svg") -Force
   Write-Host -ForegroundColor Green "Staged Goal 4E layout and assets in $cuiOutputDirectory"

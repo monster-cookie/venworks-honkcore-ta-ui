@@ -42,7 +42,7 @@ package venworks.cui
          var record:Object = assets[param1];
          if(record == null || record.kind != "image")
          {
-            throw new Error("INVALID|Loaded PNG asset is unavailable: " + param1);
+            throw new Error("INVALID|Loaded image asset is unavailable: " + param1);
          }
          return record.loader as DisplayObject;
       }
@@ -106,7 +106,7 @@ package venworks.cui
          }
          catch(param2:Error)
          {
-            this.fail("Could not start PNG asset request: " + record.src);
+            this.fail("Could not start image asset request: " + record.src);
          }
       }
 
@@ -141,7 +141,7 @@ package venworks.cui
          var record:Object = this.findByLoaderInfo(param1.currentTarget as LoaderInfo);
          if(record == null)
          {
-            this.fail("PNG loader completed without a matching component.");
+            this.fail("Image loader completed without a matching component.");
             return;
          }
          this.clearRecordListeners(record);
