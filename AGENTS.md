@@ -55,6 +55,15 @@ These rules apply throughout the repository.
   - modifying GitHub repository settings, releases, issues, workflows, secrets, rulesets, or branch protection.
 - If a command is not clearly read-only, stop and ask the user to perform it.
 
+## Commit message handoff
+
+- After completing an implementation goal that changes files, always provide a suggested Git commit title and body.
+- Use a concise imperative title that summarizes the goal.
+- In the body, summarize the major implementation, configuration, documentation, staging, and validation changes.
+- Mention only validation that actually ran successfully.
+- Format the title and body in separate code blocks for easy copying.
+- Again do not stage or commit the changes; the user performs all Git operations.
+
 ## Planning requirements
 
 Before edits, produce a plan containing:
