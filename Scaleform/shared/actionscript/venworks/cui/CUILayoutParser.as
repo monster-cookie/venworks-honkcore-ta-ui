@@ -368,6 +368,54 @@ package venworks.cui
                throw new Error("INVALID|Radial thickness exceeds meter bounds: " + String(param1.@id));
             }
          }
+         else if(type == "image" || type == "svg")
+         {
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","src","fit","alignX","alignY"]);
+            this.requirePositiveBounds(param1);
+            this.requireAssetPath(param1,type == "image" ? "png" : "svg");
+            this.requireAssetFit(param1);
+         }
+         else if(type == "path")
+         {
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","data","viewBoxX","viewBoxY","viewBoxWidth","viewBoxHeight","fillColor","fillOpacity","strokeColor","strokeOpacity","strokeWidth"]);
+            this.requirePositiveBounds(param1);
+            this.requirePathGeometry(param1);
+            this.requireColor(param1,"fillColor");
+            this.requireUnitInterval(param1,"fillOpacity");
+            this.requireColor(param1,"strokeColor");
+            this.requireUnitInterval(param1,"strokeOpacity");
+            this.requireFiniteNonNegative(param1,"strokeWidth");
+         }
+         else if(type == "mask")
+         {
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","shape","data","viewBoxX","viewBoxY","viewBoxWidth","viewBoxHeight"]);
+            this.requirePositiveBounds(param1);
+            if(String(param1.@shape) != "rectangle" && String(param1.@shape) != "ellipse" && String(param1.@shape) != "path")
+            {
+               throw new Error("INVALID|Unsupported mask shape: " + String(param1.@shape));
+            }
+            if(String(param1.@shape) == "path")
+            {
+               this.requirePathGeometry(param1);
+            }
+            else if(param1.@data.length() != 0 || param1.@viewBoxX.length() != 0 || param1.@viewBoxY.length() != 0 ||
+                    param1.@viewBoxWidth.length() != 0 || param1.@viewBoxHeight.length() != 0)
+            {
+               throw new Error("INVALID|Path geometry applies only to path masks: " + String(param1.@id));
+            }
+            this.validateChildren(param1);
+         }
+         else if(type == "symbol")
+         {
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","name","fit","alignX","alignY"]);
+            this.requirePositiveBounds(param1);
+            this.requireNonEmpty(param1,"name");
+            if(!venworks.cui.components.CUISymbol.isAllowlisted(String(param1.@name)))
+            {
+               throw new Error("INVALID|Embedded symbol is not allowlisted: " + String(param1.@name));
+            }
+            this.requireAssetFit(param1);
+         }
          else
          {
             throw new Error("INVALID|Unknown component: " + type);
@@ -402,6 +450,72 @@ package venworks.cui
          this.requireOptionalFinite(param1,"scaleY");
          this.requireInteger(param1,"z");
          this.requireOptionalAnchor(param1);
+      }
+
+      private function requirePositiveBounds(param1:XML) : void
+      {
+         if(Number(param1.@width) <= 0 || Number(param1.@height) <= 0)
+         {
+            throw new Error("INVALID|Component width and height must be positive: " + String(param1.@id));
+         }
+      }
+
+      private function requireAssetPath(param1:XML, param2:String) : void
+      {
+         var value:String = String(param1.@src);
+         var segments:Array = null;
+         var segment:String = null;
+         if(param1.@src.length() != 1 || value.length < 5 || value.length > 128 ||
+            !/^[A-Za-z0-9][A-Za-z0-9._\/-]*$/.test(value) || value.indexOf("//") >= 0 ||
+            value.indexOf(":") >= 0 || value.indexOf("\\") >= 0 || value.charAt(0) == "/")
+         {
+            throw new Error("INVALID|Asset path must be a relative path below Interface/VenworksCUI/Assets.");
+         }
+         segments = value.split("/");
+         for each(segment in segments)
+         {
+            if(segment == "" || segment == "." || segment == "..")
+            {
+               throw new Error("INVALID|Asset path traversal is prohibited: " + value);
+            }
+         }
+         if(value.toLowerCase().substr(-(param2.length + 1)) != "." + param2)
+         {
+            throw new Error("INVALID|" + String(param1.name()) + " assets must use ." + param2 + ": " + value);
+         }
+      }
+
+      private function requireAssetFit(param1:XML) : void
+      {
+         var fit:String = param1.@fit.length() == 1 ? String(param1.@fit) : "contain";
+         var alignX:String = param1.@alignX.length() == 1 ? String(param1.@alignX) : "center";
+         var alignY:String = param1.@alignY.length() == 1 ? String(param1.@alignY) : "center";
+         if(fit != "contain" && fit != "cover" && fit != "stretch" && fit != "none")
+         {
+            throw new Error("INVALID|Asset fit must be contain, cover, stretch, or none.");
+         }
+         if(alignX != "left" && alignX != "center" && alignX != "right")
+         {
+            throw new Error("INVALID|Asset alignX must be left, center, or right.");
+         }
+         if(alignY != "top" && alignY != "center" && alignY != "bottom")
+         {
+            throw new Error("INVALID|Asset alignY must be top, center, or bottom.");
+         }
+      }
+
+      private function requirePathGeometry(param1:XML) : void
+      {
+         this.requireNonEmpty(param1,"data");
+         if(String(param1.@data).length > 8192)
+         {
+            throw new Error("INVALID|SVG path data exceeds the 8192-character limit.");
+         }
+         this.requireFinite(param1,"viewBoxX");
+         this.requireFinite(param1,"viewBoxY");
+         this.requirePositive(param1,"viewBoxWidth");
+         this.requirePositive(param1,"viewBoxHeight");
+         CUISvgPathParser.validate(String(param1.@data));
       }
 
       private function requireOptionalAnchor(param1:XML) : void

@@ -38,8 +38,8 @@ inspected and tested.
 | Reusable template | Implemented | Instantiate a primitive-only component tree with bounded text, meter-value, and visibility overrides. |
 | Repeater/list layout | Implemented | Lay out up to 64 declared items vertically, horizontally, or in a grid; hidden items collapse. |
 | Bounded state selection | Implemented | Select one of up to 16 declared templates without expressions or arbitrary method calls. |
-| Data-only conditions | Implemented; acceptance pending | Evaluate bounded, case-insensitive visibility expressions against verified vanilla state with fail-hidden unknown initialization. |
-| Vanilla visibility adapter | Implemented; acceptance pending | Apply alpha presentation gates only to explicitly mapped default UI pieces while preserving vanilla visibility and lifecycle behavior. |
+| Data-only conditions | Implemented | Evaluate bounded, case-insensitive visibility expressions against verified vanilla state with fail-hidden unknown initialization. |
+| Vanilla visibility adapter | Implemented | Apply alpha presentation gates only to explicitly mapped default UI pieces while preserving vanilla visibility and lifecycle behavior. |
 
 Goal 4A keeps a fixed 1920-by-1080 design coordinate system and relies on
 Starfield's `Extensions.visibleRect` for viewport boundaries. It does not
@@ -57,7 +57,7 @@ surface.
 | Error panel | Implemented | Show actionable load/schema errors in the upper center/right region and remain hidden after a valid load. |
 | Repeater/list | Implemented | Lay out a bounded fixed collection vertically, horizontally, or in a grid with spacing and item limits. |
 | State container | Implemented | Select one fixed configuration state without allowing arbitrary expressions or method calls. |
-| Mask/clip | Future | Bound child rendering to rectangular, circular, or approved vector geometry. |
+| Mask/clip | Implemented; acceptance pending | Bound one or more children to rectangle, ellipse, or approved path geometry, including nested masks. |
 
 ## Meter and bar family
 
@@ -87,10 +87,10 @@ vanilla owner and provider contract.
 
 | Component | Status | Required behavior |
 |---|---|---|
-| Built-in symbol/icon | Future | Reference a permitted symbol already embedded in the owning vanilla movie. |
-| SVG path | Future | Render an authored path with bounded fill, stroke, transform, and view box. |
-| SVG asset | Future | Load a local, packaged SVG through a fixed asset root; no network URLs or scripts. |
-| PNG image | Future | Load a local transparent PNG through a fixed asset root with fit/crop behavior. |
+| Built-in symbol/icon | Implemented; acceptance pending | Reference a semantic name from a hardcoded allowlist of symbols embedded in the owning vanilla movie; Goal 4E initially permits `skill-tech`. |
+| SVG path | Implemented; acceptance pending | Render a bounded authored path with fill, stroke, transform, and view box; arc commands are rejected. |
+| SVG asset | Implemented; acceptance pending | Load and validate a restricted local SVG through the fixed `Interface/VenworksCUI/Assets` root; no network URLs, scripts, text, or external references. |
+| PNG image | Implemented; acceptance pending | Atomically preload a local transparent PNG through the fixed asset root with contain, cover, stretch, or intrinsic/clipped placement. |
 | JPEG image | Future | Load an opaque local image where transparency is not needed. |
 | Font icon | Future | Render an approved glyph from a packaged font subset with a stable semantic icon name. |
 
@@ -183,5 +183,11 @@ discovery and isolated tests.
 Goal 4D completes the current fixed-data meter renderer family with segmented
 rectangles, dots/circles, alternating triangles, four linear fill directions,
 optional partial segments, and bounded continuous radial arcs. These renderers
-remain independent of live Starfield providers. Assets, masks, symbols, and
-composite components remain later Goal 4 gates.
+remain independent of live Starfield providers.
+
+Goal 4E adds atomic packaged PNG/SVG loading, restricted static SVG parsing,
+authored SVG paths, rectangle/ellipse/path masks with nesting, and a semantic
+allowlist for embedded vanilla symbols. Assets are confined to
+`Interface/VenworksCUI/Assets`; unsupported or missing content fails the entire
+CUI layer with an actionable diagnostic. Composite components remain the next
+Goal 4 gate.

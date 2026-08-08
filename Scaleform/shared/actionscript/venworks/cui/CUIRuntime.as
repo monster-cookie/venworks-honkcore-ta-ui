@@ -12,11 +12,16 @@ package venworks.cui
    import venworks.cui.components.CUIDotBar;
    import venworks.cui.components.CUIDivider;
    import venworks.cui.components.CUIGroup;
+   import venworks.cui.components.CUIImage;
+   import venworks.cui.components.CUIMask;
    import venworks.cui.components.CUIMeter;
    import venworks.cui.components.CUIPanel;
    import venworks.cui.components.CUIRadialMeter;
    import venworks.cui.components.CUISegmentedBar;
    import venworks.cui.components.CUIShape;
+   import venworks.cui.components.CUISvg;
+   import venworks.cui.components.CUISvgPath;
+   import venworks.cui.components.CUISymbol;
    import venworks.cui.components.CUIText;
    import venworks.cui.components.CUITriangleBar;
 
@@ -28,6 +33,8 @@ package venworks.cui
       private var componentLayer:Sprite;
       private var diagnostics:CUIDiagnosticsPanel;
       private var loader:URLLoader;
+      private var layoutConfig:XML;
+      private var assetManager:CUIAssetManager;
       private var parser:CUILayoutParser;
       private var layoutEngine:CUILayoutEngine;
       private var conditionParser:CUIConditionParser;
@@ -87,16 +94,11 @@ package venworks.cui
          {
             parser = new CUILayoutParser();
             parser.parse(config);
-            conditionParser = new CUIConditionParser();
-            visibilityBindings = [];
-            vanillaAdapters = [];
-            conditionContext = new CUIConditionContext();
-            conditionContext.addEventListener(Event.CHANGE,this.onConditionChanged);
-            layoutEngine = new CUILayoutEngine(componentLayer,config);
-            this.renderChildren(parser.components,componentLayer,parser.components);
-            this.createVanillaAdapters(parser.vanillaVisibility);
-            this.applyConditions();
-            diagnostics.clear();
+            layoutConfig = config;
+            assetManager = new CUIAssetManager();
+            assetManager.addEventListener(Event.COMPLETE,this.onAssetsLoaded);
+            assetManager.addEventListener(Event.CANCEL,this.onAssetFailed);
+            assetManager.load(parser.components);
          }
          catch(param3:Error)
          {
@@ -111,6 +113,59 @@ package venworks.cui
             {
                diagnostics.showError("CUI LAYOUT INVALID",separator >= 0 ? message.substring(separator + 1) : message);
             }
+         }
+      }
+
+      private function onAssetsLoaded(param1:Event) : void
+      {
+         this.clearAssetListeners();
+         try
+         {
+            conditionParser = new CUIConditionParser();
+            visibilityBindings = [];
+            vanillaAdapters = [];
+            conditionContext = new CUIConditionContext();
+            conditionContext.addEventListener(Event.CHANGE,this.onConditionChanged);
+            layoutEngine = new CUILayoutEngine(componentLayer,layoutConfig);
+            this.renderChildren(parser.components,componentLayer,parser.components);
+            this.createVanillaAdapters(parser.vanillaVisibility);
+            this.applyConditions();
+            diagnostics.clear();
+         }
+         catch(param2:Error)
+         {
+            this.showRuntimeError(param2);
+         }
+      }
+
+      private function onAssetFailed(param1:Event) : void
+      {
+         this.clearAssetListeners();
+         this.clearComponentLayer();
+         diagnostics.showError("CUI ASSET LOAD ERROR",assetManager.errorMessage);
+      }
+
+      private function clearAssetListeners() : void
+      {
+         if(assetManager != null)
+         {
+            assetManager.removeEventListener(Event.COMPLETE,this.onAssetsLoaded);
+            assetManager.removeEventListener(Event.CANCEL,this.onAssetFailed);
+         }
+      }
+
+      private function showRuntimeError(param1:Error) : void
+      {
+         var message:String = param1.message;
+         var separator:int = message.indexOf("|");
+         this.clearComponentLayer();
+         if(message.indexOf("UNSUPPORTED|") == 0)
+         {
+            diagnostics.showError("CUI LAYOUT UNSUPPORTED",message.substring(separator + 1));
+         }
+         else
+         {
+            diagnostics.showError("CUI LAYOUT INVALID",separator >= 0 ? message.substring(separator + 1) : message);
          }
       }
 
@@ -165,6 +220,10 @@ package venworks.cui
             {
                this.renderChildren(node,component,node);
             }
+            else if(String(node.name()) == "mask")
+            {
+               this.renderChildren(node,CUIMask(component).content,node);
+            }
          }
       }
 
@@ -191,6 +250,26 @@ package venworks.cui
          if(type == "divider")
          {
             return new CUIDivider(param1);
+         }
+         if(type == "image")
+         {
+            return new CUIImage(param1,assetManager.getImage(String(param1.@id)));
+         }
+         if(type == "svg")
+         {
+            return new CUISvg(param1,assetManager.getSvg(String(param1.@id)));
+         }
+         if(type == "path")
+         {
+            return new CUISvgPath(param1);
+         }
+         if(type == "mask")
+         {
+            return new CUIMask(param1);
+         }
+         if(type == "symbol")
+         {
+            return new CUISymbol(param1);
          }
          if(type == "meter")
          {

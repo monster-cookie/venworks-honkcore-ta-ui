@@ -37,7 +37,7 @@ package venworks.cui
          var type:String = String(param1.name());
          var copy:XML = null;
          var child:XML = null;
-         if(type == "group")
+         if(type == "group" || type == "mask")
          {
             copy = param1.copy();
             copy.setChildren(new XMLList());
@@ -49,7 +49,8 @@ package venworks.cui
             }
             return;
          }
-         if(type == "text" || type == "panel" || type == "shape" || type == "divider" || type == "meter")
+         if(type == "text" || type == "panel" || type == "shape" || type == "divider" || type == "meter" ||
+            type == "image" || type == "svg" || type == "path" || type == "symbol")
          {
             if(param1.children().length() != 0)
             {

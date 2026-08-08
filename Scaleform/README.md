@@ -35,7 +35,7 @@ from the validation records.
 
 The build injects the Venworks-only ABC seed, exports Bethesda ActionScript only
 into ignored temporary storage, verifies the authored `HUDMenu` patch anchors,
-and imports the patched document class plus the 23 repository-authored CUI
+and imports the patched document class plus the 31 repository-authored CUI
 classes. It confirms that every other exported class remains textually
 identical and that the reopened output contains the required layout and
 diagnostic contracts. Full exported Bethesda classes are never repository
@@ -58,17 +58,19 @@ selection. The Goal 4C condition gallery is the staged `layout.xml`; it
 exercises case-insensitive visibility expressions, confirmed HUD providers,
 composition visibility, and dynamic repeater-item gates. The separate vanilla
 visibility gallery hides only the allowlisted top-center group for an isolated
-adapter test. The Goal 4D meter gallery is the staged `layout.xml`; two compact
-top panels exercise continuous, rectangle, dot, uniform-triangle,
-alternating-triangle, vertical, reverse, and radial renderers without using
-live HUD data. Malformed fixtures are intentionally not well-formed
-XML, while other negative fixtures may be schema-valid and rejected by runtime
-semantic checks. See
+adapter test. The Goal 4D meter gallery uses two compact top panels to exercise
+continuous, rectangle, dot, uniform-triangle, alternating-triangle, vertical,
+reverse, and radial renderers without live HUD data. The Goal 4E asset gallery
+is the staged `layout.xml`; it exercises PNG placement, packaged SVG, authored
+paths, masks, and an allowlisted embedded symbol. Malformed fixtures are
+intentionally not well-formed XML, while other negative fixtures may be
+schema-valid and rejected by runtime semantic checks. See
 `../docs/GOAL_3_COMPONENT_LIBRARY.md`,
-`../docs/GOAL_4A_RESPONSIVE_LAYOUT.md`, and
+`../docs/GOAL_4A_RESPONSIVE_LAYOUT.md`,
 `../docs/GOAL_4B_COMPOSITION.md`,
-`../docs/GOAL_4C_CONDITIONS.md`, and
-`../docs/GOAL_4D_METER_RENDERERS.md`, and
+`../docs/GOAL_4C_CONDITIONS.md`,
+`../docs/GOAL_4D_METER_RENDERERS.md`,
+`../docs/GOAL_4E_ASSET_PRIMITIVES.md`, and
 `../docs/COMPONENT_CATALOG.md`.
 
 An optional component `anchor` uses one of `top-left`, `top-center`,
@@ -97,3 +99,12 @@ directions. Segmented renderers optionally preserve a partially filled final
 segment, and triangle styles may select `uniform` or `alternating` orientation.
 Radial styles use a bounded start angle, sweep angle, direction, and stroke
 thickness. See `../docs/GOAL_4D_METER_RENDERERS.md` for the exact XML contract.
+
+Goal 4E adds `image`, `svg`, `path`, `mask`, and `symbol` primitives. File
+assets resolve only below `Interface/VenworksCUI/Assets` and preload atomically
+before the CUI layer renders. PNG and SVG placement supports `contain`,
+`cover`, `stretch`, or `none` fit plus bounded alignment. The SVG parser accepts
+only a small static vector subset, authored paths reject arc commands, masks
+use rectangle/ellipse/path geometry, and semantic embedded-symbol names are
+hardcoded in the runtime allowlist. See
+`../docs/GOAL_4E_ASSET_PRIMITIVES.md` for the full contract and test fixtures.

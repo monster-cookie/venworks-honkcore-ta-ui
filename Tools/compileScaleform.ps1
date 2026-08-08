@@ -74,6 +74,28 @@ function Read-Sha256File {
   return ([regex]::Match($hashLine, '[A-Fa-f0-9]{64}').Value).ToUpperInvariant()
 }
 
+function Get-XmlSchemaErrors {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$XmlPath,
+
+    [Parameter(Mandatory = $true)]
+    [string]$SchemaPath
+  )
+
+  [xml]$document = Get-Content -LiteralPath $XmlPath -Raw
+  $schemas = [System.Xml.Schema.XmlSchemaSet]::new()
+  [void]$schemas.Add($null, $SchemaPath)
+  $document.Schemas = $schemas
+  $errors = [System.Collections.Generic.List[string]]::new()
+  $handler = [System.Xml.Schema.ValidationEventHandler]{
+    param($sender, $eventArgs)
+    $errors.Add($eventArgs.Message)
+  }
+  $document.Validate($handler)
+  return @($errors)
+}
+
 function Invoke-Jpexs {
   param(
     [Parameter(Mandatory = $true)]
@@ -150,6 +172,50 @@ $resolvedVanillaInterfacePath = (Resolve-Path -LiteralPath $VanillaInterfacePath
 $resolvedOutputDirectory = [System.IO.Path]::GetFullPath($OutputDirectory)
 $resolvedWorkDirectory = [System.IO.Path]::GetFullPath($WorkDirectory)
 $decompileScript = Resolve-RequiredFile -Path (Join-Path $PSScriptRoot "decompileScaleform.ps1") -Description "Scaleform decompile helper"
+$galleryLayoutSource = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\fixtures\asset-primitives-gallery.xml") `
+  -Description "Goal 4E asset gallery"
+$galleryPngSource = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "..\MarketingSites\Images\Venworks-Logo.png") `
+  -Description "Owned Venworks PNG gallery asset"
+$gallerySvgSource = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\gallery-vector.svg") `
+  -Description "Owned SVG gallery asset"
+$invalidSvgSource = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\gallery-invalid.svg") `
+  -Description "Goal 4E invalid SVG fixture"
+$layoutSchemaPath = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "..\Schemas\VenworksCUI\layout-v1.xsd") `
+  -Description "Venworks CUI layout schema"
+$fixtureDirectory = Resolve-RequiredDirectory `
+  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\fixtures") `
+  -Description "Scaleform fixture directory"
+
+foreach ($positiveFixtureName in @(
+  'component-gallery.xml',
+  'layout-anchor-gallery.xml',
+  'composition-gallery.xml',
+  'condition-gallery.xml',
+  'vanilla-visibility-gallery.xml',
+  'meter-renderer-gallery.xml',
+  'asset-primitives-gallery.xml'
+)) {
+  $positiveFixturePath = Resolve-RequiredFile `
+    -Path (Join-Path $fixtureDirectory $positiveFixtureName) `
+    -Description "Positive layout fixture"
+  $schemaErrors = @(Get-XmlSchemaErrors -XmlPath $positiveFixturePath -SchemaPath $layoutSchemaPath)
+  if ($schemaErrors.Count -ne 0) {
+    throw "Positive fixture $positiveFixtureName failed schema validation: $($schemaErrors -join '; ')"
+  }
+}
+
+$invalidAssetPathFixture = Resolve-RequiredFile `
+  -Path (Join-Path $fixtureDirectory 'layout-invalid-asset-path.xml') `
+  -Description "Invalid asset-path fixture"
+$invalidAssetPathErrors = @(Get-XmlSchemaErrors -XmlPath $invalidAssetPathFixture -SchemaPath $layoutSchemaPath)
+if ($invalidAssetPathErrors.Count -eq 0) {
+  throw "Invalid asset-path fixture unexpectedly passed schema validation."
+}
 
 if (!(Test-Path -LiteralPath $resolvedVanillaInterfacePath -PathType Container)) {
   throw "Vanilla interface directory does not exist: $VanillaInterfacePath"
@@ -321,8 +387,8 @@ try {
       -OutputPath $patchedScriptPath
 
     $authoredScripts = @(Get-ChildItem -LiteralPath $actionScriptSourcePath -Recurse -File -Filter "*.as")
-    if ($authoredScripts.Count -ne 23) {
-      throw "Expected 23 authored CUI classes; found $($authoredScripts.Count) in $actionScriptSourcePath."
+    if ($authoredScripts.Count -ne 31) {
+      throw "Expected 31 authored CUI classes; found $($authoredScripts.Count) in $actionScriptSourcePath."
     }
 
     foreach ($authoredScript in $authoredScripts) {
@@ -361,8 +427,8 @@ try {
 
     $originalScripts = @(Get-ChildItem -LiteralPath $exportedScriptsDirectory -Recurse -File -Filter "*.as")
     $validationScripts = @(Get-ChildItem -LiteralPath $validationScriptsDirectory -Recurse -File -Filter "*.as")
-    if ($originalScripts.Count -ne 190 -or $validationScripts.Count -ne $originalScripts.Count) {
-      throw "Expected 190 seeded and reopened classes; found $($originalScripts.Count) before import and $($validationScripts.Count) after import."
+    if ($originalScripts.Count -ne 198 -or $validationScripts.Count -ne $originalScripts.Count) {
+      throw "Expected 198 seeded and reopened classes; found $($originalScripts.Count) before import and $($validationScripts.Count) after import."
     }
 
     foreach ($originalScript in $originalScripts) {
@@ -414,6 +480,22 @@ try {
       'CUIConditionContext',
       'CUIVisibilityBinding',
       'CUIVanillaVisibilityAdapter',
+      'CUIAssetManager',
+      'CUISvgParser',
+      'CUISvgPathParser',
+      'CUIImage',
+      'CUISvg',
+      'CUISvgPath',
+      'CUIMask',
+      'CUISymbol',
+      'VenworksCUI/Assets/',
+      'CUI ASSET LOAD ERROR',
+      'Asset path traversal is prohibited',
+      'Unsupported SVG element',
+      'SVG arc path commands are not supported',
+      'Embedded symbol is not allowlisted',
+      'skill-tech',
+      'Skill_Tech',
       'CUISegmentedBar',
       'CUIDotBar',
       'CUIRadialMeter',
@@ -459,6 +541,15 @@ try {
     Copy-Item -LiteralPath $generatedGfxPath -Destination $destinationPath -Force
     Write-Host -ForegroundColor Green "Built and validated $destinationPath ($actualOutputHash)"
   }
+
+  $cuiOutputDirectory = Join-Path $resolvedOutputDirectory "VenworksCUI"
+  $assetOutputDirectory = Join-Path $cuiOutputDirectory "Assets"
+  New-Item -ItemType Directory -Force -Path $assetOutputDirectory | Out-Null
+  Copy-Item -LiteralPath $galleryLayoutSource -Destination (Join-Path $cuiOutputDirectory "layout.xml") -Force
+  Copy-Item -LiteralPath $galleryPngSource -Destination (Join-Path $assetOutputDirectory "gallery-alpha.png") -Force
+  Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
+  Copy-Item -LiteralPath $invalidSvgSource -Destination (Join-Path $assetOutputDirectory "gallery-invalid.svg") -Force
+  Write-Host -ForegroundColor Green "Staged Goal 4E layout and assets in $cuiOutputDirectory"
 }
 finally {
   if ($KeepWork) {

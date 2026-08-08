@@ -76,6 +76,47 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="assetPathType">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="5" />
+      <xs:maxLength value="128" />
+      <xs:pattern value="[A-Za-z0-9][A-Za-z0-9._/-]*" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="assetFitType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="contain" />
+      <xs:enumeration value="cover" />
+      <xs:enumeration value="stretch" />
+      <xs:enumeration value="none" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="horizontalAlignmentType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="left" />
+      <xs:enumeration value="center" />
+      <xs:enumeration value="right" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="verticalAlignmentType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="top" />
+      <xs:enumeration value="center" />
+      <xs:enumeration value="bottom" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="maskShapeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="rectangle" />
+      <xs:enumeration value="ellipse" />
+      <xs:enumeration value="path" />
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:attributeGroup name="componentAttributes">
     <xs:attribute name="id" type="idType" use="required" />
     <xs:attribute name="x" type="xs:decimal" use="required" />
@@ -135,6 +176,36 @@
     <xs:attribute name="style" type="idType" use="required" />
     <xs:attribute name="value" type="xs:decimal" use="required" />
     <xs:attribute name="max" type="xs:decimal" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="assetType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="src" type="assetPathType" use="required" />
+    <xs:attribute name="fit" type="assetFitType" default="contain" />
+    <xs:attribute name="alignX" type="horizontalAlignmentType" default="center" />
+    <xs:attribute name="alignY" type="verticalAlignmentType" default="center" />
+  </xs:complexType>
+
+  <xs:complexType name="pathType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="data" type="xs:string" use="required" />
+    <xs:attribute name="viewBoxX" type="xs:decimal" use="required" />
+    <xs:attribute name="viewBoxY" type="xs:decimal" use="required" />
+    <xs:attribute name="viewBoxWidth" type="positiveDecimalType" use="required" />
+    <xs:attribute name="viewBoxHeight" type="positiveDecimalType" use="required" />
+    <xs:attribute name="fillColor" type="colorType" use="required" />
+    <xs:attribute name="fillOpacity" type="opacityType" use="required" />
+    <xs:attribute name="strokeColor" type="colorType" use="required" />
+    <xs:attribute name="strokeOpacity" type="opacityType" use="required" />
+    <xs:attribute name="strokeWidth" type="xs:nonNegativeInteger" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="symbolType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="name" type="idType" use="required" />
+    <xs:attribute name="fit" type="assetFitType" default="contain" />
+    <xs:attribute name="alignX" type="horizontalAlignmentType" default="center" />
+    <xs:attribute name="alignY" type="verticalAlignmentType" default="center" />
   </xs:complexType>
 
   <xs:complexType name="overrideType">
@@ -208,6 +279,11 @@
       <xs:element name="shape" type="shapeType" />
       <xs:element name="divider" type="dividerType" />
       <xs:element name="meter" type="meterType" />
+      <xs:element name="image" type="assetType" />
+      <xs:element name="svg" type="assetType" />
+      <xs:element name="path" type="pathType" />
+      <xs:element name="mask" type="maskType" />
+      <xs:element name="symbol" type="symbolType" />
       <xs:element name="instance" type="instanceType" />
       <xs:element name="repeater" type="repeaterType" />
       <xs:element name="state" type="stateType" />
@@ -219,6 +295,17 @@
     <xs:attributeGroup ref="componentAttributes" />
   </xs:complexType>
 
+  <xs:complexType name="maskType">
+    <xs:sequence><xs:group ref="componentChoice" minOccurs="1" maxOccurs="unbounded" /></xs:sequence>
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="shape" type="maskShapeType" use="required" />
+    <xs:attribute name="data" type="xs:string" />
+    <xs:attribute name="viewBoxX" type="xs:decimal" />
+    <xs:attribute name="viewBoxY" type="xs:decimal" />
+    <xs:attribute name="viewBoxWidth" type="positiveDecimalType" />
+    <xs:attribute name="viewBoxHeight" type="positiveDecimalType" />
+  </xs:complexType>
+
   <xs:group name="templateComponentChoice">
     <xs:choice>
       <xs:element name="group" type="templateGroupType" />
@@ -227,12 +314,28 @@
       <xs:element name="shape" type="shapeType" />
       <xs:element name="divider" type="dividerType" />
       <xs:element name="meter" type="meterType" />
+      <xs:element name="image" type="assetType" />
+      <xs:element name="svg" type="assetType" />
+      <xs:element name="path" type="pathType" />
+      <xs:element name="mask" type="templateMaskType" />
+      <xs:element name="symbol" type="symbolType" />
     </xs:choice>
   </xs:group>
 
   <xs:complexType name="templateGroupType">
     <xs:sequence><xs:group ref="templateComponentChoice" minOccurs="0" maxOccurs="unbounded" /></xs:sequence>
     <xs:attributeGroup ref="componentAttributes" />
+  </xs:complexType>
+
+  <xs:complexType name="templateMaskType">
+    <xs:sequence><xs:group ref="templateComponentChoice" minOccurs="1" maxOccurs="unbounded" /></xs:sequence>
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="shape" type="maskShapeType" use="required" />
+    <xs:attribute name="data" type="xs:string" />
+    <xs:attribute name="viewBoxX" type="xs:decimal" />
+    <xs:attribute name="viewBoxY" type="xs:decimal" />
+    <xs:attribute name="viewBoxWidth" type="positiveDecimalType" />
+    <xs:attribute name="viewBoxHeight" type="positiveDecimalType" />
   </xs:complexType>
 
   <xs:complexType name="templateType">

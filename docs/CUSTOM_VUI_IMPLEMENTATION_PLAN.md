@@ -160,10 +160,11 @@ Goal 4 is divided into bounded review gates:
   prohibited.
 - **Goal 4D — remaining meter renderers:** segmented rectangles, dots/circles,
   alternating triangles, four linear fill directions, optional partial
-  segments, and bounded continuous radial renderers. The implementation is
-  complete and awaits in-game acceptance.
+  segments, and bounded continuous radial renderers. The implementation and
+  positive/negative in-game gallery checks are accepted.
 - **Goal 4E — assets and vector primitives:** transparent PNG, local SVG,
-  authored SVG paths, masks, and permitted embedded symbols.
+  authored SVG paths, masks, and permitted embedded symbols. The implementation
+  is complete and awaits in-game acceptance.
 - **Goal 4F — composite foundations:** reusable button, quick-bar, information
   panel, warning, and related foundations assembled from approved primitives.
 
