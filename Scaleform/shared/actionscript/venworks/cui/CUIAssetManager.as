@@ -13,6 +13,7 @@ package venworks.cui
    public final class CUIAssetManager extends EventDispatcher
    {
       private static const ASSET_ROOT:String = "VenworksCUI/Assets/";
+      private static const IMAGE_ASSET_ROOT:String = "img://VenworksCUI/Assets/";
 
       private var records:Array;
       private var assets:Object;
@@ -101,7 +102,7 @@ package venworks.cui
          loader.contentLoaderInfo.addEventListener(SecurityErrorEvent.SECURITY_ERROR,this.onAssetSecurityError);
          try
          {
-            loader.load(new URLRequest(ASSET_ROOT + record.src));
+            loader.load(new URLRequest(IMAGE_ASSET_ROOT + record.src));
          }
          catch(param2:Error)
          {
@@ -174,7 +175,8 @@ package venworks.cui
       private function onAssetMissing(param1:IOErrorEvent) : void
       {
          var record:Object = this.findEventRecord(param1.currentTarget);
-         this.fail("Asset is missing or unreadable: " + (record == null ? "unknown" : record.src));
+         var detail:String = param1.text == null ? "" : String(param1.text);
+         this.fail("Asset is missing or unreadable: " + (record == null ? "unknown" : record.src) + (detail.length == 0 ? "" : ". " + detail));
       }
 
       private function onAssetSecurityError(param1:SecurityErrorEvent) : void
