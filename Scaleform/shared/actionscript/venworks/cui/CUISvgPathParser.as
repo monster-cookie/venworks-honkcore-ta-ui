@@ -28,8 +28,10 @@ package venworks.cui
                                     param5:Number, param6:Number) : void
       {
          var tokenPattern:RegExp = /[AaCcHhLlMmQqSsTtVvZz]|[-+]?(?:[0-9]*\.[0-9]+|[0-9]+\.?)(?:[eE][-+]?[0-9]+)?/g;
-         var tokens:Array = param1.match(tokenPattern);
-         var remainder:String = param1.replace(tokenPattern,"").replace(/[\s,]+/g,"");
+         var tokens:Array = [];
+         var token:Object = null;
+         var gap:String = null;
+         var lastEnd:int = 0;
          var index:int = 0;
          var command:String = null;
          var upper:String = null;
@@ -60,7 +62,20 @@ package venworks.cui
          {
             throw new Error("INVALID|SVG path data cannot be empty.");
          }
-         if(remainder.length != 0 || tokens == null || tokens.length == 0)
+
+         tokenPattern.lastIndex = 0;
+         while((token = tokenPattern.exec(param1)) != null)
+         {
+            gap = param1.substring(lastEnd,int(token.index)).replace(/[\s,]+/g,"");
+            if(gap.length != 0)
+            {
+               throw new Error("INVALID|SVG path contains unsupported syntax.");
+            }
+            tokens.push(String(token[0]));
+            lastEnd = tokenPattern.lastIndex;
+         }
+         gap = param1.substring(lastEnd).replace(/[\s,]+/g,"");
+         if(gap.length != 0 || tokens.length == 0)
          {
             throw new Error("INVALID|SVG path contains unsupported syntax.");
          }
