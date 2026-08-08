@@ -316,9 +316,10 @@ package venworks.cui
 
       private function parseNumbers(param1:String, param2:int, param3:String) : Array
       {
-         var pattern:RegExp = /[-+]?(?:[0-9]*\.[0-9]+|[0-9]+\.?)(?:[eE][-+]?[0-9]+)?/g;
-         var raw:Array = param1.match(pattern);
-         var remainder:String = param1.replace(pattern,"").replace(/[\s,]+/g,"");
+         var matchPattern:RegExp = /[-+]?(?:[0-9]*\.[0-9]+|[0-9]+\.?)(?:[eE][-+]?[0-9]+)?/g;
+         var removalPattern:RegExp = /[-+]?(?:[0-9]*\.[0-9]+|[0-9]+\.?)(?:[eE][-+]?[0-9]+)?/g;
+         var raw:Array = param1.match(matchPattern);
+         var remainder:String = param1.replace(removalPattern,"").replace(/[\s,]+/g,"");
          var result:Array = [];
          var entry:String = null;
          var value:Number = NaN;
