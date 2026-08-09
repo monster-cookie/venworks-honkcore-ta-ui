@@ -97,6 +97,9 @@ The Font Awesome Pro source SVGs are developer inputs and are not committed.
 Only the compiled subset SWF is distributed. `Tools/compileSymbolLibrary.ps1`
 requires explicit Java, JPEXS, and Font Awesome root paths and validates the
 result against `Scaleform/shared/libraries/validation/expected.sha256`.
+Each exported ActionScript class extends `Sprite` and places exactly one imported
+shape in an identity-matrix wrapper. This preserves the SVG geometry while giving
+Scaleform a renderable display-object container with runtime dimensions.
 
 ## Fixtures and staging
 
@@ -119,8 +122,9 @@ under `Interface/VenworksCUI/Assets`, and `venworks-icons.swf` under
 Automated validation must prove schema acceptance/rejection, 31 authored CUI
 classes in both generated HUD movies, unchanged unrelated vanilla
 ActionScript, fixed roots and linkage construction in reopened ActionScript,
-the 22 expected SWF exports with positive dimensions, and committed output
-hashes before staging.
+the 22 expected SWF shapes with positive dimensions, their 22 one-shape Sprite
+wrappers, the 22 one-to-one linkage exports, and committed output hashes before
+staging.
 
 Required in-game checks are:
 

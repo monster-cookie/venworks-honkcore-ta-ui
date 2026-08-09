@@ -101,11 +101,14 @@ import com.jpexs.decompiler.flash.SWF;
 import com.jpexs.decompiler.flash.abc.avm2.parser.script.AbcIndexing;
 import com.jpexs.decompiler.flash.abc.avm2.parser.script.ActionScript3Parser;
 import com.jpexs.decompiler.flash.tags.DefineShape3Tag;
+import com.jpexs.decompiler.flash.tags.DefineSpriteTag;
 import com.jpexs.decompiler.flash.tags.DoABC2Tag;
 import com.jpexs.decompiler.flash.tags.EndTag;
 import com.jpexs.decompiler.flash.tags.FileAttributesTag;
+import com.jpexs.decompiler.flash.tags.PlaceObject2Tag;
 import com.jpexs.decompiler.flash.tags.ShowFrameTag;
 import com.jpexs.decompiler.flash.tags.SymbolClassTag;
+import com.jpexs.decompiler.flash.types.MATRIX;
 import com.jpexs.decompiler.flash.types.RECT;
 import com.jpexs.decompiler.flash.types.SHAPEWITHSTYLE;
 import java.io.FileOutputStream;
@@ -145,20 +148,44 @@ public final class SymbolLibrarySeedGenerator {
         symbols.tags = new ArrayList<Integer>();
         symbols.names = new ArrayList<String>();
 
+        int shapeCount = args.length - 1;
         for (int index = 1; index < args.length; index++) {
             String className = args[index];
-            String source = "package { import flash.display.Shape; public class " + className
-                + " extends Shape { public function " + className + "() { super(); } } }";
+            String source = "package { import flash.display.Sprite; public class " + className
+                + " extends Sprite { public function " + className + "() { super(); } } }";
             parser.addScript(source, className, 0, 0, swf.getDocumentClass(), abcTag.getABC());
 
-            int id = index;
+            int shapeId = index;
             DefineShape3Tag shape = new DefineShape3Tag(swf);
-            shape.shapeId = id;
+            shape.shapeId = shapeId;
             shape.shapeBounds = new RECT(0, 2000, 0, 2000);
             shape.shapes = SHAPEWITHSTYLE.createEmpty(3);
             shape.setModified(true);
             swf.addTag(shape);
-            symbols.tags.add(id);
+
+            int spriteId = shapeCount + index;
+            DefineSpriteTag sprite = new DefineSpriteTag(swf);
+            sprite.spriteId = spriteId;
+            sprite.frameCount = 1;
+            sprite.addTag(new PlaceObject2Tag(
+                swf,
+                false,
+                1,
+                shapeId,
+                new MATRIX(),
+                null,
+                0,
+                null,
+                0,
+                null
+            ));
+            sprite.addTag(new ShowFrameTag(swf));
+            sprite.addTag(new EndTag(swf));
+            sprite.hasEndTag = true;
+            sprite.setModified(true);
+            swf.addTag(sprite);
+
+            symbols.tags.add(spriteId);
             symbols.names.add(className);
         }
 
@@ -215,13 +242,52 @@ foreach ($shape in $shapeTags) {
   }
 }
 
-$exportedNames = @()
-foreach ($symbolClassTag in $scaleform.SelectNodes('/swf/tags/item[@type="SymbolClassTag"]')) {
-  $exportedNames += @($symbolClassTag.names.item | ForEach-Object { [string]$_ })
+$spriteTags = @($scaleform.SelectNodes('/swf/tags/item[@type="DefineSpriteTag"]'))
+if ($spriteTags.Count -ne $symbols.Count) {
+  throw "Expected $($symbols.Count) symbol wrapper sprites, found $($spriteTags.Count)."
 }
-foreach ($linkage in $linkageNames) {
-  if ($exportedNames -notcontains $linkage) {
+
+$symbolTargets = @{}
+foreach ($symbolClassTag in $scaleform.SelectNodes('/swf/tags/item[@type="SymbolClassTag"]')) {
+  for ($index = 0; $index -lt $symbolClassTag.names.item.Count; ++$index) {
+    $symbolTargets[[string]$symbolClassTag.names.item[$index]] = [int]$symbolClassTag.tags.item[$index]
+  }
+}
+
+for ($index = 0; $index -lt $linkageNames.Count; ++$index) {
+  $linkage = $linkageNames[$index]
+  $shapeId = $index + 1
+  $expectedSpriteId = $symbols.Count + $shapeId
+  if (!$symbolTargets.ContainsKey($linkage)) {
     throw "Compiled symbol library is missing linkage class: $linkage"
+  }
+  if ([int]$symbolTargets[$linkage] -ne $expectedSpriteId) {
+    throw "Linkage $linkage targets character $($symbolTargets[$linkage]); expected wrapper sprite $expectedSpriteId."
+  }
+
+  $wrapper = $spriteTags | Where-Object { [int]$_.spriteId -eq $expectedSpriteId } | Select-Object -First 1
+  if ($null -eq $wrapper) {
+    throw "Wrapper sprite $expectedSpriteId was not found for $linkage."
+  }
+  if ([int]$wrapper.frameCount -ne 1 -or [string]$wrapper.hasEndTag -ne "true") {
+    throw "Wrapper sprite $expectedSpriteId must contain exactly one completed frame."
+  }
+
+  $placedShapes = @($wrapper.subTags.item | Where-Object { [string]$_.type -eq "PlaceObject2Tag" })
+  $showFrames = @($wrapper.subTags.item | Where-Object { [string]$_.type -eq "ShowFrameTag" })
+  if ($placedShapes.Count -ne 1 -or $showFrames.Count -ne 1) {
+    throw "Wrapper sprite $expectedSpriteId must contain one placed shape and one frame tag."
+  }
+
+  $placedShape = $placedShapes[0]
+  if ([int]$placedShape.characterId -ne $shapeId -or [int]$placedShape.depth -ne 1) {
+    throw "Wrapper sprite $expectedSpriteId does not place shape $shapeId at depth 1."
+  }
+  if ([string]$placedShape.matrix.hasScale -ne "false" -or
+      [string]$placedShape.matrix.hasRotate -ne "false" -or
+      [int]$placedShape.matrix.translateX -ne 0 -or
+      [int]$placedShape.matrix.translateY -ne 0) {
+    throw "Wrapper sprite $expectedSpriteId does not use an identity placement matrix."
   }
 }
 

@@ -31,10 +31,10 @@
              rotation="0" scaleX="1" scaleY="1" z="1" fillColor="#183B48" fillOpacity="0.55"
              strokeColor="#FFB51B" strokeOpacity="0.8" strokeWidth="1" />
       <symbol id="asset.fit.cover" x="386" y="106" width="280" height="120" opacity="0.8" visible="true"
-              rotation="0" scaleX="1" scaleY="1" z="2" library="venworks-icons" name="disease" color="#35E6E6"
+              rotation="0" scaleX="1" scaleY="1" z="2" library="venworks-icons" name="health" color="#35E6E6"
               fit="contain" alignX="center" alignY="center" />
       <text id="asset.fit.cover.label" x="376" y="66" width="300" height="26" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="2" value="DISEASE — CONTAIN + 80% OPACITY"
+            rotation="0" scaleX="1" scaleY="1" z="2" value="HEALTH — TINT + 80% OPACITY"
             font="$MAIN_Font_Bold" fontSize="14" color="#FFB51B" bold="false" align="center" />
 
       <panel id="asset.fit.stretch.frame" x="24" y="304" width="300" height="140" opacity="1" visible="true"
@@ -51,10 +51,10 @@
              rotation="0" scaleX="1" scaleY="1" z="1" fillColor="#183B48" fillOpacity="0.55"
              strokeColor="#FFD800" strokeOpacity="0.8" strokeWidth="1" />
       <symbol id="asset.fit.none" x="386" y="314" width="280" height="120" opacity="1" visible="true"
-              rotation="0" scaleX="1" scaleY="1" z="2" library="venworks-icons" name="health" color="#FFD800"
+              rotation="0" scaleX="1" scaleY="1" z="2" library="venworks-icons" name="disease" color="#FFD800"
               fit="none" alignX="right" alignY="bottom" />
       <text id="asset.fit.none.label" x="376" y="274" width="300" height="26" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="2" value="HEALTH — RIGHT/BOTTOM CLIP"
+            rotation="0" scaleX="1" scaleY="1" z="2" value="DISEASE — RIGHT/BOTTOM CLIP"
             font="$MAIN_Font_Bold" fontSize="14" color="#FFD800" bold="false" align="center" />
     </group>
 
