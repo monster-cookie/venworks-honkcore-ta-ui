@@ -88,13 +88,15 @@ foreach ($entry in $symbols.GetEnumerator()) {
 $sourceDirectory = Join-Path $work "source"
 $classesDirectory = Join-Path $work "classes"
 $shapeDirectory = Join-Path $work "shapes"
+$scriptsDirectory = Join-Path $work "scripts"
 $seedSwf = Join-Path $work "venworks-icons-seed.swf"
 $compiledSwf = Join-Path $work "venworks-icons.swf"
 $xmlPath = Join-Path $work "venworks-icons.xml"
 $generatorPath = Join-Path $sourceDirectory "SymbolLibrarySeedGenerator.java"
 
-New-Item -ItemType Directory -Path $sourceDirectory,$classesDirectory,$shapeDirectory,(Split-Path -Parent $output),(Split-Path -Parent $validationPath) -Force | Out-Null
+New-Item -ItemType Directory -Path $sourceDirectory,$classesDirectory,$shapeDirectory,$scriptsDirectory,(Split-Path -Parent $output),(Split-Path -Parent $validationPath) -Force | Out-Null
 Get-ChildItem -LiteralPath $shapeDirectory -File -ErrorAction SilentlyContinue | Remove-Item -Force
+Get-ChildItem -LiteralPath $scriptsDirectory -Recurse -File -Filter "VenworksCUI_*.as" -ErrorAction SilentlyContinue | Remove-Item -Force
 
 $generatorSource = @'
 import com.jpexs.decompiler.flash.SWF;
@@ -151,8 +153,8 @@ public final class SymbolLibrarySeedGenerator {
         int shapeCount = args.length - 1;
         for (int index = 1; index < args.length; index++) {
             String className = args[index];
-            String source = "package { import flash.display.Sprite; public class " + className
-                + " extends Sprite { public function " + className + "() { super(); } } }";
+            String source = "package { import flash.display.MovieClip; public class " + className
+                + " extends MovieClip { public function " + className + "() { super(); } } }";
             parser.addScript(source, className, 0, 0, swf.getDocumentClass(), abcTag.getABC());
 
             int shapeId = index;
@@ -228,6 +230,23 @@ $runtimeClassPath = $classPath + ";" + $classesDirectory
 Invoke-Checked -FilePath $java -Arguments (@("-cp",$runtimeClassPath,"SymbolLibrarySeedGenerator",$seedSwf) + $linkageNames) -Description "Symbol seed generation"
 Invoke-Checked -FilePath $java -Arguments @("-jar",$jpexsJar,"-importShapes",$seedSwf,$compiledSwf,$shapeDirectory) -Description "SVG shape import"
 Invoke-Checked -FilePath $java -Arguments @("-jar",$jpexsJar,"-swf2xml",$compiledSwf,$xmlPath) -Description "Symbol library inspection export"
+Invoke-Checked -FilePath $java -Arguments @("-jar",$jpexsJar,"-format","script:as","-export","script",$scriptsDirectory,$compiledSwf) -Description "Symbol library ActionScript export"
+
+$exportedClasses = @(Get-ChildItem -LiteralPath $scriptsDirectory -Recurse -File -Filter "VenworksCUI_*.as")
+if ($exportedClasses.Count -ne $symbols.Count) {
+  throw "Expected $($symbols.Count) exported linkage classes, found $($exportedClasses.Count)."
+}
+foreach ($linkage in $linkageNames) {
+  $classFiles = @($exportedClasses | Where-Object { $_.BaseName -eq $linkage })
+  if ($classFiles.Count -ne 1) {
+    throw "Expected one exported ActionScript class for $linkage, found $($classFiles.Count)."
+  }
+  $classSource = Get-Content -LiteralPath $classFiles[0].FullName -Raw
+  $classPattern = "public\s+(?:dynamic\s+)?class\s+" + [regex]::Escape($linkage) + "\s+extends\s+MovieClip\b"
+  if ($classSource -notmatch $classPattern) {
+    throw "Exported linkage class $linkage does not extend MovieClip."
+  }
+}
 
 [xml]$scaleform = Get-Content -LiteralPath $xmlPath -Raw
 $shapeTags = @($scaleform.SelectNodes('/swf/tags/item[@type="DefineShape3Tag"]'))
