@@ -33,6 +33,20 @@ By default, validated outputs are copied to `Staging-CUI/Interface`. Use
 build from unrecognized vanilla inputs or publish outputs whose hashes differ
 from the validation records.
 
+Build the curated supplemental symbol library when its approved source subset
+changes:
+
+```powershell
+./Tools/compileSymbolLibrary.ps1 `
+  -JavaPath "C:\path\to\java.exe" `
+  -JpexsJarPath "C:\path\to\ffdec.jar" `
+  -FontAwesomeRoot "C:\path\to\FontAwesome"
+```
+
+Font Awesome source SVGs are not repository content. The compiler imports only
+the approved subset and the Venworks-owned logo, then validates the committed
+`Scaleform/shared/libraries/venworks-icons.swf` hash.
+
 The build injects the Venworks-only ABC seed, exports Bethesda ActionScript only
 into ignored temporary storage, verifies the authored `HUDMenu` patch anchors,
 and imports the patched document class plus the 31 repository-authored CUI
@@ -61,8 +75,9 @@ visibility gallery hides only the allowlisted top-center group for an isolated
 adapter test. The Goal 4D meter gallery uses two compact top panels to exercise
 continuous, rectangle, dot, uniform-triangle, alternating-triangle, vertical,
 reverse, and radial renderers without live HUD data. The Goal 4E asset gallery
-is the staged `layout.xml`; it exercises DDS placement, packaged SVG, authored
-paths, masks, and movie-aware allowlisted embedded symbols. Malformed fixtures are
+is the staged `layout.xml`; it exercises a fixed-root supplemental symbol
+library, packaged SVG, authored paths, masks, and movie-aware allowlisted
+embedded symbols. Malformed fixtures are
 intentionally not well-formed XML, while other negative fixtures may be
 schema-valid and rejected by runtime semantic checks. See
 `../docs/GOAL_3_COMPONENT_LIBRARY.md`,
@@ -100,12 +115,13 @@ segment, and triangle styles may select `uniform` or `alternating` orientation.
 Radial styles use a bounded start angle, sweep angle, direction, and stroke
 thickness. See `../docs/GOAL_4D_METER_RENDERERS.md` for the exact XML contract.
 
-Goal 4E adds `image`, `svg`, `path`, `mask`, and `symbol` primitives. DDS image
-assets resolve below `Textures/Interface/VenworksCUI/Assets`; SVG files resolve
-below `Interface/VenworksCUI/Assets`. Both preload atomically before the CUI
-layer renders. DDS and SVG placement supports `contain`, `cover`, `stretch`, or
-`none` fit plus bounded alignment. The SVG parser accepts only a small static
-vector subset, authored paths reject arc commands, masks use
-rectangle/ellipse/path geometry, and semantic embedded-symbol names resolve
-through a movie-aware runtime allowlist. See
+Goal 4E adds `svg`, `path`, `mask`, and `symbol` primitives. Loose SVG files
+resolve below `Interface/VenworksCUI/Assets`; compiled symbol libraries resolve
+below `Interface/VenworksCUI/Libraries`. Both preload atomically before the CUI
+layer renders. Placement supports `contain`, `cover`, `stretch`, or `none` plus
+bounded alignment. The SVG parser accepts only a small static vector subset,
+authored paths reject arc commands, masks use rectangle/ellipse/path geometry,
+and symbols resolve through either a movie-aware vanilla allowlist or a
+constructed namespaced export in a fixed-root library. Direct raster and DDS
+loading is unsupported after failed in-game probes. See
 `../docs/GOAL_4E_ASSET_PRIMITIVES.md` for the full contract and test fixtures.

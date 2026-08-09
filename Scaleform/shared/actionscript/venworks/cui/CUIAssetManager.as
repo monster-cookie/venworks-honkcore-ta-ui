@@ -1,6 +1,5 @@
 package venworks.cui
 {
-   import flash.display.DisplayObject;
    import flash.display.Loader;
    import flash.display.LoaderInfo;
    import flash.events.Event;
@@ -9,14 +8,18 @@ package venworks.cui
    import flash.events.SecurityErrorEvent;
    import flash.net.URLLoader;
    import flash.net.URLRequest;
+   import flash.system.ApplicationDomain;
+   import flash.system.LoaderContext;
+   import venworks.cui.components.CUISymbol;
 
    public final class CUIAssetManager extends EventDispatcher
    {
       private static const SVG_ASSET_ROOT:String = "VenworksCUI/Assets/";
-      private static const IMAGE_ASSET_ROOT:String = "img://textures/interface/VenworksCUI/Assets/";
+      private static const SYMBOL_LIBRARY_ROOT:String = "VenworksCUI/Libraries/";
 
       private var records:Array;
       private var assets:Object;
+      private var libraries:Object;
       private var pending:int;
       private var failed:Boolean;
       private var failureMessage:String;
@@ -26,6 +29,7 @@ package venworks.cui
          super();
          records = [];
          assets = {};
+         libraries = {};
       }
 
       public function load(param1:XML) : void
@@ -35,16 +39,6 @@ package venworks.cui
          {
             dispatchEvent(new Event(Event.COMPLETE));
          }
-      }
-
-      public function getImage(param1:String) : DisplayObject
-      {
-         var record:Object = assets[param1];
-         if(record == null || record.kind != "image")
-         {
-            throw new Error("INVALID|Loaded image asset is unavailable: " + param1);
-         }
-         return record.loader as DisplayObject;
       }
 
       public function getSvg(param1:String) : XML
@@ -69,44 +63,18 @@ package venworks.cui
          for each(node in param1.children())
          {
             type = String(node.name());
-            if(type == "image")
-            {
-               this.loadImage(node);
-            }
-            else if(type == "svg")
+            if(type == "svg")
             {
                this.loadSvg(node);
+            }
+            else if(type == "symbol" && node.@library.length() == 1)
+            {
+               this.loadSymbolLibrary(node);
             }
             if(node.children().length() != 0)
             {
                this.collect(node);
             }
-         }
-      }
-
-      private function loadImage(param1:XML) : void
-      {
-         var loader:Loader = new Loader();
-         var record:Object = {
-            id:String(param1.@id),
-            src:String(param1.@src),
-            kind:"image",
-            loader:loader,
-            info:loader.contentLoaderInfo
-         };
-         records.push(record);
-         assets[record.id] = record;
-         ++pending;
-         loader.contentLoaderInfo.addEventListener(Event.COMPLETE,this.onImageLoaded);
-         loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,this.onAssetMissing);
-         loader.contentLoaderInfo.addEventListener(SecurityErrorEvent.SECURITY_ERROR,this.onAssetSecurityError);
-         try
-         {
-            loader.load(new URLRequest(IMAGE_ASSET_ROOT + record.src));
-         }
-         catch(param2:Error)
-         {
-            this.fail("Could not start image asset request: " + record.src);
          }
       }
 
@@ -136,16 +104,46 @@ package venworks.cui
          }
       }
 
-      private function onImageLoaded(param1:Event) : void
+      private function loadSymbolLibrary(param1:XML) : void
       {
-         var record:Object = this.findByLoaderInfo(param1.currentTarget as LoaderInfo);
-         if(record == null)
+         var library:String = String(param1.@library);
+         var symbolName:String = String(param1.@name);
+         var loader:Loader = null;
+         var record:Object = libraries[library];
+         if(record != null)
          {
-            this.fail("Image loader completed without a matching component.");
+            if(record.symbols.indexOf(symbolName) < 0)
+            {
+               record.symbols.push(symbolName);
+            }
             return;
          }
-         this.clearRecordListeners(record);
-         this.completeOne();
+         loader = new Loader();
+         record = {
+            id:library,
+            src:library + ".swf",
+            kind:"library",
+            loader:loader,
+            info:loader.contentLoaderInfo,
+            symbols:[symbolName]
+         };
+         libraries[library] = record;
+         records.push(record);
+         ++pending;
+         loader.contentLoaderInfo.addEventListener(Event.COMPLETE,this.onLibraryLoaded);
+         loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,this.onAssetMissing);
+         loader.contentLoaderInfo.addEventListener(SecurityErrorEvent.SECURITY_ERROR,this.onAssetSecurityError);
+         try
+         {
+            loader.load(
+               new URLRequest(SYMBOL_LIBRARY_ROOT + record.src),
+               new LoaderContext(false,ApplicationDomain.currentDomain)
+            );
+         }
+         catch(param2:Error)
+         {
+            this.fail("Could not start symbol library request: " + record.src);
+         }
       }
 
       private function onSvgLoaded(param1:Event) : void
@@ -172,17 +170,41 @@ package venworks.cui
          this.completeOne();
       }
 
+      private function onLibraryLoaded(param1:Event) : void
+      {
+         var record:Object = this.findByLoaderInfo(param1.currentTarget as LoaderInfo);
+         var symbolName:String = null;
+         if(record == null)
+         {
+            this.fail("Symbol library loader completed without a matching library.");
+            return;
+         }
+         this.clearRecordListeners(record);
+         for each(symbolName in record.symbols)
+         {
+            if(!CUISymbol.isLibrarySymbolAvailable(record.id,symbolName))
+            {
+               this.fail("Symbol library does not export requested symbol: " + record.id + "/" + symbolName);
+               return;
+            }
+         }
+         this.completeOne();
+      }
+
       private function onAssetMissing(param1:IOErrorEvent) : void
       {
          var record:Object = this.findEventRecord(param1.currentTarget);
          var detail:String = param1.text == null ? "" : String(param1.text);
-         this.fail("Asset is missing or unreadable: " + (record == null ? "unknown" : record.src) + (detail.length == 0 ? "" : ". " + detail));
+         var description:String = record != null && record.kind == "library" ?
+            "Symbol library is missing or unreadable: " : "Asset is missing or unreadable: ";
+         this.fail(description + (record == null ? "unknown" : record.src) + (detail.length == 0 ? "" : ". " + detail));
       }
 
       private function onAssetSecurityError(param1:SecurityErrorEvent) : void
       {
          var record:Object = this.findEventRecord(param1.currentTarget);
-         this.fail("Scaleform denied access to asset: " + (record == null ? "unknown" : record.src));
+         this.fail("Scaleform denied access to " + (record != null && record.kind == "library" ? "symbol library: " : "asset: ") +
+            (record == null ? "unknown" : record.src));
       }
 
       private function completeOne() : void
@@ -256,9 +278,9 @@ package venworks.cui
 
       private function clearRecordListeners(param1:Object) : void
       {
-         if(param1.kind == "image")
+         if(param1.kind == "library")
          {
-            LoaderInfo(param1.info).removeEventListener(Event.COMPLETE,this.onImageLoaded);
+            LoaderInfo(param1.info).removeEventListener(Event.COMPLETE,this.onLibraryLoaded);
             LoaderInfo(param1.info).removeEventListener(IOErrorEvent.IO_ERROR,this.onAssetMissing);
             LoaderInfo(param1.info).removeEventListener(SecurityErrorEvent.SECURITY_ERROR,this.onAssetSecurityError);
          }

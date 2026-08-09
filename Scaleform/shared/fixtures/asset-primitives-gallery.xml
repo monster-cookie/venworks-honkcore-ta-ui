@@ -12,7 +12,7 @@
              rotation="0" scaleX="1" scaleY="1" z="0" fillColor="#071923" fillOpacity="0.92"
              strokeColor="#35E6E6" strokeOpacity="0.9" strokeWidth="2" />
       <text id="asset.gallery.left.title" x="22" y="14" width="656" height="34" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="1" value="CUI ASSETS — DDS FIT MODES"
+            rotation="0" scaleX="1" scaleY="1" z="1" value="CUI SYMBOL LIBRARY — FIXED ROOT"
             font="$MAIN_Font_Bold" fontSize="19" color="#F7FCFF" bold="true" align="left" />
       <divider id="asset.gallery.left.divider" x="22" y="54" width="656" height="0" opacity="1" visible="true"
                rotation="0" scaleX="1" scaleY="1" z="1" color="#35E6E6" strokeOpacity="0.8" strokeWidth="2" />
@@ -20,37 +20,41 @@
       <panel id="asset.fit.contain.frame" x="24" y="96" width="300" height="140" opacity="1" visible="true"
              rotation="0" scaleX="1" scaleY="1" z="1" fillColor="#183B48" fillOpacity="0.55"
              strokeColor="#35E6E6" strokeOpacity="0.7" strokeWidth="1" />
-      <image id="asset.fit.contain" x="34" y="106" width="280" height="120" opacity="1" visible="true"
-             rotation="0" scaleX="1" scaleY="1" z="2" src="venworks-logo.dds" fit="contain" alignX="center" alignY="center" />
+      <symbol id="asset.fit.contain" x="34" y="106" width="280" height="120" opacity="1" visible="true"
+              rotation="0" scaleX="1" scaleY="1" z="2" library="venworks-icons" name="venworks-logo"
+              fit="contain" alignX="center" alignY="center" />
       <text id="asset.fit.contain.label" x="24" y="66" width="300" height="26" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="2" value="CONTAIN — TRANSPARENCY"
+            rotation="0" scaleX="1" scaleY="1" z="2" value="VENWORKS LOGO — CONTAIN"
             font="$MAIN_Font_Bold" fontSize="14" color="#35E6E6" bold="false" align="center" />
 
       <panel id="asset.fit.cover.frame" x="376" y="96" width="300" height="140" opacity="1" visible="true"
              rotation="0" scaleX="1" scaleY="1" z="1" fillColor="#183B48" fillOpacity="0.55"
              strokeColor="#FFB51B" strokeOpacity="0.8" strokeWidth="1" />
-      <image id="asset.fit.cover" x="386" y="106" width="280" height="120" opacity="0.8" visible="true"
-             rotation="0" scaleX="1" scaleY="1" z="2" src="venworks-logo.dds" fit="cover" alignX="center" alignY="center" />
+      <symbol id="asset.fit.cover" x="386" y="106" width="280" height="120" opacity="0.8" visible="true"
+              rotation="0" scaleX="1" scaleY="1" z="2" library="venworks-icons" name="health" color="#35E6E6"
+              fit="contain" alignX="center" alignY="center" />
       <text id="asset.fit.cover.label" x="376" y="66" width="300" height="26" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="2" value="COVER — 80% OPACITY"
+            rotation="0" scaleX="1" scaleY="1" z="2" value="HEALTH — TINT + 80% OPACITY"
             font="$MAIN_Font_Bold" fontSize="14" color="#FFB51B" bold="false" align="center" />
 
       <panel id="asset.fit.stretch.frame" x="24" y="304" width="300" height="140" opacity="1" visible="true"
              rotation="0" scaleX="1" scaleY="1" z="1" fillColor="#183B48" fillOpacity="0.55"
              strokeColor="#F39CDE" strokeOpacity="0.8" strokeWidth="1" />
-      <image id="asset.fit.stretch" x="34" y="314" width="280" height="120" opacity="1" visible="true"
-             rotation="0" scaleX="1" scaleY="1" z="2" src="venworks-logo.dds" fit="stretch" alignX="center" alignY="center" />
+      <symbol id="asset.fit.stretch" x="34" y="314" width="280" height="120" opacity="1" visible="true"
+              rotation="0" scaleX="1" scaleY="1" z="2" library="venworks-icons" name="warning" color="#F39CDE"
+              fit="stretch" alignX="center" alignY="center" />
       <text id="asset.fit.stretch.label" x="24" y="274" width="300" height="26" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="2" value="STRETCH"
+            rotation="0" scaleX="1" scaleY="1" z="2" value="WARNING — STRETCH"
             font="$MAIN_Font_Bold" fontSize="14" color="#F39CDE" bold="false" align="center" />
 
       <panel id="asset.fit.none.frame" x="376" y="304" width="300" height="140" opacity="1" visible="true"
              rotation="0" scaleX="1" scaleY="1" z="1" fillColor="#183B48" fillOpacity="0.55"
              strokeColor="#FFD800" strokeOpacity="0.8" strokeWidth="1" />
-      <image id="asset.fit.none" x="386" y="314" width="280" height="120" opacity="1" visible="true"
-             rotation="0" scaleX="1" scaleY="1" z="2" src="venworks-logo.dds" fit="none" alignX="right" alignY="bottom" />
+      <symbol id="asset.fit.none" x="386" y="314" width="280" height="120" opacity="1" visible="true"
+              rotation="0" scaleX="1" scaleY="1" z="2" library="venworks-icons" name="disease" color="#FFD800"
+              fit="none" alignX="right" alignY="bottom" />
       <text id="asset.fit.none.label" x="376" y="274" width="300" height="26" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="2" value="NONE — RIGHT/BOTTOM CLIP"
+            rotation="0" scaleX="1" scaleY="1" z="2" value="DISEASE — RIGHT/BOTTOM CLIP"
             font="$MAIN_Font_Bold" fontSize="14" color="#FFD800" bold="false" align="center" />
     </group>
 

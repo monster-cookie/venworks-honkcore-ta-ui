@@ -11,8 +11,6 @@ param(
 
   [string]$OutputDirectory = (Join-Path $PSScriptRoot "..\Staging-CUI\Interface"),
 
-  [string]$TextureOutputDirectory = (Join-Path $PSScriptRoot "..\Staging-CUI\Textures"),
-
   [string]$WorkDirectory = (Join-Path $PSScriptRoot "..\Scaleform\.work"),
 
   [string[]]$ManifestPath = @(
@@ -172,15 +170,11 @@ $script:ResolvedJavaPath = Resolve-RequiredFile -Path $JavaPath -Description "Ja
 $script:ResolvedJpexsJarPath = Resolve-RequiredFile -Path $JpexsJarPath -Description "JPEXS JAR"
 $resolvedVanillaInterfacePath = (Resolve-Path -LiteralPath $VanillaInterfacePath).Path
 $resolvedOutputDirectory = [System.IO.Path]::GetFullPath($OutputDirectory)
-$resolvedTextureOutputDirectory = [System.IO.Path]::GetFullPath($TextureOutputDirectory)
 $resolvedWorkDirectory = [System.IO.Path]::GetFullPath($WorkDirectory)
 $decompileScript = Resolve-RequiredFile -Path (Join-Path $PSScriptRoot "decompileScaleform.ps1") -Description "Scaleform decompile helper"
 $galleryLayoutSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\fixtures\asset-primitives-gallery.xml") `
   -Description "Goal 4E asset gallery"
-$galleryDdsSource = Resolve-RequiredFile `
-  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\venworks-logo.dds") `
-  -Description "Owned Venworks DDS gallery asset"
 $gallerySvgSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\gallery-vector.svg") `
   -Description "Owned SVG gallery asset"
@@ -190,6 +184,12 @@ $venworksLogoSvgSource = Resolve-RequiredFile `
 $invalidSvgSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\gallery-invalid.svg") `
   -Description "Goal 4E invalid SVG fixture"
+$symbolLibrarySource = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\libraries\venworks-icons.swf") `
+  -Description "Compiled Venworks symbol library"
+$symbolLibraryHashPath = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\libraries\validation\expected.sha256") `
+  -Description "Expected Venworks symbol library hash"
 $layoutSchemaPath = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Schemas\VenworksCUI\layout-v1.xsd") `
   -Description "Venworks CUI layout schema"
@@ -221,6 +221,19 @@ $invalidAssetPathFixture = Resolve-RequiredFile `
 $invalidAssetPathErrors = @(Get-XmlSchemaErrors -XmlPath $invalidAssetPathFixture -SchemaPath $layoutSchemaPath)
 if ($invalidAssetPathErrors.Count -eq 0) {
   throw "Invalid asset-path fixture unexpectedly passed schema validation."
+}
+
+foreach ($runtimeFailureFixture in @(
+  'layout-missing-symbol-library.xml',
+  'layout-unknown-library-symbol.xml'
+)) {
+  [void](Resolve-RequiredFile -Path (Join-Path $fixtureDirectory $runtimeFailureFixture) -Description "Symbol-library failure fixture")
+}
+
+$expectedSymbolLibraryHash = Read-Sha256File -Path $symbolLibraryHashPath
+$actualSymbolLibraryHash = (Get-FileHash -LiteralPath $symbolLibrarySource -Algorithm SHA256).Hash
+if ($actualSymbolLibraryHash -ne $expectedSymbolLibraryHash) {
+  throw "Symbol library hash mismatch. Expected $expectedSymbolLibraryHash; found $actualSymbolLibraryHash."
 }
 
 if (!(Test-Path -LiteralPath $resolvedVanillaInterfacePath -PathType Container)) {
@@ -495,8 +508,11 @@ try {
       'CUIMask',
       'CUISymbol',
       'VenworksCUI/Assets/',
-      'img://textures/interface/VenworksCUI/Assets/',
-      'Image assets must use .dds',
+      'VenworksCUI/Libraries/',
+      'LoaderContext',
+      'ApplicationDomain.currentDomain',
+      'libraryLinkageName',
+      'Symbol library does not export requested symbol',
       'CUI ASSET LOAD ERROR',
       'Asset path traversal is prohibited',
       'Unsupported SVG element',
@@ -545,6 +561,11 @@ try {
       throw "Generated ActionScript still contains the Goal 2 success probe."
     }
 
+    if ($validationSource.Contains('img://textures/interface/VenworksCUI/Assets/') -or
+        $validationSource.Contains('Image assets must use .dds')) {
+      throw "Generated ActionScript still contains retired direct DDS loading support."
+    }
+
     $expectedOutputHash = Read-Sha256File -Path $expectedHashPath
     $actualOutputHash = (Get-FileHash -LiteralPath $generatedGfxPath -Algorithm SHA256).Hash
     if ($actualOutputHash -ne $expectedOutputHash) {
@@ -558,16 +579,16 @@ try {
 
   $cuiOutputDirectory = Join-Path $resolvedOutputDirectory "VenworksCUI"
   $assetOutputDirectory = Join-Path $cuiOutputDirectory "Assets"
-  $textureAssetOutputDirectory = Join-Path $resolvedTextureOutputDirectory "Interface\VenworksCUI\Assets"
+  $libraryOutputDirectory = Join-Path $cuiOutputDirectory "Libraries"
   New-Item -ItemType Directory -Force -Path $assetOutputDirectory | Out-Null
-  New-Item -ItemType Directory -Force -Path $textureAssetOutputDirectory | Out-Null
+  New-Item -ItemType Directory -Force -Path $libraryOutputDirectory | Out-Null
   Copy-Item -LiteralPath $galleryLayoutSource -Destination (Join-Path $cuiOutputDirectory "layout.xml") -Force
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
   Copy-Item -LiteralPath $invalidSvgSource -Destination (Join-Path $assetOutputDirectory "gallery-invalid.svg") -Force
-  Copy-Item -LiteralPath $galleryDdsSource -Destination (Join-Path $textureAssetOutputDirectory "venworks-logo.dds") -Force
+  Copy-Item -LiteralPath $symbolLibrarySource -Destination (Join-Path $libraryOutputDirectory "venworks-icons.swf") -Force
   Write-Host -ForegroundColor Green "Staged Goal 4E interface assets in $cuiOutputDirectory"
-  Write-Host -ForegroundColor Green "Staged Goal 4E DDS assets in $textureAssetOutputDirectory"
+  Write-Host -ForegroundColor Green "Staged supplemental symbol library in $libraryOutputDirectory"
 }
 finally {
   if ($KeepWork) {

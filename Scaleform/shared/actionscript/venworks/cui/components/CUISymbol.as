@@ -23,7 +23,9 @@ package venworks.cui.components
 
       public function CUISymbol(param1:XML)
       {
-         super(param1,createSymbol(String(param1.@name)));
+         super(param1,param1.@library.length() == 1 ?
+            createLibrarySymbol(String(param1.@library),String(param1.@name)) :
+            createEmbeddedSymbol(String(param1.@name)));
       }
 
       public static function isAllowlisted(param1:String) : Boolean
@@ -31,7 +33,47 @@ package venworks.cui.components
          return SYMBOLS[param1] != null;
       }
 
-      private static function createSymbol(param1:String) : DisplayObject
+      public static function libraryLinkageName(param1:String, param2:String) : String
+      {
+         return "VenworksCUI_" + param1.replace(/-/g,"_") + "_" + param2.replace(/-/g,"_");
+      }
+
+      public static function isLibrarySymbolAvailable(param1:String, param2:String) : Boolean
+      {
+         try
+         {
+            return getDefinitionByName(libraryLinkageName(param1,param2)) as Class != null;
+         }
+         catch(param3:Error)
+         {
+            return false;
+         }
+      }
+
+      private static function createLibrarySymbol(param1:String, param2:String) : DisplayObject
+      {
+         var symbolClass:Class = null;
+         var result:DisplayObject = null;
+         try
+         {
+            symbolClass = getDefinitionByName(libraryLinkageName(param1,param2)) as Class;
+            if(symbolClass != null)
+            {
+               result = new symbolClass() as DisplayObject;
+            }
+         }
+         catch(param3:Error)
+         {
+            result = null;
+         }
+         if(result == null)
+         {
+            throw new Error("INVALID|Symbol library does not export requested symbol: " + param1 + "/" + param2);
+         }
+         return result;
+      }
+
+      private static function createEmbeddedSymbol(param1:String) : DisplayObject
       {
          var definition:Object = null;
          var className:String = null;

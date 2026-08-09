@@ -251,10 +251,6 @@ package venworks.cui
          {
             return new CUIDivider(param1);
          }
-         if(type == "image")
-         {
-            return new CUIImage(param1,assetManager.getImage(String(param1.@id)));
-         }
          if(type == "svg")
          {
             return new CUISvg(param1,assetManager.getSvg(String(param1.@id)));

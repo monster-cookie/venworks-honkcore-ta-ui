@@ -12,6 +12,12 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="symbolKeyType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[a-z][a-z0-9-]{0,63}" />
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:simpleType name="opacityType">
     <xs:restriction base="xs:decimal">
       <xs:minInclusive value="0" />
@@ -202,7 +208,9 @@
 
   <xs:complexType name="symbolType">
     <xs:attributeGroup ref="componentAttributes" />
-    <xs:attribute name="name" type="idType" use="required" />
+    <xs:attribute name="name" type="symbolKeyType" use="required" />
+    <xs:attribute name="library" type="symbolKeyType" />
+    <xs:attribute name="color" type="colorType" />
     <xs:attribute name="fit" type="assetFitType" default="contain" />
     <xs:attribute name="alignX" type="horizontalAlignmentType" default="center" />
     <xs:attribute name="alignY" type="verticalAlignmentType" default="center" />
@@ -279,7 +287,6 @@
       <xs:element name="shape" type="shapeType" />
       <xs:element name="divider" type="dividerType" />
       <xs:element name="meter" type="meterType" />
-      <xs:element name="image" type="assetType" />
       <xs:element name="svg" type="assetType" />
       <xs:element name="path" type="pathType" />
       <xs:element name="mask" type="maskType" />
@@ -314,7 +321,6 @@
       <xs:element name="shape" type="shapeType" />
       <xs:element name="divider" type="dividerType" />
       <xs:element name="meter" type="meterType" />
-      <xs:element name="image" type="assetType" />
       <xs:element name="svg" type="assetType" />
       <xs:element name="path" type="pathType" />
       <xs:element name="mask" type="templateMaskType" />

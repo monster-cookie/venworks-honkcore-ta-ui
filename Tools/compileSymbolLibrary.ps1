@@ -1,0 +1,241 @@
+[CmdletBinding()]
+param(
+  [Parameter(Mandatory = $true)]
+  [string]$JavaPath,
+
+  [Parameter(Mandatory = $true)]
+  [string]$JpexsJarPath,
+
+  [Parameter(Mandatory = $true)]
+  [string]$FontAwesomeRoot,
+
+  [string]$OutputPath = (Join-Path $PSScriptRoot "..\Scaleform\shared\libraries\venworks-icons.swf"),
+
+  [string]$WorkDirectory = (Join-Path $PSScriptRoot "..\Scaleform\.work\symbol-library"),
+
+  [switch]$UpdateExpectedHash
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+function Assert-File {
+  param([string]$Path, [string]$Description)
+  if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+    throw "$Description was not found: $Path"
+  }
+}
+
+function Invoke-Checked {
+  param([string]$FilePath, [string[]]$Arguments, [string]$Description)
+  & $FilePath @Arguments
+  if ($LASTEXITCODE -ne 0) {
+    throw "$Description failed with exit code $LASTEXITCODE."
+  }
+}
+
+$java = [System.IO.Path]::GetFullPath($JavaPath)
+$jpexsJar = [System.IO.Path]::GetFullPath($JpexsJarPath)
+$fontAwesome = [System.IO.Path]::GetFullPath($FontAwesomeRoot)
+$output = [System.IO.Path]::GetFullPath($OutputPath)
+$work = [System.IO.Path]::GetFullPath($WorkDirectory)
+$javac = Join-Path (Split-Path -Parent $java) "javac.exe"
+$validationPath = Join-Path $PSScriptRoot "..\Scaleform\shared\libraries\validation\expected.sha256"
+$venworksLogo = Join-Path $PSScriptRoot "..\Scaleform\shared\assets\venworks-logo.svg"
+$fontAwesomeStyleRoot = Join-Path $fontAwesome "svgs\sharp-solid"
+
+Assert-File -Path $java -Description "Java runtime"
+Assert-File -Path $javac -Description "Java compiler"
+Assert-File -Path $jpexsJar -Description "JPEXS jar"
+Assert-File -Path $venworksLogo -Description "Venworks logo SVG"
+
+$symbols = [ordered]@{
+  "health" = "heart.svg"
+  "oxygen" = "lungs.svg"
+  "co2" = "wind.svg"
+  "shield" = "shield-halved.svg"
+  "armor" = "vest-patches.svg"
+  "weapon" = "raygun.svg"
+  "aiming" = "crosshairs.svg"
+  "ship" = "shuttle-space.svg"
+  "vehicle" = "car.svg"
+  "fuel" = "gas-pump.svg"
+  "cargo" = "box.svg"
+  "scanner" = "radar.svg"
+  "stealth" = "user-ninja.svg"
+  "warning" = "triangle-exclamation.svg"
+  "objective" = "bullseye.svg"
+  "jolly-roger" = "skull-crossbones.svg"
+  "death" = "skull.svg"
+  "poison" = "flask-round-poison.svg"
+  "burning" = "fire.svg"
+  "electrocution" = "bolt.svg"
+  "disease" = "disease.svg"
+  "venworks-logo" = $venworksLogo
+}
+
+$resolvedSources = [ordered]@{}
+foreach ($entry in $symbols.GetEnumerator()) {
+  $source = if ([System.IO.Path]::IsPathRooted([string]$entry.Value)) {
+    [string]$entry.Value
+  } else {
+    Join-Path $fontAwesomeStyleRoot ([string]$entry.Value)
+  }
+  Assert-File -Path $source -Description "Source SVG for symbol '$($entry.Key)'"
+  $resolvedSources[$entry.Key] = $source
+}
+
+$sourceDirectory = Join-Path $work "source"
+$classesDirectory = Join-Path $work "classes"
+$shapeDirectory = Join-Path $work "shapes"
+$seedSwf = Join-Path $work "venworks-icons-seed.swf"
+$compiledSwf = Join-Path $work "venworks-icons.swf"
+$xmlPath = Join-Path $work "venworks-icons.xml"
+$generatorPath = Join-Path $sourceDirectory "SymbolLibrarySeedGenerator.java"
+
+New-Item -ItemType Directory -Path $sourceDirectory,$classesDirectory,$shapeDirectory,(Split-Path -Parent $output),(Split-Path -Parent $validationPath) -Force | Out-Null
+Get-ChildItem -LiteralPath $shapeDirectory -File -ErrorAction SilentlyContinue | Remove-Item -Force
+
+$generatorSource = @'
+import com.jpexs.decompiler.flash.SWF;
+import com.jpexs.decompiler.flash.abc.avm2.parser.script.AbcIndexing;
+import com.jpexs.decompiler.flash.abc.avm2.parser.script.ActionScript3Parser;
+import com.jpexs.decompiler.flash.tags.DefineShape3Tag;
+import com.jpexs.decompiler.flash.tags.DoABC2Tag;
+import com.jpexs.decompiler.flash.tags.EndTag;
+import com.jpexs.decompiler.flash.tags.FileAttributesTag;
+import com.jpexs.decompiler.flash.tags.ShowFrameTag;
+import com.jpexs.decompiler.flash.tags.SymbolClassTag;
+import com.jpexs.decompiler.flash.types.RECT;
+import com.jpexs.decompiler.flash.types.SHAPEWITHSTYLE;
+import java.io.FileOutputStream;
+import java.util.ArrayList;
+
+public final class SymbolLibrarySeedGenerator {
+    private SymbolLibrarySeedGenerator() {
+    }
+
+    public static void main(String[] args) throws Exception {
+        if (args.length < 2) {
+            throw new IllegalArgumentException("Expected an output SWF path and at least one linkage name.");
+        }
+
+        SWF.initPlayer();
+        SWF swf = new SWF();
+        swf.version = 12;
+        swf.displayRect = new RECT(0, 10240, 0, 10240);
+        swf.frameRate = 30;
+        swf.frameCount = 1;
+
+        FileAttributesTag attributes = new FileAttributesTag(swf);
+        attributes.actionScript3 = true;
+        swf.addTag(attributes);
+
+        DoABC2Tag abcTag = new DoABC2Tag(swf);
+        abcTag.name = "venworks.cui.symbols.seed";
+        abcTag.flags = 1;
+        swf.addTag(abcTag);
+        abcTag.setTimelined(swf);
+
+        AbcIndexing abcIndex = swf.getAbcIndex();
+        abcIndex.selectAbc(abcTag.getABC());
+        ActionScript3Parser parser = new ActionScript3Parser(abcIndex);
+
+        SymbolClassTag symbols = new SymbolClassTag(swf);
+        symbols.tags = new ArrayList<Integer>();
+        symbols.names = new ArrayList<String>();
+
+        for (int index = 1; index < args.length; index++) {
+            String className = args[index];
+            String source = "package { import flash.display.Shape; public class " + className
+                + " extends Shape { public function " + className + "() { super(); } } }";
+            parser.addScript(source, className, 0, 0, swf.getDocumentClass(), abcTag.getABC());
+
+            int id = index;
+            DefineShape3Tag shape = new DefineShape3Tag(swf);
+            shape.shapeId = id;
+            shape.shapeBounds = new RECT(0, 2000, 0, 2000);
+            shape.shapes = SHAPEWITHSTYLE.createEmpty(3);
+            shape.setModified(true);
+            swf.addTag(shape);
+            symbols.tags.add(id);
+            symbols.names.add(className);
+        }
+
+        abcTag.setModified(true);
+        swf.addTag(symbols);
+        swf.addTag(new ShowFrameTag(swf));
+        swf.addTag(new EndTag(swf));
+        swf.clearAllCache();
+        swf.setModified(true);
+
+        try (FileOutputStream output = new FileOutputStream(args[0])) {
+            swf.saveTo(output);
+        }
+    }
+}
+'@
+
+Set-Content -LiteralPath $generatorPath -Value $generatorSource -Encoding UTF8
+
+$jpexsRoot = Split-Path -Parent $jpexsJar
+$classPathItems = @($jpexsJar)
+$jpexsLib = Join-Path $jpexsRoot "lib"
+if (Test-Path -LiteralPath $jpexsLib -PathType Container) {
+  $classPathItems += @(Get-ChildItem -LiteralPath $jpexsLib -Filter "*.jar" -File | ForEach-Object FullName)
+}
+$classPath = $classPathItems -join ";"
+
+Invoke-Checked -FilePath $javac -Arguments @("-encoding","UTF-8","-cp",$classPath,"-d",$classesDirectory,$generatorPath) -Description "Symbol seed generator compilation"
+
+$linkageNames = @()
+$shapeId = 1
+foreach ($entry in $resolvedSources.GetEnumerator()) {
+  $linkage = "VenworksCUI_venworks_icons_" + ([string]$entry.Key).Replace("-","_")
+  $linkageNames += $linkage
+  Copy-Item -LiteralPath ([string]$entry.Value) -Destination (Join-Path $shapeDirectory ("{0}.svg" -f $shapeId)) -Force
+  ++$shapeId
+}
+
+$runtimeClassPath = $classPath + ";" + $classesDirectory
+Invoke-Checked -FilePath $java -Arguments (@("-cp",$runtimeClassPath,"SymbolLibrarySeedGenerator",$seedSwf) + $linkageNames) -Description "Symbol seed generation"
+Invoke-Checked -FilePath $java -Arguments @("-jar",$jpexsJar,"-importShapes",$seedSwf,$compiledSwf,$shapeDirectory) -Description "SVG shape import"
+Invoke-Checked -FilePath $java -Arguments @("-jar",$jpexsJar,"-swf2xml",$compiledSwf,$xmlPath) -Description "Symbol library inspection export"
+
+[xml]$scaleform = Get-Content -LiteralPath $xmlPath -Raw
+$shapeTags = @($scaleform.SelectNodes('/swf/tags/item[@type="DefineShape3Tag"]'))
+if ($shapeTags.Count -ne $symbols.Count) {
+  throw "Expected $($symbols.Count) imported shapes, found $($shapeTags.Count)."
+}
+foreach ($shape in $shapeTags) {
+  $width = [int]$shape.shapeBounds.Xmax - [int]$shape.shapeBounds.Xmin
+  $height = [int]$shape.shapeBounds.Ymax - [int]$shape.shapeBounds.Ymin
+  if ($width -le 0 -or $height -le 0) {
+    throw "Imported shape $($shape.shapeId) has no renderable dimensions."
+  }
+}
+
+$exportedNames = @()
+foreach ($symbolClassTag in $scaleform.SelectNodes('/swf/tags/item[@type="SymbolClassTag"]')) {
+  $exportedNames += @($symbolClassTag.names.item | ForEach-Object { [string]$_ })
+}
+foreach ($linkage in $linkageNames) {
+  if ($exportedNames -notcontains $linkage) {
+    throw "Compiled symbol library is missing linkage class: $linkage"
+  }
+}
+
+Copy-Item -LiteralPath $compiledSwf -Destination $output -Force
+$hash = (Get-FileHash -LiteralPath $output -Algorithm SHA256).Hash.ToLowerInvariant()
+if ($UpdateExpectedHash) {
+  Set-Content -LiteralPath $validationPath -Value ("{0}  venworks-icons.swf" -f $hash) -Encoding ASCII
+} else {
+  Assert-File -Path $validationPath -Description "Expected symbol library hash"
+  $expected = ((Get-Content -LiteralPath $validationPath -Raw).Trim() -split '\s+')[0].ToLowerInvariant()
+  if ($hash -ne $expected) {
+    throw "Symbol library hash mismatch. Expected $expected but built $hash."
+  }
+}
+
+Write-Host "Compiled $($symbols.Count) symbols to $output"
+Write-Host "SHA-256: $hash"

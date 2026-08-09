@@ -29,8 +29,9 @@ runtime and supported UI surfaces have shipped.
   XML file through its actual file opener.
 - Themes are selected before Starfield launches. Runtime palette switching is
   optional and must not delay the install-time workflow.
-- SVG path rendering and DDS support are required. PNG and JPEG remain useful
-  source formats but must be converted before packaging.
+- SVG path rendering and compiled SWF symbol-library support are required.
+  Direct PNG, JPEG, and DDS loading is unsupported after in-game probes;
+  raster artwork must be converted to an approved vector or compiled symbol.
 - Exclude SPECTR, TACR, and rear-view/secondary-camera rendering.
 - Support the player HUD and the approved ship UI surfaces, but preserve each
   vanilla movie's input, lifecycle, data-provider, and root contracts.
@@ -48,7 +49,7 @@ Interface/VenworksCUI/layout.xml
           |
           +--> Interface/VenworksCUI/Assets/...
           |
-          +--> Textures/Interface/VenworksCUI/Assets/...
+          +--> Interface/VenworksCUI/Libraries/...
           |
           v
 modified vanilla-derived Starfield Scaleform movies
@@ -135,7 +136,7 @@ Extend the versioned layout schema and runtime through bounded review gates:
 - data-only conditions and allowlisted adapters that control verified vanilla
   HUD visibility without exposing arbitrary providers or methods;
 - segmented rectangles, dots/circles, and radial meter renderers;
-- transparent DDS and local SVG assets;
+- local SVG assets and curated compiled SWF symbol libraries;
 - authored SVG paths, masks, and permitted embedded symbols;
 - composite button and information-panel foundations.
 
@@ -164,9 +165,10 @@ Goal 4 is divided into bounded review gates:
   alternating triangles, four linear fill directions, optional partial
   segments, and bounded continuous radial renderers. The implementation and
   positive/negative in-game gallery checks are accepted.
-- **Goal 4E — assets and vector primitives:** transparent DDS, local SVG,
-  authored SVG paths, masks, and permitted embedded symbols. The implementation
-  is complete and awaits in-game acceptance.
+- **Goal 4E — assets and vector primitives:** local SVG, authored SVG paths,
+  masks, permitted embedded symbols, and a fixed-root supplemental SWF symbol
+  library. Direct DDS/raster loading was retired after failed probes. The
+  implementation is complete and awaits in-game acceptance.
 - **Goal 4F — composite foundations:** reusable button, quick-bar, information
   panel, warning, and related foundations assembled from approved primitives.
 

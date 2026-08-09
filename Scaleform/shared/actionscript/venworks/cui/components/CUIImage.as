@@ -1,6 +1,7 @@
 package venworks.cui.components
 {
    import flash.display.DisplayObject;
+   import flash.geom.ColorTransform;
    import flash.geom.Rectangle;
 
    public class CUIImage extends CUIComponent
@@ -16,8 +17,26 @@ package venworks.cui.components
          }
          content = param2;
          addChild(content);
+         this.applyTint(param1);
          this.fitContent(param1);
          scrollRect = new Rectangle(0,0,componentWidth,componentHeight);
+      }
+
+      private function applyTint(param1:XML) : void
+      {
+         var color:uint = 0;
+         if(param1.@color.length() == 0)
+         {
+            return;
+         }
+         color = readColor(String(param1.@color));
+         content.transform.colorTransform = new ColorTransform(
+            0,0,0,1,
+            color >> 16 & 255,
+            color >> 8 & 255,
+            color & 255,
+            0
+         );
       }
 
       private function fitContent(param1:XML) : void

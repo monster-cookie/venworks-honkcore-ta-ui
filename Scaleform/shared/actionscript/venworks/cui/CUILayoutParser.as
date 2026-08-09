@@ -368,11 +368,11 @@ package venworks.cui
                throw new Error("INVALID|Radial thickness exceeds meter bounds: " + String(param1.@id));
             }
          }
-         else if(type == "image" || type == "svg")
+         else if(type == "svg")
          {
             this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","src","fit","alignX","alignY"]);
             this.requirePositiveBounds(param1);
-            this.requireAssetPath(param1,type);
+            this.requireAssetPath(param1);
             this.requireAssetFit(param1);
          }
          else if(type == "path")
@@ -407,12 +407,20 @@ package venworks.cui
          }
          else if(type == "symbol")
          {
-            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","name","fit","alignX","alignY"]);
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","name","library","color","fit","alignX","alignY"]);
             this.requirePositiveBounds(param1);
-            this.requireNonEmpty(param1,"name");
-            if(!venworks.cui.components.CUISymbol.isAllowlisted(String(param1.@name)))
+            this.requireSymbolKey(param1,"name");
+            if(param1.@library.length() == 1)
+            {
+               this.requireSymbolKey(param1,"library");
+            }
+            else if(!venworks.cui.components.CUISymbol.isAllowlisted(String(param1.@name)))
             {
                throw new Error("INVALID|Embedded symbol is not allowlisted: " + String(param1.@name));
+            }
+            if(param1.@color.length() == 1)
+            {
+               this.requireColor(param1,"color");
             }
             this.requireAssetFit(param1);
          }
@@ -460,12 +468,11 @@ package venworks.cui
          }
       }
 
-      private function requireAssetPath(param1:XML, param2:String) : void
+      private function requireAssetPath(param1:XML) : void
       {
          var value:String = String(param1.@src);
          var lowerValue:String = value.toLowerCase();
-         var rootDescription:String = param2 == "image" ?
-            "Textures/Interface/VenworksCUI/Assets" : "Interface/VenworksCUI/Assets";
+         var rootDescription:String = "Interface/VenworksCUI/Assets";
          var segments:Array = null;
          var segment:String = null;
          if(param1.@src.length() != 1 || value.length < 5 || value.length > 128 ||
@@ -482,17 +489,20 @@ package venworks.cui
                throw new Error("INVALID|Asset path traversal is prohibited: " + value);
             }
          }
-         if(param2 == "image")
-         {
-            if(lowerValue.substr(-4) != ".dds")
-            {
-               throw new Error("INVALID|Image assets must use .dds: " + value);
-            }
-         }
-         else if(lowerValue.substr(-4) != ".svg")
+         if(lowerValue.substr(-4) != ".svg")
          {
             throw new Error("INVALID|SVG assets must use .svg: " + value);
          }
+      }
+
+      private function requireSymbolKey(param1:XML, param2:String) : String
+      {
+         var value:String = String(param1.attribute(param2));
+         if(param1.attribute(param2).length() != 1 || !/^[a-z][a-z0-9-]{0,63}$/.test(value))
+         {
+            throw new Error("INVALID|" + param2 + " must be a lowercase symbol key on symbol.");
+         }
+         return value;
       }
 
       private function requireAssetFit(param1:XML) : void

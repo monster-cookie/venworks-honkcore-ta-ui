@@ -88,18 +88,15 @@ vanilla owner and provider contract.
 | Component | Status | Required behavior |
 |---|---|---|
 | Built-in symbol/icon | Implemented; acceptance pending | Reference a semantic name from a movie-aware hardcoded allowlist of symbols embedded in the owning vanilla movie; initial mappings are `environment-alert`, `quest-door-marker`, and `boost-fill`. |
+| Supplemental symbol library | Implemented; acceptance pending | Reference a lowercase semantic name from a fixed-root, precompiled SWF subset; runtime configuration cannot supply an ActionScript class name. |
 | SVG path | Implemented; acceptance pending | Render a bounded authored path with fill, stroke, transform, and view box; arc commands are rejected. |
 | SVG asset | Implemented; in-game loading confirmed | Load and validate a restricted local SVG through the fixed `Interface/VenworksCUI/Assets` root; no network URLs, scripts, text, or external references. |
-| DDS image | Implemented; acceptance pending | Atomically preload a local DDS through `img://textures/interface/VenworksCUI/Assets/` with contain, cover, stretch, or intrinsic/clipped placement. |
-| PNG/JPEG image | Unsupported for direct runtime loading | Convert raster source artwork to DDS; direct `img://` PNG and JPEG probes were found and attempted but rejected by Starfield Scaleform. |
-| Font icon | Future | Render an approved glyph from a packaged font subset with a stable semantic icon name. |
+| Direct raster/DDS image | Unsupported | PNG, JPEG, and DDS probes were found at their loose paths but rejected by Starfield Scaleform; use loose SVG or a precompiled symbol library. |
+| Curated Font Awesome icon | Implemented; acceptance pending | Distribute only approved compiled exports in `venworks-icons.swf`; Font Awesome source SVGs remain developer inputs and are not committed. |
 
-A local Font Awesome Pro installation is available and may simplify future
-icon or bar renderers. Its machine-specific path is intentionally not recorded
-in the repository. No Font Awesome file is inspected, copied, subset, or
-distributed by Goal 3. Before use, the exact installed version, source file,
-glyph subset, embedding method, notices, and redistribution terms must be
-approved. Native vector geometry remains the default when it is sufficient.
+The symbol-library compiler receives the local Font Awesome Pro root through an
+explicit parameter. Its machine-specific path is never recorded. The shipped
+library contains only the approved icon subset; source SVGs are not committed.
 
 ## Composite components
 
@@ -185,10 +182,10 @@ rectangles, dots/circles, alternating triangles, four linear fill directions,
 optional partial segments, and bounded continuous radial arcs. These renderers
 remain independent of live Starfield providers.
 
-Goal 4E adds atomic packaged DDS/SVG loading, restricted static SVG parsing,
-authored SVG paths, rectangle/ellipse/path masks with nesting, and a
-movie-aware semantic allowlist for embedded vanilla symbols. DDS textures are
-confined to `Textures/Interface/VenworksCUI/Assets`; SVG files are confined to
-`Interface/VenworksCUI/Assets`. Unsupported or missing content fails the entire
-CUI layer with an actionable diagnostic. Composite components remain the next
-Goal 4 gate.
+Goal 4E adds atomic restricted SVG and supplemental SWF-library loading,
+authored SVG paths, nested rectangle/ellipse/path masks, and movie-aware
+semantic symbols. Loose SVGs are confined to `Interface/VenworksCUI/Assets`;
+compiled libraries are confined to `Interface/VenworksCUI/Libraries` and
+export only constructed namespaced classes. Direct DDS/raster loading is
+retired after failed in-game probes. Unsupported or missing content fails the
+entire CUI layer with an actionable diagnostic.
