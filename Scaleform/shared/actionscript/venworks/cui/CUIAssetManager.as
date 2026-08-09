@@ -155,7 +155,7 @@ package venworks.cui
          try
          {
             loader.load(
-               new URLRequest(SYMBOL_LIBRARY_ROOT + record.src + "?symbol=" + symbolName),
+               new URLRequest(SYMBOL_LIBRARY_ROOT + record.src),
                new LoaderContext(false,record.domain as ApplicationDomain)
             );
          }
@@ -192,6 +192,8 @@ package venworks.cui
       private function onLibraryLoaded(param1:Event) : void
       {
          var record:Object = this.findByLoaderInfo(param1.currentTarget as LoaderInfo);
+         var controller:Object = null;
+         var accepted:Boolean = false;
          if(record == null)
          {
             this.fail("Symbol library loader completed without a matching library.");
@@ -202,6 +204,21 @@ package venworks.cui
          if(!this.isLibrarySymbolAvailable(record,record.symbol))
          {
             this.fail("Symbol library does not export requested symbol: " + record.library + "/" + record.symbol);
+            return;
+         }
+         try
+         {
+            controller = Object(Loader(record.loader).content);
+            accepted = Boolean(controller.setSymbol(record.symbol));
+         }
+         catch(param2:Error)
+         {
+            this.fail("Symbol library controller failed for " + record.library + "/" + record.symbol + ". " + this.cleanMessage(param2.toString()));
+            return;
+         }
+         if(!accepted)
+         {
+            this.fail("Symbol library controller rejected requested symbol: " + record.library + "/" + record.symbol);
             return;
          }
          this.completeOne();

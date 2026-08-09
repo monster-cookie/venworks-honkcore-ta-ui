@@ -101,11 +101,13 @@ Each exported ActionScript class extends `MovieClip` and places exactly one impo
 shape in an identity-matrix wrapper. This preserves the SVG geometry while giving
 Scaleform the timeline-compatible display-object container and runtime dimensions
 required by Starfield's linked symbols. A root `VenworksCUI_SymbolLibrary`
-controller reads the allowlisted semantic symbol name from the loader request and
-constructs that linkage class entirely inside the child SWF domain. The owning HUD
-movie checks `ApplicationDomain.hasDefinition`, but never extracts or coerces the
-child instance. It fits and tints only the parent-domain `Loader` wrapper. Global
-lookup remains limited to the hardcoded Bethesda embedded-symbol allowlist.
+controller exposes a post-load `setSymbol(name)` method that accepts only the
+allowlisted semantic names and constructs that linkage class entirely inside the
+child SWF domain. The owning HUD loads the plain SWF path, checks
+`ApplicationDomain.hasDefinition`, and calls the controller only after the load
+completes. It never extracts or coerces the child instance and fits and tints only
+the parent-domain `Loader` wrapper. Global lookup remains limited to the hardcoded
+Bethesda embedded-symbol allowlist.
 
 Runtime failures use the upper diagnostic panel and report the active phase,
 component type and ID, library and symbol keys when applicable, the complete
@@ -137,8 +139,8 @@ classes in both generated HUD movies, unchanged unrelated vanilla
 ActionScript, fixed roots and loader-wrapper handling in reopened ActionScript,
 the 22 expected SWF shapes with positive dimensions, their 22 one-shape timeline
 wrappers, 22 decompiled `MovieClip` linkage classes, the 22 one-to-one linkage
-exports, the root loader-parameter controller, and committed output hashes before
-staging.
+exports, the root post-load symbol controller, plain SWF library paths without URL
+parameters, and committed output hashes before staging.
 
 Required in-game checks are:
 

@@ -526,7 +526,7 @@ try {
       'ApplicationDomain.currentDomain',
       'applicationDomain',
       'hasDefinition',
-      '?symbol=',
+      'setSymbol',
       'libraryLinkageName',
       'Symbol library does not export requested symbol',
       'CUI ASSET LOAD ERROR',
@@ -585,9 +585,12 @@ try {
     if ($reopenedAssetManagerSource -notmatch 'new\s+ApplicationDomain\s*\(\s*ApplicationDomain\.currentDomain\s*\)' -or
         $reopenedAssetManagerSource -notmatch '\.applicationDomain\b' -or
         $reopenedAssetManagerSource -notmatch '\.hasDefinition\s*\(' -or
-        $reopenedAssetManagerSource -notmatch '\?symbol=' -or
+        $reopenedAssetManagerSource -notmatch '\.setSymbol\s*\(' -or
         $reopenedAssetManagerSource -notmatch 'record\.loader\s+as\s+Loader') {
-      throw 'Generated ActionScript does not retain supplemental symbols inside isolated loader wrappers.'
+      throw 'Generated ActionScript does not select supplemental symbols through isolated loader controllers.'
+    }
+    if ($reopenedAssetManagerSource -match '\?symbol=') {
+      throw 'Generated CUIAssetManager still appends an unsupported symbol query parameter to the SWF path.'
     }
     if ($reopenedAssetManagerSource -match '\.getDefinition\s*\(') {
       throw 'Generated CUIAssetManager still extracts supplemental definitions across the application-domain boundary.'

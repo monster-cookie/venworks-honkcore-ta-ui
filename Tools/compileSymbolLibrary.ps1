@@ -208,16 +208,16 @@ public final class SymbolLibrarySeedGenerator {
             .append(controllerName)
             .append(" extends MovieClip { public function ")
             .append(controllerName)
-            .append("() { super(); var requestedValue:Object = loaderInfo.parameters[\"symbol\"]; ")
-            .append("var requested:String = requestedValue == null ? \"\" : String(requestedValue); switch(requested) {");
+            .append("() { super(); } public function setSymbol(requested:String):Boolean { ")
+            .append("while(numChildren > 0) { removeChildAt(0); } switch(requested) {");
         for (int index = 0; index < semanticNames.size(); index++) {
             controllerSource.append("case \"")
                 .append(semanticNames.get(index))
                 .append("\": addChild(new ")
                 .append(linkageNames.get(index))
-                .append("()); break;");
+                .append("()); return true;");
         }
-        controllerSource.append("default: break; } } } }");
+        controllerSource.append("default: return false; } } } }");
         parser.addScript(controllerSource.toString(), controllerName, 0, 0, swf.getDocumentClass(), abcTag.getABC());
         symbols.tags.add(0);
         symbols.names.add(controllerName);
@@ -287,9 +287,11 @@ if ($controllerFiles.Count -ne 1) {
 }
 $controllerSource = Get-Content -LiteralPath $controllerFiles[0].FullName -Raw
 if ($controllerSource -notmatch 'class\s+VenworksCUI_SymbolLibrary\s+extends\s+MovieClip\b' -or
-    $controllerSource -notmatch 'loaderInfo\.parameters\["symbol"\]' -or
-    $controllerSource -notmatch 'addChild\s*\(') {
-  throw "Exported VenworksCUI_SymbolLibrary does not contain the required loader-parameter controller."
+    $controllerSource -notmatch 'function\s+setSymbol\s*\(\s*\w+\s*:\s*String\s*\)\s*:\s*Boolean' -or
+    $controllerSource -notmatch 'removeChildAt\s*\(' -or
+    $controllerSource -notmatch 'addChild\s*\(' -or
+    $controllerSource -match 'loaderInfo\.parameters') {
+  throw "Exported VenworksCUI_SymbolLibrary does not contain the required post-load symbol controller."
 }
 foreach ($entry in $resolvedSources.GetEnumerator()) {
   if ($controllerSource -notmatch ('case\s+"' + [regex]::Escape([string]$entry.Key) + '"')) {
