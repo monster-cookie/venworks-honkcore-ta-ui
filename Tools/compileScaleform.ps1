@@ -524,9 +524,18 @@ try {
       'VenworksCUI/Libraries/',
       'LoaderContext',
       'ApplicationDomain.currentDomain',
+      'applicationDomain',
+      'hasDefinition',
+      'getDefinition',
       'libraryLinkageName',
       'Symbol library does not export requested symbol',
       'CUI ASSET LOAD ERROR',
+      'PHASE:',
+      'COMPONENT:',
+      'LIBRARY:',
+      'SYMBOL:',
+      'EXCEPTION:',
+      'ERROR ID:',
       'Asset path traversal is prohibited',
       'Unsupported SVG element',
       'SVG arc path commands are not supported',
@@ -567,6 +576,19 @@ try {
       if (!$validationSource.Contains($requiredValue)) {
         throw "Generated ActionScript is missing required value '$requiredValue'."
       }
+    }
+
+    $reopenedAssetManagerPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIAssetManager.as'
+    $reopenedSymbolPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUISymbol.as'
+    $reopenedAssetManagerSource = Get-Content -LiteralPath $reopenedAssetManagerPath -Raw
+    $reopenedSymbolSource = Get-Content -LiteralPath $reopenedSymbolPath -Raw
+    if ($reopenedAssetManagerSource -notmatch 'new\s+ApplicationDomain\s*\(\s*ApplicationDomain\.currentDomain\s*\)' -or
+        $reopenedAssetManagerSource -notmatch '\.applicationDomain\b' -or
+        $reopenedAssetManagerSource -notmatch '\.getDefinition\s*\(') {
+      throw 'Generated ActionScript does not resolve supplemental symbols through an isolated loader application domain.'
+    }
+    if ($reopenedSymbolSource -match 'getDefinitionByName\s*\(\s*libraryLinkageName') {
+      throw 'Generated CUISymbol still resolves supplemental symbols through the global application domain.'
     }
 
     if ($validationSource.Contains('VENWORKS XML LOADED') -or

@@ -71,9 +71,9 @@ allowlist:
 | `quest-door-marker` | `QuestDoorMarker` | `QuestDoorMarker` |
 | `boost-fill` | `HUDMenu_fla.BoostBarFill_mc_139` | `HUDMenu_LRG_fla.BoostBarFill_mc_139` |
 
-With `library`, the runtime loads one fixed-root SWF into the current
-ApplicationDomain, deduplicates repeated library requests, and verifies every
-requested export before rendering:
+With `library`, the runtime loads one fixed-root SWF into an isolated child
+`ApplicationDomain`, deduplicates repeated library requests, and verifies every
+requested export through the completed loader's own domain before rendering:
 
 ```xml
 <symbol id="health.icon" x="40" y="40" width="72" height="72" z="2"
@@ -100,7 +100,16 @@ result against `Scaleform/shared/libraries/validation/expected.sha256`.
 Each exported ActionScript class extends `MovieClip` and places exactly one imported
 shape in an identity-matrix wrapper. This preserves the SVG geometry while giving
 Scaleform the timeline-compatible display-object container and runtime dimensions
-required by Starfield's linked symbols.
+required by Starfield's linked symbols. The owning HUD movie never performs global
+lookup for supplemental linkage classes: it resolves and constructs them through
+the library loader's `ApplicationDomain`. Global lookup remains limited to the
+hardcoded Bethesda embedded-symbol allowlist.
+
+Runtime failures use the upper diagnostic panel and report the active phase,
+component type and ID, library and symbol keys when applicable, the complete
+exception text, and a nonzero ActionScript error ID. This context applies to
+layout parsing, asset and library loading, component creation and placement,
+vanilla adapters, and initial or live visibility evaluation.
 
 ## Fixtures and staging
 

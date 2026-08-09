@@ -18,11 +18,11 @@ package venworks.cui
          mouseChildren = false;
          graphics.lineStyle(2,16728128,1);
          graphics.beginFill(1572864,0.94);
-         graphics.drawRect(0,0,620,150);
+         graphics.drawRect(0,0,620,230);
          graphics.endFill();
 
          titleField = this.createField(20,14,580,34,22,16728128,true);
-         detailField = this.createField(20,54,580,78,17,16777215,false);
+         detailField = this.createField(20,54,580,158,16,16777215,false);
          detailField.multiline = true;
          detailField.wordWrap = true;
          visible = false;

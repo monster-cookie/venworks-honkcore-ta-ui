@@ -41,6 +41,8 @@ package venworks.cui
       private var conditionContext:CUIConditionContext;
       private var visibilityBindings:Array;
       private var vanillaAdapters:Array;
+      private var diagnosticPhase:String = "";
+      private var diagnosticNode:XML;
 
       public function CUIRuntime(param1:DisplayObjectContainer)
       {
@@ -78,8 +80,6 @@ package venworks.cui
       private function onLoaded(param1:Event) : void
       {
          var config:XML = null;
-         var message:String = null;
-         var separator:int = 0;
          this.clearListeners();
          try
          {
@@ -92,6 +92,7 @@ package venworks.cui
          }
          try
          {
+            this.setDiagnosticContext("LAYOUT PARSING",null);
             parser = new CUILayoutParser();
             parser.parse(config);
             layoutConfig = config;
@@ -102,17 +103,7 @@ package venworks.cui
          }
          catch(param3:Error)
          {
-            this.clearComponentLayer();
-            message = param3.message;
-            separator = message.indexOf("|");
-            if(message.indexOf("UNSUPPORTED|") == 0)
-            {
-               diagnostics.showError("CUI LAYOUT UNSUPPORTED",message.substring(separator + 1));
-            }
-            else
-            {
-               diagnostics.showError("CUI LAYOUT INVALID",separator >= 0 ? message.substring(separator + 1) : message);
-            }
+            this.showRuntimeError(param3);
          }
       }
 
@@ -121,6 +112,7 @@ package venworks.cui
          this.clearAssetListeners();
          try
          {
+            this.setDiagnosticContext("CONDITION INITIALIZATION",null);
             conditionParser = new CUIConditionParser();
             visibilityBindings = [];
             vanillaAdapters = [];
@@ -128,8 +120,11 @@ package venworks.cui
             conditionContext.addEventListener(Event.CHANGE,this.onConditionChanged);
             layoutEngine = new CUILayoutEngine(componentLayer,layoutConfig);
             this.renderChildren(parser.components,componentLayer,parser.components);
+            this.setDiagnosticContext("VANILLA ADAPTER INITIALIZATION",null);
             this.createVanillaAdapters(parser.vanillaVisibility);
+            this.setDiagnosticContext("INITIAL VISIBILITY EVALUATION",null);
             this.applyConditions();
+            this.clearDiagnosticContext();
             diagnostics.clear();
          }
          catch(param2:Error)
@@ -142,7 +137,7 @@ package venworks.cui
       {
          this.clearAssetListeners();
          this.clearComponentLayer();
-         diagnostics.showError("CUI ASSET LOAD ERROR",assetManager.errorMessage);
+         diagnostics.showError("CUI ASSET LOAD ERROR","PHASE: ASSET LOADING\n" + assetManager.errorMessage);
       }
 
       private function clearAssetListeners() : void
@@ -158,15 +153,69 @@ package venworks.cui
       {
          var message:String = param1.message;
          var separator:int = message.indexOf("|");
+         var detail:String = this.formatRuntimeError(param1,separator >= 0 ? message.substring(separator + 1) : message);
          this.clearComponentLayer();
          if(message.indexOf("UNSUPPORTED|") == 0)
          {
-            diagnostics.showError("CUI LAYOUT UNSUPPORTED",message.substring(separator + 1));
+            diagnostics.showError("CUI LAYOUT UNSUPPORTED",detail);
          }
          else
          {
-            diagnostics.showError("CUI LAYOUT INVALID",separator >= 0 ? message.substring(separator + 1) : message);
+            diagnostics.showError("CUI LAYOUT INVALID",detail);
          }
+      }
+
+      private function formatRuntimeError(param1:Error, param2:String) : String
+      {
+         var lines:Array = [];
+         var component:String = null;
+         var exceptionText:String = param1.toString();
+         if(diagnosticPhase.length != 0)
+         {
+            lines.push("PHASE: " + diagnosticPhase);
+         }
+         if(diagnosticNode != null)
+         {
+            component = String(diagnosticNode.name()).toUpperCase();
+            if(diagnosticNode.@id.length() == 1)
+            {
+               component += " #" + String(diagnosticNode.@id);
+            }
+            lines.push("COMPONENT: " + component);
+            if(diagnosticNode.@library.length() == 1)
+            {
+               lines.push("LIBRARY: " + String(diagnosticNode.@library));
+            }
+            if(diagnosticNode.@name.length() == 1)
+            {
+               lines.push("SYMBOL: " + String(diagnosticNode.@name));
+            }
+         }
+         if(param2.length != 0)
+         {
+            lines.push(param2);
+         }
+         if(exceptionText != null && exceptionText.length != 0 && exceptionText != param1.message && exceptionText != "Error: " + param1.message)
+         {
+            lines.push("EXCEPTION: " + exceptionText);
+         }
+         if(param1.errorID != 0)
+         {
+            lines.push("ERROR ID: " + param1.errorID);
+         }
+         return lines.join("\n");
+      }
+
+      private function setDiagnosticContext(param1:String, param2:XML) : void
+      {
+         diagnosticPhase = param1;
+         diagnosticNode = param2;
+      }
+
+      private function clearDiagnosticContext() : void
+      {
+         diagnosticPhase = "";
+         diagnosticNode = null;
       }
 
       private function onMissing(param1:IOErrorEvent) : void
@@ -205,11 +254,15 @@ package venworks.cui
          for each(entry in entries)
          {
             node = entry.xml as XML;
+            this.setDiagnosticContext("COMPONENT CREATION",node);
             component = this.createComponent(node);
+            this.setDiagnosticContext("DISPLAY LIST ATTACHMENT",node);
             param2.addChild(component);
+            this.setDiagnosticContext("LAYOUT POSITIONING",node);
             layoutEngine.position(component,node,param2,param3);
             if(node.@visibleWhen.length() == 1)
             {
+               this.setDiagnosticContext("VISIBILITY CONDITION COMPILATION",node);
                visibilityBindings.push(new CUIVisibilityBinding(
                   component,
                   conditionParser.compile(String(node.@visibleWhen)),
@@ -265,7 +318,8 @@ package venworks.cui
          }
          if(type == "symbol")
          {
-            return new CUISymbol(param1);
+            return new CUISymbol(param1,param1.@library.length() == 1 ?
+               assetManager.createLibrarySymbol(String(param1.@library),String(param1.@name)) : null);
          }
          if(type == "meter")
          {
@@ -296,6 +350,7 @@ package venworks.cui
          var target:XML = null;
          for each(target in param1.children())
          {
+            this.setDiagnosticContext("VANILLA ADAPTER CREATION",target);
             vanillaAdapters.push(new CUIVanillaVisibilityAdapter(
                owner,
                String(target.@id),
@@ -306,7 +361,16 @@ package venworks.cui
 
       private function onConditionChanged(param1:Event) : void
       {
-         this.applyConditions();
+         try
+         {
+            this.setDiagnosticContext("LIVE VISIBILITY EVALUATION",null);
+            this.applyConditions();
+            this.clearDiagnosticContext();
+         }
+         catch(param2:Error)
+         {
+            this.showRuntimeError(param2);
+         }
       }
 
       private function applyConditions() : void

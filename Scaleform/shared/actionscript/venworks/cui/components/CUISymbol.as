@@ -21,10 +21,10 @@ package venworks.cui.components
          }
       };
 
-      public function CUISymbol(param1:XML)
+      public function CUISymbol(param1:XML, param2:DisplayObject = null)
       {
          super(param1,param1.@library.length() == 1 ?
-            createLibrarySymbol(String(param1.@library),String(param1.@name)) :
+            requireLibrarySymbol(param1,param2) :
             createEmbeddedSymbol(String(param1.@name)));
       }
 
@@ -38,39 +38,13 @@ package venworks.cui.components
          return "VenworksCUI_" + param1.replace(/-/g,"_") + "_" + param2.replace(/-/g,"_");
       }
 
-      public static function isLibrarySymbolAvailable(param1:String, param2:String) : Boolean
+      private static function requireLibrarySymbol(param1:XML, param2:DisplayObject) : DisplayObject
       {
-         try
+         if(param2 == null)
          {
-            return getDefinitionByName(libraryLinkageName(param1,param2)) as Class != null;
+            throw new Error("INVALID|Resolved symbol is unavailable: " + String(param1.@library) + "/" + String(param1.@name));
          }
-         catch(param3:Error)
-         {
-            return false;
-         }
-      }
-
-      private static function createLibrarySymbol(param1:String, param2:String) : DisplayObject
-      {
-         var symbolClass:Class = null;
-         var result:DisplayObject = null;
-         try
-         {
-            symbolClass = getDefinitionByName(libraryLinkageName(param1,param2)) as Class;
-            if(symbolClass != null)
-            {
-               result = new symbolClass() as DisplayObject;
-            }
-         }
-         catch(param3:Error)
-         {
-            result = null;
-         }
-         if(result == null)
-         {
-            throw new Error("INVALID|Symbol library does not export requested symbol: " + param1 + "/" + param2);
-         }
-         return result;
+         return param2;
       }
 
       private static function createEmbeddedSymbol(param1:String) : DisplayObject
