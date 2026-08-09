@@ -57,37 +57,25 @@ package venworks.cui
          return failureMessage;
       }
 
-      public function createLibrarySymbol(param1:String, param2:String) : DisplayObject
+      public function createLibrarySymbol(param1:String, param2:String, param3:String) : DisplayObject
       {
          var record:Object = libraries[param1];
-         var linkage:String = CUISymbol.libraryLinkageName(param1,param2);
+         var linkage:String = CUISymbol.libraryLinkageName(param2,param3);
          var domain:ApplicationDomain = null;
-         var symbolClass:Class = null;
-         var result:DisplayObject = null;
-         if(record == null || record.domain == null)
+         var result:Loader = null;
+         if(record == null || record.domain == null || record.library != param2 || record.symbol != param3)
          {
-            throw new Error("INVALID|Symbol library is not loaded: " + param1);
+            throw new Error("INVALID|Symbol library instance is not loaded: " + param2 + "/" + param3);
          }
          domain = record.domain as ApplicationDomain;
          if(domain == null || !domain.hasDefinition(linkage))
          {
-            throw new Error("INVALID|Symbol library does not export requested symbol: " + param1 + "/" + param2);
+            throw new Error("INVALID|Symbol library does not export requested symbol: " + param2 + "/" + param3);
          }
-         try
-         {
-            symbolClass = domain.getDefinition(linkage) as Class;
-            if(symbolClass != null)
-            {
-               result = new symbolClass() as DisplayObject;
-            }
-         }
-         catch(param3:Error)
-         {
-            throw new Error("INVALID|Could not create symbol " + param1 + "/" + param2 + ". " + param3.toString());
-         }
+         result = record.loader as Loader;
          if(result == null)
          {
-            throw new Error("INVALID|Symbol export is not a display object: " + param1 + "/" + param2);
+            throw new Error("INVALID|Symbol library loader is unavailable: " + param2 + "/" + param3);
          }
          return result;
       }
@@ -142,29 +130,23 @@ package venworks.cui
 
       private function loadSymbolLibrary(param1:XML) : void
       {
+         var componentId:String = String(param1.@id);
          var library:String = String(param1.@library);
          var symbolName:String = String(param1.@name);
          var loader:Loader = null;
-         var record:Object = libraries[library];
-         if(record != null)
-         {
-            if(record.symbols.indexOf(symbolName) < 0)
-            {
-               record.symbols.push(symbolName);
-            }
-            return;
-         }
+         var record:Object = libraries[componentId];
          loader = new Loader();
          record = {
-            id:library,
+            id:componentId,
+            library:library,
+            symbol:symbolName,
             src:library + ".swf",
             kind:"library",
             loader:loader,
             info:loader.contentLoaderInfo,
-            domain:new ApplicationDomain(ApplicationDomain.currentDomain),
-            symbols:[symbolName]
+            domain:new ApplicationDomain(ApplicationDomain.currentDomain)
          };
-         libraries[library] = record;
+         libraries[componentId] = record;
          records.push(record);
          ++pending;
          loader.contentLoaderInfo.addEventListener(Event.COMPLETE,this.onLibraryLoaded);
@@ -173,7 +155,7 @@ package venworks.cui
          try
          {
             loader.load(
-               new URLRequest(SYMBOL_LIBRARY_ROOT + record.src),
+               new URLRequest(SYMBOL_LIBRARY_ROOT + record.src + "?symbol=" + symbolName),
                new LoaderContext(false,record.domain as ApplicationDomain)
             );
          }
@@ -210,7 +192,6 @@ package venworks.cui
       private function onLibraryLoaded(param1:Event) : void
       {
          var record:Object = this.findByLoaderInfo(param1.currentTarget as LoaderInfo);
-         var symbolName:String = null;
          if(record == null)
          {
             this.fail("Symbol library loader completed without a matching library.");
@@ -218,13 +199,10 @@ package venworks.cui
          }
          this.clearRecordListeners(record);
          record.domain = LoaderInfo(record.info).applicationDomain;
-         for each(symbolName in record.symbols)
+         if(!this.isLibrarySymbolAvailable(record,record.symbol))
          {
-            if(!this.isLibrarySymbolAvailable(record,symbolName))
-            {
-               this.fail("Symbol library does not export requested symbol: " + record.id + "/" + symbolName);
-               return;
-            }
+            this.fail("Symbol library does not export requested symbol: " + record.library + "/" + record.symbol);
+            return;
          }
          this.completeOne();
       }
@@ -261,7 +239,7 @@ package venworks.cui
       private function isLibrarySymbolAvailable(param1:Object, param2:String) : Boolean
       {
          var domain:ApplicationDomain = param1.domain as ApplicationDomain;
-         return domain != null && domain.hasDefinition(CUISymbol.libraryLinkageName(param1.id,param2));
+         return domain != null && domain.hasDefinition(CUISymbol.libraryLinkageName(param1.library,param2));
       }
 
       private function fail(param1:String) : void

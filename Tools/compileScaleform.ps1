@@ -526,7 +526,7 @@ try {
       'ApplicationDomain.currentDomain',
       'applicationDomain',
       'hasDefinition',
-      'getDefinition',
+      '?symbol=',
       'libraryLinkageName',
       'Symbol library does not export requested symbol',
       'CUI ASSET LOAD ERROR',
@@ -584,8 +584,13 @@ try {
     $reopenedSymbolSource = Get-Content -LiteralPath $reopenedSymbolPath -Raw
     if ($reopenedAssetManagerSource -notmatch 'new\s+ApplicationDomain\s*\(\s*ApplicationDomain\.currentDomain\s*\)' -or
         $reopenedAssetManagerSource -notmatch '\.applicationDomain\b' -or
-        $reopenedAssetManagerSource -notmatch '\.getDefinition\s*\(') {
-      throw 'Generated ActionScript does not resolve supplemental symbols through an isolated loader application domain.'
+        $reopenedAssetManagerSource -notmatch '\.hasDefinition\s*\(' -or
+        $reopenedAssetManagerSource -notmatch '\?symbol=' -or
+        $reopenedAssetManagerSource -notmatch 'record\.loader\s+as\s+Loader') {
+      throw 'Generated ActionScript does not retain supplemental symbols inside isolated loader wrappers.'
+    }
+    if ($reopenedAssetManagerSource -match '\.getDefinition\s*\(') {
+      throw 'Generated CUIAssetManager still extracts supplemental definitions across the application-domain boundary.'
     }
     if ($reopenedSymbolSource -match 'getDefinitionByName\s*\(\s*libraryLinkageName') {
       throw 'Generated CUISymbol still resolves supplemental symbols through the global application domain.'

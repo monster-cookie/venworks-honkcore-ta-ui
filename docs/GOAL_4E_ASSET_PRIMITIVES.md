@@ -71,8 +71,8 @@ allowlist:
 | `quest-door-marker` | `QuestDoorMarker` | `QuestDoorMarker` |
 | `boost-fill` | `HUDMenu_fla.BoostBarFill_mc_139` | `HUDMenu_LRG_fla.BoostBarFill_mc_139` |
 
-With `library`, the runtime loads one fixed-root SWF into an isolated child
-`ApplicationDomain`, deduplicates repeated library requests, and verifies every
+With `library`, the runtime loads the fixed-root SWF into an isolated child
+`ApplicationDomain` for each configured symbol instance and verifies the
 requested export through the completed loader's own domain before rendering:
 
 ```xml
@@ -100,10 +100,12 @@ result against `Scaleform/shared/libraries/validation/expected.sha256`.
 Each exported ActionScript class extends `MovieClip` and places exactly one imported
 shape in an identity-matrix wrapper. This preserves the SVG geometry while giving
 Scaleform the timeline-compatible display-object container and runtime dimensions
-required by Starfield's linked symbols. The owning HUD movie never performs global
-lookup for supplemental linkage classes: it resolves and constructs them through
-the library loader's `ApplicationDomain`. Global lookup remains limited to the
-hardcoded Bethesda embedded-symbol allowlist.
+required by Starfield's linked symbols. A root `VenworksCUI_SymbolLibrary`
+controller reads the allowlisted semantic symbol name from the loader request and
+constructs that linkage class entirely inside the child SWF domain. The owning HUD
+movie checks `ApplicationDomain.hasDefinition`, but never extracts or coerces the
+child instance. It fits and tints only the parent-domain `Loader` wrapper. Global
+lookup remains limited to the hardcoded Bethesda embedded-symbol allowlist.
 
 Runtime failures use the upper diagnostic panel and report the active phase,
 component type and ID, library and symbol keys when applicable, the complete
@@ -113,7 +115,8 @@ vanilla adapters, and initial or live visibility evaluation.
 
 ## Fixtures and staging
 
-- `asset-primitives-gallery.xml` exercises the supplemental library, optional
+- `asset-primitives-gallery.xml` currently isolates the supplemental `disease`
+  symbol as the loader-wrapper compatibility proof while continuing to exercise
   tint, fit/alignment behavior, loose SVG, authored paths, nested masks, and
   embedded vanilla symbols.
 - `layout-invalid-asset-path.xml` attempts SVG traversal.
@@ -131,15 +134,16 @@ under `Interface/VenworksCUI/Assets`, and `venworks-icons.swf` under
 
 Automated validation must prove schema acceptance/rejection, 31 authored CUI
 classes in both generated HUD movies, unchanged unrelated vanilla
-ActionScript, fixed roots and linkage construction in reopened ActionScript,
+ActionScript, fixed roots and loader-wrapper handling in reopened ActionScript,
 the 22 expected SWF shapes with positive dimensions, their 22 one-shape timeline
 wrappers, 22 decompiled `MovieClip` linkage classes, the 22 one-to-one linkage
-exports, and committed output hashes before staging.
+exports, the root loader-parameter controller, and committed output hashes before
+staging.
 
 Required in-game checks are:
 
-1. deploy the positive gallery and confirm the Venworks logo plus tinted
-   library symbols render while the normal HUD remains usable;
+1. deploy the positive gallery and confirm the tinted yellow `disease` symbol
+   renders from the supplemental SWF while the normal HUD remains usable;
 2. confirm loose SVGs, authored paths, masks, and all three embedded symbols;
 3. deploy the missing-library and unknown-export fixtures individually and
    confirm the upper red diagnostic appears with no partial CUI layer; and

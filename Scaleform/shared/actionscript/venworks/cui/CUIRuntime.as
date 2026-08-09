@@ -319,7 +319,7 @@ package venworks.cui
          if(type == "symbol")
          {
             return new CUISymbol(param1,param1.@library.length() == 1 ?
-               assetManager.createLibrarySymbol(String(param1.@library),String(param1.@name)) : null);
+               assetManager.createLibrarySymbol(String(param1.@id),String(param1.@library),String(param1.@name)) : null);
          }
          if(type == "meter")
          {

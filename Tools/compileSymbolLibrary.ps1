@@ -122,7 +122,7 @@ public final class SymbolLibrarySeedGenerator {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 2) {
-            throw new IllegalArgumentException("Expected an output SWF path and at least one linkage name.");
+            throw new IllegalArgumentException("Expected an output SWF path and at least one semantic-name/linkage pair.");
         }
 
         SWF.initPlayer();
@@ -151,13 +151,24 @@ public final class SymbolLibrarySeedGenerator {
         symbols.names = new ArrayList<String>();
 
         int shapeCount = args.length - 1;
+        ArrayList<String> semanticNames = new ArrayList<String>();
+        ArrayList<String> linkageNames = new ArrayList<String>();
         for (int index = 1; index < args.length; index++) {
-            String className = args[index];
+            int separator = args[index].indexOf('|');
+            if (separator <= 0 || separator == args[index].length() - 1) {
+                throw new IllegalArgumentException("Invalid semantic-name/linkage pair: " + args[index]);
+            }
+            semanticNames.add(args[index].substring(0, separator));
+            linkageNames.add(args[index].substring(separator + 1));
+        }
+
+        for (int index = 0; index < linkageNames.size(); index++) {
+            String className = linkageNames.get(index);
             String source = "package { import flash.display.MovieClip; public class " + className
                 + " extends MovieClip { public function " + className + "() { super(); } } }";
             parser.addScript(source, className, 0, 0, swf.getDocumentClass(), abcTag.getABC());
 
-            int shapeId = index;
+            int shapeId = index + 1;
             DefineShape3Tag shape = new DefineShape3Tag(swf);
             shape.shapeId = shapeId;
             shape.shapeBounds = new RECT(0, 2000, 0, 2000);
@@ -165,7 +176,7 @@ public final class SymbolLibrarySeedGenerator {
             shape.setModified(true);
             swf.addTag(shape);
 
-            int spriteId = shapeCount + index;
+            int spriteId = shapeCount + shapeId;
             DefineSpriteTag sprite = new DefineSpriteTag(swf);
             sprite.spriteId = spriteId;
             sprite.frameCount = 1;
@@ -190,6 +201,26 @@ public final class SymbolLibrarySeedGenerator {
             symbols.tags.add(spriteId);
             symbols.names.add(className);
         }
+
+        String controllerName = "VenworksCUI_SymbolLibrary";
+        StringBuilder controllerSource = new StringBuilder();
+        controllerSource.append("package { import flash.display.MovieClip; public dynamic class ")
+            .append(controllerName)
+            .append(" extends MovieClip { public function ")
+            .append(controllerName)
+            .append("() { super(); var requestedValue:Object = loaderInfo.parameters[\"symbol\"]; ")
+            .append("var requested:String = requestedValue == null ? \"\" : String(requestedValue); switch(requested) {");
+        for (int index = 0; index < semanticNames.size(); index++) {
+            controllerSource.append("case \"")
+                .append(semanticNames.get(index))
+                .append("\": addChild(new ")
+                .append(linkageNames.get(index))
+                .append("()); break;");
+        }
+        controllerSource.append("default: break; } } } }");
+        parser.addScript(controllerSource.toString(), controllerName, 0, 0, swf.getDocumentClass(), abcTag.getABC());
+        symbols.tags.add(0);
+        symbols.names.add(controllerName);
 
         abcTag.setModified(true);
         swf.addTag(symbols);
@@ -218,21 +249,23 @@ $classPath = $classPathItems -join ";"
 Invoke-Checked -FilePath $javac -Arguments @("-encoding","UTF-8","-cp",$classPath,"-d",$classesDirectory,$generatorPath) -Description "Symbol seed generator compilation"
 
 $linkageNames = @()
+$symbolDefinitions = @()
 $shapeId = 1
 foreach ($entry in $resolvedSources.GetEnumerator()) {
   $linkage = "VenworksCUI_venworks_icons_" + ([string]$entry.Key).Replace("-","_")
   $linkageNames += $linkage
+  $symbolDefinitions += ("{0}|{1}" -f [string]$entry.Key, $linkage)
   Copy-Item -LiteralPath ([string]$entry.Value) -Destination (Join-Path $shapeDirectory ("{0}.svg" -f $shapeId)) -Force
   ++$shapeId
 }
 
 $runtimeClassPath = $classPath + ";" + $classesDirectory
-Invoke-Checked -FilePath $java -Arguments (@("-cp",$runtimeClassPath,"SymbolLibrarySeedGenerator",$seedSwf) + $linkageNames) -Description "Symbol seed generation"
+Invoke-Checked -FilePath $java -Arguments (@("-cp",$runtimeClassPath,"SymbolLibrarySeedGenerator",$seedSwf) + $symbolDefinitions) -Description "Symbol seed generation"
 Invoke-Checked -FilePath $java -Arguments @("-jar",$jpexsJar,"-importShapes",$seedSwf,$compiledSwf,$shapeDirectory) -Description "SVG shape import"
 Invoke-Checked -FilePath $java -Arguments @("-jar",$jpexsJar,"-swf2xml",$compiledSwf,$xmlPath) -Description "Symbol library inspection export"
 Invoke-Checked -FilePath $java -Arguments @("-jar",$jpexsJar,"-format","script:as","-export","script",$scriptsDirectory,$compiledSwf) -Description "Symbol library ActionScript export"
 
-$exportedClasses = @(Get-ChildItem -LiteralPath $scriptsDirectory -Recurse -File -Filter "VenworksCUI_*.as")
+$exportedClasses = @(Get-ChildItem -LiteralPath $scriptsDirectory -Recurse -File -Filter "VenworksCUI_venworks_icons_*.as")
 if ($exportedClasses.Count -ne $symbols.Count) {
   throw "Expected $($symbols.Count) exported linkage classes, found $($exportedClasses.Count)."
 }
@@ -245,6 +278,22 @@ foreach ($linkage in $linkageNames) {
   $classPattern = "public\s+(?:dynamic\s+)?class\s+" + [regex]::Escape($linkage) + "\s+extends\s+MovieClip\b"
   if ($classSource -notmatch $classPattern) {
     throw "Exported linkage class $linkage does not extend MovieClip."
+  }
+}
+
+$controllerFiles = @(Get-ChildItem -LiteralPath $scriptsDirectory -Recurse -File -Filter "VenworksCUI_SymbolLibrary.as")
+if ($controllerFiles.Count -ne 1) {
+  throw "Expected one exported VenworksCUI_SymbolLibrary controller class, found $($controllerFiles.Count)."
+}
+$controllerSource = Get-Content -LiteralPath $controllerFiles[0].FullName -Raw
+if ($controllerSource -notmatch 'class\s+VenworksCUI_SymbolLibrary\s+extends\s+MovieClip\b' -or
+    $controllerSource -notmatch 'loaderInfo\.parameters\["symbol"\]' -or
+    $controllerSource -notmatch 'addChild\s*\(') {
+  throw "Exported VenworksCUI_SymbolLibrary does not contain the required loader-parameter controller."
+}
+foreach ($entry in $resolvedSources.GetEnumerator()) {
+  if ($controllerSource -notmatch ('case\s+"' + [regex]::Escape([string]$entry.Key) + '"')) {
+    throw "Symbol-library controller is missing semantic symbol '$($entry.Key)'."
   }
 }
 
@@ -271,6 +320,11 @@ foreach ($symbolClassTag in $scaleform.SelectNodes('/swf/tags/item[@type="Symbol
   for ($index = 0; $index -lt $symbolClassTag.names.item.Count; ++$index) {
     $symbolTargets[[string]$symbolClassTag.names.item[$index]] = [int]$symbolClassTag.tags.item[$index]
   }
+}
+
+if (!$symbolTargets.ContainsKey('VenworksCUI_SymbolLibrary') -or
+    [int]$symbolTargets['VenworksCUI_SymbolLibrary'] -ne 0) {
+  throw "Compiled symbol library does not map VenworksCUI_SymbolLibrary to the root timeline."
 }
 
 for ($index = 0; $index -lt $linkageNames.Count; ++$index) {
