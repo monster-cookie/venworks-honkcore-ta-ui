@@ -74,8 +74,8 @@ existing error panel.
   anchors, nested group anchors, safe-area offsets, and one absolute control.
 - `Scaleform/shared/fixtures/layout-invalid-anchor.xml` must be rejected by the
   schema and runtime parser.
-- `Staging-CUI/Interface/VenworksCUI/layout.xml` contains the anchor gallery for
-  the Goal 4A in-game acceptance test.
+- `Staging-VWKS/Interface/VenworksCUI/layout.xml` is the active staged layout;
+  the anchor gallery remains available as a fixture for regression testing.
 
 ## Automated evidence
 

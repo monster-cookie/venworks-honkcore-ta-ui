@@ -28,10 +28,13 @@ From the repository root:
   -VanillaInterfacePath "C:\path\to\extracted\interface"
 ```
 
-By default, validated outputs are copied to `Staging-CUI/Interface`. Use
-`-OutputDirectory` to select a different destination. The script refuses to
-build from unrecognized vanilla inputs or publish outputs whose hashes differ
-from the validation records.
+By default, validated GFX files and the supplemental symbol library are copied
+to the `Interface` directories under `Staging-VWKS`, `Staging-CF`,
+`Staging-FC`, and `Staging-TA`. The first `-OutputDirectory` destination
+receives the active `layout.xml` and loose SVG assets; the default first
+destination is `Staging-VWKS/Interface`. The script refuses to build from
+unrecognized vanilla inputs or publish outputs whose hashes differ from the
+validation records.
 
 Build the curated supplemental symbol library when its approved source subset
 changes:

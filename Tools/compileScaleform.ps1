@@ -9,7 +9,12 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$VanillaInterfacePath,
 
-  [string]$OutputDirectory = (Join-Path $PSScriptRoot "..\Staging-CUI\Interface"),
+  [string[]]$OutputDirectory = @(
+    (Join-Path $PSScriptRoot "..\Staging-VWKS\Interface"),
+    (Join-Path $PSScriptRoot "..\Staging-CF\Interface"),
+    (Join-Path $PSScriptRoot "..\Staging-FC\Interface"),
+    (Join-Path $PSScriptRoot "..\Staging-TA\Interface")
+  ),
 
   [string]$WorkDirectory = (Join-Path $PSScriptRoot "..\Scaleform\.work"),
 
@@ -169,7 +174,13 @@ function Apply-ActionScriptPatch {
 $script:ResolvedJavaPath = Resolve-RequiredFile -Path $JavaPath -Description "Java executable"
 $script:ResolvedJpexsJarPath = Resolve-RequiredFile -Path $JpexsJarPath -Description "JPEXS JAR"
 $resolvedVanillaInterfacePath = (Resolve-Path -LiteralPath $VanillaInterfacePath).Path
-$resolvedOutputDirectory = [System.IO.Path]::GetFullPath($OutputDirectory)
+$resolvedOutputDirectories = @($OutputDirectory | ForEach-Object {
+  [System.IO.Path]::GetFullPath($_)
+} | Select-Object -Unique)
+if ($resolvedOutputDirectories.Count -eq 0) {
+  throw "At least one output directory is required."
+}
+$resolvedProjectOutputDirectory = $resolvedOutputDirectories[0]
 $resolvedWorkDirectory = [System.IO.Path]::GetFullPath($WorkDirectory)
 $decompileScript = Resolve-RequiredFile -Path (Join-Path $PSScriptRoot "decompileScaleform.ps1") -Description "Scaleform decompile helper"
 $galleryLayoutSource = Resolve-RequiredFile `
@@ -240,7 +251,9 @@ if (!(Test-Path -LiteralPath $resolvedVanillaInterfacePath -PathType Container))
   throw "Vanilla interface directory does not exist: $VanillaInterfacePath"
 }
 
-New-Item -ItemType Directory -Force -Path $resolvedOutputDirectory | Out-Null
+foreach ($outputPath in $resolvedOutputDirectories) {
+  New-Item -ItemType Directory -Force -Path $outputPath | Out-Null
+}
 New-Item -ItemType Directory -Force -Path $resolvedWorkDirectory | Out-Null
 
 $buildWorkDirectory = Join-Path $resolvedWorkDirectory ([guid]::NewGuid().ToString("N"))
@@ -572,23 +585,28 @@ try {
       throw "Generated hash mismatch for $($build.outputFile). Expected $expectedOutputHash; found $actualOutputHash."
     }
 
-    $destinationPath = Join-Path $resolvedOutputDirectory ([string]$build.outputFile)
-    Copy-Item -LiteralPath $generatedGfxPath -Destination $destinationPath -Force
-    Write-Host -ForegroundColor Green "Built and validated $destinationPath ($actualOutputHash)"
+    foreach ($outputPath in $resolvedOutputDirectories) {
+      $destinationPath = Join-Path $outputPath ([string]$build.outputFile)
+      Copy-Item -LiteralPath $generatedGfxPath -Destination $destinationPath -Force
+      Write-Host -ForegroundColor Green "Built and validated $destinationPath ($actualOutputHash)"
+    }
   }
 
-  $cuiOutputDirectory = Join-Path $resolvedOutputDirectory "VenworksCUI"
+  foreach ($outputPath in $resolvedOutputDirectories) {
+    $libraryOutputDirectory = Join-Path $outputPath "VenworksCUI\Libraries"
+    New-Item -ItemType Directory -Force -Path $libraryOutputDirectory | Out-Null
+    Copy-Item -LiteralPath $symbolLibrarySource -Destination (Join-Path $libraryOutputDirectory "venworks-icons.swf") -Force
+    Write-Host -ForegroundColor Green "Staged supplemental symbol library in $libraryOutputDirectory"
+  }
+
+  $cuiOutputDirectory = Join-Path $resolvedProjectOutputDirectory "VenworksCUI"
   $assetOutputDirectory = Join-Path $cuiOutputDirectory "Assets"
-  $libraryOutputDirectory = Join-Path $cuiOutputDirectory "Libraries"
   New-Item -ItemType Directory -Force -Path $assetOutputDirectory | Out-Null
-  New-Item -ItemType Directory -Force -Path $libraryOutputDirectory | Out-Null
   Copy-Item -LiteralPath $galleryLayoutSource -Destination (Join-Path $cuiOutputDirectory "layout.xml") -Force
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
   Copy-Item -LiteralPath $invalidSvgSource -Destination (Join-Path $assetOutputDirectory "gallery-invalid.svg") -Force
-  Copy-Item -LiteralPath $symbolLibrarySource -Destination (Join-Path $libraryOutputDirectory "venworks-icons.swf") -Force
   Write-Host -ForegroundColor Green "Staged Goal 4E interface assets in $cuiOutputDirectory"
-  Write-Host -ForegroundColor Green "Staged supplemental symbol library in $libraryOutputDirectory"
 }
 finally {
   if ($KeepWork) {
