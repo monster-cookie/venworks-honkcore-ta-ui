@@ -209,7 +209,15 @@
   <xs:complexType name="symbolType">
     <xs:attributeGroup ref="componentAttributes" />
     <xs:attribute name="name" type="symbolKeyType" use="required" />
-    <xs:attribute name="library" type="symbolKeyType" />
+    <xs:attribute name="color" type="colorType" />
+    <xs:attribute name="fit" type="assetFitType" default="contain" />
+    <xs:attribute name="alignX" type="horizontalAlignmentType" default="center" />
+    <xs:attribute name="alignY" type="verticalAlignmentType" default="center" />
+  </xs:complexType>
+
+  <xs:complexType name="iconType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="name" type="symbolKeyType" use="required" />
     <xs:attribute name="color" type="colorType" />
     <xs:attribute name="fit" type="assetFitType" default="contain" />
     <xs:attribute name="alignX" type="horizontalAlignmentType" default="center" />
@@ -290,6 +298,7 @@
       <xs:element name="svg" type="assetType" />
       <xs:element name="path" type="pathType" />
       <xs:element name="mask" type="maskType" />
+      <xs:element name="icon" type="iconType" />
       <xs:element name="symbol" type="symbolType" />
       <xs:element name="instance" type="instanceType" />
       <xs:element name="repeater" type="repeaterType" />
@@ -324,6 +333,7 @@
       <xs:element name="svg" type="assetType" />
       <xs:element name="path" type="pathType" />
       <xs:element name="mask" type="templateMaskType" />
+      <xs:element name="icon" type="iconType" />
       <xs:element name="symbol" type="symbolType" />
     </xs:choice>
   </xs:group>

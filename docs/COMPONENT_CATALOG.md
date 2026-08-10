@@ -87,16 +87,18 @@ vanilla owner and provider contract.
 
 | Component | Status | Required behavior |
 |---|---|---|
-| Built-in symbol/icon | Implemented; acceptance pending | Reference a semantic name from a movie-aware hardcoded allowlist of symbols embedded in the owning vanilla movie; initial mappings are `environment-alert`, `quest-door-marker`, and `boost-fill`. |
-| Supplemental symbol library | Implemented; acceptance pending | Reference a lowercase semantic name from a fixed-root, precompiled SWF subset; runtime configuration cannot supply an ActionScript class name. |
+| Bethesda embedded symbol | Implemented; acceptance pending | Reference a semantic name from a movie-aware hardcoded allowlist of symbols embedded in the owning vanilla movie; initial mappings are `environment-alert`, `quest-door-marker`, and `boost-fill`. |
+| Built-in icon | Implemented; acceptance pending | Reference one of 21 generated semantic icons compiled directly into each HUD movie; supports tint, fit, and alignment without a runtime asset handle. |
+| Supplemental symbol library | Retired | Starfield raised Error #1034 across the child-domain SWF compatibility attempts; external SWF libraries are no longer loaded. |
 | SVG path | Implemented; acceptance pending | Render a bounded authored path with fill, stroke, transform, and view box; arc commands are rejected. |
 | SVG asset | Implemented; in-game loading confirmed | Load and validate a restricted local SVG through the fixed `Interface/VenworksCUI/Assets` root; no network URLs, scripts, text, or external references. |
-| Direct raster/DDS image | Unsupported | PNG, JPEG, and DDS probes were found at their loose paths but rejected by Starfield Scaleform; use loose SVG or a precompiled symbol library. |
-| Curated Font Awesome icon | Implemented; acceptance pending | Distribute only approved compiled exports in `venworks-icons.swf`; Font Awesome source SVGs remain developer inputs and are not committed. |
+| Direct raster/DDS image | Unsupported | PNG, JPEG, and DDS probes were found at their loose paths but rejected by Starfield Scaleform; use loose SVG or a built-in icon. |
+| Curated Font Awesome icon | Implemented; acceptance pending | Generate only the approved 21-icon subset into committed ActionScript; Font Awesome source SVGs remain developer inputs and are not committed. |
 
-The symbol-library compiler receives the local Font Awesome Pro root through an
-explicit parameter. Its machine-specific path is never recorded. The shipped
-library contains only the approved icon subset; source SVGs are not committed.
+The icon generator receives the local Font Awesome Pro root through an explicit
+parameter. Its machine-specific path is never recorded. It converts source arcs
+to cubic paths and writes a deterministic same-domain library containing only
+the approved icon subset; source SVGs are not committed.
 
 ## Composite components
 
@@ -182,10 +184,10 @@ rectangles, dots/circles, alternating triangles, four linear fill directions,
 optional partial segments, and bounded continuous radial arcs. These renderers
 remain independent of live Starfield providers.
 
-Goal 4E adds atomic restricted SVG and supplemental SWF-library loading,
+Goal 4E adds atomic restricted SVG loading, generated same-domain icons,
 authored SVG paths, nested rectangle/ellipse/path masks, and movie-aware
-semantic symbols. Loose SVGs are confined to `Interface/VenworksCUI/Assets`;
-compiled libraries are confined to `Interface/VenworksCUI/Libraries` and
-export only constructed namespaced classes. Direct DDS/raster loading is
-retired after failed in-game probes. Unsupported or missing content fails the
-entire CUI layer with an actionable diagnostic.
+Bethesda semantic symbols. Loose SVGs are confined to
+`Interface/VenworksCUI/Assets`; the 21 built-in icons are compiled into both HUD
+movies and create no runtime file handles. Supplemental SWF and direct
+DDS/raster loading are retired after failed in-game probes. Unsupported or
+missing content fails the entire CUI layer with an actionable diagnostic.

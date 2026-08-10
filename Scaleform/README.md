@@ -28,31 +28,30 @@ From the repository root:
   -VanillaInterfacePath "C:\path\to\extracted\interface"
 ```
 
-By default, validated GFX files and the supplemental symbol library are copied
-to the `Interface` directories under `Staging-VWKS`, `Staging-CF`,
-`Staging-FC`, and `Staging-TA`. The first `-OutputDirectory` destination
-receives the active `layout.xml` and loose SVG assets; the default first
-destination is `Staging-VWKS/Interface`. The script refuses to build from
-unrecognized vanilla inputs or publish outputs whose hashes differ from the
-validation records.
+By default, validated GFX files are copied to the `Interface` directories under
+`Staging-VWKS`, `Staging-CF`, `Staging-FC`, and `Staging-TA`. The first
+`-OutputDirectory` destination receives the active `layout.xml` and loose SVG
+assets; the default first destination is `Staging-VWKS/Interface`. The script
+refuses to build from unrecognized vanilla inputs or publish outputs whose
+hashes differ from the validation records.
 
-Build the curated supplemental symbol library when its approved source subset
-changes:
+Regenerate the curated built-in icon definitions when their approved Font
+Awesome source subset changes:
 
 ```powershell
-./Tools/compileSymbolLibrary.ps1 `
-  -JavaPath "C:\path\to\java.exe" `
-  -JpexsJarPath "C:\path\to\ffdec.jar" `
+./Tools/generateIconLibrary.ps1 `
   -FontAwesomeRoot "C:\path\to\FontAwesome"
 ```
 
-Font Awesome source SVGs are not repository content. The compiler imports only
-the approved subset and the Venworks-owned logo, then validates the committed
-`Scaleform/shared/libraries/venworks-icons.swf` hash.
+Font Awesome source SVGs are not repository content. The generator imports only
+the approved 21-icon subset, converts SVG arcs to bounded cubic paths, and
+writes deterministic same-domain ActionScript. Normal Scaleform builds use the
+committed generated class and do not require Font Awesome. The Venworks logo is
+not part of this library; it remains a Venworks-owned loose SVG.
 
 The build injects the Venworks-only ABC seed, exports Bethesda ActionScript only
 into ignored temporary storage, verifies the authored `HUDMenu` patch anchors,
-and imports the patched document class plus the 31 repository-authored CUI
+and imports the patched document class plus the 33 repository-authored CUI
 classes. It confirms that every other exported class remains textually
 identical and that the reopened output contains the required layout and
 diagnostic contracts. Full exported Bethesda classes are never repository
@@ -78,8 +77,8 @@ visibility gallery hides only the allowlisted top-center group for an isolated
 adapter test. The Goal 4D meter gallery uses two compact top panels to exercise
 continuous, rectangle, dot, uniform-triangle, alternating-triangle, vertical,
 reverse, and radial renderers without live HUD data. The Goal 4E asset gallery
-is the staged `layout.xml`; it exercises a fixed-root supplemental symbol
-library, packaged SVG, authored paths, masks, and movie-aware allowlisted
+is the staged `layout.xml`; it exercises all 21 built-in icons, packaged SVG,
+the Venworks logo SVG, authored paths, masks, and movie-aware allowlisted
 embedded symbols. Malformed fixtures are
 intentionally not well-formed XML, while other negative fixtures may be
 schema-valid and rejected by runtime semantic checks. See
@@ -118,13 +117,14 @@ segment, and triangle styles may select `uniform` or `alternating` orientation.
 Radial styles use a bounded start angle, sweep angle, direction, and stroke
 thickness. See `../docs/GOAL_4D_METER_RENDERERS.md` for the exact XML contract.
 
-Goal 4E adds `svg`, `path`, `mask`, and `symbol` primitives. Loose SVG files
-resolve below `Interface/VenworksCUI/Assets`; compiled symbol libraries resolve
-below `Interface/VenworksCUI/Libraries`. Both preload atomically before the CUI
-layer renders. Placement supports `contain`, `cover`, `stretch`, or `none` plus
-bounded alignment. The SVG parser accepts only a small static vector subset,
-authored paths reject arc commands, masks use rectangle/ellipse/path geometry,
-and symbols resolve through either a movie-aware vanilla allowlist or a
-constructed namespaced export in a fixed-root library. Direct raster and DDS
-loading is unsupported after failed in-game probes. See
+Goal 4E adds `svg`, `path`, `mask`, `icon`, and `symbol` primitives. Loose SVG
+files resolve below `Interface/VenworksCUI/Assets` and preload atomically before
+the CUI layer renders. Built-in icons are generated into each HUD movie and
+require no runtime file handles. Placement supports `contain`, `cover`,
+`stretch`, or `none` plus bounded alignment. The SVG parser accepts only a small
+static vector subset, authored paths reject arc commands, masks use
+rectangle/ellipse/path geometry, and symbols resolve only through a movie-aware
+Bethesda allowlist. Font Awesome arcs are converted to cubic paths by the
+developer generator. Direct raster, DDS, and supplemental SWF loading are
+unsupported after failed in-game probes. See
 `../docs/GOAL_4E_ASSET_PRIMITIVES.md` for the full contract and test fixtures.

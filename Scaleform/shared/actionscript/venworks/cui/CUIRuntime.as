@@ -12,6 +12,7 @@ package venworks.cui
    import venworks.cui.components.CUIDotBar;
    import venworks.cui.components.CUIDivider;
    import venworks.cui.components.CUIGroup;
+   import venworks.cui.components.CUIIcon;
    import venworks.cui.components.CUIImage;
    import venworks.cui.components.CUIMask;
    import venworks.cui.components.CUIMeter;
@@ -316,10 +317,13 @@ package venworks.cui
          {
             return new CUIMask(param1);
          }
+         if(type == "icon")
+         {
+            return new CUIIcon(param1);
+         }
          if(type == "symbol")
          {
-            return new CUISymbol(param1,param1.@library.length() == 1 ?
-               assetManager.createLibrarySymbol(String(param1.@id),String(param1.@library),String(param1.@name)) : null);
+            return new CUISymbol(param1);
          }
          if(type == "meter")
          {

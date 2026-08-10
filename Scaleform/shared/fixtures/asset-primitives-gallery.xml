@@ -12,20 +12,59 @@
              rotation="0" scaleX="1" scaleY="1" z="0" fillColor="#071923" fillOpacity="0.92"
              strokeColor="#35E6E6" strokeOpacity="0.9" strokeWidth="2" />
       <text id="asset.gallery.left.title" x="22" y="14" width="656" height="34" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="1" value="CUI SYMBOL LIBRARY — LOADER WRAPPER PROOF"
+            rotation="0" scaleX="1" scaleY="1" z="1" value="CUI BUILT-IN ICONS — 21 SAME-DOMAIN VECTORS"
             font="$MAIN_Font_Bold" fontSize="19" color="#F7FCFF" bold="true" align="left" />
       <divider id="asset.gallery.left.divider" x="22" y="54" width="656" height="0" opacity="1" visible="true"
                rotation="0" scaleX="1" scaleY="1" z="1" color="#35E6E6" strokeOpacity="0.8" strokeWidth="2" />
 
-      <panel id="asset.fit.none.frame" x="200" y="142" width="300" height="180" opacity="1" visible="true"
-             rotation="0" scaleX="1" scaleY="1" z="1" fillColor="#183B48" fillOpacity="0.55"
-             strokeColor="#FFD800" strokeOpacity="0.8" strokeWidth="1" />
-      <symbol id="asset.fit.none" x="210" y="152" width="280" height="160" opacity="1" visible="true"
-              rotation="0" scaleX="1" scaleY="1" z="2" library="venworks-icons" name="disease" color="#FFD800"
-              fit="contain" alignX="center" alignY="center" />
-      <text id="asset.fit.none.label" x="200" y="102" width="300" height="26" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="2" value="DISEASE — CHILD SWF / PARENT LOADER"
-            font="$MAIN_Font_Bold" fontSize="14" color="#FFD800" bold="false" align="center" />
+      <icon id="icon.health" x="28" y="82" width="54" height="54" z="2" name="health" color="#35E6E6" fit="contain" alignX="center" alignY="center" />
+      <text id="icon.health.label" x="12" y="142" width="86" height="20" z="2" value="HEALTH" font="$MAIN_Font_Bold" fontSize="10" color="#F7FCFF" bold="false" align="center" />
+      <icon id="icon.oxygen" x="122" y="82" width="54" height="54" z="2" name="oxygen" color="#35E6E6" fit="contain" alignX="center" alignY="center" />
+      <text id="icon.oxygen.label" x="106" y="142" width="86" height="20" z="2" value="OXYGEN" font="$MAIN_Font_Bold" fontSize="10" color="#F7FCFF" bold="false" align="center" />
+      <icon id="icon.co2" x="216" y="82" width="54" height="54" z="2" name="co2" color="#35E6E6" fit="contain" alignX="center" alignY="center" />
+      <text id="icon.co2.label" x="200" y="142" width="86" height="20" z="2" value="CO2" font="$MAIN_Font_Bold" fontSize="10" color="#F7FCFF" bold="false" align="center" />
+      <icon id="icon.shield" x="310" y="82" width="54" height="54" z="2" name="shield" color="#35E6E6" fit="contain" alignX="center" alignY="center" />
+      <text id="icon.shield.label" x="294" y="142" width="86" height="20" z="2" value="SHIELD" font="$MAIN_Font_Bold" fontSize="10" color="#F7FCFF" bold="false" align="center" />
+      <icon id="icon.armor" x="404" y="82" width="54" height="54" z="2" name="armor" color="#35E6E6" fit="contain" alignX="center" alignY="center" />
+      <text id="icon.armor.label" x="388" y="142" width="86" height="20" z="2" value="ARMOR" font="$MAIN_Font_Bold" fontSize="10" color="#F7FCFF" bold="false" align="center" />
+      <icon id="icon.weapon" x="498" y="82" width="54" height="54" z="2" name="weapon" color="#35E6E6" fit="contain" alignX="center" alignY="center" />
+      <text id="icon.weapon.label" x="482" y="142" width="86" height="20" z="2" value="WEAPON" font="$MAIN_Font_Bold" fontSize="10" color="#F7FCFF" bold="false" align="center" />
+      <icon id="icon.aiming" x="592" y="82" width="54" height="54" z="2" name="aiming" color="#35E6E6" fit="contain" alignX="center" alignY="center" />
+      <text id="icon.aiming.label" x="576" y="142" width="86" height="20" z="2" value="AIMING" font="$MAIN_Font_Bold" fontSize="10" color="#F7FCFF" bold="false" align="center" />
+
+      <icon id="icon.ship" x="28" y="196" width="54" height="54" z="2" name="ship" color="#F7FCFF" fit="contain" alignX="center" alignY="center" />
+      <text id="icon.ship.label" x="12" y="256" width="86" height="20" z="2" value="SHIP" font="$MAIN_Font_Bold" fontSize="10" color="#F7FCFF" bold="false" align="center" />
+      <icon id="icon.vehicle" x="122" y="196" width="54" height="54" z="2" name="vehicle" color="#F7FCFF" fit="contain" alignX="center" alignY="center" />
+      <text id="icon.vehicle.label" x="106" y="256" width="86" height="20" z="2" value="VEHICLE" font="$MAIN_Font_Bold" fontSize="10" color="#F7FCFF" bold="false" align="center" />
+      <icon id="icon.fuel" x="216" y="196" width="54" height="54" z="2" name="fuel" color="#F7FCFF" fit="contain" alignX="center" alignY="center" />
+      <text id="icon.fuel.label" x="200" y="256" width="86" height="20" z="2" value="FUEL" font="$MAIN_Font_Bold" fontSize="10" color="#F7FCFF" bold="false" align="center" />
+      <icon id="icon.cargo" x="310" y="196" width="54" height="54" z="2" name="cargo" color="#F7FCFF" fit="contain" alignX="center" alignY="center" />
+      <text id="icon.cargo.label" x="294" y="256" width="86" height="20" z="2" value="CARGO" font="$MAIN_Font_Bold" fontSize="10" color="#F7FCFF" bold="false" align="center" />
+      <icon id="icon.scanner" x="404" y="196" width="54" height="54" z="2" name="scanner" color="#F7FCFF" fit="contain" alignX="center" alignY="center" />
+      <text id="icon.scanner.label" x="388" y="256" width="86" height="20" z="2" value="SCANNER" font="$MAIN_Font_Bold" fontSize="10" color="#F7FCFF" bold="false" align="center" />
+      <icon id="icon.stealth" x="498" y="196" width="54" height="54" z="2" name="stealth" color="#F7FCFF" fit="contain" alignX="center" alignY="center" />
+      <text id="icon.stealth.label" x="482" y="256" width="86" height="20" z="2" value="STEALTH" font="$MAIN_Font_Bold" fontSize="10" color="#F7FCFF" bold="false" align="center" />
+      <icon id="icon.objective" x="592" y="196" width="54" height="54" z="2" name="objective" color="#F7FCFF" fit="contain" alignX="center" alignY="center" />
+      <text id="icon.objective.label" x="576" y="256" width="86" height="20" z="2" value="OBJECTIVE" font="$MAIN_Font_Bold" fontSize="10" color="#F7FCFF" bold="false" align="center" />
+
+      <icon id="icon.warning" x="28" y="310" width="54" height="54" z="2" name="warning" color="#FFD800" fit="contain" alignX="center" alignY="center" />
+      <text id="icon.warning.label" x="12" y="370" width="86" height="20" z="2" value="WARNING" font="$MAIN_Font_Bold" fontSize="10" color="#FFD800" bold="false" align="center" />
+      <icon id="icon.jolly-roger" x="122" y="310" width="54" height="54" z="2" name="jolly-roger" color="#F39CDE" fit="contain" alignX="center" alignY="center" />
+      <text id="icon.jolly-roger.label" x="106" y="370" width="86" height="20" z="2" value="JOLLY ROGER" font="$MAIN_Font_Bold" fontSize="9" color="#F39CDE" bold="false" align="center" />
+      <icon id="icon.death" x="216" y="310" width="54" height="54" z="2" name="death" color="#F39CDE" fit="contain" alignX="center" alignY="center" />
+      <text id="icon.death.label" x="200" y="370" width="86" height="20" z="2" value="DEATH" font="$MAIN_Font_Bold" fontSize="10" color="#F39CDE" bold="false" align="center" />
+      <icon id="icon.poison" x="310" y="310" width="54" height="54" z="2" name="poison" color="#8BE04E" fit="contain" alignX="center" alignY="center" />
+      <text id="icon.poison.label" x="294" y="370" width="86" height="20" z="2" value="POISON" font="$MAIN_Font_Bold" fontSize="10" color="#8BE04E" bold="false" align="center" />
+      <icon id="icon.burning" x="404" y="310" width="54" height="54" z="2" name="burning" color="#FF7B21" fit="contain" alignX="center" alignY="center" />
+      <text id="icon.burning.label" x="388" y="370" width="86" height="20" z="2" value="BURNING" font="$MAIN_Font_Bold" fontSize="10" color="#FF7B21" bold="false" align="center" />
+      <icon id="icon.electrocution" x="498" y="310" width="54" height="54" z="2" name="electrocution" color="#35E6E6" fit="contain" alignX="center" alignY="center" />
+      <text id="icon.electrocution.label" x="482" y="370" width="86" height="20" z="2" value="ELECTRIC" font="$MAIN_Font_Bold" fontSize="10" color="#35E6E6" bold="false" align="center" />
+      <icon id="icon.disease" x="592" y="310" width="54" height="54" z="2" name="disease" color="#FFD800" fit="contain" alignX="center" alignY="center" />
+      <text id="icon.disease.label" x="576" y="370" width="86" height="20" z="2" value="DISEASE" font="$MAIN_Font_Bold" fontSize="10" color="#FFD800" bold="false" align="center" />
+
+      <text id="asset.gallery.left.note" x="22" y="430" width="656" height="28" z="2"
+            value="NO RUNTIME ASSET LOADS — GENERATED INTO HUDMENU.GFX"
+            font="$MAIN_Font_Bold" fontSize="13" color="#35E6E6" bold="false" align="center" />
     </group>
 
     <group id="asset.gallery.right" x="0" y="12" width="700" height="640" opacity="1" visible="true"

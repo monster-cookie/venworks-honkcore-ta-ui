@@ -405,16 +405,27 @@ package venworks.cui
             }
             this.validateChildren(param1);
          }
-         else if(type == "symbol")
+         else if(type == "icon")
          {
-            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","name","library","color","fit","alignX","alignY"]);
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","name","color","fit","alignX","alignY"]);
             this.requirePositiveBounds(param1);
             this.requireSymbolKey(param1,"name");
-            if(param1.@library.length() == 1)
+            if(!CUIIconLibrary.isAllowlisted(String(param1.@name)))
             {
-               this.requireSymbolKey(param1,"library");
+               throw new Error("INVALID|Built-in icon is not allowlisted: " + String(param1.@name));
             }
-            else if(!venworks.cui.components.CUISymbol.isAllowlisted(String(param1.@name)))
+            if(param1.@color.length() == 1)
+            {
+               this.requireColor(param1,"color");
+            }
+            this.requireAssetFit(param1);
+         }
+         else if(type == "symbol")
+         {
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","name","color","fit","alignX","alignY"]);
+            this.requirePositiveBounds(param1);
+            this.requireSymbolKey(param1,"name");
+            if(!venworks.cui.components.CUISymbol.isAllowlisted(String(param1.@name)))
             {
                throw new Error("INVALID|Embedded symbol is not allowlisted: " + String(param1.@name));
             }

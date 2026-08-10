@@ -166,15 +166,21 @@ Goal 4 is divided into bounded review gates:
   segments, and bounded continuous radial renderers. The implementation and
   positive/negative in-game gallery checks are accepted.
 - **Goal 4E — assets and vector primitives:** local SVG, authored SVG paths,
-  masks, permitted embedded symbols, and a fixed-root supplemental SWF symbol
-  library. Direct DDS/raster loading was retired after failed probes. The
-  implementation is complete and awaits in-game acceptance.
-- **Goal 4F — composite foundations:** reusable button, quick-bar, information
+  masks, and permitted embedded Bethesda symbols. Direct DDS/raster and
+  supplemental SWF loading were retired after failed probes. The implementation
+  and its positive/negative in-game gallery checks are accepted.
+- **Goal 4F — built-in icon library:** 21 allowlisted icons generated from the
+  approved Font Awesome Pro subset and embedded in the HUD movies as same-domain
+  ActionScript drawing data. SVG arcs are converted to cubic Bézier paths during
+  generation, so round icons remain available without runtime arc support or
+  external asset handles. The implementation is complete and awaits in-game
+  acceptance.
+- **Goal 4G — composite foundations:** reusable button, quick-bar, information
   panel, warning, and related foundations assembled from approved primitives.
 
 Each gate requires a gallery and failure fixtures before use on a live HUD
-surface. Goal 4E follows Goal 4D acceptance; palettes remain deferred until the
-UI work is complete.
+surface. Each remaining goal follows acceptance of the preceding gate; palettes
+remain deferred until the UI work is complete.
 
 ## Goal 5: Implement the first configurable player HUD surface
 

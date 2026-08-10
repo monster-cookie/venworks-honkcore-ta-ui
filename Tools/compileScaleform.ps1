@@ -195,12 +195,6 @@ $venworksLogoSvgSource = Resolve-RequiredFile `
 $invalidSvgSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\gallery-invalid.svg") `
   -Description "Goal 4E invalid SVG fixture"
-$symbolLibrarySource = Resolve-RequiredFile `
-  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\libraries\venworks-icons.swf") `
-  -Description "Compiled Venworks symbol library"
-$symbolLibraryHashPath = Resolve-RequiredFile `
-  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\libraries\validation\expected.sha256") `
-  -Description "Expected Venworks symbol library hash"
 $layoutSchemaPath = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Schemas\VenworksCUI\layout-v1.xsd") `
   -Description "Venworks CUI layout schema"
@@ -234,17 +228,12 @@ if ($invalidAssetPathErrors.Count -eq 0) {
   throw "Invalid asset-path fixture unexpectedly passed schema validation."
 }
 
-foreach ($runtimeFailureFixture in @(
-  'layout-missing-symbol-library.xml',
-  'layout-unknown-library-symbol.xml'
-)) {
-  [void](Resolve-RequiredFile -Path (Join-Path $fixtureDirectory $runtimeFailureFixture) -Description "Symbol-library failure fixture")
-}
-
-$expectedSymbolLibraryHash = Read-Sha256File -Path $symbolLibraryHashPath
-$actualSymbolLibraryHash = (Get-FileHash -LiteralPath $symbolLibrarySource -Algorithm SHA256).Hash
-if ($actualSymbolLibraryHash -ne $expectedSymbolLibraryHash) {
-  throw "Symbol library hash mismatch. Expected $expectedSymbolLibraryHash; found $actualSymbolLibraryHash."
+$unknownIconFixture = Resolve-RequiredFile `
+  -Path (Join-Path $fixtureDirectory 'layout-unknown-icon.xml') `
+  -Description "Unknown built-in icon fixture"
+$unknownIconSchemaErrors = @(Get-XmlSchemaErrors -XmlPath $unknownIconFixture -SchemaPath $layoutSchemaPath)
+if ($unknownIconSchemaErrors.Count -ne 0) {
+  throw "Unknown built-in icon fixture should pass structural schema validation: $($unknownIconSchemaErrors -join '; ')"
 }
 
 if (!(Test-Path -LiteralPath $resolvedVanillaInterfacePath -PathType Container)) {
@@ -419,8 +408,8 @@ try {
       -OutputPath $patchedScriptPath
 
     $authoredScripts = @(Get-ChildItem -LiteralPath $actionScriptSourcePath -Recurse -File -Filter "*.as")
-    if ($authoredScripts.Count -ne 31) {
-      throw "Expected 31 authored CUI classes; found $($authoredScripts.Count) in $actionScriptSourcePath."
+    if ($authoredScripts.Count -ne 33) {
+      throw "Expected 33 authored CUI classes; found $($authoredScripts.Count) in $actionScriptSourcePath."
     }
 
     foreach ($authoredScript in $authoredScripts) {
@@ -459,8 +448,8 @@ try {
 
     $originalScripts = @(Get-ChildItem -LiteralPath $exportedScriptsDirectory -Recurse -File -Filter "*.as")
     $validationScripts = @(Get-ChildItem -LiteralPath $validationScriptsDirectory -Recurse -File -Filter "*.as")
-    if ($originalScripts.Count -ne 198 -or $validationScripts.Count -ne $originalScripts.Count) {
-      throw "Expected 198 seeded and reopened classes; found $($originalScripts.Count) before import and $($validationScripts.Count) after import."
+    if ($originalScripts.Count -ne 200 -or $validationScripts.Count -ne $originalScripts.Count) {
+      throw "Expected 200 seeded and reopened classes; found $($originalScripts.Count) before import and $($validationScripts.Count) after import."
     }
 
     foreach ($originalScript in $originalScripts) {
@@ -519,32 +508,28 @@ try {
       'CUISvg',
       'CUISvgPath',
       'CUIMask',
+      'CUIIcon',
+      'CUIIconLibrary',
       'CUISymbol',
       'VenworksCUI/Assets/',
-      'VenworksCUI/Libraries/',
-      'LoaderContext',
-      'ApplicationDomain.currentDomain',
-      'applicationDomain',
-      'hasDefinition',
-      'setSymbol',
-      'Symbol library display wrapper is unavailable',
       'dimension inspection',
       'display-list attachment',
       'tint application',
       'fit and alignment',
       'clipping setup',
-      'libraryLinkageName',
-      'Symbol library does not export requested symbol',
       'CUI ASSET LOAD ERROR',
       'PHASE:',
       'COMPONENT:',
-      'LIBRARY:',
       'SYMBOL:',
       'EXCEPTION:',
       'ERROR ID:',
       'Asset path traversal is prohibited',
       'Unsupported SVG element',
       'SVG arc path commands are not supported',
+      'Built-in icon is not allowlisted',
+      'jolly-roger',
+      'electrocution',
+      'disease',
       'Embedded symbol is not allowlisted',
       'environment-alert',
       'HUDMenu_fla.envAlertIcon_174',
@@ -585,28 +570,28 @@ try {
     }
 
     $reopenedAssetManagerPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIAssetManager.as'
+    $reopenedIconLibraryPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIIconLibrary.as'
+    $reopenedIconPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIIcon.as'
     $reopenedImagePath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIImage.as'
     $reopenedSymbolPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUISymbol.as'
     $reopenedAssetManagerSource = Get-Content -LiteralPath $reopenedAssetManagerPath -Raw
+    $reopenedIconLibrarySource = Get-Content -LiteralPath $reopenedIconLibraryPath -Raw
+    $reopenedIconSource = Get-Content -LiteralPath $reopenedIconPath -Raw
     $reopenedImageSource = Get-Content -LiteralPath $reopenedImagePath -Raw
     $reopenedSymbolSource = Get-Content -LiteralPath $reopenedSymbolPath -Raw
-    if ($reopenedAssetManagerSource -notmatch 'new\s+ApplicationDomain\s*\(\s*ApplicationDomain\.currentDomain\s*\)' -or
-        $reopenedAssetManagerSource -notmatch '\.applicationDomain\b' -or
-        $reopenedAssetManagerSource -notmatch '\.hasDefinition\s*\(' -or
-        $reopenedAssetManagerSource -notmatch '\.setSymbol\s*\(' -or
-        $reopenedAssetManagerSource -notmatch 'new\s+Sprite\s*\(\s*\)' -or
-        $reopenedAssetManagerSource -notmatch 'wrapper\.addChild\s*\(\s*loader\s*\)' -or
-        $reopenedAssetManagerSource -notmatch 'record\.wrapper\s+as\s+Sprite') {
-      throw 'Generated ActionScript does not isolate supplemental symbols behind parent-domain Sprite wrappers.'
+    if ($reopenedAssetManagerSource -match 'flash\.display\.Loader' -or
+        $reopenedAssetManagerSource -match 'LoaderContext' -or
+        $reopenedAssetManagerSource -match 'ApplicationDomain' -or
+        $reopenedAssetManagerSource -match 'createLibrarySymbol' -or
+        $reopenedAssetManagerSource -match 'VenworksCUI/Libraries/') {
+      throw 'Generated CUIAssetManager still contains retired supplemental SWF loading support.'
     }
-    if ($reopenedAssetManagerSource -match '\?symbol=') {
-      throw 'Generated CUIAssetManager still appends an unsupported symbol query parameter to the SWF path.'
-    }
-    if ($reopenedAssetManagerSource -match '\.getDefinition\s*\(') {
-      throw 'Generated CUIAssetManager still extracts supplemental definitions across the application-domain boundary.'
-    }
-    if ($reopenedAssetManagerSource -match 'result\s*=\s*record\.loader') {
-      throw 'Generated CUIAssetManager still returns the raw supplemental Loader to component code.'
+    if ($reopenedIconLibrarySource -notmatch 'public\s+static\s+function\s+create' -or
+        $reopenedIconLibrarySource -notmatch 'CUISvgPathParser\.draw' -or
+        $reopenedIconLibrarySource -notmatch '"health"' -or
+        $reopenedIconLibrarySource -notmatch '"disease"' -or
+        $reopenedIconSource -notmatch 'CUIIconLibrary\.create') {
+      throw 'Generated ActionScript is missing the same-domain built-in icon framework.'
     }
     foreach ($imagePhase in @(
       'dimension inspection',
@@ -619,8 +604,8 @@ try {
         throw "Generated CUIImage is missing the '$imagePhase' diagnostic phase."
       }
     }
-    if ($reopenedSymbolSource -match 'getDefinitionByName\s*\(\s*libraryLinkageName') {
-      throw 'Generated CUISymbol still resolves supplemental symbols through the global application domain.'
+    if ($reopenedSymbolSource -match 'libraryLinkageName' -or $reopenedSymbolSource -match '@library') {
+      throw 'Generated CUISymbol still contains retired supplemental-library support.'
     }
 
     if ($validationSource.Contains('VENWORKS XML LOADED') -or
@@ -646,13 +631,6 @@ try {
     }
   }
 
-  foreach ($outputPath in $resolvedOutputDirectories) {
-    $libraryOutputDirectory = Join-Path $outputPath "VenworksCUI\Libraries"
-    New-Item -ItemType Directory -Force -Path $libraryOutputDirectory | Out-Null
-    Copy-Item -LiteralPath $symbolLibrarySource -Destination (Join-Path $libraryOutputDirectory "venworks-icons.swf") -Force
-    Write-Host -ForegroundColor Green "Staged supplemental symbol library in $libraryOutputDirectory"
-  }
-
   $cuiOutputDirectory = Join-Path $resolvedProjectOutputDirectory "VenworksCUI"
   $assetOutputDirectory = Join-Path $cuiOutputDirectory "Assets"
   New-Item -ItemType Directory -Force -Path $assetOutputDirectory | Out-Null
@@ -660,7 +638,7 @@ try {
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
   Copy-Item -LiteralPath $invalidSvgSource -Destination (Join-Path $assetOutputDirectory "gallery-invalid.svg") -Force
-  Write-Host -ForegroundColor Green "Staged Goal 4E interface assets in $cuiOutputDirectory"
+  Write-Host -ForegroundColor Green "Staged Goal 4F icon and SVG gallery assets in $cuiOutputDirectory"
 }
 finally {
   if ($KeepWork) {

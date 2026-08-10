@@ -21,30 +21,14 @@ package venworks.cui.components
          }
       };
 
-      public function CUISymbol(param1:XML, param2:DisplayObject = null)
+      public function CUISymbol(param1:XML)
       {
-         super(param1,param1.@library.length() == 1 ?
-            requireLibrarySymbol(param1,param2) :
-            createEmbeddedSymbol(String(param1.@name)));
+         super(param1,createEmbeddedSymbol(String(param1.@name)));
       }
 
       public static function isAllowlisted(param1:String) : Boolean
       {
          return SYMBOLS[param1] != null;
-      }
-
-      public static function libraryLinkageName(param1:String, param2:String) : String
-      {
-         return "VenworksCUI_" + param1.replace(/-/g,"_") + "_" + param2.replace(/-/g,"_");
-      }
-
-      private static function requireLibrarySymbol(param1:XML, param2:DisplayObject) : DisplayObject
-      {
-         if(param2 == null)
-         {
-            throw new Error("INVALID|Resolved symbol is unavailable: " + String(param1.@library) + "/" + String(param1.@name));
-         }
-         return param2;
       }
 
       private static function createEmbeddedSymbol(param1:String) : DisplayObject
