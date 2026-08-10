@@ -11,15 +11,59 @@ package venworks.cui.components
       public function CUIImage(param1:XML, param2:DisplayObject)
       {
          super(param1);
-         if(param2 == null || param2.width <= 0 || param2.height <= 0)
+         if(param2 == null)
          {
-            throw new Error("INVALID|Asset has no renderable dimensions: " + String(param1.@id));
+            throw new Error("INVALID|Asset is unavailable: " + String(param1.@id));
+         }
+         try
+         {
+            if(param2.width <= 0 || param2.height <= 0)
+            {
+               throw new Error("Asset has no renderable dimensions.");
+            }
+         }
+         catch(param3:Error)
+         {
+            throw this.phaseError("dimension inspection",param1,param3);
          }
          content = param2;
-         addChild(content);
-         this.applyTint(param1);
-         this.fitContent(param1);
-         scrollRect = new Rectangle(0,0,componentWidth,componentHeight);
+         try
+         {
+            addChild(content);
+         }
+         catch(param4:Error)
+         {
+            throw this.phaseError("display-list attachment",param1,param4);
+         }
+         try
+         {
+            this.applyTint(param1);
+         }
+         catch(param5:Error)
+         {
+            throw this.phaseError("tint application",param1,param5);
+         }
+         try
+         {
+            this.fitContent(param1);
+         }
+         catch(param6:Error)
+         {
+            throw this.phaseError("fit and alignment",param1,param6);
+         }
+         try
+         {
+            scrollRect = new Rectangle(0,0,componentWidth,componentHeight);
+         }
+         catch(param7:Error)
+         {
+            throw this.phaseError("clipping setup",param1,param7);
+         }
+      }
+
+      private function phaseError(param1:String, param2:XML, param3:Error) : Error
+      {
+         return new Error("INVALID|Asset " + param1 + " failed: " + String(param2.@id) + ". " + param3.toString());
       }
 
       private function applyTint(param1:XML) : void

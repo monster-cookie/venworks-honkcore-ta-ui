@@ -527,6 +527,12 @@ try {
       'applicationDomain',
       'hasDefinition',
       'setSymbol',
+      'Symbol library display wrapper is unavailable',
+      'dimension inspection',
+      'display-list attachment',
+      'tint application',
+      'fit and alignment',
+      'clipping setup',
       'libraryLinkageName',
       'Symbol library does not export requested symbol',
       'CUI ASSET LOAD ERROR',
@@ -579,21 +585,39 @@ try {
     }
 
     $reopenedAssetManagerPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIAssetManager.as'
+    $reopenedImagePath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIImage.as'
     $reopenedSymbolPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUISymbol.as'
     $reopenedAssetManagerSource = Get-Content -LiteralPath $reopenedAssetManagerPath -Raw
+    $reopenedImageSource = Get-Content -LiteralPath $reopenedImagePath -Raw
     $reopenedSymbolSource = Get-Content -LiteralPath $reopenedSymbolPath -Raw
     if ($reopenedAssetManagerSource -notmatch 'new\s+ApplicationDomain\s*\(\s*ApplicationDomain\.currentDomain\s*\)' -or
         $reopenedAssetManagerSource -notmatch '\.applicationDomain\b' -or
         $reopenedAssetManagerSource -notmatch '\.hasDefinition\s*\(' -or
         $reopenedAssetManagerSource -notmatch '\.setSymbol\s*\(' -or
-        $reopenedAssetManagerSource -notmatch 'record\.loader\s+as\s+Loader') {
-      throw 'Generated ActionScript does not select supplemental symbols through isolated loader controllers.'
+        $reopenedAssetManagerSource -notmatch 'new\s+Sprite\s*\(\s*\)' -or
+        $reopenedAssetManagerSource -notmatch 'wrapper\.addChild\s*\(\s*loader\s*\)' -or
+        $reopenedAssetManagerSource -notmatch 'record\.wrapper\s+as\s+Sprite') {
+      throw 'Generated ActionScript does not isolate supplemental symbols behind parent-domain Sprite wrappers.'
     }
     if ($reopenedAssetManagerSource -match '\?symbol=') {
       throw 'Generated CUIAssetManager still appends an unsupported symbol query parameter to the SWF path.'
     }
     if ($reopenedAssetManagerSource -match '\.getDefinition\s*\(') {
       throw 'Generated CUIAssetManager still extracts supplemental definitions across the application-domain boundary.'
+    }
+    if ($reopenedAssetManagerSource -match 'result\s*=\s*record\.loader') {
+      throw 'Generated CUIAssetManager still returns the raw supplemental Loader to component code.'
+    }
+    foreach ($imagePhase in @(
+      'dimension inspection',
+      'display-list attachment',
+      'tint application',
+      'fit and alignment',
+      'clipping setup'
+    )) {
+      if ($reopenedImageSource -notmatch [regex]::Escape($imagePhase)) {
+        throw "Generated CUIImage is missing the '$imagePhase' diagnostic phase."
+      }
     }
     if ($reopenedSymbolSource -match 'getDefinitionByName\s*\(\s*libraryLinkageName') {
       throw 'Generated CUISymbol still resolves supplemental symbols through the global application domain.'

@@ -3,6 +3,7 @@ package venworks.cui
    import flash.display.DisplayObject;
    import flash.display.Loader;
    import flash.display.LoaderInfo;
+   import flash.display.Sprite;
    import flash.events.Event;
    import flash.events.EventDispatcher;
    import flash.events.IOErrorEvent;
@@ -62,7 +63,7 @@ package venworks.cui
          var record:Object = libraries[param1];
          var linkage:String = CUISymbol.libraryLinkageName(param2,param3);
          var domain:ApplicationDomain = null;
-         var result:Loader = null;
+         var result:Sprite = null;
          if(record == null || record.domain == null || record.library != param2 || record.symbol != param3)
          {
             throw new Error("INVALID|Symbol library instance is not loaded: " + param2 + "/" + param3);
@@ -72,10 +73,10 @@ package venworks.cui
          {
             throw new Error("INVALID|Symbol library does not export requested symbol: " + param2 + "/" + param3);
          }
-         result = record.loader as Loader;
+         result = record.wrapper as Sprite;
          if(result == null)
          {
-            throw new Error("INVALID|Symbol library loader is unavailable: " + param2 + "/" + param3);
+            throw new Error("INVALID|Symbol library display wrapper is unavailable: " + param2 + "/" + param3);
          }
          return result;
       }
@@ -134,8 +135,10 @@ package venworks.cui
          var library:String = String(param1.@library);
          var symbolName:String = String(param1.@name);
          var loader:Loader = null;
+         var wrapper:Sprite = null;
          var record:Object = libraries[componentId];
          loader = new Loader();
+         wrapper = new Sprite();
          record = {
             id:componentId,
             library:library,
@@ -143,6 +146,7 @@ package venworks.cui
             src:library + ".swf",
             kind:"library",
             loader:loader,
+            wrapper:wrapper,
             info:loader.contentLoaderInfo,
             domain:new ApplicationDomain(ApplicationDomain.currentDomain)
          };
@@ -154,14 +158,23 @@ package venworks.cui
          loader.contentLoaderInfo.addEventListener(SecurityErrorEvent.SECURITY_ERROR,this.onAssetSecurityError);
          try
          {
+            wrapper.addChild(loader);
+         }
+         catch(param2:Error)
+         {
+            this.fail("Could not create symbol library display wrapper: " + record.src + ". " + param2.toString());
+            return;
+         }
+         try
+         {
             loader.load(
                new URLRequest(SYMBOL_LIBRARY_ROOT + record.src),
                new LoaderContext(false,record.domain as ApplicationDomain)
             );
          }
-         catch(param2:Error)
+         catch(param3:Error)
          {
-            this.fail("Could not start symbol library request: " + record.src + ". " + param2.toString());
+            this.fail("Could not start symbol library request: " + record.src + ". " + param3.toString());
          }
       }
 

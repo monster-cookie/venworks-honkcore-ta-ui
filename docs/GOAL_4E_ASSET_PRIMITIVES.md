@@ -106,14 +106,22 @@ allowlisted semantic names and constructs that linkage class entirely inside the
 child SWF domain. The owning HUD loads the plain SWF path, checks
 `ApplicationDomain.hasDefinition`, and calls the controller only after the load
 completes. It never extracts or coerces the child instance and fits and tints only
-the parent-domain `Loader` wrapper. Global lookup remains limited to the hardcoded
-Bethesda embedded-symbol allowlist.
+the parent-domain `Sprite` that contains the Loader. The raw Loader is never passed
+to generic component code. Global lookup remains limited to the hardcoded Bethesda
+embedded-symbol allowlist.
 
 Runtime failures use the upper diagnostic panel and report the active phase,
 component type and ID, library and symbol keys when applicable, the complete
 exception text, and a nonzero ActionScript error ID. This context applies to
 layout parsing, asset and library loading, component creation and placement,
-vanilla adapters, and initial or live visibility evaluation.
+vanilla adapters, and initial or live visibility evaluation. Image construction
+additionally identifies failures during dimension inspection, display-list
+attachment, tint application, fit/alignment, or clipping setup.
+
+The parent-domain Sprite boundary is the final supplemental-SWF compatibility
+attempt. If Starfield still raises Error #1034 while creating the isolated symbol
+component, supplemental SWF symbols will be retired in favor of loose SVG/path
+components and embedded Bethesda symbols.
 
 ## Fixtures and staging
 
