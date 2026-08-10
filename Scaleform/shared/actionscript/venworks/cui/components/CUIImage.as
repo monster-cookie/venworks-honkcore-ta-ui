@@ -73,7 +73,7 @@ package venworks.cui.components
          {
             return;
          }
-         color = readColor(String(param1.@color));
+         color = this.readColor(param1,"color",16777215);
          content.transform.colorTransform = new ColorTransform(
             0,0,0,1,
             color >> 16 & 255,

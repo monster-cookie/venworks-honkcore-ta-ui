@@ -606,6 +606,9 @@ try {
         throw "Generated CUIImage is missing the '$imagePhase' diagnostic phase."
       }
     }
+    if ($reopenedImageSource -notmatch 'readColor\s*\(\s*param1\s*,\s*"color"\s*,\s*16777215\s*\)') {
+      throw 'Generated CUIImage does not use the shared XML color parser for asset tinting.'
+    }
     if ($reopenedSymbolSource -match 'libraryLinkageName' -or $reopenedSymbolSource -match '@library') {
       throw 'Generated CUISymbol still contains retired supplemental-library support.'
     }
