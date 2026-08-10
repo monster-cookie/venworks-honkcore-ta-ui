@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080"
+             safeLeft="64" safeTop="36" safeRight="64" safeBottom="36">
+  <definitions>
+    <meterStyle id="unused.style" renderer="continuous" direction="right" fillColor="#35E6E6" emptyColor="#183B48" fillOpacity="1" emptyOpacity="0.7" />
+  </definitions>
+  <components>
+    <informationPanel id="invalid.info" x="0" y="0" width="410" height="600" z="1" title="TOO MANY ROWS">
+      <row id="r01" label="ROW" value="01" />
+      <row id="r02" label="ROW" value="02" />
+      <row id="r03" label="ROW" value="03" />
+      <row id="r04" label="ROW" value="04" />
+      <row id="r05" label="ROW" value="05" />
+      <row id="r06" label="ROW" value="06" />
+      <row id="r07" label="ROW" value="07" />
+      <row id="r08" label="ROW" value="08" />
+      <row id="r09" label="ROW" value="09" />
+      <row id="r10" label="ROW" value="10" />
+      <row id="r11" label="ROW" value="11" />
+      <row id="r12" label="ROW" value="12" />
+      <row id="r13" label="ROW" value="13" />
+    </informationPanel>
+  </components>
+</venworksCUI>

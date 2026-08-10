@@ -8,11 +8,13 @@ package venworks.cui
 
       private var templates:Object;
       private var resolvedComponentCount:int;
+      private var compositeResolver:CUICompositeResolver;
 
       public function CUICompositionResolver(param1:Object)
       {
          super();
          templates = param1;
+         compositeResolver = new CUICompositeResolver();
       }
 
       public function resolve(param1:XML) : XML
@@ -37,6 +39,11 @@ package venworks.cui
          var type:String = String(param1.name());
          var copy:XML = null;
          var child:XML = null;
+         if(compositeResolver.isComposite(type))
+         {
+            this.resolveNode(compositeResolver.resolve(param1),param2);
+            return;
+         }
          if(type == "group" || type == "mask")
          {
             copy = param1.copy();

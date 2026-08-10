@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080"
+             safeLeft="64" safeTop="36" safeRight="64" safeBottom="36">
+  <definitions>
+    <meterStyle id="unused.style" renderer="continuous" direction="right" fillColor="#35E6E6" emptyColor="#183B48" fillOpacity="1" emptyOpacity="0.7" />
+  </definitions>
+  <components>
+    <informationPanel id="invalid.children" x="0" y="0" width="410" height="300" z="1" title="INVALID CHILD">
+      <image id="unsupported" src="not-supported.png" />
+    </informationPanel>
+  </components>
+</venworksCUI>

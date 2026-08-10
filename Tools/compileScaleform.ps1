@@ -184,8 +184,8 @@ $resolvedProjectOutputDirectory = $resolvedOutputDirectories[0]
 $resolvedWorkDirectory = [System.IO.Path]::GetFullPath($WorkDirectory)
 $decompileScript = Resolve-RequiredFile -Path (Join-Path $PSScriptRoot "decompileScaleform.ps1") -Description "Scaleform decompile helper"
 $galleryLayoutSource = Resolve-RequiredFile `
-  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\fixtures\asset-primitives-gallery.xml") `
-  -Description "Goal 4E asset gallery"
+  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\fixtures\composite-foundations-gallery.xml") `
+  -Description "Goal 4G composite foundations gallery"
 $gallerySvgSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\gallery-vector.svg") `
   -Description "Owned SVG gallery asset"
@@ -209,7 +209,8 @@ foreach ($positiveFixtureName in @(
   'condition-gallery.xml',
   'vanilla-visibility-gallery.xml',
   'meter-renderer-gallery.xml',
-  'asset-primitives-gallery.xml'
+  'asset-primitives-gallery.xml',
+  'composite-foundations-gallery.xml'
 )) {
   $positiveFixturePath = Resolve-RequiredFile `
     -Path (Join-Path $fixtureDirectory $positiveFixtureName) `
@@ -218,6 +219,29 @@ foreach ($positiveFixtureName in @(
   if ($schemaErrors.Count -ne 0) {
     throw "Positive fixture $positiveFixtureName failed schema validation: $($schemaErrors -join '; ')"
   }
+}
+
+foreach ($structurallyInvalidCompositeFixtureName in @(
+  'layout-invalid-button-state.xml',
+  'layout-invalid-composite-child.xml',
+  'layout-invalid-quick-bar-overflow.xml',
+  'layout-invalid-warning-severity.xml'
+)) {
+  $structurallyInvalidCompositeFixture = Resolve-RequiredFile `
+    -Path (Join-Path $fixtureDirectory $structurallyInvalidCompositeFixtureName) `
+    -Description "Structurally invalid composite fixture"
+  $structuralErrors = @(Get-XmlSchemaErrors -XmlPath $structurallyInvalidCompositeFixture -SchemaPath $layoutSchemaPath)
+  if ($structuralErrors.Count -eq 0) {
+    throw "Invalid composite fixture $structurallyInvalidCompositeFixtureName unexpectedly passed schema validation."
+  }
+}
+
+$semanticInformationPanelFixture = Resolve-RequiredFile `
+  -Path (Join-Path $fixtureDirectory 'layout-invalid-information-panel.xml') `
+  -Description "Semantically invalid information-panel fixture"
+$semanticInformationPanelErrors = @(Get-XmlSchemaErrors -XmlPath $semanticInformationPanelFixture -SchemaPath $layoutSchemaPath)
+if ($semanticInformationPanelErrors.Count -ne 0) {
+  throw "Information-panel row-limit fixture should pass structural schema validation: $($semanticInformationPanelErrors -join '; ')"
 }
 
 $invalidAssetPathFixture = Resolve-RequiredFile `
@@ -408,8 +432,8 @@ try {
       -OutputPath $patchedScriptPath
 
     $authoredScripts = @(Get-ChildItem -LiteralPath $actionScriptSourcePath -Recurse -File -Filter "*.as")
-    if ($authoredScripts.Count -ne 33) {
-      throw "Expected 33 authored CUI classes; found $($authoredScripts.Count) in $actionScriptSourcePath."
+    if ($authoredScripts.Count -ne 34) {
+      throw "Expected 34 authored CUI classes; found $($authoredScripts.Count) in $actionScriptSourcePath."
     }
 
     foreach ($authoredScript in $authoredScripts) {
@@ -448,8 +472,8 @@ try {
 
     $originalScripts = @(Get-ChildItem -LiteralPath $exportedScriptsDirectory -Recurse -File -Filter "*.as")
     $validationScripts = @(Get-ChildItem -LiteralPath $validationScriptsDirectory -Recurse -File -Filter "*.as")
-    if ($originalScripts.Count -ne 200 -or $validationScripts.Count -ne $originalScripts.Count) {
-      throw "Expected 200 seeded and reopened classes; found $($originalScripts.Count) before import and $($validationScripts.Count) after import."
+    if ($originalScripts.Count -ne 201 -or $validationScripts.Count -ne $originalScripts.Count) {
+      throw "Expected 201 seeded and reopened classes; found $($originalScripts.Count) before import and $($validationScripts.Count) after import."
     }
 
     foreach ($originalScript in $originalScripts) {
@@ -496,6 +520,7 @@ try {
       'VenworksCUIComponentLayer',
       'VenworksCUIDiagnosticsPanel',
       'CUICompositionResolver',
+      'CUICompositeResolver',
       'CUIConditionParser',
       'CUIConditionExpression',
       'CUIConditionContext',
@@ -550,6 +575,9 @@ try {
       'Unsupported repeater flow',
       'Unknown template reference',
       'content exceeds its configured bounds',
+      'exceeds the 16-button limit',
+      'exceeds the 12-row limit',
+      'Unsupported warning severity',
       'selects unknown option',
       'Condition exceeds the 8-level nesting limit',
       'Condition provider unavailable in hudmenu.gfx',
@@ -571,12 +599,14 @@ try {
 
     $reopenedAssetManagerPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIAssetManager.as'
     $reopenedCompositionResolverPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUICompositionResolver.as'
+    $reopenedCompositeResolverPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUICompositeResolver.as'
     $reopenedIconLibraryPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIIconLibrary.as'
     $reopenedIconPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIIcon.as'
     $reopenedImagePath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIImage.as'
     $reopenedSymbolPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUISymbol.as'
     $reopenedAssetManagerSource = Get-Content -LiteralPath $reopenedAssetManagerPath -Raw
     $reopenedCompositionResolverSource = Get-Content -LiteralPath $reopenedCompositionResolverPath -Raw
+    $reopenedCompositeResolverSource = Get-Content -LiteralPath $reopenedCompositeResolverPath -Raw
     $reopenedIconLibrarySource = Get-Content -LiteralPath $reopenedIconLibraryPath -Raw
     $reopenedIconSource = Get-Content -LiteralPath $reopenedIconPath -Raw
     $reopenedImageSource = Get-Content -LiteralPath $reopenedImagePath -Raw
@@ -615,6 +645,13 @@ try {
     if ($reopenedCompositionResolverSource -notmatch 'type\s*==\s*"icon"') {
       throw 'Generated CUICompositionResolver does not accept icon leaf components.'
     }
+    if ($reopenedCompositionResolverSource -notmatch 'compositeResolver\.isComposite' -or
+        $reopenedCompositeResolverSource -notmatch 'param1\s*==\s*"button"' -or
+        $reopenedCompositeResolverSource -notmatch 'param1\s*==\s*"quickBar"' -or
+        $reopenedCompositeResolverSource -notmatch 'param1\s*==\s*"informationPanel"' -or
+        $reopenedCompositeResolverSource -notmatch 'param1\s*==\s*"warning"') {
+      throw 'Generated ActionScript is missing the approved composite lowering framework.'
+    }
 
     if ($validationSource.Contains('VENWORKS XML LOADED') -or
         $validationSource.Contains('VenworksCuiTest_txt')) {
@@ -646,7 +683,7 @@ try {
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
   Copy-Item -LiteralPath $invalidSvgSource -Destination (Join-Path $assetOutputDirectory "gallery-invalid.svg") -Force
-  Write-Host -ForegroundColor Green "Staged Goal 4F icon and SVG gallery assets in $cuiOutputDirectory"
+  Write-Host -ForegroundColor Green "Staged Goal 4G composite gallery in $cuiOutputDirectory"
 }
 finally {
   if ($KeepWork) {

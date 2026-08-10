@@ -117,6 +117,9 @@
             <item>CUISymbol</item>
             <item>CUISymbol$0</item>
             <item>venworks.cui.components:CUISymbol</item>
+            <item>CUICompositeResolver</item>
+            <item>CUICompositeResolver$0</item>
+            <item>venworks.cui:CUICompositeResolver</item>
           </constant_string>
           <constant_namespace>
             <item isNull="true" />
@@ -258,6 +261,10 @@
             <item type="Namespace" kind="5" name_index="104" />
             <item type="Namespace" kind="24" name_index="104" />
             <item type="Namespace" kind="26" name_index="104" />
+            <item type="Namespace" kind="5" name_index="106" />
+            <item type="Namespace" kind="5" name_index="107" />
+            <item type="Namespace" kind="24" name_index="107" />
+            <item type="Namespace" kind="26" name_index="107" />
           </constant_namespace>
           <constant_namespace_set>
             <item isNull="true" />
@@ -341,9 +348,26 @@
             <item type="Multiname" kind="9" name_index="99" namespace_index="0" namespace_set_index="2" qname_index="0" />
             <item type="Multiname" kind="7" name_index="102" namespace_index="65" namespace_set_index="0" qname_index="0" />
             <item type="Multiname" kind="9" name_index="102" namespace_index="0" namespace_set_index="2" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="105" namespace_index="2" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="9" name_index="105" namespace_index="0" namespace_set_index="1" qname_index="0" />
           </constant_multiname>
         </constants>
         <method_info>
+          <item type="MethodInfo" flags="0" name_index="4" ret_type="0">
+            <param_types />
+            <optional />
+            <paramNames />
+          </item>
+          <item type="MethodInfo" flags="0" name_index="0" ret_type="0">
+            <param_types />
+            <optional />
+            <paramNames />
+          </item>
+          <item type="MethodInfo" flags="0" name_index="4" ret_type="0">
+            <param_types />
+            <optional />
+            <paramNames />
+          </item>
           <item type="MethodInfo" flags="0" name_index="4" ret_type="0">
             <param_types />
             <optional />
@@ -1040,6 +1064,12 @@
               <traits />
             </instance_traits>
           </item>
+          <item type="InstanceInfo" flags="9" iinit_index="100" name_index="68" protectedNS="141" super_index="2">
+            <interfaces />
+            <instance_traits type="Traits">
+              <traits />
+            </instance_traits>
+          </item>
         </instance_info>
         <class_info>
           <item type="ClassInfo" cinit_index="98">
@@ -1203,6 +1233,11 @@
             </static_traits>
           </item>
           <item type="ClassInfo" cinit_index="2">
+            <static_traits type="Traits">
+              <traits />
+            </static_traits>
+          </item>
+          <item type="ClassInfo" cinit_index="101">
             <static_traits type="Traits">
               <traits />
             </static_traits>
@@ -1501,6 +1536,15 @@
             <traits type="Traits">
               <traits>
                 <item type="TraitClass" bytes="42040100" class_info="0" deleted="false" fileOffset="3619" kindFlags="0" kindType="4" name_index="66" slot_id="1">
+                  <metadata />
+                </item>
+              </traits>
+            </traits>
+          </item>
+          <item type="ScriptInfo" init_index="99">
+            <traits type="Traits">
+              <traits>
+                <item type="TraitClass" bytes="44040121" class_info="33" deleted="false" fileOffset="3625" kindFlags="0" kindType="4" name_index="68" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -2097,6 +2141,24 @@
             </traits>
           </item>
           <item type="MethodBody" codeBytes="d03047" init_scope_depth="3" max_regs="1" max_scope_depth="4" max_stack="1" method_info="98">
+            <exceptions />
+            <traits type="Traits">
+              <traits />
+            </traits>
+          </item>
+          <item type="MethodBody" codeBytes="d0305d45600230600258211d684447" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="99">
+            <exceptions />
+            <traits type="Traits">
+              <traits />
+            </traits>
+          </item>
+          <item type="MethodBody" codeBytes="d030d0490047" init_scope_depth="4" max_regs="1" max_scope_depth="5" max_stack="1" method_info="100">
+            <exceptions />
+            <traits type="Traits">
+              <traits />
+            </traits>
+          </item>
+          <item type="MethodBody" codeBytes="d03047" init_scope_depth="3" max_regs="1" max_scope_depth="4" max_stack="1" method_info="101">
             <exceptions />
             <traits type="Traits">
               <traits />

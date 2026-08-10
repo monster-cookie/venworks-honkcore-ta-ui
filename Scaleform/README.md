@@ -51,7 +51,7 @@ not part of this library; it remains a Venworks-owned loose SVG.
 
 The build injects the Venworks-only ABC seed, exports Bethesda ActionScript only
 into ignored temporary storage, verifies the authored `HUDMenu` patch anchors,
-and imports the patched document class plus the 33 repository-authored CUI
+and imports the patched document class plus the 34 repository-authored CUI
 classes. It confirms that every other exported class remains textually
 identical and that the reopened output contains the required layout and
 diagnostic contracts. Full exported Bethesda classes are never repository
@@ -76,10 +76,13 @@ composition visibility, and dynamic repeater-item gates. The separate vanilla
 visibility gallery hides only the allowlisted top-center group for an isolated
 adapter test. The Goal 4D meter gallery uses two compact top panels to exercise
 continuous, rectangle, dot, uniform-triangle, alternating-triangle, vertical,
-reverse, and radial renderers without live HUD data. The Goal 4E asset gallery
-is the staged `layout.xml`; it exercises all 21 built-in icons, packaged SVG,
+reverse, and radial renderers without live HUD data. The Goal 4F asset and icon
+gallery exercises all 21 built-in icons, packaged SVG,
 the Venworks logo SVG, authored paths, masks, and movie-aware allowlisted
-embedded symbols. Malformed fixtures are
+embedded symbols. The Goal 4G composite gallery is the staged `layout.xml`; it
+exercises all four warning severities and button states, a bounded quick bar
+with an independently hidden button, and an information panel with metadata,
+divider, and meter content. Malformed fixtures are
 intentionally not well-formed XML, while other negative fixtures may be
 schema-valid and rejected by runtime semantic checks. See
 `../docs/GOAL_3_COMPONENT_LIBRARY.md`,
@@ -128,3 +131,13 @@ Bethesda allowlist. Font Awesome arcs are converted to cubic paths by the
 developer generator. Direct raster, DDS, and supplemental SWF loading are
 unsupported after failed in-game probes. See
 `../docs/GOAL_4E_ASSET_PRIMITIVES.md` for the full contract and test fixtures.
+
+Goal 4G adds gamer-facing `button`, `quickBar`, `informationPanel`, and
+`warning` composite elements. The composition resolver lowers them to existing
+groups, panels, text, icons, dividers, and meters before the ordinary layout
+parser validates and creates display objects. Unknown attributes and children
+are rejected. Buttons support `normal`, `selected`, `disabled`, and `warning`
+states; quick bars accept at most 16 buttons; information panels accept at most
+12 metadata rows and 20 total child items; warnings support `info`, `warning`,
+`danger`, and `critical` severities. The staged gallery uses fixed values and
+does not replace or bind live vanilla HUD data.

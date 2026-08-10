@@ -138,7 +138,7 @@ Extend the versioned layout schema and runtime through bounded review gates:
 - segmented rectangles, dots/circles, and radial meter renderers;
 - local SVG assets and curated compiled SWF symbol libraries;
 - authored SVG paths, masks, and permitted embedded symbols;
-- composite button and information-panel foundations.
+- composite button, quick-bar, information-panel, and warning foundations.
 
 Validate each component in a gallery before it is connected to live data.
 Font Awesome Pro may be evaluated as an explicitly approved, licensed icon
@@ -173,10 +173,17 @@ Goal 4 is divided into bounded review gates:
   approved Font Awesome Pro subset and embedded in the HUD movies as same-domain
   ActionScript drawing data. SVG arcs are converted to cubic Bézier paths during
   generation, so round icons remain available without runtime arc support or
-  external asset handles. The implementation is complete and awaits in-game
-  acceptance.
+  external asset handles. The implementation and its in-game gallery checks are
+  accepted.
 - **Goal 4G — composite foundations:** reusable button, quick-bar, information
-  panel, warning, and related foundations assembled from approved primitives.
+  panel, and warning components assembled from approved primitives. Composite
+  configuration lowers into the existing bounded primitive runtime before
+  ordinary parsing and validation. Buttons provide normal, selected, disabled,
+  and warning states; quick bars allow at most 16 independently visible buttons;
+  information panels allow at most 12 metadata rows and 20 total content items;
+  warnings provide info, warning, danger, and critical severities. The
+  implementation is complete and awaits positive/negative in-game gallery
+  acceptance.
 
 Each gate requires a gallery and failure fixtures before use on a live HUD
 surface. Each remaining goal follows acceptance of the preceding gate; palettes

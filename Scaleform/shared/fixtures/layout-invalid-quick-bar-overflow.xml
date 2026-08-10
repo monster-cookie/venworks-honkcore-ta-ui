@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080"
+             safeLeft="64" safeTop="36" safeRight="64" safeBottom="36">
+  <definitions>
+    <meterStyle id="unused.style" renderer="continuous" direction="right" fillColor="#35E6E6" emptyColor="#183B48" fillOpacity="1" emptyOpacity="0.7" />
+  </definitions>
+  <components>
+    <quickBar id="invalid.quickbar" x="0" y="0" width="240" height="1000" z="1" buttonHeight="48" gap="2">
+      <button id="b01" label="ONE" state="normal" />
+      <button id="b02" label="TWO" state="normal" />
+      <button id="b03" label="THREE" state="normal" />
+      <button id="b04" label="FOUR" state="normal" />
+      <button id="b05" label="FIVE" state="normal" />
+      <button id="b06" label="SIX" state="normal" />
+      <button id="b07" label="SEVEN" state="normal" />
+      <button id="b08" label="EIGHT" state="normal" />
+      <button id="b09" label="NINE" state="normal" />
+      <button id="b10" label="TEN" state="normal" />
+      <button id="b11" label="ELEVEN" state="normal" />
+      <button id="b12" label="TWELVE" state="normal" />
+      <button id="b13" label="THIRTEEN" state="normal" />
+      <button id="b14" label="FOURTEEN" state="normal" />
+      <button id="b15" label="FIFTEEN" state="normal" />
+      <button id="b16" label="SIXTEEN" state="normal" />
+      <button id="b17" label="SEVENTEEN" state="normal" />
+    </quickBar>
+  </components>
+</venworksCUI>

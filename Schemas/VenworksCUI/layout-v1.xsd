@@ -123,6 +123,24 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="buttonStateType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="normal" />
+      <xs:enumeration value="selected" />
+      <xs:enumeration value="disabled" />
+      <xs:enumeration value="warning" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="warningSeverityType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="info" />
+      <xs:enumeration value="warning" />
+      <xs:enumeration value="danger" />
+      <xs:enumeration value="critical" />
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:attributeGroup name="componentAttributes">
     <xs:attribute name="id" type="idType" use="required" />
     <xs:attribute name="x" type="xs:decimal" use="required" />
@@ -224,6 +242,77 @@
     <xs:attribute name="alignY" type="verticalAlignmentType" default="center" />
   </xs:complexType>
 
+  <xs:complexType name="buttonType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="label" type="xs:string" use="required" />
+    <xs:attribute name="icon" type="symbolKeyType" />
+    <xs:attribute name="key" type="xs:string" />
+    <xs:attribute name="state" type="buttonStateType" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="quickBarButtonType">
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="label" type="xs:string" use="required" />
+    <xs:attribute name="icon" type="symbolKeyType" />
+    <xs:attribute name="key" type="xs:string" />
+    <xs:attribute name="state" type="buttonStateType" use="required" />
+    <xs:attribute name="visible" type="strictBooleanType" default="true" />
+    <xs:attribute name="visibleWhen" type="xs:string" />
+  </xs:complexType>
+
+  <xs:complexType name="quickBarType">
+    <xs:sequence><xs:element name="button" type="quickBarButtonType" minOccurs="1" maxOccurs="16" /></xs:sequence>
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="buttonHeight" type="xs:positiveInteger" use="required" />
+    <xs:attribute name="gap" type="xs:nonNegativeInteger" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="informationRowType">
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="label" type="xs:string" use="required" />
+    <xs:attribute name="value" type="xs:string" use="required" />
+    <xs:attribute name="icon" type="symbolKeyType" />
+    <xs:attribute name="visible" type="strictBooleanType" default="true" />
+    <xs:attribute name="visibleWhen" type="xs:string" />
+  </xs:complexType>
+
+  <xs:complexType name="informationMeterType">
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="label" type="xs:string" />
+    <xs:attribute name="style" type="idType" use="required" />
+    <xs:attribute name="value" type="xs:decimal" use="required" />
+    <xs:attribute name="max" type="xs:decimal" use="required" />
+    <xs:attribute name="icon" type="symbolKeyType" />
+    <xs:attribute name="visible" type="strictBooleanType" default="true" />
+    <xs:attribute name="visibleWhen" type="xs:string" />
+  </xs:complexType>
+
+  <xs:complexType name="informationDividerType">
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="visible" type="strictBooleanType" default="true" />
+    <xs:attribute name="visibleWhen" type="xs:string" />
+  </xs:complexType>
+
+  <xs:complexType name="informationPanelType">
+    <xs:choice minOccurs="0" maxOccurs="20">
+      <xs:element name="row" type="informationRowType" />
+      <xs:element name="meter" type="informationMeterType" />
+      <xs:element name="divider" type="informationDividerType" />
+    </xs:choice>
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="title" type="xs:string" use="required" />
+    <xs:attribute name="icon" type="symbolKeyType" />
+    <xs:attribute name="body" type="xs:string" />
+  </xs:complexType>
+
+  <xs:complexType name="warningType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="severity" type="warningSeverityType" use="required" />
+    <xs:attribute name="icon" type="symbolKeyType" />
+    <xs:attribute name="title" type="xs:string" use="required" />
+    <xs:attribute name="message" type="xs:string" use="required" />
+  </xs:complexType>
+
   <xs:complexType name="overrideType">
     <xs:attribute name="target" type="idType" use="required" />
     <xs:attribute name="text" type="xs:string" />
@@ -300,6 +389,10 @@
       <xs:element name="mask" type="maskType" />
       <xs:element name="icon" type="iconType" />
       <xs:element name="symbol" type="symbolType" />
+      <xs:element name="button" type="buttonType" />
+      <xs:element name="quickBar" type="quickBarType" />
+      <xs:element name="informationPanel" type="informationPanelType" />
+      <xs:element name="warning" type="warningType" />
       <xs:element name="instance" type="instanceType" />
       <xs:element name="repeater" type="repeaterType" />
       <xs:element name="state" type="stateType" />
