@@ -183,9 +183,9 @@ if ($resolvedOutputDirectories.Count -eq 0) {
 $resolvedProjectOutputDirectory = $resolvedOutputDirectories[0]
 $resolvedWorkDirectory = [System.IO.Path]::GetFullPath($WorkDirectory)
 $decompileScript = Resolve-RequiredFile -Path (Join-Path $PSScriptRoot "decompileScaleform.ps1") -Description "Scaleform decompile helper"
-$galleryLayoutSource = Resolve-RequiredFile `
-  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\fixtures\composite-foundations-gallery.xml") `
-  -Description "Goal 4G composite foundations gallery"
+$providerProbeLayoutSource = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\fixtures\chronomark-provider-probe.xml") `
+  -Description "Goal 5 Chronomark provider probe"
 $gallerySvgSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\gallery-vector.svg") `
   -Description "Owned SVG gallery asset"
@@ -210,7 +210,8 @@ foreach ($positiveFixtureName in @(
   'vanilla-visibility-gallery.xml',
   'meter-renderer-gallery.xml',
   'asset-primitives-gallery.xml',
-  'composite-foundations-gallery.xml'
+  'composite-foundations-gallery.xml',
+  'chronomark-provider-probe.xml'
 )) {
   $positiveFixturePath = Resolve-RequiredFile `
     -Path (Join-Path $fixtureDirectory $positiveFixtureName) `
@@ -258,6 +259,20 @@ $unknownIconFixture = Resolve-RequiredFile `
 $unknownIconSchemaErrors = @(Get-XmlSchemaErrors -XmlPath $unknownIconFixture -SchemaPath $layoutSchemaPath)
 if ($unknownIconSchemaErrors.Count -ne 0) {
   throw "Unknown built-in icon fixture should pass structural schema validation: $($unknownIconSchemaErrors -join '; ')"
+}
+
+foreach ($semanticValueFixtureName in @(
+  'layout-unknown-value-source.xml',
+  'layout-incompatible-value-binding.xml',
+  'layout-invalid-value-format.xml'
+)) {
+  $semanticValueFixture = Resolve-RequiredFile `
+    -Path (Join-Path $fixtureDirectory $semanticValueFixtureName) `
+    -Description "Semantically invalid value-binding fixture"
+  $semanticValueErrors = @(Get-XmlSchemaErrors -XmlPath $semanticValueFixture -SchemaPath $layoutSchemaPath)
+  if ($semanticValueErrors.Count -ne 0) {
+    throw "Value-binding fixture $semanticValueFixtureName should pass structural schema validation: $($semanticValueErrors -join '; ')"
+  }
 }
 
 if (!(Test-Path -LiteralPath $resolvedVanillaInterfacePath -PathType Container)) {
@@ -432,8 +447,8 @@ try {
       -OutputPath $patchedScriptPath
 
     $authoredScripts = @(Get-ChildItem -LiteralPath $actionScriptSourcePath -Recurse -File -Filter "*.as")
-    if ($authoredScripts.Count -ne 34) {
-      throw "Expected 34 authored CUI classes; found $($authoredScripts.Count) in $actionScriptSourcePath."
+    if ($authoredScripts.Count -ne 36) {
+      throw "Expected 36 authored CUI classes; found $($authoredScripts.Count) in $actionScriptSourcePath."
     }
 
     foreach ($authoredScript in $authoredScripts) {
@@ -472,8 +487,8 @@ try {
 
     $originalScripts = @(Get-ChildItem -LiteralPath $exportedScriptsDirectory -Recurse -File -Filter "*.as")
     $validationScripts = @(Get-ChildItem -LiteralPath $validationScriptsDirectory -Recurse -File -Filter "*.as")
-    if ($originalScripts.Count -ne 201 -or $validationScripts.Count -ne $originalScripts.Count) {
-      throw "Expected 201 seeded and reopened classes; found $($originalScripts.Count) before import and $($validationScripts.Count) after import."
+    if ($originalScripts.Count -ne 203 -or $validationScripts.Count -ne $originalScripts.Count) {
+      throw "Expected 203 seeded and reopened classes; found $($originalScripts.Count) before import and $($validationScripts.Count) after import."
     }
 
     foreach ($originalScript in $originalScripts) {
@@ -526,6 +541,8 @@ try {
       'CUIConditionContext',
       'CUIVisibilityBinding',
       'CUIVanillaVisibilityAdapter',
+      'CUIPlayerHudDataContext',
+      'CUIValueBinding',
       'CUIAssetManager',
       'CUISvgParser',
       'CUISvgPathParser',
@@ -582,6 +599,12 @@ try {
       'Condition exceeds the 8-level nesting limit',
       'Condition provider unavailable in hudmenu.gfx',
       'Vanilla visibility target is not allowlisted',
+      'Value source is not allowlisted in hudmenu.gfx',
+      'LocalEnvironmentData',
+      'LocalEnvData_Frequent',
+      'PlayerFrequentData',
+      'WeaponData',
+      'HUDStarbornPowersData',
       'Meter direction must be right, left, down, or up',
       'Meter segmentCount must be between 1 and 64',
       'Radial thickness exceeds meter bounds',
@@ -679,11 +702,11 @@ try {
   $cuiOutputDirectory = Join-Path $resolvedProjectOutputDirectory "VenworksCUI"
   $assetOutputDirectory = Join-Path $cuiOutputDirectory "Assets"
   New-Item -ItemType Directory -Force -Path $assetOutputDirectory | Out-Null
-  Copy-Item -LiteralPath $galleryLayoutSource -Destination (Join-Path $cuiOutputDirectory "layout.xml") -Force
+  Copy-Item -LiteralPath $providerProbeLayoutSource -Destination (Join-Path $cuiOutputDirectory "layout.xml") -Force
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
   Copy-Item -LiteralPath $invalidSvgSource -Destination (Join-Path $assetOutputDirectory "gallery-invalid.svg") -Force
-  Write-Host -ForegroundColor Green "Staged Goal 4G composite gallery in $cuiOutputDirectory"
+  Write-Host -ForegroundColor Green "Staged Goal 5 Chronomark provider probe in $cuiOutputDirectory"
 }
 finally {
   if ($KeepWork) {

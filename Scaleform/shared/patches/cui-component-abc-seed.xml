@@ -26,6 +26,9 @@
             <item>CUICompositionResolver</item>
             <item>CUICompositionResolver$0</item>
             <item>venworks.cui:CUICompositionResolver</item>
+            <item>CUICompositeResolver</item>
+            <item>CUICompositeResolver$0</item>
+            <item>venworks.cui:CUICompositeResolver</item>
             <item>CUIConditionParser</item>
             <item>CUIConditionParser$0</item>
             <item>venworks.cui:CUIConditionParser</item>
@@ -41,6 +44,12 @@
             <item>CUIVanillaVisibilityAdapter</item>
             <item>CUIVanillaVisibilityAdapter$0</item>
             <item>venworks.cui:CUIVanillaVisibilityAdapter</item>
+            <item>CUIPlayerHudDataContext</item>
+            <item>CUIPlayerHudDataContext$0</item>
+            <item>venworks.cui:CUIPlayerHudDataContext</item>
+            <item>CUIValueBinding</item>
+            <item>CUIValueBinding$0</item>
+            <item>venworks.cui:CUIValueBinding</item>
             <item>CUILayoutEngine</item>
             <item>CUILayoutEngine$0</item>
             <item>venworks.cui:CUILayoutEngine</item>
@@ -117,9 +126,6 @@
             <item>CUISymbol</item>
             <item>CUISymbol$0</item>
             <item>venworks.cui.components:CUISymbol</item>
-            <item>CUICompositeResolver</item>
-            <item>CUICompositeResolver$0</item>
-            <item>venworks.cui:CUICompositeResolver</item>
           </constant_string>
           <constant_namespace>
             <item isNull="true" />
@@ -187,20 +193,20 @@
             <item type="Namespace" kind="5" name_index="49" />
             <item type="Namespace" kind="24" name_index="49" />
             <item type="Namespace" kind="26" name_index="49" />
-            <item type="Namespace" kind="22" name_index="50" />
-            <item type="Namespace" kind="23" name_index="50" />
+            <item type="Namespace" kind="5" name_index="51" />
             <item type="Namespace" kind="5" name_index="52" />
-            <item type="Namespace" kind="5" name_index="53" />
-            <item type="Namespace" kind="24" name_index="53" />
-            <item type="Namespace" kind="26" name_index="53" />
+            <item type="Namespace" kind="24" name_index="52" />
+            <item type="Namespace" kind="26" name_index="52" />
+            <item type="Namespace" kind="5" name_index="54" />
             <item type="Namespace" kind="5" name_index="55" />
-            <item type="Namespace" kind="5" name_index="56" />
-            <item type="Namespace" kind="24" name_index="56" />
-            <item type="Namespace" kind="26" name_index="56" />
+            <item type="Namespace" kind="24" name_index="55" />
+            <item type="Namespace" kind="26" name_index="55" />
+            <item type="Namespace" kind="5" name_index="57" />
             <item type="Namespace" kind="5" name_index="58" />
-            <item type="Namespace" kind="5" name_index="59" />
-            <item type="Namespace" kind="24" name_index="59" />
-            <item type="Namespace" kind="26" name_index="59" />
+            <item type="Namespace" kind="24" name_index="58" />
+            <item type="Namespace" kind="26" name_index="58" />
+            <item type="Namespace" kind="22" name_index="59" />
+            <item type="Namespace" kind="23" name_index="59" />
             <item type="Namespace" kind="5" name_index="61" />
             <item type="Namespace" kind="5" name_index="62" />
             <item type="Namespace" kind="24" name_index="62" />
@@ -265,6 +271,14 @@
             <item type="Namespace" kind="5" name_index="107" />
             <item type="Namespace" kind="24" name_index="107" />
             <item type="Namespace" kind="26" name_index="107" />
+            <item type="Namespace" kind="5" name_index="109" />
+            <item type="Namespace" kind="5" name_index="110" />
+            <item type="Namespace" kind="24" name_index="110" />
+            <item type="Namespace" kind="26" name_index="110" />
+            <item type="Namespace" kind="5" name_index="112" />
+            <item type="Namespace" kind="5" name_index="113" />
+            <item type="Namespace" kind="24" name_index="113" />
+            <item type="Namespace" kind="26" name_index="113" />
           </constant_namespace>
           <constant_namespace_set>
             <item isNull="true" />
@@ -275,7 +289,7 @@
             </item>
             <item type="NamespaceSet">
               <namespaces>
-                <item>65</item>
+                <item>77</item>
               </namespaces>
             </item>
           </constant_namespace_set>
@@ -312,44 +326,48 @@
             <item type="Multiname" kind="9" name_index="44" namespace_index="0" namespace_set_index="1" qname_index="0" />
             <item type="Multiname" kind="7" name_index="47" namespace_index="2" namespace_set_index="0" qname_index="0" />
             <item type="Multiname" kind="9" name_index="47" namespace_index="0" namespace_set_index="1" qname_index="0" />
-            <item type="Multiname" kind="7" name_index="51" namespace_index="65" namespace_set_index="0" qname_index="0" />
-            <item type="Multiname" kind="9" name_index="51" namespace_index="0" namespace_set_index="2" qname_index="0" />
-            <item type="Multiname" kind="7" name_index="54" namespace_index="65" namespace_set_index="0" qname_index="0" />
-            <item type="Multiname" kind="9" name_index="54" namespace_index="0" namespace_set_index="2" qname_index="0" />
-            <item type="Multiname" kind="7" name_index="57" namespace_index="65" namespace_set_index="0" qname_index="0" />
-            <item type="Multiname" kind="9" name_index="57" namespace_index="0" namespace_set_index="2" qname_index="0" />
-            <item type="Multiname" kind="7" name_index="60" namespace_index="65" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="50" namespace_index="2" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="9" name_index="50" namespace_index="0" namespace_set_index="1" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="53" namespace_index="2" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="9" name_index="53" namespace_index="0" namespace_set_index="1" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="56" namespace_index="2" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="9" name_index="56" namespace_index="0" namespace_set_index="1" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="60" namespace_index="77" namespace_set_index="0" qname_index="0" />
             <item type="Multiname" kind="9" name_index="60" namespace_index="0" namespace_set_index="2" qname_index="0" />
-            <item type="Multiname" kind="7" name_index="63" namespace_index="65" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="63" namespace_index="77" namespace_set_index="0" qname_index="0" />
             <item type="Multiname" kind="9" name_index="63" namespace_index="0" namespace_set_index="2" qname_index="0" />
-            <item type="Multiname" kind="7" name_index="66" namespace_index="65" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="66" namespace_index="77" namespace_set_index="0" qname_index="0" />
             <item type="Multiname" kind="9" name_index="66" namespace_index="0" namespace_set_index="2" qname_index="0" />
-            <item type="Multiname" kind="7" name_index="69" namespace_index="65" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="69" namespace_index="77" namespace_set_index="0" qname_index="0" />
             <item type="Multiname" kind="9" name_index="69" namespace_index="0" namespace_set_index="2" qname_index="0" />
-            <item type="Multiname" kind="7" name_index="72" namespace_index="65" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="72" namespace_index="77" namespace_set_index="0" qname_index="0" />
             <item type="Multiname" kind="9" name_index="72" namespace_index="0" namespace_set_index="2" qname_index="0" />
-            <item type="Multiname" kind="7" name_index="75" namespace_index="65" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="75" namespace_index="77" namespace_set_index="0" qname_index="0" />
             <item type="Multiname" kind="9" name_index="75" namespace_index="0" namespace_set_index="2" qname_index="0" />
-            <item type="Multiname" kind="7" name_index="78" namespace_index="65" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="78" namespace_index="77" namespace_set_index="0" qname_index="0" />
             <item type="Multiname" kind="9" name_index="78" namespace_index="0" namespace_set_index="2" qname_index="0" />
-            <item type="Multiname" kind="7" name_index="81" namespace_index="65" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="81" namespace_index="77" namespace_set_index="0" qname_index="0" />
             <item type="Multiname" kind="9" name_index="81" namespace_index="0" namespace_set_index="2" qname_index="0" />
-            <item type="Multiname" kind="7" name_index="84" namespace_index="65" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="84" namespace_index="77" namespace_set_index="0" qname_index="0" />
             <item type="Multiname" kind="9" name_index="84" namespace_index="0" namespace_set_index="2" qname_index="0" />
-            <item type="Multiname" kind="7" name_index="87" namespace_index="65" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="87" namespace_index="77" namespace_set_index="0" qname_index="0" />
             <item type="Multiname" kind="9" name_index="87" namespace_index="0" namespace_set_index="2" qname_index="0" />
-            <item type="Multiname" kind="7" name_index="90" namespace_index="65" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="90" namespace_index="77" namespace_set_index="0" qname_index="0" />
             <item type="Multiname" kind="9" name_index="90" namespace_index="0" namespace_set_index="2" qname_index="0" />
-            <item type="Multiname" kind="7" name_index="93" namespace_index="65" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="93" namespace_index="77" namespace_set_index="0" qname_index="0" />
             <item type="Multiname" kind="9" name_index="93" namespace_index="0" namespace_set_index="2" qname_index="0" />
-            <item type="Multiname" kind="7" name_index="96" namespace_index="65" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="96" namespace_index="77" namespace_set_index="0" qname_index="0" />
             <item type="Multiname" kind="9" name_index="96" namespace_index="0" namespace_set_index="2" qname_index="0" />
-            <item type="Multiname" kind="7" name_index="99" namespace_index="65" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="99" namespace_index="77" namespace_set_index="0" qname_index="0" />
             <item type="Multiname" kind="9" name_index="99" namespace_index="0" namespace_set_index="2" qname_index="0" />
-            <item type="Multiname" kind="7" name_index="102" namespace_index="65" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="102" namespace_index="77" namespace_set_index="0" qname_index="0" />
             <item type="Multiname" kind="9" name_index="102" namespace_index="0" namespace_set_index="2" qname_index="0" />
-            <item type="Multiname" kind="7" name_index="105" namespace_index="2" namespace_set_index="0" qname_index="0" />
-            <item type="Multiname" kind="9" name_index="105" namespace_index="0" namespace_set_index="1" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="105" namespace_index="77" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="9" name_index="105" namespace_index="0" namespace_set_index="2" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="108" namespace_index="77" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="9" name_index="108" namespace_index="0" namespace_set_index="2" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="111" namespace_index="77" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="9" name_index="111" namespace_index="0" namespace_set_index="2" qname_index="0" />
           </constant_multiname>
         </constants>
         <method_info>
@@ -863,9 +881,57 @@
             <optional />
             <paramNames />
           </item>
+          <item type="MethodInfo" flags="0" name_index="4" ret_type="0">
+            <param_types />
+            <optional />
+            <paramNames />
+          </item>
+          <item type="MethodInfo" flags="0" name_index="0" ret_type="0">
+            <param_types />
+            <optional />
+            <paramNames />
+          </item>
+          <item type="MethodInfo" flags="0" name_index="4" ret_type="0">
+            <param_types />
+            <optional />
+            <paramNames />
+          </item>
+          <item type="MethodInfo" flags="0" name_index="4" ret_type="0">
+            <param_types />
+            <optional />
+            <paramNames />
+          </item>
+          <item type="MethodInfo" flags="0" name_index="0" ret_type="0">
+            <param_types />
+            <optional />
+            <paramNames />
+          </item>
+          <item type="MethodInfo" flags="0" name_index="4" ret_type="0">
+            <param_types />
+            <optional />
+            <paramNames />
+          </item>
         </method_info>
         <metadata_info />
         <instance_info>
+          <item type="InstanceInfo" flags="9" iinit_index="106" name_index="72" protectedNS="149" super_index="2">
+            <interfaces />
+            <instance_traits type="Traits">
+              <traits />
+            </instance_traits>
+          </item>
+          <item type="InstanceInfo" flags="9" iinit_index="103" name_index="70" protectedNS="145" super_index="2">
+            <interfaces />
+            <instance_traits type="Traits">
+              <traits />
+            </instance_traits>
+          </item>
+          <item type="InstanceInfo" flags="9" iinit_index="100" name_index="68" protectedNS="141" super_index="2">
+            <interfaces />
+            <instance_traits type="Traits">
+              <traits />
+            </instance_traits>
+          </item>
           <item type="InstanceInfo" flags="9" iinit_index="97" name_index="66" protectedNS="137" super_index="2">
             <interfaces />
             <instance_traits type="Traits">
@@ -956,19 +1022,19 @@
               <traits />
             </instance_traits>
           </item>
-          <item type="InstanceInfo" flags="9" iinit_index="52" name_index="36" protectedNS="77" super_index="2">
+          <item type="InstanceInfo" flags="9" iinit_index="52" name_index="36" protectedNS="75" super_index="2">
             <interfaces />
             <instance_traits type="Traits">
               <traits />
             </instance_traits>
           </item>
-          <item type="InstanceInfo" flags="9" iinit_index="49" name_index="34" protectedNS="73" super_index="2">
+          <item type="InstanceInfo" flags="9" iinit_index="49" name_index="34" protectedNS="71" super_index="2">
             <interfaces />
             <instance_traits type="Traits">
               <traits />
             </instance_traits>
           </item>
-          <item type="InstanceInfo" flags="9" iinit_index="46" name_index="32" protectedNS="69" super_index="2">
+          <item type="InstanceInfo" flags="9" iinit_index="46" name_index="32" protectedNS="67" super_index="2">
             <interfaces />
             <instance_traits type="Traits">
               <traits />
@@ -1064,14 +1130,23 @@
               <traits />
             </instance_traits>
           </item>
-          <item type="InstanceInfo" flags="9" iinit_index="100" name_index="68" protectedNS="141" super_index="2">
-            <interfaces />
-            <instance_traits type="Traits">
-              <traits />
-            </instance_traits>
-          </item>
         </instance_info>
         <class_info>
+          <item type="ClassInfo" cinit_index="107">
+            <static_traits type="Traits">
+              <traits />
+            </static_traits>
+          </item>
+          <item type="ClassInfo" cinit_index="104">
+            <static_traits type="Traits">
+              <traits />
+            </static_traits>
+          </item>
+          <item type="ClassInfo" cinit_index="101">
+            <static_traits type="Traits">
+              <traits />
+            </static_traits>
+          </item>
           <item type="ClassInfo" cinit_index="98">
             <static_traits type="Traits">
               <traits />
@@ -1237,17 +1312,12 @@
               <traits />
             </static_traits>
           </item>
-          <item type="ClassInfo" cinit_index="101">
-            <static_traits type="Traits">
-              <traits />
-            </static_traits>
-          </item>
         </class_info>
         <script_info>
           <item type="ScriptInfo" init_index="0">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="01040120" class_info="32" deleted="false" fileOffset="3427" kindFlags="0" kindType="4" name_index="1" slot_id="1">
+                <item type="TraitClass" bytes="01040123" class_info="35" deleted="false" fileOffset="3763" kindFlags="0" kindType="4" name_index="1" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1256,7 +1326,7 @@
           <item type="ScriptInfo" init_index="3">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="0404011f" class_info="31" deleted="false" fileOffset="3433" kindFlags="0" kindType="4" name_index="4" slot_id="1">
+                <item type="TraitClass" bytes="04040122" class_info="34" deleted="false" fileOffset="3769" kindFlags="0" kindType="4" name_index="4" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1265,7 +1335,7 @@
           <item type="ScriptInfo" init_index="6">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="0604011e" class_info="30" deleted="false" fileOffset="3439" kindFlags="0" kindType="4" name_index="6" slot_id="1">
+                <item type="TraitClass" bytes="06040121" class_info="33" deleted="false" fileOffset="3775" kindFlags="0" kindType="4" name_index="6" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1274,7 +1344,7 @@
           <item type="ScriptInfo" init_index="9">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="0804011d" class_info="29" deleted="false" fileOffset="3445" kindFlags="0" kindType="4" name_index="8" slot_id="1">
+                <item type="TraitClass" bytes="08040120" class_info="32" deleted="false" fileOffset="3781" kindFlags="0" kindType="4" name_index="8" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1283,7 +1353,7 @@
           <item type="ScriptInfo" init_index="12">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="0a04011c" class_info="28" deleted="false" fileOffset="3451" kindFlags="0" kindType="4" name_index="10" slot_id="1">
+                <item type="TraitClass" bytes="0a04011f" class_info="31" deleted="false" fileOffset="3787" kindFlags="0" kindType="4" name_index="10" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1292,7 +1362,7 @@
           <item type="ScriptInfo" init_index="15">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="0c04011b" class_info="27" deleted="false" fileOffset="3457" kindFlags="0" kindType="4" name_index="12" slot_id="1">
+                <item type="TraitClass" bytes="0c04011e" class_info="30" deleted="false" fileOffset="3793" kindFlags="0" kindType="4" name_index="12" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1301,7 +1371,7 @@
           <item type="ScriptInfo" init_index="18">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="0e04011a" class_info="26" deleted="false" fileOffset="3463" kindFlags="0" kindType="4" name_index="14" slot_id="1">
+                <item type="TraitClass" bytes="0e04011d" class_info="29" deleted="false" fileOffset="3799" kindFlags="0" kindType="4" name_index="14" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1310,7 +1380,7 @@
           <item type="ScriptInfo" init_index="21">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="10040119" class_info="25" deleted="false" fileOffset="3469" kindFlags="0" kindType="4" name_index="16" slot_id="1">
+                <item type="TraitClass" bytes="1004011c" class_info="28" deleted="false" fileOffset="3805" kindFlags="0" kindType="4" name_index="16" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1319,7 +1389,7 @@
           <item type="ScriptInfo" init_index="24">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="12040118" class_info="24" deleted="false" fileOffset="3475" kindFlags="0" kindType="4" name_index="18" slot_id="1">
+                <item type="TraitClass" bytes="1204011b" class_info="27" deleted="false" fileOffset="3811" kindFlags="0" kindType="4" name_index="18" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1328,7 +1398,7 @@
           <item type="ScriptInfo" init_index="27">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="14040117" class_info="23" deleted="false" fileOffset="3481" kindFlags="0" kindType="4" name_index="20" slot_id="1">
+                <item type="TraitClass" bytes="1404011a" class_info="26" deleted="false" fileOffset="3817" kindFlags="0" kindType="4" name_index="20" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1337,7 +1407,7 @@
           <item type="ScriptInfo" init_index="30">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="16040116" class_info="22" deleted="false" fileOffset="3487" kindFlags="0" kindType="4" name_index="22" slot_id="1">
+                <item type="TraitClass" bytes="16040119" class_info="25" deleted="false" fileOffset="3823" kindFlags="0" kindType="4" name_index="22" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1346,7 +1416,7 @@
           <item type="ScriptInfo" init_index="33">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="18040115" class_info="21" deleted="false" fileOffset="3493" kindFlags="0" kindType="4" name_index="24" slot_id="1">
+                <item type="TraitClass" bytes="18040118" class_info="24" deleted="false" fileOffset="3829" kindFlags="0" kindType="4" name_index="24" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1355,7 +1425,7 @@
           <item type="ScriptInfo" init_index="36">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="1a040114" class_info="20" deleted="false" fileOffset="3499" kindFlags="0" kindType="4" name_index="26" slot_id="1">
+                <item type="TraitClass" bytes="1a040117" class_info="23" deleted="false" fileOffset="3835" kindFlags="0" kindType="4" name_index="26" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1364,7 +1434,7 @@
           <item type="ScriptInfo" init_index="39">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="1c040113" class_info="19" deleted="false" fileOffset="3505" kindFlags="0" kindType="4" name_index="28" slot_id="1">
+                <item type="TraitClass" bytes="1c040116" class_info="22" deleted="false" fileOffset="3841" kindFlags="0" kindType="4" name_index="28" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1373,7 +1443,7 @@
           <item type="ScriptInfo" init_index="42">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="1e040112" class_info="18" deleted="false" fileOffset="3511" kindFlags="0" kindType="4" name_index="30" slot_id="1">
+                <item type="TraitClass" bytes="1e040115" class_info="21" deleted="false" fileOffset="3847" kindFlags="0" kindType="4" name_index="30" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1382,7 +1452,7 @@
           <item type="ScriptInfo" init_index="45">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="20040111" class_info="17" deleted="false" fileOffset="3517" kindFlags="0" kindType="4" name_index="32" slot_id="1">
+                <item type="TraitClass" bytes="20040114" class_info="20" deleted="false" fileOffset="3853" kindFlags="0" kindType="4" name_index="32" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1391,7 +1461,7 @@
           <item type="ScriptInfo" init_index="48">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="22040110" class_info="16" deleted="false" fileOffset="3523" kindFlags="0" kindType="4" name_index="34" slot_id="1">
+                <item type="TraitClass" bytes="22040113" class_info="19" deleted="false" fileOffset="3859" kindFlags="0" kindType="4" name_index="34" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1400,7 +1470,7 @@
           <item type="ScriptInfo" init_index="51">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="2404010f" class_info="15" deleted="false" fileOffset="3529" kindFlags="0" kindType="4" name_index="36" slot_id="1">
+                <item type="TraitClass" bytes="24040112" class_info="18" deleted="false" fileOffset="3865" kindFlags="0" kindType="4" name_index="36" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1409,7 +1479,7 @@
           <item type="ScriptInfo" init_index="54">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="2604010e" class_info="14" deleted="false" fileOffset="3535" kindFlags="0" kindType="4" name_index="38" slot_id="1">
+                <item type="TraitClass" bytes="26040111" class_info="17" deleted="false" fileOffset="3871" kindFlags="0" kindType="4" name_index="38" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1418,7 +1488,7 @@
           <item type="ScriptInfo" init_index="57">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="2804010d" class_info="13" deleted="false" fileOffset="3541" kindFlags="0" kindType="4" name_index="40" slot_id="1">
+                <item type="TraitClass" bytes="28040110" class_info="16" deleted="false" fileOffset="3877" kindFlags="0" kindType="4" name_index="40" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1427,7 +1497,7 @@
           <item type="ScriptInfo" init_index="60">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="2a04010c" class_info="12" deleted="false" fileOffset="3547" kindFlags="0" kindType="4" name_index="42" slot_id="1">
+                <item type="TraitClass" bytes="2a04010f" class_info="15" deleted="false" fileOffset="3883" kindFlags="0" kindType="4" name_index="42" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1436,7 +1506,7 @@
           <item type="ScriptInfo" init_index="63">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="2c04010b" class_info="11" deleted="false" fileOffset="3553" kindFlags="0" kindType="4" name_index="44" slot_id="1">
+                <item type="TraitClass" bytes="2c04010e" class_info="14" deleted="false" fileOffset="3889" kindFlags="0" kindType="4" name_index="44" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1445,7 +1515,7 @@
           <item type="ScriptInfo" init_index="66">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="2e04010a" class_info="10" deleted="false" fileOffset="3559" kindFlags="0" kindType="4" name_index="46" slot_id="1">
+                <item type="TraitClass" bytes="2e04010d" class_info="13" deleted="false" fileOffset="3895" kindFlags="0" kindType="4" name_index="46" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1454,7 +1524,7 @@
           <item type="ScriptInfo" init_index="69">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="30040109" class_info="9" deleted="false" fileOffset="3565" kindFlags="0" kindType="4" name_index="48" slot_id="1">
+                <item type="TraitClass" bytes="3004010c" class_info="12" deleted="false" fileOffset="3901" kindFlags="0" kindType="4" name_index="48" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1463,7 +1533,7 @@
           <item type="ScriptInfo" init_index="72">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="32040108" class_info="8" deleted="false" fileOffset="3571" kindFlags="0" kindType="4" name_index="50" slot_id="1">
+                <item type="TraitClass" bytes="3204010b" class_info="11" deleted="false" fileOffset="3907" kindFlags="0" kindType="4" name_index="50" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1472,7 +1542,7 @@
           <item type="ScriptInfo" init_index="75">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="34040107" class_info="7" deleted="false" fileOffset="3577" kindFlags="0" kindType="4" name_index="52" slot_id="1">
+                <item type="TraitClass" bytes="3404010a" class_info="10" deleted="false" fileOffset="3913" kindFlags="0" kindType="4" name_index="52" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1481,7 +1551,7 @@
           <item type="ScriptInfo" init_index="78">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="36040106" class_info="6" deleted="false" fileOffset="3583" kindFlags="0" kindType="4" name_index="54" slot_id="1">
+                <item type="TraitClass" bytes="36040109" class_info="9" deleted="false" fileOffset="3919" kindFlags="0" kindType="4" name_index="54" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1490,7 +1560,7 @@
           <item type="ScriptInfo" init_index="81">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="38040105" class_info="5" deleted="false" fileOffset="3589" kindFlags="0" kindType="4" name_index="56" slot_id="1">
+                <item type="TraitClass" bytes="38040108" class_info="8" deleted="false" fileOffset="3925" kindFlags="0" kindType="4" name_index="56" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1499,7 +1569,7 @@
           <item type="ScriptInfo" init_index="84">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="3a040104" class_info="4" deleted="false" fileOffset="3595" kindFlags="0" kindType="4" name_index="58" slot_id="1">
+                <item type="TraitClass" bytes="3a040107" class_info="7" deleted="false" fileOffset="3931" kindFlags="0" kindType="4" name_index="58" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1508,7 +1578,7 @@
           <item type="ScriptInfo" init_index="87">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="3c040103" class_info="3" deleted="false" fileOffset="3601" kindFlags="0" kindType="4" name_index="60" slot_id="1">
+                <item type="TraitClass" bytes="3c040106" class_info="6" deleted="false" fileOffset="3937" kindFlags="0" kindType="4" name_index="60" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1517,7 +1587,7 @@
           <item type="ScriptInfo" init_index="90">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="3e040102" class_info="2" deleted="false" fileOffset="3607" kindFlags="0" kindType="4" name_index="62" slot_id="1">
+                <item type="TraitClass" bytes="3e040105" class_info="5" deleted="false" fileOffset="3943" kindFlags="0" kindType="4" name_index="62" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1526,7 +1596,7 @@
           <item type="ScriptInfo" init_index="93">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="40040101" class_info="1" deleted="false" fileOffset="3613" kindFlags="0" kindType="4" name_index="64" slot_id="1">
+                <item type="TraitClass" bytes="40040104" class_info="4" deleted="false" fileOffset="3949" kindFlags="0" kindType="4" name_index="64" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1535,7 +1605,7 @@
           <item type="ScriptInfo" init_index="96">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="42040100" class_info="0" deleted="false" fileOffset="3619" kindFlags="0" kindType="4" name_index="66" slot_id="1">
+                <item type="TraitClass" bytes="42040103" class_info="3" deleted="false" fileOffset="3955" kindFlags="0" kindType="4" name_index="66" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1544,7 +1614,25 @@
           <item type="ScriptInfo" init_index="99">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="44040121" class_info="33" deleted="false" fileOffset="3625" kindFlags="0" kindType="4" name_index="68" slot_id="1">
+                <item type="TraitClass" bytes="44040102" class_info="2" deleted="false" fileOffset="3961" kindFlags="0" kindType="4" name_index="68" slot_id="1">
+                  <metadata />
+                </item>
+              </traits>
+            </traits>
+          </item>
+          <item type="ScriptInfo" init_index="102">
+            <traits type="Traits">
+              <traits>
+                <item type="TraitClass" bytes="46040101" class_info="1" deleted="false" fileOffset="3967" kindFlags="0" kindType="4" name_index="70" slot_id="1">
+                  <metadata />
+                </item>
+              </traits>
+            </traits>
+          </item>
+          <item type="ScriptInfo" init_index="105">
+            <traits type="Traits">
+              <traits>
+                <item type="TraitClass" bytes="48040100" class_info="0" deleted="false" fileOffset="3973" kindFlags="0" kindType="4" name_index="72" slot_id="1">
                   <metadata />
                 </item>
               </traits>
@@ -1552,7 +1640,7 @@
           </item>
         </script_info>
         <bodies>
-          <item type="MethodBody" codeBytes="d0305d03600230600258201d680147" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="0">
+          <item type="MethodBody" codeBytes="d0305d03600230600258231d680147" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="0">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1570,7 +1658,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d056002306002581f1d680447" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="3">
+          <item type="MethodBody" codeBytes="d0305d05600230600258221d680447" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="3">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1588,7 +1676,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d076002306002581e1d680647" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="6">
+          <item type="MethodBody" codeBytes="d0305d07600230600258211d680647" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="6">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1606,7 +1694,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d096002306002581d1d680847" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="9">
+          <item type="MethodBody" codeBytes="d0305d09600230600258201d680847" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="9">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1624,7 +1712,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d0b6002306002581c1d680a47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="12">
+          <item type="MethodBody" codeBytes="d0305d0b6002306002581f1d680a47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="12">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1642,7 +1730,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d0d6002306002581b1d680c47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="15">
+          <item type="MethodBody" codeBytes="d0305d0d6002306002581e1d680c47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="15">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1660,7 +1748,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d0f6002306002581a1d680e47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="18">
+          <item type="MethodBody" codeBytes="d0305d0f6002306002581d1d680e47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="18">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1678,7 +1766,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d11600230600258191d681047" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="21">
+          <item type="MethodBody" codeBytes="d0305d116002306002581c1d681047" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="21">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1696,7 +1784,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d13600230600258181d681247" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="24">
+          <item type="MethodBody" codeBytes="d0305d136002306002581b1d681247" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="24">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1714,7 +1802,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d15600230600258171d681447" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="27">
+          <item type="MethodBody" codeBytes="d0305d156002306002581a1d681447" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="27">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1732,7 +1820,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d17600230600258161d681647" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="30">
+          <item type="MethodBody" codeBytes="d0305d17600230600258191d681647" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="30">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1750,7 +1838,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d19600230600258151d681847" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="33">
+          <item type="MethodBody" codeBytes="d0305d19600230600258181d681847" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="33">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1768,7 +1856,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d1b600230600258141d681a47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="36">
+          <item type="MethodBody" codeBytes="d0305d1b600230600258171d681a47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="36">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1786,7 +1874,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d1d600230600258131d681c47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="39">
+          <item type="MethodBody" codeBytes="d0305d1d600230600258161d681c47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="39">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1804,7 +1892,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d1f600230600258121d681e47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="42">
+          <item type="MethodBody" codeBytes="d0305d1f600230600258151d681e47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="42">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1822,7 +1910,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d21600230600258111d682047" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="45">
+          <item type="MethodBody" codeBytes="d0305d21600230600258141d682047" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="45">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1840,7 +1928,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d23600230600258101d682247" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="48">
+          <item type="MethodBody" codeBytes="d0305d23600230600258131d682247" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="48">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1858,7 +1946,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d256002306002580f1d682447" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="51">
+          <item type="MethodBody" codeBytes="d0305d25600230600258121d682447" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="51">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1876,7 +1964,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d276002306002580e1d682647" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="54">
+          <item type="MethodBody" codeBytes="d0305d27600230600258111d682647" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="54">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1894,7 +1982,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d296002306002580d1d682847" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="57">
+          <item type="MethodBody" codeBytes="d0305d29600230600258101d682847" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="57">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1912,7 +2000,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d2b6002306002580c1d682a47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="60">
+          <item type="MethodBody" codeBytes="d0305d2b6002306002580f1d682a47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="60">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1930,7 +2018,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d2d6002306002580b1d682c47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="63">
+          <item type="MethodBody" codeBytes="d0305d2d6002306002580e1d682c47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="63">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1948,7 +2036,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d2f6002306002580a1d682e47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="66">
+          <item type="MethodBody" codeBytes="d0305d2f6002306002580d1d682e47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="66">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1966,7 +2054,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d31600230600258091d683047" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="69">
+          <item type="MethodBody" codeBytes="d0305d316002306002580c1d683047" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="69">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -1984,7 +2072,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d33600230600258081d683247" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="72">
+          <item type="MethodBody" codeBytes="d0305d336002306002580b1d683247" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="72">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -2002,7 +2090,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d35600230600258071d683447" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="75">
+          <item type="MethodBody" codeBytes="d0305d356002306002580a1d683447" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="75">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -2020,7 +2108,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d37600230600258061d683647" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="78">
+          <item type="MethodBody" codeBytes="d0305d37600230600258091d683647" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="78">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -2038,7 +2126,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d39600230600258051d683847" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="81">
+          <item type="MethodBody" codeBytes="d0305d39600230600258081d683847" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="81">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -2056,7 +2144,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d3b600230600258041d683a47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="84">
+          <item type="MethodBody" codeBytes="d0305d3b600230600258071d683a47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="84">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -2074,7 +2162,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d3d600230600258031d683c47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="87">
+          <item type="MethodBody" codeBytes="d0305d3d600230600258061d683c47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="87">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -2092,7 +2180,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d3f600230600258021d683e47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="90">
+          <item type="MethodBody" codeBytes="d0305d3f600230600258051d683e47" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="90">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -2110,7 +2198,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d41600230600258011d684047" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="93">
+          <item type="MethodBody" codeBytes="d0305d41600230600258041d684047" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="93">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -2128,7 +2216,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d43600230600258001d684247" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="96">
+          <item type="MethodBody" codeBytes="d0305d43600230600258031d684247" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="96">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -2146,7 +2234,7 @@
               <traits />
             </traits>
           </item>
-          <item type="MethodBody" codeBytes="d0305d45600230600258211d684447" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="99">
+          <item type="MethodBody" codeBytes="d0305d45600230600258021d684447" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="99">
             <exceptions />
             <traits type="Traits">
               <traits />
@@ -2159,6 +2247,42 @@
             </traits>
           </item>
           <item type="MethodBody" codeBytes="d03047" init_scope_depth="3" max_regs="1" max_scope_depth="4" max_stack="1" method_info="101">
+            <exceptions />
+            <traits type="Traits">
+              <traits />
+            </traits>
+          </item>
+          <item type="MethodBody" codeBytes="d0305d47600230600258011d684647" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="102">
+            <exceptions />
+            <traits type="Traits">
+              <traits />
+            </traits>
+          </item>
+          <item type="MethodBody" codeBytes="d030d0490047" init_scope_depth="4" max_regs="1" max_scope_depth="5" max_stack="1" method_info="103">
+            <exceptions />
+            <traits type="Traits">
+              <traits />
+            </traits>
+          </item>
+          <item type="MethodBody" codeBytes="d03047" init_scope_depth="3" max_regs="1" max_scope_depth="4" max_stack="1" method_info="104">
+            <exceptions />
+            <traits type="Traits">
+              <traits />
+            </traits>
+          </item>
+          <item type="MethodBody" codeBytes="d0305d49600230600258001d684847" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="105">
+            <exceptions />
+            <traits type="Traits">
+              <traits />
+            </traits>
+          </item>
+          <item type="MethodBody" codeBytes="d030d0490047" init_scope_depth="4" max_regs="1" max_scope_depth="5" max_stack="1" method_info="106">
+            <exceptions />
+            <traits type="Traits">
+              <traits />
+            </traits>
+          </item>
+          <item type="MethodBody" codeBytes="d03047" init_scope_depth="3" max_regs="1" max_scope_depth="4" max_stack="1" method_info="107">
             <exceptions />
             <traits type="Traits">
               <traits />

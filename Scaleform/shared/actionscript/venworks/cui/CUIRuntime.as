@@ -40,7 +40,9 @@ package venworks.cui
       private var layoutEngine:CUILayoutEngine;
       private var conditionParser:CUIConditionParser;
       private var conditionContext:CUIConditionContext;
+      private var valueContext:CUIPlayerHudDataContext;
       private var visibilityBindings:Array;
+      private var valueBindings:Array;
       private var vanillaAdapters:Array;
       private var diagnosticPhase:String = "";
       private var diagnosticNode:XML;
@@ -116,13 +118,18 @@ package venworks.cui
             this.setDiagnosticContext("CONDITION INITIALIZATION",null);
             conditionParser = new CUIConditionParser();
             visibilityBindings = [];
+            valueBindings = [];
             vanillaAdapters = [];
             conditionContext = new CUIConditionContext();
             conditionContext.addEventListener(Event.CHANGE,this.onConditionChanged);
+            valueContext = new CUIPlayerHudDataContext();
+            valueContext.addEventListener(Event.CHANGE,this.onValueChanged);
             layoutEngine = new CUILayoutEngine(componentLayer,layoutConfig);
             this.renderChildren(parser.components,componentLayer,parser.components);
             this.setDiagnosticContext("VANILLA ADAPTER INITIALIZATION",null);
             this.createVanillaAdapters(parser.vanillaVisibility);
+            this.setDiagnosticContext("INITIAL LIVE VALUE EVALUATION",null);
+            this.applyValues();
             this.setDiagnosticContext("INITIAL VISIBILITY EVALUATION",null);
             this.applyConditions();
             this.clearDiagnosticContext();
@@ -261,6 +268,15 @@ package venworks.cui
             param2.addChild(component);
             this.setDiagnosticContext("LAYOUT POSITIONING",node);
             layoutEngine.position(component,node,param2,param3);
+            if(node.@source.length() == 1)
+            {
+               this.setDiagnosticContext("VALUE BINDING CREATION",node);
+               valueBindings.push(new CUIValueBinding(
+                  component,
+                  node,
+                  String(node.name()) == "meter" ? parser.getMeterStyle(String(node.@style)) : null
+               ));
+            }
             if(node.@visibleWhen.length() == 1)
             {
                this.setDiagnosticContext("VISIBILITY CONDITION COMPILATION",node);
@@ -377,6 +393,29 @@ package venworks.cui
          }
       }
 
+      private function onValueChanged(param1:Event) : void
+      {
+         try
+         {
+            this.setDiagnosticContext("LIVE VALUE EVALUATION",null);
+            this.applyValues();
+            this.clearDiagnosticContext();
+         }
+         catch(param2:Error)
+         {
+            this.showRuntimeError(param2);
+         }
+      }
+
+      private function applyValues() : void
+      {
+         var binding:CUIValueBinding = null;
+         for each(binding in valueBindings)
+         {
+            binding.apply(valueContext);
+         }
+      }
+
       private function applyConditions() : void
       {
          var binding:CUIVisibilityBinding = null;
@@ -393,11 +432,20 @@ package venworks.cui
 
       private function clearComponentLayer() : void
       {
+         if(conditionContext != null)
+         {
+            conditionContext.removeEventListener(Event.CHANGE,this.onConditionChanged);
+         }
+         if(valueContext != null)
+         {
+            valueContext.removeEventListener(Event.CHANGE,this.onValueChanged);
+         }
          while(componentLayer.numChildren > 0)
          {
             componentLayer.removeChildAt(componentLayer.numChildren - 1);
          }
          visibilityBindings = [];
+         valueBindings = [];
          vanillaAdapters = [];
       }
    }

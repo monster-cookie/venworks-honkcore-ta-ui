@@ -79,10 +79,14 @@ continuous, rectangle, dot, uniform-triangle, alternating-triangle, vertical,
 reverse, and radial renderers without live HUD data. The Goal 4F asset and icon
 gallery exercises all 21 built-in icons, packaged SVG,
 the Venworks logo SVG, authored paths, masks, and movie-aware allowlisted
-embedded symbols. The Goal 4G composite gallery is the staged `layout.xml`; it
+embedded symbols. The Goal 4G composite gallery exercises
 exercises all four warning severities and button states, a bounded quick bar
 with an independently hidden button, and an information panel with metadata,
-divider, and meter content. Malformed fixtures are
+divider, and meter content. Goal 4G's positive and negative in-game checks are
+accepted. The staged `layout.xml` is now the Goal 5 Chronomark provider probe:
+it hides the allowlisted vanilla bottom-left group and displays confirmed live
+player-HUD fields plus explicit placeholders for unresolved providers.
+Malformed fixtures are
 intentionally not well-formed XML, while other negative fixtures may be
 schema-valid and rejected by runtime semantic checks. See
 `../docs/GOAL_3_COMPONENT_LIBRARY.md`,
@@ -91,6 +95,7 @@ schema-valid and rejected by runtime semantic checks. See
 `../docs/GOAL_4C_CONDITIONS.md`,
 `../docs/GOAL_4D_METER_RENDERERS.md`,
 `../docs/GOAL_4E_ASSET_PRIMITIVES.md`, and
+`../docs/GOAL_5_CHRONOMARK_REPLACEMENT.md`, and
 `../docs/COMPONENT_CATALOG.md`.
 
 An optional component `anchor` uses one of `top-left`, `top-center`,
@@ -141,3 +146,20 @@ states; quick bars accept at most 16 buttons; information panels accept at most
 12 metadata rows and 20 total child items; warnings support `info`, `warning`,
 `danger`, and `critical` severities. The staged gallery uses fixed values and
 does not replace or bind live vanilla HUD data.
+
+Goal 5 adds bounded live values to ordinary `text` and `meter` primitives.
+A text keeps its required static `value` as a provider-not-ready fallback and
+may add `source` plus one of `raw`, `integer`, `percent`, `temperature`,
+`gravity`, `time24`, or `boolean`. A meter keeps required static `value` and
+`max` fallbacks and may add numeric `source` plus optional `maxSource`.
+Source identifiers are case-insensitive and ignore underscores, but they must
+belong to the hardcoded `hudmenu.gfx` allowlist. Unknown sources and incompatible
+source/format combinations fail before the component renders. The runtime does
+not accept provider names, member names, interpolation, scripts, or arbitrary
+expressions from configuration.
+
+The current allowlist covers `location.name`, the four `environment.*` probe
+values, health/O2/power values under `player.*` and `power.*`, and weapon ammo
+counts/flags under `weapon.*`. Weapon name, ammo type, carry weight, and credits
+are intentionally unavailable until their always-loaded providers are proven.
+See `../docs/GOAL_5_CHRONOMARK_REPLACEMENT.md` for the exact list.

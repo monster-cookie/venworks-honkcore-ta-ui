@@ -141,6 +141,26 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="valueSourceType">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="1" />
+      <xs:maxLength value="64" />
+      <xs:pattern value="[A-Za-z][A-Za-z0-9._]*" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="valueFormatType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="raw" />
+      <xs:enumeration value="integer" />
+      <xs:enumeration value="percent" />
+      <xs:enumeration value="temperature" />
+      <xs:enumeration value="gravity" />
+      <xs:enumeration value="time24" />
+      <xs:enumeration value="boolean" />
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:attributeGroup name="componentAttributes">
     <xs:attribute name="id" type="idType" use="required" />
     <xs:attribute name="x" type="xs:decimal" use="required" />
@@ -160,6 +180,8 @@
   <xs:complexType name="textType">
     <xs:attributeGroup ref="componentAttributes" />
     <xs:attribute name="value" type="xs:string" use="required" />
+    <xs:attribute name="source" type="valueSourceType" />
+    <xs:attribute name="format" type="valueFormatType" default="raw" />
     <xs:attribute name="font" type="xs:string" use="required" />
     <xs:attribute name="fontSize" type="xs:positiveInteger" use="required" />
     <xs:attribute name="color" type="colorType" use="required" />
@@ -200,6 +222,8 @@
     <xs:attribute name="style" type="idType" use="required" />
     <xs:attribute name="value" type="xs:decimal" use="required" />
     <xs:attribute name="max" type="xs:decimal" use="required" />
+    <xs:attribute name="source" type="valueSourceType" />
+    <xs:attribute name="maxSource" type="valueSourceType" />
   </xs:complexType>
 
   <xs:complexType name="assetType">

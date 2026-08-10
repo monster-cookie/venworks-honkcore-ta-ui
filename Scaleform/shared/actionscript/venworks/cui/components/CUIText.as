@@ -30,5 +30,11 @@ package venworks.cui.components
          label.setTextFormat(format);
          addChild(labelHost);
       }
+
+      public function setValue(param1:String) : void
+      {
+         label.text = param1;
+         label.setTextFormat(label.defaultTextFormat);
+      }
    }
 }

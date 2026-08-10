@@ -309,7 +309,7 @@ package venworks.cui
          }
          else if(type == "text")
          {
-            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","value","font","fontSize","color","bold","align"]);
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","value","source","format","font","fontSize","color","bold","align"]);
             if(String(param1.@value).length == 0)
             {
                throw new Error("INVALID|Text value cannot be empty: " + String(param1.@id));
@@ -321,6 +321,10 @@ package venworks.cui
             if(String(param1.@align) != "left" && String(param1.@align) != "center" && String(param1.@align) != "right")
             {
                throw new Error("INVALID|Text align must be left, center, or right: " + String(param1.@id));
+            }
+            if(param1.@source.length() == 1)
+            {
+               CUIValueBinding.validateText(param1);
             }
          }
          else if(type == "panel")
@@ -354,13 +358,21 @@ package venworks.cui
          }
          else if(type == "meter")
          {
-            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","style","value","max"]);
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","style","value","max","source","maxSource"]);
             style = this.getMeterStyle(String(param1.@style));
             this.requireFinite(param1,"value");
             this.requireFinite(param1,"max");
             if(Number(param1.@max) <= 0)
             {
                throw new Error("INVALID|Meter max must be greater than zero: " + String(param1.@id));
+            }
+            if(param1.@maxSource.length() == 1 && param1.@source.length() == 0)
+            {
+               throw new Error("INVALID|Meter maxSource requires source: " + String(param1.@id));
+            }
+            if(param1.@source.length() == 1)
+            {
+               CUIValueBinding.validateMeter(param1);
             }
             if(String(style.@renderer) == "radial" && Number(style.@thickness) >
                Math.min(Number(param1.@width),Number(param1.@height)))

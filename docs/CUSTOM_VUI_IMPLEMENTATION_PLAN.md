@@ -182,8 +182,8 @@ Goal 4 is divided into bounded review gates:
   and warning states; quick bars allow at most 16 independently visible buttons;
   information panels allow at most 12 metadata rows and 20 total content items;
   warnings provide info, warning, danger, and critical severities. The
-  implementation is complete and awaits positive/negative in-game gallery
-  acceptance.
+  implementation and its positive/negative in-game gallery checks are
+  accepted.
 
 Each gate requires a gallery and failure fixtures before use on a live HUD
 surface. Each remaining goal follows acceptance of the preceding gate; palettes
@@ -191,10 +191,22 @@ remain deferred until the UI work is complete.
 
 ## Goal 5: Implement the first configurable player HUD surface
 
-Choose one low-risk vanilla-owned surface after provider discovery. Apply
-layout, visibility, and the reusable meter renderers to real data without
-changing the vanilla input, lifecycle, or data-provider contract. Health is a
-candidate, but the exact first surface is a separate approval decision.
+The approved first surface is the bottom-left Chronomark replacement. Goal 5
+starts with a provider probe in approximately the final layout: it hides the
+complete vanilla bottom-left group through the lifecycle-safe adapter, renders
+the replacement whenever the HUD is active, and ignores scanner state. Only
+allowlisted fields confirmed in the vanilla `hudmenu.gfx` provider contract may
+bind. The probe exposes location, local time, atmospheric oxygen, temperature,
+gravity, health, O2, active-power data, and weapon ammo. Weapon name/ammo type,
+carry weight, and credits remain visibly labeled provider gaps until an
+always-loaded owner is proven; they are not guessed.
+
+The live binding contract is deliberately smaller than an expression system:
+text selects one allowlisted `source` and bounded `format`, while meters select
+one numeric `source` and optional numeric `maxSource`. Configuration cannot
+subscribe to arbitrary providers or name ActionScript members. See
+`GOAL_5_CHRONOMARK_REPLACEMENT.md` for the discovered provider map, probe
+acceptance checks, and final-layout requirements.
 
 Validate reload, save load, first/third person, scanner, death/reload, ladder,
 workbench, and ship transitions before expanding the runtime.
