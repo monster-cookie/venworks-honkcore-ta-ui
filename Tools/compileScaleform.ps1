@@ -570,11 +570,13 @@ try {
     }
 
     $reopenedAssetManagerPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIAssetManager.as'
+    $reopenedCompositionResolverPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUICompositionResolver.as'
     $reopenedIconLibraryPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIIconLibrary.as'
     $reopenedIconPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIIcon.as'
     $reopenedImagePath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIImage.as'
     $reopenedSymbolPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUISymbol.as'
     $reopenedAssetManagerSource = Get-Content -LiteralPath $reopenedAssetManagerPath -Raw
+    $reopenedCompositionResolverSource = Get-Content -LiteralPath $reopenedCompositionResolverPath -Raw
     $reopenedIconLibrarySource = Get-Content -LiteralPath $reopenedIconLibraryPath -Raw
     $reopenedIconSource = Get-Content -LiteralPath $reopenedIconPath -Raw
     $reopenedImageSource = Get-Content -LiteralPath $reopenedImagePath -Raw
@@ -606,6 +608,9 @@ try {
     }
     if ($reopenedSymbolSource -match 'libraryLinkageName' -or $reopenedSymbolSource -match '@library') {
       throw 'Generated CUISymbol still contains retired supplemental-library support.'
+    }
+    if ($reopenedCompositionResolverSource -notmatch 'type\s*==\s*"icon"') {
+      throw 'Generated CUICompositionResolver does not accept icon leaf components.'
     }
 
     if ($validationSource.Contains('VENWORKS XML LOADED') -or
