@@ -725,8 +725,10 @@ try {
       }
     }
     if ($reopenedVanillaVisibilitySource -notmatch 'RightMeters_mc' -or
+        $reopenedVanillaVisibilitySource -notmatch 'Object\(playerStatus\)\[childName\]' -or
+        $reopenedVanillaVisibilitySource -match 'playerStatus\.getChildByName\(childName\)' -or
         $reopenedVanillaVisibilitySource -match 'EquippedGrenadeIcon_mc|EquippedGrenadeCount_mc|JetpackMeterWrapper_mc|HUDVehicle_mc') {
-      throw 'Generated player-status visibility adapter does not preserve grenade, boost, and vehicle controls.'
+      throw 'Generated player-status visibility adapter does not use fixed properties or preserve grenade, boost, and vehicle controls.'
     }
     if ($reopenedAssetManagerSource -match 'flash\.display\.Loader' -or
         $reopenedAssetManagerSource -match 'LoaderContext' -or

@@ -137,7 +137,10 @@ visible.
 `playerStatus` is a fixed, surgical adapter for the replaced lower-right player
 status children inside `RightMeters_mc`. It suppresses only the vanilla health,
 power, and equipped-weapon presentation. Grenade icon/count, boost/jetpack,
-vehicle HUD, and their divider remain under vanilla ownership.
+vehicle HUD, and their divider remain under vanilla ownership. The adapter
+resolves its hardcoded child allowlist through the vanilla class's public
+timeline properties; display-list names are not treated as a configuration or
+runtime discovery surface.
 
 The following targets are deliberately unavailable:
 

@@ -31,7 +31,7 @@ package venworks.cui
                                    "VerticalDivider_mc","Health_mc","HealthBarEmpty_mc",
                                    "EquippedWeaponIconHolder_mc","HealthBarIncrease_mc"])
             {
-               target = playerStatus.getChildByName(childName);
+               target = Object(playerStatus)[childName] as DisplayObject;
                if(target == null)
                {
                   throw new Error("INVALID|Allowlisted vanilla HUD child is missing: " + childName);
