@@ -522,7 +522,7 @@ try {
     $componentDispatchChecks = @(
       @{
         path = "venworks\cui\CUILayoutParser.as"
-        markers = @('.toLowerCase()','else if(type == "providersymbol")')
+        markers = @('.localName()','.toLowerCase()','else if(type == "providersymbol")','lengths=')
       },
       @{
         path = "venworks\cui\CUIRuntime.as"

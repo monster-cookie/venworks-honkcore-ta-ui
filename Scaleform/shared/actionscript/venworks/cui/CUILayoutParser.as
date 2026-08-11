@@ -300,7 +300,9 @@ package venworks.cui
 
       private function validateComponent(param1:XML) : void
       {
-         var type:String = String(param1.name()).toLowerCase();
+         var rawName:String = String(param1.name());
+         var localName:String = String(param1.localName());
+         var type:String = rawName.toLowerCase();
          var style:XML = null;
          if(type == "group")
          {
@@ -460,7 +462,9 @@ package venworks.cui
          }
          else
          {
-            throw new Error("INVALID|Unknown component: " + type);
+            throw new Error("INVALID|Unknown component: " + type +
+               " | raw=[" + rawName + "] local=[" + localName + "]" +
+               " lengths=" + rawName.length + "/" + localName.length + "/" + type.length);
          }
       }
 
