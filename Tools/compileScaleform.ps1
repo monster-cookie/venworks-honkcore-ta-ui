@@ -225,6 +225,24 @@ foreach ($positiveFixtureName in @(
   }
 }
 
+$providerProbeLayout = [xml](Get-Content -LiteralPath $providerProbeLayoutSource -Raw)
+foreach ($meterStyle in @($providerProbeLayout.venworksCUI.definitions.meterStyle)) {
+  $renderer = [string]$meterStyle.renderer
+  $rejectedAttributes = switch ($renderer) {
+    'continuous' { @('segmentCount','gap','partialSegments','trianglePattern','startAngle','sweepAngle','clockwise','thickness') }
+    'radial' { @('segmentCount','gap','direction','partialSegments','trianglePattern') }
+    'triangles' { @('startAngle','sweepAngle','clockwise','thickness') }
+    'segments' { @('trianglePattern','startAngle','sweepAngle','clockwise','thickness') }
+    'dots' { @('trianglePattern','startAngle','sweepAngle','clockwise','thickness') }
+    default { throw "Unsupported Goal 5 meter renderer: $renderer" }
+  }
+  foreach ($attributeName in $rejectedAttributes) {
+    if ($null -ne $meterStyle.Attributes[$attributeName]) {
+      throw "Goal 5 meter attribute '$attributeName' does not apply to renderer $renderer."
+    }
+  }
+}
+
 foreach ($componentFixtureName in @(
   'weapon-status.xml',
   'environment-status.xml',

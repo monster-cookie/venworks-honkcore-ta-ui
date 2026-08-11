@@ -17,7 +17,7 @@
     <meterStyle id="probe.boost" renderer="continuous"
                 fillColor="#FFB51B" emptyColor="#3A2714"
                 fillOpacity="1" emptyOpacity="0.72"
-                direction="up" partialSegments="true" />
+                direction="up" />
   </definitions>
   <vanillaVisibility>
     <target id="bottomLeft" visibleWhen="never" />
