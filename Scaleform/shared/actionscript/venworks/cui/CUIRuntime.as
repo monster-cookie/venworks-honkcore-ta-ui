@@ -3,10 +3,6 @@ package venworks.cui
    import flash.display.DisplayObjectContainer;
    import flash.display.Sprite;
    import flash.events.Event;
-   import flash.events.IOErrorEvent;
-   import flash.events.SecurityErrorEvent;
-   import flash.net.URLLoader;
-   import flash.net.URLRequest;
    import venworks.cui.components.CUIComponent;
    import venworks.cui.components.CUIContinuousBar;
    import venworks.cui.components.CUIDotBar;
@@ -29,12 +25,10 @@ package venworks.cui
 
    public final class CUIRuntime
    {
-      private static const LAYOUT_PATH:String = "VenworksCUI/layout.xml";
-
       private var owner:DisplayObjectContainer;
       private var componentLayer:Sprite;
       private var diagnostics:CUIDiagnosticsPanel;
-      private var loader:URLLoader;
+      private var loader:CUILayoutImportLoader;
       private var layoutConfig:XML;
       private var assetManager:CUIAssetManager;
       private var parser:CUILayoutParser;
@@ -66,34 +60,16 @@ package venworks.cui
          {
             return;
          }
-         loader = new URLLoader();
+         loader = new CUILayoutImportLoader();
          loader.addEventListener(Event.COMPLETE,this.onLoaded);
-         loader.addEventListener(IOErrorEvent.IO_ERROR,this.onMissing);
-         loader.addEventListener(SecurityErrorEvent.SECURITY_ERROR,this.onSecurityError);
-         try
-         {
-            loader.load(new URLRequest(LAYOUT_PATH));
-         }
-         catch(param1:Error)
-         {
-            this.clearListeners();
-            diagnostics.showError("CUI LAYOUT LOAD ERROR","Starfield could not start the layout request.");
-         }
+         loader.addEventListener(Event.CANCEL,this.onLoadFailed);
+         loader.load();
       }
 
       private function onLoaded(param1:Event) : void
       {
-         var config:XML = null;
+         var config:XML = loader.layout;
          this.clearListeners();
-         try
-         {
-            config = new XML(loader.data);
-         }
-         catch(param2:Error)
-         {
-            diagnostics.showError("CUI LAYOUT MALFORMED","layout.xml is not well-formed XML.");
-            return;
-         }
          try
          {
             this.setDiagnosticContext("LAYOUT PARSING",null);
@@ -105,10 +81,17 @@ package venworks.cui
             assetManager.addEventListener(Event.CANCEL,this.onAssetFailed);
             assetManager.load(parser.components);
          }
-         catch(param3:Error)
+         catch(param2:Error)
          {
-            this.showRuntimeError(param3);
+            this.showRuntimeError(param2);
          }
+      }
+
+      private function onLoadFailed(param1:Event) : void
+      {
+         this.clearListeners();
+         this.clearComponentLayer();
+         diagnostics.showError(loader.errorTitle,loader.errorMessage);
       }
 
       private function onAssetsLoaded(param1:Event) : void
@@ -227,25 +210,12 @@ package venworks.cui
          diagnosticNode = null;
       }
 
-      private function onMissing(param1:IOErrorEvent) : void
-      {
-         this.clearListeners();
-         diagnostics.showError("CUI LAYOUT MISSING","Expected Interface/VenworksCUI/layout.xml.");
-      }
-
-      private function onSecurityError(param1:SecurityErrorEvent) : void
-      {
-         this.clearListeners();
-         diagnostics.showError("CUI LAYOUT SECURITY ERROR","Scaleform denied access to layout.xml.");
-      }
-
       private function clearListeners() : void
       {
          if(loader != null)
          {
             loader.removeEventListener(Event.COMPLETE,this.onLoaded);
-            loader.removeEventListener(IOErrorEvent.IO_ERROR,this.onMissing);
-            loader.removeEventListener(SecurityErrorEvent.SECURITY_ERROR,this.onSecurityError);
+            loader.removeEventListener(Event.CANCEL,this.onLoadFailed);
          }
       }
 

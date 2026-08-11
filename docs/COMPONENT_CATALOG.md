@@ -29,6 +29,29 @@ inspected and tested.
 
 ### Layout composition
 
+Root layouts may place reusable external fragments with bounded imports:
+
+```xml
+<includes>
+  <include id="chronomark.weapon-status" src="weapon-status.xml"
+           x="0" y="0" anchor="bottom-left"
+           visible="true" visibleWhen="always" z="102" />
+</includes>
+```
+
+The runtime loads `src` only from `Interface/VenworksCUI/components`, resolves
+all includes atomically, prefixes fragment-local IDs with the include ID, and
+then passes the complete document to ordinary composition and validation. A
+fragment is a `venworksCUIFragment` containing exactly one local root `group`.
+Fragments cannot import other fragments. The root owns placement, anchoring,
+visibility, and z-order.
+
+At most 16 fragments may be included. Paths cannot contain traversal,
+subdirectories, backslashes, schemes, query strings, or URL fragments, and a
+fragment is limited to 65,536 characters. Missing, malformed, unsafe, nested,
+or duplicate imports fail the complete configurable layer with an actionable
+diagnostic.
+
 | Capability | Status | Required behavior |
 |---|---|---|
 | Absolute positioning | Implemented | Preserve parent-relative `x` and `y` behavior when no anchor is configured. |

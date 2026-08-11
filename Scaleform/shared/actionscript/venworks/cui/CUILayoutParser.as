@@ -24,6 +24,10 @@ package venworks.cui
          conditionParser = new CUIConditionParser();
          vanillaVisibilityRoot = <vanillaVisibility />;
          this.requireName(param1,"venworksCUI");
+         if(param1.descendants("include").length() != 0 || param1.descendants("includes").length() != 0)
+         {
+            throw new Error("INVALID|Layout imports must be resolved before parsing.");
+         }
          this.requireAttributes(param1,["schemaVersion","runtimeVersion","designWidth","designHeight","safeLeft","safeTop","safeRight","safeBottom"]);
          if(String(param1.@schemaVersion) != "1" || String(param1.@runtimeVersion) != "1")
          {

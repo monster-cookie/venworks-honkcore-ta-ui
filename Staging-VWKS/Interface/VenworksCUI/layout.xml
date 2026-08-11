@@ -26,125 +26,13 @@
   <vanillaVisibility>
     <target id="bottomLeft" visibleWhen="never" />
   </vanillaVisibility>
-  <components>
-    <group id="provider.discovery.gallery" x="0" y="0" width="760" height="264" opacity="1" visible="true"
-           rotation="0" scaleX="1" scaleY="1" z="200" anchor="top-center">
-      <panel id="provider.discovery.background" x="0" y="0" width="760" height="264" opacity="1" visible="true"
-             rotation="0" scaleX="1" scaleY="1" z="0"
-             fillColor="#061B22" fillOpacity="0.92" strokeColor="#F2B41C" strokeOpacity="0.9" strokeWidth="2" />
-      <text id="provider.discovery.title" x="16" y="10" width="728" height="28" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="1" value="GOAL 5 PROVIDER / VALUE TEMPLATE DISCOVERY"
-            font="$MAIN_Font_Bold" fontSize="17" color="#F2B41C" bold="true" align="left" />
-      <text id="provider.discovery.inventory" x="16" y="42" width="728" height="24" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="1" source="diagnostic.inventoryprovider" format="raw"
-            value="INVENTORY PROVIDER: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#93A9AD" bold="false" align="left" />
-      <text id="provider.discovery.power.name.provider" x="16" y="68" width="728" height="24" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="1" source="diagnostic.powernameprovider" format="raw"
-            value="HUD POWER KEY MAPPING: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#93A9AD" bold="false" align="left" />
-      <text id="provider.discovery.power.key" x="16" y="96" width="356" height="24" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="1" source="power.key" format="raw"
-            value="POWER KEY DIRECT: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#F2F7F9" bold="false" align="left" />
-      <text id="provider.discovery.power.name" x="388" y="96" width="356" height="24" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="1" valueTemplate="POWER NAME: {power.name}"
-            value="POWER NAME TEMPLATE: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#F2F7F9" bold="false" align="left" />
-      <text id="provider.discovery.carry.direct" x="16" y="128" width="356" height="24" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="1" source="carry.current" format="raw"
-            value="CARRY CURRENT DIRECT: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#00E8EC" bold="false" align="left" />
-      <text id="provider.discovery.carry.template" x="388" y="128" width="356" height="24" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="1" valueTemplate="CARRY CURRENT TEMPLATE: {carry.current}"
-            value="CARRY CURRENT TEMPLATE: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#00E8EC" bold="false" align="left" />
-      <text id="provider.discovery.carry.combined" x="16" y="158" width="728" height="24" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="1"
-            valueTemplate="CARRY COMBINED: {carry.current:integer} / {carry.maximum:integer} KG"
-            value="CARRY COMBINED TEMPLATE: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#00E8EC" bold="false" align="left" />
-      <text id="provider.discovery.credits.direct" x="16" y="190" width="356" height="24" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="1" source="credits" format="integer"
-            value="CREDITS DIRECT: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#F2B41C" bold="false" align="left" />
-      <text id="provider.discovery.credits.template" x="388" y="190" width="356" height="24" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="1" valueTemplate="CREDITS TEMPLATE: {credits:integer} CR"
-            value="CREDITS TEMPLATE: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#F2B41C" bold="false" align="left" />
-      <text id="provider.discovery.note" x="16" y="226" width="728" height="24" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="1" value="SWITCH AMONG SEVERAL POWERS AND VERIFY KEY / ENGLISH NAME PAIRS"
-            font="$MAIN_Font_Bold" fontSize="12" color="#93A9AD" bold="false" align="left" />
-    </group>
-    <group id="chronomark.probe" x="0" y="0" width="430" height="370" opacity="1" visible="true" visibleWhen="always"
-           rotation="0" scaleX="1" scaleY="1" z="100" anchor="bottom-left">
-      <providerSymbol id="chronomark.weapon.icon" x="8" y="0" width="54" height="54" opacity="1" visible="true"
-                      rotation="0" scaleX="1" scaleY="1" z="1" source="weapon.icon"
-                      color="#F2F7F9" fit="contain" alignX="left" alignY="center" />
-      <text id="chronomark.weapon" x="66" y="0" width="356" height="27" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="1"
-            source="weapon.name" format="raw" value="WEAPON NAME WAITING FOR WEAPONDATA"
-            font="$MAIN_Font_Bold" fontSize="16" color="#F2F7F9" bold="false" align="left" />
-      <text id="chronomark.ammo.clip" x="66" y="26" width="52" height="30" opacity="1" visible="true" visibleWhen="weaponHasAmmo"
-            rotation="0" scaleX="1" scaleY="1" z="1" source="weapon.clipammo" format="integer"
-            value="--" font="$MAIN_Font_Bold" fontSize="22" color="#F2F7F9" bold="true" align="right" />
-      <text id="chronomark.ammo.separator" x="122" y="26" width="18" height="30" opacity="1" visible="true" visibleWhen="weaponHasAmmo"
-            rotation="0" scaleX="1" scaleY="1" z="1"
-            value="/" font="$MAIN_Font_Bold" fontSize="22" color="#F2F7F9" bold="true" align="center" />
-      <text id="chronomark.ammo.reserve" x="142" y="26" width="60" height="30" opacity="1" visible="true" visibleWhen="weaponHasAmmo"
-            rotation="0" scaleX="1" scaleY="1" z="1" source="weapon.reserveammo" format="integer"
-            value="--" font="$MAIN_Font_Bold" fontSize="22" color="#F2F7F9" bold="true" align="left" />
-      <text id="chronomark.ammo.type" x="204" y="29" width="212" height="26" opacity="1" visible="true" visibleWhen="weaponHasAmmo"
-            rotation="0" scaleX="1" scaleY="1" z="1"
-            source="weapon.ammotype" format="raw" value="(AMMO TYPE WAITING FOR INVENTORY)"
-            font="$MAIN_Font_Bold" fontSize="13" color="#93A9AD" bold="false" align="left" />
-
-      <panel id="chronomark.panel" x="0" y="60" width="430" height="214" opacity="1" visible="true"
-             rotation="0" scaleX="1" scaleY="1" z="0"
-             fillColor="#061B22" fillOpacity="0.86" strokeColor="#00BFC4" strokeOpacity="0.58" strokeWidth="1" />
-      <divider id="chronomark.panel.topline" x="12" y="72" width="406" height="0" opacity="1" visible="true"
-               rotation="0" scaleX="1" scaleY="1" z="1" color="#00BFC4" strokeOpacity="0.8" strokeWidth="2" />
-      <text id="chronomark.location" x="16" y="78" width="286" height="34" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="2" source="location.name" format="raw"
-            value="LOCATION WAITING FOR PROVIDER" font="$MAIN_Font_Bold" fontSize="22" color="#00E8EC" bold="false" align="left" />
-      <text id="chronomark.time" x="310" y="82" width="102" height="27" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="2" source="environment.localtime" format="time24"
-            value="--:--" font="$MAIN_Font_Bold" fontSize="15" color="#00E8EC" bold="false" align="right" />
-
-      <text id="chronomark.environment.oxygen.label" x="16" y="116" width="26" height="25" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="2"
-            value="O2" font="$MAIN_Font_Bold" fontSize="15" color="#F2F7F9" bold="false" align="left" />
-      <text id="chronomark.environment.oxygen" x="44" y="116" width="54" height="25" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="2" source="environment.oxygenpercentage" format="percent"
-            value="--%" font="$MAIN_Font_Bold" fontSize="15" color="#F2F7F9" bold="false" align="left" />
-      <text id="chronomark.environment.temperature" x="104" y="116" width="78" height="25" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="2" source="environment.temperature" format="temperature"
-            value="--°" font="$MAIN_Font_Bold" fontSize="15" color="#F2F7F9" bold="false" align="left" />
-      <text id="chronomark.environment.gravity" x="186" y="116" width="92" height="25" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="2" source="environment.gravity" format="gravity"
-            value="--.--g" font="$MAIN_Font_Bold" fontSize="15" color="#F2F7F9" bold="false" align="left" />
-
-      <text id="chronomark.power" x="16" y="158" width="250" height="27" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="2" source="power.name" format="raw"
-            value="NO ACTIVE POWER" font="$MAIN_Font_Bold" fontSize="16" color="#00E8EC" bold="false" align="left" />
-      <text id="chronomark.carry" x="16" y="188" width="250" height="25" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="2"
-            valueTemplate="{carry.current:integer} / {carry.maximum:integer} KG" value="-- / -- KG"
-            font="$MAIN_Font_Bold" fontSize="15" color="#00E8EC" bold="false" align="left" />
-      <text id="chronomark.credits" x="236" y="188" width="176" height="25" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="2"
-            valueTemplate="{credits:integer} CR" value="-- CR"
-            font="$MAIN_Font_Bold" fontSize="15" color="#F2B41C" bold="false" align="right" />
-
-      <meter id="chronomark.health.empty" x="8" y="286" width="344" height="26" opacity="1" visible="true"
-             rotation="0" scaleX="1" scaleY="1" z="1" style="probe.health.empty" value="0" max="100" />
-      <meter id="chronomark.health.live" x="8" y="286" width="344" height="26" opacity="1" visible="true"
-             rotation="0" scaleX="1" scaleY="1" z="2" style="probe.health.live" value="100" max="100"
-             source="player.health" maxSource="player.maxhealth" />
-      <meter id="chronomark.oxygen.empty" x="8" y="320" width="344" height="20" opacity="1" visible="true"
-             rotation="0" scaleX="1" scaleY="1" z="1" style="probe.oxygen.empty" value="0" max="100" />
-      <meter id="chronomark.oxygen.live" x="8" y="320" width="344" height="20" opacity="1" visible="true"
-             rotation="0" scaleX="1" scaleY="1" z="2" style="probe.oxygen.live" value="100" max="100"
-             source="player.oxygen" maxSource="player.maxoxygen" />
-      <meter id="chronomark.encumbrance.placeholder" x="8" y="350" width="84" height="14" opacity="1" visible="true"
-             rotation="0" scaleX="1" scaleY="1" z="1" style="probe.encumbrance" value="3" max="8" />
-      <text id="chronomark.health.percentage" x="360" y="285" width="62" height="25" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="2" source="player.healthpercentage" format="percent"
-            value="--%" font="$MAIN_Font_Bold" fontSize="13" color="#00E8EC" bold="false" align="right" />
-      <text id="chronomark.oxygen.percentage" x="360" y="317" width="62" height="25" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="2" source="player.oxygenpercentage" format="percent"
-            value="--%" font="$MAIN_Font_Bold" fontSize="13" color="#F12CE8" bold="false" align="right" />
-    </group>
-  </components>
+  <includes>
+    <include id="chronomark.environment-status" src="environment-status.xml"
+             x="0" y="0" anchor="bottom-left" visible="true" visibleWhen="always" z="100" />
+    <include id="chronomark.player-meters" src="player-meters.xml"
+             x="0" y="0" anchor="bottom-left" visible="true" visibleWhen="always" z="101" />
+    <include id="chronomark.weapon-status" src="weapon-status.xml"
+             x="0" y="0" anchor="bottom-left" visible="true" visibleWhen="always" z="102" />
+  </includes>
+  <components />
 </venworksCUI>

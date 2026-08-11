@@ -518,12 +518,24 @@
     <xs:attribute name="visibleWhen" type="xs:string" use="required" />
   </xs:complexType>
 
+  <xs:complexType name="includeType">
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="src" use="required"><xs:simpleType><xs:restriction base="xs:string"><xs:pattern value="[A-Za-z0-9][A-Za-z0-9._-]{0,59}\.xml" /></xs:restriction></xs:simpleType></xs:attribute>
+    <xs:attribute name="x" type="xs:decimal" use="required" />
+    <xs:attribute name="y" type="xs:decimal" use="required" />
+    <xs:attribute name="anchor" type="anchorType" />
+    <xs:attribute name="visible" type="strictBooleanType" default="true" />
+    <xs:attribute name="visibleWhen" type="xs:string" />
+    <xs:attribute name="z" type="xs:decimal" use="required" />
+  </xs:complexType>
+
   <xs:element name="venworksCUI">
     <xs:complexType>
       <xs:sequence>
         <xs:element name="definitions"><xs:complexType><xs:choice minOccurs="1" maxOccurs="unbounded"><xs:element name="meterStyle" type="meterStyleType" /><xs:element name="template" type="templateType" /></xs:choice></xs:complexType></xs:element>
         <xs:element name="vanillaVisibility" minOccurs="0"><xs:complexType><xs:sequence><xs:element name="target" type="vanillaVisibilityTargetType" minOccurs="1" maxOccurs="16" /></xs:sequence></xs:complexType></xs:element>
-        <xs:element name="components"><xs:complexType><xs:sequence><xs:group ref="componentChoice" minOccurs="1" maxOccurs="unbounded" /></xs:sequence></xs:complexType></xs:element>
+        <xs:element name="includes" minOccurs="0"><xs:complexType><xs:sequence><xs:element name="include" type="includeType" minOccurs="1" maxOccurs="16" /></xs:sequence></xs:complexType></xs:element>
+        <xs:element name="components"><xs:complexType><xs:sequence><xs:group ref="componentChoice" minOccurs="0" maxOccurs="unbounded" /></xs:sequence></xs:complexType></xs:element>
       </xs:sequence>
       <xs:attribute name="schemaVersion" fixed="1" use="required" />
       <xs:attribute name="runtimeVersion" fixed="1" use="required" />
@@ -537,7 +549,16 @@
     <xs:key name="definitionIds"><xs:selector xpath="definitions/meterStyle | definitions/template" /><xs:field xpath="@id" /></xs:key>
     <xs:key name="meterStyleIds"><xs:selector xpath="definitions/meterStyle" /><xs:field xpath="@id" /></xs:key>
     <xs:key name="templateIds"><xs:selector xpath="definitions/template" /><xs:field xpath="@id" /></xs:key>
+    <xs:key name="includeIds"><xs:selector xpath="includes/include" /><xs:field xpath="@id" /></xs:key>
     <xs:keyref name="meterStyleReferences" refer="meterStyleIds"><xs:selector xpath=".//meter" /><xs:field xpath="@style" /></xs:keyref>
     <xs:keyref name="templateReferences" refer="templateIds"><xs:selector xpath=".//instance | .//repeater | .//option" /><xs:field xpath="@template" /></xs:keyref>
+  </xs:element>
+
+  <xs:element name="venworksCUIFragment">
+    <xs:complexType>
+      <xs:sequence><xs:element name="group" type="groupType" /></xs:sequence>
+      <xs:attribute name="schemaVersion" fixed="1" use="required" />
+      <xs:attribute name="runtimeVersion" fixed="1" use="required" />
+    </xs:complexType>
   </xs:element>
 </xs:schema>

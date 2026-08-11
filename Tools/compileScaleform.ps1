@@ -186,6 +186,9 @@ $decompileScript = Resolve-RequiredFile -Path (Join-Path $PSScriptRoot "decompil
 $providerProbeLayoutSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\fixtures\chronomark-provider-probe.xml") `
   -Description "Goal 5 Chronomark provider probe"
+$providerProbeComponentDirectory = Resolve-RequiredDirectory `
+  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\fixtures\components") `
+  -Description "Goal 5 Chronomark component directory"
 $gallerySvgSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\gallery-vector.svg") `
   -Description "Owned SVG gallery asset"
@@ -220,6 +223,47 @@ foreach ($positiveFixtureName in @(
   if ($schemaErrors.Count -ne 0) {
     throw "Positive fixture $positiveFixtureName failed schema validation: $($schemaErrors -join '; ')"
   }
+}
+
+foreach ($componentFixtureName in @(
+  'weapon-status.xml',
+  'environment-status.xml',
+  'player-meters.xml'
+)) {
+  $componentFixturePath = Resolve-RequiredFile `
+    -Path (Join-Path $providerProbeComponentDirectory $componentFixtureName) `
+    -Description "Positive component fragment"
+  $componentSchemaErrors = @(Get-XmlSchemaErrors -XmlPath $componentFixturePath -SchemaPath $layoutSchemaPath)
+  if ($componentSchemaErrors.Count -ne 0) {
+    throw "Component fragment $componentFixtureName failed schema validation: $($componentSchemaErrors -join '; ')"
+  }
+}
+
+$missingIncludeFixture = Resolve-RequiredFile -Path (Join-Path $fixtureDirectory 'layout-missing-include.xml') -Description "Missing include fixture"
+$missingIncludeErrors = @(Get-XmlSchemaErrors -XmlPath $missingIncludeFixture -SchemaPath $layoutSchemaPath)
+if ($missingIncludeErrors.Count -ne 0) {
+  throw "Missing include fixture should pass structural schema validation: $($missingIncludeErrors -join '; ')"
+}
+
+foreach ($invalidImportFixtureName in @(
+  'layout-unsafe-include-path.xml',
+  'layout-nested-include.xml',
+  'layout-duplicate-include-id.xml'
+)) {
+  $invalidImportFixture = Resolve-RequiredFile -Path (Join-Path $fixtureDirectory $invalidImportFixtureName) -Description "Invalid import fixture"
+  $invalidImportErrors = @(Get-XmlSchemaErrors -XmlPath $invalidImportFixture -SchemaPath $layoutSchemaPath)
+  if ($invalidImportErrors.Count -eq 0) {
+    throw "Invalid import fixture $invalidImportFixtureName unexpectedly passed schema validation."
+  }
+}
+
+$malformedFragmentPath = Resolve-RequiredFile -Path (Join-Path $fixtureDirectory 'layout-malformed-fragment.xml') -Description "Malformed fragment fixture"
+try {
+  [xml](Get-Content -LiteralPath $malformedFragmentPath -Raw) | Out-Null
+  throw 'Malformed fragment fixture unexpectedly parsed as XML.'
+}
+catch {
+  if ($_.Exception.Message -eq 'Malformed fragment fixture unexpectedly parsed as XML.') { throw }
 }
 
 foreach ($structurallyInvalidCompositeFixtureName in @(
@@ -450,8 +494,8 @@ try {
       -OutputPath $patchedScriptPath
 
     $authoredScripts = @(Get-ChildItem -LiteralPath $actionScriptSourcePath -Recurse -File -Filter "*.as")
-    if ($authoredScripts.Count -ne 37) {
-      throw "Expected 37 authored CUI classes; found $($authoredScripts.Count) in $actionScriptSourcePath."
+    if ($authoredScripts.Count -ne 38) {
+      throw "Expected 38 authored CUI classes; found $($authoredScripts.Count) in $actionScriptSourcePath."
     }
 
     foreach ($authoredScript in $authoredScripts) {
@@ -490,8 +534,8 @@ try {
 
     $originalScripts = @(Get-ChildItem -LiteralPath $exportedScriptsDirectory -Recurse -File -Filter "*.as")
     $validationScripts = @(Get-ChildItem -LiteralPath $validationScriptsDirectory -Recurse -File -Filter "*.as")
-    if ($originalScripts.Count -ne 204 -or $validationScripts.Count -ne $originalScripts.Count) {
-      throw "Expected 204 seeded and reopened classes; found $($originalScripts.Count) before import and $($validationScripts.Count) after import."
+    if ($originalScripts.Count -ne 205 -or $validationScripts.Count -ne $originalScripts.Count) {
+      throw "Expected 205 seeded and reopened classes; found $($originalScripts.Count) before import and $($validationScripts.Count) after import."
     }
 
     foreach ($originalScript in $originalScripts) {
@@ -555,6 +599,13 @@ try {
       'CUIPlayerHudDataContext',
       'CUIValueBinding',
       'CUIAssetManager',
+      'CUILayoutImportLoader',
+      'VenworksCUI/components/',
+      'The layout exceeds the 16-include limit',
+      'Include paths must name one XML file',
+      'cannot contain imports',
+      'CUI COMPONENT MISSING',
+      'CUI COMPONENT MALFORMED',
       'CUISvgParser',
       'CUISvgPathParser',
       'CUIImage',
@@ -721,12 +772,17 @@ try {
 
   $cuiOutputDirectory = Join-Path $resolvedProjectOutputDirectory "VenworksCUI"
   $assetOutputDirectory = Join-Path $cuiOutputDirectory "Assets"
+  $componentOutputDirectory = Join-Path $cuiOutputDirectory "components"
   New-Item -ItemType Directory -Force -Path $assetOutputDirectory | Out-Null
+  New-Item -ItemType Directory -Force -Path $componentOutputDirectory | Out-Null
   Copy-Item -LiteralPath $providerProbeLayoutSource -Destination (Join-Path $cuiOutputDirectory "layout.xml") -Force
+  foreach ($componentFixtureName in @('weapon-status.xml','environment-status.xml','player-meters.xml')) {
+    Copy-Item -LiteralPath (Join-Path $providerProbeComponentDirectory $componentFixtureName) -Destination (Join-Path $componentOutputDirectory $componentFixtureName) -Force
+  }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
   Copy-Item -LiteralPath $invalidSvgSource -Destination (Join-Path $assetOutputDirectory "gallery-invalid.svg") -Force
-  Write-Host -ForegroundColor Green "Staged Goal 5 Chronomark provider probe in $cuiOutputDirectory"
+  Write-Host -ForegroundColor Green "Staged Goal 5 multi-file Chronomark layout in $cuiOutputDirectory"
 }
 finally {
   if ($KeepWork) {

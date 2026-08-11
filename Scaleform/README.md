@@ -35,6 +35,11 @@ assets; the default first destination is `Staging-VWKS/Interface`. The script
 refuses to build from unrecognized vanilla inputs or publish outputs whose
 hashes differ from the validation records.
 
+The first output also receives the root-placed Goal 5 fragments under
+`VenworksCUI/components`. Deploy `layout.xml` and that directory together.
+Component imports are relative filenames resolved only inside this fixed
+directory; nested imports and path traversal are unsupported.
+
 Regenerate the curated built-in icon definitions when their approved Font
 Awesome source subset changes:
 

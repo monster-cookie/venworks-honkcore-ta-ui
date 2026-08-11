@@ -72,7 +72,22 @@ The provider-symbol runtime screenshots verify the layout, weapon icon/name,
 ammunition row, environment values, meters, and receipt of inventory data. They
 also drove replacement of the unfinished body rows: the lower panel now uses
 the mapped power name and accepted carry/credits templates. The top discovery
-gallery remains temporary instrumentation until the mapping is runtime accepted.
+gallery was removed after the mapped name and live carry/credits values passed
+runtime acceptance.
+
+## Multi-file Chronomark configuration
+
+The accepted surface is split into three reusable component fragments under
+`VenworksCUI/components`: `weapon-status.xml`, `environment-status.xml`, and
+`player-meters.xml`. Root `layout.xml` owns their placement through bounded
+`include` declarations. Each fragment contains exactly one local root group;
+the loader prefixes local IDs with the include ID and resolves every file before
+the parser, asset manager, or renderer can create a partial HUD.
+
+Includes are limited to 16 direct XML files beneath the fixed components root.
+Absolute paths, traversal, subdirectories, URLs, query strings, fragments,
+duplicate include IDs, oversized fragments, and nested imports are rejected.
+Single-file layouts without imports remain supported.
 
 ## Ammo-type provider diagnostic
 
@@ -202,11 +217,8 @@ component system allows:
 Goal 5 is not complete when provider probing ends. Before Goal 6 begins:
 
 - replace the layered empty/fill bar pairs with single live `meter` controls;
-- add bounded multi-file layout composition in which root `layout.xml` imports
-  reusable fragments and owns their placement;
-- split the Chronomark surface into `components/weapon-status.xml`,
-  `components/environment-status.xml`, and `components/player-meters.xml` (or
-  equivalently scoped names accepted during that slice); and
+- runtime-accept the bounded multi-file layout and its three root-placed
+  Chronomark fragments;
 - pass the complete provider, live-update, and transition acceptance list above.
 
 ## Risks and rollback
