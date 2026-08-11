@@ -40,9 +40,9 @@ copied into CUI.
 | `weapon.name` | `WeaponData.sWeaponName` | string | Confirmed in HUD runtime |
 | `weapon.icon` | `WeaponData.sIconLinkageName` | string | Confirmed in vanilla HUD; rendered through the bounded provider-symbol adapter |
 | `weapon.ammoType` | Equipped `PlayerInventoryData.aItems[*].WeaponInfo.sAmmoType` | string | Confirmed in HUD runtime for ranged weapons and the Cutter |
-| `carry.current` / `carry.maximum` | `PlayerInventoryData.fEncumbrance` / `fMaxEncumbrance` | number | Confirmed in HUD runtime; value-change refresh pending |
-| `credits` | `PlayerInventoryData.uCoin` | number | Confirmed in HUD runtime; value-change refresh pending |
-| `power.name` | Bounded name-field probe on `HUDStarbornPowersData` | string | Candidate only; HUD field probe pending |
+| `carry.current` / `carry.maximum` | `PlayerInventoryData.fEncumbrance` / `fMaxEncumbrance` | number | Confirmed in HUD runtime, including value-change refresh |
+| `credits` | `PlayerInventoryData.uCoin` | number | Confirmed in HUD runtime, including value-change refresh |
+| `power.name` | Bounded canonical-English mapping from `HUDStarbornPowersData.sKey` | string | Mapping implemented; runtime acceptance pending |
 
 Identifiers are case-insensitive and underscores are ignored. Configuration
 never supplies provider names or field names; each public CUI source maps to a
@@ -51,24 +51,28 @@ hardcoded adapter entry.
 Carry and credits are published by the already-proven `PlayerInventoryData`
 provider through fields consumed by vanilla InventoryMenu. HUD runtime confirms
 that both values populate before Inventory opens, and that direct and templated
-forms agree. Refresh after an actual inventory-weight or credit change remains
-unverified.
+forms agree. Runtime changes to carried weight and credits also refresh both
+forms, completing their provider acceptance.
 
 `PowersMenuData` exposes player-facing names to the vanilla Powers menu, but HUD
 runtime did not receive that menu-owned provider before or after opening and
 closing Powers. That cross-provider candidate is rejected. The next bounded
 probe checks `sName`, `sPowerName`, and `sDisplayName` directly on the already-live
-`HUDStarbornPowersData`; the raw `sKey` remains diagnostic evidence only.
+`HUDStarbornPowersData`; runtime confirmed that none is present. The accepted
+interim route maps the provider's 24 known keys to the canonical English names
+exposed by Bethesda's Powers-menu data contract. Empty and unknown keys retain
+the complete static fallback. This mapping is intentionally English-only until
+a HUD-safe localized record-name source is discovered; the raw `sKey` remains
+diagnostic evidence only.
 
 No candidate becomes a production source until its owner, lifetime, field
 contract, and transition safety are separately proven.
 
-The provider-symbol runtime screenshot verifies the layout, weapon icon/name,
-ammunition row, environment values, meters, and receipt of inventory data. It
-also proves that the body remains unfinished: `power.key` renders a timeline
-symbol key, carry and credits are literal provider placeholders, and the
-inventory status line is diagnostic instrumentation. None of those three body
-rows is accepted as final behavior.
+The provider-symbol runtime screenshots verify the layout, weapon icon/name,
+ammunition row, environment values, meters, and receipt of inventory data. They
+also drove replacement of the unfinished body rows: the lower panel now uses
+the mapped power name and accepted carry/credits templates. The top discovery
+gallery remains temporary instrumentation until the mapping is runtime accepted.
 
 ## Ammo-type provider diagnostic
 

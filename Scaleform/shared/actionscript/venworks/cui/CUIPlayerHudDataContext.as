@@ -174,36 +174,103 @@ package venworks.cui
          this.setBoolean("power.hasspell",param1.data.bHasSpell);
          this.setFinite("power.cost",param1.data.fCost);
          this.setFinite("power.cooldown",param1.data.uCooldown);
-         this.resolveHudPowerName(param1.data);
+         this.resolvePowerName(param1.data.sKey);
          this.notifyChanged();
       }
 
-      private function resolveHudPowerName(param1:Object) : void
+      private function resolvePowerName(param1:Object) : void
       {
-         if(this.acceptPowerNameCandidate(param1.sName,"sName"))
+         var key:String = param1 === undefined || param1 === null ? "" : String(param1);
+         var name:String = "";
+         switch(key)
          {
+            case "ArtifactPower_AlienReanim":
+               name = "Alien Reanimation";
+               break;
+            case "ArtifactPower_AntiGravityField":
+               name = "Anti-Gravity Field";
+               break;
+            case "ArtifactPower_CreateVacuum":
+               name = "Create Vacuum";
+               break;
+            case "ArtifactPower_CreatorsPeace":
+               name = "Creators' Peace";
+               break;
+            case "ArtifactPower_Earthbound":
+               name = "Earthbound";
+               break;
+            case "ArtifactPower_ElementalBlast":
+               name = "Elemental Blast";
+               break;
+            case "ArtifactPower_EternalHarvest":
+               name = "Eternal Harvest";
+               break;
+            case "ArtifactPower_GravDash":
+               name = "Grav Dash";
+               break;
+            case "ArtifactPower_GravWave":
+               name = "Gravity Wave";
+               break;
+            case "ArtifactPower_GravWell":
+               name = "Gravity Well";
+               break;
+            case "ArtifactPower_InnerDemon":
+               name = "Inner Demon";
+               break;
+            case "ArtifactPower_LifeForced":
+               name = "Life Forced";
+               break;
+            case "ArtifactPower_MoonForm":
+               name = "Moon Form";
+               break;
+            case "ArtifactPower_ParallelSelf":
+               name = "Parallel Self";
+               break;
+            case "ArtifactPower_ParticleBeam":
+               name = "Particle Beam";
+               break;
+            case "ArtifactPower_PersonalAtmo":
+               name = "Personal Atmosphere";
+               break;
+            case "ArtifactPower_PhasedTime":
+               name = "Phased Time";
+               break;
+            case "ArtifactPower_Precognition":
+               name = "Precognition";
+               break;
+            case "ArtifactPower_ReactiveShield":
+               name = "Reactive Shield";
+               break;
+            case "ArtifactPower_SenseStarStuff":
+               name = "Sense Star Stuff";
+               break;
+            case "ArtifactPower_SolarFlare":
+               name = "Solar Flare";
+               break;
+            case "ArtifactPower_SunlessSpace":
+               name = "Sunless Space";
+               break;
+            case "ArtifactPower_Supernova":
+               name = "Supernova";
+               break;
+            case "ArtifactPower_VoidForm":
+               name = "Void Form";
+               break;
+         }
+         if(name.length != 0)
+         {
+            this.setText("power.name",name);
+            this.setText("diagnostic.powernameprovider","HUD POWER KEY MAPPED — " + name);
             return;
          }
-         if(this.acceptPowerNameCandidate(param1.sPowerName,"sPowerName"))
+         if(key.replace(/\s/g,"").length == 0)
          {
-            return;
+            this.setText("diagnostic.powernameprovider","HUD POWER KEY EMPTY — NO ACTIVE POWER NAME");
          }
-         if(this.acceptPowerNameCandidate(param1.sDisplayName,"sDisplayName"))
+         else
          {
-            return;
+            this.setText("diagnostic.powernameprovider","HUD POWER KEY UNKNOWN — " + key);
          }
-         this.setText("diagnostic.powernameprovider","HUDSTARBORNPOWERSDATA RECEIVED — NO BOUNDED NAME FIELD");
-      }
-
-      private function acceptPowerNameCandidate(param1:Object, param2:String) : Boolean
-      {
-         if(param1 === undefined || param1 === null || String(param1).replace(/\s/g,"").length == 0)
-         {
-            return false;
-         }
-         this.setText("power.name",param1);
-         this.setText("diagnostic.powernameprovider","HUDSTARBORNPOWERSDATA " + param2 + " RESOLVED");
-         return true;
       }
 
       private function setText(param1:String, param2:Object) : void

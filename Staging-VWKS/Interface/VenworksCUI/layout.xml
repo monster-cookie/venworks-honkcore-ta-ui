@@ -40,7 +40,7 @@
             value="INVENTORY PROVIDER: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#93A9AD" bold="false" align="left" />
       <text id="provider.discovery.power.name.provider" x="16" y="68" width="728" height="24" opacity="1" visible="true"
             rotation="0" scaleX="1" scaleY="1" z="1" source="diagnostic.powernameprovider" format="raw"
-            value="HUD POWER NAME FIELDS: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#93A9AD" bold="false" align="left" />
+            value="HUD POWER KEY MAPPING: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#93A9AD" bold="false" align="left" />
       <text id="provider.discovery.power.key" x="16" y="96" width="356" height="24" opacity="1" visible="true"
             rotation="0" scaleX="1" scaleY="1" z="1" source="power.key" format="raw"
             value="POWER KEY DIRECT: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#F2F7F9" bold="false" align="left" />
@@ -64,7 +64,7 @@
             rotation="0" scaleX="1" scaleY="1" z="1" valueTemplate="CREDITS TEMPLATE: {credits:integer} CR"
             value="CREDITS TEMPLATE: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#F2B41C" bold="false" align="left" />
       <text id="provider.discovery.note" x="16" y="226" width="728" height="24" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="1" value="SWITCH POWER, CHANGE CARRIED WEIGHT, AND GAIN OR SPEND CREDITS"
+            rotation="0" scaleX="1" scaleY="1" z="1" value="SWITCH AMONG SEVERAL POWERS AND VERIFY KEY / ENGLISH NAME PAIRS"
             font="$MAIN_Font_Bold" fontSize="12" color="#93A9AD" bold="false" align="left" />
     </group>
     <group id="chronomark.probe" x="0" y="0" width="430" height="370" opacity="1" visible="true" visibleWhen="always"
@@ -116,18 +116,16 @@
             value="--.--g" font="$MAIN_Font_Bold" fontSize="15" color="#F2F7F9" bold="false" align="left" />
 
       <text id="chronomark.power" x="16" y="158" width="250" height="27" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="2" source="power.key" format="raw"
+            rotation="0" scaleX="1" scaleY="1" z="2" source="power.name" format="raw"
             value="NO ACTIVE POWER" font="$MAIN_Font_Bold" fontSize="16" color="#00E8EC" bold="false" align="left" />
-      <text id="chronomark.carry.placeholder" x="16" y="188" width="250" height="25" opacity="1" visible="true"
+      <text id="chronomark.carry" x="16" y="188" width="250" height="25" opacity="1" visible="true"
             rotation="0" scaleX="1" scaleY="1" z="2"
-            value="CARRY [PROVIDER REQUIRED]" font="$MAIN_Font_Bold" fontSize="15" color="#00E8EC" bold="false" align="left" />
-      <text id="chronomark.credits.placeholder" x="236" y="188" width="176" height="25" opacity="1" visible="true"
+            valueTemplate="{carry.current:integer} / {carry.maximum:integer} KG" value="-- / -- KG"
+            font="$MAIN_Font_Bold" fontSize="15" color="#00E8EC" bold="false" align="left" />
+      <text id="chronomark.credits" x="236" y="188" width="176" height="25" opacity="1" visible="true"
             rotation="0" scaleX="1" scaleY="1" z="2"
-            value="CREDITS [PROVIDER REQUIRED]" font="$MAIN_Font_Bold" fontSize="15" color="#F2B41C" bold="false" align="right" />
-      <text id="chronomark.provider.note" x="16" y="232" width="396" height="27" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="2"
-            source="diagnostic.inventoryprovider" format="raw" value="PLAYERINVENTORYDATA NOT RECEIVED"
-            font="$MAIN_Font_Bold" fontSize="12" color="#93A9AD" bold="false" align="left" />
+            valueTemplate="{credits:integer} CR" value="-- CR"
+            font="$MAIN_Font_Bold" fontSize="15" color="#F2B41C" bold="false" align="right" />
 
       <meter id="chronomark.health.empty" x="8" y="286" width="344" height="26" opacity="1" visible="true"
              rotation="0" scaleX="1" scaleY="1" z="1" style="probe.health.empty" value="0" max="100" />
