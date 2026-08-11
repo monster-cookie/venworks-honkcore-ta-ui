@@ -463,8 +463,9 @@ package venworks.cui
          else
          {
             throw new Error("INVALID|Unknown component: " + type +
-               " | raw=[" + rawName + "] local=[" + localName + "]" +
-               " lengths=" + rawName.length + "/" + localName.length + "/" + type.length);
+               "\nraw=[" + rawName + "]" +
+               "\nlocal=[" + localName + "]" +
+               "\nlengths=" + rawName.length + "/" + localName.length + "/" + type.length);
          }
       }
 
