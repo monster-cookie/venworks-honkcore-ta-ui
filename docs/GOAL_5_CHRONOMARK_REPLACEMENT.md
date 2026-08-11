@@ -40,8 +40,8 @@ copied into CUI.
 | `weapon.name` | `WeaponData.sWeaponName` | string | Confirmed in HUD runtime |
 | `weapon.icon` | `WeaponData.sIconLinkageName` | string | Confirmed in vanilla HUD; rendered through the bounded provider-symbol adapter |
 | `weapon.ammoType` | Equipped `PlayerInventoryData.aItems[*].WeaponInfo.sAmmoType` | string | Confirmed in HUD runtime for ranged weapons and the Cutter |
-| `weapon.explosiveCount` / `weapon.explosiveType` | `WeaponData.uExplosiveCount` / `uExplosiveIndicatorType` | number | Implemented; runtime acceptance pending |
-| `boost.charge` | `HudJetpackData.fJetpackCharge`, clamped to `0..1` | number | Implemented; runtime acceptance pending |
+| `weapon.explosiveCount` / `weapon.explosiveType` | `WeaponData.uExplosiveCount` / `uExplosiveIndicatorType` | number | Confirmed in HUD runtime |
+| `boost.charge` | `HudJetpackData.fJetpackCharge`, clamped to `0..1` | number | Confirmed in HUD runtime |
 | `carry.current` / `carry.maximum` | `PlayerInventoryData.fEncumbrance` / `fMaxEncumbrance` | number | Confirmed in HUD runtime, including value-change refresh |
 | `credits` | `PlayerInventoryData.uCoin` | number | Confirmed in HUD runtime, including value-change refresh |
 | `power.name` | Bounded canonical-English mapping from `HUDStarbornPowersData.sKey` | string | Confirmed in HUD runtime across power changes |
@@ -204,11 +204,13 @@ Build and deploy the Venworks variant, then verify:
     hold-to-exit actions work because the untouched vanilla `HUDVehicle_mc`
     continues processing the real `VehicleExit` event.
 
-Runtime has accepted the three imported fragments, scanner persistence,
+Runtime has accepted the four imported fragments, scanner persistence,
 health/O2 updates (including health reaching zero through fall damage and the
 subsequent death/reload), weapon changes, mapped power names, and live
-carry/credits changes. The consolidated meter controls, live encumbrance meter,
-and surgical vanilla player-status suppression remain the current test slice.
+carry/credits changes. It has also accepted the consolidated meters, explosive
+presentation, boost updates, whole-group vanilla suppression, and functional
+vehicle exit through the hidden original control. The dynamically mapped key or
+controller glyph on the replacement vehicle prompt remains pending.
 
 Report the displayed values and transition behavior before judging styling.
 The final replacement must not proceed until the confirmed fields and lifecycle
@@ -235,7 +237,7 @@ Goal 5 is not complete when provider probing ends. Before Goal 6 begins:
 - runtime-accept the bounded multi-file layout and its four root-placed
   Chronomark fragments;
 - runtime-accept the new grenade/mine count and live boost presentation;
-- runtime-accept the visual-only CUI vehicle prompt while the hidden vanilla
+- runtime-accept the mapped, noninteractive CUI vehicle prompt while the hidden vanilla
   `HUDVehicle_mc` remains alive and exclusively owns vehicle-exit input;
 - pass the complete provider, live-update, and transition acceptance list above.
 
@@ -243,7 +245,10 @@ The complete vanilla `RightMeters_mc` presentation is alpha-gated as one fixed
 target. The adapter never changes its `visible` property and never addresses
 `HUDVehicle_mc`. Consequently the vehicle child retains its provider-driven
 `visible` state and `ProcessUserEvent` path even though CUI supplies the visible
-exit prompt. Configuration cannot bind actions or callbacks to that prompt.
+exit prompt. That prompt is a second, presentation-only instance of Bethesda's
+embedded vehicle control so its keyboard/controller glyph follows the actual
+control map. Mouse interaction and user-event routing are disabled on the
+duplicate, and configuration cannot bind actions or callbacks to it.
 
 ## Risks and rollback
 

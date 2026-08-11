@@ -674,6 +674,7 @@ try {
       'boost-fill',
       'HUDMenu_fla.BoostBarFill_mc_139',
       'HUDMenu_LRG_fla.BoostBarFill_mc_139',
+      'vehicle-exit-prompt',
       'CUISegmentedBar',
       'CUIDotBar',
       'CUIRadialMeter',
@@ -756,6 +757,13 @@ try {
         $reopenedVanillaVisibilitySource -match 'PowerBarEmpty_mc|EquippedGrenadeIcon_mc|EquippedGrenadeCount_mc|JetpackMeterWrapper_mc|HUDVehicle_mc') {
       throw 'Generated rightMeters visibility adapter does not remain a whole-group alpha-only presentation gate.'
     }
+    if ($reopenedSymbolSource -notmatch '"vehicle-exit-prompt"' -or
+        $reopenedSymbolSource -notmatch '"classes":\["HUDVehicle"\]' -or
+        $reopenedSymbolSource -notmatch 'mouseEnabled\s*=\s*false' -or
+        $reopenedSymbolSource -notmatch 'mouseChildren\s*=\s*false' -or
+        $reopenedSymbolSource -match 'ProcessUserEvent|HandleUserEvent|UserEventData|callback') {
+      throw 'Generated vehicle-exit-prompt symbol is not a bounded noninteractive presentation mapping.'
+    }
     if ($reopenedAssetManagerSource -match 'flash\.display\.Loader' -or
         $reopenedAssetManagerSource -match 'LoaderContext' -or
         $reopenedAssetManagerSource -match 'ApplicationDomain' -or
@@ -836,10 +844,10 @@ try {
   }
   $stagedMobilityStatusPath = Join-Path $componentOutputDirectory 'mobility-status.xml'
   $stagedMobilityStatusText = Get-Content -LiteralPath $stagedMobilityStatusPath -Raw
-  if ($stagedMobilityStatusText -notmatch 'HOLD TO EXIT VEHICLE' -or
+  if ($stagedMobilityStatusText -notmatch 'name="vehicle-exit-prompt"' -or
       $stagedMobilityStatusText -notmatch 'visibleWhen="inVehicle"' -or
-      $stagedMobilityStatusText -match 'action=|event=|callback=|userEvent=') {
-    throw 'Staged mobility-status.xml must contain a visual-only in-vehicle exit prompt.'
+      $stagedMobilityStatusText -match '<button|action=|event=|callback=|userEvent=|key=') {
+    throw 'Staged mobility-status.xml must contain only the mapped noninteractive vehicle exit prompt.'
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force

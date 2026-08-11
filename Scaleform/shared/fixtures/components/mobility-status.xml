@@ -8,8 +8,8 @@
     <meter id="boost.charge" x="396" y="216" width="16" height="92" opacity="1" visible="true"
            visibleWhen="boostActive" rotation="0" scaleX="1" scaleY="1" z="2"
            style="probe.boost" value="1" max="1" source="boost.charge" />
-    <button id="vehicle.exit" x="142" y="306" width="280" height="56" opacity="1" visible="true"
+    <symbol id="vehicle.exit" x="142" y="306" width="280" height="56" opacity="1" visible="true"
             visibleWhen="inVehicle" rotation="0" scaleX="1" scaleY="1" z="3"
-            anchor="top-left" label="HOLD TO EXIT VEHICLE" icon="vehicle" state="normal" />
+            name="vehicle-exit-prompt" fit="contain" alignX="right" alignY="center" />
   </group>
 </venworksCUIFragment>

@@ -148,8 +148,9 @@ The following targets are deliberately unavailable:
 - hit, kill, and damage indicators; and
 - rollover and quick-container controls.
 
-The vehicle exit control is never a configurable visibility target. A CUI
-vehicle prompt is visual only; vanilla remains the sole input owner. The
+The vehicle exit control is never a configurable visibility target. A bounded
+duplicate prompt is noninteractive presentation only and follows Bethesda's
+platform/control-map glyph updates; the hidden original remains the sole input owner. The
 crosshair requires an isolated crash test. Enemy health requires a legendary
 enemy regression test. Hit indicators require animation-lifecycle testing,
 and rollover widgets require input testing, before any later allowlist change.

@@ -1,6 +1,8 @@
 package venworks.cui.components
 {
    import flash.display.DisplayObject;
+   import flash.display.DisplayObjectContainer;
+   import flash.display.InteractiveObject;
    import flash.display.MovieClip;
    import flash.utils.getDefinitionByName;
 
@@ -18,6 +20,10 @@ package venworks.cui.components
          "boost-fill":{
             classes:["HUDMenu_fla.BoostBarFill_mc_139","HUDMenu_LRG_fla.BoostBarFill_mc_139"],
             initialFrame:1
+         },
+         "vehicle-exit-prompt":{
+            classes:["HUDVehicle"],
+            presentationOnly:true
          }
       };
 
@@ -68,6 +74,17 @@ package venworks.cui.components
          if(result is MovieClip && definition.initialFrame != null)
          {
             MovieClip(result).gotoAndStop(int(definition.initialFrame));
+         }
+         if(Boolean(definition.presentationOnly))
+         {
+            if(result is InteractiveObject)
+            {
+               InteractiveObject(result).mouseEnabled = false;
+            }
+            if(result is DisplayObjectContainer)
+            {
+               DisplayObjectContainer(result).mouseChildren = false;
+            }
          }
          return result;
       }
