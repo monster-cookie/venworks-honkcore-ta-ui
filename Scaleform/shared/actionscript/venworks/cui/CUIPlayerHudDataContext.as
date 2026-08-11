@@ -8,9 +8,6 @@ package venworks.cui
    public final class CUIPlayerHudDataContext extends EventDispatcher
    {
       private var values:Object;
-      private var activePowerKey:String = "";
-      private var powersMenuEntries:Array = null;
-
       public function CUIPlayerHudDataContext()
       {
          super();
@@ -21,9 +18,8 @@ package venworks.cui
          BSUIDataManager.Subscribe("PlayerInventoryData",this.onPlayerInventoryData);
          BSUIDataManager.Subscribe("WeaponData",this.onWeaponData);
          BSUIDataManager.Subscribe("HUDStarbornPowersData",this.onStarbornPowersData);
-         BSUIDataManager.Subscribe("PowersMenuData",this.onPowersMenuData);
          this.setText("diagnostic.inventoryprovider","PLAYERINVENTORYDATA NOT RECEIVED");
-         this.setText("diagnostic.powersmenuprovider","POWERSMENUDATA NOT RECEIVED");
+         this.setText("diagnostic.powernameprovider","HUD POWER NAME FIELDS NOT RECEIVED");
       }
 
       public static function normalizeSource(param1:String) : String
@@ -36,7 +32,7 @@ package venworks.cui
          var source:String = normalizeSource(param1);
          if(source == "location.name" || source == "power.key" || source == "power.name" ||
             source == "weapon.name" || source == "weapon.icon" || source == "weapon.ammotype" ||
-            source == "diagnostic.inventoryprovider" || source == "diagnostic.powersmenuprovider")
+            source == "diagnostic.inventoryprovider" || source == "diagnostic.powernameprovider")
          {
             return "string";
          }
@@ -173,51 +169,41 @@ package venworks.cui
       private function onStarbornPowersData(param1:FromClientDataEvent) : void
       {
          this.clearValue("power.key");
+         this.clearValue("power.name");
          this.setText("power.key",param1.data.sKey);
-         activePowerKey = param1.data.sKey === undefined || param1.data.sKey === null ? "" : String(param1.data.sKey);
          this.setBoolean("power.hasspell",param1.data.bHasSpell);
          this.setFinite("power.cost",param1.data.fCost);
          this.setFinite("power.cooldown",param1.data.uCooldown);
-         this.resolvePowerName();
+         this.resolveHudPowerName(param1.data);
          this.notifyChanged();
       }
 
-      private function onPowersMenuData(param1:FromClientDataEvent) : void
+      private function resolveHudPowerName(param1:Object) : void
       {
-         powersMenuEntries = param1.data.aPowers as Array;
-         if(powersMenuEntries == null)
-         {
-            this.setText("diagnostic.powersmenuprovider","POWERSMENUDATA RECEIVED — POWER LIST UNAVAILABLE");
-         }
-         else
-         {
-            this.setText("diagnostic.powersmenuprovider","POWERSMENUDATA RECEIVED — " + powersMenuEntries.length.toString() + " POWERS");
-         }
-         this.resolvePowerName();
-         this.notifyChanged();
-      }
-
-      private function resolvePowerName() : void
-      {
-         var entry:Object = null;
-         var index:int = 0;
-         this.clearValue("power.name");
-         if(activePowerKey.length == 0 || powersMenuEntries == null)
+         if(this.acceptPowerNameCandidate(param1.sName,"sName"))
          {
             return;
          }
-         while(index < powersMenuEntries.length)
+         if(this.acceptPowerNameCandidate(param1.sPowerName,"sPowerName"))
          {
-            entry = powersMenuEntries[index];
-            if(entry != null && entry.sKey !== undefined && entry.sKey !== null &&
-               String(entry.sKey) == activePowerKey && entry.sName !== undefined && entry.sName !== null &&
-               String(entry.sName).replace(/\s/g,"").length != 0)
-            {
-               this.setText("power.name",entry.sName);
-               return;
-            }
-            ++index;
+            return;
          }
+         if(this.acceptPowerNameCandidate(param1.sDisplayName,"sDisplayName"))
+         {
+            return;
+         }
+         this.setText("diagnostic.powernameprovider","HUDSTARBORNPOWERSDATA RECEIVED — NO BOUNDED NAME FIELD");
+      }
+
+      private function acceptPowerNameCandidate(param1:Object, param2:String) : Boolean
+      {
+         if(param1 === undefined || param1 === null || String(param1).replace(/\s/g,"").length == 0)
+         {
+            return false;
+         }
+         this.setText("power.name",param1);
+         this.setText("diagnostic.powernameprovider","HUDSTARBORNPOWERSDATA " + param2 + " RESOLVED");
+         return true;
       }
 
       private function setText(param1:String, param2:Object) : void

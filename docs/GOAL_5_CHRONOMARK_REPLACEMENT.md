@@ -40,20 +40,25 @@ copied into CUI.
 | `weapon.name` | `WeaponData.sWeaponName` | string | Confirmed in HUD runtime |
 | `weapon.icon` | `WeaponData.sIconLinkageName` | string | Confirmed in vanilla HUD; rendered through the bounded provider-symbol adapter |
 | `weapon.ammoType` | Equipped `PlayerInventoryData.aItems[*].WeaponInfo.sAmmoType` | string | Confirmed in HUD runtime for ranged weapons and the Cutter |
-| `carry.current` / `carry.maximum` | `PlayerInventoryData.fEncumbrance` / `fMaxEncumbrance` | number | Confirmed in InventoryMenu; HUD runtime probe pending |
-| `credits` | `PlayerInventoryData.uCoin` | number | Confirmed in InventoryMenu; HUD runtime probe pending |
-| `power.name` | Matching `PowersMenuData.aPowers[*].sName` for `HUDStarbornPowersData.sKey` | string | Candidate only; HUD lifetime probe pending |
+| `carry.current` / `carry.maximum` | `PlayerInventoryData.fEncumbrance` / `fMaxEncumbrance` | number | Confirmed in HUD runtime; value-change refresh pending |
+| `credits` | `PlayerInventoryData.uCoin` | number | Confirmed in HUD runtime; value-change refresh pending |
+| `power.name` | Bounded name-field probe on `HUDStarbornPowersData` | string | Candidate only; HUD field probe pending |
 
 Identifiers are case-insensitive and underscores are ignored. Configuration
 never supplies provider names or field names; each public CUI source maps to a
 hardcoded adapter entry.
 
 Carry and credits are published by the already-proven `PlayerInventoryData`
-provider through fields consumed by vanilla InventoryMenu. Their field values
-must still be verified from HUD before Inventory opens and across inventory and
-credit changes. A player-facing power name is available in `PowersMenuData`,
-but that provider is not accepted unless it proves live from HUD before the
-Powers menu opens and remains current after Favorites changes.
+provider through fields consumed by vanilla InventoryMenu. HUD runtime confirms
+that both values populate before Inventory opens, and that direct and templated
+forms agree. Refresh after an actual inventory-weight or credit change remains
+unverified.
+
+`PowersMenuData` exposes player-facing names to the vanilla Powers menu, but HUD
+runtime did not receive that menu-owned provider before or after opening and
+closing Powers. That cross-provider candidate is rejected. The next bounded
+probe checks `sName`, `sPowerName`, and `sDisplayName` directly on the already-live
+`HUDStarbornPowersData`; the raw `sKey` remains diagnostic evidence only.
 
 No candidate becomes a production source until its owner, lifetime, field
 contract, and transition safety are separately proven.
@@ -187,6 +192,18 @@ component system allows:
 - active power, carry current/max, and credits in the body;
 - teal alternating-triangle health, pink O2, and green encumbrance meters;
 - all former Chronomark markers moved to the future compass surface.
+
+## Goal 5 exit requirements
+
+Goal 5 is not complete when provider probing ends. Before Goal 6 begins:
+
+- replace the layered empty/fill bar pairs with single live `meter` controls;
+- add bounded multi-file layout composition in which root `layout.xml` imports
+  reusable fragments and owns their placement;
+- split the Chronomark surface into `components/weapon-status.xml`,
+  `components/environment-status.xml`, and `components/player-meters.xml` (or
+  equivalently scoped names accepted during that slice); and
+- pass the complete provider, live-update, and transition acceptance list above.
 
 ## Risks and rollback
 

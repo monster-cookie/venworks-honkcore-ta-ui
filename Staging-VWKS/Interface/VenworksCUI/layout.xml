@@ -38,9 +38,9 @@
       <text id="provider.discovery.inventory" x="16" y="42" width="728" height="24" opacity="1" visible="true"
             rotation="0" scaleX="1" scaleY="1" z="1" source="diagnostic.inventoryprovider" format="raw"
             value="INVENTORY PROVIDER: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#93A9AD" bold="false" align="left" />
-      <text id="provider.discovery.powers" x="16" y="68" width="728" height="24" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="1" source="diagnostic.powersmenuprovider" format="raw"
-            value="POWERS MENU PROVIDER: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#93A9AD" bold="false" align="left" />
+      <text id="provider.discovery.power.name.provider" x="16" y="68" width="728" height="24" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="1" source="diagnostic.powernameprovider" format="raw"
+            value="HUD POWER NAME FIELDS: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#93A9AD" bold="false" align="left" />
       <text id="provider.discovery.power.key" x="16" y="96" width="356" height="24" opacity="1" visible="true"
             rotation="0" scaleX="1" scaleY="1" z="1" source="power.key" format="raw"
             value="POWER KEY DIRECT: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#F2F7F9" bold="false" align="left" />
@@ -64,7 +64,7 @@
             rotation="0" scaleX="1" scaleY="1" z="1" valueTemplate="CREDITS TEMPLATE: {credits:integer} CR"
             value="CREDITS TEMPLATE: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#F2B41C" bold="false" align="left" />
       <text id="provider.discovery.note" x="16" y="226" width="728" height="24" opacity="1" visible="true"
-            rotation="0" scaleX="1" scaleY="1" z="1" value="TEST BEFORE OPENING INVENTORY OR POWERS, THEN RETEST AFTER EACH MENU"
+            rotation="0" scaleX="1" scaleY="1" z="1" value="SWITCH POWER, CHANGE CARRIED WEIGHT, AND GAIN OR SPEND CREDITS"
             font="$MAIN_Font_Bold" fontSize="12" color="#93A9AD" bold="false" align="left" />
     </group>
     <group id="chronomark.probe" x="0" y="0" width="430" height="370" opacity="1" visible="true" visibleWhen="always"
