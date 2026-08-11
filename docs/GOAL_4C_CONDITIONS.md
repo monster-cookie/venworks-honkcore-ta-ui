@@ -148,10 +148,12 @@ The following targets are deliberately unavailable:
 - hit, kill, and damage indicators; and
 - rollover and quick-container controls.
 
-The vehicle exit control is never a configurable visibility target. A bounded
-duplicate prompt is noninteractive presentation only and follows Bethesda's
-platform/control-map glyph updates; the hidden original remains the sole input owner. The
-crosshair requires an isolated crash test. Enemy health requires a legendary
+The vehicle exit control is never a configurable visibility target. The bounded
+duplicate prompt extracts only Bethesda's initialized `GetUpButton_mc` child;
+the complete duplicate vehicle timeline is not attached or subscribed. The
+child is noninteractive presentation only and retains Bethesda's
+platform/control-map presentation, while the hidden original remains the sole
+input owner. The crosshair requires an isolated crash test. Enemy health requires a legendary
 enemy regression test. Hit indicators require animation-lifecycle testing,
 and rollover widgets require input testing, before any later allowlist change.
 

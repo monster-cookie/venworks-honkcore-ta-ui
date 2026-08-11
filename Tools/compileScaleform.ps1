@@ -759,9 +759,11 @@ try {
     }
     if ($reopenedSymbolSource -notmatch '"vehicle-exit-prompt"' -or
         $reopenedSymbolSource -notmatch '"classes":\["HUDVehicle"\]' -or
+        $reopenedSymbolSource -notmatch '"child":"GetUpButton_mc"' -or
+        $reopenedSymbolSource -notmatch 'Object\(result\)\[String\(definition\.child\)\]' -or
         $reopenedSymbolSource -notmatch 'mouseEnabled\s*=\s*false' -or
         $reopenedSymbolSource -notmatch 'mouseChildren\s*=\s*false' -or
-        $reopenedSymbolSource -match 'ProcessUserEvent|HandleUserEvent|UserEventData|callback') {
+        $reopenedSymbolSource -match 'Subscribe|ProcessUserEvent|HandleUserEvent|UserEventData|callback') {
       throw 'Generated vehicle-exit-prompt symbol is not a bounded noninteractive presentation mapping.'
     }
     if ($reopenedAssetManagerSource -match 'flash\.display\.Loader' -or

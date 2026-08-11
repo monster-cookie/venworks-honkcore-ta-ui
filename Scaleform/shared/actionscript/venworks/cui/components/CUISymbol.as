@@ -23,6 +23,7 @@ package venworks.cui.components
          },
          "vehicle-exit-prompt":{
             classes:["HUDVehicle"],
+            child:"GetUpButton_mc",
             presentationOnly:true
          }
       };
@@ -43,6 +44,7 @@ package venworks.cui.components
          var className:String = null;
          var symbolClass:Class = null;
          var result:DisplayObject = null;
+         var extractedChild:DisplayObject = null;
          if(!isAllowlisted(param1))
          {
             throw new Error("INVALID|Embedded symbol is not allowlisted: " + param1);
@@ -70,6 +72,15 @@ package venworks.cui.components
          if(result == null)
          {
             throw new Error("INVALID|Embedded symbol is unavailable in this HUD movie: " + param1);
+         }
+         if(definition.child != null)
+         {
+            extractedChild = Object(result)[String(definition.child)] as DisplayObject;
+            if(extractedChild == null)
+            {
+               throw new Error("INVALID|Embedded symbol child is unavailable: " + param1);
+            }
+            result = extractedChild;
          }
          if(result is MovieClip && definition.initialFrame != null)
          {

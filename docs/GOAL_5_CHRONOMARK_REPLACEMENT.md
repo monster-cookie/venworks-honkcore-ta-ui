@@ -210,7 +210,13 @@ subsequent death/reload), weapon changes, mapped power names, and live
 carry/credits changes. It has also accepted the consolidated meters, explosive
 presentation, boost updates, whole-group vanilla suppression, and functional
 vehicle exit through the hidden original control. The dynamically mapped key or
-controller glyph on the replacement vehicle prompt remains pending.
+controller glyph on the replacement vehicle prompt remains pending. Keyboard
+runtime rejected fitting a complete second `HUDVehicle` timeline into the CUI
+prompt box: the full timeline bounds reduced the intended control to a clipped
+fragment. The replacement now extracts only the initialized `GetUpButton_mc`
+child before fitting. Controller presentation is structurally supported by the
+Bethesda hold-button control but remains runtime-unverified because no controller
+is available for the current test pass.
 
 Report the displayed values and transition behavior before judging styling.
 The final replacement must not proceed until the confirmed fields and lifecycle
@@ -245,10 +251,12 @@ The complete vanilla `RightMeters_mc` presentation is alpha-gated as one fixed
 target. The adapter never changes its `visible` property and never addresses
 `HUDVehicle_mc`. Consequently the vehicle child retains its provider-driven
 `visible` state and `ProcessUserEvent` path even though CUI supplies the visible
-exit prompt. That prompt is a second, presentation-only instance of Bethesda's
-embedded vehicle control so its keyboard/controller glyph follows the actual
-control map. Mouse interaction and user-event routing are disabled on the
-duplicate, and configuration cannot bind actions or callbacks to it.
+exit prompt. That prompt uses only the initialized `GetUpButton_mc` child
+extracted from a temporary Bethesda vehicle-control instance. The complete
+duplicate timeline is never attached or subscribed, avoiding its HUD-sized
+bounds while retaining the Bethesda hold button's keyboard/controller
+presentation. Mouse interaction and user-event routing are disabled on the
+extracted child, and configuration cannot bind actions or callbacks to it.
 
 ## Risks and rollback
 

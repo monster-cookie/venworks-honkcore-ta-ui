@@ -113,7 +113,7 @@ vanilla owner and provider contract.
 
 | Component | Status | Required behavior |
 |---|---|---|
-| Bethesda embedded symbol | Implemented; acceptance pending | Reference a semantic name from a movie-aware hardcoded allowlist of symbols embedded in the owning vanilla movie; mappings are `environment-alert`, `quest-door-marker`, `boost-fill`, and noninteractive `vehicle-exit-prompt`. |
+| Bethesda embedded symbol | Implemented; acceptance pending | Reference a semantic name from a movie-aware hardcoded allowlist of symbols embedded in the owning vanilla movie; mappings are `environment-alert`, `quest-door-marker`, `boost-fill`, and noninteractive `vehicle-exit-prompt`. The vehicle mapping extracts only Bethesda's initialized `GetUpButton_mc` hold-button child so the full HUD timeline is never fitted into the CUI box. |
 | Built-in icon | Implemented; acceptance pending | Reference one of 21 generated semantic icons compiled directly into each HUD movie; supports tint, fit, and alignment without a runtime asset handle. |
 | Supplemental symbol library | Retired | Starfield raised Error #1034 across the child-domain SWF compatibility attempts; external SWF libraries are no longer loaded. |
 | SVG path | Implemented; acceptance pending | Render a bounded authored path with fill, stroke, transform, and view box; arc commands are rejected. |
@@ -240,7 +240,7 @@ provider/member selection remains prohibited.
 Goal 5 also exposes bounded explosive count/type and jetpack charge values.
 The weapon fragment uses them for grenade/mine presentation, while the mobility
 fragment owns boost and an `inVehicle`-conditioned vehicle prompt. The prompt
-uses a fixed embedded Bethesda control to retain mapped keyboard/controller
-glyphs, but disables mouse interaction and receives no routed user events. The
-hidden vanilla `HUDVehicle_mc` remains alive and exclusively processes
-vehicle-exit input.
+extracts the initialized `GetUpButton_mc` child from a temporary embedded
+Bethesda vehicle control, then fits only that bounded hold button. It disables
+mouse interaction and receives no routed user events. The hidden vanilla
+`HUDVehicle_mc` remains alive and exclusively processes vehicle-exit input.
