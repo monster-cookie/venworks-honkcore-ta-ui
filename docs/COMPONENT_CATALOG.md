@@ -194,17 +194,18 @@ missing content fails the entire CUI layer with an actionable diagnostic.
 
 ## Goal 5 live-value probe
 
-Goal 5 adds an allowlisted live-value adapter for the player HUD without
-changing the reusable component API. `text` accepts an optional single
-`source` and bounded `format`; `meter` accepts an optional numeric `source` and
-numeric `maxSource`. Required static values remain fallbacks until the vanilla
-provider publishes its first update. Dynamic meters clip an ordinary approved
-meter renderer, so continuous, segmented, triangle, dot, and radial visuals
+Goal 5 adds an allowlisted live-value adapter for the player HUD. `text`
+accepts either one `source` with a bounded `format`, or a bounded
+`valueTemplate` containing up to eight allowlisted variables with optional
+per-variable formats. `meter` accepts an optional numeric `source` and numeric
+`maxSource`. Required static values remain fallbacks until every required
+vanilla value publishes its first update. Dynamic meters clip an ordinary
+approved meter renderer, so continuous, segmented, triangle, dot, and radial visuals
 remain reusable rather than gaining provider-specific implementations.
 
 The first probe replaces the complete bottom-left Chronomark presentation and
-confirms only values published to `hudmenu.gfx`: location, local time,
-environmental oxygen/temperature/gravity, player health/O2/power, active-power
-metadata, and ammo counts/flags. Weapon name and ammo type, carry weight, and
-credits are unresolved and are displayed as provider-required placeholders.
-Arbitrary provider/member selection remains prohibited.
+confirms values published to `hudmenu.gfx`, including weapon name/ammo type.
+The discovery gallery compares direct and templated carry/credits values from
+`PlayerInventoryData` and tests whether `PowersMenuData` is sufficiently live
+to resolve the active power key to a player-facing name. Arbitrary
+provider/member selection remains prohibited.

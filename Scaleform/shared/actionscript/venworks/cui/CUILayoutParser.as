@@ -309,7 +309,7 @@ package venworks.cui
          }
          else if(type == "text")
          {
-            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","value","source","format","font","fontSize","color","bold","align"]);
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","value","source","format","valueTemplate","font","fontSize","color","bold","align"]);
             if(String(param1.@value).length == 0)
             {
                throw new Error("INVALID|Text value cannot be empty: " + String(param1.@id));
@@ -322,9 +322,21 @@ package venworks.cui
             {
                throw new Error("INVALID|Text align must be left, center, or right: " + String(param1.@id));
             }
+            if(param1.@source.length() == 1 && param1.@valueTemplate.length() == 1)
+            {
+               throw new Error("INVALID|Text source and valueTemplate are mutually exclusive: " + String(param1.@id));
+            }
             if(param1.@source.length() == 1)
             {
                CUIValueBinding.validateText(param1);
+            }
+            else if(param1.@valueTemplate.length() == 1)
+            {
+               if(param1.@format.length() == 1)
+               {
+                  throw new Error("INVALID|Text valueTemplate uses per-variable formats: " + String(param1.@id));
+               }
+               CUIValueBinding.validateTextTemplate(param1);
             }
          }
          else if(type == "panel")

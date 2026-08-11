@@ -269,7 +269,7 @@ package venworks.cui
             param2.addChild(component);
             this.setDiagnosticContext("LAYOUT POSITIONING",node);
             layoutEngine.position(component,node,param2,param3);
-            if(node.@source.length() == 1)
+            if(node.@source.length() == 1 || node.@valueTemplate.length() == 1)
             {
                this.setDiagnosticContext("VALUE BINDING CREATION",node);
                valueBindings.push(new CUIValueBinding(

@@ -40,25 +40,36 @@ copied into CUI.
 | `weapon.name` | `WeaponData.sWeaponName` | string | Confirmed in HUD runtime |
 | `weapon.icon` | `WeaponData.sIconLinkageName` | string | Confirmed in vanilla HUD; rendered through the bounded provider-symbol adapter |
 | `weapon.ammoType` | Equipped `PlayerInventoryData.aItems[*].WeaponInfo.sAmmoType` | string | Confirmed in HUD runtime for ranged weapons and the Cutter |
+| `carry.current` / `carry.maximum` | `PlayerInventoryData.fEncumbrance` / `fMaxEncumbrance` | number | Confirmed in InventoryMenu; HUD runtime probe pending |
+| `credits` | `PlayerInventoryData.uCoin` | number | Confirmed in InventoryMenu; HUD runtime probe pending |
+| `power.name` | Matching `PowersMenuData.aPowers[*].sName` for `HUDStarbornPowersData.sKey` | string | Candidate only; HUD lifetime probe pending |
 
 Identifiers are case-insensitive and underscores are ignored. Configuration
 never supplies provider names or field names; each public CUI source maps to a
 hardcoded adapter entry.
 
-The following desired values are not yet published by confirmed providers in
-this always-loaded movie and remain explicit probe placeholders:
+Carry and credits are published by the already-proven `PlayerInventoryData`
+provider through fields consumed by vanilla InventoryMenu. Their field values
+must still be verified from HUD before Inventory opens and across inventory and
+credit changes. A player-facing power name is available in `PowersMenuData`,
+but that provider is not accepted unless it proves live from HUD before the
+Powers menu opens and remains current after Favorites changes.
 
-- current and maximum carry weight;
-- player credit total.
+No candidate becomes a production source until its owner, lifetime, field
+contract, and transition safety are separately proven.
 
-They must not be inferred or connected through a new provider until its owner,
-lifetime, field contract, and transition safety are separately proven.
+The provider-symbol runtime screenshot verifies the layout, weapon icon/name,
+ammunition row, environment values, meters, and receipt of inventory data. It
+also proves that the body remains unfinished: `power.key` renders a timeline
+symbol key, carry and credits are literal provider placeholders, and the
+inventory status line is diagnostic instrumentation. None of those three body
+rows is accepted as final behavior.
 
 ## Ammo-type provider diagnostic
 
 Vanilla `inventorymenu.swf` consumes `PlayerInventoryData.aItems` and displays
 `WeaponInfo.sAmmoType`. Inventory entries also expose `bIsEquipped`, providing a
-bounded candidate route to the equipped weapon. The Goal 6 diagnostic subscribes
+bounded candidate route to the equipped weapon. The Goal 5 diagnostic subscribes
 to the same provider from `HUDMenu`, adds `weapon.ammoType`, and reports whether
 the provider was received, whether an equipped weapon candidate was found, and
 whether that candidate supplied a valid string. It clears a previously resolved
@@ -90,6 +101,13 @@ Dynamic text keeps a static fallback and selects one bounded formatter:
 
 Supported formats are `raw`, `integer`, `percent`, `temperature`, `gravity`,
 `time24`, and `boolean`. Source kind and format must be compatible.
+
+Text may alternatively use a bounded `valueTemplate`. Variables use
+`{allowlisted.source}` or `{allowlisted.source:format}`. Direct `source` and
+`valueTemplate` are mutually exclusive, templates are limited to 256
+characters and eight variables, and the static `value` replaces the complete
+template until every referenced value is available. Provider/member names,
+expressions, nesting, and scripts remain unavailable.
 
 Dynamic meters keep static fallbacks and may use a live maximum:
 
@@ -142,9 +160,10 @@ Build and deploy the Venworks variant, then verify:
    received and shows the ammo type for the equipped weapon.
 7. The ammo type changes when switching between weapons through Favorites and
    remains correct after opening and closing Inventory.
-8. The active-power field is either a useful player-facing value or is reported
-   verbatim so its provider semantics can be corrected without guessing.
-9. Carry and credits remain clearly labeled provider gaps.
+8. The active-power field displays a useful player-facing name from a provider
+   proven live in HUD; the raw timeline key is diagnostic evidence only.
+9. Carry current/max and credits populate before Inventory opens, direct and
+   templated forms agree, and values update after inventory/credit changes.
 10. Save load, death/reload, ladder, workbench, vehicle, and ship transitions do
    not crash and do not permanently suppress the panel.
 11. Ranged weapons and the Cutter show their icon, name, ammunition counts, and

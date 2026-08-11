@@ -264,7 +264,10 @@ if ($unknownIconSchemaErrors.Count -ne 0) {
 foreach ($semanticValueFixtureName in @(
   'layout-unknown-value-source.xml',
   'layout-incompatible-value-binding.xml',
-  'layout-invalid-value-format.xml'
+  'layout-invalid-value-format.xml',
+  'layout-invalid-text-value-template.xml',
+  'layout-unknown-template-value-source.xml',
+  'layout-incompatible-template-value-format.xml'
 )) {
   $semanticValueFixture = Resolve-RequiredFile `
     -Path (Join-Path $fixtureDirectory $semanticValueFixtureName) `
@@ -608,6 +611,12 @@ try {
       'Condition provider unavailable in hudmenu.gfx',
       'Vanilla visibility target is not allowlisted',
       'Value source is not allowlisted in hudmenu.gfx',
+      'Text source and valueTemplate are mutually exclusive',
+      'Text valueTemplate exceeds the 8-variable limit',
+      'PowersMenuData',
+      'fEncumbrance',
+      'fMaxEncumbrance',
+      'uCoin',
       'LocalEnvironmentData',
       'LocalEnvData_Frequent',
       'PlayerFrequentData',

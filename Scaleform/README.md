@@ -149,17 +149,17 @@ does not replace or bind live vanilla HUD data.
 
 Goal 5 adds bounded live values to ordinary `text` and `meter` primitives.
 A text keeps its required static `value` as a provider-not-ready fallback and
-may add `source` plus one of `raw`, `integer`, `percent`, `temperature`,
-`gravity`, `time24`, or `boolean`. A meter keeps required static `value` and
+may add either `source` plus one bounded format, or `valueTemplate` with up to
+eight `{source:format}` variables. The complete fallback remains until every
+template variable is available. A meter keeps required static `value` and
 `max` fallbacks and may add numeric `source` plus optional `maxSource`.
 Source identifiers are case-insensitive and ignore underscores, but they must
 belong to the hardcoded `hudmenu.gfx` allowlist. Unknown sources and incompatible
 source/format combinations fail before the component renders. The runtime does
-not accept provider names, member names, interpolation, scripts, or arbitrary
-expressions from configuration.
+not accept provider names, member names, scripts, or arbitrary expressions from
+configuration.
 
 The current allowlist covers `location.name`, the four `environment.*` probe
-values, health/O2/power values under `player.*` and `power.*`, and weapon ammo
-counts/flags under `weapon.*`. Weapon name, ammo type, carry weight, and credits
-are intentionally unavailable until their always-loaded providers are proven.
+values, health/O2/power values under `player.*` and `power.*`, weapon values,
+and the Goal 5 carry/credits candidates under `carry.*` and `credits`.
 See `../docs/GOAL_5_CHRONOMARK_REPLACEMENT.md` for the exact list.

@@ -15,6 +15,8 @@ package venworks.cui
       private var source:String;
       private var maxSource:String;
       private var format:String;
+      private var valueTemplate:String;
+      private var templateVariables:Array;
       private var meterMask:Shape;
 
       public function CUIValueBinding(param1:CUIComponent, param2:XML, param3:XML = null)
@@ -26,12 +28,26 @@ package venworks.cui
          source = CUIPlayerHudDataContext.normalizeSource(String(node.@source));
          maxSource = node.@maxSource.length() == 1 ? CUIPlayerHudDataContext.normalizeSource(String(node.@maxSource)) : "";
          format = node.@format.length() == 1 ? String(node.@format).toLowerCase() : "raw";
+         valueTemplate = node.@valueTemplate.length() == 1 ? String(node.@valueTemplate) : "";
+         templateVariables = valueTemplate.length == 0 ? [] : parseTextTemplate(valueTemplate);
       }
 
       public static function validateText(param1:XML) : void
       {
          var kind:String = validateSource(String(param1.@source));
          var valueFormat:String = param1.@format.length() == 1 ? String(param1.@format).toLowerCase() : "raw";
+         validateFormat(String(param1.@source),kind,valueFormat);
+      }
+
+      public static function validateTextTemplate(param1:XML) : void
+      {
+         parseTextTemplate(String(param1.@valueTemplate));
+      }
+
+      private static function validateFormat(param1:String, param2:String, param3:String) : void
+      {
+         var kind:String = param2;
+         var valueFormat:String = param3;
          if(valueFormat != "raw" && valueFormat != "integer" && valueFormat != "percent" &&
             valueFormat != "temperature" && valueFormat != "gravity" && valueFormat != "time24" &&
             valueFormat != "boolean")
@@ -40,16 +56,71 @@ package venworks.cui
          }
          if(kind == "string" && valueFormat != "raw")
          {
-            throw new Error("INVALID|String source requires raw format: " + String(param1.@source));
+            throw new Error("INVALID|String source requires raw format: " + param1);
          }
          if(kind == "boolean" && valueFormat != "raw" && valueFormat != "boolean")
          {
-            throw new Error("INVALID|Boolean source requires raw or boolean format: " + String(param1.@source));
+            throw new Error("INVALID|Boolean source requires raw or boolean format: " + param1);
          }
          if(kind == "number" && valueFormat == "boolean")
          {
-            throw new Error("INVALID|Numeric source cannot use boolean format: " + String(param1.@source));
+            throw new Error("INVALID|Numeric source cannot use boolean format: " + param1);
          }
+      }
+
+      private static function parseTextTemplate(param1:String) : Array
+      {
+         var variables:Array = [];
+         var cursor:int = 0;
+         var openIndex:int = 0;
+         var closeIndex:int = 0;
+         var body:String = null;
+         var separatorIndex:int = 0;
+         var variableSource:String = null;
+         var variableFormat:String = null;
+         if(param1.length == 0 || param1.length > 256)
+         {
+            throw new Error("INVALID|Text valueTemplate length must be between 1 and 256 characters.");
+         }
+         while(cursor < param1.length)
+         {
+            if(param1.charAt(cursor) == "}")
+            {
+               throw new Error("INVALID|Malformed text valueTemplate.");
+            }
+            if(param1.charAt(cursor) != "{")
+            {
+               ++cursor;
+               continue;
+            }
+            openIndex = cursor;
+            closeIndex = param1.indexOf("}",openIndex + 1);
+            if(closeIndex < 0 || param1.indexOf("{",openIndex + 1) >= 0 && param1.indexOf("{",openIndex + 1) < closeIndex)
+            {
+               throw new Error("INVALID|Malformed text valueTemplate.");
+            }
+            body = param1.substring(openIndex + 1,closeIndex);
+            separatorIndex = body.indexOf(":");
+            variableSource = separatorIndex < 0 ? body : body.substring(0,separatorIndex);
+            variableFormat = separatorIndex < 0 ? "raw" : body.substring(separatorIndex + 1).toLowerCase();
+            if(variableSource.length == 0 || variableSource.search(/^[A-Za-z][A-Za-z0-9._]*$/) != 0 ||
+               separatorIndex >= 0 && body.indexOf(":",separatorIndex + 1) >= 0)
+            {
+               throw new Error("INVALID|Malformed text valueTemplate variable: " + body);
+            }
+            validateFormat(variableSource,validateSource(variableSource),variableFormat);
+            variables.push({ source:CUIPlayerHudDataContext.normalizeSource(variableSource), format:variableFormat, token:param1.substring(openIndex,closeIndex + 1) });
+            if(variables.length > 8)
+            {
+               throw new Error("INVALID|Text valueTemplate exceeds the 8-variable limit.");
+            }
+            cursor = closeIndex + 1;
+         }
+         if(variables.length == 0)
+         {
+            throw new Error("INVALID|Text valueTemplate requires at least one well-formed variable.");
+         }
+         return variables;
       }
 
       public static function validateMeter(param1:XML) : void
@@ -92,7 +163,14 @@ package venworks.cui
          var resolved:Object = param1.getValue(source);
          if(target is CUIText)
          {
-            CUIText(target).setValue(Boolean(resolved.known) ? this.formatValue(resolved.value) : String(node.@value));
+            if(valueTemplate.length != 0)
+            {
+               CUIText(target).setValue(this.applyTextTemplate(param1));
+            }
+            else
+            {
+               CUIText(target).setValue(Boolean(resolved.known) ? this.formatValue(resolved.value,format) : String(node.@value));
+            }
          }
          else if(target is CUIMeter)
          {
@@ -102,6 +180,23 @@ package venworks.cui
          {
             CUIProviderSymbol(target).setSymbol(Boolean(resolved.known) ? String(resolved.value) : "");
          }
+      }
+
+      private function applyTextTemplate(param1:CUIPlayerHudDataContext) : String
+      {
+         var output:String = valueTemplate;
+         var variable:Object = null;
+         var resolved:Object = null;
+         for each(variable in templateVariables)
+         {
+            resolved = param1.getValue(String(variable.source));
+            if(!Boolean(resolved.known))
+            {
+               return String(node.@value);
+            }
+            output = output.split(String(variable.token)).join(this.formatValue(resolved.value,String(variable.format)));
+         }
+         return output;
       }
 
       private function applyMeter(param1:CUIPlayerHudDataContext, param2:Object) : void
@@ -166,33 +261,33 @@ package venworks.cui
          target.mask = meterMask;
       }
 
-      private function formatValue(param1:Object) : String
+      private function formatValue(param1:Object, param2:String) : String
       {
          var numeric:Number = Number(param1);
          var totalMinutes:int = 0;
          var hours:int = 0;
          var minutes:int = 0;
-         if(format == "boolean")
+         if(param2 == "boolean")
          {
             return Boolean(param1) ? "TRUE" : "FALSE";
          }
-         if(format == "integer")
+         if(param2 == "integer")
          {
             return Math.round(numeric).toString();
          }
-         if(format == "percent")
+         if(param2 == "percent")
          {
             return Math.round(numeric).toString() + "%";
          }
-         if(format == "temperature")
+         if(param2 == "temperature")
          {
             return Math.round(numeric).toString() + "°";
          }
-         if(format == "gravity")
+         if(param2 == "gravity")
          {
             return numeric.toFixed(2) + "g";
          }
-         if(format == "time24")
+         if(param2 == "time24")
          {
             numeric = numeric - Math.floor(numeric);
             if(numeric < 0)

@@ -8,6 +8,8 @@ package venworks.cui
    public final class CUIPlayerHudDataContext extends EventDispatcher
    {
       private var values:Object;
+      private var activePowerKey:String = "";
+      private var powersMenuEntries:Array = null;
 
       public function CUIPlayerHudDataContext()
       {
@@ -19,7 +21,9 @@ package venworks.cui
          BSUIDataManager.Subscribe("PlayerInventoryData",this.onPlayerInventoryData);
          BSUIDataManager.Subscribe("WeaponData",this.onWeaponData);
          BSUIDataManager.Subscribe("HUDStarbornPowersData",this.onStarbornPowersData);
+         BSUIDataManager.Subscribe("PowersMenuData",this.onPowersMenuData);
          this.setText("diagnostic.inventoryprovider","PLAYERINVENTORYDATA NOT RECEIVED");
+         this.setText("diagnostic.powersmenuprovider","POWERSMENUDATA NOT RECEIVED");
       }
 
       public static function normalizeSource(param1:String) : String
@@ -30,9 +34,9 @@ package venworks.cui
       public static function getKind(param1:String) : String
       {
          var source:String = normalizeSource(param1);
-         if(source == "location.name" || source == "power.key" ||
+         if(source == "location.name" || source == "power.key" || source == "power.name" ||
             source == "weapon.name" || source == "weapon.icon" || source == "weapon.ammotype" ||
-            source == "diagnostic.inventoryprovider")
+            source == "diagnostic.inventoryprovider" || source == "diagnostic.powersmenuprovider")
          {
             return "string";
          }
@@ -48,6 +52,7 @@ package venworks.cui
             source == "player.carbondioxide" || source == "power.current" ||
             source == "power.maximum" || source == "power.percentage" ||
             source == "power.cost" || source == "power.cooldown" ||
+            source == "carry.current" || source == "carry.maximum" || source == "credits" ||
             source == "weapon.clipammo" || source == "weapon.totalammo" ||
             source == "weapon.reserveammo")
          {
@@ -121,6 +126,12 @@ package venworks.cui
          var ammoType:String = "";
          var equippedWeaponCount:int = 0;
          var index:int = 0;
+         this.clearValue("carry.current");
+         this.clearValue("carry.maximum");
+         this.clearValue("credits");
+         this.setFinite("carry.current",param1.data.fEncumbrance);
+         this.setFinite("carry.maximum",param1.data.fMaxEncumbrance);
+         this.setFinite("credits",param1.data.uCoin);
          if(items == null)
          {
             this.clearValue("weapon.ammotype");
@@ -161,11 +172,52 @@ package venworks.cui
 
       private function onStarbornPowersData(param1:FromClientDataEvent) : void
       {
+         this.clearValue("power.key");
          this.setText("power.key",param1.data.sKey);
+         activePowerKey = param1.data.sKey === undefined || param1.data.sKey === null ? "" : String(param1.data.sKey);
          this.setBoolean("power.hasspell",param1.data.bHasSpell);
          this.setFinite("power.cost",param1.data.fCost);
          this.setFinite("power.cooldown",param1.data.uCooldown);
+         this.resolvePowerName();
          this.notifyChanged();
+      }
+
+      private function onPowersMenuData(param1:FromClientDataEvent) : void
+      {
+         powersMenuEntries = param1.data.aPowers as Array;
+         if(powersMenuEntries == null)
+         {
+            this.setText("diagnostic.powersmenuprovider","POWERSMENUDATA RECEIVED — POWER LIST UNAVAILABLE");
+         }
+         else
+         {
+            this.setText("diagnostic.powersmenuprovider","POWERSMENUDATA RECEIVED — " + powersMenuEntries.length.toString() + " POWERS");
+         }
+         this.resolvePowerName();
+         this.notifyChanged();
+      }
+
+      private function resolvePowerName() : void
+      {
+         var entry:Object = null;
+         var index:int = 0;
+         this.clearValue("power.name");
+         if(activePowerKey.length == 0 || powersMenuEntries == null)
+         {
+            return;
+         }
+         while(index < powersMenuEntries.length)
+         {
+            entry = powersMenuEntries[index];
+            if(entry != null && entry.sKey !== undefined && entry.sKey !== null &&
+               String(entry.sKey) == activePowerKey && entry.sName !== undefined && entry.sName !== null &&
+               String(entry.sName).replace(/\s/g,"").length != 0)
+            {
+               this.setText("power.name",entry.sName);
+               return;
+            }
+            ++index;
+         }
       }
 
       private function setText(param1:String, param2:Object) : void

@@ -161,6 +161,13 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="valueTemplateType">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="1" />
+      <xs:maxLength value="256" />
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:attributeGroup name="componentAttributes">
     <xs:attribute name="id" type="idType" use="required" />
     <xs:attribute name="x" type="xs:decimal" use="required" />
@@ -182,6 +189,7 @@
     <xs:attribute name="value" type="xs:string" use="required" />
     <xs:attribute name="source" type="valueSourceType" />
     <xs:attribute name="format" type="valueFormatType" default="raw" />
+    <xs:attribute name="valueTemplate" type="valueTemplateType" />
     <xs:attribute name="font" type="xs:string" use="required" />
     <xs:attribute name="fontSize" type="xs:positiveInteger" use="required" />
     <xs:attribute name="color" type="colorType" use="required" />

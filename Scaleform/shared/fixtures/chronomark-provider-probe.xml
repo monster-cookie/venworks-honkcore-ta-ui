@@ -27,6 +27,46 @@
     <target id="bottomLeft" visibleWhen="never" />
   </vanillaVisibility>
   <components>
+    <group id="provider.discovery.gallery" x="0" y="0" width="760" height="264" opacity="1" visible="true"
+           rotation="0" scaleX="1" scaleY="1" z="200" anchor="top-center">
+      <panel id="provider.discovery.background" x="0" y="0" width="760" height="264" opacity="1" visible="true"
+             rotation="0" scaleX="1" scaleY="1" z="0"
+             fillColor="#061B22" fillOpacity="0.92" strokeColor="#F2B41C" strokeOpacity="0.9" strokeWidth="2" />
+      <text id="provider.discovery.title" x="16" y="10" width="728" height="28" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="1" value="GOAL 5 PROVIDER / VALUE TEMPLATE DISCOVERY"
+            font="$MAIN_Font_Bold" fontSize="17" color="#F2B41C" bold="true" align="left" />
+      <text id="provider.discovery.inventory" x="16" y="42" width="728" height="24" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="1" source="diagnostic.inventoryprovider" format="raw"
+            value="INVENTORY PROVIDER: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#93A9AD" bold="false" align="left" />
+      <text id="provider.discovery.powers" x="16" y="68" width="728" height="24" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="1" source="diagnostic.powersmenuprovider" format="raw"
+            value="POWERS MENU PROVIDER: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#93A9AD" bold="false" align="left" />
+      <text id="provider.discovery.power.key" x="16" y="96" width="356" height="24" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="1" source="power.key" format="raw"
+            value="POWER KEY DIRECT: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#F2F7F9" bold="false" align="left" />
+      <text id="provider.discovery.power.name" x="388" y="96" width="356" height="24" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="1" valueTemplate="POWER NAME: {power.name}"
+            value="POWER NAME TEMPLATE: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#F2F7F9" bold="false" align="left" />
+      <text id="provider.discovery.carry.direct" x="16" y="128" width="356" height="24" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="1" source="carry.current" format="raw"
+            value="CARRY CURRENT DIRECT: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#00E8EC" bold="false" align="left" />
+      <text id="provider.discovery.carry.template" x="388" y="128" width="356" height="24" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="1" valueTemplate="CARRY CURRENT TEMPLATE: {carry.current}"
+            value="CARRY CURRENT TEMPLATE: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#00E8EC" bold="false" align="left" />
+      <text id="provider.discovery.carry.combined" x="16" y="158" width="728" height="24" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="1"
+            valueTemplate="CARRY COMBINED: {carry.current:integer} / {carry.maximum:integer} KG"
+            value="CARRY COMBINED TEMPLATE: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#00E8EC" bold="false" align="left" />
+      <text id="provider.discovery.credits.direct" x="16" y="190" width="356" height="24" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="1" source="credits" format="integer"
+            value="CREDITS DIRECT: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#F2B41C" bold="false" align="left" />
+      <text id="provider.discovery.credits.template" x="388" y="190" width="356" height="24" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="1" valueTemplate="CREDITS TEMPLATE: {credits:integer} CR"
+            value="CREDITS TEMPLATE: WAITING" font="$MAIN_Font_Bold" fontSize="13" color="#F2B41C" bold="false" align="left" />
+      <text id="provider.discovery.note" x="16" y="226" width="728" height="24" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="1" value="TEST BEFORE OPENING INVENTORY OR POWERS, THEN RETEST AFTER EACH MENU"
+            font="$MAIN_Font_Bold" fontSize="12" color="#93A9AD" bold="false" align="left" />
+    </group>
     <group id="chronomark.probe" x="0" y="0" width="430" height="370" opacity="1" visible="true" visibleWhen="always"
            rotation="0" scaleX="1" scaleY="1" z="100" anchor="bottom-left">
       <providerSymbol id="chronomark.weapon.icon" x="8" y="0" width="54" height="54" opacity="1" visible="true"
