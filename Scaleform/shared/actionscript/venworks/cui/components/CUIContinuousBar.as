@@ -4,11 +4,17 @@ package venworks.cui.components
    {
       public function CUIContinuousBar(param1:XML, param2:XML)
       {
+         super(param1,param2);
+         this.redraw();
+      }
+
+      override protected function redraw() : void
+      {
          var fillWidth:Number = NaN;
          var fillHeight:Number = NaN;
          var fillX:Number = 0;
          var fillY:Number = 0;
-         super(param1,param2);
+         this.clearMeterGraphics();
          graphics.beginFill(emptyColor,emptyOpacity);
          graphics.drawRect(0,0,componentWidth,componentHeight);
          graphics.endFill();

@@ -6,28 +6,35 @@ package venworks.cui.components
 
    public class CUITriangleBar extends CUIMeter
    {
+      private var segmentCount:int;
+      private var segmentGap:Number;
+      private var alternating:Boolean;
+
       public function CUITriangleBar(param1:XML, param2:XML)
       {
-         var segmentCount:int = 0;
-         var gap:Number = NaN;
+         super(param1,param2);
+         segmentCount = int(this.readNumber(param2,"segmentCount",12));
+         segmentGap = this.readNumber(param2,"gap",2);
+         alternating = String(param2.@trianglePattern) == "alternating";
+         this.redraw();
+      }
+
+      override protected function redraw() : void
+      {
          var segmentExtent:Number = NaN;
          var visualIndex:int = 0;
          var segmentX:Number = NaN;
          var segmentY:Number = NaN;
          var index:int = 0;
          var segmentFraction:Number = NaN;
-         var alternating:Boolean = false;
-         super(param1,param2);
-         segmentCount = int(this.readNumber(param2,"segmentCount",12));
-         gap = this.readNumber(param2,"gap",2);
-         alternating = String(param2.@trianglePattern) == "alternating";
-         segmentExtent = (axisLength - gap * (segmentCount - 1)) / segmentCount;
+         this.clearMeterGraphics();
+         segmentExtent = (axisLength - segmentGap * (segmentCount - 1)) / segmentCount;
          index = 0;
          while(index < segmentCount)
          {
             visualIndex = this.displayIndex(index,segmentCount);
-            segmentX = horizontal ? visualIndex * (segmentExtent + gap) : 0;
-            segmentY = horizontal ? 0 : visualIndex * (segmentExtent + gap);
+            segmentX = horizontal ? visualIndex * (segmentExtent + segmentGap) : 0;
+            segmentY = horizontal ? 0 : visualIndex * (segmentExtent + segmentGap);
             this.drawTriangle(graphics,segmentX,segmentY,
                               horizontal ? segmentExtent : componentWidth,
                               horizontal ? componentHeight : segmentExtent,

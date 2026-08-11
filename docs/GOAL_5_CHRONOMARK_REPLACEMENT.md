@@ -42,7 +42,7 @@ copied into CUI.
 | `weapon.ammoType` | Equipped `PlayerInventoryData.aItems[*].WeaponInfo.sAmmoType` | string | Confirmed in HUD runtime for ranged weapons and the Cutter |
 | `carry.current` / `carry.maximum` | `PlayerInventoryData.fEncumbrance` / `fMaxEncumbrance` | number | Confirmed in HUD runtime, including value-change refresh |
 | `credits` | `PlayerInventoryData.uCoin` | number | Confirmed in HUD runtime, including value-change refresh |
-| `power.name` | Bounded canonical-English mapping from `HUDStarbornPowersData.sKey` | string | Mapping implemented; runtime acceptance pending |
+| `power.name` | Bounded canonical-English mapping from `HUDStarbornPowersData.sKey` | string | Confirmed in HUD runtime across power changes |
 
 Identifiers are case-insensitive and underscores are ignored. Configuration
 never supplies provider names or field names; each public CUI source maps to a
@@ -136,15 +136,16 @@ expressions, nesting, and scripts remain unavailable.
 Dynamic meters keep static fallbacks and may use a live maximum:
 
 ```xml
-<meter id="health.live" x="8" y="286" width="344" height="26"
-       opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
-       style="probe.health.live" value="100" max="100"
+<meter id="health" x="8" y="286" width="344" height="26"
+       opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1"
+       style="probe.health" value="100" max="100"
        source="player.health" maxSource="player.maxHealth" />
 ```
 
-The runtime clips the configured renderer to the resolved ratio. A separate
-ordinary empty/background meter supplies the unfilled visual. This preserves
-the shared meter renderer library and avoids provider-specific components.
+The configured renderer owns both its empty and filled visuals and redraws
+itself when a bound current or maximum value changes. One meter therefore
+replaces each former layered empty/fill pair while preserving the shared meter
+renderer library and avoiding provider-specific components.
 
 Active Bethesda weapon icons use the bounded provider-symbol component:
 
@@ -195,6 +196,12 @@ Build and deploy the Venworks variant, then verify:
 12. Rapid Favorites switching does not leave a stale icon or stale ammunition
     row, and unarmed state clears the icon without an error.
 
+Runtime has accepted the three imported fragments, scanner persistence,
+health/O2 updates (including health reaching zero through fall damage and the
+subsequent death/reload), weapon changes, mapped power names, and live
+carry/credits changes. The consolidated meter controls, live encumbrance meter,
+and surgical vanilla player-status suppression remain the current test slice.
+
 Report the displayed values and transition behavior before judging styling.
 The final replacement must not proceed until the confirmed fields and lifecycle
 behavior are accepted.
@@ -219,6 +226,10 @@ Goal 5 is not complete when provider probing ends. Before Goal 6 begins:
 - replace the layered empty/fill bar pairs with single live `meter` controls;
 - runtime-accept the bounded multi-file layout and its three root-placed
   Chronomark fragments;
+- place grenade icon/count presentation in the new weapon control, then suppress
+  the corresponding vanilla grenade controls;
+- leave boost/jetpack presentation on the vanilla HUD until the later
+  environmental-effects/tricorder control owns its replacement;
 - pass the complete provider, live-update, and transition acceptance list above.
 
 ## Risks and rollback

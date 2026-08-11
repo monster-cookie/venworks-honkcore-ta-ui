@@ -4,17 +4,24 @@ package venworks.cui.components
 
    public class CUIRadialMeter extends CUIMeter
    {
+      private var startAngle:Number;
+      private var sweepAngle:Number;
+      private var clockwise:Boolean;
+      private var thickness:Number;
+
       public function CUIRadialMeter(param1:XML, param2:XML)
       {
-         var startAngle:Number = NaN;
-         var sweepAngle:Number = NaN;
-         var clockwise:Boolean = false;
-         var thickness:Number = NaN;
          super(param1,param2);
          startAngle = this.readNumber(param2,"startAngle",-90);
          sweepAngle = this.readNumber(param2,"sweepAngle",360);
          clockwise = this.readBoolean(param2,"clockwise",true);
          thickness = this.readNumber(param2,"thickness",8);
+         this.redraw();
+      }
+
+      override protected function redraw() : void
+      {
+         this.clearMeterGraphics();
          this.drawArc(graphics,startAngle,sweepAngle,clockwise,thickness,emptyColor,emptyOpacity,1);
          if(fraction > 0)
          {

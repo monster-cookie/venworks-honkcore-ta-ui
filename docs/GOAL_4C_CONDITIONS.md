@@ -134,9 +134,14 @@ advancing under `Extensions.noInvisibleAdvance`. A condition can make an
 allowlisted target transparent, but it cannot force a vanilla-hidden target
 visible.
 
+`playerStatus` is a fixed, surgical adapter for the replaced lower-right player
+status children inside `RightMeters_mc`. It suppresses only the vanilla health,
+power, and equipped-weapon presentation. Grenade icon/count, boost/jetpack,
+vehicle HUD, and their divider remain under vanilla ownership.
+
 The following targets are deliberately unavailable:
 
-- `rightMeters`, `HUDVehicle`, and the exit-vehicle button;
+- the whole `rightMeters` group, `HUDVehicle`, and the exit-vehicle button;
 - `centerGroup` and the target crosshair;
 - the enemy-health holder and enemy-health internals;
 - hit, kill, and damage indicators; and
@@ -158,7 +163,7 @@ and rollover widgets require input testing, before any later allowlist change.
 - `layout-unknown-condition.xml` uses an unknown condition name.
 - `layout-condition-complexity.xml` exceeds the nesting limit.
 - `layout-unavailable-provider.xml` uses the reserved combat-effect function.
-- `layout-unsafe-vanilla-target.xml` attempts to target `rightMeters`.
+- `layout-unsafe-vanilla-target.xml` attempts to target `HUDVehicle`.
 
 ## Automated validation
 

@@ -5,21 +5,52 @@ package venworks.cui
 
    public final class CUIVanillaVisibilityAdapter
    {
-      private var target:DisplayObject;
+      private var targets:Array;
       private var expression:CUIConditionExpression;
-      private var initialAlpha:Number;
+      private var initialAlphas:Array;
 
       public function CUIVanillaVisibilityAdapter(param1:DisplayObjectContainer, param2:String, param3:CUIConditionExpression)
       {
          super();
-         var displayName:String = this.getDisplayName(param2);
-         target = param1.getChildByName(displayName);
-         if(target == null)
+         var targetName:String = normalizeTarget(param2);
+         var target:DisplayObject = null;
+         var playerStatus:DisplayObjectContainer = null;
+         var childName:String = null;
+         targets = [];
+         initialAlphas = [];
+         if(targetName == "playerstatus")
          {
-            throw new Error("INVALID|Allowlisted vanilla HUD target is missing: " + param2);
+            playerStatus = param1.getChildByName("RightMeters_mc") as DisplayObjectContainer;
+            if(playerStatus == null)
+            {
+               throw new Error("INVALID|Allowlisted vanilla HUD target is missing: " + param2);
+            }
+            for each(childName in ["HealthBar_mc","HealthBarGhost_mc","HealthBarDamage_mc",
+                                   "PowerBar_mc","PowerBarEmpty_mc","PowerBarIncrease_mc",
+                                   "EquippedWeaponAmmoTotal_mc","EquippedWeaponAmmo_mc",
+                                   "VerticalDivider_mc","Health_mc","HealthBarEmpty_mc",
+                                   "EquippedWeaponIconHolder_mc","HealthBarIncrease_mc"])
+            {
+               target = playerStatus.getChildByName(childName);
+               if(target == null)
+               {
+                  throw new Error("INVALID|Allowlisted vanilla HUD child is missing: " + childName);
+               }
+               targets.push(target);
+               initialAlphas.push(target.alpha);
+            }
+         }
+         else
+         {
+            target = param1.getChildByName(this.getDisplayName(param2));
+            if(target == null)
+            {
+               throw new Error("INVALID|Allowlisted vanilla HUD target is missing: " + param2);
+            }
+            targets.push(target);
+            initialAlphas.push(target.alpha);
          }
          expression = param3;
-         initialAlpha = target.alpha;
       }
 
       public static function normalizeTarget(param1:String) : String
@@ -32,20 +63,25 @@ package venworks.cui
          var targetName:String = normalizeTarget(param1);
          return targetName == "topcenter" || targetName == "bottomleft" ||
             targetName == "socialcommandicons" || targetName == "floatingquestmarkers" ||
-            targetName == "crewbuffwidget";
+            targetName == "crewbuffwidget" || targetName == "playerstatus";
       }
 
       public function apply(param1:CUIConditionContext) : void
       {
          var opacity:Number = param1.hudOpacity;
          var conditionVisible:Boolean = expression.evaluate(param1) == CUIConditionExpression.TRUE_VALUE;
-         if(!conditionVisible)
+         var index:int = 0;
+         while(index < targets.length)
          {
-            target.alpha = 0;
-         }
-         else
-         {
-            target.alpha = isNaN(opacity) ? initialAlpha : opacity;
+            if(!conditionVisible)
+            {
+               DisplayObject(targets[index]).alpha = 0;
+            }
+            else
+            {
+               DisplayObject(targets[index]).alpha = isNaN(opacity) ? Number(initialAlphas[index]) : opacity;
+            }
+            index++;
          }
       }
 

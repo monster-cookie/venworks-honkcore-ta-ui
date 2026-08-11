@@ -1,7 +1,5 @@
 package venworks.cui
 {
-   import flash.display.Shape;
-   import flash.geom.Matrix;
    import venworks.cui.components.CUIComponent;
    import venworks.cui.components.CUIMeter;
    import venworks.cui.components.CUIProviderSymbol;
@@ -11,20 +9,17 @@ package venworks.cui
    {
       private var target:CUIComponent;
       private var node:XML;
-      private var style:XML;
       private var source:String;
       private var maxSource:String;
       private var format:String;
       private var valueTemplate:String;
       private var templateVariables:Array;
-      private var meterMask:Shape;
 
       public function CUIValueBinding(param1:CUIComponent, param2:XML, param3:XML = null)
       {
          super();
          target = param1;
          node = param2;
-         style = param3;
          source = CUIPlayerHudDataContext.normalizeSource(String(node.@source));
          maxSource = node.@maxSource.length() == 1 ? CUIPlayerHudDataContext.normalizeSource(String(node.@maxSource)) : "";
          format = node.@format.length() == 1 ? String(node.@format).toLowerCase() : "raw";
@@ -204,11 +199,6 @@ package venworks.cui
          var resolvedMaximum:Object = null;
          var current:Number = Boolean(param2.known) ? Number(param2.value) : Number(node.@value);
          var maximum:Number = Number(node.@max);
-         var ratio:Number = 0;
-         var width:Number = Number(node.@width);
-         var height:Number = Number(node.@height);
-         var direction:String = style != null && style.@direction.length() == 1 ? String(style.@direction) : "right";
-         var transformMatrix:Matrix = null;
          if(maxSource.length != 0)
          {
             resolvedMaximum = param1.getValue(maxSource);
@@ -217,48 +207,7 @@ package venworks.cui
                maximum = Number(resolvedMaximum.value);
             }
          }
-         if(!isNaN(current) && isFinite(current) && !isNaN(maximum) && isFinite(maximum) && maximum > 0)
-         {
-            ratio = Math.max(0,Math.min(1,current / maximum));
-         }
-         this.ensureMeterMask();
-         transformMatrix = target.transform.matrix.clone();
-         meterMask.transform.matrix = transformMatrix;
-         meterMask.graphics.clear();
-         meterMask.graphics.beginFill(16777215,1);
-         if(direction == "left")
-         {
-            meterMask.graphics.drawRect(width * (1 - ratio),0,width * ratio,height);
-         }
-         else if(direction == "down")
-         {
-            meterMask.graphics.drawRect(0,0,width,height * ratio);
-         }
-         else if(direction == "up")
-         {
-            meterMask.graphics.drawRect(0,height * (1 - ratio),width,height * ratio);
-         }
-         else
-         {
-            meterMask.graphics.drawRect(0,0,width * ratio,height);
-         }
-         meterMask.graphics.endFill();
-      }
-
-      private function ensureMeterMask() : void
-      {
-         if(meterMask != null)
-         {
-            return;
-         }
-         if(target.parent == null)
-         {
-            throw new Error("INVALID|Bound meter must be attached before value evaluation: " + String(node.@id));
-         }
-         meterMask = new Shape();
-         meterMask.name = String(node.@id) + ".ValueMask";
-         target.parent.addChild(meterMask);
-         target.mask = meterMask;
+         CUIMeter(target).setValue(current,maximum);
       }
 
       private function formatValue(param1:Object, param2:String) : String

@@ -2,10 +2,19 @@ package venworks.cui.components
 {
    public class CUISegmentedBar extends CUIMeter
    {
+      private var segmentCount:int;
+      private var segmentGap:Number;
+
       public function CUISegmentedBar(param1:XML, param2:XML)
       {
-         var count:int = 0;
-         var gap:Number = NaN;
+         super(param1,param2);
+         segmentCount = int(this.readNumber(param2,"segmentCount",12));
+         segmentGap = this.readNumber(param2,"gap",2);
+         this.redraw();
+      }
+
+      override protected function redraw() : void
+      {
          var extent:Number = NaN;
          var logicalIndex:int = 0;
          var visualIndex:int = 0;
@@ -14,22 +23,20 @@ package venworks.cui.components
          var segmentY:Number = NaN;
          var segmentWidth:Number = NaN;
          var segmentHeight:Number = NaN;
-         super(param1,param2);
-         count = int(this.readNumber(param2,"segmentCount",12));
-         gap = this.readNumber(param2,"gap",2);
-         extent = (axisLength - gap * (count - 1)) / count;
+         this.clearMeterGraphics();
+         extent = (axisLength - segmentGap * (segmentCount - 1)) / segmentCount;
          logicalIndex = 0;
-         while(logicalIndex < count)
+         while(logicalIndex < segmentCount)
          {
-            visualIndex = this.displayIndex(logicalIndex,count);
-            segmentX = horizontal ? visualIndex * (extent + gap) : 0;
-            segmentY = horizontal ? 0 : visualIndex * (extent + gap);
+            visualIndex = this.displayIndex(logicalIndex,segmentCount);
+            segmentX = horizontal ? visualIndex * (extent + segmentGap) : 0;
+            segmentY = horizontal ? 0 : visualIndex * (extent + segmentGap);
             segmentWidth = horizontal ? extent : componentWidth;
             segmentHeight = horizontal ? componentHeight : extent;
             graphics.beginFill(emptyColor,emptyOpacity);
             graphics.drawRect(segmentX,segmentY,segmentWidth,segmentHeight);
             graphics.endFill();
-            amount = this.segmentFraction(logicalIndex,count);
+            amount = this.segmentFraction(logicalIndex,segmentCount);
             if(amount > 0)
             {
                graphics.beginFill(fillColor,fillOpacity);

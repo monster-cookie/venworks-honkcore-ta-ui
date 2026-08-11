@@ -598,6 +598,10 @@ try {
       'CUIVanillaVisibilityAdapter',
       'CUIPlayerHudDataContext',
       'CUIValueBinding',
+      'Meter renderer must implement redraw.',
+      'CUIMeter(target).setValue',
+      'playerStatus',
+      'RightMeters_mc',
       'CUIAssetManager',
       'CUILayoutImportLoader',
       'VenworksCUI/components/',
@@ -698,6 +702,8 @@ try {
     $reopenedIconPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIIcon.as'
     $reopenedImagePath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIImage.as'
     $reopenedSymbolPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUISymbol.as'
+    $reopenedValueBindingPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIValueBinding.as'
+    $reopenedVanillaVisibilityPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIVanillaVisibilityAdapter.as'
     $reopenedAssetManagerSource = Get-Content -LiteralPath $reopenedAssetManagerPath -Raw
     $reopenedCompositionResolverSource = Get-Content -LiteralPath $reopenedCompositionResolverPath -Raw
     $reopenedCompositeResolverSource = Get-Content -LiteralPath $reopenedCompositeResolverPath -Raw
@@ -705,6 +711,23 @@ try {
     $reopenedIconSource = Get-Content -LiteralPath $reopenedIconPath -Raw
     $reopenedImageSource = Get-Content -LiteralPath $reopenedImagePath -Raw
     $reopenedSymbolSource = Get-Content -LiteralPath $reopenedSymbolPath -Raw
+    $reopenedValueBindingSource = Get-Content -LiteralPath $reopenedValueBindingPath -Raw
+    $reopenedVanillaVisibilitySource = Get-Content -LiteralPath $reopenedVanillaVisibilityPath -Raw
+    if ($reopenedValueBindingSource -notmatch 'CUIMeter\(target\)\.setValue' -or
+        $reopenedValueBindingSource -match 'meterMask|ValueMask|flash\.geom\.Matrix') {
+      throw 'Generated value binding does not use direct meter redraws or retains the retired external meter mask.'
+    }
+    foreach ($meterRenderer in @('CUIContinuousBar','CUISegmentedBar','CUITriangleBar','CUIDotBar','CUIRadialMeter')) {
+      $meterRendererPath = Join-Path $validationScriptsDirectory "scripts\venworks\cui\components\$meterRenderer.as"
+      $meterRendererSource = Get-Content -LiteralPath $meterRendererPath -Raw
+      if ($meterRendererSource -notmatch 'override\s+protected\s+function\s+redraw') {
+        throw "Generated $meterRenderer does not implement dynamic redraw."
+      }
+    }
+    if ($reopenedVanillaVisibilitySource -notmatch 'RightMeters_mc' -or
+        $reopenedVanillaVisibilitySource -match 'EquippedGrenadeIcon_mc|EquippedGrenadeCount_mc|JetpackMeterWrapper_mc|HUDVehicle_mc') {
+      throw 'Generated player-status visibility adapter does not preserve grenade, boost, and vehicle controls.'
+    }
     if ($reopenedAssetManagerSource -match 'flash\.display\.Loader' -or
         $reopenedAssetManagerSource -match 'LoaderContext' -or
         $reopenedAssetManagerSource -match 'ApplicationDomain' -or
@@ -778,6 +801,10 @@ try {
   Copy-Item -LiteralPath $providerProbeLayoutSource -Destination (Join-Path $cuiOutputDirectory "layout.xml") -Force
   foreach ($componentFixtureName in @('weapon-status.xml','environment-status.xml','player-meters.xml')) {
     Copy-Item -LiteralPath (Join-Path $providerProbeComponentDirectory $componentFixtureName) -Destination (Join-Path $componentOutputDirectory $componentFixtureName) -Force
+  }
+  $stagedPlayerMeters = [xml](Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'player-meters.xml') -Raw)
+  if (@($stagedPlayerMeters.venworksCUIFragment.group.meter).Count -ne 3) {
+    throw 'Staged player-meters.xml must contain exactly three consolidated live meters.'
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force

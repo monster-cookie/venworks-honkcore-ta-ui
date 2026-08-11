@@ -2,18 +2,15 @@
 <venworksCUIFragment schemaVersion="1" runtimeVersion="1">
   <group id="root" x="0" y="0" width="430" height="370" opacity="1" visible="true"
          rotation="0" scaleX="1" scaleY="1" z="0">
-    <meter id="health.empty" x="8" y="286" width="344" height="26" opacity="1" visible="true"
-           rotation="0" scaleX="1" scaleY="1" z="1" style="probe.health.empty" value="0" max="100" />
-    <meter id="health.live" x="8" y="286" width="344" height="26" opacity="1" visible="true"
-           rotation="0" scaleX="1" scaleY="1" z="2" style="probe.health.live" value="100" max="100"
+    <meter id="health" x="8" y="286" width="344" height="26" opacity="1" visible="true"
+           rotation="0" scaleX="1" scaleY="1" z="1" style="probe.health" value="100" max="100"
            source="player.health" maxSource="player.maxhealth" />
-    <meter id="oxygen.empty" x="8" y="320" width="344" height="20" opacity="1" visible="true"
-           rotation="0" scaleX="1" scaleY="1" z="1" style="probe.oxygen.empty" value="0" max="100" />
-    <meter id="oxygen.live" x="8" y="320" width="344" height="20" opacity="1" visible="true"
-           rotation="0" scaleX="1" scaleY="1" z="2" style="probe.oxygen.live" value="100" max="100"
+    <meter id="oxygen" x="8" y="320" width="344" height="20" opacity="1" visible="true"
+           rotation="0" scaleX="1" scaleY="1" z="1" style="probe.oxygen" value="100" max="100"
            source="player.oxygen" maxSource="player.maxoxygen" />
-    <meter id="encumbrance.placeholder" x="8" y="350" width="84" height="14" opacity="1" visible="true"
-           rotation="0" scaleX="1" scaleY="1" z="1" style="probe.encumbrance" value="3" max="8" />
+    <meter id="encumbrance" x="8" y="350" width="84" height="14" opacity="1" visible="true"
+           rotation="0" scaleX="1" scaleY="1" z="1" style="probe.encumbrance" value="0" max="100"
+           source="carry.current" maxSource="carry.maximum" />
     <text id="health.percentage" x="360" y="285" width="62" height="25" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" source="player.healthpercentage" format="percent"
           value="--%" font="$MAIN_Font_Bold" fontSize="13" color="#00E8EC" bold="false" align="right" />

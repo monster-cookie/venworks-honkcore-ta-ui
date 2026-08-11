@@ -88,6 +88,9 @@ All meter renderers share one contract: `value`, `max`, bounds, style reference,
 fill and empty colors, fill and empty opacity, transforms, visibility, and
 z-order. A renderer changes appearance without changing the owning HUD binding.
 Values clamp to the range from zero through `max`.
+Each renderer owns its empty and filled drawing and redraws in place when a
+live binding changes. Dynamic meters do not require a second background meter
+or an external whole-component mask.
 
 | Renderer | Status | Primary uses |
 |---|---|---|
@@ -222,9 +225,10 @@ accepts either one `source` with a bounded `format`, or a bounded
 `valueTemplate` containing up to eight allowlisted variables with optional
 per-variable formats. `meter` accepts an optional numeric `source` and numeric
 `maxSource`. Required static values remain fallbacks until every required
-vanilla value publishes its first update. Dynamic meters clip an ordinary
-approved meter renderer, so continuous, segmented, triangle, dot, and radial visuals
-remain reusable rather than gaining provider-specific implementations.
+vanilla value publishes its first update. Dynamic meters redraw the ordinary
+approved meter renderer's empty and filled portions, so continuous, segmented,
+triangle, dot, and radial visuals remain reusable rather than gaining
+provider-specific implementations.
 
 The first probe replaces the complete bottom-left Chronomark presentation and
 confirms values published to `hudmenu.gfx`, including weapon name/ammo type.

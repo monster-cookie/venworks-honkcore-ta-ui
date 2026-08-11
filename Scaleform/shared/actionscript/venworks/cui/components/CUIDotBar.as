@@ -6,10 +6,19 @@ package venworks.cui.components
 
    public class CUIDotBar extends CUIMeter
    {
+      private var segmentCount:int;
+      private var segmentGap:Number;
+
       public function CUIDotBar(param1:XML, param2:XML)
       {
-         var count:int = 0;
-         var gap:Number = NaN;
+         super(param1,param2);
+         segmentCount = int(this.readNumber(param2,"segmentCount",12));
+         segmentGap = this.readNumber(param2,"gap",2);
+         this.redraw();
+      }
+
+      override protected function redraw() : void
+      {
          var extent:Number = NaN;
          var diameter:Number = NaN;
          var logicalIndex:int = 0;
@@ -17,21 +26,19 @@ package venworks.cui.components
          var amount:Number = NaN;
          var dotX:Number = NaN;
          var dotY:Number = NaN;
-         super(param1,param2);
-         count = int(this.readNumber(param2,"segmentCount",12));
-         gap = this.readNumber(param2,"gap",2);
-         extent = (axisLength - gap * (count - 1)) / count;
+         this.clearMeterGraphics();
+         extent = (axisLength - segmentGap * (segmentCount - 1)) / segmentCount;
          diameter = Math.min(extent,crossLength);
          logicalIndex = 0;
-         while(logicalIndex < count)
+         while(logicalIndex < segmentCount)
          {
-            visualIndex = this.displayIndex(logicalIndex,count);
-            dotX = horizontal ? visualIndex * (extent + gap) + (extent - diameter) / 2 :
+            visualIndex = this.displayIndex(logicalIndex,segmentCount);
+            dotX = horizontal ? visualIndex * (extent + segmentGap) + (extent - diameter) / 2 :
                                 (componentWidth - diameter) / 2;
             dotY = horizontal ? (componentHeight - diameter) / 2 :
-                                visualIndex * (extent + gap) + (extent - diameter) / 2;
+                                visualIndex * (extent + segmentGap) + (extent - diameter) / 2;
             this.drawDot(graphics,dotX,dotY,diameter,emptyColor,emptyOpacity);
-            amount = this.segmentFraction(logicalIndex,count);
+            amount = this.segmentFraction(logicalIndex,segmentCount);
             if(amount > 0)
             {
                this.drawFilledDot(dotX,dotY,diameter,amount);

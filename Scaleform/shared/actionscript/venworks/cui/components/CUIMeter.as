@@ -26,6 +26,27 @@ package venworks.cui.components
          partialSegments = this.readBoolean(param2,"partialSegments",true);
       }
 
+      public function setValue(param1:Number, param2:Number) : void
+      {
+         meterValue = !isNaN(param1) && isFinite(param1) ? param1 : 0;
+         meterMaximum = !isNaN(param2) && isFinite(param2) && param2 > 0 ? param2 : 1;
+         this.redraw();
+      }
+
+      protected function redraw() : void
+      {
+         throw new Error("Meter renderer must implement redraw.");
+      }
+
+      protected function clearMeterGraphics() : void
+      {
+         graphics.clear();
+         while(numChildren > 0)
+         {
+            removeChildAt(numChildren - 1);
+         }
+      }
+
       protected function get fraction() : Number
       {
          if(meterMaximum <= 0)
