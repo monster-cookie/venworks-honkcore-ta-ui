@@ -300,7 +300,7 @@ package venworks.cui
 
       private function validateComponent(param1:XML) : void
       {
-         var type:String = String(param1.name());
+         var type:String = String(param1.name()).toLowerCase();
          var style:XML = null;
          if(type == "group")
          {
@@ -432,7 +432,7 @@ package venworks.cui
             }
             this.requireAssetFit(param1);
          }
-         else if(type == "providerSymbol")
+         else if(type == "providersymbol")
          {
             this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","source","color","fit","alignX","alignY"]);
             this.requirePositiveBounds(param1);

@@ -121,6 +121,17 @@ unavailable linkages unload and hide the icon without affecting the weapon name.
 
 ## Probe acceptance
 
+### Provider-symbol component-name compatibility
+
+The first deployed provider-symbol probe failed layout parsing even though the
+layout, schema, and reopened ActionScript contained the expected mixed-case
+`providerSymbol` name. Existing component tags were all lowercase. Component
+dispatch now canonicalizes XML names to lowercase in both parser validation and
+runtime construction, with `providersymbol` as the internal comparison. The
+public XML contract remains `<providerSymbol>`. Reopen validation confirms that
+both compiled dispatch paths retain the canonicalization before an artifact can
+be accepted.
+
 Build and deploy the Venworks variant, then verify:
 
 1. The complete vanilla bottom-left Chronomark is hidden.

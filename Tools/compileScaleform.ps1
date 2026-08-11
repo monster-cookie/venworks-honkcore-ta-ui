@@ -519,6 +519,26 @@ try {
       }
     }
 
+    $componentDispatchChecks = @(
+      @{
+        path = "venworks\cui\CUILayoutParser.as"
+        markers = @('.toLowerCase()','else if(type == "providersymbol")')
+      },
+      @{
+        path = "venworks\cui\CUIRuntime.as"
+        markers = @('.toLowerCase()','if(type == "providersymbol")','return new CUIProviderSymbol(param1);')
+      }
+    )
+    foreach ($dispatchCheck in $componentDispatchChecks) {
+      $reopenedDispatchPath = Join-Path (Join-Path $validationScriptsDirectory "scripts") $dispatchCheck.path
+      $reopenedDispatchSource = Get-Content -LiteralPath $reopenedDispatchPath -Raw
+      foreach ($marker in $dispatchCheck.markers) {
+        if (!$reopenedDispatchSource.Contains($marker)) {
+          throw "Generated output is missing component dispatch '$marker' in $($dispatchCheck.path)."
+        }
+      }
+    }
+
     $validationSource = ($validationScripts | ForEach-Object {
       Get-Content -LiteralPath $_.FullName -Raw
     }) -join "`n"

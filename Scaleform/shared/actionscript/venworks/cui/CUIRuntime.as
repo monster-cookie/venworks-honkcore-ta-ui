@@ -300,7 +300,7 @@ package venworks.cui
 
       private function createComponent(param1:XML) : CUIComponent
       {
-         var type:String = String(param1.name());
+         var type:String = String(param1.name()).toLowerCase();
          var style:XML = null;
          if(type == "group")
          {
@@ -338,7 +338,7 @@ package venworks.cui
          {
             return new CUIIcon(param1);
          }
-         if(type == "providerSymbol")
+         if(type == "providersymbol")
          {
             return new CUIProviderSymbol(param1);
          }
