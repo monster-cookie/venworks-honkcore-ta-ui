@@ -10,7 +10,7 @@ for the new UI.
 
 ### HUD overview 01
 
-![HONKCORE Venworks HUD overview 01](hud-overview-01.png)
+![HONKCORE Venworks HUD Normal View](venworks-honkcore-hub-normal.png)
 
 Full first-person HUD with the scanner closed. Visible reference elements
 include:
@@ -28,15 +28,14 @@ include:
 
 ### HUD overview 02
 
-![HONKCORE Venworks HUD overview 02](hud-overview-02.png)
+![HONKCORE Venworks HUD Aiming Weapons](venworks-honkcore-hub-aiming.png)
 
-Second preserved source capture of the same first-person HUD state. This file is
-byte-identical to `hud-overview-01.png`; both are retained intentionally to
-preserve every supplied reference artifact.
+Second preserved source capture of the same first-person HUD state. This is the HUD
+when aiming a weapon. Main difference is a few panels hide.
 
 ### Scanner overview
 
-![HONKCORE Venworks scanner overview](scanner-overview.png)
+![HONKCORE Venworks scanner overview](venworks-honkcore-hub-scanning.png)
 
 Scanner-active reference state. It shows the persistent Venworks HUD together
 with scanner-specific presentation:
