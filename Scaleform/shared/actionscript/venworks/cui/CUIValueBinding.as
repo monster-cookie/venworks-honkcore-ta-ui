@@ -4,6 +4,7 @@ package venworks.cui
    import flash.geom.Matrix;
    import venworks.cui.components.CUIComponent;
    import venworks.cui.components.CUIMeter;
+   import venworks.cui.components.CUIProviderSymbol;
    import venworks.cui.components.CUIText;
 
    public final class CUIValueBinding
@@ -63,6 +64,19 @@ package venworks.cui
          }
       }
 
+      public static function validateProviderSymbol(param1:XML) : void
+      {
+         var normalizedSource:String = CUIPlayerHudDataContext.normalizeSource(String(param1.@source));
+         if(normalizedSource != "weapon.icon")
+         {
+            throw new Error("INVALID|Provider symbol source is not allowlisted: " + String(param1.@source));
+         }
+         if(validateSource(String(param1.@source)) != "string")
+         {
+            throw new Error("INVALID|Provider symbol source must be a string: " + String(param1.@source));
+         }
+      }
+
       private static function validateSource(param1:String) : String
       {
          var kind:String = CUIPlayerHudDataContext.getKind(param1);
@@ -83,6 +97,10 @@ package venworks.cui
          else if(target is CUIMeter)
          {
             this.applyMeter(param1,resolved);
+         }
+         else if(target is CUIProviderSymbol)
+         {
+            CUIProviderSymbol(target).setSymbol(Boolean(resolved.known) ? String(resolved.value) : "");
          }
       }
 

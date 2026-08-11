@@ -29,20 +29,23 @@
   <components>
     <group id="chronomark.probe" x="0" y="0" width="430" height="370" opacity="1" visible="true" visibleWhen="always"
            rotation="0" scaleX="1" scaleY="1" z="100" anchor="bottom-left">
-      <text id="chronomark.weapon" x="8" y="0" width="414" height="27" opacity="1" visible="true"
+      <providerSymbol id="chronomark.weapon.icon" x="8" y="0" width="54" height="54" opacity="1" visible="true"
+                      rotation="0" scaleX="1" scaleY="1" z="1" source="weapon.icon"
+                      color="#F2F7F9" fit="contain" alignX="left" alignY="center" />
+      <text id="chronomark.weapon" x="66" y="0" width="356" height="27" opacity="1" visible="true"
             rotation="0" scaleX="1" scaleY="1" z="1"
             source="weapon.name" format="raw" value="WEAPON NAME WAITING FOR WEAPONDATA"
             font="$MAIN_Font_Bold" fontSize="16" color="#F2F7F9" bold="false" align="left" />
-      <text id="chronomark.ammo.clip" x="8" y="26" width="52" height="30" opacity="1" visible="true"
+      <text id="chronomark.ammo.clip" x="66" y="26" width="52" height="30" opacity="1" visible="true" visibleWhen="weaponHasAmmo"
             rotation="0" scaleX="1" scaleY="1" z="1" source="weapon.clipammo" format="integer"
             value="--" font="$MAIN_Font_Bold" fontSize="22" color="#F2F7F9" bold="true" align="right" />
-      <text id="chronomark.ammo.separator" x="64" y="26" width="18" height="30" opacity="1" visible="true"
+      <text id="chronomark.ammo.separator" x="122" y="26" width="18" height="30" opacity="1" visible="true" visibleWhen="weaponHasAmmo"
             rotation="0" scaleX="1" scaleY="1" z="1"
             value="/" font="$MAIN_Font_Bold" fontSize="22" color="#F2F7F9" bold="true" align="center" />
-      <text id="chronomark.ammo.reserve" x="84" y="26" width="60" height="30" opacity="1" visible="true"
+      <text id="chronomark.ammo.reserve" x="142" y="26" width="60" height="30" opacity="1" visible="true" visibleWhen="weaponHasAmmo"
             rotation="0" scaleX="1" scaleY="1" z="1" source="weapon.reserveammo" format="integer"
             value="--" font="$MAIN_Font_Bold" fontSize="22" color="#F2F7F9" bold="true" align="left" />
-      <text id="chronomark.ammo.type" x="146" y="29" width="270" height="26" opacity="1" visible="true"
+      <text id="chronomark.ammo.type" x="204" y="29" width="212" height="26" opacity="1" visible="true" visibleWhen="weaponHasAmmo"
             rotation="0" scaleX="1" scaleY="1" z="1"
             source="weapon.ammotype" format="raw" value="(AMMO TYPE WAITING FOR INVENTORY)"
             font="$MAIN_Font_Bold" fontSize="13" color="#93A9AD" bold="false" align="left" />

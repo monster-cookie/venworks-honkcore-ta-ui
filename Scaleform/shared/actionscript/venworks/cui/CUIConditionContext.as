@@ -18,6 +18,7 @@ package venworks.cui
          BSUIDataManager.Subscribe("HudCompassData",this.onCompassData);
          BSUIDataManager.Subscribe("HUDVehicleData",this.onVehicleData);
          BSUIDataManager.Subscribe("HUDOpacityData",this.onOpacityData);
+         BSUIDataManager.Subscribe("WeaponData",this.onWeaponData);
       }
 
       public static function normalizeName(param1:String) : String
@@ -30,7 +31,7 @@ package venworks.cui
          var name:String = normalizeName(param1);
          if(name == "always" || name == "never" || name == "firstperson" || name == "thirdperson" ||
             name == "incombat" || name == "inscanner" || name == "issneaking" ||
-            name == "weaponaiming" || name == "invehicle" || name == "hudvisible")
+            name == "weaponaiming" || name == "weaponhasammo" || name == "invehicle" || name == "hudvisible")
          {
             return "boolean";
          }
@@ -106,6 +107,12 @@ package venworks.cui
          opacity = Math.max(0,Math.min(1,opacity));
          this.setValue("hudopacitypercentage",opacity * 100);
          this.setValue("hudvisible",opacity > 0);
+         this.notifyChanged();
+      }
+
+      private function onWeaponData(param1:FromClientDataEvent) : void
+      {
+         this.setValue("weaponhasammo",Boolean(param1.data.bDisplayAmmo));
          this.notifyChanged();
       }
 

@@ -37,8 +37,9 @@ copied into CUI.
 | `weapon.clipAmmo` / `weapon.totalAmmo` | `WeaponData.uClipAmmo` / `uTotalAmmo` | number | Confirmed in movie |
 | `weapon.reserveAmmo` | Total minus clip, clamped at zero | number | Confirmed derivation |
 | `weapon.displayAmmo` / `weapon.ammoAsPercent` | `WeaponData` Boolean fields | Boolean | Confirmed in movie |
-| `weapon.name` | `WeaponData.sWeaponName` | string | Candidate field; HUD runtime probe pending |
-| `weapon.ammoType` | Equipped `PlayerInventoryData.aItems[*].WeaponInfo.sAmmoType` | string | Confirmed in InventoryMenu; HUD lifetime probe pending |
+| `weapon.name` | `WeaponData.sWeaponName` | string | Confirmed in HUD runtime |
+| `weapon.icon` | `WeaponData.sIconLinkageName` | string | Confirmed in vanilla HUD; rendered through the bounded provider-symbol adapter |
+| `weapon.ammoType` | Equipped `PlayerInventoryData.aItems[*].WeaponInfo.sAmmoType` | string | Confirmed in HUD runtime for ranged weapons and the Cutter |
 
 Identifiers are case-insensitive and underscores are ignored. Configuration
 never supplies provider names or field names; each public CUI source maps to a
@@ -67,6 +68,12 @@ This route is accepted only if it is live before InventoryMenu is opened and
 continues to update when weapons change through Favorites. A provider that is
 menu-owned, delayed until InventoryMenu opens, or stale after weapon changes is
 not a production HUD provider.
+
+Runtime testing confirmed that the provider is live before InventoryMenu opens,
+updates through Favorites, and resolves conventional ammunition plus the
+Cutter's continuous ammunition. Melee weapons intentionally have no ammunition
+type; their entire ammunition row is hidden by the `weaponHasAmmo` condition
+derived from `WeaponData.bDisplayAmmo`.
 
 ## XML contract
 
@@ -97,6 +104,21 @@ The runtime clips the configured renderer to the resolved ratio. A separate
 ordinary empty/background meter supplies the unfilled visual. This preserves
 the shared meter renderer library and avoids provider-specific components.
 
+Active Bethesda weapon icons use the bounded provider-symbol component:
+
+```xml
+<providerSymbol id="weapon.icon" x="8" y="0" width="54" height="54"
+                opacity="1" visible="true" rotation="0"
+                scaleX="1" scaleY="1" z="1"
+                source="weapon.icon" color="#F2F7F9"
+                fit="contain" alignX="left" alignY="center" />
+```
+
+Configuration cannot select a SWF or library. Ordinary Bethesda linkage names
+resolve only through `WeaponIcons`; linkage names beginning with `CCSUP` resolve
+through Bethesda's linkage-named Creation Club library convention. Empty or
+unavailable linkages unload and hide the icon without affecting the weapon name.
+
 ## Probe acceptance
 
 Build and deploy the Venworks variant, then verify:
@@ -116,6 +138,10 @@ Build and deploy the Venworks variant, then verify:
 9. Carry and credits remain clearly labeled provider gaps.
 10. Save load, death/reload, ladder, workbench, vehicle, and ship transitions do
    not crash and do not permanently suppress the panel.
+11. Ranged weapons and the Cutter show their icon, name, ammunition counts, and
+    ammunition type; melee weapons show only their icon and name.
+12. Rapid Favorites switching does not leave a stale icon or stale ammunition
+    row, and unarmed state clears the icon without an error.
 
 Report the displayed values and transition behavior before judging styling.
 The final replacement must not proceed until the confirmed fields and lifecycle

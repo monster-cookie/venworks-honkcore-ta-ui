@@ -257,6 +257,15 @@
     <xs:attribute name="alignY" type="verticalAlignmentType" default="center" />
   </xs:complexType>
 
+  <xs:complexType name="providerSymbolType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="source" type="xs:string" use="required" />
+    <xs:attribute name="color" type="colorType" />
+    <xs:attribute name="fit" type="assetFitType" default="contain" />
+    <xs:attribute name="alignX" type="horizontalAlignmentType" default="center" />
+    <xs:attribute name="alignY" type="verticalAlignmentType" default="center" />
+  </xs:complexType>
+
   <xs:complexType name="iconType">
     <xs:attributeGroup ref="componentAttributes" />
     <xs:attribute name="name" type="symbolKeyType" use="required" />
@@ -413,6 +422,7 @@
       <xs:element name="mask" type="maskType" />
       <xs:element name="icon" type="iconType" />
       <xs:element name="symbol" type="symbolType" />
+      <xs:element name="providerSymbol" type="providerSymbolType" />
       <xs:element name="button" type="buttonType" />
       <xs:element name="quickBar" type="quickBarType" />
       <xs:element name="informationPanel" type="informationPanelType" />
@@ -452,6 +462,7 @@
       <xs:element name="mask" type="templateMaskType" />
       <xs:element name="icon" type="iconType" />
       <xs:element name="symbol" type="symbolType" />
+      <xs:element name="providerSymbol" type="providerSymbolType" />
     </xs:choice>
   </xs:group>
 

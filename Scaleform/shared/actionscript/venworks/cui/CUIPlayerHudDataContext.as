@@ -31,7 +31,7 @@ package venworks.cui
       {
          var source:String = normalizeSource(param1);
          if(source == "location.name" || source == "power.key" ||
-            source == "weapon.name" || source == "weapon.ammotype" ||
+            source == "weapon.name" || source == "weapon.icon" || source == "weapon.ammotype" ||
             source == "diagnostic.inventoryprovider")
          {
             return "string";
@@ -101,6 +101,7 @@ package venworks.cui
          var clip:Number = Number(param1.data.uClipAmmo);
          var total:Number = Number(param1.data.uTotalAmmo);
          this.setText("weapon.name",param1.data.sWeaponName);
+         this.setText("weapon.icon",param1.data.sIconLinkageName);
          this.setFinite("weapon.clipammo",clip);
          this.setFinite("weapon.totalammo",total);
          if(!isNaN(clip) && isFinite(clip) && !isNaN(total) && isFinite(total))

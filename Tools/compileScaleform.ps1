@@ -447,8 +447,8 @@ try {
       -OutputPath $patchedScriptPath
 
     $authoredScripts = @(Get-ChildItem -LiteralPath $actionScriptSourcePath -Recurse -File -Filter "*.as")
-    if ($authoredScripts.Count -ne 36) {
-      throw "Expected 36 authored CUI classes; found $($authoredScripts.Count) in $actionScriptSourcePath."
+    if ($authoredScripts.Count -ne 37) {
+      throw "Expected 37 authored CUI classes; found $($authoredScripts.Count) in $actionScriptSourcePath."
     }
 
     foreach ($authoredScript in $authoredScripts) {
@@ -487,8 +487,8 @@ try {
 
     $originalScripts = @(Get-ChildItem -LiteralPath $exportedScriptsDirectory -Recurse -File -Filter "*.as")
     $validationScripts = @(Get-ChildItem -LiteralPath $validationScriptsDirectory -Recurse -File -Filter "*.as")
-    if ($originalScripts.Count -ne 203 -or $validationScripts.Count -ne $originalScripts.Count) {
-      throw "Expected 203 seeded and reopened classes; found $($originalScripts.Count) before import and $($validationScripts.Count) after import."
+    if ($originalScripts.Count -ne 204 -or $validationScripts.Count -ne $originalScripts.Count) {
+      throw "Expected 204 seeded and reopened classes; found $($originalScripts.Count) before import and $($validationScripts.Count) after import."
     }
 
     foreach ($originalScript in $originalScripts) {

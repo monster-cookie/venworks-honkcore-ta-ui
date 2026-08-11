@@ -17,6 +17,7 @@ package venworks.cui
    import venworks.cui.components.CUIMask;
    import venworks.cui.components.CUIMeter;
    import venworks.cui.components.CUIPanel;
+   import venworks.cui.components.CUIProviderSymbol;
    import venworks.cui.components.CUIRadialMeter;
    import venworks.cui.components.CUISegmentedBar;
    import venworks.cui.components.CUIShape;
@@ -336,6 +337,10 @@ package venworks.cui
          if(type == "icon")
          {
             return new CUIIcon(param1);
+         }
+         if(type == "providerSymbol")
+         {
+            return new CUIProviderSymbol(param1);
          }
          if(type == "symbol")
          {

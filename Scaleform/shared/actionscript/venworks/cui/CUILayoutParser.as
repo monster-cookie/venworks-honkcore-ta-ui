@@ -432,6 +432,17 @@ package venworks.cui
             }
             this.requireAssetFit(param1);
          }
+         else if(type == "providerSymbol")
+         {
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","source","color","fit","alignX","alignY"]);
+            this.requirePositiveBounds(param1);
+            CUIValueBinding.validateProviderSymbol(param1);
+            if(param1.@color.length() == 1)
+            {
+               this.requireColor(param1,"color");
+            }
+            this.requireAssetFit(param1);
+         }
          else if(type == "symbol")
          {
             this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","name","color","fit","alignX","alignY"]);
