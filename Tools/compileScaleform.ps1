@@ -247,7 +247,8 @@ foreach ($componentFixtureName in @(
   'weapon-status.xml',
   'environment-status.xml',
   'player-meters.xml',
-  'mobility-status.xml'
+  'mobility-status.xml',
+  'localization-probe.xml'
 )) {
   $componentFixturePath = Resolve-RequiredFile `
     -Path (Join-Path $providerProbeComponentDirectory $componentFixtureName) `
@@ -837,7 +838,7 @@ try {
   New-Item -ItemType Directory -Force -Path $assetOutputDirectory | Out-Null
   New-Item -ItemType Directory -Force -Path $componentOutputDirectory | Out-Null
   Copy-Item -LiteralPath $providerProbeLayoutSource -Destination (Join-Path $cuiOutputDirectory "layout.xml") -Force
-  foreach ($componentFixtureName in @('weapon-status.xml','environment-status.xml','player-meters.xml','mobility-status.xml')) {
+  foreach ($componentFixtureName in @('weapon-status.xml','environment-status.xml','player-meters.xml','mobility-status.xml','localization-probe.xml')) {
     Copy-Item -LiteralPath (Join-Path $providerProbeComponentDirectory $componentFixtureName) -Destination (Join-Path $componentOutputDirectory $componentFixtureName) -Force
   }
   $stagedPlayerMeters = [xml](Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'player-meters.xml') -Raw)
@@ -850,6 +851,13 @@ try {
       $stagedMobilityStatusText -notmatch 'visibleWhen="inVehicle"' -or
       $stagedMobilityStatusText -match '<button|action=|event=|callback=|userEvent=|key=') {
     throw 'Staged mobility-status.xml must contain only the mapped noninteractive vehicle exit prompt.'
+  }
+  $stagedLocalizationProbePath = Join-Path $componentOutputDirectory 'localization-probe.xml'
+  $stagedLocalizationProbeText = Get-Content -LiteralPath $stagedLocalizationProbePath -Raw
+  foreach ($localizationCandidate in @('$VehicleExit','$ExitVehicle','$EXIT VEHICLE','$HOLD TO EXIT VEHICLE','$HoldToExitVehicle','$VehicleExitPrompt')) {
+    if ($stagedLocalizationProbeText -notmatch [regex]::Escape($localizationCandidate)) {
+      throw "Staged localization-probe.xml is missing candidate $localizationCandidate."
+    }
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force

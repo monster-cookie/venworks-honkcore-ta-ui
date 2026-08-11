@@ -218,6 +218,15 @@ child before fitting. Controller presentation is structurally supported by the
 Bethesda hold-button control but remains runtime-unverified because no controller
 is available for the current test pass.
 
+HONKCORE did not supply a localization handler for this prompt. Its HUD patch
+registered the original `RightMeters_mc.HUDVehicle_mc` as a separately
+configurable default target and preserved Bethesda's input object; its custom
+text widgets otherwise assigned configured or hardcoded strings directly. CUI
+therefore uses a temporary six-candidate `$`-token gallery to discover the
+Bethesda vehicle-exit localization key. The available English client can prove
+that a token resolves instead of rendering raw, but cannot independently verify
+the wording in another installed language.
+
 Report the displayed values and transition behavior before judging styling.
 The final replacement must not proceed until the confirmed fields and lifecycle
 behavior are accepted.
