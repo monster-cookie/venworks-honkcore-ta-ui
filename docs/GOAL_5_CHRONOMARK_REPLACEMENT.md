@@ -14,9 +14,10 @@ and spacing will be refined only after provider acceptance.
 
 ## Clean-room provider contract
 
-The contract was derived from locally extracted vanilla Starfield
-`playerhudcomponents.gfx` scripts. No HONKCORE source, format, or implementation
-is used.
+The contract was derived from locally extracted vanilla Starfield interface
+scripts and Bethesda data channels. HONKCORE was inspected only to identify
+candidate Bethesda fields; no HONKCORE source, format, or implementation is
+copied into CUI.
 
 | CUI source | Vanilla provider and field | Kind | Status |
 | --- | --- | --- | --- |
@@ -36,21 +37,36 @@ is used.
 | `weapon.clipAmmo` / `weapon.totalAmmo` | `WeaponData.uClipAmmo` / `uTotalAmmo` | number | Confirmed in movie |
 | `weapon.reserveAmmo` | Total minus clip, clamped at zero | number | Confirmed derivation |
 | `weapon.displayAmmo` / `weapon.ammoAsPercent` | `WeaponData` Boolean fields | Boolean | Confirmed in movie |
+| `weapon.name` | `WeaponData.sWeaponName` | string | Candidate field; HUD runtime probe pending |
+| `weapon.ammoType` | Equipped `PlayerInventoryData.aItems[*].WeaponInfo.sAmmoType` | string | Confirmed in InventoryMenu; HUD lifetime probe pending |
 
 Identifiers are case-insensitive and underscores are ignored. Configuration
 never supplies provider names or field names; each public CUI source maps to a
 hardcoded adapter entry.
 
-The following desired values are not published by the confirmed providers in
+The following desired values are not yet published by confirmed providers in
 this always-loaded movie and remain explicit probe placeholders:
 
-- equipped weapon display name;
-- ammo type display name;
 - current and maximum carry weight;
 - player credit total.
 
 They must not be inferred or connected through a new provider until its owner,
 lifetime, field contract, and transition safety are separately proven.
+
+## Ammo-type provider diagnostic
+
+Vanilla `inventorymenu.swf` consumes `PlayerInventoryData.aItems` and displays
+`WeaponInfo.sAmmoType`. Inventory entries also expose `bIsEquipped`, providing a
+bounded candidate route to the equipped weapon. The Goal 6 diagnostic subscribes
+to the same provider from `HUDMenu`, adds `weapon.ammoType`, and reports whether
+the provider was received, whether an equipped weapon candidate was found, and
+whether that candidate supplied a valid string. It clears a previously resolved
+ammo type when a later update does not contain one.
+
+This route is accepted only if it is live before InventoryMenu is opened and
+continues to update when weapons change through Favorites. A provider that is
+menu-owned, delayed until InventoryMenu opens, or stale after weapon changes is
+not a production HUD provider.
 
 ## XML contract
 
@@ -91,10 +107,14 @@ Build and deploy the Venworks variant, then verify:
 3. Location, local time, atmospheric O2, temperature, and gravity populate.
 4. Health and O2 labels/meters respond to real value changes.
 5. Clip and reserve ammo populate and update after firing/reloading.
-6. The active-power field is either a useful player-facing value or is reported
+6. Before opening Inventory, the diagnostic reports `PlayerInventoryData`
+   received and shows the ammo type for the equipped weapon.
+7. The ammo type changes when switching between weapons through Favorites and
+   remains correct after opening and closing Inventory.
+8. The active-power field is either a useful player-facing value or is reported
    verbatim so its provider semantics can be corrected without guessing.
-7. Weapon name/type, carry, and credits remain clearly labeled provider gaps.
-8. Save load, death/reload, ladder, workbench, vehicle, and ship transitions do
+9. Carry and credits remain clearly labeled provider gaps.
+10. Save load, death/reload, ladder, workbench, vehicle, and ship transitions do
    not crash and do not permanently suppress the panel.
 
 Report the displayed values and transition behavior before judging styling.

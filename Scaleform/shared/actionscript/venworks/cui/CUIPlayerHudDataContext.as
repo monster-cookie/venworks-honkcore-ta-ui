@@ -16,8 +16,10 @@ package venworks.cui
          BSUIDataManager.Subscribe("LocalEnvironmentData",this.onLocalEnvironmentData);
          BSUIDataManager.Subscribe("LocalEnvData_Frequent",this.onLocalEnvironmentFrequentData);
          BSUIDataManager.Subscribe("PlayerFrequentData",this.onPlayerFrequentData);
+         BSUIDataManager.Subscribe("PlayerInventoryData",this.onPlayerInventoryData);
          BSUIDataManager.Subscribe("WeaponData",this.onWeaponData);
          BSUIDataManager.Subscribe("HUDStarbornPowersData",this.onStarbornPowersData);
+         this.setText("diagnostic.inventoryprovider","PLAYERINVENTORYDATA NOT RECEIVED");
       }
 
       public static function normalizeSource(param1:String) : String
@@ -28,7 +30,9 @@ package venworks.cui
       public static function getKind(param1:String) : String
       {
          var source:String = normalizeSource(param1);
-         if(source == "location.name" || source == "power.key")
+         if(source == "location.name" || source == "power.key" ||
+            source == "weapon.name" || source == "weapon.ammotype" ||
+            source == "diagnostic.inventoryprovider")
          {
             return "string";
          }
@@ -96,6 +100,7 @@ package venworks.cui
       {
          var clip:Number = Number(param1.data.uClipAmmo);
          var total:Number = Number(param1.data.uTotalAmmo);
+         this.setText("weapon.name",param1.data.sWeaponName);
          this.setFinite("weapon.clipammo",clip);
          this.setFinite("weapon.totalammo",total);
          if(!isNaN(clip) && isFinite(clip) && !isNaN(total) && isFinite(total))
@@ -104,6 +109,52 @@ package venworks.cui
          }
          this.setBoolean("weapon.displayammo",param1.data.bDisplayAmmo);
          this.setBoolean("weapon.ammoaspercent",param1.data.bShowAmmoAsPercent);
+         this.notifyChanged();
+      }
+
+      private function onPlayerInventoryData(param1:FromClientDataEvent) : void
+      {
+         var items:Array = param1.data.aItems as Array;
+         var item:Object = null;
+         var weaponInfo:Object = null;
+         var ammoType:String = "";
+         var equippedWeaponCount:int = 0;
+         var index:int = 0;
+         if(items == null)
+         {
+            this.clearValue("weapon.ammotype");
+            this.setText("diagnostic.inventoryprovider","PLAYERINVENTORYDATA RECEIVED — ITEM DATA UNAVAILABLE");
+            this.notifyChanged();
+            return;
+         }
+         while(index < items.length)
+         {
+            item = items[index];
+            if(item != null && Boolean(item.bIsEquipped) && item.WeaponInfo != null)
+            {
+               weaponInfo = item.WeaponInfo;
+               ++equippedWeaponCount;
+               if(ammoType.length == 0 && weaponInfo.sAmmoType !== undefined && weaponInfo.sAmmoType !== null)
+               {
+                  ammoType = String(weaponInfo.sAmmoType);
+                  if(ammoType.replace(/\s/g,"").length == 0)
+                  {
+                     ammoType = "";
+                  }
+               }
+            }
+            ++index;
+         }
+         if(ammoType.length != 0)
+         {
+            this.setText("weapon.ammotype",ammoType);
+            this.setText("diagnostic.inventoryprovider","PLAYERINVENTORYDATA RECEIVED — " + equippedWeaponCount.toString() + " EQUIPPED WEAPON — AMMO " + ammoType);
+         }
+         else
+         {
+            this.clearValue("weapon.ammotype");
+            this.setText("diagnostic.inventoryprovider","PLAYERINVENTORYDATA RECEIVED — " + equippedWeaponCount.toString() + " EQUIPPED WEAPON — NO AMMO NAME");
+         }
          this.notifyChanged();
       }
 
@@ -139,6 +190,11 @@ package venworks.cui
          {
             values[normalizeSource(param1)] = { known:true, value:value };
          }
+      }
+
+      private function clearValue(param1:String) : void
+      {
+         delete values[normalizeSource(param1)];
       }
 
       private function setRatio(param1:String, param2:Object, param3:Object) : void

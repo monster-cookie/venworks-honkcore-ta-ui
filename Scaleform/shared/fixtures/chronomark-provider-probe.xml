@@ -29,9 +29,10 @@
   <components>
     <group id="chronomark.probe" x="0" y="0" width="430" height="370" opacity="1" visible="true" visibleWhen="always"
            rotation="0" scaleX="1" scaleY="1" z="100" anchor="bottom-left">
-      <text id="chronomark.weapon.placeholder" x="8" y="0" width="414" height="27" opacity="1" visible="true"
+      <text id="chronomark.weapon" x="8" y="0" width="414" height="27" opacity="1" visible="true"
             rotation="0" scaleX="1" scaleY="1" z="1"
-            value="WEAPON NAME [PROVIDER REQUIRED]" font="$MAIN_Font_Bold" fontSize="16" color="#F2F7F9" bold="false" align="left" />
+            source="weapon.name" format="raw" value="WEAPON NAME WAITING FOR WEAPONDATA"
+            font="$MAIN_Font_Bold" fontSize="16" color="#F2F7F9" bold="false" align="left" />
       <text id="chronomark.ammo.clip" x="8" y="26" width="52" height="30" opacity="1" visible="true"
             rotation="0" scaleX="1" scaleY="1" z="1" source="weapon.clipammo" format="integer"
             value="--" font="$MAIN_Font_Bold" fontSize="22" color="#F2F7F9" bold="true" align="right" />
@@ -41,9 +42,10 @@
       <text id="chronomark.ammo.reserve" x="84" y="26" width="60" height="30" opacity="1" visible="true"
             rotation="0" scaleX="1" scaleY="1" z="1" source="weapon.reserveammo" format="integer"
             value="--" font="$MAIN_Font_Bold" fontSize="22" color="#F2F7F9" bold="true" align="left" />
-      <text id="chronomark.ammo.type.placeholder" x="146" y="29" width="270" height="26" opacity="1" visible="true"
+      <text id="chronomark.ammo.type" x="146" y="29" width="270" height="26" opacity="1" visible="true"
             rotation="0" scaleX="1" scaleY="1" z="1"
-            value="(AMMO TYPE PROVIDER REQUIRED)" font="$MAIN_Font_Bold" fontSize="13" color="#93A9AD" bold="false" align="left" />
+            source="weapon.ammotype" format="raw" value="(AMMO TYPE WAITING FOR INVENTORY)"
+            font="$MAIN_Font_Bold" fontSize="13" color="#93A9AD" bold="false" align="left" />
 
       <panel id="chronomark.panel" x="0" y="60" width="430" height="214" opacity="1" visible="true"
              rotation="0" scaleX="1" scaleY="1" z="0"
@@ -81,7 +83,8 @@
             value="CREDITS [PROVIDER REQUIRED]" font="$MAIN_Font_Bold" fontSize="15" color="#F2B41C" bold="false" align="right" />
       <text id="chronomark.provider.note" x="16" y="232" width="396" height="27" opacity="1" visible="true"
             rotation="0" scaleX="1" scaleY="1" z="2"
-            value="GOAL 5 PROVIDER PROBE — REPORT VALUES, NOT STYLING" font="$MAIN_Font_Bold" fontSize="12" color="#93A9AD" bold="false" align="left" />
+            source="diagnostic.inventoryprovider" format="raw" value="PLAYERINVENTORYDATA NOT RECEIVED"
+            font="$MAIN_Font_Bold" fontSize="12" color="#93A9AD" bold="false" align="left" />
 
       <meter id="chronomark.health.empty" x="8" y="286" width="344" height="26" opacity="1" visible="true"
              rotation="0" scaleX="1" scaleY="1" z="1" style="probe.health.empty" value="0" max="100" />
