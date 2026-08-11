@@ -14,10 +14,14 @@
                 fillColor="#16AE32" emptyColor="#123E20"
                 fillOpacity="1" emptyOpacity="0.7" segmentCount="8" gap="1"
                 direction="right" partialSegments="false" />
+    <meterStyle id="probe.boost" renderer="continuous"
+                fillColor="#FFB51B" emptyColor="#3A2714"
+                fillOpacity="1" emptyOpacity="0.72"
+                direction="up" partialSegments="true" />
   </definitions>
   <vanillaVisibility>
     <target id="bottomLeft" visibleWhen="never" />
-    <target id="playerStatus" visibleWhen="never" />
+    <target id="rightMeters" visibleWhen="never" />
   </vanillaVisibility>
   <includes>
     <include id="chronomark.environment-status" src="environment-status.xml"
@@ -26,6 +30,8 @@
              x="0" y="0" anchor="bottom-left" visible="true" visibleWhen="always" z="101" />
     <include id="chronomark.weapon-status" src="weapon-status.xml"
              x="0" y="0" anchor="bottom-left" visible="true" visibleWhen="always" z="102" />
+    <include id="chronomark.mobility-status" src="mobility-status.xml"
+             x="0" y="0" anchor="bottom-right" visible="true" visibleWhen="always" z="103" />
   </includes>
   <components />
 </venworksCUI>

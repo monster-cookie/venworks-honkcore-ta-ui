@@ -22,5 +22,20 @@
           rotation="0" scaleX="1" scaleY="1" z="1"
           source="weapon.ammotype" format="raw" value="(AMMO TYPE WAITING FOR INVENTORY)"
           font="$MAIN_Font_Bold" fontSize="13" color="#93A9AD" bold="false" align="left" />
+    <icon id="explosive.icon" x="8" y="34" width="22" height="22" opacity="1" visible="true"
+          visibleWhen="weaponHasExplosive" rotation="0" scaleX="1" scaleY="1" z="2"
+          name="warning" color="#FFB51B" fit="contain" alignX="center" alignY="center" />
+    <text id="explosive.grenade" x="34" y="36" width="76" height="20" opacity="1" visible="true"
+          visibleWhen="weaponHasExplosive AND NOT weaponExplosiveIsMine"
+          rotation="0" scaleX="1" scaleY="1" z="2" value="GRENADE"
+          font="$MAIN_Font_Bold" fontSize="11" color="#FFCB45" bold="true" align="left" />
+    <text id="explosive.mine" x="34" y="36" width="76" height="20" opacity="1" visible="true"
+          visibleWhen="weaponHasExplosive AND weaponExplosiveIsMine"
+          rotation="0" scaleX="1" scaleY="1" z="2" value="MINE"
+          font="$MAIN_Font_Bold" fontSize="11" color="#FFCB45" bold="true" align="left" />
+    <text id="explosive.count" x="110" y="34" width="38" height="22" opacity="1" visible="true"
+          visibleWhen="weaponHasExplosive" rotation="0" scaleX="1" scaleY="1" z="2"
+          source="weapon.explosivecount" format="integer" value="--"
+          font="$MAIN_Font_Bold" fontSize="13" color="#FFCB45" bold="true" align="left" />
   </group>
 </venworksCUIFragment>

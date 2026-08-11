@@ -134,23 +134,22 @@ advancing under `Extensions.noInvisibleAdvance`. A condition can make an
 allowlisted target transparent, but it cannot force a vanilla-hidden target
 visible.
 
-`playerStatus` is a fixed, surgical adapter for the replaced lower-right player
-status children inside `RightMeters_mc`. It suppresses only the vanilla health,
-power, and equipped-weapon presentation. Grenade icon/count, boost/jetpack,
-vehicle HUD, and their divider remain under vanilla ownership. The adapter
-resolves its hardcoded child allowlist through the vanilla class's public
-timeline properties; display-list names are not treated as a configuration or
-runtime discovery surface.
+`rightMeters` is a fixed whole-group presentation adapter for `RightMeters_mc`.
+It changes only the group's alpha and never changes its `visible` property or
+addresses any child. This lets CUI replace the visible health, power, weapon,
+explosive, boost, and vehicle-prompt presentation while the untouched vanilla
+`HUDVehicle_mc` retains its provider state and vehicle-exit input handling.
 
 The following targets are deliberately unavailable:
 
-- the whole `rightMeters` group, `HUDVehicle`, and the exit-vehicle button;
+- `HUDVehicle` and the exit-vehicle button as direct targets;
 - `centerGroup` and the target crosshair;
 - the enemy-health holder and enemy-health internals;
 - hit, kill, and damage indicators; and
 - rollover and quick-container controls.
 
-The vehicle exit control is never a configurable visibility target. The
+The vehicle exit control is never a configurable visibility target. A CUI
+vehicle prompt is visual only; vanilla remains the sole input owner. The
 crosshair requires an isolated crash test. Enemy health requires a legendary
 enemy regression test. Hit indicators require animation-lifecycle testing,
 and rollover widgets require input testing, before any later allowlist change.

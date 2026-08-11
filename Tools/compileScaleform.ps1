@@ -228,7 +228,8 @@ foreach ($positiveFixtureName in @(
 foreach ($componentFixtureName in @(
   'weapon-status.xml',
   'environment-status.xml',
-  'player-meters.xml'
+  'player-meters.xml',
+  'mobility-status.xml'
 )) {
   $componentFixturePath = Resolve-RequiredFile `
     -Path (Join-Path $providerProbeComponentDirectory $componentFixtureName) `
@@ -600,8 +601,16 @@ try {
       'CUIValueBinding',
       'Meter renderer must implement redraw.',
       'CUIMeter(target).setValue',
-      'playerStatus',
+      'rightmeters',
       'RightMeters_mc',
+      'weapon.explosivecount',
+      'weapon.explosivetype',
+      'boost.charge',
+      'weaponhasexplosive',
+      'weaponexplosiveismine',
+      'boostactive',
+      'HudJetpackData',
+      'uExplosiveCount',
       'CUIAssetManager',
       'CUILayoutImportLoader',
       'VenworksCUI/components/',
@@ -724,11 +733,10 @@ try {
         throw "Generated $meterRenderer does not implement dynamic redraw."
       }
     }
-    if ($reopenedVanillaVisibilitySource -notmatch 'RightMeters_mc' -or
-        $reopenedVanillaVisibilitySource -notmatch 'Object\(playerStatus\)\[childName\]' -or
-        $reopenedVanillaVisibilitySource -match 'playerStatus\.getChildByName\(childName\)' -or
-        $reopenedVanillaVisibilitySource -match 'EquippedGrenadeIcon_mc|EquippedGrenadeCount_mc|JetpackMeterWrapper_mc|HUDVehicle_mc') {
-      throw 'Generated player-status visibility adapter does not use fixed properties or preserve grenade, boost, and vehicle controls.'
+    if ($reopenedVanillaVisibilitySource -notmatch 'targetName\s*==\s*"rightmeters"' -or
+        $reopenedVanillaVisibilitySource -notmatch 'return\s+"RightMeters_mc"' -or
+        $reopenedVanillaVisibilitySource -match 'PowerBarEmpty_mc|EquippedGrenadeIcon_mc|EquippedGrenadeCount_mc|JetpackMeterWrapper_mc|HUDVehicle_mc') {
+      throw 'Generated rightMeters visibility adapter does not remain a whole-group alpha-only presentation gate.'
     }
     if ($reopenedAssetManagerSource -match 'flash\.display\.Loader' -or
         $reopenedAssetManagerSource -match 'LoaderContext' -or
@@ -801,12 +809,19 @@ try {
   New-Item -ItemType Directory -Force -Path $assetOutputDirectory | Out-Null
   New-Item -ItemType Directory -Force -Path $componentOutputDirectory | Out-Null
   Copy-Item -LiteralPath $providerProbeLayoutSource -Destination (Join-Path $cuiOutputDirectory "layout.xml") -Force
-  foreach ($componentFixtureName in @('weapon-status.xml','environment-status.xml','player-meters.xml')) {
+  foreach ($componentFixtureName in @('weapon-status.xml','environment-status.xml','player-meters.xml','mobility-status.xml')) {
     Copy-Item -LiteralPath (Join-Path $providerProbeComponentDirectory $componentFixtureName) -Destination (Join-Path $componentOutputDirectory $componentFixtureName) -Force
   }
   $stagedPlayerMeters = [xml](Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'player-meters.xml') -Raw)
   if (@($stagedPlayerMeters.venworksCUIFragment.group.meter).Count -ne 3) {
     throw 'Staged player-meters.xml must contain exactly three consolidated live meters.'
+  }
+  $stagedMobilityStatusPath = Join-Path $componentOutputDirectory 'mobility-status.xml'
+  $stagedMobilityStatusText = Get-Content -LiteralPath $stagedMobilityStatusPath -Raw
+  if ($stagedMobilityStatusText -notmatch 'HOLD TO EXIT VEHICLE' -or
+      $stagedMobilityStatusText -notmatch 'visibleWhen="inVehicle"' -or
+      $stagedMobilityStatusText -match 'action=|event=|callback=|userEvent=') {
+    throw 'Staged mobility-status.xml must contain a visual-only in-vehicle exit prompt.'
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force

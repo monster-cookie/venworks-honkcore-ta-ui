@@ -14,42 +14,15 @@ package venworks.cui
          super();
          var targetName:String = normalizeTarget(param2);
          var target:DisplayObject = null;
-         var playerStatus:DisplayObjectContainer = null;
-         var childName:String = null;
          targets = [];
          initialAlphas = [];
-         if(targetName == "playerstatus")
+         target = param1.getChildByName(this.getDisplayName(param2));
+         if(target == null)
          {
-            playerStatus = param1.getChildByName("RightMeters_mc") as DisplayObjectContainer;
-            if(playerStatus == null)
-            {
-               throw new Error("INVALID|Allowlisted vanilla HUD target is missing: " + param2);
-            }
-            for each(childName in ["HealthBar_mc","HealthBarGhost_mc","HealthBarDamage_mc",
-                                   "PowerBar_mc","PowerBarEmpty_mc","PowerBarIncrease_mc",
-                                   "EquippedWeaponAmmoTotal_mc","EquippedWeaponAmmo_mc",
-                                   "VerticalDivider_mc","Health_mc","HealthBarEmpty_mc",
-                                   "EquippedWeaponIconHolder_mc","HealthBarIncrease_mc"])
-            {
-               target = Object(playerStatus)[childName] as DisplayObject;
-               if(target == null)
-               {
-                  throw new Error("INVALID|Allowlisted vanilla HUD child is missing: " + childName);
-               }
-               targets.push(target);
-               initialAlphas.push(target.alpha);
-            }
+            throw new Error("INVALID|Allowlisted vanilla HUD target is missing: " + param2);
          }
-         else
-         {
-            target = param1.getChildByName(this.getDisplayName(param2));
-            if(target == null)
-            {
-               throw new Error("INVALID|Allowlisted vanilla HUD target is missing: " + param2);
-            }
-            targets.push(target);
-            initialAlphas.push(target.alpha);
-         }
+         targets.push(target);
+         initialAlphas.push(target.alpha);
          expression = param3;
       }
 
@@ -63,7 +36,7 @@ package venworks.cui
          var targetName:String = normalizeTarget(param1);
          return targetName == "topcenter" || targetName == "bottomleft" ||
             targetName == "socialcommandicons" || targetName == "floatingquestmarkers" ||
-            targetName == "crewbuffwidget" || targetName == "playerstatus";
+            targetName == "crewbuffwidget" || targetName == "rightmeters";
       }
 
       public function apply(param1:CUIConditionContext) : void
@@ -95,6 +68,10 @@ package venworks.cui
          if(targetName == "bottomleft")
          {
             return "BottomLeftGroup_mc";
+         }
+         if(targetName == "rightmeters")
+         {
+            return "RightMeters_mc";
          }
          if(targetName == "socialcommandicons")
          {

@@ -17,6 +17,7 @@ package venworks.cui
          BSUIDataManager.Subscribe("PlayerFrequentData",this.onPlayerFrequentData);
          BSUIDataManager.Subscribe("PlayerInventoryData",this.onPlayerInventoryData);
          BSUIDataManager.Subscribe("WeaponData",this.onWeaponData);
+         BSUIDataManager.Subscribe("HudJetpackData",this.onJetpackData);
          BSUIDataManager.Subscribe("HUDStarbornPowersData",this.onStarbornPowersData);
          this.setText("diagnostic.inventoryprovider","PLAYERINVENTORYDATA NOT RECEIVED");
          this.setText("diagnostic.powernameprovider","HUD POWER NAME FIELDS NOT RECEIVED");
@@ -50,7 +51,8 @@ package venworks.cui
             source == "power.cost" || source == "power.cooldown" ||
             source == "carry.current" || source == "carry.maximum" || source == "credits" ||
             source == "weapon.clipammo" || source == "weapon.totalammo" ||
-            source == "weapon.reserveammo")
+            source == "weapon.reserveammo" || source == "weapon.explosivecount" ||
+            source == "weapon.explosivetype" || source == "boost.charge")
          {
             return "number";
          }
@@ -111,7 +113,19 @@ package venworks.cui
          }
          this.setBoolean("weapon.displayammo",param1.data.bDisplayAmmo);
          this.setBoolean("weapon.ammoaspercent",param1.data.bShowAmmoAsPercent);
+         this.setFinite("weapon.explosivecount",param1.data.uExplosiveCount);
+         this.setFinite("weapon.explosivetype",param1.data.uExplosiveIndicatorType);
          this.notifyChanged();
+      }
+
+      private function onJetpackData(param1:FromClientDataEvent) : void
+      {
+         var charge:Number = Number(param1.data.fJetpackCharge);
+         if(!isNaN(charge) && isFinite(charge))
+         {
+            this.setFinite("boost.charge",Math.max(0,Math.min(1,charge)));
+            this.notifyChanged();
+         }
       }
 
       private function onPlayerInventoryData(param1:FromClientDataEvent) : void

@@ -40,6 +40,8 @@ copied into CUI.
 | `weapon.name` | `WeaponData.sWeaponName` | string | Confirmed in HUD runtime |
 | `weapon.icon` | `WeaponData.sIconLinkageName` | string | Confirmed in vanilla HUD; rendered through the bounded provider-symbol adapter |
 | `weapon.ammoType` | Equipped `PlayerInventoryData.aItems[*].WeaponInfo.sAmmoType` | string | Confirmed in HUD runtime for ranged weapons and the Cutter |
+| `weapon.explosiveCount` / `weapon.explosiveType` | `WeaponData.uExplosiveCount` / `uExplosiveIndicatorType` | number | Implemented; runtime acceptance pending |
+| `boost.charge` | `HudJetpackData.fJetpackCharge`, clamped to `0..1` | number | Implemented; runtime acceptance pending |
 | `carry.current` / `carry.maximum` | `PlayerInventoryData.fEncumbrance` / `fMaxEncumbrance` | number | Confirmed in HUD runtime, including value-change refresh |
 | `credits` | `PlayerInventoryData.uCoin` | number | Confirmed in HUD runtime, including value-change refresh |
 | `power.name` | Bounded canonical-English mapping from `HUDStarbornPowersData.sKey` | string | Confirmed in HUD runtime across power changes |
@@ -77,9 +79,9 @@ runtime acceptance.
 
 ## Multi-file Chronomark configuration
 
-The accepted surface is split into three reusable component fragments under
-`VenworksCUI/components`: `weapon-status.xml`, `environment-status.xml`, and
-`player-meters.xml`. Root `layout.xml` owns their placement through bounded
+The accepted surface is split into four reusable component fragments under
+`VenworksCUI/components`: `weapon-status.xml`, `environment-status.xml`,
+`player-meters.xml`, and `mobility-status.xml`. Root `layout.xml` owns their placement through bounded
 `include` declarations. Each fragment contains exactly one local root group;
 the loader prefixes local IDs with the include ID and resolves every file before
 the parser, asset manager, or renderer can create a partial HUD.
@@ -195,6 +197,12 @@ Build and deploy the Venworks variant, then verify:
     ammunition type; melee weapons show only their icon and name.
 12. Rapid Favorites switching does not leave a stale icon or stale ammunition
     row, and unarmed state clears the icon without an error.
+13. Grenade/mine type and count update after equipping and consuming explosives.
+14. The boost meter appears only during partial charge, drains and refills, and
+    does not interfere with ordinary HUD transitions.
+15. Entering a vehicle shows the CUI exit prompt; repeated keyboard/controller
+    hold-to-exit actions work because the untouched vanilla `HUDVehicle_mc`
+    continues processing the real `VehicleExit` event.
 
 Runtime has accepted the three imported fragments, scanner persistence,
 health/O2 updates (including health reaching zero through fall damage and the
@@ -224,13 +232,18 @@ component system allows:
 Goal 5 is not complete when provider probing ends. Before Goal 6 begins:
 
 - replace the layered empty/fill bar pairs with single live `meter` controls;
-- runtime-accept the bounded multi-file layout and its three root-placed
+- runtime-accept the bounded multi-file layout and its four root-placed
   Chronomark fragments;
-- place grenade icon/count presentation in the new weapon control, then suppress
-  the corresponding vanilla grenade controls;
-- leave boost/jetpack presentation on the vanilla HUD until the later
-  environmental-effects/tricorder control owns its replacement;
+- runtime-accept the new grenade/mine count and live boost presentation;
+- runtime-accept the visual-only CUI vehicle prompt while the hidden vanilla
+  `HUDVehicle_mc` remains alive and exclusively owns vehicle-exit input;
 - pass the complete provider, live-update, and transition acceptance list above.
+
+The complete vanilla `RightMeters_mc` presentation is alpha-gated as one fixed
+target. The adapter never changes its `visible` property and never addresses
+`HUDVehicle_mc`. Consequently the vehicle child retains its provider-driven
+`visible` state and `ProcessUserEvent` path even though CUI supplies the visible
+exit prompt. Configuration cannot bind actions or callbacks to that prompt.
 
 ## Risks and rollback
 

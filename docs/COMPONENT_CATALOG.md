@@ -236,3 +236,9 @@ The discovery gallery compares direct and templated carry/credits values from
 `PlayerInventoryData` and tests whether `PowersMenuData` is sufficiently live
 to resolve the active power key to a player-facing name. Arbitrary
 provider/member selection remains prohibited.
+
+Goal 5 also exposes bounded explosive count/type and jetpack charge values.
+The weapon fragment uses them for grenade/mine presentation, while the mobility
+fragment owns boost and an `inVehicle`-conditioned visual exit prompt. The
+prompt has no action binding: the hidden vanilla `HUDVehicle_mc` remains alive
+and exclusively processes vehicle-exit input.

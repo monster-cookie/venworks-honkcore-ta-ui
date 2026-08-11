@@ -19,6 +19,7 @@ package venworks.cui
          BSUIDataManager.Subscribe("HUDVehicleData",this.onVehicleData);
          BSUIDataManager.Subscribe("HUDOpacityData",this.onOpacityData);
          BSUIDataManager.Subscribe("WeaponData",this.onWeaponData);
+         BSUIDataManager.Subscribe("HudJetpackData",this.onJetpackData);
       }
 
       public static function normalizeName(param1:String) : String
@@ -31,7 +32,8 @@ package venworks.cui
          var name:String = normalizeName(param1);
          if(name == "always" || name == "never" || name == "firstperson" || name == "thirdperson" ||
             name == "incombat" || name == "inscanner" || name == "issneaking" ||
-            name == "weaponaiming" || name == "weaponhasammo" || name == "invehicle" || name == "hudvisible")
+            name == "weaponaiming" || name == "weaponhasammo" || name == "weaponhasexplosive" ||
+            name == "weaponexplosiveismine" || name == "boostactive" || name == "invehicle" || name == "hudvisible")
          {
             return "boolean";
          }
@@ -113,6 +115,19 @@ package venworks.cui
       private function onWeaponData(param1:FromClientDataEvent) : void
       {
          this.setValue("weaponhasammo",Boolean(param1.data.bDisplayAmmo));
+         this.setValue("weaponhasexplosive",Number(param1.data.uExplosiveCount) > 0);
+         this.setValue("weaponexplosiveismine",Number(param1.data.uExplosiveIndicatorType) != 0);
+         this.notifyChanged();
+      }
+
+      private function onJetpackData(param1:FromClientDataEvent) : void
+      {
+         var charge:Number = Number(param1.data.fJetpackCharge);
+         if(isNaN(charge) || !isFinite(charge))
+         {
+            return;
+         }
+         this.setValue("boostactive",charge > 0 && charge < 1);
          this.notifyChanged();
       }
 
