@@ -519,24 +519,12 @@ try {
       }
     }
 
-    $componentDispatchChecks = @(
-      @{
-        path = "venworks\cui\CUILayoutParser.as"
-        markers = @('.localName()','.toLowerCase()','else if(type == "providersymbol")','lengths=')
-      },
-      @{
-        path = "venworks\cui\CUIRuntime.as"
-        markers = @('.toLowerCase()','if(type == "providersymbol")','return new CUIProviderSymbol(param1);')
-      }
-    )
-    foreach ($dispatchCheck in $componentDispatchChecks) {
-      $reopenedDispatchPath = Join-Path (Join-Path $validationScriptsDirectory "scripts") $dispatchCheck.path
-      $reopenedDispatchSource = Get-Content -LiteralPath $reopenedDispatchPath -Raw
-      foreach ($marker in $dispatchCheck.markers) {
-        if (!$reopenedDispatchSource.Contains($marker)) {
-          throw "Generated output is missing component dispatch '$marker' in $($dispatchCheck.path)."
-        }
-      }
+    $reopenedCompositionResolverPath = Join-Path `
+      (Join-Path $validationScriptsDirectory "scripts") `
+      "venworks\cui\CUICompositionResolver.as"
+    $reopenedCompositionResolverSource = Get-Content -LiteralPath $reopenedCompositionResolverPath -Raw
+    if (!$reopenedCompositionResolverSource.Contains('type == "providerSymbol"')) {
+      throw "Generated output composition resolver does not accept providerSymbol components."
     }
 
     $validationSource = ($validationScripts | ForEach-Object {

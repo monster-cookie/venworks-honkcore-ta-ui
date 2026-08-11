@@ -300,9 +300,7 @@ package venworks.cui
 
       private function validateComponent(param1:XML) : void
       {
-         var rawName:String = String(param1.name());
-         var localName:String = String(param1.localName());
-         var type:String = rawName.toLowerCase();
+         var type:String = String(param1.name());
          var style:XML = null;
          if(type == "group")
          {
@@ -434,7 +432,7 @@ package venworks.cui
             }
             this.requireAssetFit(param1);
          }
-         else if(type == "providersymbol")
+         else if(type == "providerSymbol")
          {
             this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","source","color","fit","alignX","alignY"]);
             this.requirePositiveBounds(param1);
@@ -462,10 +460,7 @@ package venworks.cui
          }
          else
          {
-            throw new Error("INVALID|Unknown component: " + type +
-               "\nraw=[" + rawName + "]" +
-               "\nlocal=[" + localName + "]" +
-               "\nlengths=" + rawName.length + "/" + localName.length + "/" + type.length);
+            throw new Error("INVALID|Unknown component: " + type);
          }
       }
 

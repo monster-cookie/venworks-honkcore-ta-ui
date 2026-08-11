@@ -57,7 +57,7 @@ package venworks.cui
             return;
          }
          if(type == "text" || type == "panel" || type == "shape" || type == "divider" || type == "meter" ||
-            type == "svg" || type == "path" || type == "icon" || type == "symbol")
+            type == "svg" || type == "path" || type == "icon" || type == "providerSymbol" || type == "symbol")
          {
             if(param1.children().length() != 0)
             {

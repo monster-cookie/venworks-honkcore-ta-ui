@@ -121,16 +121,14 @@ unavailable linkages unload and hide the icon without affecting the weapon name.
 
 ## Probe acceptance
 
-### Provider-symbol component-name compatibility
+### Provider-symbol composition compatibility
 
-The first deployed provider-symbol probe failed layout parsing even though the
-layout, schema, and reopened ActionScript contained the expected mixed-case
-`providerSymbol` name. Existing component tags were all lowercase. Component
-dispatch now canonicalizes XML names to lowercase in both parser validation and
-runtime construction, with `providersymbol` as the internal comparison. The
-public XML contract remains `<providerSymbol>`. Reopen validation confirms that
-both compiled dispatch paths retain the canonicalization before an artifact can
-be accepted.
+The first deployed provider-symbol probe failed layout parsing because the
+composition resolver's leaf-component allowlist had not been extended for
+`providerSymbol`. The resolver rejected the node before parser validation or
+runtime construction. The allowlist now preserves provider-symbol nodes during
+composition, and reopen validation confirms the compiled resolver retains that
+behavior before an artifact can be accepted.
 
 Build and deploy the Venworks variant, then verify:
 
