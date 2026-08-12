@@ -149,7 +149,8 @@ The following targets are deliberately unavailable:
 - rollover and quick-container controls.
 
 The vehicle exit control is never a configurable visibility target. The bounded
-duplicate prompt extracts only Bethesda's initialized `GetUpButton_mc` child;
+duplicate prompt extracts Bethesda's initialized `GetUpButton_mc` child and
+bounds it to the keyboard/controller glyph region;
 the complete duplicate vehicle timeline is not attached or subscribed. The
 child is noninteractive presentation only and retains Bethesda's
 platform/control-map presentation, while the hidden original remains the sole

@@ -760,6 +760,9 @@ try {
     if ($reopenedSymbolSource -notmatch '"vehicle-exit-prompt"' -or
         $reopenedSymbolSource -notmatch '"classes":\["HUDVehicle"\]' -or
         $reopenedSymbolSource -notmatch '"child":"GetUpButton_mc"' -or
+        $reopenedSymbolSource -notmatch '"glyphChildren":\["PCButton_mc","ConsoleButton_mc"\]' -or
+        $reopenedSymbolSource -notmatch 'createBoundedChildViewport' -or
+        $reopenedSymbolSource -notmatch 'bounds\.union\(childBounds\)' -or
         $reopenedSymbolSource -notmatch 'Object\(result\)\[String\(definition\.child\)\]' -or
         $reopenedSymbolSource -notmatch 'mouseEnabled\s*=\s*false' -or
         $reopenedSymbolSource -notmatch 'mouseChildren\s*=\s*false' -or
@@ -849,7 +852,8 @@ try {
   if ($stagedMobilityStatusText -notmatch 'name="vehicle-exit-prompt"' -or
       $stagedMobilityStatusText -notmatch 'value="\$EXIT HOLD"' -or
       $stagedMobilityStatusText -notmatch 'fontSize="21"' -or
-      $stagedMobilityStatusText -notmatch 'id="vehicle\.exit\.glyph"[^>]*width="59" height="59"' -or
+      $stagedMobilityStatusText -notmatch 'id="vehicle\.exit\.label" x="112" y="137"' -or
+      $stagedMobilityStatusText -notmatch 'id="vehicle\.exit\.glyph" x="355" y="128" width="68" height="68"' -or
       ([regex]::Matches($stagedMobilityStatusText, 'visibleWhen="inVehicle"')).Count -lt 2 -or
       $stagedMobilityStatusText -match '<button|action=|event=|callback=|userEvent=|key=') {
     throw 'Staged mobility-status.xml must compose the mapped noninteractive glyph with localized $EXIT HOLD text.'

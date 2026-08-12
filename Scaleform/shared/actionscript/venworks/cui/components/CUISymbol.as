@@ -4,6 +4,8 @@ package venworks.cui.components
    import flash.display.DisplayObjectContainer;
    import flash.display.InteractiveObject;
    import flash.display.MovieClip;
+   import flash.display.Sprite;
+   import flash.geom.Rectangle;
    import flash.utils.getDefinitionByName;
 
    public class CUISymbol extends CUIImage
@@ -24,6 +26,7 @@ package venworks.cui.components
          "vehicle-exit-prompt":{
             classes:["HUDVehicle"],
             child:"GetUpButton_mc",
+            glyphChildren:["PCButton_mc","ConsoleButton_mc"],
             presentationOnly:true
          }
       };
@@ -82,6 +85,10 @@ package venworks.cui.components
             }
             result = extractedChild;
          }
+         if(definition.glyphChildren != null)
+         {
+            result = createBoundedChildViewport(result,definition.glyphChildren,param1);
+         }
          if(result is MovieClip && definition.initialFrame != null)
          {
             MovieClip(result).gotoAndStop(int(definition.initialFrame));
@@ -98,6 +105,40 @@ package venworks.cui.components
             }
          }
          return result;
+      }
+
+      private static function createBoundedChildViewport(param1:DisplayObject, param2:Array, param3:String) : DisplayObject
+      {
+         var container:DisplayObjectContainer = param1 as DisplayObjectContainer;
+         var childName:String = null;
+         var child:DisplayObject = null;
+         var childBounds:Rectangle = null;
+         var bounds:Rectangle = null;
+         var viewport:Sprite = null;
+         if(container == null)
+         {
+            throw new Error("INVALID|Embedded symbol child is not a container: " + param3);
+         }
+         for each(childName in param2)
+         {
+            child = Object(container)[childName] as DisplayObject;
+            if(child == null)
+            {
+               throw new Error("INVALID|Embedded symbol glyph child is unavailable: " + param3);
+            }
+            childBounds = child.getBounds(container);
+            bounds = bounds == null ? childBounds.clone() : bounds.union(childBounds);
+         }
+         if(bounds == null || bounds.width <= 0 || bounds.height <= 0)
+         {
+            throw new Error("INVALID|Embedded symbol glyph region has no renderable dimensions: " + param3);
+         }
+         param1.x = -bounds.x;
+         param1.y = -bounds.y;
+         viewport = new Sprite();
+         viewport.addChild(param1);
+         viewport.scrollRect = new Rectangle(0,0,bounds.width,bounds.height);
+         return viewport;
       }
    }
 }

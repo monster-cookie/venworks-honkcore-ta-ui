@@ -241,10 +241,12 @@ now composes `$EXIT HOLD` with the confirmed live mapped glyph.
 
 The first composed runtime prompt passed localization, mapped-key presentation,
 and vehicle-exit behavior, but both the label and especially the key glyph were
-too small for final readability. The follow-up sizing pass increases the label
-font and glyph box by approximately 40%, balances their visual height, and keeps
-the pair within the existing bottom-right mobility group. Final size and clipping
-remain pending runtime acceptance.
+too small for final readability. Increasing the outer glyph box proved that the
+wide hold-button label bounds still dominated `contain` fitting. The follow-up
+bounds the initialized hold button to the union of its live keyboard and
+controller glyph children, moves the horizontal pair above the lower-right
+weapon UI, and fits that key-only region beside the accepted 21-pixel label.
+Final placement, key size, and clipping remain pending runtime acceptance.
 
 Report the displayed values and transition behavior before judging styling.
 The final replacement must not proceed until the confirmed fields and lifecycle
@@ -283,8 +285,11 @@ exit prompt. That prompt uses only the initialized `GetUpButton_mc` child
 extracted from a temporary Bethesda vehicle-control instance. The complete
 duplicate timeline is never attached or subscribed, avoiding its HUD-sized
 bounds while retaining the Bethesda hold button's keyboard/controller
-presentation. Mouse interaction and user-event routing are disabled on the
-extracted child, and configuration cannot bind actions or callbacks to it.
+presentation. A clipped wrapper uses the union of `PCButton_mc` and
+`ConsoleButton_mc` as the fitted region, excluding the hold-button label area
+without reimplementing device switching. Mouse interaction and user-event
+routing are disabled on the extracted child, and configuration cannot bind
+actions or callbacks to it.
 
 ## Risks and rollback
 
