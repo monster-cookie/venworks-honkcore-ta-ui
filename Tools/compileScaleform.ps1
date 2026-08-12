@@ -247,8 +247,7 @@ foreach ($componentFixtureName in @(
   'weapon-status.xml',
   'environment-status.xml',
   'player-meters.xml',
-  'mobility-status.xml',
-  'localization-probe.xml'
+  'mobility-status.xml'
 )) {
   $componentFixturePath = Resolve-RequiredFile `
     -Path (Join-Path $providerProbeComponentDirectory $componentFixtureName) `
@@ -838,7 +837,7 @@ try {
   New-Item -ItemType Directory -Force -Path $assetOutputDirectory | Out-Null
   New-Item -ItemType Directory -Force -Path $componentOutputDirectory | Out-Null
   Copy-Item -LiteralPath $providerProbeLayoutSource -Destination (Join-Path $cuiOutputDirectory "layout.xml") -Force
-  foreach ($componentFixtureName in @('weapon-status.xml','environment-status.xml','player-meters.xml','mobility-status.xml','localization-probe.xml')) {
+  foreach ($componentFixtureName in @('weapon-status.xml','environment-status.xml','player-meters.xml','mobility-status.xml')) {
     Copy-Item -LiteralPath (Join-Path $providerProbeComponentDirectory $componentFixtureName) -Destination (Join-Path $componentOutputDirectory $componentFixtureName) -Force
   }
   $stagedPlayerMeters = [xml](Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'player-meters.xml') -Raw)
@@ -848,16 +847,10 @@ try {
   $stagedMobilityStatusPath = Join-Path $componentOutputDirectory 'mobility-status.xml'
   $stagedMobilityStatusText = Get-Content -LiteralPath $stagedMobilityStatusPath -Raw
   if ($stagedMobilityStatusText -notmatch 'name="vehicle-exit-prompt"' -or
-      $stagedMobilityStatusText -notmatch 'visibleWhen="inVehicle"' -or
+      $stagedMobilityStatusText -notmatch 'value="\$EXIT HOLD"' -or
+      ([regex]::Matches($stagedMobilityStatusText, 'visibleWhen="inVehicle"')).Count -lt 2 -or
       $stagedMobilityStatusText -match '<button|action=|event=|callback=|userEvent=|key=') {
-    throw 'Staged mobility-status.xml must contain only the mapped noninteractive vehicle exit prompt.'
-  }
-  $stagedLocalizationProbePath = Join-Path $componentOutputDirectory 'localization-probe.xml'
-  $stagedLocalizationProbeText = Get-Content -LiteralPath $stagedLocalizationProbePath -Raw
-  foreach ($localizationCandidate in @('$Unknown Location','$MASS','$VALUE','$VehicleExit','$ExitVehicle','$EXIT VEHICLE','$HOLD TO EXIT VEHICLE','$HoldToExitVehicle','$VehicleExitPrompt')) {
-    if ($stagedLocalizationProbeText -notmatch [regex]::Escape($localizationCandidate)) {
-      throw "Staged localization-probe.xml is missing bounded token $localizationCandidate."
-    }
+    throw 'Staged mobility-status.xml must compose the mapped noninteractive glyph with localized $EXIT HOLD text.'
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force

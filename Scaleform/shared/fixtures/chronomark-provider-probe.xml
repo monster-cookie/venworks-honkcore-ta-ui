@@ -32,8 +32,6 @@
              x="0" y="0" anchor="bottom-left" visible="true" visibleWhen="always" z="102" />
     <include id="chronomark.mobility-status" src="mobility-status.xml"
              x="0" y="0" anchor="bottom-right" visible="true" visibleWhen="always" z="103" />
-    <include id="diagnostic.localization-probe" src="localization-probe.xml"
-             x="0" y="0" anchor="top-center" visible="true" visibleWhen="always" z="200" />
   </includes>
   <components />
 </venworksCUI>

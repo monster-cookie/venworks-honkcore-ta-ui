@@ -214,7 +214,8 @@ controller glyph on the replacement vehicle prompt remains pending. Keyboard
 runtime rejected fitting a complete second `HUDVehicle` timeline into the CUI
 prompt box: the full timeline bounds reduced the intended control to a clipped
 fragment. The replacement now extracts only the initialized `GetUpButton_mc`
-child before fitting. Controller presentation is structurally supported by the
+child before fitting. Keyboard runtime confirms that child displays the mapped
+key glyph. Controller presentation is structurally supported by the
 Bethesda hold-button control but remains runtime-unverified because no controller
 is available for the current test pass.
 
@@ -230,9 +231,13 @@ the wording in another installed language.
 The first localization pass rendered all six vehicle candidates literally,
 including their leading `$`. Because that pass lacked a known-valid control, a
 second diagnostic adds `$Unknown Location`, `$MASS`, and `$VALUE`, all observed
-in Bethesda's extracted interface scripts. If those controls translate, the
-vehicle keys are wrong; if they remain literal, the current CUI text assignment
-path does not invoke Bethesda localization and requires a bounded implementation.
+in Bethesda's extracted interface scripts. Runtime confirmed all three controls
+translate, proving the CUI text path invokes Bethesda localization and the six
+vehicle guesses were wrong. Read-only inspection of the installed
+`translate_*.txt` tables identifies `$EXIT HOLD` as Bethesda's complete
+language-safe phrase: `HOLD TO EXIT` in English, with entries in all nine
+installed UI languages. The temporary gallery is removed; the mobility fragment
+now composes `$EXIT HOLD` with the confirmed live mapped glyph.
 
 Report the displayed values and transition behavior before judging styling.
 The final replacement must not proceed until the confirmed fields and lifecycle
