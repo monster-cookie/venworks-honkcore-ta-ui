@@ -9,7 +9,7 @@ These rules apply throughout the repository.
 - Always produce a plan and wait for explicit user approval before editing files.
 - Use `AGENT-PLAN-TEMPLATE.md` when present.
 - After approval, make only the approved edits.
-- Stop and ask before editing additional paths, changing the goal, or expanding the approved scope.
+- Stop and ask before changing the goal, or expanding the approved scope.
 - Stop and ask the user how to proceed when uncertain or before trying an approach that is new to the codebase. Explain the uncertainty or proposed approach and wait for explicit approval before continuing.
 
 ## Repo-wide safety rules
