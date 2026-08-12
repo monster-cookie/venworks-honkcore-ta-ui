@@ -852,8 +852,8 @@ try {
   if ($stagedWeaponStatusText -notmatch 'name="vehicle-exit-prompt"' -or
       $stagedWeaponStatusText -notmatch 'value="\$EXIT HOLD"' -or
       $stagedWeaponStatusText -notmatch 'fontSize="21"' -or
-      $stagedWeaponStatusText -notmatch 'id="vehicle\.exit\.label" x="8" y="-61"' -or
-      $stagedWeaponStatusText -notmatch 'id="vehicle\.exit\.glyph" x="251" y="-66" width="52" height="52"' -or
+      $stagedWeaponStatusText -notmatch 'id="vehicle\.exit\.label" x="8" y="-61" width="165"' -or
+      $stagedWeaponStatusText -notmatch 'id="vehicle\.exit\.glyph" x="183" y="-69" width="52" height="52"' -or
       ([regex]::Matches($stagedWeaponStatusText, 'visibleWhen="inVehicle"')).Count -lt 2 -or
       $stagedWeaponStatusText -match '<button|action=|event=|callback=|userEvent=|key=' -or
       $stagedMobilityStatusText -match 'vehicle\.exit|vehicle-exit-prompt|\$EXIT HOLD') {

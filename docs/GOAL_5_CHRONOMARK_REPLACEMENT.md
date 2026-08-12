@@ -252,6 +252,14 @@ reduces the readable but oversized key box from 68 to 52 pixels beside the
 accepted 21-pixel label. Final placement and key size remain pending runtime
 acceptance.
 
+Runtime accepted the upper-left ownership and reduced key size, then identified
+excess spacing and a small optical baseline mismatch. The refinement narrows the
+label box, places the unchanged 52-pixel mapped glyph approximately 10 pixels
+after the label, and lifts the glyph three pixels to compensate for whitespace
+inside Bethesda's button artwork. Keyboard alignment remains pending final
+runtime acceptance; controller alignment remains structurally supported but
+runtime-unverified.
+
 Report the displayed values and transition behavior before judging styling.
 The final replacement must not proceed until the confirmed fields and lifecycle
 behavior are accepted.
