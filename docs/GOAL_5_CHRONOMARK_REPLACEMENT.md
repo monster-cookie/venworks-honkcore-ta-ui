@@ -227,6 +227,13 @@ Bethesda vehicle-exit localization key. The available English client can prove
 that a token resolves instead of rendering raw, but cannot independently verify
 the wording in another installed language.
 
+The first localization pass rendered all six vehicle candidates literally,
+including their leading `$`. Because that pass lacked a known-valid control, a
+second diagnostic adds `$Unknown Location`, `$MASS`, and `$VALUE`, all observed
+in Bethesda's extracted interface scripts. If those controls translate, the
+vehicle keys are wrong; if they remain literal, the current CUI text assignment
+path does not invoke Bethesda localization and requires a bounded implementation.
+
 Report the displayed values and transition behavior before judging styling.
 The final replacement must not proceed until the confirmed fields and lifecycle
 behavior are accepted.

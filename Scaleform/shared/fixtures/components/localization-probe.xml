@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <venworksCUIFragment schemaVersion="1" runtimeVersion="1">
-  <group id="root" x="0" y="0" width="900" height="286" opacity="1" visible="true"
+  <group id="root" x="0" y="0" width="900" height="430" opacity="1" visible="true"
          rotation="0" scaleX="1" scaleY="1" z="0">
-    <panel id="background" x="0" y="0" width="900" height="286" opacity="1" visible="true"
+    <panel id="background" x="0" y="0" width="900" height="430" opacity="1" visible="true"
            rotation="0" scaleX="1" scaleY="1" z="0" fillColor="#10272E" fillOpacity="0.9"
            strokeColor="#FFB51B" strokeOpacity="1" strokeWidth="2" />
     <text id="title" x="20" y="14" width="860" height="30" opacity="1" visible="true"
@@ -11,17 +11,25 @@
     <text id="note" x="20" y="44" width="860" height="22" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="1" value="REPORT WHICH RESULT BECOMES READABLE ENGLISH INSTEAD OF A RAW $ TOKEN"
           font="$MAIN_Font_Bold" fontSize="11" color="#9BB2B8" bold="false" align="left" />
-    <text id="candidate.1.label" x="20" y="78" width="260" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="1  $VehicleExit" font="$MAIN_Font_Bold" fontSize="14" color="#35E6E6" bold="false" align="left" />
-    <text id="candidate.1.value" x="290" y="78" width="590" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="$VehicleExit" font="$MAIN_Font_Bold" fontSize="14" color="#F2F7F9" bold="false" align="left" />
-    <text id="candidate.2.label" x="20" y="110" width="260" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="2  $ExitVehicle" font="$MAIN_Font_Bold" fontSize="14" color="#35E6E6" bold="false" align="left" />
-    <text id="candidate.2.value" x="290" y="110" width="590" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="$ExitVehicle" font="$MAIN_Font_Bold" fontSize="14" color="#F2F7F9" bold="false" align="left" />
-    <text id="candidate.3.label" x="20" y="142" width="260" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="3  $EXIT VEHICLE" font="$MAIN_Font_Bold" fontSize="14" color="#35E6E6" bold="false" align="left" />
-    <text id="candidate.3.value" x="290" y="142" width="590" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="$EXIT VEHICLE" font="$MAIN_Font_Bold" fontSize="14" color="#F2F7F9" bold="false" align="left" />
-    <text id="candidate.4.label" x="20" y="174" width="260" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="4  $HOLD TO EXIT VEHICLE" font="$MAIN_Font_Bold" fontSize="14" color="#35E6E6" bold="false" align="left" />
-    <text id="candidate.4.value" x="290" y="174" width="590" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="$HOLD TO EXIT VEHICLE" font="$MAIN_Font_Bold" fontSize="14" color="#F2F7F9" bold="false" align="left" />
-    <text id="candidate.5.label" x="20" y="206" width="260" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="5  $HoldToExitVehicle" font="$MAIN_Font_Bold" fontSize="14" color="#35E6E6" bold="false" align="left" />
-    <text id="candidate.5.value" x="290" y="206" width="590" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="$HoldToExitVehicle" font="$MAIN_Font_Bold" fontSize="14" color="#F2F7F9" bold="false" align="left" />
-    <text id="candidate.6.label" x="20" y="238" width="260" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="6  $VehicleExitPrompt" font="$MAIN_Font_Bold" fontSize="14" color="#35E6E6" bold="false" align="left" />
-    <text id="candidate.6.value" x="290" y="238" width="590" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="$VehicleExitPrompt" font="$MAIN_Font_Bold" fontSize="14" color="#F2F7F9" bold="false" align="left" />
+    <text id="controls.heading" x="20" y="76" width="860" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="KNOWN BETHESDA POSITIVE CONTROLS" font="$MAIN_Font_Bold" fontSize="12" color="#FFB51B" bold="true" align="left" />
+    <text id="control.1.label" x="20" y="102" width="260" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="C1  $Unknown Location" font="$MAIN_Font_Bold" fontSize="14" color="#35E6E6" bold="false" align="left" />
+    <text id="control.1.value" x="290" y="102" width="590" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="$Unknown Location" font="$MAIN_Font_Bold" fontSize="14" color="#F2F7F9" bold="false" align="left" />
+    <text id="control.2.label" x="20" y="134" width="260" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="C2  $MASS" font="$MAIN_Font_Bold" fontSize="14" color="#35E6E6" bold="false" align="left" />
+    <text id="control.2.value" x="290" y="134" width="590" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="$MASS" font="$MAIN_Font_Bold" fontSize="14" color="#F2F7F9" bold="false" align="left" />
+    <text id="control.3.label" x="20" y="166" width="260" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="C3  $VALUE" font="$MAIN_Font_Bold" fontSize="14" color="#35E6E6" bold="false" align="left" />
+    <text id="control.3.value" x="290" y="166" width="590" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="$VALUE" font="$MAIN_Font_Bold" fontSize="14" color="#F2F7F9" bold="false" align="left" />
+    <text id="candidates.heading" x="20" y="204" width="860" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="VEHICLE EXIT CANDIDATES" font="$MAIN_Font_Bold" fontSize="12" color="#FFB51B" bold="true" align="left" />
+    <text id="candidate.1.label" x="20" y="230" width="260" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="1  $VehicleExit" font="$MAIN_Font_Bold" fontSize="14" color="#35E6E6" bold="false" align="left" />
+    <text id="candidate.1.value" x="290" y="230" width="590" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="$VehicleExit" font="$MAIN_Font_Bold" fontSize="14" color="#F2F7F9" bold="false" align="left" />
+    <text id="candidate.2.label" x="20" y="262" width="260" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="2  $ExitVehicle" font="$MAIN_Font_Bold" fontSize="14" color="#35E6E6" bold="false" align="left" />
+    <text id="candidate.2.value" x="290" y="262" width="590" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="$ExitVehicle" font="$MAIN_Font_Bold" fontSize="14" color="#F2F7F9" bold="false" align="left" />
+    <text id="candidate.3.label" x="20" y="294" width="260" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="3  $EXIT VEHICLE" font="$MAIN_Font_Bold" fontSize="14" color="#35E6E6" bold="false" align="left" />
+    <text id="candidate.3.value" x="290" y="294" width="590" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="$EXIT VEHICLE" font="$MAIN_Font_Bold" fontSize="14" color="#F2F7F9" bold="false" align="left" />
+    <text id="candidate.4.label" x="20" y="326" width="260" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="4  $HOLD TO EXIT VEHICLE" font="$MAIN_Font_Bold" fontSize="14" color="#35E6E6" bold="false" align="left" />
+    <text id="candidate.4.value" x="290" y="326" width="590" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="$HOLD TO EXIT VEHICLE" font="$MAIN_Font_Bold" fontSize="14" color="#F2F7F9" bold="false" align="left" />
+    <text id="candidate.5.label" x="20" y="358" width="260" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="5  $HoldToExitVehicle" font="$MAIN_Font_Bold" fontSize="14" color="#35E6E6" bold="false" align="left" />
+    <text id="candidate.5.value" x="290" y="358" width="590" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="$HoldToExitVehicle" font="$MAIN_Font_Bold" fontSize="14" color="#F2F7F9" bold="false" align="left" />
+    <text id="candidate.6.label" x="20" y="390" width="260" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="6  $VehicleExitPrompt" font="$MAIN_Font_Bold" fontSize="14" color="#35E6E6" bold="false" align="left" />
+    <text id="candidate.6.value" x="290" y="390" width="590" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="$VehicleExitPrompt" font="$MAIN_Font_Bold" fontSize="14" color="#F2F7F9" bold="false" align="left" />
   </group>
 </venworksCUIFragment>

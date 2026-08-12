@@ -854,9 +854,9 @@ try {
   }
   $stagedLocalizationProbePath = Join-Path $componentOutputDirectory 'localization-probe.xml'
   $stagedLocalizationProbeText = Get-Content -LiteralPath $stagedLocalizationProbePath -Raw
-  foreach ($localizationCandidate in @('$VehicleExit','$ExitVehicle','$EXIT VEHICLE','$HOLD TO EXIT VEHICLE','$HoldToExitVehicle','$VehicleExitPrompt')) {
+  foreach ($localizationCandidate in @('$Unknown Location','$MASS','$VALUE','$VehicleExit','$ExitVehicle','$EXIT VEHICLE','$HOLD TO EXIT VEHICLE','$HoldToExitVehicle','$VehicleExitPrompt')) {
     if ($stagedLocalizationProbeText -notmatch [regex]::Escape($localizationCandidate)) {
-      throw "Staged localization-probe.xml is missing candidate $localizationCandidate."
+      throw "Staged localization-probe.xml is missing bounded token $localizationCandidate."
     }
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
