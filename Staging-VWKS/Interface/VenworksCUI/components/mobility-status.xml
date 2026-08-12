@@ -8,10 +8,10 @@
     <meter id="boost.charge" x="396" y="216" width="16" height="92" opacity="1" visible="true"
            visibleWhen="boostActive" rotation="0" scaleX="1" scaleY="1" z="2"
            style="probe.boost" value="1" max="1" source="boost.charge" />
-    <text id="vehicle.exit.label" x="202" y="320" width="172" height="30" opacity="1" visible="true"
+    <text id="vehicle.exit.label" x="126" y="306" width="238" height="42" opacity="1" visible="true"
           visibleWhen="inVehicle" rotation="0" scaleX="1" scaleY="1" z="3" value="$EXIT HOLD"
-          font="$MAIN_Font_Bold" fontSize="15" color="#F2F7F9" bold="false" align="right" />
-    <symbol id="vehicle.exit.glyph" x="380" y="312" width="42" height="42" opacity="1" visible="true"
+          font="$MAIN_Font_Bold" fontSize="21" color="#F2F7F9" bold="false" align="right" />
+    <symbol id="vehicle.exit.glyph" x="369" y="297" width="59" height="59" opacity="1" visible="true"
             visibleWhen="inVehicle" rotation="0" scaleX="1" scaleY="1" z="3"
             name="vehicle-exit-prompt" fit="contain" alignX="right" alignY="center" />
   </group>

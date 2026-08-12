@@ -848,6 +848,8 @@ try {
   $stagedMobilityStatusText = Get-Content -LiteralPath $stagedMobilityStatusPath -Raw
   if ($stagedMobilityStatusText -notmatch 'name="vehicle-exit-prompt"' -or
       $stagedMobilityStatusText -notmatch 'value="\$EXIT HOLD"' -or
+      $stagedMobilityStatusText -notmatch 'fontSize="21"' -or
+      $stagedMobilityStatusText -notmatch 'id="vehicle\.exit\.glyph"[^>]*width="59" height="59"' -or
       ([regex]::Matches($stagedMobilityStatusText, 'visibleWhen="inVehicle"')).Count -lt 2 -or
       $stagedMobilityStatusText -match '<button|action=|event=|callback=|userEvent=|key=') {
     throw 'Staged mobility-status.xml must compose the mapped noninteractive glyph with localized $EXIT HOLD text.'

@@ -239,6 +239,13 @@ language-safe phrase: `HOLD TO EXIT` in English, with entries in all nine
 installed UI languages. The temporary gallery is removed; the mobility fragment
 now composes `$EXIT HOLD` with the confirmed live mapped glyph.
 
+The first composed runtime prompt passed localization, mapped-key presentation,
+and vehicle-exit behavior, but both the label and especially the key glyph were
+too small for final readability. The follow-up sizing pass increases the label
+font and glyph box by approximately 40%, balances their visual height, and keeps
+the pair within the existing bottom-right mobility group. Final size and clipping
+remain pending runtime acceptance.
+
 Report the displayed values and transition behavior before judging styling.
 The final replacement must not proceed until the confirmed fields and lifecycle
 behavior are accepted.
