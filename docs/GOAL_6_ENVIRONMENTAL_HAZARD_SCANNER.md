@@ -1,7 +1,7 @@
 # Goal 6 environmental hazard scanner
 
-**Status: Diagnostic implementation and automated build acceptance complete;
-runtime acceptance pending.**
+**Status: Diagnostic implementation, automated build acceptance, and nominal
+HUD baseline accepted; hazard-transition runtime acceptance pending.**
 
 ## Product direction
 
@@ -116,8 +116,8 @@ as a physical spectrum.
 
 ## Diagnostic implementation
 
-The top-center `environmental-hazard-scanner.xml` fragment is independent from
-the four accepted Goal 5 Chronomark fragments. It provides:
+The packaged `environmental-hazard-scanner.xml` product fragment is independent
+from the four accepted Goal 5 Chronomark fragments. It provides:
 
 - a live O2 and temperature atmosphere band;
 - explicit unproven placeholders for CO2/inert composition, pressure, and
@@ -137,11 +137,44 @@ eight fields per effect, 32 scanned effect entries, four equipped armor items,
 and 48 characters per scalar value. Arrays are reported by length and nested
 objects are not recursively serialized.
 
+The full 1530-by-520 product fragment remains packaged but inactive during the
+hazard-transition probe. The active `environmental-hazard-diagnostic-strip.xml`
+fragment is a semi-transparent 1160-by-196 top-center strip gated by the proven
+`inScanner` condition. It retains provider receipt, the raw soak/full-alert
+candidates, the bounded environment root and candidate lists, and four
+full-width effect-object rows. Local-environment, armor, and starmap baseline
+diagnostics remain available in the provider context and are recorded below;
+they do not consume navigation space during repeated hazard tests.
+
+## Nominal HUD runtime evidence
+
+The first Goal 6 runtime capture in a nominal outdoor environment established:
+
+- `EnvironmentEffectsData` is delivered during ordinary `HUDMenu` lifetime;
+- its root contains `aEnvironmentEffects`, `fSoakDamagePct`,
+  `bShouldPlayAlertAtFullSoak`, `uEnvIconPulseMinMS`, and
+  `uEnvIconPulseMaxMS`;
+- the nominal sample reported `fSoakDamagePct=1`,
+  `bShouldPlayAlertAtFullSoak=false`, `uEnvIconPulseMinMS=200`, and
+  `uEnvIconPulseMaxMS=2000`;
+- all four bounded effect rows were unused in that nominal sample;
+- live O2 and temperature agreed with the accepted Goal 5 Chronomark display;
+- equipped armor entries delivered unaggregated thermal, airborne, corrosive,
+  and radiation resistance values; and
+- `StarmapSystemBodyInfoProvider` was not received during the observed ordinary
+  HUD lifetime.
+
+This single safe sample does not establish whether `fSoakDamagePct` changes,
+which direction it moves, or whether it owns Bethesda's normalized pulse input.
+The 200 and 2000 millisecond values are confirmed timing bounds, not a current
+threat score. Starmap non-receipt in this sample also does not prove that the
+provider can never appear during menu transitions.
+
 ## Runtime acceptance plan
 
 Build and deploy both normal and large HUD variants after recording their
-SHA-256 hashes. Test the following without treating a missing provider as a
-crash-worthy condition:
+SHA-256 hashes. Open the hand scanner to display the compact probe, then test
+the following without treating a missing provider as a crash-worthy condition:
 
 1. Confirm `EnvironmentEffectsData` receipt in a nominal environment.
 2. Record every root field and each effect-entry field in the bounded panel.
@@ -184,14 +217,16 @@ The repository validation and complete two-variant Scaleform build passed:
 ```
 
 The build compiled, imported, reopened, and validated both GFX variants, then
-staged the independent scanner fragment with the accepted Goal 5 fragments.
+staged the compact scanner-gated diagnostic and preserved product scanner with
+the accepted Goal 5 fragments.
 Expected SHA-256 values are:
 
 | Staged artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
 | `hudmenu.gfx` | 389944 | `5BAF91751F78E5A798E1ECD88708426B83DB8849C11232835E8C462B886858D6` |
 | `hudmenu_lrg.gfx` | 390127 | `D1108E28D747B908F0811A408C4650DC504F22AC66F5D4C7125C5525C1C57E60` |
-| `VenworksCUI/layout.xml` | 3280 | `80ADAD01172913E344A99318AA870576C25A3141F0B41089292C0F5B51F6044D` |
+| `VenworksCUI/layout.xml` | 3301 | `82E731EEC61A262B75AD505B0A728475A5BE21574234EBED1E069AD47B7D1BCE` |
+| `VenworksCUI/components/environmental-hazard-diagnostic-strip.xml` | 4681 | `90691CB5EC0E47E3EF4C8FE75FB50EBB65D8DACF2B0E70DBEEB08B7D5194429C` |
 | `VenworksCUI/components/environmental-hazard-scanner.xml` | 13295 | `8C98FEAE29A25CDC62D58F8C7097E4B8427E5145B3A55316A317DC227CD4A0C7` |
 
 The normal and large GFX hashes were reproduced by their individual discovery

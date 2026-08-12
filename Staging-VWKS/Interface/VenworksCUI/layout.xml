@@ -40,8 +40,8 @@
     <target id="rightMeters" visibleWhen="never" />
   </vanillaVisibility>
   <includes>
-    <include id="environmental-hazard-scanner" src="environmental-hazard-scanner.xml"
-             x="0" y="0" anchor="top-center" visible="true" visibleWhen="always" z="90" />
+    <include id="environmental-hazard-diagnostic-strip" src="environmental-hazard-diagnostic-strip.xml"
+             x="0" y="0" anchor="top-center" visible="true" visibleWhen="inScanner" z="90" />
     <include id="chronomark.environment-status" src="environment-status.xml"
              x="0" y="0" anchor="bottom-left" visible="true" visibleWhen="always" z="100" />
     <include id="chronomark.player-meters" src="player-meters.xml"

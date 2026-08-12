@@ -248,7 +248,8 @@ foreach ($componentFixtureName in @(
   'environment-status.xml',
   'player-meters.xml',
   'mobility-status.xml',
-  'environmental-hazard-scanner.xml'
+  'environmental-hazard-scanner.xml',
+  'environmental-hazard-diagnostic-strip.xml'
 )) {
   $componentFixturePath = Resolve-RequiredFile `
     -Path (Join-Path $providerProbeComponentDirectory $componentFixtureName) `
@@ -841,7 +842,7 @@ try {
   New-Item -ItemType Directory -Force -Path $assetOutputDirectory | Out-Null
   New-Item -ItemType Directory -Force -Path $componentOutputDirectory | Out-Null
   Copy-Item -LiteralPath $providerProbeLayoutSource -Destination (Join-Path $cuiOutputDirectory "layout.xml") -Force
-  foreach ($componentFixtureName in @('weapon-status.xml','environment-status.xml','player-meters.xml','mobility-status.xml','environmental-hazard-scanner.xml')) {
+  foreach ($componentFixtureName in @('weapon-status.xml','environment-status.xml','player-meters.xml','mobility-status.xml','environmental-hazard-scanner.xml','environmental-hazard-diagnostic-strip.xml')) {
     Copy-Item -LiteralPath (Join-Path $providerProbeComponentDirectory $componentFixtureName) -Destination (Join-Path $componentOutputDirectory $componentFixtureName) -Force
   }
   $stagedPlayerMeters = [xml](Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'player-meters.xml') -Raw)
@@ -851,6 +852,9 @@ try {
   $stagedWeaponStatusText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'weapon-status.xml') -Raw
   $stagedMobilityStatusText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'mobility-status.xml') -Raw
   $stagedEnvironmentalScannerText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'environmental-hazard-scanner.xml') -Raw
+  $stagedEnvironmentalDiagnosticPath = Join-Path $componentOutputDirectory 'environmental-hazard-diagnostic-strip.xml'
+  $stagedEnvironmentalDiagnosticText = Get-Content -LiteralPath $stagedEnvironmentalDiagnosticPath -Raw
+  $stagedEnvironmentalDiagnostic = [xml]$stagedEnvironmentalDiagnosticText
   if ($stagedWeaponStatusText -notmatch 'name="vehicle-exit-prompt"' -or
       $stagedWeaponStatusText -notmatch 'value="\$EXIT HOLD"' -or
       $stagedWeaponStatusText -notmatch 'fontSize="21"' -or
@@ -861,23 +865,40 @@ try {
       $stagedMobilityStatusText -match 'vehicle\.exit|vehicle-exit-prompt|\$EXIT HOLD') {
     throw 'Staged weapon-status.xml must own the left-aligned mapped vehicle-exit presentation, and mobility-status.xml must not retain it.'
   }
+  $environmentalDiagnosticIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
+    [string]$_.id -eq 'environmental-hazard-diagnostic-strip'
+  })
   $environmentalScannerIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'environmental-hazard-scanner'
   })
-  if ($environmentalScannerIncludes.Count -ne 1 -or
-      [string]$environmentalScannerIncludes[0].src -ne 'environmental-hazard-scanner.xml' -or
-      [string]$environmentalScannerIncludes[0].anchor -ne 'top-center' -or
+  $stagedEnvironmentalDiagnosticGroup = $stagedEnvironmentalDiagnostic.venworksCUIFragment.group
+  if ($environmentalDiagnosticIncludes.Count -ne 1 -or
+      [string]$environmentalDiagnosticIncludes[0].src -ne 'environmental-hazard-diagnostic-strip.xml' -or
+      [string]$environmentalDiagnosticIncludes[0].anchor -ne 'top-center' -or
+      [string]$environmentalDiagnosticIncludes[0].visibleWhen -ne 'inScanner' -or
+      $environmentalScannerIncludes.Count -ne 0 -or
+      [int]$stagedEnvironmentalDiagnosticGroup.width -ne 1160 -or
+      [int]$stagedEnvironmentalDiagnosticGroup.height -ne 196 -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.environmentProvider"' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'environment\.soakCandidate:raw' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'environment\.fullSoakAlertCandidate:boolean' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.environmentCandidates"' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.environmentFields"' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.effect0"' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.effect1"' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.effect2"' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.effect3"' -or
+      $stagedEnvironmentalDiagnosticText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE)' -or
       $stagedEnvironmentalScannerText -notmatch 'QUAD SENSOR CHANNELS // DIAGNOSTIC' -or
-      $stagedEnvironmentalScannerText -notmatch 'source="diagnostic\.environmentCandidates"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="diagnostic\.starmapProvider"' -or
       $stagedEnvironmentalScannerText -notmatch 'NO ENVIRONMENTAL THREAT INDEX FORMULA' -or
       $stagedEnvironmentalScannerText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE)') {
-    throw 'Staged environmental-hazard-scanner.xml must remain an independent top-center diagnostic without invented measurements.'
+    throw 'Goal 6 must stage the full product scanner plus one compact scanner-gated diagnostic with all discovery-critical fields and no invented measurements.'
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
   Copy-Item -LiteralPath $invalidSvgSource -Destination (Join-Path $assetOutputDirectory "gallery-invalid.svg") -Force
-  Write-Host -ForegroundColor Green "Staged Goal 6 environmental diagnostic with the accepted Goal 5 Chronomark in $cuiOutputDirectory"
+  Write-Host -ForegroundColor Green "Staged compact scanner-gated Goal 6 diagnostic and full product scanner with the accepted Goal 5 Chronomark in $cuiOutputDirectory"
 }
 finally {
   if ($KeepWork) {
