@@ -1,5 +1,10 @@
 # Goal 5 Chronomark replacement
 
+**Status: Complete.** Runtime acceptance is complete for the available
+keyboard/mouse test environment. Controller glyph presentation remains a
+non-blocking verification limitation because no controller was available; the
+same Bethesda hold-button control structurally retains controller switching.
+
 ## Scope
 
 Goal 5 is the first live-data player-HUD surface. The approved probe replaces
@@ -8,9 +13,9 @@ that is always present while `hudmenu.gfx` is active. Scanner state does not
 hide it. The existing `bottomLeft` vanilla-visibility adapter performs the
 hide; no display path or method name comes from configuration.
 
-This is a provider probe, not final visual acceptance. Its layout approximates
-the old HONKCORE panel so the live fields can be verified in context. Styling
-and spacing will be refined only after provider acceptance.
+This work began as a provider probe and concluded with runtime acceptance of the
+replacement surface. Its layout approximates the old HONKCORE panel while using
+the clean-room CUI component system and the confirmed live-data contracts below.
 
 ## Clean-room provider contract
 
@@ -209,15 +214,15 @@ health/O2 updates (including health reaching zero through fall damage and the
 subsequent death/reload), weapon changes, mapped power names, and live
 carry/credits changes. It has also accepted the consolidated meters, explosive
 presentation, boost updates, whole-group vanilla suppression, and functional
-vehicle exit through the hidden original control. The dynamically mapped key or
-controller glyph on the replacement vehicle prompt remains pending. Keyboard
-runtime rejected fitting a complete second `HUDVehicle` timeline into the CUI
+vehicle exit through the hidden original control. Keyboard runtime rejected
+fitting a complete second `HUDVehicle` timeline into the CUI
 prompt box: the full timeline bounds reduced the intended control to a clipped
 fragment. The replacement now extracts only the initialized `GetUpButton_mc`
 child before fitting. Keyboard runtime confirms that child displays the mapped
-key glyph. Controller presentation is structurally supported by the
-Bethesda hold-button control but remains runtime-unverified because no controller
-is available for the current test pass.
+key glyph, remains readable through repeated vehicle transitions, and preserves
+functional hold-to-exit input through the hidden original control. Controller
+presentation is structurally supported by the Bethesda hold-button control but
+remains runtime-unverified because no controller was available.
 
 HONKCORE did not supply a localization handler for this prompt. Its HUD patch
 registered the original `RightMeters_mc.HUDVehicle_mc` as a separately
@@ -236,8 +241,9 @@ translate, proving the CUI text path invokes Bethesda localization and the six
 vehicle guesses were wrong. Read-only inspection of the installed
 `translate_*.txt` tables identifies `$EXIT HOLD` as Bethesda's complete
 language-safe phrase: `HOLD TO EXIT` in English, with entries in all nine
-installed UI languages. The temporary gallery is removed; the mobility fragment
-now composes `$EXIT HOLD` with the confirmed live mapped glyph.
+installed UI languages. The temporary gallery is removed; the weapon fragment
+now composes `$EXIT HOLD` with the confirmed live mapped glyph above the weapon
+row.
 
 The first composed runtime prompt passed localization, mapped-key presentation,
 and vehicle-exit behavior, but both the label and especially the key glyph were
@@ -249,16 +255,17 @@ but also exposed that `mobility-status.xml` remained rooted at bottom-right.
 The final placement pass transfers the horizontal pair to the bottom-left
 weapon fragment, positions it above and left-aligned with the weapon row, and
 reduces the readable but oversized key box from 68 to 52 pixels beside the
-accepted 21-pixel label. Final placement and key size remain pending runtime
-acceptance.
+accepted 21-pixel label. Runtime accepted the upper-left placement and reduced
+key size.
 
 Runtime accepted the upper-left ownership and reduced key size, then identified
 excess spacing and a small optical baseline mismatch. The refinement narrows the
 label box, places the unchanged 52-pixel mapped glyph approximately 10 pixels
 after the label, and lifts the glyph three pixels to compensate for whitespace
-inside Bethesda's button artwork. Keyboard alignment remains pending final
-runtime acceptance; controller alignment remains structurally supported but
-runtime-unverified.
+inside Bethesda's button artwork. Keyboard runtime accepted the final spacing,
+alignment, readability, and repeated hold-to-exit behavior. Controller
+alignment remains structurally supported but runtime-unverified because the
+current test environment has no controller.
 
 Report the displayed values and transition behavior before judging styling.
 The final replacement must not proceed until the confirmed fields and lifecycle
@@ -279,15 +286,20 @@ component system allows:
 
 ## Goal 5 exit requirements
 
-Goal 5 is not complete when provider probing ends. Before Goal 6 begins:
+Goal 5 did not end when provider probing finished. Its completed exit checklist
+is:
 
-- replace the layered empty/fill bar pairs with single live `meter` controls;
-- runtime-accept the bounded multi-file layout and its four root-placed
+- [x] replace the layered empty/fill bar pairs with single live `meter` controls;
+- [x] runtime-accept the bounded multi-file layout and its four root-placed
   Chronomark fragments;
-- runtime-accept the new grenade/mine count and live boost presentation;
-- runtime-accept the mapped, noninteractive CUI vehicle prompt while the hidden vanilla
+- [x] runtime-accept the new grenade/mine count and live boost presentation;
+- [x] runtime-accept the mapped, noninteractive CUI vehicle prompt while the hidden vanilla
   `HUDVehicle_mc` remains alive and exclusively owns vehicle-exit input;
-- pass the complete provider, live-update, and transition acceptance list above.
+- [x] pass the complete provider, live-update, and transition acceptance list above
+  in the available keyboard/mouse runtime environment.
+
+Controller-only glyph presentation remains recorded as unverified hardware
+coverage, not an incomplete Goal 5 implementation requirement.
 
 The complete vanilla `RightMeters_mc` presentation is alpha-gated as one fixed
 target. The adapter never changes its `visible` property and never addresses
