@@ -629,9 +629,18 @@ package venworks.cui
       private function requireId(param1:XML) : String
       {
          var id:String = String(param1.@id);
-         if(!/^[A-Za-z][A-Za-z0-9._-]{0,63}$/.test(id))
+         var componentType:String = String(param1.name());
+         if(param1.@id.length() != 1 || id.length == 0)
          {
-            throw new Error("INVALID|Invalid or missing id on " + String(param1.name()) + ".");
+            throw new Error("INVALID|Missing id on " + componentType + ".");
+         }
+         if(id.length > 64)
+         {
+            throw new Error("INVALID|Id on " + componentType + " exceeds the 64-character limit (" + id.length.toString() + "): " + id);
+         }
+         if(!/^[A-Za-z][A-Za-z0-9._-]*$/.test(id))
+         {
+            throw new Error("INVALID|Id on " + componentType + " contains unsupported characters: " + id);
          }
          return id;
       }

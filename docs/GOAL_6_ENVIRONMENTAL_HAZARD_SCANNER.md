@@ -170,6 +170,31 @@ The 200 and 2000 millisecond values are confirmed timing bounds, not a current
 threat score. Starmap non-receipt in this sample also does not prove that the
 provider can never appear during menu transitions.
 
+## Compact-probe validation incident
+
+The first compact-probe deployment was rejected safely by the live CUI error
+panel during layout parsing. Include resolution prefixes each fragment-local
+component ID with the include ID. The original 38-character
+`environmental-hazard-diagnostic-strip.` prefix expanded two otherwise valid
+local text IDs beyond the runtime's 64-character component-ID limit:
+
+- `diagnostic.environment.candidates` resolved to 71 characters; and
+- `diagnostic.environment.fields` resolved to 67 characters.
+
+The runtime correctly refused the invalid layout, but its generic
+`Invalid or missing id on text` message did not distinguish an absent ID from
+an overlength ID or unsupported characters. The active include now uses the
+short stable ID `env-hazard-probe`. The layout parser, composition resolver,
+and composite resolver separately report missing, overlength, and unsupported-
+character failures, including the rejected value and actual length when useful.
+
+The build now evaluates every component ID after applying its include prefix
+and contains a regression check for the known 71-character failure. It also
+verifies that all three actionable error categories survive GFX compilation and
+reopen. A future GUI builder should enforce this same composed-ID contract
+before export, while live runtime validation remains authoritative for hand-
+edited XML, package drift, and builder/runtime version mismatches.
+
 ## Runtime acceptance plan
 
 Build and deploy both normal and large HUD variants after recording their
@@ -223,9 +248,9 @@ Expected SHA-256 values are:
 
 | Staged artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 389944 | `5BAF91751F78E5A798E1ECD88708426B83DB8849C11232835E8C462B886858D6` |
-| `hudmenu_lrg.gfx` | 390127 | `D1108E28D747B908F0811A408C4650DC504F22AC66F5D4C7125C5525C1C57E60` |
-| `VenworksCUI/layout.xml` | 3301 | `82E731EEC61A262B75AD505B0A728475A5BE21574234EBED1E069AD47B7D1BCE` |
+| `hudmenu.gfx` | 390352 | `8A2E5C27E00D2E8C57C583ECFDE92E7CCEA2FF2E477F8329278BBF069F6A0B7E` |
+| `hudmenu_lrg.gfx` | 390535 | `52C12B703236D78A05E0E125B3CDC982B6ED37D556D460D063B4448D73F3311E` |
+| `VenworksCUI/layout.xml` | 3280 | `C3ECB63A915391948040A00679996D60279921DCA950B3C0D65FD6867E5DE4C0` |
 | `VenworksCUI/components/environmental-hazard-diagnostic-strip.xml` | 4681 | `90691CB5EC0E47E3EF4C8FE75FB50EBB65D8DACF2B0E70DBEEB08B7D5194429C` |
 | `VenworksCUI/components/environmental-hazard-scanner.xml` | 13295 | `8C98FEAE29A25CDC62D58F8C7097E4B8427E5145B3A55316A317DC227CD4A0C7` |
 

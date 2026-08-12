@@ -101,6 +101,27 @@ function Get-XmlSchemaErrors {
   return @($errors)
 }
 
+function Assert-CuiIdentifier {
+  param(
+    [Parameter(Mandatory = $true)]
+    [AllowEmptyString()]
+    [string]$Identifier,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Context
+  )
+
+  if ([string]::IsNullOrEmpty($Identifier)) {
+    throw "$Context is missing an id."
+  }
+  if ($Identifier.Length -gt 64) {
+    throw "$Context id exceeds the 64-character limit ($($Identifier.Length)): $Identifier"
+  }
+  if ($Identifier -notmatch '^[A-Za-z][A-Za-z0-9._-]*$') {
+    throw "$Context id contains unsupported characters: $Identifier"
+  }
+}
+
 function Invoke-Jpexs {
   param(
     [Parameter(Mandatory = $true)]
@@ -257,6 +278,32 @@ foreach ($componentFixtureName in @(
   $componentSchemaErrors = @(Get-XmlSchemaErrors -XmlPath $componentFixturePath -SchemaPath $layoutSchemaPath)
   if ($componentSchemaErrors.Count -ne 0) {
     throw "Component fragment $componentFixtureName failed schema validation: $($componentSchemaErrors -join '; ')"
+  }
+}
+
+$legacyOverlongResolvedId = 'environmental-hazard-diagnostic-strip.diagnostic.environment.candidates'
+try {
+  Assert-CuiIdentifier -Identifier $legacyOverlongResolvedId -Context 'Goal 6 composed-id regression'
+  throw 'Composed-id validation did not reject the known 71-character Goal 6 regression.'
+}
+catch {
+  if ($_.Exception.Message -notmatch 'exceeds the 64-character limit \(71\)') {
+    throw
+  }
+}
+
+foreach ($includeNode in @($providerProbeLayout.venworksCUI.includes.include)) {
+  $includeId = [string]$includeNode.id
+  Assert-CuiIdentifier -Identifier $includeId -Context 'CUI include'
+  $includedFragmentPath = Resolve-RequiredFile `
+    -Path (Join-Path $providerProbeComponentDirectory ([string]$includeNode.src)) `
+    -Description "Included component fragment '$([string]$includeNode.src)'"
+  [xml]$includedFragment = Get-Content -LiteralPath $includedFragmentPath -Raw
+  foreach ($componentNode in @($includedFragment.SelectNodes('//*[@id]'))) {
+    $resolvedComponentId = $includeId + '.' + [string]$componentNode.id
+    Assert-CuiIdentifier `
+      -Identifier $resolvedComponentId `
+      -Context "Resolved $($componentNode.Name) component for include '$includeId'"
   }
 }
 
@@ -726,6 +773,7 @@ try {
     }
 
     $reopenedAssetManagerPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIAssetManager.as'
+    $reopenedLayoutParserPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUILayoutParser.as'
     $reopenedCompositionResolverPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUICompositionResolver.as'
     $reopenedCompositeResolverPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUICompositeResolver.as'
     $reopenedIconLibraryPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIIconLibrary.as'
@@ -735,6 +783,7 @@ try {
     $reopenedValueBindingPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIValueBinding.as'
     $reopenedVanillaVisibilityPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIVanillaVisibilityAdapter.as'
     $reopenedAssetManagerSource = Get-Content -LiteralPath $reopenedAssetManagerPath -Raw
+    $reopenedLayoutParserSource = Get-Content -LiteralPath $reopenedLayoutParserPath -Raw
     $reopenedCompositionResolverSource = Get-Content -LiteralPath $reopenedCompositionResolverPath -Raw
     $reopenedCompositeResolverSource = Get-Content -LiteralPath $reopenedCompositeResolverPath -Raw
     $reopenedIconLibrarySource = Get-Content -LiteralPath $reopenedIconLibraryPath -Raw
@@ -743,6 +792,21 @@ try {
     $reopenedSymbolSource = Get-Content -LiteralPath $reopenedSymbolPath -Raw
     $reopenedValueBindingSource = Get-Content -LiteralPath $reopenedValueBindingPath -Raw
     $reopenedVanillaVisibilitySource = Get-Content -LiteralPath $reopenedVanillaVisibilityPath -Raw
+    foreach ($identifierValidatorSource in @(
+      $reopenedLayoutParserSource,
+      $reopenedCompositionResolverSource,
+      $reopenedCompositeResolverSource
+    )) {
+      foreach ($requiredIdentifierError in @(
+        'Missing id on ',
+        'exceeds the 64-character limit (',
+        'contains unsupported characters: '
+      )) {
+        if (!$identifierValidatorSource.Contains($requiredIdentifierError)) {
+          throw "Generated ID validator is missing actionable error text '$requiredIdentifierError'."
+        }
+      }
+    }
     if ($reopenedValueBindingSource -notmatch 'CUIMeter\(target\)\.setValue' -or
         $reopenedValueBindingSource -match 'meterMask|ValueMask|flash\.geom\.Matrix') {
       throw 'Generated value binding does not use direct meter redraws or retains the retired external meter mask.'
@@ -866,7 +930,7 @@ try {
     throw 'Staged weapon-status.xml must own the left-aligned mapped vehicle-exit presentation, and mobility-status.xml must not retain it.'
   }
   $environmentalDiagnosticIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
-    [string]$_.id -eq 'environmental-hazard-diagnostic-strip'
+    [string]$_.id -eq 'env-hazard-probe'
   })
   $environmentalScannerIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'environmental-hazard-scanner'
