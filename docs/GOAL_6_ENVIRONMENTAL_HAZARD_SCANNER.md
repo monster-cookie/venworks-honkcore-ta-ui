@@ -1,7 +1,8 @@
 # Goal 6 environmental hazard scanner
 
-**Status: Diagnostic implementation, automated build acceptance, and nominal
-HUD baseline accepted; hazard-transition runtime acceptance pending.**
+**Status: Diagnostic discovery, hazard-transition runtime acceptance, compact
+production scanner implementation, and automated build acceptance complete;
+production layout runtime acceptance pending.**
 
 ## Product direction
 
@@ -195,36 +196,84 @@ reopen. A future GUI builder should enforce this same composed-ID contract
 before export, while live runtime validation remains authoritative for hand-
 edited XML, package drift, and builder/runtime version mismatches.
 
-## Runtime acceptance plan
+## Hazard-transition runtime evidence
 
-Build and deploy both normal and large HUD variants after recording their
-SHA-256 hashes. Open the hand scanner to display the compact probe, then test
-the following without treating a missing provider as a crash-worthy condition:
+The compact diagnostic was exercised across safe environments, local flora,
+unsafe biological water, extreme heat and cold, corrosive atmosphere,
+radiation, multi-effect planets, and no-atmosphere moons. Runtime established:
 
-1. Confirm `EnvironmentEffectsData` receipt in a nominal environment.
-2. Record every root field and each effect-entry field in the bounded panel.
-3. Exercise radiation, thermal, airborne, and corrosive hazards separately and
-   in combinations.
-4. Record whether effect icons encode polarity or severity beyond category.
-5. Record `fSoakDamagePct` range and direction while protection depletes and
-   restores.
-6. Record `bShouldPlayAlertAtFullSoak` transitions.
-7. Compare any pulse/aggregate candidate with the visible vanilla environmental
-   pulse without assigning semantics in advance.
-8. Equip and remove spacesuit, helmet, and pack items and record the unaggregated
-   resistance fields delivered through `PlayerInventoryData`.
-9. Check `StarmapSystemBodyInfoProvider` before opening starmap, while entering
-   and leaving it, and after the HUD resumes.
-10. Test a breathable location, non-breathable atmosphere, and vacuum. Record
-    Local Environment fields; do not derive vacuum from O2 alone.
-11. Test water exposure to determine whether Bethesda emits airborne,
-    corrosive, a distinct category, or no environment effect.
-12. Repeat save/load, death/reload, scanner, ship, vehicle, ladder, workbench,
-    and rapid menu transitions to identify stale values or lifecycle failures.
+- `HazardEffect_Airborne`, `HazardEffect_Thermal`,
+  `HazardEffect_Corrosive`, and `HazardEffect_Radiation` all reach HUDMenu in
+  `aEnvironmentEffects`;
+- hot and cold environments both use `HazardEffect_Thermal`; the live local
+  temperature supplies polarity and context but is not a channel magnitude;
+- Venus produced Thermal and Corrosive entries concurrently;
+- other tested surfaces produced Thermal and Radiation concurrently, proving
+  the bounded array can represent simultaneous category activity;
+- Akila's unsafe biological water produced `HazardEffect_Airborne`, the same
+  category used by hazardous plant mist; no confirmed field distinguishes air
+  from water after it reaches HUDMenu;
+- active categories can be present while `fSoakDamagePct` remains `1`, so the
+  field is not category presence or per-channel severity;
+- during sustained unsafe-water exposure, `fSoakDamagePct` moved from `1`
+  through `0.902703...` to `0`;
+- at `0`, `bShouldPlayAlertAtFullSoak` became `true`, remained true for at least
+  another three to five seconds, and direct health damage followed;
+- the visible environmental alarm could already appear full while the field
+  was approximately `0.813664` and the full-soak Boolean was false, so neither
+  field is a direct representation of the vanilla alarm graphic;
+- leaving the water cleared the effect and restored the value toward `1`
+  almost immediately; and
+- both no-atmosphere moons and Venus reported O2 `0%`. Oxygen therefore cannot
+  distinguish vacuum from a non-oxygen atmosphere.
 
-Production channel severity, units, aggregate scoring, planetary-baseline
-display, and any history waveform remain out of scope until this diagnostic is
-accepted with runtime evidence.
+This evidence supports treating clamped `fSoakDamagePct` as Bethesda's
+normalized remaining suit-protection reserve: `1` is ready, intermediate
+values are partial reserve, and `0` with the full-soak flag is health-risk
+exposure. It does not support a Threat Index, physical units, independent
+channel magnitudes, or an atmospheric-pressure/vacuum inference.
+
+## Compact production implementation
+
+The production scanner remains an independent XML fragment rendered by the
+existing CUI host. It is a 510-by-342 center-right panel gated by the proven
+`inScanner` condition. The accepted diagnostic fragment remains packaged for
+future provider investigation but is no longer included by the active layout.
+
+The compact panel provides:
+
+- live O2 percentage and temperature;
+- a 20-segment shared `SUIT PROTECTION` meter driven directly by clamped
+  `fSoakDamagePct`;
+- a numeric protection percentage and the bounded states `PROTECTION READY`,
+  `PROTECTION PARTIAL`, and `FULL SOAK // HEALTH RISK`;
+- four stacked category channels for Air/Water, Thermal, Corrosive, and
+  Radiation; and
+- full/empty categorical channel bars driven only by recognized Bethesda
+  effect icons.
+
+The Air/Water channel explicitly notes that unsafe water and airborne exposure
+share Bethesda's Airborne category. The layout does not display CO2,
+atmospheric pressure, a vacuum state, per-channel magnitude, a threat formula,
+physical units, or synthetic telemetry.
+
+## Production runtime acceptance plan
+
+After both HUD artifacts are built, hashed, and committed, deploy them and
+verify:
+
+1. the panel is absent with the scanner closed;
+2. the compact center-right panel appears with the scanner open and does not
+   obstruct navigation at normal and large HUD scale;
+3. a nominal environment shows four clear channels and 100% protection;
+4. a brief low-risk hazard activates the matching categorical channel and
+   moves protection in Bethesda's reported direction;
+5. simultaneous effects activate their corresponding channels; and
+6. leaving exposure clears the channel and restores protection without an
+   artificial delay.
+
+The accepted captures already cover the dangerous full-soak transition; no
+additional full-soak unsafe-water test is required.
 
 ## Automated validation and expected artifacts
 
@@ -242,17 +291,17 @@ The repository validation and complete two-variant Scaleform build passed:
 ```
 
 The build compiled, imported, reopened, and validated both GFX variants, then
-staged the compact scanner-gated diagnostic and preserved product scanner with
-the accepted Goal 5 fragments.
+staged the compact scanner-gated production meter, retained the inactive
+diagnostic fragment, and preserved the accepted Goal 5 fragments.
 Expected SHA-256 values are:
 
 | Staged artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 390352 | `8A2E5C27E00D2E8C57C583ECFDE92E7CCEA2FF2E477F8329278BBF069F6A0B7E` |
-| `hudmenu_lrg.gfx` | 390535 | `52C12B703236D78A05E0E125B3CDC982B6ED37D556D460D063B4448D73F3311E` |
-| `VenworksCUI/layout.xml` | 3280 | `C3ECB63A915391948040A00679996D60279921DCA950B3C0D65FD6867E5DE4C0` |
+| `hudmenu.gfx` | 390719 | `A37998F1A81D84A41D72FE9759A60DA7ACCE733B78477A4F1D51B927614C16EA` |
+| `hudmenu_lrg.gfx` | 390902 | `4BB40384FA6E6D48AAB65CC8FDD067D39CB7D126DFC9208CB11AB08AD096B22C` |
+| `VenworksCUI/layout.xml` | 3546 | `3BAE1696A2CB0B6C98A61AF96BC6DF9498BFAE9064AA1839F98EB4DFE033704C` |
 | `VenworksCUI/components/environmental-hazard-diagnostic-strip.xml` | 4681 | `90691CB5EC0E47E3EF4C8FE75FB50EBB65D8DACF2B0E70DBEEB08B7D5194429C` |
-| `VenworksCUI/components/environmental-hazard-scanner.xml` | 13295 | `8C98FEAE29A25CDC62D58F8C7097E4B8427E5145B3A55316A317DC227CD4A0C7` |
+| `VenworksCUI/components/environmental-hazard-scanner.xml` | 8162 | `40152E268FCB1B3298D24A773ADF3694D5E8B39EC8C02A824174C3DAA9CAA120` |
 
 The normal and large GFX hashes were reproduced by their individual discovery
 builds and by the final complete build. Runtime deployment must use artifacts

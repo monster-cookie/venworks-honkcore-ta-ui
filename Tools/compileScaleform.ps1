@@ -754,6 +754,14 @@ try {
       'uCoin',
       'LocalEnvironmentData',
       'LocalEnvData_Frequent',
+      'EnvironmentEffectsData',
+      'fSoakDamagePct',
+      'bShouldPlayAlertAtFullSoak',
+      'environment.protectionlevel',
+      'environment.protectionpercentage',
+      'environment.protectionstatus',
+      'FULL SOAK // HEALTH RISK',
+      'AIR / WATER DETECTED',
       'PlayerFrequentData',
       'WeaponData',
       'HUDStarbornPowersData',
@@ -916,6 +924,7 @@ try {
   $stagedWeaponStatusText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'weapon-status.xml') -Raw
   $stagedMobilityStatusText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'mobility-status.xml') -Raw
   $stagedEnvironmentalScannerText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'environmental-hazard-scanner.xml') -Raw
+  $stagedEnvironmentalScanner = [xml]$stagedEnvironmentalScannerText
   $stagedEnvironmentalDiagnosticPath = Join-Path $componentOutputDirectory 'environmental-hazard-diagnostic-strip.xml'
   $stagedEnvironmentalDiagnosticText = Get-Content -LiteralPath $stagedEnvironmentalDiagnosticPath -Raw
   $stagedEnvironmentalDiagnostic = [xml]$stagedEnvironmentalDiagnosticText
@@ -935,12 +944,22 @@ try {
   $environmentalScannerIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'environmental-hazard-scanner'
   })
+  $environmentalProtectionStyles = @($providerProbeLayout.venworksCUI.definitions.meterStyle | Where-Object {
+    [string]$_.id -eq 'environment.protection'
+  })
   $stagedEnvironmentalDiagnosticGroup = $stagedEnvironmentalDiagnostic.venworksCUIFragment.group
-  if ($environmentalDiagnosticIncludes.Count -ne 1 -or
-      [string]$environmentalDiagnosticIncludes[0].src -ne 'environmental-hazard-diagnostic-strip.xml' -or
-      [string]$environmentalDiagnosticIncludes[0].anchor -ne 'top-center' -or
-      [string]$environmentalDiagnosticIncludes[0].visibleWhen -ne 'inScanner' -or
-      $environmentalScannerIncludes.Count -ne 0 -or
+  $stagedEnvironmentalScannerGroup = $stagedEnvironmentalScanner.venworksCUIFragment.group
+  if ($environmentalDiagnosticIncludes.Count -ne 0 -or
+      $environmentalScannerIncludes.Count -ne 1 -or
+      [string]$environmentalScannerIncludes[0].src -ne 'environmental-hazard-scanner.xml' -or
+      [string]$environmentalScannerIncludes[0].anchor -ne 'center-right' -or
+      [string]$environmentalScannerIncludes[0].visibleWhen -ne 'inScanner' -or
+      $environmentalProtectionStyles.Count -ne 1 -or
+      [string]$environmentalProtectionStyles[0].renderer -ne 'segments' -or
+      [string]$environmentalProtectionStyles[0].direction -ne 'right' -or
+      [int]$environmentalProtectionStyles[0].segmentCount -ne 20 -or
+      [int]$stagedEnvironmentalScannerGroup.width -ne 510 -or
+      [int]$stagedEnvironmentalScannerGroup.height -ne 342 -or
       [int]$stagedEnvironmentalDiagnosticGroup.width -ne 1160 -or
       [int]$stagedEnvironmentalDiagnosticGroup.height -ne 196 -or
       $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.environmentProvider"' -or
@@ -953,16 +972,22 @@ try {
       $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.effect2"' -or
       $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.effect3"' -or
       $stagedEnvironmentalDiagnosticText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE)' -or
-      $stagedEnvironmentalScannerText -notmatch 'QUAD SENSOR CHANNELS // DIAGNOSTIC' -or
-      $stagedEnvironmentalScannerText -notmatch 'source="diagnostic\.starmapProvider"' -or
-      $stagedEnvironmentalScannerText -notmatch 'NO ENVIRONMENTAL THREAT INDEX FORMULA' -or
-      $stagedEnvironmentalScannerText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE)') {
-    throw 'Goal 6 must stage the full product scanner plus one compact scanner-gated diagnostic with all discovery-critical fields and no invented measurements.'
+      $stagedEnvironmentalScannerText -notmatch 'QUAD CHANNELS' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="environment\.protectionLevel"' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="environment\.protectionPercentage"' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="environment\.protectionStatus"' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.airWaterLevel"' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.thermalLevel"' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.corrosiveLevel"' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.radiationLevel"' -or
+      $stagedEnvironmentalScannerText -notmatch 'AIR \+ UNSAFE WATER SHARE BETHESDA''S AIRBORNE CATEGORY' -or
+      $stagedEnvironmentalScannerText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE|THREAT INDEX|VACUUM)') {
+    throw 'Goal 6 must stage one compact center-right scanner-gated production meter, retain the inactive diagnostic, and expose only runtime-confirmed environmental values.'
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
   Copy-Item -LiteralPath $invalidSvgSource -Destination (Join-Path $assetOutputDirectory "gallery-invalid.svg") -Force
-  Write-Host -ForegroundColor Green "Staged compact scanner-gated Goal 6 diagnostic and full product scanner with the accepted Goal 5 Chronomark in $cuiOutputDirectory"
+  Write-Host -ForegroundColor Green "Staged compact scanner-gated Goal 6 production meter and inactive diagnostic with the accepted Goal 5 Chronomark in $cuiOutputDirectory"
 }
 finally {
   if ($KeepWork) {

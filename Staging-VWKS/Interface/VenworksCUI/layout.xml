@@ -34,14 +34,18 @@
                 fillColor="#E64B4B" emptyColor="#3D1C22"
                 fillOpacity="1" emptyOpacity="0.72" segmentCount="24" gap="2"
                 direction="right" partialSegments="false" />
+    <meterStyle id="environment.protection" renderer="segments"
+                fillColor="#62DDF2" emptyColor="#3D1C22"
+                fillOpacity="1" emptyOpacity="0.78" segmentCount="20" gap="2"
+                direction="right" partialSegments="true" />
   </definitions>
   <vanillaVisibility>
     <target id="bottomLeft" visibleWhen="never" />
     <target id="rightMeters" visibleWhen="never" />
   </vanillaVisibility>
   <includes>
-    <include id="env-hazard-probe" src="environmental-hazard-diagnostic-strip.xml"
-             x="0" y="0" anchor="top-center" visible="true" visibleWhen="inScanner" z="90" />
+    <include id="environmental-hazard-scanner" src="environmental-hazard-scanner.xml"
+             x="-18" y="0" anchor="center-right" visible="true" visibleWhen="inScanner" z="90" />
     <include id="chronomark.environment-status" src="environment-status.xml"
              x="0" y="0" anchor="bottom-left" visible="true" visibleWhen="always" z="100" />
     <include id="chronomark.player-meters" src="player-meters.xml"

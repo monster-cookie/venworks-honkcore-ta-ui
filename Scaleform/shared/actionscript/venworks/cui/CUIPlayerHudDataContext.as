@@ -34,7 +34,8 @@ package venworks.cui
          this.setText("diagnostic.armorresistance","EQUIPPED ARMOR RESISTANCE DATA NOT RECEIVED");
          this.setText("diagnostic.starmapprovider","STARMAP BODY PROVIDER NOT RECEIVED IN HUD");
          this.resetEnvironmentalHazards();
-         this.setText("environment.hazard.airwaterstatus","ENVIRONMENT PROVIDER NOT RECEIVED / WATER UNPROVEN");
+         this.setText("environment.protectionstatus","ENVIRONMENT PROVIDER NOT RECEIVED");
+         this.setText("environment.hazard.airwaterstatus","ENVIRONMENT PROVIDER NOT RECEIVED");
          this.setText("environment.hazard.thermalstatus","ENVIRONMENT PROVIDER NOT RECEIVED");
          this.setText("environment.hazard.corrosivestatus","ENVIRONMENT PROVIDER NOT RECEIVED");
          this.setText("environment.hazard.radiationstatus","ENVIRONMENT PROVIDER NOT RECEIVED");
@@ -51,6 +52,7 @@ package venworks.cui
          if(source == "location.name" || source == "power.key" || source == "power.name" ||
             source == "weapon.name" || source == "weapon.icon" || source == "weapon.ammotype" ||
             source == "diagnostic.inventoryprovider" || source == "diagnostic.powernameprovider" ||
+            source == "environment.protectionstatus" ||
             source == "environment.hazard.airwaterstatus" || source == "environment.hazard.thermalstatus" ||
             source == "environment.hazard.corrosivestatus" || source == "environment.hazard.radiationstatus" ||
             source == "diagnostic.environmentprovider" || source == "diagnostic.environmentfields" ||
@@ -80,7 +82,8 @@ package venworks.cui
             source == "weapon.explosivetype" || source == "boost.charge" ||
             source == "environment.hazard.effectcount" || source == "environment.hazard.airwaterlevel" ||
             source == "environment.hazard.thermallevel" || source == "environment.hazard.corrosivelevel" ||
-            source == "environment.hazard.radiationlevel" || source == "environment.soakcandidate")
+            source == "environment.hazard.radiationlevel" || source == "environment.soakcandidate" ||
+            source == "environment.protectionlevel" || source == "environment.protectionpercentage")
          {
             return "number";
          }
@@ -113,17 +116,43 @@ package venworks.cui
          var effect:Object = null;
          var icon:String = "";
          var normalizedIcon:String = "";
+         var soakProtection:Number = Number(param1.data.fSoakDamagePct);
+         var normalizedProtection:Number = 0;
+         var fullSoak:Boolean = param1.data.bShouldPlayAlertAtFullSoak !== undefined &&
+            param1.data.bShouldPlayAlertAtFullSoak !== null &&
+            Boolean(param1.data.bShouldPlayAlertAtFullSoak);
          var index:int = 0;
          var diagnosticIndex:int = 0;
          this.resetEnvironmentalHazards();
          this.clearValue("environment.soakcandidate");
          this.clearValue("environment.fullsoakalertcandidate");
+         this.clearValue("environment.protectionlevel");
+         this.clearValue("environment.protectionpercentage");
+         this.setText("environment.protectionstatus","PROTECTION DATA UNAVAILABLE");
          this.setText("diagnostic.environmentprovider","ENVIRONMENTEFFECTSDATA RECEIVED");
          this.setText("diagnostic.environmentfields","ENVIRONMENT ROOT: " + this.listFieldNames(param1.data,MAX_DIAGNOSTIC_FIELDS));
          this.setText("diagnostic.environmentcandidates","PULSE / AGGREGATE CANDIDATES: " +
             this.listCandidateFields(param1.data,["pulse","speed","threat","severity","exposure","soak"],8));
          this.setFinite("environment.soakcandidate",param1.data.fSoakDamagePct);
          this.setBoolean("environment.fullsoakalertcandidate",param1.data.bShouldPlayAlertAtFullSoak);
+         if(!isNaN(soakProtection) && isFinite(soakProtection))
+         {
+            normalizedProtection = Math.max(0,Math.min(1,soakProtection));
+            this.setFinite("environment.protectionlevel",normalizedProtection);
+            this.setFinite("environment.protectionpercentage",normalizedProtection * 100);
+            if(fullSoak || normalizedProtection <= 0)
+            {
+               this.setText("environment.protectionstatus","FULL SOAK // HEALTH RISK");
+            }
+            else if(normalizedProtection >= 1)
+            {
+               this.setText("environment.protectionstatus","PROTECTION READY");
+            }
+            else
+            {
+               this.setText("environment.protectionstatus","PROTECTION PARTIAL");
+            }
+         }
          if(effects != null)
          {
             this.setFinite("environment.hazard.effectcount",effects.length);
@@ -145,7 +174,7 @@ package venworks.cui
                      if(normalizedIcon.indexOf("airborne") >= 0)
                      {
                         this.setFinite("environment.hazard.airwaterlevel",1);
-                        this.setText("environment.hazard.airwaterstatus","AIRBORNE DETECTED / WATER UNPROVEN");
+                        this.setText("environment.hazard.airwaterstatus","AIR / WATER DETECTED");
                      }
                      else if(normalizedIcon.indexOf("thermal") >= 0)
                      {
@@ -454,10 +483,10 @@ package venworks.cui
          this.setFinite("environment.hazard.thermallevel",0);
          this.setFinite("environment.hazard.corrosivelevel",0);
          this.setFinite("environment.hazard.radiationlevel",0);
-         this.setText("environment.hazard.airwaterstatus","AIRBORNE CLEAR / WATER UNPROVEN");
-         this.setText("environment.hazard.thermalstatus","NO THERMAL EFFECT");
-         this.setText("environment.hazard.corrosivestatus","NO CORROSIVE EFFECT");
-         this.setText("environment.hazard.radiationstatus","NO RADIATION EFFECT");
+         this.setText("environment.hazard.airwaterstatus","CLEAR");
+         this.setText("environment.hazard.thermalstatus","CLEAR");
+         this.setText("environment.hazard.corrosivestatus","CLEAR");
+         this.setText("environment.hazard.radiationstatus","CLEAR");
          while(index < MAX_DIAGNOSTIC_EFFECTS)
          {
             this.setText("diagnostic.effect" + index.toString(),"EFFECT " + index.toString() + ": UNUSED");

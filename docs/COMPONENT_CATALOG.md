@@ -244,3 +244,27 @@ extracts the initialized `GetUpButton_mc` child from a temporary embedded
 Bethesda vehicle control, then fits only that bounded hold button. It disables
 mouse interaction and receives no routed user events. The hidden vanilla
 `HUDVehicle_mc` remains alive and exclusively processes vehicle-exit input.
+
+## Goal 6 environmental scanner bindings
+
+Goal 6 adds an allowlisted `EnvironmentEffectsData` adapter and a compact,
+scanner-gated environmental readout. The following sources are available to
+ordinary text templates or meters after their owning provider publishes:
+
+| Source | Kind | Confirmed meaning |
+| --- | --- | --- |
+| `environment.protectionLevel` | Number `0..1` | Clamped Bethesda `fSoakDamagePct`; `1` is ready and `0` is exhausted. |
+| `environment.protectionPercentage` | Number `0..100` | Display scaling of the same normalized protection value. |
+| `environment.protectionStatus` | String | Ready, partial, or full-soak/health-risk presentation derived only from the normalized value and Bethesda full-soak flag. |
+| `environment.fullSoakAlertCandidate` | Boolean | Bethesda `bShouldPlayAlertAtFullSoak`; retained for diagnostics. |
+| `environment.hazard.airWaterLevel` | Number `0` or `1` | Presence of `HazardEffect_Airborne`; runtime confirmed both unsafe biological water and airborne flora use this category. |
+| `environment.hazard.thermalLevel` | Number `0` or `1` | Presence of `HazardEffect_Thermal`. |
+| `environment.hazard.corrosiveLevel` | Number `0` or `1` | Presence of `HazardEffect_Corrosive`. |
+| `environment.hazard.radiationLevel` | Number `0` or `1` | Presence of `HazardEffect_Radiation`. |
+| Corresponding `...Status` sources | String | Provider waiting, clear, or detected text for the four categories. |
+
+The four hazard levels are categorical activity gates, not magnitudes. Local
+temperature can provide hot/cold context but is not Thermal severity. O2 `0%`
+cannot distinguish vacuum from an oxygen-free atmosphere. No allowlisted source
+currently claims CO2 composition, atmospheric pressure, vacuum, physical
+hazard units, per-channel severity, or an aggregate environmental Threat Index.
