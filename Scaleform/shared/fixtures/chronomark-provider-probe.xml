@@ -18,12 +18,30 @@
                 fillColor="#FFB51B" emptyColor="#3A2714"
                 fillOpacity="1" emptyOpacity="0.72"
                 direction="up" />
+    <meterStyle id="environment.air" renderer="segments"
+                fillColor="#62DDF2" emptyColor="#123642"
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="24" gap="2"
+                direction="right" partialSegments="false" />
+    <meterStyle id="environment.thermal" renderer="segments"
+                fillColor="#D89B2B" emptyColor="#3A2C16"
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="24" gap="2"
+                direction="right" partialSegments="false" />
+    <meterStyle id="environment.corrosive" renderer="segments"
+                fillColor="#E6B840" emptyColor="#3D3218"
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="24" gap="2"
+                direction="right" partialSegments="false" />
+    <meterStyle id="environment.radiation" renderer="segments"
+                fillColor="#E64B4B" emptyColor="#3D1C22"
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="24" gap="2"
+                direction="right" partialSegments="false" />
   </definitions>
   <vanillaVisibility>
     <target id="bottomLeft" visibleWhen="never" />
     <target id="rightMeters" visibleWhen="never" />
   </vanillaVisibility>
   <includes>
+    <include id="environmental-hazard-scanner" src="environmental-hazard-scanner.xml"
+             x="0" y="0" anchor="top-center" visible="true" visibleWhen="always" z="90" />
     <include id="chronomark.environment-status" src="environment-status.xml"
              x="0" y="0" anchor="bottom-left" visible="true" visibleWhen="always" z="100" />
     <include id="chronomark.player-meters" src="player-meters.xml"

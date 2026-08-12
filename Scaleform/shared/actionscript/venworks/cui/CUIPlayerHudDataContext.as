@@ -7,6 +7,10 @@ package venworks.cui
 
    public final class CUIPlayerHudDataContext extends EventDispatcher
    {
+      private static const MAX_DIAGNOSTIC_FIELDS:int = 12;
+      private static const MAX_DIAGNOSTIC_EFFECTS:int = 4;
+      private static const MAX_HAZARD_EFFECTS:int = 32;
+
       private var values:Object;
       public function CUIPlayerHudDataContext()
       {
@@ -19,8 +23,21 @@ package venworks.cui
          BSUIDataManager.Subscribe("WeaponData",this.onWeaponData);
          BSUIDataManager.Subscribe("HudJetpackData",this.onJetpackData);
          BSUIDataManager.Subscribe("HUDStarbornPowersData",this.onStarbornPowersData);
+         BSUIDataManager.Subscribe("EnvironmentEffectsData",this.onEnvironmentEffectsData);
+         BSUIDataManager.Subscribe("StarmapSystemBodyInfoProvider",this.onStarmapSystemBodyInfoData);
          this.setText("diagnostic.inventoryprovider","PLAYERINVENTORYDATA NOT RECEIVED");
          this.setText("diagnostic.powernameprovider","HUD POWER NAME FIELDS NOT RECEIVED");
+         this.setText("diagnostic.environmentprovider","ENVIRONMENTEFFECTSDATA NOT RECEIVED");
+         this.setText("diagnostic.environmentfields","ENVIRONMENT ROOT FIELDS UNAVAILABLE");
+         this.setText("diagnostic.environmentcandidates","PULSE / AGGREGATE CANDIDATES UNAVAILABLE");
+         this.setText("diagnostic.localenvironmentfields","LOCALENVIRONMENTDATA NOT RECEIVED");
+         this.setText("diagnostic.armorresistance","EQUIPPED ARMOR RESISTANCE DATA NOT RECEIVED");
+         this.setText("diagnostic.starmapprovider","STARMAP BODY PROVIDER NOT RECEIVED IN HUD");
+         this.resetEnvironmentalHazards();
+         this.setText("environment.hazard.airwaterstatus","ENVIRONMENT PROVIDER NOT RECEIVED / WATER UNPROVEN");
+         this.setText("environment.hazard.thermalstatus","ENVIRONMENT PROVIDER NOT RECEIVED");
+         this.setText("environment.hazard.corrosivestatus","ENVIRONMENT PROVIDER NOT RECEIVED");
+         this.setText("environment.hazard.radiationstatus","ENVIRONMENT PROVIDER NOT RECEIVED");
       }
 
       public static function normalizeSource(param1:String) : String
@@ -33,11 +50,19 @@ package venworks.cui
          var source:String = normalizeSource(param1);
          if(source == "location.name" || source == "power.key" || source == "power.name" ||
             source == "weapon.name" || source == "weapon.icon" || source == "weapon.ammotype" ||
-            source == "diagnostic.inventoryprovider" || source == "diagnostic.powernameprovider")
+            source == "diagnostic.inventoryprovider" || source == "diagnostic.powernameprovider" ||
+            source == "environment.hazard.airwaterstatus" || source == "environment.hazard.thermalstatus" ||
+            source == "environment.hazard.corrosivestatus" || source == "environment.hazard.radiationstatus" ||
+            source == "diagnostic.environmentprovider" || source == "diagnostic.environmentfields" ||
+            source == "diagnostic.environmentcandidates" || source == "diagnostic.localenvironmentfields" ||
+            source == "diagnostic.effect0" || source == "diagnostic.effect1" ||
+            source == "diagnostic.effect2" || source == "diagnostic.effect3" ||
+            source == "diagnostic.armorresistance" || source == "diagnostic.starmapprovider")
          {
             return "string";
          }
-         if(source == "power.hasspell" || source == "weapon.displayammo" || source == "weapon.ammoaspercent")
+         if(source == "power.hasspell" || source == "weapon.displayammo" || source == "weapon.ammoaspercent" ||
+            source == "environment.fullsoakalertcandidate")
          {
             return "boolean";
          }
@@ -52,7 +77,10 @@ package venworks.cui
             source == "carry.current" || source == "carry.maximum" || source == "credits" ||
             source == "weapon.clipammo" || source == "weapon.totalammo" ||
             source == "weapon.reserveammo" || source == "weapon.explosivecount" ||
-            source == "weapon.explosivetype" || source == "boost.charge")
+            source == "weapon.explosivetype" || source == "boost.charge" ||
+            source == "environment.hazard.effectcount" || source == "environment.hazard.airwaterlevel" ||
+            source == "environment.hazard.thermallevel" || source == "environment.hazard.corrosivelevel" ||
+            source == "environment.hazard.radiationlevel" || source == "environment.soakcandidate")
          {
             return "number";
          }
@@ -75,6 +103,77 @@ package venworks.cui
          this.setFinite("environment.oxygenpercentage",param1.data.fOxygenPercent);
          this.setFinite("environment.temperature",param1.data.fTemperature);
          this.setFinite("environment.gravity",param1.data.fGravity);
+         this.setText("diagnostic.localenvironmentfields","LOCAL ENV ROOT: " + this.listFieldNames(param1.data,MAX_DIAGNOSTIC_FIELDS));
+         this.notifyChanged();
+      }
+
+      private function onEnvironmentEffectsData(param1:FromClientDataEvent) : void
+      {
+         var effects:Array = param1.data.aEnvironmentEffects as Array;
+         var effect:Object = null;
+         var icon:String = "";
+         var normalizedIcon:String = "";
+         var index:int = 0;
+         var diagnosticIndex:int = 0;
+         this.resetEnvironmentalHazards();
+         this.clearValue("environment.soakcandidate");
+         this.clearValue("environment.fullsoakalertcandidate");
+         this.setText("diagnostic.environmentprovider","ENVIRONMENTEFFECTSDATA RECEIVED");
+         this.setText("diagnostic.environmentfields","ENVIRONMENT ROOT: " + this.listFieldNames(param1.data,MAX_DIAGNOSTIC_FIELDS));
+         this.setText("diagnostic.environmentcandidates","PULSE / AGGREGATE CANDIDATES: " +
+            this.listCandidateFields(param1.data,["pulse","speed","threat","severity","exposure","soak"],8));
+         this.setFinite("environment.soakcandidate",param1.data.fSoakDamagePct);
+         this.setBoolean("environment.fullsoakalertcandidate",param1.data.bShouldPlayAlertAtFullSoak);
+         if(effects != null)
+         {
+            this.setFinite("environment.hazard.effectcount",effects.length);
+            while(index < effects.length && index < MAX_HAZARD_EFFECTS)
+            {
+               effect = effects[index];
+               if(effect != null)
+               {
+                  if(diagnosticIndex < MAX_DIAGNOSTIC_EFFECTS)
+                  {
+                     this.setText("diagnostic.effect" + diagnosticIndex.toString(),"EFFECT " +
+                        diagnosticIndex.toString() + ": " + this.describeObject(effect,8));
+                     ++diagnosticIndex;
+                  }
+                  if(effect.sEffectIcon !== undefined && effect.sEffectIcon !== null)
+                  {
+                     icon = String(effect.sEffectIcon);
+                     normalizedIcon = icon.toLowerCase();
+                     if(normalizedIcon.indexOf("airborne") >= 0)
+                     {
+                        this.setFinite("environment.hazard.airwaterlevel",1);
+                        this.setText("environment.hazard.airwaterstatus","AIRBORNE DETECTED / WATER UNPROVEN");
+                     }
+                     else if(normalizedIcon.indexOf("thermal") >= 0)
+                     {
+                        this.setFinite("environment.hazard.thermallevel",1);
+                        this.setText("environment.hazard.thermalstatus","THERMAL EFFECT DETECTED");
+                     }
+                     else if(normalizedIcon.indexOf("corrosive") >= 0)
+                     {
+                        this.setFinite("environment.hazard.corrosivelevel",1);
+                        this.setText("environment.hazard.corrosivestatus","CORROSIVE EFFECT DETECTED");
+                     }
+                     else if(normalizedIcon.indexOf("radiation") >= 0)
+                     {
+                        this.setFinite("environment.hazard.radiationlevel",1);
+                        this.setText("environment.hazard.radiationstatus","RADIATION EFFECT DETECTED");
+                     }
+                  }
+               }
+               ++index;
+            }
+         }
+         this.notifyChanged();
+      }
+
+      private function onStarmapSystemBodyInfoData(param1:FromClientDataEvent) : void
+      {
+         this.setText("diagnostic.starmapprovider","STARMAP BODY PROVIDER RECEIVED IN HUD: " +
+            this.listCandidateFields(param1.data,["body","gravity","temp","atmosphere","magnetosphere","water"],8));
          this.notifyChanged();
       }
 
@@ -134,11 +233,14 @@ package venworks.cui
          var item:Object = null;
          var weaponInfo:Object = null;
          var ammoType:String = "";
+         var armorResistance:Array = [];
+         var armorInfo:Object = null;
          var equippedWeaponCount:int = 0;
          var index:int = 0;
          this.clearValue("carry.current");
          this.clearValue("carry.maximum");
          this.clearValue("credits");
+         this.setText("diagnostic.armorresistance","EQUIPPED ARMOR RESISTANCE FIELDS NOT PRESENT");
          this.setFinite("carry.current",param1.data.fEncumbrance);
          this.setFinite("carry.maximum",param1.data.fMaxEncumbrance);
          this.setFinite("credits",param1.data.uCoin);
@@ -165,7 +267,19 @@ package venworks.cui
                   }
                }
             }
+            if(item != null && Boolean(item.bIsEquipped) && item.ArmorInfo != null && armorResistance.length < 4)
+            {
+               armorInfo = item.ArmorInfo;
+               armorResistance.push("T=" + this.formatDiagnosticValue(armorInfo.fThermalResist) +
+                  " A=" + this.formatDiagnosticValue(armorInfo.fAirborneResist) +
+                  " C=" + this.formatDiagnosticValue(armorInfo.fCorrosiveResist) +
+                  " R=" + this.formatDiagnosticValue(armorInfo.fRadiationResist));
+            }
             ++index;
+         }
+         if(armorResistance.length != 0)
+         {
+            this.setText("diagnostic.armorresistance","EQUIPPED ARMOR ITEMS (UNAGGREGATED): " + armorResistance.join(" | "));
          }
          if(ammoType.length != 0)
          {
@@ -330,6 +444,136 @@ package venworks.cui
       private function notifyChanged() : void
       {
          dispatchEvent(new Event(Event.CHANGE));
+      }
+
+      private function resetEnvironmentalHazards() : void
+      {
+         var index:int = 0;
+         this.setFinite("environment.hazard.effectcount",0);
+         this.setFinite("environment.hazard.airwaterlevel",0);
+         this.setFinite("environment.hazard.thermallevel",0);
+         this.setFinite("environment.hazard.corrosivelevel",0);
+         this.setFinite("environment.hazard.radiationlevel",0);
+         this.setText("environment.hazard.airwaterstatus","AIRBORNE CLEAR / WATER UNPROVEN");
+         this.setText("environment.hazard.thermalstatus","NO THERMAL EFFECT");
+         this.setText("environment.hazard.corrosivestatus","NO CORROSIVE EFFECT");
+         this.setText("environment.hazard.radiationstatus","NO RADIATION EFFECT");
+         while(index < MAX_DIAGNOSTIC_EFFECTS)
+         {
+            this.setText("diagnostic.effect" + index.toString(),"EFFECT " + index.toString() + ": UNUSED");
+            ++index;
+         }
+      }
+
+      private function listFieldNames(param1:Object, param2:int) : String
+      {
+         var fields:Array = [];
+         var field:String = null;
+         if(param1 == null)
+         {
+            return "NULL";
+         }
+         for(field in param1)
+         {
+            fields.push(field);
+         }
+         fields.sort(Array.CASEINSENSITIVE);
+         if(fields.length > param2)
+         {
+            fields.length = param2;
+            return fields.join(",") + ",...";
+         }
+         return fields.length == 0 ? "NO ENUMERABLE FIELDS" : fields.join(",");
+      }
+
+      private function listCandidateFields(param1:Object, param2:Array, param3:int) : String
+      {
+         var matches:Array = [];
+         var field:String = null;
+         var normalized:String = null;
+         var candidate:String = null;
+         var index:int = 0;
+         if(param1 == null)
+         {
+            return "NULL";
+         }
+         for(field in param1)
+         {
+            normalized = field.toLowerCase();
+            index = 0;
+            while(index < param2.length)
+            {
+               candidate = String(param2[index]).toLowerCase();
+               if(normalized.indexOf(candidate) >= 0)
+               {
+                  matches.push(field + "=" + this.formatDiagnosticValue(param1[field]));
+                  break;
+               }
+               ++index;
+            }
+         }
+         matches.sort(Array.CASEINSENSITIVE);
+         if(matches.length > param3)
+         {
+            matches.length = param3;
+            return matches.join(" | ") + " | ...";
+         }
+         return matches.length == 0 ? "NONE" : matches.join(" | ");
+      }
+
+      private function describeObject(param1:Object, param2:int) : String
+      {
+         var fields:Array = [];
+         var output:Array = [];
+         var field:String = null;
+         var index:int = 0;
+         if(param1 == null)
+         {
+            return "NULL";
+         }
+         for(field in param1)
+         {
+            fields.push(field);
+         }
+         fields.sort(Array.CASEINSENSITIVE);
+         while(index < fields.length && index < param2)
+         {
+            field = String(fields[index]);
+            output.push(field + "=" + this.formatDiagnosticValue(param1[field]));
+            ++index;
+         }
+         if(fields.length > param2)
+         {
+            output.push("...");
+         }
+         return output.length == 0 ? "NO ENUMERABLE FIELDS" : output.join(" | ");
+      }
+
+      private function formatDiagnosticValue(param1:Object) : String
+      {
+         var value:String = null;
+         if(param1 === undefined)
+         {
+            return "UNDEFINED";
+         }
+         if(param1 === null)
+         {
+            return "NULL";
+         }
+         if(param1 is Array)
+         {
+            return "ARRAY[" + (param1 as Array).length.toString() + "]";
+         }
+         if(typeof param1 == "object")
+         {
+            return "OBJECT";
+         }
+         value = String(param1).replace(/[\r\n\t]+/g," ");
+         if(value.length > 48)
+         {
+            value = value.substring(0,48) + "...";
+         }
+         return value;
       }
    }
 }

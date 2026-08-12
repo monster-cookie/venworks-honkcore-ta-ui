@@ -1,0 +1,199 @@
+# Goal 6 environmental hazard scanner
+
+**Status: Diagnostic implementation and automated build acceptance complete;
+runtime acceptance pending.**
+
+## Product direction
+
+Goal 6 adds an independent helmet-HUD environmental scanner layout. The
+selected visual direction is a wide scientific panel with four vertically
+stacked sensor channels:
+
+1. air/water toxins;
+2. thermal exposure;
+3. corrosive atmosphere; and
+4. radiation.
+
+The primary direction retains the selected Quad Sensor Channels structure.
+Atmospheric composition may appear as a separate band above those channels,
+but planetary baseline data must remain conceptually separate from immediate
+live suit exposure.
+
+The scanner is a reusable XML fragment rendered by the existing CUI host. This
+diagnostic slice does not add a dedicated compiled scanner component. A future
+component is justified only if accepted telemetry requires behavior that the
+existing text, panels, dividers, icons, conditions, and meters cannot express.
+
+## Roadmap and provider evidence
+
+HONKCORE behavior and implementation may identify visual and provider
+candidates. Candidate contracts are checked independently against Bethesda
+movie artifacts or CUI runtime behavior before they become production data.
+
+The former HONKCORE CBRN presentation confirms the desired four-channel
+roadmap, but its displayed threat index is derived from its own count of active
+categories. Its animated bars are synthetic. Neither implementation is
+Bethesda environmental-provider evidence, so Goal 6 does not copy either
+formula or animation.
+
+### Immediate HUD candidates
+
+| Display concept | Provider and field | Classification before Goal 6 runtime | Use in diagnostic |
+| --- | --- | --- | --- |
+| Atmospheric oxygen | `LocalEnvironmentData.fOxygenPercent` | Confirmed in HUD runtime by Goal 5 | Live percentage |
+| Local temperature | `LocalEnvironmentData.fTemperature` | Confirmed in HUD runtime by Goal 5 | Live temperature; not treated as hazard magnitude |
+| Local gravity | `LocalEnvironmentData.fGravity` | Confirmed in HUD runtime by Goal 5 | Context only |
+| Active environmental effects | `EnvironmentEffectsData.aEnvironmentEffects` | Provider is a HONKCORE roadmap candidate; array field is confirmed in Bethesda HUD-related code | Bounded receipt and field probe |
+| Hazard category | `aEnvironmentEffects[*].sEffectIcon` | Confirmed in Bethesda `EnvironmentEffectsWidget` and `WatchIconsWidget` contracts | Four categorical activity gates |
+| Radiation category | `HazardEffect_Radiation` | Confirmed in Bethesda HUD movie | Detected/clear only |
+| Thermal category | `HazardEffect_Thermal` | Confirmed in Bethesda HUD movie | Detected/clear only |
+| Airborne category | `HazardEffect_Airborne` | Confirmed in Bethesda HUD movie | Airborne detected/clear; water remains unproven |
+| Corrosive category | `HazardEffect_Corrosive` | Confirmed in Bethesda HUD movie | Detected/clear only |
+| Suit-soak candidate | `EnvironmentEffectsData.fSoakDamagePct` | HONKCORE roadmap candidate | Raw diagnostic and bounded `0..1` meter candidate only after runtime proves range |
+| Full-soak alert candidate | `EnvironmentEffectsData.bShouldPlayAlertAtFullSoak` | HONKCORE roadmap candidate | Raw Boolean diagnostic |
+| Bethesda normalized pulse | `EnvironmentEffectsWidget.SetPulseSpeedPct(0..1, flag)` | Confirmed widget input; owning provider and meaning unknown | Search provider fields only; no Threat Index mapping |
+
+The pulse setter interpolates the widget's minimum and maximum pulse times. A
+value of `1` stops the animation at full opacity, while `0` can either stop or
+run at the minimum pulse time depending on the second Boolean. Direction,
+ownership, and environmental meaning therefore require runtime evidence before
+any normalized aggregate can be exposed.
+
+### Protection candidates
+
+Bethesda inventory item cards consume these equipped-item fields:
+
+- `ArmorInfo.fThermalResist`;
+- `ArmorInfo.fAirborneResist`;
+- `ArmorInfo.fCorrosiveResist`; and
+- `ArmorInfo.fRadiationResist`.
+
+Those fields are confirmed in an inventory-menu contract. Goal 5 already
+confirmed that `PlayerInventoryData` is live in HUD, but it has not proven that
+all equipped armor entries and their `ArmorInfo` objects are present there.
+The diagnostic reports up to four equipped armor records without aggregating
+them. No suit-total formula is assumed.
+
+### Planetary baseline
+
+`GalaxyStarMapMenu` subscribes to `StarmapSystemBodyInfoProvider` and forwards
+the payload to Bethesda's planet information card. The card statically consumes
+at least:
+
+- `sGravityDescriptor` and `fGravity`;
+- `sTempDescriptor`;
+- `sAtmospherePressure`;
+- `sAtmosphereType`;
+- `sAtmosphereToxicity`;
+- `sMagnetosphere`;
+- `sWaterDescriptor` and `sWaterQuality`;
+- flora and fauna descriptors/probabilities; and
+- scan, survey, visit, and entered-system state.
+
+These are confirmed starmap-menu fields, not confirmed HUD fields. The Goal 6
+diagnostic subscribes only to determine whether the provider is ever delivered
+during the HUD movie lifetime. Receipt does not by itself prove that values
+remain current or safe after starmap transitions.
+
+## Unknowns that must not be invented
+
+The inspected Bethesda contracts do not yet prove:
+
+- atmospheric CO2 or inert-gas composition;
+- numeric atmospheric pressure;
+- an explicit mutually exclusive vacuum/no-atmosphere field;
+- distinct airborne and water contamination values;
+- per-channel raw magnitude or normalized severity;
+- an aggregate environmental exposure or threat value;
+- physical toxin, corrosion, or radiation units; or
+- a meaningful telemetry sample rate.
+
+The diagnostic consequently omits ppm, radiation-dose units, corrosion-rate
+units, pressure units, a sample-rate claim, and spectrum-like waveforms. If a
+normalized Bethesda environmental value is found, a future history trace may
+plot actual successive samples and must be labeled as normalized history, not
+as a physical spectrum.
+
+## Diagnostic implementation
+
+The top-center `environmental-hazard-scanner.xml` fragment is independent from
+the four accepted Goal 5 Chronomark fragments. It provides:
+
+- a live O2 and temperature atmosphere band;
+- explicit unproven placeholders for CO2/inert composition, pressure, and
+  vacuum/no-atmosphere state;
+- four binary category-activity meters driven only by recognized Bethesda
+  effect-icon categories;
+- bounded enumeration of the environment-provider root and four effect
+  entries;
+- a focused search for pulse, speed, threat, severity, exposure, and soak
+  candidate fields;
+- raw suit-soak and full-alert candidates;
+- unaggregated equipped armor resistance candidates; and
+- starmap-provider receipt/lifetime evidence.
+
+Diagnostic enumeration is bounded to 12 root fields, four effect objects,
+eight fields per effect, 32 scanned effect entries, four equipped armor items,
+and 48 characters per scalar value. Arrays are reported by length and nested
+objects are not recursively serialized.
+
+## Runtime acceptance plan
+
+Build and deploy both normal and large HUD variants after recording their
+SHA-256 hashes. Test the following without treating a missing provider as a
+crash-worthy condition:
+
+1. Confirm `EnvironmentEffectsData` receipt in a nominal environment.
+2. Record every root field and each effect-entry field in the bounded panel.
+3. Exercise radiation, thermal, airborne, and corrosive hazards separately and
+   in combinations.
+4. Record whether effect icons encode polarity or severity beyond category.
+5. Record `fSoakDamagePct` range and direction while protection depletes and
+   restores.
+6. Record `bShouldPlayAlertAtFullSoak` transitions.
+7. Compare any pulse/aggregate candidate with the visible vanilla environmental
+   pulse without assigning semantics in advance.
+8. Equip and remove spacesuit, helmet, and pack items and record the unaggregated
+   resistance fields delivered through `PlayerInventoryData`.
+9. Check `StarmapSystemBodyInfoProvider` before opening starmap, while entering
+   and leaving it, and after the HUD resumes.
+10. Test a breathable location, non-breathable atmosphere, and vacuum. Record
+    Local Environment fields; do not derive vacuum from O2 alone.
+11. Test water exposure to determine whether Bethesda emits airborne,
+    corrosive, a distinct category, or no environment effect.
+12. Repeat save/load, death/reload, scanner, ship, vehicle, ladder, workbench,
+    and rapid menu transitions to identify stale values or lifecycle failures.
+
+Production channel severity, units, aggregate scoring, planetary-baseline
+display, and any history waveform remain out of scope until this diagnostic is
+accepted with runtime evidence.
+
+## Automated validation and expected artifacts
+
+The repository validation and complete two-variant Scaleform build passed:
+
+```powershell
+./Tools/checkRepo.ps1
+```
+
+```powershell
+./Tools/compileScaleform.ps1 `
+  -JavaPath "<approved-java-path>" `
+  -JpexsJarPath "<approved-ffdec-path>" `
+  -VanillaInterfacePath "<approved-vanilla-interface-path>"
+```
+
+The build compiled, imported, reopened, and validated both GFX variants, then
+staged the independent scanner fragment with the accepted Goal 5 fragments.
+Expected SHA-256 values are:
+
+| Staged artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `hudmenu.gfx` | 389944 | `5BAF91751F78E5A798E1ECD88708426B83DB8849C11232835E8C462B886858D6` |
+| `hudmenu_lrg.gfx` | 390127 | `D1108E28D747B908F0811A408C4650DC504F22AC66F5D4C7125C5525C1C57E60` |
+| `VenworksCUI/layout.xml` | 3280 | `80ADAD01172913E344A99318AA870576C25A3141F0B41089292C0F5B51F6044D` |
+| `VenworksCUI/components/environmental-hazard-scanner.xml` | 13295 | `8C98FEAE29A25CDC62D58F8C7097E4B8427E5145B3A55316A317DC227CD4A0C7` |
+
+The normal and large GFX hashes were reproduced by their individual discovery
+builds and by the final complete build. Runtime deployment must use artifacts
+from the committed Goal 6 worktree.

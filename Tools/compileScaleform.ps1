@@ -185,10 +185,10 @@ $resolvedWorkDirectory = [System.IO.Path]::GetFullPath($WorkDirectory)
 $decompileScript = Resolve-RequiredFile -Path (Join-Path $PSScriptRoot "decompileScaleform.ps1") -Description "Scaleform decompile helper"
 $providerProbeLayoutSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\fixtures\chronomark-provider-probe.xml") `
-  -Description "Goal 5 Chronomark provider probe"
+  -Description "Goal 6 environmental provider probe"
 $providerProbeComponentDirectory = Resolve-RequiredDirectory `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\fixtures\components") `
-  -Description "Goal 5 Chronomark component directory"
+  -Description "Goal 6 HUD component directory"
 $gallerySvgSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\gallery-vector.svg") `
   -Description "Owned SVG gallery asset"
@@ -247,7 +247,8 @@ foreach ($componentFixtureName in @(
   'weapon-status.xml',
   'environment-status.xml',
   'player-meters.xml',
-  'mobility-status.xml'
+  'mobility-status.xml',
+  'environmental-hazard-scanner.xml'
 )) {
   $componentFixturePath = Resolve-RequiredFile `
     -Path (Join-Path $providerProbeComponentDirectory $componentFixtureName) `
@@ -840,7 +841,7 @@ try {
   New-Item -ItemType Directory -Force -Path $assetOutputDirectory | Out-Null
   New-Item -ItemType Directory -Force -Path $componentOutputDirectory | Out-Null
   Copy-Item -LiteralPath $providerProbeLayoutSource -Destination (Join-Path $cuiOutputDirectory "layout.xml") -Force
-  foreach ($componentFixtureName in @('weapon-status.xml','environment-status.xml','player-meters.xml','mobility-status.xml')) {
+  foreach ($componentFixtureName in @('weapon-status.xml','environment-status.xml','player-meters.xml','mobility-status.xml','environmental-hazard-scanner.xml')) {
     Copy-Item -LiteralPath (Join-Path $providerProbeComponentDirectory $componentFixtureName) -Destination (Join-Path $componentOutputDirectory $componentFixtureName) -Force
   }
   $stagedPlayerMeters = [xml](Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'player-meters.xml') -Raw)
@@ -849,6 +850,7 @@ try {
   }
   $stagedWeaponStatusText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'weapon-status.xml') -Raw
   $stagedMobilityStatusText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'mobility-status.xml') -Raw
+  $stagedEnvironmentalScannerText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'environmental-hazard-scanner.xml') -Raw
   if ($stagedWeaponStatusText -notmatch 'name="vehicle-exit-prompt"' -or
       $stagedWeaponStatusText -notmatch 'value="\$EXIT HOLD"' -or
       $stagedWeaponStatusText -notmatch 'fontSize="21"' -or
@@ -859,10 +861,23 @@ try {
       $stagedMobilityStatusText -match 'vehicle\.exit|vehicle-exit-prompt|\$EXIT HOLD') {
     throw 'Staged weapon-status.xml must own the left-aligned mapped vehicle-exit presentation, and mobility-status.xml must not retain it.'
   }
+  $environmentalScannerIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
+    [string]$_.id -eq 'environmental-hazard-scanner'
+  })
+  if ($environmentalScannerIncludes.Count -ne 1 -or
+      [string]$environmentalScannerIncludes[0].src -ne 'environmental-hazard-scanner.xml' -or
+      [string]$environmentalScannerIncludes[0].anchor -ne 'top-center' -or
+      $stagedEnvironmentalScannerText -notmatch 'QUAD SENSOR CHANNELS // DIAGNOSTIC' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="diagnostic\.environmentCandidates"' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="diagnostic\.starmapProvider"' -or
+      $stagedEnvironmentalScannerText -notmatch 'NO ENVIRONMENTAL THREAT INDEX FORMULA' -or
+      $stagedEnvironmentalScannerText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE)') {
+    throw 'Staged environmental-hazard-scanner.xml must remain an independent top-center diagnostic without invented measurements.'
+  }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
   Copy-Item -LiteralPath $invalidSvgSource -Destination (Join-Path $assetOutputDirectory "gallery-invalid.svg") -Force
-  Write-Host -ForegroundColor Green "Staged Goal 5 multi-file Chronomark layout in $cuiOutputDirectory"
+  Write-Host -ForegroundColor Green "Staged Goal 6 environmental diagnostic with the accepted Goal 5 Chronomark in $cuiOutputDirectory"
 }
 finally {
   if ($KeepWork) {
