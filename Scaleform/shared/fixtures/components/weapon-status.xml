@@ -2,6 +2,12 @@
 <venworksCUIFragment schemaVersion="1" runtimeVersion="1">
   <group id="root" x="0" y="0" width="430" height="370" opacity="1" visible="true"
          rotation="0" scaleX="1" scaleY="1" z="0">
+    <text id="vehicle.exit.label" x="8" y="-61" width="238" height="42" opacity="1" visible="true"
+          visibleWhen="inVehicle" rotation="0" scaleX="1" scaleY="1" z="3" value="$EXIT HOLD"
+          font="$MAIN_Font_Bold" fontSize="21" color="#F2F7F9" bold="false" align="left" />
+    <symbol id="vehicle.exit.glyph" x="251" y="-66" width="52" height="52" opacity="1" visible="true"
+            visibleWhen="inVehicle" rotation="0" scaleX="1" scaleY="1" z="3"
+            name="vehicle-exit-prompt" fit="contain" alignX="left" alignY="center" />
     <providerSymbol id="weapon.icon" x="8" y="0" width="54" height="54" opacity="1" visible="true"
                     rotation="0" scaleX="1" scaleY="1" z="1" source="weapon.icon"
                     color="#F2F7F9" fit="contain" alignX="left" alignY="center" />

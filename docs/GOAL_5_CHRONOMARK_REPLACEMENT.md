@@ -244,9 +244,13 @@ and vehicle-exit behavior, but both the label and especially the key glyph were
 too small for final readability. Increasing the outer glyph box proved that the
 wide hold-button label bounds still dominated `contain` fitting. The follow-up
 bounds the initialized hold button to the union of its live keyboard and
-controller glyph children, moves the horizontal pair above the lower-right
-weapon UI, and fits that key-only region beside the accepted 21-pixel label.
-Final placement, key size, and clipping remain pending runtime acceptance.
+controller glyph children. Runtime confirmed that the helper became readable,
+but also exposed that `mobility-status.xml` remained rooted at bottom-right.
+The final placement pass transfers the horizontal pair to the bottom-left
+weapon fragment, positions it above and left-aligned with the weapon row, and
+reduces the readable but oversized key box from 68 to 52 pixels beside the
+accepted 21-pixel label. Final placement and key size remain pending runtime
+acceptance.
 
 Report the displayed values and transition behavior before judging styling.
 The final replacement must not proceed until the confirmed fields and lifecycle

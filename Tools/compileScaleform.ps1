@@ -847,16 +847,17 @@ try {
   if (@($stagedPlayerMeters.venworksCUIFragment.group.meter).Count -ne 3) {
     throw 'Staged player-meters.xml must contain exactly three consolidated live meters.'
   }
-  $stagedMobilityStatusPath = Join-Path $componentOutputDirectory 'mobility-status.xml'
-  $stagedMobilityStatusText = Get-Content -LiteralPath $stagedMobilityStatusPath -Raw
-  if ($stagedMobilityStatusText -notmatch 'name="vehicle-exit-prompt"' -or
-      $stagedMobilityStatusText -notmatch 'value="\$EXIT HOLD"' -or
-      $stagedMobilityStatusText -notmatch 'fontSize="21"' -or
-      $stagedMobilityStatusText -notmatch 'id="vehicle\.exit\.label" x="112" y="137"' -or
-      $stagedMobilityStatusText -notmatch 'id="vehicle\.exit\.glyph" x="355" y="128" width="68" height="68"' -or
-      ([regex]::Matches($stagedMobilityStatusText, 'visibleWhen="inVehicle"')).Count -lt 2 -or
-      $stagedMobilityStatusText -match '<button|action=|event=|callback=|userEvent=|key=') {
-    throw 'Staged mobility-status.xml must compose the mapped noninteractive glyph with localized $EXIT HOLD text.'
+  $stagedWeaponStatusText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'weapon-status.xml') -Raw
+  $stagedMobilityStatusText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'mobility-status.xml') -Raw
+  if ($stagedWeaponStatusText -notmatch 'name="vehicle-exit-prompt"' -or
+      $stagedWeaponStatusText -notmatch 'value="\$EXIT HOLD"' -or
+      $stagedWeaponStatusText -notmatch 'fontSize="21"' -or
+      $stagedWeaponStatusText -notmatch 'id="vehicle\.exit\.label" x="8" y="-61"' -or
+      $stagedWeaponStatusText -notmatch 'id="vehicle\.exit\.glyph" x="251" y="-66" width="52" height="52"' -or
+      ([regex]::Matches($stagedWeaponStatusText, 'visibleWhen="inVehicle"')).Count -lt 2 -or
+      $stagedWeaponStatusText -match '<button|action=|event=|callback=|userEvent=|key=' -or
+      $stagedMobilityStatusText -match 'vehicle\.exit|vehicle-exit-prompt|\$EXIT HOLD') {
+    throw 'Staged weapon-status.xml must own the left-aligned mapped vehicle-exit presentation, and mobility-status.xml must not retain it.'
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
