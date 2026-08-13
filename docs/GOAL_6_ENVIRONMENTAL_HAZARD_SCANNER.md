@@ -2,9 +2,9 @@
 
 **Status: The environmental hazard scanner and Planet Data presentation are
 runtime accepted. The bounded player-data probe confirmed the final Goal 6
-player-tricorder providers. A scanner-only SharedObject persistence experiment
-is implemented for the requested generated serial; restart persistence remains
-pending runtime acceptance.**
+player-tricorder providers. The scanner-only SharedObject persistence experiment
+was runtime rejected with Error #1501. A storage-free, exact-name-derived display
+serial is implemented and pending runtime acceptance.**
 
 ## Product direction
 
@@ -167,15 +167,22 @@ numeric base form `0x00000A` with `uFormID=10`, `uCount=51`, and
 `sName=DIGIPICK`; `sEditorID` remained `NULL`. The exact base form is therefore
 the production-capable identity, independent of localized display name.
 
-No Bethesda save/player serial is exposed by the tested HUD provider. The
-approved experiment therefore uses the Flash `SharedObject` store
-`VenworksCUIPlayerSerials`. It indexes one raw 18-character uppercase
-alphanumeric value by the exact character name, flushes a newly generated value,
-reads it back, and displays it as `XXXXXXXX-XXXX-XXXXXX`. This storage is local
-to the Flash installation/profile rather than the save: same-named characters
-collide, renaming a character creates a new key, and the value is expected to
-survive Unity transitions. It remains diagnostic-only until HUD recreation,
-save reload, and full game restart prove persistence.
+No Bethesda save/player serial is exposed by the tested HUD provider. The first
+approved fallback experiment used Flash `SharedObject` storage, but the deployed
+HUD reported `Error #1501` when `flush()` attempted to write. That error means the
+host has not installed a `SharedObjectManager`; providing one requires native
+application-layer loader support and is outside this Scaleform-only, no-SFSE
+project.
+
+The replacement derives a display-only serial directly from the exact character
+name without storage, randomness, native code, or a new save field. It maps the
+case- and whitespace-sensitive name deterministically to 18 uppercase `A-Z0-9`
+characters and displays them as `XXXXXXXX-XXXX-XXXXXX`. The same exact name
+always produces the same value, including after save reload, game restart, or a
+Unity transition because it is recomputed rather than persisted. Renaming changes
+the value, and two characters with identical exact names collide by design. The
+result is not a Bethesda identifier, save identifier, globally unique identifier,
+or security token.
 
 ## Unknowns that must not be invented
 
@@ -405,26 +412,25 @@ verify:
 The accepted captures already cover the dangerous full-soak transition; no
 additional full-soak unsafe-water test is required.
 
-## Player-data and serial-persistence runtime acceptance plan
+## Player-data and deterministic-serial runtime acceptance plan
 
 The initial player-data runtime capture is accepted provider evidence. The
-remaining diagnostic deployment tests only Flash-local serial persistence:
+remaining diagnostic deployment tests only the name-derived display serial:
 
 1. on first scanner open, the serial line reports an 8-4-6 formatted uppercase
-   alphanumeric value and `READBACK=MATCH`; a new character key may report
-   `CREATED THIS HUD SESSION`, while an existing key reports `LOADED`;
-2. closing and reopening the scanner retains the exact value; this does not
-   require HUDMenu recreation, so the lifecycle label may remain unchanged;
-3. saving and reloading retains the exact value and reports `LOADED` if the HUD
-   movie is recreated;
-4. fully exiting and restarting the game retains the exact value and reports
-   `LOADED`;
-5. a differently named character receives a different value; and
-6. returning to the first character restores its original value.
+   alphanumeric value plus `SOURCE=<exact character name>` and
+   `MODE=DETERMINISTIC`, with no persistence error;
+2. closing and reopening the scanner produces the exact same value;
+3. saving and reloading produces the exact same value;
+4. fully exiting and restarting the game produces the exact same value;
+5. a Unity transition produces the exact same value;
+6. changing case, whitespace, or any character in the name produces a different
+   value; and
+7. two characters with the same exact name produce the same value, confirming
+   the documented collision behavior.
 
-Any `SHAREDOBJECT UNAVAILABLE`, persistence exception, `READBACK=MISMATCH`, or
-serial change for the same exact character name rejects this approach. The
-probe remains scanner-gated and must disappear when the scanner closes. The
+A serial change for the same exact character name rejects the implementation.
+The probe remains scanner-gated and must disappear when the scanner closes. The
 user commits the generated build before deployment.
 
 ## Automated validation and expected artifacts
@@ -442,20 +448,21 @@ Run repository validation and the complete two-variant Scaleform build:
   -VanillaInterfacePath "<approved-vanilla-interface-path>"
 ```
 
-The scanner-only player-data and SharedObject persistence diagnostic build
-passed automated validation on 2026-08-13. Both generated GFX variants
-compiled, imported, reopened, passed their build and staged-layout contracts,
-and reproduced from the approved source. All four staging variants contain the
-same normal/large pair. The retired environmental diagnostic remains absent,
-while the bounded persistence probe is staged only as a scanner-gated
-component; its in-game persistence sequence remains pending:
+The earlier SharedObject diagnostic passed automated build validation but was
+rejected by runtime Error #1501 because the Scaleform host does not install a
+`SharedObjectManager`. The deterministic replacement removes the rejected
+storage path. On 2026-08-13 both corrected GFX variants compiled, imported,
+reopened, passed their build and staged-layout contracts, and reproduced from
+the approved source. All four staging variants contain the same normal/large
+pair. The player-data probe remains scanner-gated pending the runtime acceptance
+sequence above:
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 400785 | `1E46CA21F667C2534EBB98AC398AF9D3E47BAF6C5DE8BF642A1978C1E3868E70` |
-| `hudmenu_lrg.gfx` | 400968 | `6036455BEC814FB6301560A739CF35E9EDAB0C433AB8476096CA12A2EC48975F` |
+| `hudmenu.gfx` | 399966 | `6B029C28EE7AF4DA1232027704EE5596F89DF9FDDCD50600C27E1BFF4B90365D` |
+| `hudmenu_lrg.gfx` | 400149 | `1442B9B191008EA51E5BB4DBBB9267639A26C7754DD72F91B8C82C6D44BBB633` |
 | `VenworksCUI/layout.xml` | 3710 | `4B0CA23278139753E6067816C35FFC1ED9E0F44442FA2B063D53B86D7C60BC03` |
-| `components/player-data-diagnostic-strip.xml` | 2894 | `9DC41E49E6DD67C774A1213E21217C43A812F3AAA9D341DC456A9DE04AEC120E` |
+| `components/player-data-diagnostic-strip.xml` | 2879 | `D2368D03C44DE55C0F8170A03DBF8A0842A7C64845E5E7F4B8897ACDB6234994` |
 | `components/environmental-hazard-scanner.xml` | 9856 | `055A9A7D51EF8016AAD3EAEC533885C430FD05888CCB5C76AC01FEE5A14BECA8` |
 | `components/environment-status.xml` | 1634 | `9DB8E41326E61D05798FAFDE38BFE87A4AB13A95DA0C47F5B554D9CC8B9D33E1` |
 

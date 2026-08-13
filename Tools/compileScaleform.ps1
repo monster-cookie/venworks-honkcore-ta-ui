@@ -251,17 +251,23 @@ foreach ($positiveFixtureName in @(
 
 $providerProbeLayout = [xml](Get-Content -LiteralPath $providerProbeLayoutSource -Raw)
 $playerHudDataContextText = Get-Content -LiteralPath $playerHudDataContextSource -Raw
-if ($playerHudDataContextText -notmatch 'import flash\.net\.SharedObject;' -or
-    $playerHudDataContextText -notmatch 'PLAYER_SERIAL_STORE_NAME:String\s*=\s*"VenworksCUIPlayerSerials"' -or
+$playerSerialDerivation = [regex]::Match(
+  $playerHudDataContextText,
+  '(?s)private function derivePlayerSerial\(param1:String\).*?private function formatPlayerSerial')
+if (-not $playerSerialDerivation.Success -or
+    $playerHudDataContextText -match 'SharedObject|store\.flush\(\)' -or
+    $playerSerialDerivation.Value -match 'Math\.random\(\)' -or
     $playerHudDataContextText -notmatch 'PLAYER_SERIAL_ALPHABET:String\s*=\s*"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"' -or
     $playerHudDataContextText -notmatch 'PLAYER_SERIAL_LENGTH:int\s*=\s*18' -or
-    $playerHudDataContextText -notmatch 'SharedObject\.getLocal\(PLAYER_SERIAL_STORE_NAME\)' -or
-    $playerHudDataContextText -notmatch 'store\.flush\(\)' -or
+    $playerHudDataContextText -notmatch 'derivePlayerSerial\(param1:String\)' -or
+    $playerHudDataContextText -notmatch 'param1\.charCodeAt\(index\)' -or
+    $playerSerialDerivation.Value -notmatch 'uint\(stateA \^ stateB\) % PLAYER_SERIAL_ALPHABET\.length' -or
+    $playerHudDataContextText -notmatch 'MODE=DETERMINISTIC' -or
     $playerHudDataContextText -notmatch '\^\[A-Z0-9\]\{18\}\$' -or
     $playerHudDataContextText -notmatch 'substring\(0,8\)' -or
     $playerHudDataContextText -notmatch 'substring\(8,12\)' -or
     $playerHudDataContextText -notmatch 'substring\(12,18\)') {
-  throw 'Goal 6 player serial persistence probe must use one flushed SharedObject store, an 18-character uppercase alphanumeric value, and the accepted 8-4-6 display format.'
+  throw 'Goal 6 player serial probe must deterministically derive an 18-character uppercase alphanumeric value from the exact character name, use the accepted 8-4-6 display format, and perform no random or persistent-storage operations.'
 }
 foreach ($meterStyle in @($providerProbeLayout.venworksCUI.definitions.meterStyle)) {
   $renderer = [string]$meterStyle.renderer
@@ -1007,8 +1013,8 @@ try {
       $stagedPlayerDiagnosticText -notmatch 'source="diagnostic\.playerTargets"' -or
       $stagedPlayerDiagnosticText -notmatch 'source="diagnostic\.playerIdentifiers"' -or
       $stagedPlayerDiagnosticText -notmatch 'source="diagnostic\.playerTimeInventory"' -or
-      $stagedPlayerDiagnosticText -notmatch 'SERIAL PERSISTENCE: WAITING FOR PLAYERDATA' -or
-      $stagedPlayerDiagnosticText -notmatch 'SERIAL MUST REMAIN IDENTICAL AFTER HUD RELOAD, SAVE RELOAD, AND GAME RESTART' -or
+      $stagedPlayerDiagnosticText -notmatch 'DETERMINISTIC SERIAL: WAITING FOR PLAYERDATA' -or
+      $stagedPlayerDiagnosticText -notmatch 'SAME EXACT CASE \+ WHITESPACE PRODUCES THE SAME SERIAL' -or
       $environmentalProtectionStyles.Count -ne 1 -or
       [string]$environmentalProtectionStyles[0].renderer -ne 'segments' -or
       [string]$environmentalProtectionStyles[0].direction -ne 'right' -or
@@ -1032,7 +1038,7 @@ try {
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.radiationExposureLevel"' -or
       $stagedEnvironmentStatusText -match 'source="(location\.name|environment\.(localtime|oxygenpercentage|temperature|gravity))"' -or
       $stagedEnvironmentalScannerText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE|THREAT INDEX|VACUUM)') {
-    throw 'Goal 6 must stage the accepted lower-right environmental control plus one scanner-only bounded player-data and serial-persistence diagnostic, with no retired environment diagnostic or invented production data.'
+    throw 'Goal 6 must stage the accepted lower-right environmental control plus one scanner-only bounded player-data and deterministic-serial diagnostic, with no retired environment diagnostic or invented production data.'
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force

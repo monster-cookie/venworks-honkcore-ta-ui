@@ -5,7 +5,6 @@ package venworks.cui
    import flash.events.Event;
    import flash.events.EventDispatcher;
    import flash.events.TimerEvent;
-   import flash.net.SharedObject;
    import flash.utils.Timer;
 
    public final class CUIPlayerHudDataContext extends EventDispatcher
@@ -16,9 +15,10 @@ package venworks.cui
       private static const MAX_HAZARD_EFFECTS:int = 32;
       private static const MAX_DIAGNOSTIC_INVENTORY_ITEMS:int = 256;
       private static const DIGIPICK_FORM_ID:Number = 10;
-      private static const PLAYER_SERIAL_STORE_NAME:String = "VenworksCUIPlayerSerials";
       private static const PLAYER_SERIAL_ALPHABET:String = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
       private static const PLAYER_SERIAL_LENGTH:int = 18;
+      private static const PLAYER_SERIAL_SEED_A:uint = 0x811C9DC5;
+      private static const PLAYER_SERIAL_SEED_B:uint = 0x9E3779B9;
       private static const EXPOSURE_UPDATE_MS:int = 250;
       private static const EXPOSURE_LERP:Number = 0.18;
       private static const EXPOSURE_TARGET_MIN_TICKS:int = 6;
@@ -50,7 +50,6 @@ package venworks.cui
       private var oxygenActivity:Number = 0;
       private var universalTimeDiagnostic:String = "UT: LOCAL ENV FREQUENT DATA NOT RECEIVED";
       private var digipickDiagnostic:String = "DIGIPICK: PLAYER INVENTORY DATA NOT RECEIVED";
-      private var playerSerialCreatedKeysThisSession:Object = {};
 
       public function CUIPlayerHudDataContext()
       {
@@ -87,7 +86,7 @@ package venworks.cui
          this.setText("diagnostic.activityloads","LOADS: AIR/WATER 0% // THERMAL 0% // CORROSIVE 0% // RADIATION 0%");
          this.setText("diagnostic.playerfields","PLAYERDATA NOT RECEIVED");
          this.setText("diagnostic.playertargets","PLAYER TARGETS: WAITING");
-         this.setText("diagnostic.playeridentifiers","SERIAL PERSISTENCE: WAITING FOR PLAYERDATA");
+         this.setText("diagnostic.playeridentifiers","DETERMINISTIC SERIAL: WAITING FOR PLAYERDATA");
          this.updatePlayerTimeInventoryDiagnostic();
          this.resetEnvironmentalHazards();
          this.setText("environment.protectionstatus","ENVIRONMENT PROVIDER NOT RECEIVED");
@@ -901,71 +900,16 @@ package venworks.cui
       private function updatePlayerSerialDiagnostic(param1:Object) : void
       {
          var characterName:String = param1 !== undefined && param1 !== null ? String(param1) : "";
-         var store:SharedObject = null;
-         var serials:Object = null;
-         var verifyStore:SharedObject = null;
-         var verifySerials:Object = null;
          var serial:String = "";
-         var verifySerial:String = "";
-         var lifecycle:String = this.playerSerialCreatedKeysThisSession[characterName] === true ?
-            "CREATED THIS HUD SESSION" : "LOADED";
-         var flushResult:Object = null;
-         var flushText:String = "NOT NEEDED";
-         var readbackText:String = "MISMATCH";
          if(characterName.length == 0)
          {
-            this.setText("diagnostic.playeridentifiers","SERIAL PERSISTENCE: CHARACTER NAME UNAVAILABLE");
+            this.setText("diagnostic.playeridentifiers","DETERMINISTIC SERIAL: CHARACTER NAME UNAVAILABLE");
             return;
          }
-         try
-         {
-            store = SharedObject.getLocal(PLAYER_SERIAL_STORE_NAME);
-            if(store == null)
-            {
-               this.setText("diagnostic.playeridentifiers","SERIAL PERSISTENCE: SHAREDOBJECT UNAVAILABLE");
-               return;
-            }
-            serials = store.data.serials;
-            if(serials == null || typeof serials != "object")
-            {
-               serials = {};
-               store.data.serials = serials;
-            }
-            if(serials[characterName] !== undefined && serials[characterName] !== null)
-            {
-               serial = String(serials[characterName]);
-            }
-            if(!this.isValidPlayerSerial(serial))
-            {
-               serial = this.generatePlayerSerial();
-               serials[characterName] = serial;
-               store.data.serials = serials;
-               this.playerSerialCreatedKeysThisSession[characterName] = true;
-               lifecycle = "CREATED THIS HUD SESSION";
-               flushResult = store.flush();
-               flushText = flushResult === undefined ? "UNDEFINED" :
-                  (flushResult === null ? "NULL" : String(flushResult).toUpperCase());
-            }
-            verifyStore = SharedObject.getLocal(PLAYER_SERIAL_STORE_NAME);
-            if(verifyStore != null)
-            {
-               verifySerials = verifyStore.data.serials;
-               if(verifySerials != null && verifySerials[characterName] !== undefined &&
-                  verifySerials[characterName] !== null)
-               {
-                  verifySerial = String(verifySerials[characterName]);
-               }
-            }
-            readbackText = verifySerial == serial ? "MATCH" : "MISMATCH";
-            this.setText("diagnostic.playeridentifiers","SERIAL PERSISTENCE: " +
-               this.formatPlayerSerial(serial) + " | KEY=" + this.formatDiagnosticValue(characterName) +
-               " | " + lifecycle + " | FLUSH=" + flushText + " | READBACK=" + readbackText);
-         }
-         catch(error:Error)
-         {
-            this.setText("diagnostic.playeridentifiers","SERIAL PERSISTENCE FAILED: " +
-               this.formatDiagnosticValue(error.name) + " | " + this.formatDiagnosticValue(error.message));
-         }
+         serial = this.derivePlayerSerial(characterName);
+         this.setText("diagnostic.playeridentifiers","DETERMINISTIC SERIAL: " +
+            this.formatPlayerSerial(serial) + " | SOURCE=" + this.formatDiagnosticValue(characterName) +
+            " | MODE=DETERMINISTIC");
       }
 
       private function isValidPlayerSerial(param1:String) : Boolean
@@ -973,13 +917,35 @@ package venworks.cui
          return param1 != null && /^[A-Z0-9]{18}$/.test(param1);
       }
 
-      private function generatePlayerSerial() : String
+      private function derivePlayerSerial(param1:String) : String
       {
          var serial:String = "";
-         while(serial.length < PLAYER_SERIAL_LENGTH)
+         var stateA:uint = PLAYER_SERIAL_SEED_A;
+         var stateB:uint = PLAYER_SERIAL_SEED_B;
+         var characterCode:uint = 0;
+         var index:int = 0;
+         while(index < param1.length)
          {
+            characterCode = uint(param1.charCodeAt(index));
+            stateA = uint(((stateA << 5) - stateA) + characterCode + uint(index));
+            stateA ^= stateA >>> 16;
+            stateB = uint(((stateB << 7) - stateB) ^
+               (characterCode + uint(index * 131)));
+            stateB ^= stateB >>> 13;
+            ++index;
+         }
+         index = 0;
+         while(index < PLAYER_SERIAL_LENGTH)
+         {
+            stateA ^= stateA << 13;
+            stateA ^= stateA >>> 17;
+            stateA ^= stateA << 5;
+            stateB = uint(stateB + 0x6D2B79F5 + uint(index));
+            stateB ^= stateB >>> 15;
+            stateB ^= stateB << 7;
             serial += PLAYER_SERIAL_ALPHABET.charAt(
-               Math.floor(Math.random() * PLAYER_SERIAL_ALPHABET.length));
+               int(uint(stateA ^ stateB) % PLAYER_SERIAL_ALPHABET.length));
+            ++index;
          }
          return serial;
       }
