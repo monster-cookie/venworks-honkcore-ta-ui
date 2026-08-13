@@ -94,8 +94,10 @@ diagnostic vanilla bottom-left Chronomark and right-meter group, places the
 split-tab Player Data scanner at lower-left and the split-tab Planet
 Data/environmental scanner at lower-right, and moves the temporary
 weapon/power presentation to upper-right. Each lower scanner uses one
-continuous rounded path with separate title and clock tabs around a transparent
-center notch.
+continuous rounded path with separate title and clock tabs around a wide
+transparent center notch. Mirrored overflow rails extend through the nearest
+side and bottom screen margins so both scanners appear integrated into the
+helmet edge without moving their accepted content geometry.
 Malformed fixtures are
 intentionally not well-formed XML, while other negative fixtures may be
 schema-valid and rejected by runtime semantic checks. See

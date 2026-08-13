@@ -1046,8 +1046,8 @@ try {
   $stagedPlayerPanelPaths = @($stagedPlayerScannerGroup.path | Where-Object {
     [string]$_.id -eq 'panel'
   })
-  $expectedPlayerPanelPath = 'M 8 0 L 164 0 Q 176 0 176 12 L 176 20 Q 176 30 186 30 L 194 30 Q 204 30 204 20 L 204 12 Q 204 0 216 0 L 352 0 Q 360 0 360 8 L 360 288 Q 360 296 352 296 L 8 296 Q 0 296 0 288 L 0 8 Q 0 0 8 0 Z'
-  $expectedEnvironmentalPanelPath = 'M 8 0 L 164 0 Q 176 0 176 12 L 176 20 Q 176 30 186 30 L 194 30 Q 204 30 204 20 L 204 12 Q 204 0 216 0 L 352 0 Q 360 0 360 8 L 360 304 Q 360 312 352 312 L 8 312 Q 0 312 0 304 L 0 8 Q 0 0 8 0 Z'
+  $expectedPlayerPanelPath = 'M -25 -32 L -25 321 L 352 321 Q 360 321 360 313 L 360 8 Q 360 0 352 0 L 260 0 Q 248 0 248 12 L 248 20 Q 248 30 236 30 L 132 30 Q 120 30 120 20 L 120 12 Q 120 0 108 0 L 8 0 Q -10 0 -25 -32 Z'
+  $expectedEnvironmentalPanelPath = 'M 8 0 L 108 0 Q 120 0 120 12 L 120 20 Q 120 30 132 30 L 236 30 Q 248 30 248 20 L 248 12 Q 248 0 260 0 L 352 0 Q 370 0 385 -32 L 385 337 L 8 337 Q 0 337 0 329 L 0 8 Q 0 0 8 0 Z'
   if ($environmentalDiagnosticIncludes.Count -ne 0 -or
       $retiredStagedComponents.Count -ne 0 -or
       $environmentalScannerIncludes.Count -ne 1 -or

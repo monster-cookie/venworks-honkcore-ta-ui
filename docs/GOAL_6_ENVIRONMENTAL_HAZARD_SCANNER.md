@@ -478,12 +478,15 @@ Player Data panel remains the production presentation.
 ## Helmet-integration presentation
 
 The final Goal 6 visual pass changes only the two lower tricorder panels. Each
-panel background is one continuous CUI vector path with rounded outside
-corners, a rounded title tab at upper-left, a rounded clock tab at upper-right,
-and a transparent center notch. The former full-width header divider is removed
-so it cannot visually bridge that notch. All accepted text, provider bindings,
-meter geometry, safe-area anchoring, and the temporary upper-right weapon panel
-remain unchanged.
+panel background is one continuous CUI vector path with a rounded title tab at
+upper-left, a rounded clock tab at upper-right, and a wide transparent center
+notch following the accepted runtime annotation. Mirrored 25-unit side and
+bottom overflow rails continue through the matching safe-area margins, while a
+32-unit curved rise makes each panel emerge from its nearest helmet edge. The
+former full-width header divider remains absent so it cannot visually bridge
+the notch. All accepted text, provider bindings, meter geometry, root bounds,
+safe-area anchoring, and the temporary upper-right weapon panel remain
+unchanged.
 
 ## Automated validation and expected artifacts
 
@@ -512,8 +515,8 @@ normal/large pair across all four staging variants:
 | `hudmenu.gfx` | 402359 | `66F25999E6685D6CCE684593D8E87D28387C01B7BB765C7B0923E196B5A251D2` |
 | `hudmenu_lrg.gfx` | 402542 | `E0C9DA806CC5F20DA89D09065A1E33EE769BEB0A82614724A55C9204FF2DF1BD` |
 | `VenworksCUI/layout.xml` | 3736 | `51D2128ABA3E0154D210DD061A095A2D20602255D059FFEB0F93786DB923443C` |
-| `components/player-status-scanner.xml` | 9176 | `817BA0C48D275A751A237759CF6D861AD59E97BBFCC21615669A37F6B034FB40` |
-| `components/environmental-hazard-scanner.xml` | 9931 | `1075A6C15FB0603153E45968781509D1B14E9AD4590269DA1B88D92FFFD1A60E` |
+| `components/player-status-scanner.xml` | 9174 | `FF920F831877489D66E5067284DF17727BE15AA97F111BF6F737E78B6FB4DB53` |
+| `components/environmental-hazard-scanner.xml` | 9915 | `936AFD567C6A3629950A8870C1803B189F3C469871D7D638D2F3E37C03BEC7C2` |
 | `components/weapon-status.xml` | 4455 | `81FF1E81CC4647736A4C360C131BDF68D84D566338268BFF2AEC68D508248894` |
 
 The table above records the helmet-integration build after both HUD variants

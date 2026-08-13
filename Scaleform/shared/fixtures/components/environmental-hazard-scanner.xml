@@ -4,7 +4,7 @@
          rotation="0" scaleX="1" scaleY="1" z="0">
     <path id="panel" x="0" y="0" width="360" height="312" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="0"
-          data="M 8 0 L 164 0 Q 176 0 176 12 L 176 20 Q 176 30 186 30 L 194 30 Q 204 30 204 20 L 204 12 Q 204 0 216 0 L 352 0 Q 360 0 360 8 L 360 304 Q 360 312 352 312 L 8 312 Q 0 312 0 304 L 0 8 Q 0 0 8 0 Z"
+          data="M 8 0 L 108 0 Q 120 0 120 12 L 120 20 Q 120 30 132 30 L 236 30 Q 248 30 248 20 L 248 12 Q 248 0 260 0 L 352 0 Q 370 0 385 -32 L 385 337 L 8 337 Q 0 337 0 329 L 0 8 Q 0 0 8 0 Z"
           viewBoxX="0" viewBoxY="0" viewBoxWidth="360" viewBoxHeight="312"
           fillColor="#03141D" fillOpacity="0.88" strokeColor="#62DDF2" strokeOpacity="0.76" strokeWidth="2" />
 
