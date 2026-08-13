@@ -248,7 +248,7 @@ mouse interaction and receives no routed user events. The hidden vanilla
 ## Goal 6 environmental scanner bindings
 
 Goal 6 adds an allowlisted `EnvironmentEffectsData` adapter and a compact,
-scanner-gated environmental readout. The following sources are available to
+persistent environmental readout. The following sources are available to
 ordinary text templates or meters after their owning provider publishes:
 
 | Source | Kind | Confirmed meaning |
@@ -261,10 +261,25 @@ ordinary text templates or meters after their owning provider publishes:
 | `environment.hazard.thermalLevel` | Number `0` or `1` | Presence of `HazardEffect_Thermal`. |
 | `environment.hazard.corrosiveLevel` | Number `0` or `1` | Presence of `HazardEffect_Corrosive`. |
 | `environment.hazard.radiationLevel` | Number `0` or `1` | Presence of `HazardEffect_Radiation`. |
+| `environment.hazard.airWaterExposureLevel` | Number `0..1` | Modeled relative load for an active Airborne category; `0` when absent. |
+| `environment.hazard.thermalExposureLevel` | Number `0..1` | Modeled relative load for an active Thermal category; `0` when absent. |
+| `environment.hazard.corrosiveExposureLevel` | Number `0..1` | Modeled relative load for an active Corrosive category; `0` when absent. |
+| `environment.hazard.radiationExposureLevel` | Number `0..1` | Modeled relative load for an active Radiation category; `0` when absent. |
 | Corresponding `...Status` sources | String | Provider waiting, clear, or detected text for the four categories. |
 
-The four hazard levels are categorical activity gates, not magnitudes. Local
-temperature can provide hot/cold context but is not Thermal severity. O2 `0%`
-cannot distinguish vacuum from an oxygen-free atmosphere. No allowlisted source
-currently claims CO2 composition, atmospheric pressure, vacuum, physical
-hazard units, per-channel severity, or an aggregate environmental Threat Index.
+The four `...Level` values are categorical activity gates, not magnitudes. The
+four `...ExposureLevel` values are explicitly modeled display values rather
+than Bethesda telemetry or physical measurements. An active channel selects a
+slowly changing target from `0.05 + 0.45 * depletion` through
+`0.50 + 0.50 * depletion`, where `depletion = 1 - protection`; inactive
+channels are exactly `0`. This means healthy protection produces a 5–50%
+relative load and exhausted protection produces a 50–100% relative load.
+
+Local temperature can provide hot/cold context but is not Thermal severity.
+O2 `0%` cannot distinguish vacuum from an oxygen-free atmosphere. No
+allowlisted source currently claims CO2 composition, atmospheric pressure,
+vacuum, physical hazard units, per-channel Bethesda severity, or an aggregate
+environmental Threat Index. A scanner-only diagnostic separately inspects
+bounded field names and movement candidates from `PlayerFrequentData`,
+`HUDVehicleData`, `HudCrosshairData`, `HUDStealthData`, and `HudJetpackData`;
+no movement field controls the model until runtime evidence identifies one.

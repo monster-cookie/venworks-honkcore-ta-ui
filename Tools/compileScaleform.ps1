@@ -762,6 +762,19 @@ try {
       'environment.protectionstatus',
       'FULL SOAK // HEALTH RISK',
       'AIR / WATER DETECTED',
+      'EXPOSURE_UPDATE_MS',
+      'EXPOSURE_LERP',
+      'MOVEMENT_CANDIDATES',
+      'environment.hazard.airwaterexposurelevel',
+      'environment.hazard.thermalexposurelevel',
+      'environment.hazard.corrosiveexposurelevel',
+      'environment.hazard.radiationexposurelevel',
+      'diagnostic.movementplayer',
+      'diagnostic.movementvehicle',
+      'diagnostic.movementcrosshair',
+      'diagnostic.movementstealth',
+      'diagnostic.movementjetpack',
+      'valueContext.dispose()',
       'PlayerFrequentData',
       'WeaponData',
       'HUDStarbornPowersData',
@@ -939,7 +952,7 @@ try {
     throw 'Staged weapon-status.xml must own the left-aligned mapped vehicle-exit presentation, and mobility-status.xml must not retain it.'
   }
   $environmentalDiagnosticIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
-    [string]$_.id -eq 'env-hazard-probe'
+    [string]$_.id -eq 'environmental-hazard-diagnostic'
   })
   $environmentalScannerIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'environmental-hazard-scanner'
@@ -949,45 +962,48 @@ try {
   })
   $stagedEnvironmentalDiagnosticGroup = $stagedEnvironmentalDiagnostic.venworksCUIFragment.group
   $stagedEnvironmentalScannerGroup = $stagedEnvironmentalScanner.venworksCUIFragment.group
-  if ($environmentalDiagnosticIncludes.Count -ne 0 -or
+  if ($environmentalDiagnosticIncludes.Count -ne 1 -or
+      [string]$environmentalDiagnosticIncludes[0].src -ne 'environmental-hazard-diagnostic-strip.xml' -or
+      [string]$environmentalDiagnosticIncludes[0].anchor -ne 'top-center' -or
+      [string]$environmentalDiagnosticIncludes[0].visibleWhen -ne 'inScanner' -or
       $environmentalScannerIncludes.Count -ne 1 -or
       [string]$environmentalScannerIncludes[0].src -ne 'environmental-hazard-scanner.xml' -or
-      [string]$environmentalScannerIncludes[0].anchor -ne 'center-right' -or
-      [string]$environmentalScannerIncludes[0].visibleWhen -ne 'inScanner' -or
+      [string]$environmentalScannerIncludes[0].anchor -ne 'bottom-right' -or
+      [string]$environmentalScannerIncludes[0].visibleWhen -ne 'always' -or
+      [int]$environmentalScannerIncludes[0].x -ne -54 -or
+      [int]$environmentalScannerIncludes[0].y -ne -12 -or
       $environmentalProtectionStyles.Count -ne 1 -or
       [string]$environmentalProtectionStyles[0].renderer -ne 'segments' -or
       [string]$environmentalProtectionStyles[0].direction -ne 'right' -or
-      [int]$environmentalProtectionStyles[0].segmentCount -ne 20 -or
-      [int]$stagedEnvironmentalScannerGroup.width -ne 510 -or
-      [int]$stagedEnvironmentalScannerGroup.height -ne 342 -or
+      [int]$environmentalProtectionStyles[0].segmentCount -ne 16 -or
+      [int]$stagedEnvironmentalScannerGroup.width -ne 360 -or
+      [int]$stagedEnvironmentalScannerGroup.height -ne 230 -or
       [int]$stagedEnvironmentalDiagnosticGroup.width -ne 1160 -or
       [int]$stagedEnvironmentalDiagnosticGroup.height -ne 196 -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.environmentProvider"' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'environment\.soakCandidate:raw' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'environment\.fullSoakAlertCandidate:boolean' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.environmentCandidates"' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.environmentFields"' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.effect0"' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.effect1"' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.effect2"' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.effect3"' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'MOVEMENT PROVIDER PROBE' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.movementPlayer"' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.movementVehicle"' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.movementCrosshair"' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.movementStealth"' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.movementJetpack"' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'NO MOVEMENT VALUE DRIVES EXPOSURE UNTIL RUNTIME PROVEN' -or
       $stagedEnvironmentalDiagnosticText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE)' -or
-      $stagedEnvironmentalScannerText -notmatch 'QUAD CHANNELS' -or
+      $stagedEnvironmentalScannerText -notmatch 'RELATIVE LOAD' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.protectionLevel"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.protectionPercentage"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.protectionStatus"' -or
-      $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.airWaterLevel"' -or
-      $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.thermalLevel"' -or
-      $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.corrosiveLevel"' -or
-      $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.radiationLevel"' -or
-      $stagedEnvironmentalScannerText -notmatch 'AIR \+ UNSAFE WATER SHARE BETHESDA''S AIRBORNE CATEGORY' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.airWaterExposureLevel"' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.thermalExposureLevel"' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.corrosiveExposureLevel"' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.radiationExposureLevel"' -or
+      $stagedEnvironmentalScannerText -match 'source="environment\.(oxygenPercentage|temperature)"' -or
       $stagedEnvironmentalScannerText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE|THREAT INDEX|VACUUM)') {
-    throw 'Goal 6 must stage one compact center-right scanner-gated production meter, retain the inactive diagnostic, and expose only runtime-confirmed environmental values.'
+    throw 'Goal 6 must stage one compact persistent bottom-right relative-load meter, one scanner-gated movement diagnostic, and no invented physical units or Threat Index.'
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
   Copy-Item -LiteralPath $invalidSvgSource -Destination (Join-Path $assetOutputDirectory "gallery-invalid.svg") -Force
-  Write-Host -ForegroundColor Green "Staged compact scanner-gated Goal 6 production meter and inactive diagnostic with the accepted Goal 5 Chronomark in $cuiOutputDirectory"
+  Write-Host -ForegroundColor Green "Staged compact persistent Goal 6 relative-load meter and scanner-gated movement diagnostic with the accepted Goal 5 Chronomark in $cuiOutputDirectory"
 }
 finally {
   if ($KeepWork) {

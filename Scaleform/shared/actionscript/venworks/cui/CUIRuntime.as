@@ -414,6 +414,7 @@ package venworks.cui
          if(valueContext != null)
          {
             valueContext.removeEventListener(Event.CHANGE,this.onValueChanged);
+            valueContext.dispose();
          }
          while(componentLayer.numChildren > 0)
          {

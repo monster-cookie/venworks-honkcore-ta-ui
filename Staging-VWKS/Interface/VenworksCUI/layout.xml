@@ -20,23 +20,23 @@
                 direction="up" />
     <meterStyle id="environment.air" renderer="segments"
                 fillColor="#62DDF2" emptyColor="#123642"
-                fillOpacity="1" emptyOpacity="0.72" segmentCount="24" gap="2"
-                direction="right" partialSegments="false" />
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="16" gap="2"
+                direction="right" partialSegments="true" />
     <meterStyle id="environment.thermal" renderer="segments"
                 fillColor="#D89B2B" emptyColor="#3A2C16"
-                fillOpacity="1" emptyOpacity="0.72" segmentCount="24" gap="2"
-                direction="right" partialSegments="false" />
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="16" gap="2"
+                direction="right" partialSegments="true" />
     <meterStyle id="environment.corrosive" renderer="segments"
                 fillColor="#E6B840" emptyColor="#3D3218"
-                fillOpacity="1" emptyOpacity="0.72" segmentCount="24" gap="2"
-                direction="right" partialSegments="false" />
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="16" gap="2"
+                direction="right" partialSegments="true" />
     <meterStyle id="environment.radiation" renderer="segments"
                 fillColor="#E64B4B" emptyColor="#3D1C22"
-                fillOpacity="1" emptyOpacity="0.72" segmentCount="24" gap="2"
-                direction="right" partialSegments="false" />
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="16" gap="2"
+                direction="right" partialSegments="true" />
     <meterStyle id="environment.protection" renderer="segments"
                 fillColor="#62DDF2" emptyColor="#3D1C22"
-                fillOpacity="1" emptyOpacity="0.78" segmentCount="20" gap="2"
+                fillOpacity="1" emptyOpacity="0.78" segmentCount="16" gap="2"
                 direction="right" partialSegments="true" />
   </definitions>
   <vanillaVisibility>
@@ -45,7 +45,9 @@
   </vanillaVisibility>
   <includes>
     <include id="environmental-hazard-scanner" src="environmental-hazard-scanner.xml"
-             x="-18" y="0" anchor="center-right" visible="true" visibleWhen="inScanner" z="90" />
+             x="-54" y="-12" anchor="bottom-right" visible="true" visibleWhen="always" z="90" />
+    <include id="environmental-hazard-diagnostic" src="environmental-hazard-diagnostic-strip.xml"
+             x="0" y="12" anchor="top-center" visible="true" visibleWhen="inScanner" z="91" />
     <include id="chronomark.environment-status" src="environment-status.xml"
              x="0" y="0" anchor="bottom-left" visible="true" visibleWhen="always" z="100" />
     <include id="chronomark.player-meters" src="player-meters.xml"

@@ -4,18 +4,44 @@ package venworks.cui
    import Shared.AS3.Data.FromClientDataEvent;
    import flash.events.Event;
    import flash.events.EventDispatcher;
+   import flash.events.TimerEvent;
+   import flash.utils.Timer;
 
    public final class CUIPlayerHudDataContext extends EventDispatcher
    {
       private static const MAX_DIAGNOSTIC_FIELDS:int = 12;
       private static const MAX_DIAGNOSTIC_EFFECTS:int = 4;
       private static const MAX_HAZARD_EFFECTS:int = 32;
+      private static const EXPOSURE_UPDATE_MS:int = 250;
+      private static const EXPOSURE_LERP:Number = 0.18;
+      private static const EXPOSURE_TARGET_MIN_TICKS:int = 6;
+      private static const EXPOSURE_TARGET_TICK_RANGE:int = 11;
+      private static const MOVEMENT_CANDIDATES:Array = ["speed","velocity","move","walk","run","sprint","boost","throttle"];
+      private static const EXPOSURE_SOURCES:Array = [
+         "environment.hazard.airwaterexposurelevel",
+         "environment.hazard.thermalexposurelevel",
+         "environment.hazard.corrosiveexposurelevel",
+         "environment.hazard.radiationexposurelevel"
+      ];
 
       private var values:Object;
+      private var exposureTimer:Timer;
+      private var exposureActive:Array;
+      private var exposureCurrent:Array;
+      private var exposureTarget:Array;
+      private var exposureTargetTicks:Array;
+      private var currentProtection:Number = 1;
+
       public function CUIPlayerHudDataContext()
       {
          super();
          values = {};
+         exposureActive = [false,false,false,false];
+         exposureCurrent = [0,0,0,0];
+         exposureTarget = [0,0,0,0];
+         exposureTargetTicks = [0,0,0,0];
+         exposureTimer = new Timer(EXPOSURE_UPDATE_MS);
+         exposureTimer.addEventListener(TimerEvent.TIMER,this.onExposureTimer);
          BSUIDataManager.Subscribe("LocalEnvironmentData",this.onLocalEnvironmentData);
          BSUIDataManager.Subscribe("LocalEnvData_Frequent",this.onLocalEnvironmentFrequentData);
          BSUIDataManager.Subscribe("PlayerFrequentData",this.onPlayerFrequentData);
@@ -25,6 +51,9 @@ package venworks.cui
          BSUIDataManager.Subscribe("HUDStarbornPowersData",this.onStarbornPowersData);
          BSUIDataManager.Subscribe("EnvironmentEffectsData",this.onEnvironmentEffectsData);
          BSUIDataManager.Subscribe("StarmapSystemBodyInfoProvider",this.onStarmapSystemBodyInfoData);
+         BSUIDataManager.Subscribe("HUDVehicleData",this.onMovementVehicleData);
+         BSUIDataManager.Subscribe("HudCrosshairData",this.onMovementCrosshairData);
+         BSUIDataManager.Subscribe("HUDStealthData",this.onMovementStealthData);
          this.setText("diagnostic.inventoryprovider","PLAYERINVENTORYDATA NOT RECEIVED");
          this.setText("diagnostic.powernameprovider","HUD POWER NAME FIELDS NOT RECEIVED");
          this.setText("diagnostic.environmentprovider","ENVIRONMENTEFFECTSDATA NOT RECEIVED");
@@ -33,6 +62,11 @@ package venworks.cui
          this.setText("diagnostic.localenvironmentfields","LOCALENVIRONMENTDATA NOT RECEIVED");
          this.setText("diagnostic.armorresistance","EQUIPPED ARMOR RESISTANCE DATA NOT RECEIVED");
          this.setText("diagnostic.starmapprovider","STARMAP BODY PROVIDER NOT RECEIVED IN HUD");
+         this.setText("diagnostic.movementplayer","PLAYERFREQUENTDATA NOT RECEIVED");
+         this.setText("diagnostic.movementvehicle","HUDVEHICLEDATA NOT RECEIVED");
+         this.setText("diagnostic.movementcrosshair","HUDCROSSHAIRDATA NOT RECEIVED");
+         this.setText("diagnostic.movementstealth","HUDSTEALTHDATA NOT RECEIVED");
+         this.setText("diagnostic.movementjetpack","HUDJETPACKDATA NOT RECEIVED");
          this.resetEnvironmentalHazards();
          this.setText("environment.protectionstatus","ENVIRONMENT PROVIDER NOT RECEIVED");
          this.setText("environment.hazard.airwaterstatus","ENVIRONMENT PROVIDER NOT RECEIVED");
@@ -57,6 +91,9 @@ package venworks.cui
             source == "environment.hazard.corrosivestatus" || source == "environment.hazard.radiationstatus" ||
             source == "diagnostic.environmentprovider" || source == "diagnostic.environmentfields" ||
             source == "diagnostic.environmentcandidates" || source == "diagnostic.localenvironmentfields" ||
+            source == "diagnostic.movementplayer" || source == "diagnostic.movementvehicle" ||
+            source == "diagnostic.movementcrosshair" || source == "diagnostic.movementstealth" ||
+            source == "diagnostic.movementjetpack" ||
             source == "diagnostic.effect0" || source == "diagnostic.effect1" ||
             source == "diagnostic.effect2" || source == "diagnostic.effect3" ||
             source == "diagnostic.armorresistance" || source == "diagnostic.starmapprovider")
@@ -82,7 +119,11 @@ package venworks.cui
             source == "weapon.explosivetype" || source == "boost.charge" ||
             source == "environment.hazard.effectcount" || source == "environment.hazard.airwaterlevel" ||
             source == "environment.hazard.thermallevel" || source == "environment.hazard.corrosivelevel" ||
-            source == "environment.hazard.radiationlevel" || source == "environment.soakcandidate" ||
+            source == "environment.hazard.radiationlevel" ||
+            source == "environment.hazard.airwaterexposurelevel" ||
+            source == "environment.hazard.thermalexposurelevel" ||
+            source == "environment.hazard.corrosiveexposurelevel" ||
+            source == "environment.hazard.radiationexposurelevel" || source == "environment.soakcandidate" ||
             source == "environment.protectionlevel" || source == "environment.protectionpercentage")
          {
             return "number";
@@ -113,6 +154,7 @@ package venworks.cui
       private function onEnvironmentEffectsData(param1:FromClientDataEvent) : void
       {
          var effects:Array = param1.data.aEnvironmentEffects as Array;
+         var activeEffects:Array = [false,false,false,false];
          var effect:Object = null;
          var icon:String = "";
          var normalizedIcon:String = "";
@@ -138,6 +180,7 @@ package venworks.cui
          if(!isNaN(soakProtection) && isFinite(soakProtection))
          {
             normalizedProtection = Math.max(0,Math.min(1,soakProtection));
+            this.currentProtection = normalizedProtection;
             this.setFinite("environment.protectionlevel",normalizedProtection);
             this.setFinite("environment.protectionpercentage",normalizedProtection * 100);
             if(fullSoak || normalizedProtection <= 0)
@@ -173,21 +216,25 @@ package venworks.cui
                      normalizedIcon = icon.toLowerCase();
                      if(normalizedIcon.indexOf("airborne") >= 0)
                      {
+                        activeEffects[0] = true;
                         this.setFinite("environment.hazard.airwaterlevel",1);
                         this.setText("environment.hazard.airwaterstatus","AIR / WATER DETECTED");
                      }
                      else if(normalizedIcon.indexOf("thermal") >= 0)
                      {
+                        activeEffects[1] = true;
                         this.setFinite("environment.hazard.thermallevel",1);
                         this.setText("environment.hazard.thermalstatus","THERMAL EFFECT DETECTED");
                      }
                      else if(normalizedIcon.indexOf("corrosive") >= 0)
                      {
+                        activeEffects[2] = true;
                         this.setFinite("environment.hazard.corrosivelevel",1);
                         this.setText("environment.hazard.corrosivestatus","CORROSIVE EFFECT DETECTED");
                      }
                      else if(normalizedIcon.indexOf("radiation") >= 0)
                      {
+                        activeEffects[3] = true;
                         this.setFinite("environment.hazard.radiationlevel",1);
                         this.setText("environment.hazard.radiationstatus","RADIATION EFFECT DETECTED");
                      }
@@ -196,6 +243,7 @@ package venworks.cui
                ++index;
             }
          }
+         this.updateExposureActivity(activeEffects);
          this.notifyChanged();
       }
 
@@ -224,6 +272,7 @@ package venworks.cui
          this.setFinite("power.current",param1.data.fStarPower);
          this.setFinite("power.maximum",param1.data.fMaxStarPower);
          this.setRatio("power.percentage",param1.data.fStarPower,param1.data.fMaxStarPower);
+         this.setMovementDiagnostic("diagnostic.movementplayer","PLAYER FREQUENT",param1.data);
          this.notifyChanged();
       }
 
@@ -249,11 +298,32 @@ package venworks.cui
       private function onJetpackData(param1:FromClientDataEvent) : void
       {
          var charge:Number = Number(param1.data.fJetpackCharge);
+         this.setMovementDiagnostic("diagnostic.movementjetpack","JETPACK",param1.data);
          if(!isNaN(charge) && isFinite(charge))
          {
             this.setFinite("boost.charge",Math.max(0,Math.min(1,charge)));
             this.notifyChanged();
+            return;
          }
+         this.notifyChanged();
+      }
+
+      private function onMovementVehicleData(param1:FromClientDataEvent) : void
+      {
+         this.setMovementDiagnostic("diagnostic.movementvehicle","HUD VEHICLE",param1.data);
+         this.notifyChanged();
+      }
+
+      private function onMovementCrosshairData(param1:FromClientDataEvent) : void
+      {
+         this.setMovementDiagnostic("diagnostic.movementcrosshair","HUD CROSSHAIR",param1.data);
+         this.notifyChanged();
+      }
+
+      private function onMovementStealthData(param1:FromClientDataEvent) : void
+      {
+         this.setMovementDiagnostic("diagnostic.movementstealth","HUD STEALTH",param1.data);
+         this.notifyChanged();
       }
 
       private function onPlayerInventoryData(param1:FromClientDataEvent) : void
@@ -475,6 +545,15 @@ package venworks.cui
          dispatchEvent(new Event(Event.CHANGE));
       }
 
+      public function dispose() : void
+      {
+         if(this.exposureTimer != null)
+         {
+            this.exposureTimer.stop();
+            this.exposureTimer.removeEventListener(TimerEvent.TIMER,this.onExposureTimer);
+         }
+      }
+
       private function resetEnvironmentalHazards() : void
       {
          var index:int = 0;
@@ -483,6 +562,10 @@ package venworks.cui
          this.setFinite("environment.hazard.thermallevel",0);
          this.setFinite("environment.hazard.corrosivelevel",0);
          this.setFinite("environment.hazard.radiationlevel",0);
+         this.setFinite("environment.hazard.airwaterexposurelevel",0);
+         this.setFinite("environment.hazard.thermalexposurelevel",0);
+         this.setFinite("environment.hazard.corrosiveexposurelevel",0);
+         this.setFinite("environment.hazard.radiationexposurelevel",0);
          this.setText("environment.hazard.airwaterstatus","CLEAR");
          this.setText("environment.hazard.thermalstatus","CLEAR");
          this.setText("environment.hazard.corrosivestatus","CLEAR");
@@ -492,6 +575,106 @@ package venworks.cui
             this.setText("diagnostic.effect" + index.toString(),"EFFECT " + index.toString() + ": UNUSED");
             ++index;
          }
+      }
+
+      private function updateExposureActivity(param1:Array) : void
+      {
+         var anyActive:Boolean = false;
+         var index:int = 0;
+         while(index < EXPOSURE_SOURCES.length)
+         {
+            if(Boolean(param1[index]))
+            {
+               anyActive = true;
+               if(!Boolean(this.exposureActive[index]))
+               {
+                  this.exposureActive[index] = true;
+                  this.chooseExposureTarget(index);
+                  this.exposureCurrent[index] = this.exposureTarget[index];
+               }
+               else if(!this.exposureValueInCurrentRange(Number(this.exposureTarget[index])))
+               {
+                  this.chooseExposureTarget(index);
+               }
+               this.setFinite(String(EXPOSURE_SOURCES[index]),Number(this.exposureCurrent[index]));
+            }
+            else
+            {
+               this.exposureActive[index] = false;
+               this.exposureCurrent[index] = 0;
+               this.exposureTarget[index] = 0;
+               this.exposureTargetTicks[index] = 0;
+               this.setFinite(String(EXPOSURE_SOURCES[index]),0);
+            }
+            ++index;
+         }
+         if(anyActive && !this.exposureTimer.running)
+         {
+            this.exposureTimer.start();
+         }
+         else if(!anyActive && this.exposureTimer.running)
+         {
+            this.exposureTimer.stop();
+         }
+      }
+
+      private function onExposureTimer(param1:TimerEvent) : void
+      {
+         var current:Number = 0;
+         var target:Number = 0;
+         var index:int = 0;
+         var changed:Boolean = false;
+         while(index < EXPOSURE_SOURCES.length)
+         {
+            if(Boolean(this.exposureActive[index]))
+            {
+               this.exposureTargetTicks[index] = int(this.exposureTargetTicks[index]) - 1;
+               if(int(this.exposureTargetTicks[index]) <= 0 ||
+                  !this.exposureValueInCurrentRange(Number(this.exposureTarget[index])))
+               {
+                  this.chooseExposureTarget(index);
+               }
+               current = Number(this.exposureCurrent[index]);
+               target = Number(this.exposureTarget[index]);
+               current += (target - current) * EXPOSURE_LERP;
+               if(Math.abs(target - current) < 0.0025)
+               {
+                  current = target;
+               }
+               this.exposureCurrent[index] = current;
+               this.setFinite(String(EXPOSURE_SOURCES[index]),current);
+               changed = true;
+            }
+            ++index;
+         }
+         if(changed)
+         {
+            this.notifyChanged();
+         }
+      }
+
+      private function chooseExposureTarget(param1:int) : void
+      {
+         var depletion:Number = 1 - this.currentProtection;
+         var minimum:Number = 0.05 + 0.45 * depletion;
+         var maximum:Number = 0.50 + 0.50 * depletion;
+         this.exposureTarget[param1] = minimum + Math.random() * (maximum - minimum);
+         this.exposureTargetTicks[param1] = EXPOSURE_TARGET_MIN_TICKS +
+            Math.floor(Math.random() * EXPOSURE_TARGET_TICK_RANGE);
+      }
+
+      private function exposureValueInCurrentRange(param1:Number) : Boolean
+      {
+         var depletion:Number = 1 - this.currentProtection;
+         var minimum:Number = 0.05 + 0.45 * depletion;
+         var maximum:Number = 0.50 + 0.50 * depletion;
+         return param1 >= minimum && param1 <= maximum;
+      }
+
+      private function setMovementDiagnostic(param1:String, param2:String, param3:Object) : void
+      {
+         this.setText(param1,param2 + " FIELDS: " + this.listFieldNames(param3,MAX_DIAGNOSTIC_FIELDS) +
+            " // MOVEMENT CANDIDATES: " + this.listCandidateFields(param3,MOVEMENT_CANDIDATES,8));
       }
 
       private function listFieldNames(param1:Object, param2:int) : String

@@ -1,98 +1,82 @@
 <?xml version="1.0" encoding="utf-8"?>
 <venworksCUIFragment schemaVersion="1" runtimeVersion="1">
-  <group id="root" x="0" y="0" width="510" height="342" opacity="1" visible="true"
+  <group id="root" x="0" y="0" width="360" height="230" opacity="1" visible="true"
          rotation="0" scaleX="1" scaleY="1" z="0">
-    <panel id="panel" x="0" y="0" width="510" height="342" opacity="1" visible="true"
+    <panel id="panel" x="0" y="0" width="360" height="230" opacity="1" visible="true"
            rotation="0" scaleX="1" scaleY="1" z="0"
            fillColor="#03141D" fillOpacity="0.88" strokeColor="#62DDF2" strokeOpacity="0.76" strokeWidth="2" />
 
-    <text id="title" x="18" y="9" width="280" height="25" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" value="ENVIRONMENTAL HAZARD SCAN"
-          font="$MAIN_Font_Bold" fontSize="16" color="#62DDF2" bold="false" align="left" />
-    <text id="subtitle" x="304" y="10" width="188" height="23" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" value="QUAD CHANNELS"
-          font="$MAIN_Font_Bold" fontSize="12" color="#62DDF2" bold="false" align="right" />
-    <divider id="header.line" x="12" y="38" width="486" height="0" opacity="1" visible="true"
+    <text id="title" x="12" y="6" width="222" height="22" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="2" value="ENVIRONMENTAL HAZARDS"
+          font="$MAIN_Font_Bold" fontSize="13" color="#62DDF2" bold="false" align="left" />
+    <text id="subtitle" x="238" y="7" width="110" height="20" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="2" value="RELATIVE LOAD"
+          font="$MAIN_Font_Bold" fontSize="9" color="#8CB1BC" bold="false" align="right" />
+    <divider id="header.line" x="8" y="30" width="344" height="0" opacity="1" visible="true"
              rotation="0" scaleX="1" scaleY="1" z="1" color="#62DDF2" strokeOpacity="0.68" strokeWidth="1" />
 
-    <text id="atmosphere.label" x="18" y="45" width="162" height="23" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" value="LIVE SUIT ENVIRONMENT"
-          font="$MAIN_Font_Bold" fontSize="11" color="#8CB1BC" bold="false" align="left" />
-    <text id="atmosphere.values" x="188" y="43" width="304" height="25" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2"
-          valueTemplate="O2 {environment.oxygenPercentage:percent}  //  TEMP {environment.temperature:temperature}"
-          value="O2 --%  //  TEMP --°" font="$MAIN_Font_Bold" fontSize="15" color="#F2F7F9" bold="false" align="right" />
-
-    <panel id="protection.panel" x="12" y="72" width="486" height="58" opacity="1" visible="true"
+    <panel id="protection.panel" x="8" y="36" width="344" height="39" opacity="1" visible="true"
            rotation="0" scaleX="1" scaleY="1" z="1"
            fillColor="#082733" fillOpacity="0.72" strokeColor="#2AAFC4" strokeOpacity="0.45" strokeWidth="1" />
-    <text id="protection.label" x="22" y="78" width="142" height="22" opacity="1" visible="true"
+    <text id="protection.label" x="14" y="38" width="106" height="18" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" value="SUIT PROTECTION"
-          font="$MAIN_Font_Bold" fontSize="12" color="#62DDF2" bold="false" align="left" />
-    <text id="protection.status" x="168" y="78" width="228" height="22" opacity="1" visible="true"
+          font="$MAIN_Font_Bold" fontSize="9" color="#62DDF2" bold="false" align="left" />
+    <text id="protection.status" x="122" y="38" width="166" height="18" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" source="environment.protectionStatus" format="raw"
-          value="ENVIRONMENT PROVIDER WAITING" font="$MAIN_Font_Bold" fontSize="11" color="#D89B2B" bold="false" align="right" />
-    <text id="protection.value" x="402" y="77" width="84" height="23" opacity="1" visible="true"
+          value="PROVIDER WAITING" font="$MAIN_Font_Bold" fontSize="8" color="#D89B2B" bold="false" align="right" />
+    <text id="protection.value" x="292" y="37" width="54" height="19" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" source="environment.protectionPercentage" format="percent"
-          value="--%" font="$MAIN_Font_Bold" fontSize="14" color="#F2F7F9" bold="false" align="right" />
-    <meter id="protection.meter" x="22" y="106" width="464" height="12" opacity="1" visible="true"
+          value="--%" font="$MAIN_Font_Bold" fontSize="11" color="#F2F7F9" bold="false" align="right" />
+    <meter id="protection.meter" x="14" y="59" width="332" height="8" opacity="1" visible="true"
            rotation="0" scaleX="1" scaleY="1" z="2" style="environment.protection"
            value="0" max="1" source="environment.protectionLevel" />
 
-    <divider id="channel.line0" x="12" y="139" width="486" height="0" opacity="1" visible="true"
+    <divider id="channel.line0" x="8" y="82" width="344" height="0" opacity="1" visible="true"
              rotation="0" scaleX="1" scaleY="1" z="1" color="#2AAFC4" strokeOpacity="0.45" strokeWidth="1" />
-    <text id="airwater.label" x="18" y="145" width="176" height="22" opacity="1" visible="true"
+    <text id="airwater.label" x="12" y="85" width="160" height="18" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" value="AIR / WATER TOXINS"
-          font="$MAIN_Font_Bold" fontSize="13" color="#62DDF2" bold="false" align="left" />
-    <text id="airwater.status" x="202" y="145" width="290" height="22" opacity="1" visible="true"
+          font="$MAIN_Font_Bold" fontSize="10" color="#62DDF2" bold="false" align="left" />
+    <text id="airwater.status" x="176" y="85" width="172" height="18" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" source="environment.hazard.airWaterStatus" format="raw"
-          value="ENVIRONMENT PROVIDER WAITING" font="$MAIN_Font_Bold" fontSize="11" color="#F2F7F9" bold="false" align="right" />
-    <meter id="airwater.activity" x="18" y="168" width="474" height="9" opacity="1" visible="true"
+          value="PROVIDER WAITING" font="$MAIN_Font_Bold" fontSize="8" color="#F2F7F9" bold="false" align="right" />
+    <meter id="airwater.exposure" x="12" y="105" width="336" height="7" opacity="1" visible="true"
            rotation="0" scaleX="1" scaleY="1" z="2" style="environment.air"
-           value="0" max="1" source="environment.hazard.airWaterLevel" />
+           value="0" max="1" source="environment.hazard.airWaterExposureLevel" />
 
-    <divider id="channel.line1" x="12" y="184" width="486" height="0" opacity="1" visible="true"
+    <divider id="channel.line1" x="8" y="118" width="344" height="0" opacity="1" visible="true"
              rotation="0" scaleX="1" scaleY="1" z="1" color="#2AAFC4" strokeOpacity="0.45" strokeWidth="1" />
-    <text id="thermal.label" x="18" y="190" width="176" height="22" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" value="THERMAL"
-          font="$MAIN_Font_Bold" fontSize="13" color="#D89B2B" bold="false" align="left" />
-    <text id="thermal.status" x="202" y="190" width="212" height="22" opacity="1" visible="true"
+    <text id="thermal.label" x="12" y="121" width="160" height="18" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="2" value="THERMAL EXPOSURE"
+          font="$MAIN_Font_Bold" fontSize="10" color="#D89B2B" bold="false" align="left" />
+    <text id="thermal.status" x="176" y="121" width="172" height="18" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" source="environment.hazard.thermalStatus" format="raw"
-          value="ENVIRONMENT PROVIDER WAITING" font="$MAIN_Font_Bold" fontSize="11" color="#F2F7F9" bold="false" align="right" />
-    <text id="thermal.value" x="420" y="189" width="72" height="23" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" source="environment.temperature" format="temperature"
-          value="--°" font="$MAIN_Font_Bold" fontSize="13" color="#D89B2B" bold="false" align="right" />
-    <meter id="thermal.activity" x="18" y="213" width="474" height="9" opacity="1" visible="true"
+          value="PROVIDER WAITING" font="$MAIN_Font_Bold" fontSize="8" color="#F2F7F9" bold="false" align="right" />
+    <meter id="thermal.exposure" x="12" y="141" width="336" height="7" opacity="1" visible="true"
            rotation="0" scaleX="1" scaleY="1" z="2" style="environment.thermal"
-           value="0" max="1" source="environment.hazard.thermalLevel" />
+           value="0" max="1" source="environment.hazard.thermalExposureLevel" />
 
-    <divider id="channel.line2" x="12" y="229" width="486" height="0" opacity="1" visible="true"
+    <divider id="channel.line2" x="8" y="154" width="344" height="0" opacity="1" visible="true"
              rotation="0" scaleX="1" scaleY="1" z="1" color="#2AAFC4" strokeOpacity="0.45" strokeWidth="1" />
-    <text id="corrosive.label" x="18" y="235" width="176" height="22" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" value="CORROSION"
-          font="$MAIN_Font_Bold" fontSize="13" color="#E6B840" bold="false" align="left" />
-    <text id="corrosive.status" x="202" y="235" width="290" height="22" opacity="1" visible="true"
+    <text id="corrosive.label" x="12" y="157" width="160" height="18" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="2" value="CORROSIVE EXPOSURE"
+          font="$MAIN_Font_Bold" fontSize="10" color="#E6B840" bold="false" align="left" />
+    <text id="corrosive.status" x="176" y="157" width="172" height="18" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" source="environment.hazard.corrosiveStatus" format="raw"
-          value="ENVIRONMENT PROVIDER WAITING" font="$MAIN_Font_Bold" fontSize="11" color="#F2F7F9" bold="false" align="right" />
-    <meter id="corrosive.activity" x="18" y="258" width="474" height="9" opacity="1" visible="true"
+          value="PROVIDER WAITING" font="$MAIN_Font_Bold" fontSize="8" color="#F2F7F9" bold="false" align="right" />
+    <meter id="corrosive.exposure" x="12" y="177" width="336" height="7" opacity="1" visible="true"
            rotation="0" scaleX="1" scaleY="1" z="2" style="environment.corrosive"
-           value="0" max="1" source="environment.hazard.corrosiveLevel" />
+           value="0" max="1" source="environment.hazard.corrosiveExposureLevel" />
 
-    <divider id="channel.line3" x="12" y="274" width="486" height="0" opacity="1" visible="true"
+    <divider id="channel.line3" x="8" y="190" width="344" height="0" opacity="1" visible="true"
              rotation="0" scaleX="1" scaleY="1" z="1" color="#2AAFC4" strokeOpacity="0.45" strokeWidth="1" />
-    <text id="radiation.label" x="18" y="280" width="176" height="22" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" value="RADIATION"
-          font="$MAIN_Font_Bold" fontSize="13" color="#E64B4B" bold="false" align="left" />
-    <text id="radiation.status" x="202" y="280" width="290" height="22" opacity="1" visible="true"
+    <text id="radiation.label" x="12" y="193" width="160" height="18" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="2" value="RADIATION EXPOSURE"
+          font="$MAIN_Font_Bold" fontSize="10" color="#E64B4B" bold="false" align="left" />
+    <text id="radiation.status" x="176" y="193" width="172" height="18" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" source="environment.hazard.radiationStatus" format="raw"
-          value="ENVIRONMENT PROVIDER WAITING" font="$MAIN_Font_Bold" fontSize="11" color="#F2F7F9" bold="false" align="right" />
-    <meter id="radiation.activity" x="18" y="303" width="474" height="9" opacity="1" visible="true"
+          value="PROVIDER WAITING" font="$MAIN_Font_Bold" fontSize="8" color="#F2F7F9" bold="false" align="right" />
+    <meter id="radiation.exposure" x="12" y="213" width="336" height="7" opacity="1" visible="true"
            rotation="0" scaleX="1" scaleY="1" z="2" style="environment.radiation"
-           value="0" max="1" source="environment.hazard.radiationLevel" />
-
-    <text id="provider.note" x="18" y="319" width="474" height="17" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2"
-          value="AIR + UNSAFE WATER SHARE BETHESDA'S AIRBORNE CATEGORY"
-          font="$MAIN_Font_Bold" fontSize="8" color="#8CB1BC" bold="false" align="center" />
+           value="0" max="1" source="environment.hazard.radiationExposureLevel" />
   </group>
 </venworksCUIFragment>
