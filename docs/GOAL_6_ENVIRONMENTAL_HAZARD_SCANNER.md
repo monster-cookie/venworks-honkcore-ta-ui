@@ -1,9 +1,10 @@
 # Goal 6 environmental hazard scanner
 
-**Status: Hazard-transition runtime acceptance, compact relative-load scanner,
-movement-provider discovery, gradual player-O2-only recalibration,
-environmental full-soak critical override, and automated build acceptance are
-complete. Runtime verification is pending.**
+**Status: Hazard-transition runtime acceptance, movement-provider discovery,
+gradual player-O2-only recalibration, and the environmental full-soak critical
+override are complete. The approved final Planet Data presentation,
+diagnostic-strip removal, and automated normal/large build acceptance are
+complete. Final runtime layout verification is pending.**
 
 ## Product direction
 
@@ -45,6 +46,8 @@ formula or animation.
 | Atmospheric oxygen | `LocalEnvironmentData.fOxygenPercent` | Confirmed in HUD runtime by Goal 5 | Live percentage |
 | Local temperature | `LocalEnvironmentData.fTemperature` | Confirmed in HUD runtime by Goal 5 | Live temperature; not treated as hazard magnitude |
 | Local gravity | `LocalEnvironmentData.fGravity` | Confirmed in HUD runtime by Goal 5 | Context only |
+| Planetary local time | `LocalEnvData_Frequent.fLocalPlanetTime` | Confirmed in Bethesda HUD movie and Goal 5 runtime | Live local 24-hour display |
+| Galactic Standard Time / UT | `LocalEnvData_Frequent.fGalacticStandardTime` | Clean-room roadmap candidate only; not independently confirmed in Bethesda HUD runtime | Future player-scanner probe; not displayed in Goal 6 |
 | Active environmental effects | `EnvironmentEffectsData.aEnvironmentEffects` | Provider is a HONKCORE roadmap candidate; array field is confirmed in Bethesda HUD-related code | Bounded receipt and field probe |
 | Hazard category | `aEnvironmentEffects[*].sEffectIcon` | Confirmed in Bethesda `EnvironmentEffectsWidget` and `WatchIconsWidget` contracts | Four categorical activity gates |
 | Radiation category | `HazardEffect_Radiation` | Confirmed in Bethesda HUD movie | Detected/clear only |
@@ -152,12 +155,16 @@ characters per scalar value. That probe established the environment evidence
 recorded below. The subsequent movement-provider probe has also completed and
 is recorded above.
 
-The active `environmental-hazard-diagnostic-strip.xml` is a semi-transparent
-1160-by-196 top-center strip gated by the proven `inScanner` condition. The
-calibration strip reports current normalized player-O2 reserve, downward-drain
-detection, the gradual O2 activity envelope, suit protection and depletion,
-and all four modeled channel loads. It explicitly distinguishes the pink
-player-O2 reserve from atmospheric O2 and records that boost is excluded.
+The retired `environmental-hazard-diagnostic-strip.xml` was a semi-transparent
+1160-by-196 top-center strip gated by the proven `inScanner` condition. It
+reported current normalized player-O2 reserve, downward-drain detection, the
+gradual O2 activity envelope, suit protection and depletion, and all four
+modeled channel loads. It explicitly distinguished the pink player-O2 reserve
+from atmospheric O2 and recorded that boost is excluded. Runtime acceptance
+completed its purpose, so neither the source fixture, staged component, nor
+layout include remains in the final production package. The diagnostic data
+adapter stays bounded in ActionScript for future layouts without rendering an
+overlay.
 
 A downward player-O2 change greater than `0.0005` marks the next 250 ms update
 as active drain. Each active tick adds `0.08` to the bounded O2 activity
@@ -203,10 +210,11 @@ local text IDs beyond the runtime's 64-character component-ID limit:
 
 The runtime correctly refused the invalid layout, but its generic
 `Invalid or missing id on text` message did not distinguish an absent ID from
-an overlength ID or unsupported characters. The active include now uses the
-short stable ID `env-hazard-probe`. The layout parser, composition resolver,
-and composite resolver separately report missing, overlength, and unsupported-
-character failures, including the rejected value and actual length when useful.
+an overlength ID or unsupported characters. The corrected diagnostic used the
+short stable ID `env-hazard-probe` until its runtime work completed. The layout
+parser, composition resolver, and composite resolver separately report missing,
+overlength, and unsupported-character failures, including the rejected value
+and actual length when useful.
 
 The build now evaluates every component ID after applying its include prefix
 and contains a regression check for the known 71-character failure. It also
@@ -255,22 +263,34 @@ channel magnitudes, or an atmospheric-pressure/vacuum inference.
 ## Compact production implementation
 
 The production scanner remains an independent XML fragment rendered by the
-existing CUI host. It is a 360-by-230 panel anchored at the lower right with a
-small inset from the screen and boost strip. It remains visible during ordinary
-HUD use; standard HUD opacity and visibility ownership still apply. O2 and
-temperature were removed because the independent lower-left environment panel
-already displays them.
+existing CUI host. It is a 360-by-312 stacked panel anchored at the lower right.
+The root layout's 64-unit right and 36-unit bottom safe insets combine with
+approved include offsets `x=39`, `y=11` to place the outer border 25 design
+units from the physical right and bottom edges while retaining responsive
+`visibleRect` anchoring. It remains visible during ordinary HUD use; standard
+HUD opacity and visibility ownership still apply.
 
 The compact panel provides:
 
+- a distinct `PLANET DATA` section above the suit readout containing the
+  confirmed location/body label, planetary local time, atmospheric O2,
+  temperature, and gravity;
 - a 16-segment shared `SUIT PROTECTION` meter driven directly by clamped
   `fSoakDamagePct`;
 - a numeric protection percentage and the bounded states `PROTECTION READY`,
-  `PROTECTION PARTIAL`, and `FULL SOAK // HEALTH RISK`;
+  `PROTECTION PARTIAL`, and `PROTECTION DEPLETED`;
 - four stacked category channels for Air/Water, Thermal, Corrosive, and
   Radiation; and
-- independently drifting 16-segment `RELATIVE LOAD` bars whose presence is
-  gated only by recognized Bethesda effect icons.
+- independently drifting 16-segment load bars whose presence is gated only by
+  recognized Bethesda effect icons. The ambiguous `RELATIVE LOAD` header is
+  not displayed.
+
+The lower-left environment fragment no longer duplicates location, local time,
+atmospheric O2, temperature, or gravity. It temporarily retains only power,
+carry weight, and credits until the separate player-scanner design replaces
+that surface. `fGalacticStandardTime` is recorded as a precise candidate for
+that future player's universal-time display, but remains unshipped until a
+HUD-lifetime runtime probe confirms it independently of the clean-room roadmap.
 
 An absent category is exactly `0`. For an active category, the modeled target
 is:
@@ -312,29 +332,22 @@ reinterpreted as an environmental aggregate here.
 After both HUD artifacts are built, hashed, and committed, deploy them and
 verify:
 
-1. the compact lower-right panel remains readable with the scanner both closed
-   and open and does not overlap the boost strip at normal or large HUD scale;
-2. the activity calibration diagnostic appears only with the scanner open;
-3. while idle, confirm downward drain reads false, the O2 activity envelope
-   releases to zero, and stable low reserves do not remain active;
-4. briefly sprint, confirm the envelope rises only one or a few steps rather
-   than jumping to full activity, then releases smoothly after stopping;
-5. sustain sprinting, confirm downward player-O2 changes build the envelope
-   gradually toward 100% and raise an already active hazard channel;
-6. use the jetpack and confirm boost charge does not influence the envelope;
-7. a nominal environment shows four zero-load channels and 100% protection;
-8. a brief low-risk hazard activates only the matching category and its bar
-   drifts within the healthy-protection range;
-9. simultaneous effects produce independent drifting bars;
-10. if protection safely drops partway, active bars shift upward while the
-   shared protection bar shifts downward; and
-11. at zero protection before the full-soak flag, confirm an idle active
-    channel remains within the expected 75% to 85% range;
-12. when the full-soak flag becomes true with zero protection, confirm every
-    active category snaps immediately to 100% and remains there without O2 use;
-13. confirm unrelated health loss does not activate the critical override; and
-14. leaving exposure immediately returns the inactive channel to zero while
-    Bethesda restores protection on its own schedule.
+1. the combined lower-right border sits approximately 25 design units from the
+   physical right and bottom edges at normal and large HUD scale;
+2. `PLANET DATA` appears above `ENVIRONMENTAL HAZARDS` and shows the live
+   location/body label, local time, atmospheric O2, temperature, and gravity;
+3. those five values no longer appear in the lower-left panel, while power,
+   carry weight, credits, and the three player meters remain functional;
+4. `RELATIVE LOAD` and `FULL SOAK // HEALTH RISK` are absent, and exhausted
+   protection reads `PROTECTION DEPLETED`;
+5. opening the scanner does not render the retired diagnostic strip;
+6. nominal environments still show four empty channels and ready protection;
+7. active and simultaneous categories still use independent drifting bars;
+8. zero protection before the full-soak flag remains within the accepted idle
+   range, and the full-soak critical state still snaps active categories to
+   100%; and
+9. leaving exposure immediately returns inactive channels to zero while
+   Bethesda restores protection on its own schedule.
 
 The accepted captures already cover the dangerous full-soak transition; no
 additional full-soak unsafe-water test is required.
@@ -354,17 +367,18 @@ Run repository validation and the complete two-variant Scaleform build:
   -VanillaInterfacePath "<approved-vanilla-interface-path>"
 ```
 
-The complete environmental-critical build passed on 2026-08-12. Both generated
-GFX variants compiled, imported, reopened, passed their build and staged-layout
+The complete final-presentation build passed on 2026-08-12. Both generated GFX
+variants compiled, imported, reopened, passed their build and staged-layout
 contracts, and reproduced from the final source. All four staging variants
-contain the same normal/large pair:
+contain the same normal/large pair, and the retired diagnostic component is
+absent from both source and staging:
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 396286 | `9323CE5CD1782B404805AC5C84406B171F05BC1AC779537B071337B86694C810` |
-| `hudmenu_lrg.gfx` | 396469 | `FE6CCFB03C8F778947EC2A077974B200F4981E5D2515B806995DA595DB1FF033` |
-| `VenworksCUI/layout.xml` | 3734 | `7112EA7DA33DAC0C02AD6A16F2D3086B265EEDF7AE7976F44A84841E28CF4862` |
-| `components/environmental-hazard-scanner.xml` | 6860 | `FC822EE57ED481345C43E7460DC2219A2771D16BE1BC3A26C6AB2A6D1F6825BC` |
-| `components/environmental-hazard-diagnostic-strip.xml` | 3384 | `626C08B2EFA574C9B07398BD686A2F71FA5A6BDBB9C3B5573365EA5B65D5EEEF` |
+| `hudmenu.gfx` | 396281 | `7474236AF4F87514F8E46A3487D84EBE93720131478E68C4CDC59E0B3E88C587` |
+| `hudmenu_lrg.gfx` | 396464 | `FE7FB45A5F1A36A668F14D707DD3D80DDC2AF580DCFE30C6F3EC8E3CC16241AF` |
+| `VenworksCUI/layout.xml` | 3539 | `B7027E8934BFAB7B04ADB2756F5DE6078C824C2D88FD6AAA44F0D077CA533F1A` |
+| `components/environmental-hazard-scanner.xml` | 9856 | `055A9A7D51EF8016AAD3EAEC533885C430FD05888CCB5C76AC01FEE5A14BECA8` |
+| `components/environment-status.xml` | 1634 | `9DB8E41326E61D05798FAFDE38BFE87A4AB13A95DA0C47F5B554D9CC8B9D33E1` |
 
 Runtime deployment must use artifacts from the user-committed Goal 6 worktree.

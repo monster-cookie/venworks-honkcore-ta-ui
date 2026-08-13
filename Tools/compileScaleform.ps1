@@ -269,8 +269,7 @@ foreach ($componentFixtureName in @(
   'environment-status.xml',
   'player-meters.xml',
   'mobility-status.xml',
-  'environmental-hazard-scanner.xml',
-  'environmental-hazard-diagnostic-strip.xml'
+  'environmental-hazard-scanner.xml'
 )) {
   $componentFixturePath = Resolve-RequiredFile `
     -Path (Join-Path $providerProbeComponentDirectory $componentFixtureName) `
@@ -760,7 +759,7 @@ try {
       'environment.protectionlevel',
       'environment.protectionpercentage',
       'environment.protectionstatus',
-      'FULL SOAK // HEALTH RISK',
+      'PROTECTION DEPLETED',
       'AIR / WATER DETECTED',
       'EXPOSURE_UPDATE_MS',
       'EXPOSURE_LERP',
@@ -934,7 +933,11 @@ try {
   New-Item -ItemType Directory -Force -Path $assetOutputDirectory | Out-Null
   New-Item -ItemType Directory -Force -Path $componentOutputDirectory | Out-Null
   Copy-Item -LiteralPath $providerProbeLayoutSource -Destination (Join-Path $cuiOutputDirectory "layout.xml") -Force
-  foreach ($componentFixtureName in @('weapon-status.xml','environment-status.xml','player-meters.xml','mobility-status.xml','environmental-hazard-scanner.xml','environmental-hazard-diagnostic-strip.xml')) {
+  $retiredEnvironmentalDiagnosticPath = Join-Path $componentOutputDirectory 'environmental-hazard-diagnostic-strip.xml'
+  if (Test-Path -LiteralPath $retiredEnvironmentalDiagnosticPath) {
+    Remove-Item -LiteralPath $retiredEnvironmentalDiagnosticPath -Force
+  }
+  foreach ($componentFixtureName in @('weapon-status.xml','environment-status.xml','player-meters.xml','mobility-status.xml','environmental-hazard-scanner.xml')) {
     Copy-Item -LiteralPath (Join-Path $providerProbeComponentDirectory $componentFixtureName) -Destination (Join-Path $componentOutputDirectory $componentFixtureName) -Force
   }
   $stagedPlayerMeters = [xml](Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'player-meters.xml') -Raw)
@@ -942,12 +945,10 @@ try {
     throw 'Staged player-meters.xml must contain exactly three consolidated live meters.'
   }
   $stagedWeaponStatusText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'weapon-status.xml') -Raw
+  $stagedEnvironmentStatusText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'environment-status.xml') -Raw
   $stagedMobilityStatusText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'mobility-status.xml') -Raw
   $stagedEnvironmentalScannerText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'environmental-hazard-scanner.xml') -Raw
   $stagedEnvironmentalScanner = [xml]$stagedEnvironmentalScannerText
-  $stagedEnvironmentalDiagnosticPath = Join-Path $componentOutputDirectory 'environmental-hazard-diagnostic-strip.xml'
-  $stagedEnvironmentalDiagnosticText = Get-Content -LiteralPath $stagedEnvironmentalDiagnosticPath -Raw
-  $stagedEnvironmentalDiagnostic = [xml]$stagedEnvironmentalDiagnosticText
   if ($stagedWeaponStatusText -notmatch 'name="vehicle-exit-prompt"' -or
       $stagedWeaponStatusText -notmatch 'value="\$EXIT HOLD"' -or
       $stagedWeaponStatusText -notmatch 'fontSize="21"' -or
@@ -967,37 +968,29 @@ try {
   $environmentalProtectionStyles = @($providerProbeLayout.venworksCUI.definitions.meterStyle | Where-Object {
     [string]$_.id -eq 'environment.protection'
   })
-  $stagedEnvironmentalDiagnosticGroup = $stagedEnvironmentalDiagnostic.venworksCUIFragment.group
   $stagedEnvironmentalScannerGroup = $stagedEnvironmentalScanner.venworksCUIFragment.group
-  if ($environmentalDiagnosticIncludes.Count -ne 1 -or
-      [string]$environmentalDiagnosticIncludes[0].src -ne 'environmental-hazard-diagnostic-strip.xml' -or
-      [string]$environmentalDiagnosticIncludes[0].anchor -ne 'top-center' -or
-      [string]$environmentalDiagnosticIncludes[0].visibleWhen -ne 'inScanner' -or
+  if ($environmentalDiagnosticIncludes.Count -ne 0 -or
+      (Test-Path -LiteralPath $retiredEnvironmentalDiagnosticPath) -or
       $environmentalScannerIncludes.Count -ne 1 -or
       [string]$environmentalScannerIncludes[0].src -ne 'environmental-hazard-scanner.xml' -or
       [string]$environmentalScannerIncludes[0].anchor -ne 'bottom-right' -or
       [string]$environmentalScannerIncludes[0].visibleWhen -ne 'always' -or
-      [int]$environmentalScannerIncludes[0].x -ne -54 -or
-      [int]$environmentalScannerIncludes[0].y -ne -12 -or
+      [int]$environmentalScannerIncludes[0].x -ne 39 -or
+      [int]$environmentalScannerIncludes[0].y -ne 11 -or
       $environmentalProtectionStyles.Count -ne 1 -or
       [string]$environmentalProtectionStyles[0].renderer -ne 'segments' -or
       [string]$environmentalProtectionStyles[0].direction -ne 'right' -or
       [int]$environmentalProtectionStyles[0].segmentCount -ne 16 -or
       [int]$stagedEnvironmentalScannerGroup.width -ne 360 -or
-      [int]$stagedEnvironmentalScannerGroup.height -ne 230 -or
-      [int]$stagedEnvironmentalDiagnosticGroup.width -ne 1160 -or
-      [int]$stagedEnvironmentalDiagnosticGroup.height -ne 196 -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'ACTIVITY PROXY CALIBRATION' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.activityOxygen"' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.activityEnvelope"' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.activityProtection"' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.activityLoads"' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'FULL-SOAK FLAG \+ 0% PROTECTION \+ ACTIVE CATEGORY = 100%' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'GENERIC HEALTH LOSS EXCLUDED' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'ATMOSPHERIC O2 AND BOOST ARE EXCLUDED' -or
-      $stagedEnvironmentalDiagnosticText -match 'source="diagnostic\.activity(Boost|Combined)"' -or
-      $stagedEnvironmentalDiagnosticText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE)' -or
-      $stagedEnvironmentalScannerText -notmatch 'RELATIVE LOAD' -or
+      [int]$stagedEnvironmentalScannerGroup.height -ne 312 -or
+      $stagedEnvironmentalScannerText -notmatch 'value="PLANET DATA"' -or
+      $stagedEnvironmentalScannerText -notmatch 'value="ENVIRONMENTAL HAZARDS"' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="location\.name"' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="environment\.localTime"' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="environment\.oxygenPercentage"' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="environment\.temperature"' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="environment\.gravity"' -or
+      $stagedEnvironmentalScannerText -match 'RELATIVE LOAD' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.protectionLevel"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.protectionPercentage"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.protectionStatus"' -or
@@ -1005,14 +998,14 @@ try {
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.thermalExposureLevel"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.corrosiveExposureLevel"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.radiationExposureLevel"' -or
-      $stagedEnvironmentalScannerText -match 'source="environment\.(oxygenPercentage|temperature)"' -or
+      $stagedEnvironmentStatusText -match 'source="(location\.name|environment\.(localtime|oxygenpercentage|temperature|gravity))"' -or
       $stagedEnvironmentalScannerText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE|THREAT INDEX|VACUUM)') {
-    throw 'Goal 6 must stage one compact persistent bottom-right relative-load meter, one scanner-gated player-O2 activity calibration diagnostic, and no invented physical units or Threat Index.'
+    throw 'Goal 6 must stage one persistent lower-right Planet Data and environmental-hazards control at the approved edge inset, no retired diagnostic strip, and no invented physical units or Threat Index.'
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
   Copy-Item -LiteralPath $invalidSvgSource -Destination (Join-Path $assetOutputDirectory "gallery-invalid.svg") -Force
-  Write-Host -ForegroundColor Green "Staged compact persistent Goal 6 relative-load meter and scanner-gated player-O2 activity calibration diagnostic with the accepted Goal 5 Chronomark in $cuiOutputDirectory"
+  Write-Host -ForegroundColor Green "Staged the final Goal 6 Planet Data and environmental-hazards control with the compacted Goal 5 left panel in $cuiOutputDirectory"
 }
 finally {
   if ($KeepWork) {

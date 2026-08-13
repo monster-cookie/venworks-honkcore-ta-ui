@@ -255,7 +255,7 @@ ordinary text templates or meters after their owning provider publishes:
 | --- | --- | --- |
 | `environment.protectionLevel` | Number `0..1` | Clamped Bethesda `fSoakDamagePct`; `1` is ready and `0` is exhausted. |
 | `environment.protectionPercentage` | Number `0..100` | Display scaling of the same normalized protection value. |
-| `environment.protectionStatus` | String | Ready, partial, or full-soak/health-risk presentation derived only from the normalized value and Bethesda full-soak flag. |
+| `environment.protectionStatus` | String | `PROTECTION READY`, `PROTECTION PARTIAL`, or `PROTECTION DEPLETED`, derived only from the normalized value and Bethesda full-soak flag. |
 | `environment.fullSoakAlertCandidate` | Boolean | Bethesda `bShouldPlayAlertAtFullSoak`; retained for diagnostics. |
 | `environment.hazard.airWaterLevel` | Number `0` or `1` | Presence of `HazardEffect_Airborne`; runtime confirmed both unsafe biological water and airborne flora use this category. |
 | `environment.hazard.thermalLevel` | Number `0` or `1` | Presence of `HazardEffect_Thermal`. |
@@ -279,12 +279,23 @@ atmospheric O2 do not contribute. An active category snaps to `1` while
 protection is `0` and Bethesda's `bShouldPlayAlertAtFullSoak` is true. This
 environmental critical override does not inspect generic player-health loss.
 
-Local temperature can provide hot/cold context but is not Thermal severity.
-O2 `0%` cannot distinguish vacuum from an oxygen-free atmosphere. No
+The production fragment stacks a confirmed `PLANET DATA` context section above
+the suit-exposure section. It reuses `location.name`,
+`environment.localTime`, `environment.oxygenPercentage`,
+`environment.temperature`, and `environment.gravity`; those values are no
+longer duplicated by the lower-left environment fragment. Local temperature
+can provide hot/cold context but is not Thermal severity. O2 `0%` cannot
+distinguish vacuum from an oxygen-free atmosphere. No
 allowlisted source currently claims CO2 composition, atmospheric pressure,
 vacuum, physical hazard units, per-channel Bethesda severity, or an aggregate
 environmental Threat Index. Runtime testing found no walking or ground-vehicle
-speed value in the bounded HUD provider probe. A scanner-only calibration strip
-therefore reports current player-O2 reserve, downward-drain detection, the
-gradual O2 activity envelope, protection depletion, and the four modeled
-channel loads.
+speed value in the bounded HUD provider probe. The temporary scanner-only
+calibration strip established current player-O2 reserve, downward-drain
+detection, the gradual O2 activity envelope, protection depletion, and the four
+modeled channel loads; it is not included in the accepted production layout.
+
+`LocalEnvData_Frequent.fGalacticStandardTime` is a precise future
+universal-time candidate identified from the clean-room roadmap. Bethesda's
+HUD movie extraction independently confirms only `fLocalPlanetTime`, so the
+galactic-standard-time candidate remains unallowlisted until a bounded runtime
+probe confirms field receipt and semantics for the future player scanner.

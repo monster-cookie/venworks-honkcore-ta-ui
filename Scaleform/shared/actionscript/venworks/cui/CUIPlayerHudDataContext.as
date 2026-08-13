@@ -195,7 +195,7 @@ package venworks.cui
             this.setFinite("environment.protectionpercentage",normalizedProtection * 100);
             if(fullSoak || normalizedProtection <= 0)
             {
-               this.setText("environment.protectionstatus","FULL SOAK // HEALTH RISK");
+               this.setText("environment.protectionstatus","PROTECTION DEPLETED");
             }
             else if(normalizedProtection >= 1)
             {
