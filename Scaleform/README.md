@@ -89,12 +89,13 @@ embedded symbols. The Goal 4G composite gallery exercises
 exercises all four warning severities and button states, a bounded quick bar
 with an independently hidden button, and an information panel with metadata,
 divider, and meter content. Goal 4G's positive and negative in-game checks are
-accepted. The staged `layout.xml` is the Goal 6 production HUD: it places the
-live allowlisted vanilla bottom-left Chronomark at the upper-left for O2/CO2
-comparison, reapplies that configured placement after Bethesda's safe-rect
-lock, hides the right-meter group, places the Player Data scanner at
-lower-left and the Planet Data/environmental scanner at lower-right, and moves
-the temporary weapon/power presentation to upper-right.
+accepted. The staged `layout.xml` is the Goal 6 production HUD: it hides the
+diagnostic vanilla bottom-left Chronomark and right-meter group, places the
+split-tab Player Data scanner at lower-left and the split-tab Planet
+Data/environmental scanner at lower-right, and moves the temporary
+weapon/power presentation to upper-right. Each lower scanner uses one
+continuous rounded path with separate title and clock tabs around a transparent
+center notch.
 Malformed fixtures are
 intentionally not well-formed XML, while other negative fixtures may be
 schema-valid and rejected by runtime semantic checks. See

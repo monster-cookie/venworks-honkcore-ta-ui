@@ -2,9 +2,11 @@
 <venworksCUIFragment schemaVersion="1" runtimeVersion="1">
   <group id="root" x="0" y="0" width="360" height="296" opacity="1" visible="true"
          rotation="0" scaleX="1" scaleY="1" z="0">
-    <panel id="panel" x="0" y="0" width="360" height="296" opacity="1" visible="true"
-           rotation="0" scaleX="1" scaleY="1" z="0"
-           fillColor="#03141D" fillOpacity="0.88" strokeColor="#62DDF2" strokeOpacity="0.76" strokeWidth="2" />
+    <path id="panel" x="0" y="0" width="360" height="296" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="0"
+          data="M 8 0 L 164 0 Q 176 0 176 12 L 176 20 Q 176 30 186 30 L 194 30 Q 204 30 204 20 L 204 12 Q 204 0 216 0 L 352 0 Q 360 0 360 8 L 360 288 Q 360 296 352 296 L 8 296 Q 0 296 0 288 L 0 8 Q 0 0 8 0 Z"
+          viewBoxX="0" viewBoxY="0" viewBoxWidth="360" viewBoxHeight="296"
+          fillColor="#03141D" fillOpacity="0.88" strokeColor="#62DDF2" strokeOpacity="0.76" strokeWidth="2" />
 
     <text id="title" x="12" y="6" width="156" height="22" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" value="PLAYER DATA"
@@ -15,9 +17,6 @@
     <text id="time" x="288" y="6" width="58" height="20" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" source="player.universalTime" format="time24"
           value="--:--" font="$MAIN_Font_Bold" fontSize="10" color="#F2F7F9" bold="false" align="right" />
-    <divider id="header.line" x="8" y="30" width="344" height="0" opacity="1" visible="true"
-             rotation="0" scaleX="1" scaleY="1" z="1" color="#62DDF2" strokeOpacity="0.68" strokeWidth="1" />
-
     <panel id="identity.panel" x="8" y="36" width="344" height="48" opacity="1" visible="true"
            rotation="0" scaleX="1" scaleY="1" z="1"
            fillColor="#082733" fillOpacity="0.58" strokeColor="#2AAFC4" strokeOpacity="0.35" strokeWidth="1" />

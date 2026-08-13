@@ -1,10 +1,9 @@
 # Goal 6 environmental hazard scanner
 
-**Status: The environmental hazard scanner and Planet Data presentation are
-runtime accepted. The bounded player-data probe confirmed the final Goal 6
-player-tricorder providers, and the storage-free exact-name-derived display
-serial is runtime accepted. The production Player Data panel is implemented and
-awaits its final in-game layout and behavior check.**
+**Status: The environmental hazard scanner, Planet Data presentation, Player
+Data presentation, deterministic display serial, and shared O2/CO2 behavior
+are runtime accepted. The final helmet-integration presentation is implemented
+and awaits one in-game visual acceptance check.**
 
 ## Product direction
 
@@ -455,11 +454,11 @@ Planet Data header. The provider sources and normalization are unchanged.
 CUI only observes `PlayerFrequentData`; it does not apply or suppress
 Bethesda's oxygen warnings, carbon-dioxide penalties, or health effects. To
 resolve the reported mismatch between a full CUI CO2 track and absent vanilla
-penalties, the existing Bethesda-owned `BottomLeftGroup_mc` is temporarily
-restored and moved, unscaled, to `top-left +25,+25` inside the configured safe
-area. HUDMenu continues to own that complete live Chronomark object, its
-providers, animations, and mode-driven `visible` state. `rightMeters` remains
-hidden and unchanged.
+penalties, a diagnostic build restored the existing Bethesda-owned
+`BottomLeftGroup_mc` and moved it, unscaled, to `top-left +25,+25` inside the
+configured safe area. HUDMenu retained ownership of that complete live
+Chronomark object, its providers, animations, and mode-driven `visible` state.
+`rightMeters` remained hidden and unchanged.
 
 The first runtime comparison build restored the Chronomark but left it behind
 the Player Data scanner. Static inspection and the capture confirmed the cause:
@@ -470,10 +469,21 @@ the configured whole-control position. The callback is null-safe during the
 initial HUD setup and runs again on later safe-rect changes; it does not clone,
 reparent, rescale, or replace the Chronomark.
 
-Runtime comparison must record whether the vanilla and CUI tracks agree during
-idle, sprint drain, O2 depletion, CO2 accumulation, and recovery before any
-change is made to `player.oxygenPercentage` or
-`player.carbonDioxidePercentage`.
+The runtime comparison is accepted: the CUI Player Data track matched the
+vanilla Chronomark exactly during the shared captured O2/CO2 state, including
+the `O2 3% / CO2 97%` transition. No normalization change was required. The
+diagnostic Chronomark is hidden again in the production layout; the lower-left
+Player Data panel remains the production presentation.
+
+## Helmet-integration presentation
+
+The final Goal 6 visual pass changes only the two lower tricorder panels. Each
+panel background is one continuous CUI vector path with rounded outside
+corners, a rounded title tab at upper-left, a rounded clock tab at upper-right,
+and a transparent center notch. The former full-width header divider is removed
+so it cannot visually bridge that notch. All accepted text, provider bindings,
+meter geometry, safe-area anchoring, and the temporary upper-right weapon panel
+remain unchanged.
 
 ## Automated validation and expected artifacts
 
@@ -493,7 +503,7 @@ Run repository validation and the complete two-variant Scaleform build:
 The earlier SharedObject diagnostic passed automated build validation but was
 rejected by runtime Error #1501 because the Scaleform host does not install a
 `SharedObjectManager`. The deterministic replacement removes the rejected
-storage path. On 2026-08-13 the Chronomark comparison build compiled, imported,
+storage path. On 2026-08-13 the helmet-integration build compiled, imported,
 reopened, passed its source and staged-layout contracts, and reproduced the
 normal/large pair across all four staging variants:
 
@@ -501,12 +511,13 @@ normal/large pair across all four staging variants:
 | --- | ---: | --- |
 | `hudmenu.gfx` | 402359 | `66F25999E6685D6CCE684593D8E87D28387C01B7BB765C7B0923E196B5A251D2` |
 | `hudmenu_lrg.gfx` | 402542 | `E0C9DA806CC5F20DA89D09065A1E33EE769BEB0A82614724A55C9204FF2DF1BD` |
-| `VenworksCUI/layout.xml` | 3769 | `57E149BCED7A650A57BD710900075F062513AF22939B9FC3C0DE851E23701F00` |
-| `components/player-status-scanner.xml` | 9099 | `34386032F9A491176E980A88D73572D21EC70E8C0212C95070515C4340202FF8` |
-| `components/environmental-hazard-scanner.xml` | 9854 | `C6743AE669B090F6802DD0F37B687ECC6ABCE300ABCD0C0FB0FEE5763A12F8B8` |
+| `VenworksCUI/layout.xml` | 3736 | `51D2128ABA3E0154D210DD061A095A2D20602255D059FFEB0F93786DB923443C` |
+| `components/player-status-scanner.xml` | 9176 | `817BA0C48D275A751A237759CF6D861AD59E97BBFCC21615669A37F6B034FB40` |
+| `components/environmental-hazard-scanner.xml` | 9931 | `1075A6C15FB0603153E45968781509D1B14E9AD4590269DA1B88D92FFFD1A60E` |
 | `components/weapon-status.xml` | 4455 | `81FF1E81CC4647736A4C360C131BDF68D84D566338268BFF2AEC68D508248894` |
 
-The table above records the accepted Chronomark comparison build after both HUD
-variants passed the same compile, reopen, staging, and hash validation.
+The table above records the helmet-integration build after both HUD variants
+passed the same compile, reopen, staging, and hash validation. The loose XML
+hashes record the production-hidden Chronomark and final split-tab silhouettes.
 
 Runtime deployment must use artifacts from the user-committed Goal 6 worktree.

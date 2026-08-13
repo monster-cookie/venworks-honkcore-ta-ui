@@ -1036,10 +1036,18 @@ try {
     [string]$_.id -eq 'environment.protection'
   })
   $stagedEnvironmentalScannerGroup = $stagedEnvironmentalScanner.venworksCUIFragment.group
+  $stagedEnvironmentalPanelPaths = @($stagedEnvironmentalScannerGroup.path | Where-Object {
+    [string]$_.id -eq 'panel'
+  })
   $retiredStagedComponents = @($retiredComponentNames | Where-Object {
     Test-Path -LiteralPath (Join-Path $componentOutputDirectory $_)
   })
   $stagedPlayerScannerGroup = $stagedPlayerScanner.venworksCUIFragment.group
+  $stagedPlayerPanelPaths = @($stagedPlayerScannerGroup.path | Where-Object {
+    [string]$_.id -eq 'panel'
+  })
+  $expectedPlayerPanelPath = 'M 8 0 L 164 0 Q 176 0 176 12 L 176 20 Q 176 30 186 30 L 194 30 Q 204 30 204 20 L 204 12 Q 204 0 216 0 L 352 0 Q 360 0 360 8 L 360 288 Q 360 296 352 296 L 8 296 Q 0 296 0 288 L 0 8 Q 0 0 8 0 Z'
+  $expectedEnvironmentalPanelPath = 'M 8 0 L 164 0 Q 176 0 176 12 L 176 20 Q 176 30 186 30 L 194 30 Q 204 30 204 20 L 204 12 Q 204 0 216 0 L 352 0 Q 360 0 360 8 L 360 304 Q 360 312 352 312 L 8 312 Q 0 312 0 304 L 0 8 Q 0 0 8 0 Z'
   if ($environmentalDiagnosticIncludes.Count -ne 0 -or
       $retiredStagedComponents.Count -ne 0 -or
       $environmentalScannerIncludes.Count -ne 1 -or
@@ -1059,12 +1067,17 @@ try {
       [int]$weaponStatusIncludes[0].x -ne 39 -or
       [int]$weaponStatusIncludes[0].y -ne -11 -or
       $bottomLeftTargets.Count -ne 1 -or
-      [string]$bottomLeftTargets[0].visibleWhen -ne 'always' -or
-      [string]$bottomLeftTargets[0].anchor -ne 'top-left' -or
-      [int]$bottomLeftTargets[0].x -ne 25 -or
-      [int]$bottomLeftTargets[0].y -ne 25 -or
+      [string]$bottomLeftTargets[0].visibleWhen -ne 'never' -or
+      $bottomLeftTargets[0].HasAttribute('anchor') -or
+      $bottomLeftTargets[0].HasAttribute('x') -or
+      $bottomLeftTargets[0].HasAttribute('y') -or
       [int]$stagedPlayerScannerGroup.width -ne 360 -or
       [int]$stagedPlayerScannerGroup.height -ne 296 -or
+      $stagedPlayerPanelPaths.Count -ne 1 -or
+      [string]$stagedPlayerPanelPaths[0].data -ne $expectedPlayerPanelPath -or
+      [int]$stagedPlayerPanelPaths[0].viewBoxWidth -ne 360 -or
+      [int]$stagedPlayerPanelPaths[0].viewBoxHeight -ne 296 -or
+      $stagedPlayerScannerText -match 'id="header\.line"' -or
       $stagedPlayerScannerText -notmatch 'value="PLAYER DATA"' -or
       $stagedPlayerScannerText -notmatch 'source="player\.serial"' -or
       $stagedPlayerScannerText -notmatch 'source="player\.universalTime"' -or
@@ -1087,6 +1100,11 @@ try {
       [int]$environmentalProtectionStyles[0].segmentCount -ne 16 -or
       [int]$stagedEnvironmentalScannerGroup.width -ne 360 -or
       [int]$stagedEnvironmentalScannerGroup.height -ne 312 -or
+      $stagedEnvironmentalPanelPaths.Count -ne 1 -or
+      [string]$stagedEnvironmentalPanelPaths[0].data -ne $expectedEnvironmentalPanelPath -or
+      [int]$stagedEnvironmentalPanelPaths[0].viewBoxWidth -ne 360 -or
+      [int]$stagedEnvironmentalPanelPaths[0].viewBoxHeight -ne 312 -or
+      $stagedEnvironmentalScannerText -match 'id="planet\.line"' -or
       $stagedEnvironmentalScannerText -notmatch 'value="PLANET DATA"' -or
       $stagedEnvironmentalScannerText -notmatch 'value="ENVIRONMENTAL HAZARDS"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="location\.name"' -or
@@ -1105,7 +1123,7 @@ try {
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.corrosiveExposureLevel"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.radiationExposureLevel"' -or
       $stagedEnvironmentalScannerText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE|THREAT INDEX|VACUUM)') {
-    throw 'Goal 6 must stage the accepted environmental control, production player scanner, and temporary upper-right weapon/power presentation with no retired diagnostics or invented data.'
+    throw 'Goal 6 must stage the helmet-integrated environmental and player scanners, hidden diagnostic Chronomark, and temporary upper-right weapon/power presentation with no retired diagnostics or invented data.'
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force

@@ -48,7 +48,7 @@
                 direction="right" partialSegments="true" />
   </definitions>
   <vanillaVisibility>
-    <target id="bottomLeft" visibleWhen="always" x="25" y="25" anchor="top-left" />
+    <target id="bottomLeft" visibleWhen="never" />
     <target id="rightMeters" visibleWhen="never" />
   </vanillaVisibility>
   <includes>
