@@ -765,16 +765,17 @@ try {
       'EXPOSURE_UPDATE_MS',
       'EXPOSURE_LERP',
       'ACTIVITY_DRAIN_EPSILON',
-      'ACTIVITY_RELEASE',
-      'Math.max(this.oxygenDrainSignal,this.boostDrainSignal)',
-      '0.05 + 0.1 * randomValue + 0.35 * activity + 0.5 * depletion',
+      'ACTIVITY_ATTACK_STEP',
+      'ACTIVITY_RELEASE_STEP',
+      'this.oxygenActivity = Math.min(1,this.oxygenActivity + ACTIVITY_ATTACK_STEP)',
+      'this.oxygenActivity = Math.max(0,this.oxygenActivity - ACTIVITY_RELEASE_STEP)',
+      '0.05 + 0.1 * randomValue + 0.25 * activity + 0.6 * depletion',
       'environment.hazard.airwaterexposurelevel',
       'environment.hazard.thermalexposurelevel',
       'environment.hazard.corrosiveexposurelevel',
       'environment.hazard.radiationexposurelevel',
       'diagnostic.activityoxygen',
-      'diagnostic.activityboost',
-      'diagnostic.activitycombined',
+      'diagnostic.activityenvelope',
       'diagnostic.activityprotection',
       'diagnostic.activityloads',
       'valueContext.dispose()',
@@ -985,11 +986,12 @@ try {
       [int]$stagedEnvironmentalDiagnosticGroup.height -ne 196 -or
       $stagedEnvironmentalDiagnosticText -notmatch 'ACTIVITY PROXY CALIBRATION' -or
       $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.activityOxygen"' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.activityBoost"' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.activityCombined"' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.activityEnvelope"' -or
       $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.activityProtection"' -or
       $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.activityLoads"' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'NO WALKING OR VEHICLE SPEED FIELD IS AVAILABLE' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'ATMOSPHERIC O2 IS NOT ACTIVITY' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'BOOST EXCLUDED' -or
+      $stagedEnvironmentalDiagnosticText -match 'source="diagnostic\.activity(Boost|Combined)"' -or
       $stagedEnvironmentalDiagnosticText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE)' -or
       $stagedEnvironmentalScannerText -notmatch 'RELATIVE LOAD' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.protectionLevel"' -or
@@ -1001,12 +1003,12 @@ try {
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.radiationExposureLevel"' -or
       $stagedEnvironmentalScannerText -match 'source="environment\.(oxygenPercentage|temperature)"' -or
       $stagedEnvironmentalScannerText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE|THREAT INDEX|VACUUM)') {
-    throw 'Goal 6 must stage one compact persistent bottom-right relative-load meter, one scanner-gated O2/boost activity calibration diagnostic, and no invented physical units or Threat Index.'
+    throw 'Goal 6 must stage one compact persistent bottom-right relative-load meter, one scanner-gated player-O2 activity calibration diagnostic, and no invented physical units or Threat Index.'
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
   Copy-Item -LiteralPath $invalidSvgSource -Destination (Join-Path $assetOutputDirectory "gallery-invalid.svg") -Force
-  Write-Host -ForegroundColor Green "Staged compact persistent Goal 6 relative-load meter and scanner-gated O2/boost activity calibration diagnostic with the accepted Goal 5 Chronomark in $cuiOutputDirectory"
+  Write-Host -ForegroundColor Green "Staged compact persistent Goal 6 relative-load meter and scanner-gated player-O2 activity calibration diagnostic with the accepted Goal 5 Chronomark in $cuiOutputDirectory"
 }
 finally {
   if ($KeepWork) {

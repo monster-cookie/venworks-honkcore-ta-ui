@@ -271,9 +271,11 @@ The four `...Level` values are categorical activity gates, not magnitudes. The
 four `...ExposureLevel` values are explicitly modeled display values rather
 than Bethesda telemetry or physical measurements. Inactive channels are
 exactly `0`. Each active channel uses an independent slowly changing random
-value and the bounded model `clamp(0.05 + 0.10 * random + 0.35 * activity +
-0.50 * depletion, 0, 1)`. `depletion` is `1 - protection`; `activity` is the
-greater of the normalized O2-drain and boost-charge-drain envelopes.
+value and the bounded model `clamp(0.05 + 0.10 * random + 0.25 * activity +
+0.60 * depletion, 0, 1)`. `depletion` is `1 - protection`; `activity` is a
+gradual envelope driven only by sustained downward changes in the normalized
+player-O2 reserve represented by the pink HUD meter. Boost charge and
+atmospheric O2 do not contribute.
 
 Local temperature can provide hot/cold context but is not Thermal severity.
 O2 `0%` cannot distinguish vacuum from an oxygen-free atmosphere. No
@@ -281,5 +283,6 @@ allowlisted source currently claims CO2 composition, atmospheric pressure,
 vacuum, physical hazard units, per-channel Bethesda severity, or an aggregate
 environmental Threat Index. Runtime testing found no walking or ground-vehicle
 speed value in the bounded HUD provider probe. A scanner-only calibration strip
-therefore reports current O2/boost reserves, their downward-drain envelopes,
-combined activity, protection depletion, and the four modeled channel loads.
+therefore reports current player-O2 reserve, downward-drain detection, the
+gradual O2 activity envelope, protection depletion, and the four modeled
+channel loads.

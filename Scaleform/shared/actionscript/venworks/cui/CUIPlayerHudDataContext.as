@@ -17,8 +17,8 @@ package venworks.cui
       private static const EXPOSURE_TARGET_MIN_TICKS:int = 6;
       private static const EXPOSURE_TARGET_TICK_RANGE:int = 11;
       private static const ACTIVITY_DRAIN_EPSILON:Number = 0.0005;
-      private static const ACTIVITY_RELEASE:Number = 0.82;
-      private static const ACTIVITY_IDLE_EPSILON:Number = 0.01;
+      private static const ACTIVITY_ATTACK_STEP:Number = 0.08;
+      private static const ACTIVITY_RELEASE_STEP:Number = 0.10;
       private static const EXPOSURE_SOURCES:Array = [
          "environment.hazard.airwaterexposurelevel",
          "environment.hazard.thermalexposurelevel",
@@ -37,10 +37,8 @@ package venworks.cui
       private var protectionKnown:Boolean = false;
       private var currentOxygen:Number = NaN;
       private var previousOxygen:Number = NaN;
-      private var currentBoost:Number = NaN;
-      private var previousBoost:Number = NaN;
-      private var oxygenDrainSignal:Number = 0;
-      private var boostDrainSignal:Number = 0;
+      private var oxygenDrainDetected:Boolean = false;
+      private var oxygenActivity:Number = 0;
 
       public function CUIPlayerHudDataContext()
       {
@@ -70,9 +68,8 @@ package venworks.cui
          this.setText("diagnostic.localenvironmentfields","LOCALENVIRONMENTDATA NOT RECEIVED");
          this.setText("diagnostic.armorresistance","EQUIPPED ARMOR RESISTANCE DATA NOT RECEIVED");
          this.setText("diagnostic.starmapprovider","STARMAP BODY PROVIDER NOT RECEIVED IN HUD");
-         this.setText("diagnostic.activityoxygen","O2 RESERVE: WAITING // DRAIN SIGNAL: 0%");
-         this.setText("diagnostic.activityboost","BOOST CHARGE: WAITING // DRAIN SIGNAL: 0%");
-         this.setText("diagnostic.activitycombined","COMBINED ACTIVITY: 0%");
+         this.setText("diagnostic.activityoxygen","PLAYER O2 RESERVE: WAITING // DOWNWARD DRAIN: FALSE");
+         this.setText("diagnostic.activityenvelope","O2 ACTIVITY ENVELOPE: 0%");
          this.setText("diagnostic.activityprotection","SUIT PROTECTION: WAITING // DEPLETION: 0%");
          this.setText("diagnostic.activityloads","LOADS: AIR/WATER 0% // THERMAL 0% // CORROSIVE 0% // RADIATION 0%");
          this.resetEnvironmentalHazards();
@@ -99,8 +96,8 @@ package venworks.cui
             source == "environment.hazard.corrosivestatus" || source == "environment.hazard.radiationstatus" ||
             source == "diagnostic.environmentprovider" || source == "diagnostic.environmentfields" ||
             source == "diagnostic.environmentcandidates" || source == "diagnostic.localenvironmentfields" ||
-            source == "diagnostic.activityoxygen" || source == "diagnostic.activityboost" ||
-            source == "diagnostic.activitycombined" || source == "diagnostic.activityprotection" ||
+            source == "diagnostic.activityoxygen" || source == "diagnostic.activityenvelope" ||
+            source == "diagnostic.activityprotection" ||
             source == "diagnostic.activityloads" ||
             source == "diagnostic.effect0" || source == "diagnostic.effect1" ||
             source == "diagnostic.effect2" || source == "diagnostic.effect3" ||
@@ -312,8 +309,6 @@ package venworks.cui
          {
             charge = Math.max(0,Math.min(1,charge));
             this.setFinite("boost.charge",charge);
-            this.captureBoostActivity(charge);
-            this.updateActivityDiagnostic();
             this.notifyChanged();
             return;
          }
@@ -611,16 +606,21 @@ package venworks.cui
          var current:Number = 0;
          var target:Number = 0;
          var index:int = 0;
-         var changed:Boolean = this.oxygenDrainSignal > 0 || this.boostDrainSignal > 0;
-         this.oxygenDrainSignal *= ACTIVITY_RELEASE;
-         this.boostDrainSignal *= ACTIVITY_RELEASE;
-         if(this.oxygenDrainSignal < ACTIVITY_IDLE_EPSILON)
+         var previousActivity:Number = this.oxygenActivity;
+         var drainDetected:Boolean = this.oxygenDrainDetected;
+         var changed:Boolean = drainDetected || this.oxygenActivity > 0;
+         this.oxygenDrainDetected = false;
+         if(drainDetected)
          {
-            this.oxygenDrainSignal = 0;
+            this.oxygenActivity = Math.min(1,this.oxygenActivity + ACTIVITY_ATTACK_STEP);
          }
-         if(this.boostDrainSignal < ACTIVITY_IDLE_EPSILON)
+         else
          {
-            this.boostDrainSignal = 0;
+            this.oxygenActivity = Math.max(0,this.oxygenActivity - ACTIVITY_RELEASE_STEP);
+         }
+         if(this.oxygenActivity != previousActivity)
+         {
+            changed = true;
          }
          while(index < EXPOSURE_SOURCES.length)
          {
@@ -668,10 +668,10 @@ package venworks.cui
       private function refreshExposureTarget(param1:int) : void
       {
          var depletion:Number = 1 - this.currentProtection;
-         var activity:Number = Math.max(this.oxygenDrainSignal,this.boostDrainSignal);
+         var activity:Number = this.oxygenActivity;
          var randomValue:Number = Number(this.exposureRandom[param1]);
          this.exposureTarget[param1] = Math.max(0,Math.min(1,
-            0.05 + 0.10 * randomValue + 0.35 * activity + 0.50 * depletion));
+            0.05 + 0.10 * randomValue + 0.25 * activity + 0.60 * depletion));
       }
 
       private function updateExposureTargets() : void
@@ -698,29 +698,16 @@ package venworks.cui
          this.currentOxygen = Math.max(0,Math.min(1,oxygen / maximum));
          if(!isNaN(this.previousOxygen) && this.previousOxygen - this.currentOxygen > ACTIVITY_DRAIN_EPSILON)
          {
-            this.oxygenDrainSignal = 1;
-            this.updateExposureTargets();
+            this.oxygenDrainDetected = true;
          }
          this.previousOxygen = this.currentOxygen;
-         this.updateExposureTimerState();
-      }
-
-      private function captureBoostActivity(param1:Number) : void
-      {
-         this.currentBoost = param1;
-         if(!isNaN(this.previousBoost) && this.previousBoost - this.currentBoost > ACTIVITY_DRAIN_EPSILON)
-         {
-            this.boostDrainSignal = 1;
-            this.updateExposureTargets();
-         }
-         this.previousBoost = this.currentBoost;
          this.updateExposureTimerState();
       }
 
       private function updateExposureTimerState() : void
       {
          var needsTimer:Boolean = this.hasActiveExposure() ||
-            this.oxygenDrainSignal > 0 || this.boostDrainSignal > 0;
+            this.oxygenDrainDetected || this.oxygenActivity > 0;
          if(needsTimer && !this.exposureTimer.running)
          {
             this.exposureTimer.start();
@@ -747,15 +734,12 @@ package venworks.cui
 
       private function updateActivityDiagnostic() : void
       {
-         var activity:Number = Math.max(this.oxygenDrainSignal,this.boostDrainSignal);
          var protectionText:String = this.protectionKnown ? this.formatNormalized(this.currentProtection) : "WAITING";
          var depletionText:String = this.protectionKnown ? this.formatNormalized(1 - this.currentProtection) : "WAITING";
-         this.setText("diagnostic.activityoxygen","O2 RESERVE: " + this.formatOptionalNormalized(this.currentOxygen) +
-            " // DOWNWARD-DRAIN SIGNAL: " + this.formatNormalized(this.oxygenDrainSignal));
-         this.setText("diagnostic.activityboost","BOOST CHARGE: " + this.formatOptionalNormalized(this.currentBoost) +
-            " // DOWNWARD-DRAIN SIGNAL: " + this.formatNormalized(this.boostDrainSignal));
-         this.setText("diagnostic.activitycombined","COMBINED ACTIVITY: MAX(O2, BOOST) = " +
-            this.formatNormalized(activity));
+         this.setText("diagnostic.activityoxygen","PLAYER O2 RESERVE: " + this.formatOptionalNormalized(this.currentOxygen) +
+            " // DOWNWARD DRAIN: " + (this.oxygenDrainDetected ? "TRUE" : "FALSE"));
+         this.setText("diagnostic.activityenvelope","O2 ACTIVITY ENVELOPE: " +
+            this.formatNormalized(this.oxygenActivity) + " // ATTACK +8%/TICK // RELEASE -10%/TICK");
          this.setText("diagnostic.activityprotection","SUIT PROTECTION: " + protectionText +
             " // DEPLETION: " + depletionText);
          this.setText("diagnostic.activityloads","LOADS: AIR/WATER " + this.formatNormalized(Number(this.exposureCurrent[0])) +

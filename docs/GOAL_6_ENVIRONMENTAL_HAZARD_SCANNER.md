@@ -1,9 +1,8 @@
 # Goal 6 environmental hazard scanner
 
 **Status: Hazard-transition runtime acceptance, compact relative-load scanner,
-movement-provider discovery, O2/boost activity proxy implementation, and
-automated build acceptance are complete. Runtime proxy calibration is
-pending.**
+movement-provider discovery, gradual player-O2-only recalibration, and
+automated build acceptance are complete. Runtime calibration is pending.**
 
 ## Product direction
 
@@ -154,16 +153,17 @@ is recorded above.
 
 The active `environmental-hazard-diagnostic-strip.xml` is a semi-transparent
 1160-by-196 top-center strip gated by the proven `inScanner` condition. The
-calibration strip reports current normalized O2 reserve, normalized jetpack
-charge, their downward-drain envelopes, combined activity, suit protection and
-depletion, and all four modeled channel loads. It explicitly records that no
-walking or vehicle-speed field is available.
+calibration strip reports current normalized player-O2 reserve, downward-drain
+detection, the gradual O2 activity envelope, suit protection and depletion,
+and all four modeled channel loads. It explicitly distinguishes the pink
+player-O2 reserve from atmospheric O2 and records that boost is excluded.
 
-Only a downward change greater than `0.0005` activates the corresponding drain
-signal. Low but stable O2 or boost charge is not activity, and O2 recovery or
-boost recharge is not activity. A detected drain attacks immediately to `1`
-and decays by `0.82` every 250 ms until below `0.01`, when it becomes `0` and
-the timer may stop if no hazard remains active.
+A downward player-O2 change greater than `0.0005` marks the next 250 ms update
+as active drain. Each active tick adds `0.08` to the bounded O2 activity
+envelope; each tick without detected drain subtracts `0.10`. Sustained running
+therefore builds to full activity in approximately 3.25 seconds and releases
+in approximately 2.5 seconds. Low but stable player O2 and O2 recovery are not
+activity. Boost does not contribute to environmental load.
 
 ## Nominal HUD runtime evidence
 
@@ -276,9 +276,9 @@ is:
 
 ```text
 depletion = 1 - protection
-activity = max(oxygenDrainSignal, boostDrainSignal)
+activity = gradual player-O2 drain envelope
 relativeLoad = clamp(
-    0.05 + 0.10 * independentRandom + 0.35 * activity + 0.50 * depletion,
+    0.05 + 0.10 * independentRandom + 0.25 * activity + 0.60 * depletion,
     0,
     1
 )
@@ -286,12 +286,13 @@ relativeLoad = clamp(
 
 Random targets are independently selected per category and eased toward at a
 bounded 250 ms update cadence. At full protection and idle, active bars range
-from 5% to 15%; full O2 or boost activity adds 35 percentage points. Half
-protection adds 25 points, and exhausted protection adds 50 points. Higher bars
-mean greater relative exposure load and health risk, not more remaining
-protection. O2 and boost use are an explicitly modeled activity proxy, not
-physical speed or Bethesda per-channel severity. Taking their maximum avoids
-double-counting overlapping sprint/boost activity.
+from 5% to 15%; sustained player-O2 drain adds up to 25 percentage points.
+Half protection adds 30 points, and exhausted protection adds 60 points. Idle
+load with no protection is therefore 65% to 75%; sustained running can bring it
+to 90% to 100%. Higher bars mean greater relative exposure load and health
+risk, not more remaining protection. Player-O2 use is an explicitly modeled
+activity proxy, not physical speed or Bethesda per-channel severity. Boost was
+removed after a runtime tap drove the binary proxy immediately to full activity.
 
 The layout does not display CO2, atmospheric pressure, a vacuum state, a raw
 per-channel magnitude, a Threat Index formula, or physical units. The separate
@@ -306,20 +307,22 @@ verify:
 1. the compact lower-right panel remains readable with the scanner both closed
    and open and does not overlap the boost strip at normal or large HUD scale;
 2. the activity calibration diagnostic appears only with the scanner open;
-3. while idle, confirm both drain signals decay to zero and stable low reserves
-   do not remain active;
-4. while sprinting, confirm downward O2 changes attack the O2 signal and raise
-   an already active hazard channel, then decay smoothly after stopping;
-5. while jetpacking, confirm downward charge changes attack the boost signal,
-   recharge does not count as activity, and overlapping O2/boost use is bounded
-   by `max()` rather than added;
-6. a nominal environment shows four zero-load channels and 100% protection;
-7. a brief low-risk hazard activates only the matching category and its bar
+3. while idle, confirm downward drain reads false, the O2 activity envelope
+   releases to zero, and stable low reserves do not remain active;
+4. briefly sprint, confirm the envelope rises only one or a few steps rather
+   than jumping to full activity, then releases smoothly after stopping;
+5. sustain sprinting, confirm downward player-O2 changes build the envelope
+   gradually toward 100% and raise an already active hazard channel;
+6. use the jetpack and confirm boost charge does not influence the envelope;
+7. a nominal environment shows four zero-load channels and 100% protection;
+8. a brief low-risk hazard activates only the matching category and its bar
    drifts within the healthy-protection range;
-8. simultaneous effects produce independent drifting bars;
-9. if protection safely drops partway, active bars shift upward while the
+9. simultaneous effects produce independent drifting bars;
+10. if protection safely drops partway, active bars shift upward while the
    shared protection bar shifts downward; and
-10. leaving exposure immediately returns the inactive channel to zero while
+11. at zero protection, confirm an idle active channel remains within the
+    expected 65% to 75% range; and
+12. leaving exposure immediately returns the inactive channel to zero while
    Bethesda restores protection on its own schedule.
 
 The accepted captures already cover the dangerous full-soak transition; no
@@ -340,17 +343,17 @@ Run repository validation and the complete two-variant Scaleform build:
   -VanillaInterfacePath "<approved-vanilla-interface-path>"
 ```
 
-The complete build passed on 2026-08-12. Both generated GFX variants compiled,
-imported, reopened, passed their build and staged-layout contracts, and were
-reproduced from the final source. All four staging variants contain the same
-normal/large pair:
+The complete O2-only recalibration build passed on 2026-08-12. Both generated
+GFX variants compiled, imported, reopened, passed their build and staged-layout
+contracts, and reproduced from the final source. All four staging variants
+contain the same normal/large pair:
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 395951 | `C7FC51DBDECDE0CC74089B10D5B252DC9B912C26302130F47FA857B723720654` |
-| `hudmenu_lrg.gfx` | 396134 | `2602BC8D77812C6C85D730139BC7DD86BE672B1254037B5D87B9FF0A9258C9AF` |
+| `hudmenu.gfx` | 395645 | `6490F0B278DE3DD743836F197AE30919B64633B6060AB0FA39909A2289D824EC` |
+| `hudmenu_lrg.gfx` | 395828 | `97CF80E0E7628A923F621E7C2DBFC3409A797B41A9A4852718F7B81306FC7205` |
 | `VenworksCUI/layout.xml` | 3734 | `7112EA7DA33DAC0C02AD6A16F2D3086B265EEDF7AE7976F44A84841E28CF4862` |
 | `components/environmental-hazard-scanner.xml` | 6860 | `FC822EE57ED481345C43E7460DC2219A2771D16BE1BC3A26C6AB2A6D1F6825BC` |
-| `components/environmental-hazard-diagnostic-strip.xml` | 3337 | `96FFDC65D6E19BA0A3E12AE34C0FD6EEFECB3A756D8526C3947307A6F5879141` |
+| `components/environmental-hazard-diagnostic-strip.xml` | 3344 | `96FA10B4A4E0D53D149557CD11D6D0C31EA5281554CAD068D95A3F64D28F3B9A` |
 
 Runtime deployment must use artifacts from the user-committed Goal 6 worktree.
