@@ -288,11 +288,8 @@ foreach ($meterStyle in @($providerProbeLayout.venworksCUI.definitions.meterStyl
 
 foreach ($componentFixtureName in @(
   'weapon-status.xml',
-  'environment-status.xml',
-  'player-meters.xml',
-  'mobility-status.xml',
   'environmental-hazard-scanner.xml',
-  'player-data-diagnostic-strip.xml'
+  'player-status-scanner.xml'
 )) {
   $componentFixturePath = Resolve-RequiredFile `
     -Path (Join-Path $providerProbeComponentDirectory $componentFixtureName) `
@@ -805,6 +802,15 @@ try {
       'diagnostic.activityloads',
       'valueContext.dispose()',
       'PlayerFrequentData',
+      'PlayerInventoryData',
+      'player.serial',
+      'player.universaltime',
+      'player.xppercentage',
+      'player.carbondioxidepercentage',
+      'player.digipicks',
+      'carry.percentage',
+      'boost.percentage',
+      'digipicksavailable',
       'WeaponData',
       'HUDStarbornPowersData',
       'Meter direction must be right, left, down, or up',
@@ -956,32 +962,39 @@ try {
   New-Item -ItemType Directory -Force -Path $assetOutputDirectory | Out-Null
   New-Item -ItemType Directory -Force -Path $componentOutputDirectory | Out-Null
   Copy-Item -LiteralPath $providerProbeLayoutSource -Destination (Join-Path $cuiOutputDirectory "layout.xml") -Force
-  $retiredEnvironmentalDiagnosticPath = Join-Path $componentOutputDirectory 'environmental-hazard-diagnostic-strip.xml'
-  if (Test-Path -LiteralPath $retiredEnvironmentalDiagnosticPath) {
-    Remove-Item -LiteralPath $retiredEnvironmentalDiagnosticPath -Force
+  $retiredComponentNames = @(
+    'environmental-hazard-diagnostic-strip.xml',
+    'environment-status.xml',
+    'player-meters.xml',
+    'mobility-status.xml',
+    'player-data-diagnostic-strip.xml'
+  )
+  foreach ($retiredComponentName in $retiredComponentNames) {
+    $retiredComponentPath = Join-Path $componentOutputDirectory $retiredComponentName
+    if (Test-Path -LiteralPath $retiredComponentPath) {
+      Remove-Item -LiteralPath $retiredComponentPath -Force
+    }
   }
-  foreach ($componentFixtureName in @('weapon-status.xml','environment-status.xml','player-meters.xml','mobility-status.xml','environmental-hazard-scanner.xml','player-data-diagnostic-strip.xml')) {
+  foreach ($componentFixtureName in @('weapon-status.xml','environmental-hazard-scanner.xml','player-status-scanner.xml')) {
     Copy-Item -LiteralPath (Join-Path $providerProbeComponentDirectory $componentFixtureName) -Destination (Join-Path $componentOutputDirectory $componentFixtureName) -Force
   }
-  $stagedPlayerMeters = [xml](Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'player-meters.xml') -Raw)
-  if (@($stagedPlayerMeters.venworksCUIFragment.group.meter).Count -ne 3) {
-    throw 'Staged player-meters.xml must contain exactly three consolidated live meters.'
+  $stagedPlayerScannerText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'player-status-scanner.xml') -Raw
+  $stagedPlayerScanner = [xml]$stagedPlayerScannerText
+  if (@($stagedPlayerScanner.venworksCUIFragment.group.meter).Count -ne 6) {
+    throw 'Staged player-status-scanner.xml must contain five normalized tracks and the shared CO2 overlay.'
   }
   $stagedWeaponStatusText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'weapon-status.xml') -Raw
-  $stagedEnvironmentStatusText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'environment-status.xml') -Raw
-  $stagedMobilityStatusText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'mobility-status.xml') -Raw
   $stagedEnvironmentalScannerText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'environmental-hazard-scanner.xml') -Raw
-  $stagedPlayerDiagnosticText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'player-data-diagnostic-strip.xml') -Raw
   $stagedEnvironmentalScanner = [xml]$stagedEnvironmentalScannerText
   if ($stagedWeaponStatusText -notmatch 'name="vehicle-exit-prompt"' -or
       $stagedWeaponStatusText -notmatch 'value="\$EXIT HOLD"' -or
       $stagedWeaponStatusText -notmatch 'fontSize="21"' -or
-      $stagedWeaponStatusText -notmatch 'id="vehicle\.exit\.label" x="8" y="-61" width="165"' -or
-      $stagedWeaponStatusText -notmatch 'id="vehicle\.exit\.glyph" x="183" y="-69" width="52" height="52"' -or
+      $stagedWeaponStatusText -notmatch 'id="vehicle\.exit\.label" x="8" y="88" width="165"' -or
+      $stagedWeaponStatusText -notmatch 'id="vehicle\.exit\.glyph" x="183" y="80" width="52" height="52"' -or
+      $stagedWeaponStatusText -notmatch 'source="power\.name"' -or
       ([regex]::Matches($stagedWeaponStatusText, 'visibleWhen="inVehicle"')).Count -lt 2 -or
-      $stagedWeaponStatusText -match '<button|action=|event=|callback=|userEvent=|key=' -or
-      $stagedMobilityStatusText -match 'vehicle\.exit|vehicle-exit-prompt|\$EXIT HOLD') {
-    throw 'Staged weapon-status.xml must own the left-aligned mapped vehicle-exit presentation, and mobility-status.xml must not retain it.'
+      $stagedWeaponStatusText -match '<button|action=|event=|callback=|userEvent=|key=') {
+    throw 'Staged weapon-status.xml must own the bounded vehicle-exit presentation and temporary active-power readout.'
   }
   $environmentalDiagnosticIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'environmental-hazard-diagnostic'
@@ -989,32 +1002,52 @@ try {
   $environmentalScannerIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'environmental-hazard-scanner'
   })
-  $playerDiagnosticIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
-    [string]$_.id -eq 'player-data-probe'
+  $playerScannerIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
+    [string]$_.id -eq 'player-status-scanner'
+  })
+  $weaponStatusIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
+    [string]$_.id -eq 'chronomark.weapon-status'
   })
   $environmentalProtectionStyles = @($providerProbeLayout.venworksCUI.definitions.meterStyle | Where-Object {
     [string]$_.id -eq 'environment.protection'
   })
   $stagedEnvironmentalScannerGroup = $stagedEnvironmentalScanner.venworksCUIFragment.group
+  $retiredStagedComponents = @($retiredComponentNames | Where-Object {
+    Test-Path -LiteralPath (Join-Path $componentOutputDirectory $_)
+  })
+  $stagedPlayerScannerGroup = $stagedPlayerScanner.venworksCUIFragment.group
   if ($environmentalDiagnosticIncludes.Count -ne 0 -or
-      (Test-Path -LiteralPath $retiredEnvironmentalDiagnosticPath) -or
+      $retiredStagedComponents.Count -ne 0 -or
       $environmentalScannerIncludes.Count -ne 1 -or
       [string]$environmentalScannerIncludes[0].src -ne 'environmental-hazard-scanner.xml' -or
       [string]$environmentalScannerIncludes[0].anchor -ne 'bottom-right' -or
       [string]$environmentalScannerIncludes[0].visibleWhen -ne 'always' -or
       [int]$environmentalScannerIncludes[0].x -ne 39 -or
       [int]$environmentalScannerIncludes[0].y -ne 11 -or
-      $playerDiagnosticIncludes.Count -ne 1 -or
-      [string]$playerDiagnosticIncludes[0].src -ne 'player-data-diagnostic-strip.xml' -or
-      [string]$playerDiagnosticIncludes[0].anchor -ne 'top-center' -or
-      [string]$playerDiagnosticIncludes[0].visibleWhen -ne 'inScanner' -or
-      [int]$playerDiagnosticIncludes[0].y -ne 12 -or
-      $stagedPlayerDiagnosticText -notmatch 'source="diagnostic\.playerFields"' -or
-      $stagedPlayerDiagnosticText -notmatch 'source="diagnostic\.playerTargets"' -or
-      $stagedPlayerDiagnosticText -notmatch 'source="diagnostic\.playerIdentifiers"' -or
-      $stagedPlayerDiagnosticText -notmatch 'source="diagnostic\.playerTimeInventory"' -or
-      $stagedPlayerDiagnosticText -notmatch 'DETERMINISTIC SERIAL: WAITING FOR PLAYERDATA' -or
-      $stagedPlayerDiagnosticText -notmatch 'SAME EXACT CASE \+ WHITESPACE PRODUCES THE SAME SERIAL' -or
+      $playerScannerIncludes.Count -ne 1 -or
+      [string]$playerScannerIncludes[0].src -ne 'player-status-scanner.xml' -or
+      [string]$playerScannerIncludes[0].anchor -ne 'bottom-left' -or
+      [string]$playerScannerIncludes[0].visibleWhen -ne 'always' -or
+      [int]$playerScannerIncludes[0].x -ne -39 -or
+      [int]$playerScannerIncludes[0].y -ne 11 -or
+      $weaponStatusIncludes.Count -ne 1 -or
+      [string]$weaponStatusIncludes[0].anchor -ne 'top-right' -or
+      [int]$weaponStatusIncludes[0].x -ne 39 -or
+      [int]$weaponStatusIncludes[0].y -ne -11 -or
+      [int]$stagedPlayerScannerGroup.width -ne 360 -or
+      [int]$stagedPlayerScannerGroup.height -ne 296 -or
+      $stagedPlayerScannerText -notmatch 'value="PLAYER DATA"' -or
+      $stagedPlayerScannerText -notmatch 'source="player\.serial"' -or
+      $stagedPlayerScannerText -notmatch 'source="player\.universalTime"' -or
+      $stagedPlayerScannerText -notmatch 'source="player\.xpPercentage"' -or
+      $stagedPlayerScannerText -notmatch 'source="player\.healthPercentage"' -or
+      $stagedPlayerScannerText -notmatch 'source="player\.oxygenPercentage"' -or
+      $stagedPlayerScannerText -notmatch 'source="player\.carbonDioxidePercentage"' -or
+      $stagedPlayerScannerText -notmatch 'source="boost\.percentage"' -or
+      $stagedPlayerScannerText -notmatch 'source="carry\.percentage"' -or
+      $stagedPlayerScannerText -notmatch 'visibleWhen="digipicksAvailable"' -or
+      $stagedPlayerScannerText -notmatch 'player\.digipicks:integer' -or
+      ([regex]::Matches($stagedPlayerScannerText, 'max="100"')).Count -ne 6 -or
       $environmentalProtectionStyles.Count -ne 1 -or
       [string]$environmentalProtectionStyles[0].renderer -ne 'segments' -or
       [string]$environmentalProtectionStyles[0].direction -ne 'right' -or
@@ -1036,14 +1069,13 @@ try {
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.thermalExposureLevel"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.corrosiveExposureLevel"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.radiationExposureLevel"' -or
-      $stagedEnvironmentStatusText -match 'source="(location\.name|environment\.(localtime|oxygenpercentage|temperature|gravity))"' -or
       $stagedEnvironmentalScannerText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE|THREAT INDEX|VACUUM)') {
-    throw 'Goal 6 must stage the accepted lower-right environmental control plus one scanner-only bounded player-data and deterministic-serial diagnostic, with no retired environment diagnostic or invented production data.'
+    throw 'Goal 6 must stage the accepted environmental control, production player scanner, and temporary upper-right weapon/power presentation with no retired diagnostics or invented data.'
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
   Copy-Item -LiteralPath $invalidSvgSource -Destination (Join-Path $assetOutputDirectory "gallery-invalid.svg") -Force
-  Write-Host -ForegroundColor Green "Staged the accepted Goal 6 environmental control and scanner-only player-data diagnostic in $cuiOutputDirectory"
+  Write-Host -ForegroundColor Green "Staged the accepted Goal 6 environmental control and production player scanner in $cuiOutputDirectory"
 }
 finally {
   if ($KeepWork) {

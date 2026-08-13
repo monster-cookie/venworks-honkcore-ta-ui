@@ -33,9 +33,9 @@ Root layouts may place reusable external fragments with bounded imports:
 
 ```xml
 <includes>
-  <include id="chronomark.weapon-status" src="weapon-status.xml"
-           x="0" y="0" anchor="bottom-left"
-           visible="true" visibleWhen="always" z="102" />
+  <include id="player-status-scanner" src="player-status-scanner.xml"
+           x="-39" y="11" anchor="bottom-left"
+           visible="true" visibleWhen="always" z="100" />
 </includes>
 ```
 
@@ -238,8 +238,8 @@ to resolve the active power key to a player-facing name. Arbitrary
 provider/member selection remains prohibited.
 
 Goal 5 also exposes bounded explosive count/type and jetpack charge values.
-The weapon fragment uses them for grenade/mine presentation, while the mobility
-fragment owns boost and an `inVehicle`-conditioned vehicle prompt. The prompt
+The weapon fragment uses them for grenade/mine presentation and owns an
+`inVehicle`-conditioned vehicle prompt. The prompt
 extracts the initialized `GetUpButton_mc` child from a temporary embedded
 Bethesda vehicle control, then fits only that bounded hold button. It disables
 mouse interaction and receives no routed user events. The hidden vanilla
@@ -294,8 +294,30 @@ calibration strip established current player-O2 reserve, downward-drain
 detection, the gradual O2 activity envelope, protection depletion, and the four
 modeled channel loads; it is not included in the accepted production layout.
 
-`LocalEnvData_Frequent.fGalacticStandardTime` is a precise future
-universal-time candidate identified from the clean-room roadmap. Bethesda's
-HUD movie extraction independently confirms only `fLocalPlanetTime`, so the
-galactic-standard-time candidate remains unallowlisted until a bounded runtime
-probe confirms field receipt and semantics for the future player scanner.
+`LocalEnvData_Frequent.fGalacticStandardTime` is a precise universal-time value
+confirmed by the bounded HUD runtime probe. The production Player Data fragment
+formats it independently from the Planet Data fragment's local time.
+
+## Goal 6 player scanner bindings
+
+The 360-design-unit lower-left Player Data fragment uses only runtime-confirmed
+HUD-lifetime values. It is anchored 25 design units from the physical left and
+bottom edges. Its production sources are:
+
+| Source | Kind | Confirmed meaning |
+| --- | --- | --- |
+| `player.serial` | String | Display-only deterministic 8-4-6 serial derived from the exact character name. |
+| `player.level` | Number | `PlayerData.uLevel`. |
+| `player.xpPercentage` | Number `0..100` | Bounded ratio of `fLevelXP` to `fNextLevelXP`. |
+| `player.universalTime` | Number | `LocalEnvData_Frequent.fGalacticStandardTime`, formatted as a 24-hour clock. |
+| `player.healthPercentage` | Number `0..100` | Bounded health ratio. |
+| `player.oxygenPercentage` | Number `0..100` | Bounded remaining O2 ratio. |
+| `player.carbonDioxidePercentage` | Number `0..100` | Bounded CO2 ratio using the shared O2/CO2 maximum. |
+| `player.digipicks` | Number | Count for exact base form `00000A:Starfield.esm`; shown only when the inventory array is available. |
+| `boost.percentage` | Number `0..100` | Normalized jetpack charge. |
+| `carry.percentage` | Number `0..100` | Bounded current/max encumbrance ratio; full at or above capacity. |
+
+O2 and CO2 use one visual track with a transparent-empty red CO2 overlay. All
+five player tracks use the same bounded percentage contract. The temporary
+upper-right weapon fragment also displays `power.name`; it does not move input
+ownership or add interaction callbacks.

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <venworksCUIFragment schemaVersion="1" runtimeVersion="1">
-  <group id="root" x="0" y="0" width="430" height="370" opacity="1" visible="true"
+  <group id="root" x="0" y="0" width="430" height="136" opacity="1" visible="true"
          rotation="0" scaleX="1" scaleY="1" z="0">
-    <text id="vehicle.exit.label" x="8" y="-61" width="165" height="42" opacity="1" visible="true"
+    <text id="vehicle.exit.label" x="8" y="88" width="165" height="42" opacity="1" visible="true"
           visibleWhen="inVehicle" rotation="0" scaleX="1" scaleY="1" z="3" value="$EXIT HOLD"
           font="$MAIN_Font_Bold" fontSize="21" color="#F2F7F9" bold="false" align="left" />
-    <symbol id="vehicle.exit.glyph" x="183" y="-69" width="52" height="52" opacity="1" visible="true"
+    <symbol id="vehicle.exit.glyph" x="183" y="80" width="52" height="52" opacity="1" visible="true"
             visibleWhen="inVehicle" rotation="0" scaleX="1" scaleY="1" z="3"
             name="vehicle-exit-prompt" fit="contain" alignX="left" alignY="center" />
     <providerSymbol id="weapon.icon" x="8" y="0" width="54" height="54" opacity="1" visible="true"
@@ -43,5 +43,11 @@
           visibleWhen="weaponHasExplosive" rotation="0" scaleX="1" scaleY="1" z="2"
           source="weapon.explosivecount" format="integer" value="--"
           font="$MAIN_Font_Bold" fontSize="13" color="#FFCB45" bold="true" align="left" />
+    <text id="power.label" x="204" y="61" width="62" height="20" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="2" value="POWER"
+          font="$MAIN_Font_Bold" fontSize="9" color="#8CB1BC" bold="false" align="right" />
+    <text id="power.name" x="272" y="59" width="144" height="22" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="2" source="power.name" format="raw"
+          value="NO ACTIVE POWER" font="$MAIN_Font_Bold" fontSize="10" color="#00E8EC" bold="false" align="right" />
   </group>
 </venworksCUIFragment>

@@ -20,6 +20,7 @@ package venworks.cui
          BSUIDataManager.Subscribe("HUDOpacityData",this.onOpacityData);
          BSUIDataManager.Subscribe("WeaponData",this.onWeaponData);
          BSUIDataManager.Subscribe("HudJetpackData",this.onJetpackData);
+         BSUIDataManager.Subscribe("PlayerInventoryData",this.onPlayerInventoryData);
       }
 
       public static function normalizeName(param1:String) : String
@@ -33,7 +34,8 @@ package venworks.cui
          if(name == "always" || name == "never" || name == "firstperson" || name == "thirdperson" ||
             name == "incombat" || name == "inscanner" || name == "issneaking" ||
             name == "weaponaiming" || name == "weaponhasammo" || name == "weaponhasexplosive" ||
-            name == "weaponexplosiveismine" || name == "boostactive" || name == "invehicle" || name == "hudvisible")
+            name == "weaponexplosiveismine" || name == "boostactive" || name == "invehicle" ||
+            name == "digipicksavailable" || name == "hudvisible")
          {
             return "boolean";
          }
@@ -128,6 +130,12 @@ package venworks.cui
             return;
          }
          this.setValue("boostactive",charge > 0 && charge < 1);
+         this.notifyChanged();
+      }
+
+      private function onPlayerInventoryData(param1:FromClientDataEvent) : void
+      {
+         this.setValue("digipicksavailable",param1.data.aItems is Array);
          this.notifyChanged();
       }
 

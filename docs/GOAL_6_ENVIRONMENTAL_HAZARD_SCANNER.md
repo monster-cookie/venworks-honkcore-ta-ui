@@ -2,9 +2,9 @@
 
 **Status: The environmental hazard scanner and Planet Data presentation are
 runtime accepted. The bounded player-data probe confirmed the final Goal 6
-player-tricorder providers. The scanner-only SharedObject persistence experiment
-was runtime rejected with Error #1501. A storage-free, exact-name-derived display
-serial is implemented and pending runtime acceptance.**
+player-tricorder providers, and the storage-free exact-name-derived display
+serial is runtime accepted. The production Player Data panel is implemented and
+awaits its final in-game layout and behavior check.**
 
 ## Product direction
 
@@ -140,7 +140,7 @@ bounded runtime probe as follows:
 | Character name | `PlayerData.sName` | Confirmed in HUD runtime |
 | Player level | `PlayerData.uLevel` | Confirmed in HUD runtime |
 | XP progress | `PlayerData.fLevelXP` / `fNextLevelXP` | Confirmed in HUD runtime |
-| Universal time | `LocalEnvData_Frequent.fGalacticStandardTime` | Confirmed in HUD runtime; production formatting remains unimplemented |
+| Universal time | `LocalEnvData_Frequent.fGalacticStandardTime` | Confirmed in HUD runtime and formatted by the production player panel |
 | Venworks actor value | `PlayerData.VWKS_PlayerLevel` candidate for Actor Value `000030:Venworks-Core.esm` | Absent from the received HUD payload (`NULL`) |
 | Digipick count | `PlayerInventoryData.aItems[*].uCount` for base form `00000A:Starfield.esm` | Confirmed in HUD runtime by exact base form |
 | Save/player serial | ID-, serial-, save-, character-, actor-, form-, reference-, or `VWKS`-named `PlayerData` member | No candidate found by bounded HUD runtime enumeration |
@@ -182,7 +182,8 @@ always produces the same value, including after save reload, game restart, or a
 Unity transition because it is recomputed rather than persisted. Renaming changes
 the value, and two characters with identical exact names collide by design. The
 result is not a Bethesda identifier, save identifier, globally unique identifier,
-or security token.
+or security token. Runtime accepted the deterministic 8-4-6 display, including
+stable regeneration without a persistence error.
 
 ## Unknowns that must not be invented
 
@@ -225,6 +226,12 @@ completed its purpose, so neither the source fixture, staged component, nor
 layout include remains in the final production package. The diagnostic data
 adapter stays bounded in ActionScript for future layouts without rendering an
 overlay.
+
+The subsequent `player-data-diagnostic-strip.xml` was likewise scanner-gated
+and bounded. It confirmed player name, level, XP, Galactic Standard Time, the
+exact Digipick base form, and the deterministic serial. Its source fixture,
+staged component, and layout include are retired now that those values feed the
+production Player Data panel.
 
 A downward player-O2 change greater than `0.0005` marks the next 250 ms update
 as active drain. Each active tick adds `0.08` to the bounded O2 activity
@@ -345,12 +352,15 @@ The compact panel provides:
   recognized Bethesda effect icons. The ambiguous `RELATIVE LOAD` header is
   not displayed.
 
-The lower-left environment fragment no longer duplicates location, local time,
-atmospheric O2, temperature, or gravity. It temporarily retains only power,
-carry weight, and credits until the separate player-scanner design replaces
-that surface. `fGalacticStandardTime` is recorded as a precise candidate for
-that future player's universal-time display, but remains unshipped until a
-HUD-lifetime runtime probe confirms it independently of the clean-room roadmap.
+The production lower-left `PLAYER DATA` fragment replaces the former environment,
+meter, and mobility fragments. Its identity band displays the deterministic
+serial, level, Galactic Standard Time, current/max carry weight, credits, and
+the exact-form Digipick count when the inventory array is available. Five
+normalized tracks show XP to level, health, shared O2/CO2, boost charge, and
+encumbrance. O2 drains in magenta and CO2 grows in red on the same visual track.
+Encumbrance is clamped to a full bar at or above capacity. Active power moves
+temporarily to the upper-right weapon fragment; the next goal may revise that
+weapon presentation.
 
 An absent category is exactly `0`. For an active category, the modeled target
 is:
@@ -396,8 +406,8 @@ verify:
    physical right and bottom edges at normal and large HUD scale;
 2. `PLANET DATA` appears above `ENVIRONMENTAL HAZARDS` and shows the live
    location/body label, local time, atmospheric O2, temperature, and gravity;
-3. those five values no longer appear in the lower-left panel, while power,
-   carry weight, credits, and the three player meters remain functional;
+3. those five values no longer appear in the lower-left panel, while the
+   consolidated Player Data panel remains functional;
 4. `RELATIVE LOAD` and `FULL SOAK // HEALTH RISK` are absent, and exhausted
    protection reads `PROTECTION DEPLETED`;
 5. opening the scanner does not render the retired diagnostic strip;
@@ -412,26 +422,25 @@ verify:
 The accepted captures already cover the dangerous full-soak transition; no
 additional full-soak unsafe-water test is required.
 
-## Player-data and deterministic-serial runtime acceptance plan
+## Player Data production runtime acceptance plan
 
-The initial player-data runtime capture is accepted provider evidence. The
-remaining diagnostic deployment tests only the name-derived display serial:
+The deterministic serial diagnostic is accepted and removed. The final Goal 6
+runtime pass verifies the production presentation:
 
-1. on first scanner open, the serial line reports an 8-4-6 formatted uppercase
-   alphanumeric value plus `SOURCE=<exact character name>` and
-   `MODE=DETERMINISTIC`, with no persistence error;
-2. closing and reopening the scanner produces the exact same value;
-3. saving and reloading produces the exact same value;
-4. fully exiting and restarting the game produces the exact same value;
-5. a Unity transition produces the exact same value;
-6. changing case, whitespace, or any character in the name produces a different
-   value; and
-7. two characters with the same exact name produce the same value, confirming
-   the documented collision behavior.
+1. the 360-design-unit Player Data panel sits approximately 25 units from the
+   physical left and bottom edges at normal and large HUD scale;
+2. serial, level, universal time, carry weight, credits, and Digipicks match the
+   proven provider values, and the Digipick field hides if the inventory array
+   is unavailable;
+3. XP and health tracks follow their normalized provider ratios;
+4. the shared O2/CO2 track drains magenta O2, then grows red CO2;
+5. boost charge drains and refills, while encumbrance becomes full at or above
+   carrying capacity;
+6. weapon, ammunition, explosives, vehicle exit, and the temporary active-power
+   readout remain functional in the upper-right; and
+7. neither retired diagnostic strip renders when the scanner opens.
 
-A serial change for the same exact character name rejects the implementation.
-The probe remains scanner-gated and must disappear when the scanner closes. The
-user commits the generated build before deployment.
+The user commits the generated build before deployment.
 
 ## Automated validation and expected artifacts
 
@@ -451,19 +460,17 @@ Run repository validation and the complete two-variant Scaleform build:
 The earlier SharedObject diagnostic passed automated build validation but was
 rejected by runtime Error #1501 because the Scaleform host does not install a
 `SharedObjectManager`. The deterministic replacement removes the rejected
-storage path. On 2026-08-13 both corrected GFX variants compiled, imported,
-reopened, passed their build and staged-layout contracts, and reproduced from
-the approved source. All four staging variants contain the same normal/large
-pair. The player-data probe remains scanner-gated pending the runtime acceptance
-sequence above:
+storage path. On 2026-08-13 the production Player Data build compiled, imported,
+reopened, passed its source and staged-layout contracts, and reproduced the
+normal/large pair across all four staging variants:
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 399966 | `6B029C28EE7AF4DA1232027704EE5596F89DF9FDDCD50600C27E1BFF4B90365D` |
-| `hudmenu_lrg.gfx` | 400149 | `1442B9B191008EA51E5BB4DBBB9267639A26C7754DD72F91B8C82C6D44BBB633` |
-| `VenworksCUI/layout.xml` | 3710 | `4B0CA23278139753E6067816C35FFC1ED9E0F44442FA2B063D53B86D7C60BC03` |
-| `components/player-data-diagnostic-strip.xml` | 2879 | `D2368D03C44DE55C0F8170A03DBF8A0842A7C64845E5E7F4B8897ACDB6234994` |
+| `hudmenu.gfx` | 400628 | `543B21D698B8356F8F00DCD2522754A84343ECCE486F2D75A94E67D797C624F6` |
+| `hudmenu_lrg.gfx` | 400811 | `975EDB52FDF3082B1874411B66392A85B7010C86A889EC875407EBACF26C94B7` |
+| `VenworksCUI/layout.xml` | 3736 | `51D2128ABA3E0154D210DD061A095A2D20602255D059FFEB0F93786DB923443C` |
+| `components/player-status-scanner.xml` | 8819 | `60D28CBEFB55DE21316571BA2224EB7429054FA3DE2AA3F8CA3B250F3121E94C` |
 | `components/environmental-hazard-scanner.xml` | 9856 | `055A9A7D51EF8016AAD3EAEC533885C430FD05888CCB5C76AC01FEE5A14BECA8` |
-| `components/environment-status.xml` | 1634 | `9DB8E41326E61D05798FAFDE38BFE87A4AB13A95DA0C47F5B554D9CC8B9D33E1` |
+| `components/weapon-status.xml` | 4455 | `81FF1E81CC4647736A4C360C131BDF68D84D566338268BFF2AEC68D508248894` |
 
 Runtime deployment must use artifacts from the user-committed Goal 6 worktree.

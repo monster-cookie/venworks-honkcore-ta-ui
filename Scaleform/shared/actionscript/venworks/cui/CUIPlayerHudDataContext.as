@@ -104,7 +104,8 @@ package venworks.cui
       public static function getKind(param1:String) : String
       {
          var source:String = normalizeSource(param1);
-         if(source == "location.name" || source == "power.key" || source == "power.name" ||
+         if(source == "location.name" || source == "player.serial" ||
+            source == "power.key" || source == "power.name" ||
             source == "weapon.name" || source == "weapon.icon" || source == "weapon.ammotype" ||
             source == "diagnostic.inventoryprovider" || source == "diagnostic.powernameprovider" ||
             source == "environment.protectionstatus" ||
@@ -130,16 +131,21 @@ package venworks.cui
          }
          if(source == "environment.oxygenpercentage" || source == "environment.temperature" ||
             source == "environment.gravity" || source == "environment.localtime" ||
-            source == "player.health" || source == "player.maxhealth" ||
+            source == "player.universaltime" || source == "player.level" ||
+            source == "player.levelxp" || source == "player.nextlevelxp" ||
+            source == "player.xppercentage" || source == "player.health" || source == "player.maxhealth" ||
             source == "player.healthpercentage" || source == "player.oxygen" ||
             source == "player.maxoxygen" || source == "player.oxygenpercentage" ||
-            source == "player.carbondioxide" || source == "power.current" ||
+            source == "player.carbondioxide" || source == "player.carbondioxidepercentage" ||
+            source == "player.digipicks" || source == "power.current" ||
             source == "power.maximum" || source == "power.percentage" ||
             source == "power.cost" || source == "power.cooldown" ||
-            source == "carry.current" || source == "carry.maximum" || source == "credits" ||
+            source == "carry.current" || source == "carry.maximum" || source == "carry.percentage" ||
+            source == "credits" ||
             source == "weapon.clipammo" || source == "weapon.totalammo" ||
             source == "weapon.reserveammo" || source == "weapon.explosivecount" ||
             source == "weapon.explosivetype" || source == "boost.charge" ||
+            source == "boost.percentage" ||
             source == "environment.hazard.effectcount" || source == "environment.hazard.airwaterlevel" ||
             source == "environment.hazard.thermallevel" || source == "environment.hazard.corrosivelevel" ||
             source == "environment.hazard.radiationlevel" ||
@@ -283,6 +289,7 @@ package venworks.cui
       private function onLocalEnvironmentFrequentData(param1:FromClientDataEvent) : void
       {
          this.setFinite("environment.localtime",param1.data.fLocalPlanetTime);
+         this.setFinite("player.universaltime",param1.data.fGalacticStandardTime);
          this.universalTimeDiagnostic = "UT: fGalacticStandardTime=" +
             this.formatDiagnosticValue(param1.data.fGalacticStandardTime) +
             " | fLocalPlanetTime=" + this.formatDiagnosticValue(param1.data.fLocalPlanetTime) +
@@ -293,6 +300,10 @@ package venworks.cui
 
       private function onPlayerData(param1:FromClientDataEvent) : void
       {
+         this.setFinite("player.level",param1.data.uLevel);
+         this.setFinite("player.levelxp",param1.data.fLevelXP);
+         this.setFinite("player.nextlevelxp",param1.data.fNextLevelXP);
+         this.setRatio("player.xppercentage",param1.data.fLevelXP,param1.data.fNextLevelXP);
          this.setText("diagnostic.playerfields","PLAYERDATA ROOT: " +
             this.listFieldNames(param1.data,MAX_PLAYER_DIAGNOSTIC_FIELDS));
          this.setText("diagnostic.playertargets","PLAYER TARGETS: sName=" +
@@ -314,6 +325,7 @@ package venworks.cui
          this.setFinite("player.maxoxygen",param1.data.fMaxO2CO2);
          this.setRatio("player.oxygenpercentage",param1.data.fOxygen,param1.data.fMaxO2CO2);
          this.setFinite("player.carbondioxide",param1.data.fCarbonDioxide);
+         this.setRatio("player.carbondioxidepercentage",param1.data.fCarbonDioxide,param1.data.fMaxO2CO2);
          this.setFinite("power.current",param1.data.fStarPower);
          this.setFinite("power.maximum",param1.data.fMaxStarPower);
          this.setRatio("power.percentage",param1.data.fStarPower,param1.data.fMaxStarPower);
@@ -348,6 +360,7 @@ package venworks.cui
          {
             charge = Math.max(0,Math.min(1,charge));
             this.setFinite("boost.charge",charge);
+            this.setFinite("boost.percentage",charge * 100);
             this.notifyChanged();
             return;
          }
@@ -366,10 +379,12 @@ package venworks.cui
          var index:int = 0;
          this.clearValue("carry.current");
          this.clearValue("carry.maximum");
+         this.clearValue("carry.percentage");
          this.clearValue("credits");
          this.setText("diagnostic.armorresistance","EQUIPPED ARMOR RESISTANCE FIELDS NOT PRESENT");
          this.setFinite("carry.current",param1.data.fEncumbrance);
          this.setFinite("carry.maximum",param1.data.fMaxEncumbrance);
+         this.setRatio("carry.percentage",param1.data.fEncumbrance,param1.data.fMaxEncumbrance);
          this.setFinite("credits",param1.data.uCoin);
          this.updateDigipickDiagnostic(items);
          if(items == null)
@@ -845,12 +860,14 @@ package venworks.cui
          var formId:Number = NaN;
          var index:int = 0;
          var limit:int = 0;
+         this.clearValue("player.digipicks");
          if(param1 == null)
          {
             this.digipickDiagnostic = "DIGIPICK: ITEM ARRAY UNAVAILABLE";
             this.updatePlayerTimeInventoryDiagnostic();
             return;
          }
+         this.setFinite("player.digipicks",0);
          limit = Math.min(param1.length,MAX_DIAGNOSTIC_INVENTORY_ITEMS);
          while(index < limit)
          {
@@ -865,6 +882,7 @@ package venworks.cui
                {
                   match = item;
                   matchRoute = "FORM 00000A";
+                  this.setFinite("player.digipicks",item.uCount);
                   break;
                }
                if(match == null && editorId.toLowerCase() == "digipick")
@@ -903,10 +921,12 @@ package venworks.cui
          var serial:String = "";
          if(characterName.length == 0)
          {
+            this.clearValue("player.serial");
             this.setText("diagnostic.playeridentifiers","DETERMINISTIC SERIAL: CHARACTER NAME UNAVAILABLE");
             return;
          }
          serial = this.derivePlayerSerial(characterName);
+         this.setText("player.serial",this.formatPlayerSerial(serial));
          this.setText("diagnostic.playeridentifiers","DETERMINISTIC SERIAL: " +
             this.formatPlayerSerial(serial) + " | SOURCE=" + this.formatDiagnosticValue(characterName) +
             " | MODE=DETERMINISTIC");

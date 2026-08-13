@@ -35,7 +35,7 @@ assets; the default first destination is `Staging-VWKS/Interface`. The script
 refuses to build from unrecognized vanilla inputs or publish outputs whose
 hashes differ from the validation records.
 
-The first output also receives the root-placed Goal 5 fragments under
+The first output also receives the root-placed production fragments under
 `VenworksCUI/components`. Deploy `layout.xml` and that directory together.
 Component imports are relative filenames resolved only inside this fixed
 directory; nested imports and path traversal are unsupported.
@@ -56,10 +56,10 @@ not part of this library; it remains a Venworks-owned loose SVG.
 
 The build injects the Venworks-only ABC seed, exports Bethesda ActionScript only
 into ignored temporary storage, verifies the authored `HUDMenu` patch anchors,
-and imports the patched document class plus the 34 repository-authored CUI
+and imports the patched document class plus the repository-authored CUI
 classes. It confirms that every other exported class remains textually
 identical and that the reopened output contains the required layout and
-diagnostic contracts. Full exported Bethesda classes are never repository
+production contracts. Full exported Bethesda classes are never repository
 source.
 
 Dynamic CUI text retains Starfield's exported `PromptMessageWidget` symbol and
@@ -88,9 +88,10 @@ embedded symbols. The Goal 4G composite gallery exercises
 exercises all four warning severities and button states, a bounded quick bar
 with an independently hidden button, and an information panel with metadata,
 divider, and meter content. Goal 4G's positive and negative in-game checks are
-accepted. The staged `layout.xml` is now the Goal 5 Chronomark provider probe:
-it hides the allowlisted vanilla bottom-left group and displays confirmed live
-player-HUD fields plus explicit placeholders for unresolved providers.
+accepted. The staged `layout.xml` is the Goal 6 production HUD: it hides the
+allowlisted vanilla bottom-left and right-meter groups, places the Player Data
+scanner at lower-left and the Planet Data/environmental scanner at lower-right,
+and moves the temporary weapon/power presentation to upper-right.
 Malformed fixtures are
 intentionally not well-formed XML, while other negative fixtures may be
 schema-valid and rejected by runtime semantic checks. See
@@ -164,7 +165,7 @@ source/format combinations fail before the component renders. The runtime does
 not accept provider names, member names, scripts, or arbitrary expressions from
 configuration.
 
-The current allowlist covers `location.name`, the four `environment.*` probe
-values, health/O2/power values under `player.*` and `power.*`, weapon values,
-and the Goal 5 carry/credits candidates under `carry.*` and `credits`.
+The current allowlist covers `location.name`, the environmental scanner values,
+the production player serial/level/XP/time/health/O2/CO2/Digipick values,
+power/boost values, weapon values, and carry/credits values.
 See `../docs/GOAL_5_CHRONOMARK_REPLACEMENT.md` for the exact list.

@@ -2,22 +2,30 @@
 <venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080"
              safeLeft="64" safeTop="36" safeRight="64" safeBottom="36">
   <definitions>
-    <meterStyle id="probe.health" renderer="triangles"
+    <meterStyle id="player.xp" renderer="segments"
+                fillColor="#62DDF2" emptyColor="#123642"
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="16" gap="2"
+                direction="right" partialSegments="true" />
+    <meterStyle id="player.health" renderer="segments"
                 fillColor="#00BFC4" emptyColor="#123E42"
-                fillOpacity="1" emptyOpacity="0.72" segmentCount="14" gap="2"
-                direction="right" partialSegments="true" trianglePattern="alternating" />
-    <meterStyle id="probe.oxygen" renderer="segments"
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="16" gap="2"
+                direction="right" partialSegments="true" />
+    <meterStyle id="player.oxygen" renderer="segments"
                 fillColor="#F12CE8" emptyColor="#4A214A"
                 fillOpacity="1" emptyOpacity="0.72" segmentCount="16" gap="2"
                 direction="right" partialSegments="true" />
-    <meterStyle id="probe.encumbrance" renderer="segments"
-                fillColor="#16AE32" emptyColor="#123E20"
-                fillOpacity="1" emptyOpacity="0.7" segmentCount="8" gap="1"
-                direction="right" partialSegments="false" />
-    <meterStyle id="probe.boost" renderer="continuous"
+    <meterStyle id="player.carbondioxide" renderer="segments"
+                fillColor="#E64B4B" emptyColor="#000000"
+                fillOpacity="1" emptyOpacity="0" segmentCount="16" gap="2"
+                direction="right" partialSegments="true" />
+    <meterStyle id="player.boost" renderer="segments"
                 fillColor="#FFB51B" emptyColor="#3A2714"
-                fillOpacity="1" emptyOpacity="0.72"
-                direction="up" />
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="16" gap="2"
+                direction="right" partialSegments="true" />
+    <meterStyle id="player.encumbrance" renderer="segments"
+                fillColor="#16AE32" emptyColor="#123E20"
+                fillOpacity="1" emptyOpacity="0.7" segmentCount="16" gap="2"
+                direction="right" partialSegments="true" />
     <meterStyle id="environment.air" renderer="segments"
                 fillColor="#62DDF2" emptyColor="#123642"
                 fillOpacity="1" emptyOpacity="0.72" segmentCount="16" gap="2"
@@ -44,18 +52,12 @@
     <target id="rightMeters" visibleWhen="never" />
   </vanillaVisibility>
   <includes>
-    <include id="player-data-probe" src="player-data-diagnostic-strip.xml"
-             x="0" y="12" anchor="top-center" visible="true" visibleWhen="inScanner" z="120" />
     <include id="environmental-hazard-scanner" src="environmental-hazard-scanner.xml"
              x="39" y="11" anchor="bottom-right" visible="true" visibleWhen="always" z="90" />
-    <include id="chronomark.environment-status" src="environment-status.xml"
-             x="0" y="0" anchor="bottom-left" visible="true" visibleWhen="always" z="100" />
-    <include id="chronomark.player-meters" src="player-meters.xml"
-             x="0" y="0" anchor="bottom-left" visible="true" visibleWhen="always" z="101" />
+    <include id="player-status-scanner" src="player-status-scanner.xml"
+             x="-39" y="11" anchor="bottom-left" visible="true" visibleWhen="always" z="100" />
     <include id="chronomark.weapon-status" src="weapon-status.xml"
-             x="0" y="0" anchor="bottom-left" visible="true" visibleWhen="always" z="102" />
-    <include id="chronomark.mobility-status" src="mobility-status.xml"
-             x="0" y="0" anchor="bottom-right" visible="true" visibleWhen="always" z="103" />
+             x="39" y="-11" anchor="top-right" visible="true" visibleWhen="always" z="102" />
   </includes>
   <components />
 </venworksCUI>
