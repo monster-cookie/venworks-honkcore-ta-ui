@@ -16,7 +16,9 @@ package venworks.cui
       private static const EXPOSURE_LERP:Number = 0.18;
       private static const EXPOSURE_TARGET_MIN_TICKS:int = 6;
       private static const EXPOSURE_TARGET_TICK_RANGE:int = 11;
-      private static const MOVEMENT_CANDIDATES:Array = ["speed","velocity","move","walk","run","sprint","boost","throttle"];
+      private static const ACTIVITY_DRAIN_EPSILON:Number = 0.0005;
+      private static const ACTIVITY_RELEASE:Number = 0.82;
+      private static const ACTIVITY_IDLE_EPSILON:Number = 0.01;
       private static const EXPOSURE_SOURCES:Array = [
          "environment.hazard.airwaterexposurelevel",
          "environment.hazard.thermalexposurelevel",
@@ -30,7 +32,15 @@ package venworks.cui
       private var exposureCurrent:Array;
       private var exposureTarget:Array;
       private var exposureTargetTicks:Array;
+      private var exposureRandom:Array;
       private var currentProtection:Number = 1;
+      private var protectionKnown:Boolean = false;
+      private var currentOxygen:Number = NaN;
+      private var previousOxygen:Number = NaN;
+      private var currentBoost:Number = NaN;
+      private var previousBoost:Number = NaN;
+      private var oxygenDrainSignal:Number = 0;
+      private var boostDrainSignal:Number = 0;
 
       public function CUIPlayerHudDataContext()
       {
@@ -40,6 +50,7 @@ package venworks.cui
          exposureCurrent = [0,0,0,0];
          exposureTarget = [0,0,0,0];
          exposureTargetTicks = [0,0,0,0];
+         exposureRandom = [0,0,0,0];
          exposureTimer = new Timer(EXPOSURE_UPDATE_MS);
          exposureTimer.addEventListener(TimerEvent.TIMER,this.onExposureTimer);
          BSUIDataManager.Subscribe("LocalEnvironmentData",this.onLocalEnvironmentData);
@@ -51,9 +62,6 @@ package venworks.cui
          BSUIDataManager.Subscribe("HUDStarbornPowersData",this.onStarbornPowersData);
          BSUIDataManager.Subscribe("EnvironmentEffectsData",this.onEnvironmentEffectsData);
          BSUIDataManager.Subscribe("StarmapSystemBodyInfoProvider",this.onStarmapSystemBodyInfoData);
-         BSUIDataManager.Subscribe("HUDVehicleData",this.onMovementVehicleData);
-         BSUIDataManager.Subscribe("HudCrosshairData",this.onMovementCrosshairData);
-         BSUIDataManager.Subscribe("HUDStealthData",this.onMovementStealthData);
          this.setText("diagnostic.inventoryprovider","PLAYERINVENTORYDATA NOT RECEIVED");
          this.setText("diagnostic.powernameprovider","HUD POWER NAME FIELDS NOT RECEIVED");
          this.setText("diagnostic.environmentprovider","ENVIRONMENTEFFECTSDATA NOT RECEIVED");
@@ -62,11 +70,11 @@ package venworks.cui
          this.setText("diagnostic.localenvironmentfields","LOCALENVIRONMENTDATA NOT RECEIVED");
          this.setText("diagnostic.armorresistance","EQUIPPED ARMOR RESISTANCE DATA NOT RECEIVED");
          this.setText("diagnostic.starmapprovider","STARMAP BODY PROVIDER NOT RECEIVED IN HUD");
-         this.setText("diagnostic.movementplayer","PLAYERFREQUENTDATA NOT RECEIVED");
-         this.setText("diagnostic.movementvehicle","HUDVEHICLEDATA NOT RECEIVED");
-         this.setText("diagnostic.movementcrosshair","HUDCROSSHAIRDATA NOT RECEIVED");
-         this.setText("diagnostic.movementstealth","HUDSTEALTHDATA NOT RECEIVED");
-         this.setText("diagnostic.movementjetpack","HUDJETPACKDATA NOT RECEIVED");
+         this.setText("diagnostic.activityoxygen","O2 RESERVE: WAITING // DRAIN SIGNAL: 0%");
+         this.setText("diagnostic.activityboost","BOOST CHARGE: WAITING // DRAIN SIGNAL: 0%");
+         this.setText("diagnostic.activitycombined","COMBINED ACTIVITY: 0%");
+         this.setText("diagnostic.activityprotection","SUIT PROTECTION: WAITING // DEPLETION: 0%");
+         this.setText("diagnostic.activityloads","LOADS: AIR/WATER 0% // THERMAL 0% // CORROSIVE 0% // RADIATION 0%");
          this.resetEnvironmentalHazards();
          this.setText("environment.protectionstatus","ENVIRONMENT PROVIDER NOT RECEIVED");
          this.setText("environment.hazard.airwaterstatus","ENVIRONMENT PROVIDER NOT RECEIVED");
@@ -91,9 +99,9 @@ package venworks.cui
             source == "environment.hazard.corrosivestatus" || source == "environment.hazard.radiationstatus" ||
             source == "diagnostic.environmentprovider" || source == "diagnostic.environmentfields" ||
             source == "diagnostic.environmentcandidates" || source == "diagnostic.localenvironmentfields" ||
-            source == "diagnostic.movementplayer" || source == "diagnostic.movementvehicle" ||
-            source == "diagnostic.movementcrosshair" || source == "diagnostic.movementstealth" ||
-            source == "diagnostic.movementjetpack" ||
+            source == "diagnostic.activityoxygen" || source == "diagnostic.activityboost" ||
+            source == "diagnostic.activitycombined" || source == "diagnostic.activityprotection" ||
+            source == "diagnostic.activityloads" ||
             source == "diagnostic.effect0" || source == "diagnostic.effect1" ||
             source == "diagnostic.effect2" || source == "diagnostic.effect3" ||
             source == "diagnostic.armorresistance" || source == "diagnostic.starmapprovider")
@@ -181,6 +189,7 @@ package venworks.cui
          {
             normalizedProtection = Math.max(0,Math.min(1,soakProtection));
             this.currentProtection = normalizedProtection;
+            this.protectionKnown = true;
             this.setFinite("environment.protectionlevel",normalizedProtection);
             this.setFinite("environment.protectionpercentage",normalizedProtection * 100);
             if(fullSoak || normalizedProtection <= 0)
@@ -272,7 +281,8 @@ package venworks.cui
          this.setFinite("power.current",param1.data.fStarPower);
          this.setFinite("power.maximum",param1.data.fMaxStarPower);
          this.setRatio("power.percentage",param1.data.fStarPower,param1.data.fMaxStarPower);
-         this.setMovementDiagnostic("diagnostic.movementplayer","PLAYER FREQUENT",param1.data);
+         this.captureOxygenActivity(param1.data.fOxygen,param1.data.fMaxO2CO2);
+         this.updateActivityDiagnostic();
          this.notifyChanged();
       }
 
@@ -298,31 +308,15 @@ package venworks.cui
       private function onJetpackData(param1:FromClientDataEvent) : void
       {
          var charge:Number = Number(param1.data.fJetpackCharge);
-         this.setMovementDiagnostic("diagnostic.movementjetpack","JETPACK",param1.data);
          if(!isNaN(charge) && isFinite(charge))
          {
-            this.setFinite("boost.charge",Math.max(0,Math.min(1,charge)));
+            charge = Math.max(0,Math.min(1,charge));
+            this.setFinite("boost.charge",charge);
+            this.captureBoostActivity(charge);
+            this.updateActivityDiagnostic();
             this.notifyChanged();
             return;
          }
-         this.notifyChanged();
-      }
-
-      private function onMovementVehicleData(param1:FromClientDataEvent) : void
-      {
-         this.setMovementDiagnostic("diagnostic.movementvehicle","HUD VEHICLE",param1.data);
-         this.notifyChanged();
-      }
-
-      private function onMovementCrosshairData(param1:FromClientDataEvent) : void
-      {
-         this.setMovementDiagnostic("diagnostic.movementcrosshair","HUD CROSSHAIR",param1.data);
-         this.notifyChanged();
-      }
-
-      private function onMovementStealthData(param1:FromClientDataEvent) : void
-      {
-         this.setMovementDiagnostic("diagnostic.movementstealth","HUD STEALTH",param1.data);
          this.notifyChanged();
       }
 
@@ -579,13 +573,11 @@ package venworks.cui
 
       private function updateExposureActivity(param1:Array) : void
       {
-         var anyActive:Boolean = false;
          var index:int = 0;
          while(index < EXPOSURE_SOURCES.length)
          {
             if(Boolean(param1[index]))
             {
-               anyActive = true;
                if(!Boolean(this.exposureActive[index]))
                {
                   this.exposureActive[index] = true;
@@ -604,18 +596,14 @@ package venworks.cui
                this.exposureCurrent[index] = 0;
                this.exposureTarget[index] = 0;
                this.exposureTargetTicks[index] = 0;
+               this.exposureRandom[index] = 0;
                this.setFinite(String(EXPOSURE_SOURCES[index]),0);
             }
             ++index;
          }
-         if(anyActive && !this.exposureTimer.running)
-         {
-            this.exposureTimer.start();
-         }
-         else if(!anyActive && this.exposureTimer.running)
-         {
-            this.exposureTimer.stop();
-         }
+         this.updateExposureTargets();
+         this.updateExposureTimerState();
+         this.updateActivityDiagnostic();
       }
 
       private function onExposureTimer(param1:TimerEvent) : void
@@ -623,16 +611,30 @@ package venworks.cui
          var current:Number = 0;
          var target:Number = 0;
          var index:int = 0;
-         var changed:Boolean = false;
+         var changed:Boolean = this.oxygenDrainSignal > 0 || this.boostDrainSignal > 0;
+         this.oxygenDrainSignal *= ACTIVITY_RELEASE;
+         this.boostDrainSignal *= ACTIVITY_RELEASE;
+         if(this.oxygenDrainSignal < ACTIVITY_IDLE_EPSILON)
+         {
+            this.oxygenDrainSignal = 0;
+         }
+         if(this.boostDrainSignal < ACTIVITY_IDLE_EPSILON)
+         {
+            this.boostDrainSignal = 0;
+         }
          while(index < EXPOSURE_SOURCES.length)
          {
             if(Boolean(this.exposureActive[index]))
             {
                this.exposureTargetTicks[index] = int(this.exposureTargetTicks[index]) - 1;
                if(int(this.exposureTargetTicks[index]) <= 0 ||
-                  !this.exposureValueInCurrentRange(Number(this.exposureTarget[index])))
+                  isNaN(Number(this.exposureTarget[index])))
                {
                   this.chooseExposureTarget(index);
+               }
+               else
+               {
+                  this.refreshExposureTarget(index);
                }
                current = Number(this.exposureCurrent[index]);
                target = Number(this.exposureTarget[index]);
@@ -647,6 +649,8 @@ package venworks.cui
             }
             ++index;
          }
+         this.updateActivityDiagnostic();
+         this.updateExposureTimerState();
          if(changed)
          {
             this.notifyChanged();
@@ -655,26 +659,119 @@ package venworks.cui
 
       private function chooseExposureTarget(param1:int) : void
       {
-         var depletion:Number = 1 - this.currentProtection;
-         var minimum:Number = 0.05 + 0.45 * depletion;
-         var maximum:Number = 0.50 + 0.50 * depletion;
-         this.exposureTarget[param1] = minimum + Math.random() * (maximum - minimum);
+         this.exposureRandom[param1] = Math.random();
+         this.refreshExposureTarget(param1);
          this.exposureTargetTicks[param1] = EXPOSURE_TARGET_MIN_TICKS +
             Math.floor(Math.random() * EXPOSURE_TARGET_TICK_RANGE);
       }
 
-      private function exposureValueInCurrentRange(param1:Number) : Boolean
+      private function refreshExposureTarget(param1:int) : void
       {
          var depletion:Number = 1 - this.currentProtection;
-         var minimum:Number = 0.05 + 0.45 * depletion;
-         var maximum:Number = 0.50 + 0.50 * depletion;
-         return param1 >= minimum && param1 <= maximum;
+         var activity:Number = Math.max(this.oxygenDrainSignal,this.boostDrainSignal);
+         var randomValue:Number = Number(this.exposureRandom[param1]);
+         this.exposureTarget[param1] = Math.max(0,Math.min(1,
+            0.05 + 0.10 * randomValue + 0.35 * activity + 0.50 * depletion));
       }
 
-      private function setMovementDiagnostic(param1:String, param2:String, param3:Object) : void
+      private function updateExposureTargets() : void
       {
-         this.setText(param1,param2 + " FIELDS: " + this.listFieldNames(param3,MAX_DIAGNOSTIC_FIELDS) +
-            " // MOVEMENT CANDIDATES: " + this.listCandidateFields(param3,MOVEMENT_CANDIDATES,8));
+         var index:int = 0;
+         while(index < EXPOSURE_SOURCES.length)
+         {
+            if(Boolean(this.exposureActive[index]))
+            {
+               this.refreshExposureTarget(index);
+            }
+            ++index;
+         }
+      }
+
+      private function captureOxygenActivity(param1:Object, param2:Object) : void
+      {
+         var oxygen:Number = Number(param1);
+         var maximum:Number = Number(param2);
+         if(isNaN(oxygen) || !isFinite(oxygen) || isNaN(maximum) || !isFinite(maximum) || maximum <= 0)
+         {
+            return;
+         }
+         this.currentOxygen = Math.max(0,Math.min(1,oxygen / maximum));
+         if(!isNaN(this.previousOxygen) && this.previousOxygen - this.currentOxygen > ACTIVITY_DRAIN_EPSILON)
+         {
+            this.oxygenDrainSignal = 1;
+            this.updateExposureTargets();
+         }
+         this.previousOxygen = this.currentOxygen;
+         this.updateExposureTimerState();
+      }
+
+      private function captureBoostActivity(param1:Number) : void
+      {
+         this.currentBoost = param1;
+         if(!isNaN(this.previousBoost) && this.previousBoost - this.currentBoost > ACTIVITY_DRAIN_EPSILON)
+         {
+            this.boostDrainSignal = 1;
+            this.updateExposureTargets();
+         }
+         this.previousBoost = this.currentBoost;
+         this.updateExposureTimerState();
+      }
+
+      private function updateExposureTimerState() : void
+      {
+         var needsTimer:Boolean = this.hasActiveExposure() ||
+            this.oxygenDrainSignal > 0 || this.boostDrainSignal > 0;
+         if(needsTimer && !this.exposureTimer.running)
+         {
+            this.exposureTimer.start();
+         }
+         else if(!needsTimer && this.exposureTimer.running)
+         {
+            this.exposureTimer.stop();
+         }
+      }
+
+      private function hasActiveExposure() : Boolean
+      {
+         var index:int = 0;
+         while(index < this.exposureActive.length)
+         {
+            if(Boolean(this.exposureActive[index]))
+            {
+               return true;
+            }
+            ++index;
+         }
+         return false;
+      }
+
+      private function updateActivityDiagnostic() : void
+      {
+         var activity:Number = Math.max(this.oxygenDrainSignal,this.boostDrainSignal);
+         var protectionText:String = this.protectionKnown ? this.formatNormalized(this.currentProtection) : "WAITING";
+         var depletionText:String = this.protectionKnown ? this.formatNormalized(1 - this.currentProtection) : "WAITING";
+         this.setText("diagnostic.activityoxygen","O2 RESERVE: " + this.formatOptionalNormalized(this.currentOxygen) +
+            " // DOWNWARD-DRAIN SIGNAL: " + this.formatNormalized(this.oxygenDrainSignal));
+         this.setText("diagnostic.activityboost","BOOST CHARGE: " + this.formatOptionalNormalized(this.currentBoost) +
+            " // DOWNWARD-DRAIN SIGNAL: " + this.formatNormalized(this.boostDrainSignal));
+         this.setText("diagnostic.activitycombined","COMBINED ACTIVITY: MAX(O2, BOOST) = " +
+            this.formatNormalized(activity));
+         this.setText("diagnostic.activityprotection","SUIT PROTECTION: " + protectionText +
+            " // DEPLETION: " + depletionText);
+         this.setText("diagnostic.activityloads","LOADS: AIR/WATER " + this.formatNormalized(Number(this.exposureCurrent[0])) +
+            " // THERMAL " + this.formatNormalized(Number(this.exposureCurrent[1])) +
+            " // CORROSIVE " + this.formatNormalized(Number(this.exposureCurrent[2])) +
+            " // RADIATION " + this.formatNormalized(Number(this.exposureCurrent[3])));
+      }
+
+      private function formatOptionalNormalized(param1:Number) : String
+      {
+         return isNaN(param1) || !isFinite(param1) ? "WAITING" : this.formatNormalized(param1);
+      }
+
+      private function formatNormalized(param1:Number) : String
+      {
+         return Math.round(Math.max(0,Math.min(1,param1)) * 100).toString() + "%";
       }
 
       private function listFieldNames(param1:Object, param2:int) : String

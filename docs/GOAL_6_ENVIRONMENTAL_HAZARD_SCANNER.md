@@ -1,8 +1,9 @@
 # Goal 6 environmental hazard scanner
 
-**Status: Hazard-transition runtime acceptance, the compact relative-load
-scanner, movement-provider diagnostic, and automated build acceptance are
-complete; runtime movement discovery and final cadence binding are pending.**
+**Status: Hazard-transition runtime acceptance, compact relative-load scanner,
+movement-provider discovery, O2/boost activity proxy implementation, and
+automated build acceptance are complete. Runtime proxy calibration is
+pending.**
 
 ## Product direction
 
@@ -109,12 +110,16 @@ vehicle speed value in `HUDMenu`. The relevant candidates are classified as:
 | `HUDStealthData` | Confirmed in HUD | HUD-owned provider; no speed member is statically proven. |
 | `HudJetpackData` | Confirmed in HUD | `fJetpackCharge` is live; charge is not player speed. Other movement fields remain unknown. |
 | `StickDataProvider.speed` | Confirmed elsewhere/menu-owned | Bethesda's spaceship HUD consumes this field. Its `SpaceshipHudMenu` ownership does not make it available or lifetime-safe in `HUDMenu`. |
-| Walking/sprinting/boosting speed | Unknown | No inspected `HUDMenu` script names or consumes a suitable field. |
+| Walking/sprinting/boosting speed | Not available in tested HUD providers | No inspected `HUDMenu` script names or consumes a suitable field, and runtime enumeration found no speed-named candidate. |
 
-The smallest runtime probe therefore lists bounded field names and searches
-movement-related candidate names on the five confirmed HUD providers above.
-It does not subscribe to a spaceship-menu provider or assume that vehicle UI
-injection makes a field globally available.
+The smallest runtime probe listed bounded field names and searched movement-
+related candidate names on the five confirmed HUD providers above. Runtime
+testing while stationary, sprinting, jetpacking, and driving found no numeric
+walking or ground-vehicle speed. `HUDVehicleData` exposed only `bInVehicle`.
+The field-name probe also did not display ordinary values such as O2 reserve or
+jetpack charge, so it was replaced after completing its bounded search. The
+runtime does not subscribe to a spaceship-menu provider or assume that vehicle
+UI injection makes a field globally available.
 
 ## Unknowns that must not be invented
 
@@ -144,23 +149,21 @@ from the four accepted Goal 5 Chronomark fragments. Earlier diagnostic builds
 bounded environment discovery to 12 root fields, four effect objects, eight
 fields per effect, 32 scanned effect entries, four equipped armor items, and 48
 characters per scalar value. That probe established the environment evidence
-recorded below and has now been replaced in the active layout by the smaller
-movement-provider probe.
+recorded below. The subsequent movement-provider probe has also completed and
+is recorded above.
 
 The active `environmental-hazard-diagnostic-strip.xml` is a semi-transparent
-1160-by-196 top-center strip gated by the proven `inScanner` condition. It
-reports up to 12 field names and eight movement-name matches for each of:
+1160-by-196 top-center strip gated by the proven `inScanner` condition. The
+calibration strip reports current normalized O2 reserve, normalized jetpack
+charge, their downward-drain envelopes, combined activity, suit protection and
+depletion, and all four modeled channel loads. It explicitly records that no
+walking or vehicle-speed field is available.
 
-- `PlayerFrequentData`;
-- `HUDVehicleData`;
-- `HudCrosshairData`;
-- `HUDStealthData`; and
-- `HudJetpackData`.
-
-Candidate matching searches `speed`, `velocity`, `move`, `walk`, `run`,
-`sprint`, `boost`, and `throttle`. This diagnostic is discovery-only. No
-candidate changes relative-load magnitude or cadence until runtime proves its
-meaning, range, direction, update behavior, and HUD lifetime.
+Only a downward change greater than `0.0005` activates the corresponding drain
+signal. Low but stable O2 or boost charge is not activity, and O2 recovery or
+boost recharge is not activity. A detected drain attacks immediately to `1`
+and decays by `0.82` every 250 ms until below `0.01`, when it becomes `0` and
+the timer may stop if no hazard remains active.
 
 ## Nominal HUD runtime evidence
 
@@ -269,22 +272,26 @@ The compact panel provides:
   gated only by recognized Bethesda effect icons.
 
 An absent category is exactly `0`. For an active category, the modeled target
-range is:
+is:
 
 ```text
 depletion = 1 - protection
-minimum = 0.05 + 0.45 * depletion
-maximum = 0.50 + 0.50 * depletion
-target = random(minimum, maximum)
+activity = max(oxygenDrainSignal, boostDrainSignal)
+relativeLoad = clamp(
+    0.05 + 0.10 * independentRandom + 0.35 * activity + 0.50 * depletion,
+    0,
+    1
+)
 ```
 
-Targets are independently selected per category and eased toward at a bounded
-250 ms update cadence. At full protection, active bars therefore fluctuate
-between 5% and 50%; at exhausted protection, they fluctuate between 50% and
-100%. Higher bars mean greater relative exposure load and health risk, not more
-remaining protection. Movement may alter target cadence later if the runtime
-probe proves a suitable speed value, but it will not alter the protection-
-controlled range without a separately approved model change.
+Random targets are independently selected per category and eased toward at a
+bounded 250 ms update cadence. At full protection and idle, active bars range
+from 5% to 15%; full O2 or boost activity adds 35 percentage points. Half
+protection adds 25 points, and exhausted protection adds 50 points. Higher bars
+mean greater relative exposure load and health risk, not more remaining
+protection. O2 and boost use are an explicitly modeled activity proxy, not
+physical speed or Bethesda per-channel severity. Taking their maximum avoids
+double-counting overlapping sprint/boost activity.
 
 The layout does not display CO2, atmospheric pressure, a vacuum state, a raw
 per-channel magnitude, a Threat Index formula, or physical units. The separate
@@ -298,17 +305,21 @@ verify:
 
 1. the compact lower-right panel remains readable with the scanner both closed
    and open and does not overlap the boost strip at normal or large HUD scale;
-2. the movement diagnostic appears only with the scanner open;
-3. capture the diagnostic while stationary, walking, sprinting, jetpacking,
-   and driving a ground vehicle, looking for a field/value that changes with
-   speed rather than merely reporting a Boolean state;
-4. a nominal environment shows four zero-load channels and 100% protection;
-5. a brief low-risk hazard activates only the matching category and its bar
-   drifts within the healthy-protection half of the scale;
-6. simultaneous effects produce independent drifting bars;
-7. if protection safely drops partway, active bars shift upward while the
+2. the activity calibration diagnostic appears only with the scanner open;
+3. while idle, confirm both drain signals decay to zero and stable low reserves
+   do not remain active;
+4. while sprinting, confirm downward O2 changes attack the O2 signal and raise
+   an already active hazard channel, then decay smoothly after stopping;
+5. while jetpacking, confirm downward charge changes attack the boost signal,
+   recharge does not count as activity, and overlapping O2/boost use is bounded
+   by `max()` rather than added;
+6. a nominal environment shows four zero-load channels and 100% protection;
+7. a brief low-risk hazard activates only the matching category and its bar
+   drifts within the healthy-protection range;
+8. simultaneous effects produce independent drifting bars;
+9. if protection safely drops partway, active bars shift upward while the
    shared protection bar shifts downward; and
-8. leaving exposure immediately returns the inactive channel to zero while
+10. leaving exposure immediately returns the inactive channel to zero while
    Bethesda restores protection on its own schedule.
 
 The accepted captures already cover the dangerous full-soak transition; no
@@ -316,7 +327,7 @@ additional full-soak unsafe-water test is required.
 
 ## Automated validation and expected artifacts
 
-The repository validation and complete two-variant Scaleform build passed:
+Run repository validation and the complete two-variant Scaleform build:
 
 ```powershell
 ./Tools/checkRepo.ps1
@@ -329,19 +340,17 @@ The repository validation and complete two-variant Scaleform build passed:
   -VanillaInterfacePath "<approved-vanilla-interface-path>"
 ```
 
-The build compiled, imported, reopened, and validated both GFX variants. It
-then staged the compact persistent meter, scanner-only movement diagnostic, and
-the accepted Goal 5 fragments. The normal and large GFX hashes reproduced in
-their separate discovery builds and the final complete build. Expected SHA-256
-values are:
+The complete build passed on 2026-08-12. Both generated GFX variants compiled,
+imported, reopened, passed their build and staged-layout contracts, and were
+reproduced from the final source. All four staging variants contain the same
+normal/large pair:
 
-| Staged artifact | Bytes | SHA-256 |
+| Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 394249 | `0B8FFD0A64FC1D3C8520115F6A33144C5F8ED4892FA99CB87DD773CFFFF2F5AD` |
-| `hudmenu_lrg.gfx` | 394432 | `F28439AF984E89D8947CF7417CF67DDF5D0275FD98B86437592E27CBCB75957B` |
+| `hudmenu.gfx` | 395951 | `C7FC51DBDECDE0CC74089B10D5B252DC9B912C26302130F47FA857B723720654` |
+| `hudmenu_lrg.gfx` | 396134 | `2602BC8D77812C6C85D730139BC7DD86BE672B1254037B5D87B9FF0A9258C9AF` |
 | `VenworksCUI/layout.xml` | 3734 | `7112EA7DA33DAC0C02AD6A16F2D3086B265EEDF7AE7976F44A84841E28CF4862` |
-| `VenworksCUI/components/environmental-hazard-scanner.xml` | 6860 | `FC822EE57ED481345C43E7460DC2219A2771D16BE1BC3A26C6AB2A6D1F6825BC` |
-| `VenworksCUI/components/environmental-hazard-diagnostic-strip.xml` | 3257 | `12E50B385081D48C44092B47B1A17485E122F8822759EF510C239F056FC3F05A` |
+| `components/environmental-hazard-scanner.xml` | 6860 | `FC822EE57ED481345C43E7460DC2219A2771D16BE1BC3A26C6AB2A6D1F6825BC` |
+| `components/environmental-hazard-diagnostic-strip.xml` | 3337 | `96FFDC65D6E19BA0A3E12AE34C0FD6EEFECB3A756D8526C3947307A6F5879141` |
 
-All four staged UI variants carry the same normal and large GFX hashes.
-Runtime deployment must use artifacts from the committed Goal 6 worktree.
+Runtime deployment must use artifacts from the user-committed Goal 6 worktree.

@@ -764,16 +764,19 @@ try {
       'AIR / WATER DETECTED',
       'EXPOSURE_UPDATE_MS',
       'EXPOSURE_LERP',
-      'MOVEMENT_CANDIDATES',
+      'ACTIVITY_DRAIN_EPSILON',
+      'ACTIVITY_RELEASE',
+      'Math.max(this.oxygenDrainSignal,this.boostDrainSignal)',
+      '0.05 + 0.1 * randomValue + 0.35 * activity + 0.5 * depletion',
       'environment.hazard.airwaterexposurelevel',
       'environment.hazard.thermalexposurelevel',
       'environment.hazard.corrosiveexposurelevel',
       'environment.hazard.radiationexposurelevel',
-      'diagnostic.movementplayer',
-      'diagnostic.movementvehicle',
-      'diagnostic.movementcrosshair',
-      'diagnostic.movementstealth',
-      'diagnostic.movementjetpack',
+      'diagnostic.activityoxygen',
+      'diagnostic.activityboost',
+      'diagnostic.activitycombined',
+      'diagnostic.activityprotection',
+      'diagnostic.activityloads',
       'valueContext.dispose()',
       'PlayerFrequentData',
       'WeaponData',
@@ -980,13 +983,13 @@ try {
       [int]$stagedEnvironmentalScannerGroup.height -ne 230 -or
       [int]$stagedEnvironmentalDiagnosticGroup.width -ne 1160 -or
       [int]$stagedEnvironmentalDiagnosticGroup.height -ne 196 -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'MOVEMENT PROVIDER PROBE' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.movementPlayer"' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.movementVehicle"' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.movementCrosshair"' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.movementStealth"' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.movementJetpack"' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'NO MOVEMENT VALUE DRIVES EXPOSURE UNTIL RUNTIME PROVEN' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'ACTIVITY PROXY CALIBRATION' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.activityOxygen"' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.activityBoost"' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.activityCombined"' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.activityProtection"' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.activityLoads"' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'NO WALKING OR VEHICLE SPEED FIELD IS AVAILABLE' -or
       $stagedEnvironmentalDiagnosticText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE)' -or
       $stagedEnvironmentalScannerText -notmatch 'RELATIVE LOAD' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.protectionLevel"' -or
@@ -998,12 +1001,12 @@ try {
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.radiationExposureLevel"' -or
       $stagedEnvironmentalScannerText -match 'source="environment\.(oxygenPercentage|temperature)"' -or
       $stagedEnvironmentalScannerText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE|THREAT INDEX|VACUUM)') {
-    throw 'Goal 6 must stage one compact persistent bottom-right relative-load meter, one scanner-gated movement diagnostic, and no invented physical units or Threat Index.'
+    throw 'Goal 6 must stage one compact persistent bottom-right relative-load meter, one scanner-gated O2/boost activity calibration diagnostic, and no invented physical units or Threat Index.'
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
   Copy-Item -LiteralPath $invalidSvgSource -Destination (Join-Path $assetOutputDirectory "gallery-invalid.svg") -Force
-  Write-Host -ForegroundColor Green "Staged compact persistent Goal 6 relative-load meter and scanner-gated movement diagnostic with the accepted Goal 5 Chronomark in $cuiOutputDirectory"
+  Write-Host -ForegroundColor Green "Staged compact persistent Goal 6 relative-load meter and scanner-gated O2/boost activity calibration diagnostic with the accepted Goal 5 Chronomark in $cuiOutputDirectory"
 }
 finally {
   if ($KeepWork) {
