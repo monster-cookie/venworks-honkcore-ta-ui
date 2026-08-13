@@ -269,7 +269,8 @@ foreach ($componentFixtureName in @(
   'environment-status.xml',
   'player-meters.xml',
   'mobility-status.xml',
-  'environmental-hazard-scanner.xml'
+  'environmental-hazard-scanner.xml',
+  'player-data-diagnostic-strip.xml'
 )) {
   $componentFixturePath = Resolve-RequiredFile `
     -Path (Join-Path $providerProbeComponentDirectory $componentFixtureName) `
@@ -937,7 +938,7 @@ try {
   if (Test-Path -LiteralPath $retiredEnvironmentalDiagnosticPath) {
     Remove-Item -LiteralPath $retiredEnvironmentalDiagnosticPath -Force
   }
-  foreach ($componentFixtureName in @('weapon-status.xml','environment-status.xml','player-meters.xml','mobility-status.xml','environmental-hazard-scanner.xml')) {
+  foreach ($componentFixtureName in @('weapon-status.xml','environment-status.xml','player-meters.xml','mobility-status.xml','environmental-hazard-scanner.xml','player-data-diagnostic-strip.xml')) {
     Copy-Item -LiteralPath (Join-Path $providerProbeComponentDirectory $componentFixtureName) -Destination (Join-Path $componentOutputDirectory $componentFixtureName) -Force
   }
   $stagedPlayerMeters = [xml](Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'player-meters.xml') -Raw)
@@ -948,6 +949,7 @@ try {
   $stagedEnvironmentStatusText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'environment-status.xml') -Raw
   $stagedMobilityStatusText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'mobility-status.xml') -Raw
   $stagedEnvironmentalScannerText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'environmental-hazard-scanner.xml') -Raw
+  $stagedPlayerDiagnosticText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'player-data-diagnostic-strip.xml') -Raw
   $stagedEnvironmentalScanner = [xml]$stagedEnvironmentalScannerText
   if ($stagedWeaponStatusText -notmatch 'name="vehicle-exit-prompt"' -or
       $stagedWeaponStatusText -notmatch 'value="\$EXIT HOLD"' -or
@@ -965,6 +967,9 @@ try {
   $environmentalScannerIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'environmental-hazard-scanner'
   })
+  $playerDiagnosticIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
+    [string]$_.id -eq 'player-data-probe'
+  })
   $environmentalProtectionStyles = @($providerProbeLayout.venworksCUI.definitions.meterStyle | Where-Object {
     [string]$_.id -eq 'environment.protection'
   })
@@ -977,6 +982,15 @@ try {
       [string]$environmentalScannerIncludes[0].visibleWhen -ne 'always' -or
       [int]$environmentalScannerIncludes[0].x -ne 39 -or
       [int]$environmentalScannerIncludes[0].y -ne 11 -or
+      $playerDiagnosticIncludes.Count -ne 1 -or
+      [string]$playerDiagnosticIncludes[0].src -ne 'player-data-diagnostic-strip.xml' -or
+      [string]$playerDiagnosticIncludes[0].anchor -ne 'top-center' -or
+      [string]$playerDiagnosticIncludes[0].visibleWhen -ne 'inScanner' -or
+      [int]$playerDiagnosticIncludes[0].y -ne 12 -or
+      $stagedPlayerDiagnosticText -notmatch 'source="diagnostic\.playerFields"' -or
+      $stagedPlayerDiagnosticText -notmatch 'source="diagnostic\.playerTargets"' -or
+      $stagedPlayerDiagnosticText -notmatch 'source="diagnostic\.playerIdentifiers"' -or
+      $stagedPlayerDiagnosticText -notmatch 'source="diagnostic\.playerTimeInventory"' -or
       $environmentalProtectionStyles.Count -ne 1 -or
       [string]$environmentalProtectionStyles[0].renderer -ne 'segments' -or
       [string]$environmentalProtectionStyles[0].direction -ne 'right' -or
@@ -1000,12 +1014,12 @@ try {
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.radiationExposureLevel"' -or
       $stagedEnvironmentStatusText -match 'source="(location\.name|environment\.(localtime|oxygenpercentage|temperature|gravity))"' -or
       $stagedEnvironmentalScannerText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE|THREAT INDEX|VACUUM)') {
-    throw 'Goal 6 must stage one persistent lower-right Planet Data and environmental-hazards control at the approved edge inset, no retired diagnostic strip, and no invented physical units or Threat Index.'
+    throw 'Goal 6 must stage the accepted lower-right environmental control plus one scanner-only bounded player-data diagnostic, with no retired environment diagnostic or invented production data.'
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
   Copy-Item -LiteralPath $invalidSvgSource -Destination (Join-Path $assetOutputDirectory "gallery-invalid.svg") -Force
-  Write-Host -ForegroundColor Green "Staged the final Goal 6 Planet Data and environmental-hazards control with the compacted Goal 5 left panel in $cuiOutputDirectory"
+  Write-Host -ForegroundColor Green "Staged the accepted Goal 6 environmental control and scanner-only player-data diagnostic in $cuiOutputDirectory"
 }
 finally {
   if ($KeepWork) {

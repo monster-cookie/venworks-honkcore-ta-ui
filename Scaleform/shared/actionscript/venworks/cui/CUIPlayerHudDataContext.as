@@ -10,8 +10,11 @@ package venworks.cui
    public final class CUIPlayerHudDataContext extends EventDispatcher
    {
       private static const MAX_DIAGNOSTIC_FIELDS:int = 12;
+      private static const MAX_PLAYER_DIAGNOSTIC_FIELDS:int = 32;
       private static const MAX_DIAGNOSTIC_EFFECTS:int = 4;
       private static const MAX_HAZARD_EFFECTS:int = 32;
+      private static const MAX_DIAGNOSTIC_INVENTORY_ITEMS:int = 256;
+      private static const DIGIPICK_FORM_ID:Number = 10;
       private static const EXPOSURE_UPDATE_MS:int = 250;
       private static const EXPOSURE_LERP:Number = 0.18;
       private static const EXPOSURE_TARGET_MIN_TICKS:int = 6;
@@ -41,6 +44,8 @@ package venworks.cui
       private var previousOxygen:Number = NaN;
       private var oxygenDrainDetected:Boolean = false;
       private var oxygenActivity:Number = 0;
+      private var universalTimeDiagnostic:String = "UT: LOCAL ENV FREQUENT DATA NOT RECEIVED";
+      private var digipickDiagnostic:String = "DIGIPICK: PLAYER INVENTORY DATA NOT RECEIVED";
 
       public function CUIPlayerHudDataContext()
       {
@@ -55,6 +60,7 @@ package venworks.cui
          exposureTimer.addEventListener(TimerEvent.TIMER,this.onExposureTimer);
          BSUIDataManager.Subscribe("LocalEnvironmentData",this.onLocalEnvironmentData);
          BSUIDataManager.Subscribe("LocalEnvData_Frequent",this.onLocalEnvironmentFrequentData);
+         BSUIDataManager.Subscribe("PlayerData",this.onPlayerData);
          BSUIDataManager.Subscribe("PlayerFrequentData",this.onPlayerFrequentData);
          BSUIDataManager.Subscribe("PlayerInventoryData",this.onPlayerInventoryData);
          BSUIDataManager.Subscribe("WeaponData",this.onWeaponData);
@@ -74,6 +80,10 @@ package venworks.cui
          this.setText("diagnostic.activityenvelope","O2 ACTIVITY ENVELOPE: 0%");
          this.setText("diagnostic.activityprotection","SUIT PROTECTION: WAITING // FULL-SOAK FLAG: FALSE // CRITICAL OVERRIDE: FALSE");
          this.setText("diagnostic.activityloads","LOADS: AIR/WATER 0% // THERMAL 0% // CORROSIVE 0% // RADIATION 0%");
+         this.setText("diagnostic.playerfields","PLAYERDATA NOT RECEIVED");
+         this.setText("diagnostic.playertargets","PLAYER TARGETS: WAITING");
+         this.setText("diagnostic.playeridentifiers","PLAYER ID / SERIAL CANDIDATES: WAITING");
+         this.updatePlayerTimeInventoryDiagnostic();
          this.resetEnvironmentalHazards();
          this.setText("environment.protectionstatus","ENVIRONMENT PROVIDER NOT RECEIVED");
          this.setText("environment.hazard.airwaterstatus","ENVIRONMENT PROVIDER NOT RECEIVED");
@@ -101,6 +111,8 @@ package venworks.cui
             source == "diagnostic.activityoxygen" || source == "diagnostic.activityenvelope" ||
             source == "diagnostic.activityprotection" ||
             source == "diagnostic.activityloads" ||
+            source == "diagnostic.playerfields" || source == "diagnostic.playertargets" ||
+            source == "diagnostic.playeridentifiers" || source == "diagnostic.playertimeinventory" ||
             source == "diagnostic.effect0" || source == "diagnostic.effect1" ||
             source == "diagnostic.effect2" || source == "diagnostic.effect3" ||
             source == "diagnostic.armorresistance" || source == "diagnostic.starmapprovider")
@@ -267,6 +279,26 @@ package venworks.cui
       private function onLocalEnvironmentFrequentData(param1:FromClientDataEvent) : void
       {
          this.setFinite("environment.localtime",param1.data.fLocalPlanetTime);
+         this.universalTimeDiagnostic = "UT: fGalacticStandardTime=" +
+            this.formatDiagnosticValue(param1.data.fGalacticStandardTime) +
+            " | fLocalPlanetTime=" + this.formatDiagnosticValue(param1.data.fLocalPlanetTime) +
+            " | fLocalPlanetHoursPerDay=" + this.formatDiagnosticValue(param1.data.fLocalPlanetHoursPerDay);
+         this.updatePlayerTimeInventoryDiagnostic();
+         this.notifyChanged();
+      }
+
+      private function onPlayerData(param1:FromClientDataEvent) : void
+      {
+         this.setText("diagnostic.playerfields","PLAYERDATA ROOT: " +
+            this.listFieldNames(param1.data,MAX_PLAYER_DIAGNOSTIC_FIELDS));
+         this.setText("diagnostic.playertargets","PLAYER TARGETS: sName=" +
+            this.formatDiagnosticValue(param1.data.sName) + " | uLevel=" +
+            this.formatDiagnosticValue(param1.data.uLevel) + " | fLevelXP=" +
+            this.formatDiagnosticValue(param1.data.fLevelXP) + " | fNextLevelXP=" +
+            this.formatDiagnosticValue(param1.data.fNextLevelXP) + " | VWKS_PlayerLevel=" +
+            this.formatDiagnosticValue(param1.data["VWKS_PlayerLevel"]));
+         this.setText("diagnostic.playeridentifiers","PLAYER ID / SERIAL CANDIDATES: " +
+            this.listCandidateFields(param1.data,["id","serial","save","character","actor","form","ref","vwks"],12));
          this.notifyChanged();
       }
 
@@ -336,6 +368,7 @@ package venworks.cui
          this.setFinite("carry.current",param1.data.fEncumbrance);
          this.setFinite("carry.maximum",param1.data.fMaxEncumbrance);
          this.setFinite("credits",param1.data.uCoin);
+         this.updateDigipickDiagnostic(items);
          if(items == null)
          {
             this.clearValue("weapon.ammotype");
@@ -797,6 +830,74 @@ package venworks.cui
             " // THERMAL " + this.formatNormalized(Number(this.exposureCurrent[1])) +
             " // CORROSIVE " + this.formatNormalized(Number(this.exposureCurrent[2])) +
             " // RADIATION " + this.formatNormalized(Number(this.exposureCurrent[3])));
+      }
+
+      private function updateDigipickDiagnostic(param1:Array) : void
+      {
+         var item:Object = null;
+         var match:Object = null;
+         var matchRoute:String = "";
+         var editorId:String = "";
+         var name:String = "";
+         var formId:Number = NaN;
+         var index:int = 0;
+         var limit:int = 0;
+         if(param1 == null)
+         {
+            this.digipickDiagnostic = "DIGIPICK: ITEM ARRAY UNAVAILABLE";
+            this.updatePlayerTimeInventoryDiagnostic();
+            return;
+         }
+         limit = Math.min(param1.length,MAX_DIAGNOSTIC_INVENTORY_ITEMS);
+         while(index < limit)
+         {
+            item = param1[index];
+            if(item != null)
+            {
+               formId = Number(item.uFormID);
+               editorId = item.sEditorID !== undefined && item.sEditorID !== null ? String(item.sEditorID) :
+                  (item.EditorID !== undefined && item.EditorID !== null ? String(item.EditorID) : "");
+               name = item.sName !== undefined && item.sName !== null ? String(item.sName) : "";
+               if(!isNaN(formId) && isFinite(formId) && formId == DIGIPICK_FORM_ID)
+               {
+                  match = item;
+                  matchRoute = "FORM 00000A";
+                  break;
+               }
+               if(match == null && editorId.toLowerCase() == "digipick")
+               {
+                  match = item;
+                  matchRoute = "EDITOR ID";
+               }
+               else if(match == null && name.toLowerCase() == "digipick")
+               {
+                  match = item;
+                  matchRoute = "ENGLISH NAME ONLY";
+               }
+            }
+            ++index;
+         }
+         if(match == null)
+         {
+            this.digipickDiagnostic = "DIGIPICK: NOT FOUND IN " + limit.toString() +
+               " / " + param1.length.toString() + " ITEMS";
+         }
+         else
+         {
+            this.digipickDiagnostic = "DIGIPICK: " + matchRoute + " MATCH | uFormID=" +
+               this.formatDiagnosticValue(match.uFormID) + " | uCount=" +
+               this.formatDiagnosticValue(match.uCount) + " | sName=" +
+               this.formatDiagnosticValue(match.sName) + " | sEditorID=" +
+               this.formatDiagnosticValue(match.sEditorID) + " | uHandleID=" +
+               this.formatDiagnosticValue(match.uHandleID);
+         }
+         this.updatePlayerTimeInventoryDiagnostic();
+      }
+
+      private function updatePlayerTimeInventoryDiagnostic() : void
+      {
+         this.setText("diagnostic.playertimeinventory",this.universalTimeDiagnostic +
+            " // " + this.digipickDiagnostic);
       }
 
       private function formatOptionalNormalized(param1:Number) : String

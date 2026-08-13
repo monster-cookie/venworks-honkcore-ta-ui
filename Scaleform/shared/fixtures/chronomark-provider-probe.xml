@@ -44,6 +44,8 @@
     <target id="rightMeters" visibleWhen="never" />
   </vanillaVisibility>
   <includes>
+    <include id="player-data-probe" src="player-data-diagnostic-strip.xml"
+             x="0" y="12" anchor="top-center" visible="true" visibleWhen="inScanner" z="120" />
     <include id="environmental-hazard-scanner" src="environmental-hazard-scanner.xml"
              x="39" y="11" anchor="bottom-right" visible="true" visibleWhen="always" z="90" />
     <include id="chronomark.environment-status" src="environment-status.xml"

@@ -1,10 +1,9 @@
 # Goal 6 environmental hazard scanner
 
-**Status: Hazard-transition runtime acceptance, movement-provider discovery,
-gradual player-O2-only recalibration, and the environmental full-soak critical
-override are complete. The approved final Planet Data presentation,
-diagnostic-strip removal, and automated normal/large build acceptance are
-complete. Final runtime layout verification is pending.**
+**Status: The environmental hazard scanner and Planet Data presentation are
+runtime accepted. A bounded scanner-only player-data diagnostic is implemented
+for the final Goal 6 player-tricorder discovery; its runtime results are
+pending.**
 
 ## Product direction
 
@@ -123,6 +122,52 @@ The field-name probe also did not display ordinary values such as O2 reserve or
 jetpack charge, so it was replaced after completing its bounded search. The
 runtime does not subscribe to a spaceship-menu provider or assume that vehicle
 UI injection makes a field globally available.
+
+### Player-tricorder candidates
+
+The accepted environmental layout frees the lower-left surface for a matching
+player tricorder. Its requested production fields are classified before the
+bounded runtime probe as follows:
+
+| Display concept | Provider and field | Classification before player probe |
+| --- | --- | --- |
+| Health | `PlayerFrequentData.fHealth` / `fMaxHealth` | Confirmed in HUD runtime |
+| Shared O2/CO2 | `PlayerFrequentData.fOxygen`, `fCarbonDioxide`, `fMaxO2CO2` | Confirmed in HUD runtime and Bethesda HUD movie |
+| Carry weight | `PlayerInventoryData.fEncumbrance` / `fMaxEncumbrance` | Confirmed in HUD runtime |
+| Credits | `PlayerInventoryData.uCoin` | Confirmed in HUD runtime |
+| Boost charge | `HudJetpackData.fJetpackCharge` | Confirmed in HUD runtime |
+| Character name | `PlayerData.sName` | Confirmed in Status Menu; HUD lifetime unproven |
+| Player level | `PlayerData.uLevel` | Confirmed in Status Menu; HUD lifetime unproven |
+| XP progress | `PlayerData.fLevelXP` / `fNextLevelXP` | Confirmed in Status Menu; HUD lifetime unproven |
+| Universal time | `LocalEnvData_Frequent.fGalacticStandardTime` | Clean-room roadmap candidate; HUD field unproven |
+| Venworks actor value | `PlayerData.VWKS_PlayerLevel` candidate for Actor Value `000030:Venworks-Core.esm` | Custom provider projection unproven |
+| Digipick count | `PlayerInventoryData.aItems[*].uCount` for base form `00000A:Starfield.esm` | Item array is confirmed in HUD; identity and presence of this entry are unproven |
+| Save/player serial | ID-, serial-, save-, character-, actor-, form-, reference-, or `VWKS`-named `PlayerData` member | Unknown |
+
+Bethesda's HUD movie subscribes to `PlayerData`, but its inspected bottom-left
+widget consumes only `bIsInCombat`. The Status Menu consumes the name, level,
+and XP fields from a menu lifetime that cannot be assumed equivalent to
+`HUDMenu`. Similarly, defining an Actor Value record does not by itself prove
+that its EditorID becomes a dynamic `PlayerData` member.
+
+The scanner-only probe enumerates at most 32 `PlayerData` root fields and
+reports the five requested exact members separately. It also bounds serial-like
+candidate reporting to 12 fields. `LocalEnvData_Frequent` reports the exact
+Galactic Standard Time, local-time, and local-hours-per-day candidates without
+formatting them as production time.
+
+The digipick search inspects at most 256 inventory entries. It prefers numeric
+base form `0x00000A`, then an EditorID equal to `Digipick`, and reports an
+English-name-only match solely as diagnostic evidence. Bethesda's Inventory
+Menu confirms that entries expose `sName`, `uCount`, and `uFormID`; the
+localized display name is not an acceptable production identity.
+
+No ActionScript-generated serial is used. A value generated inside HUDMenu
+would change when the movie is recreated, while Flash-local persistent storage
+would not naturally reset at a Unity transition. Production serial display
+therefore requires a Venworks Core value with the intended character/universe
+lifetime and a proven HUD provider projection; otherwise the character name is
+the approved fallback.
 
 ## Unknowns that must not be invented
 
@@ -367,17 +412,19 @@ Run repository validation and the complete two-variant Scaleform build:
   -VanillaInterfacePath "<approved-vanilla-interface-path>"
 ```
 
-The complete final-presentation build passed on 2026-08-12. Both generated GFX
-variants compiled, imported, reopened, passed their build and staged-layout
-contracts, and reproduced from the final source. All four staging variants
-contain the same normal/large pair, and the retired diagnostic component is
-absent from both source and staging:
+The scanner-only player-data diagnostic build passed on 2026-08-12. Both
+generated GFX variants compiled, imported, reopened, passed their build and
+staged-layout contracts, and reproduced from the approved source. All four
+staging variants contain the same normal/large pair. The retired environmental
+diagnostic remains absent, while the bounded player-data probe is staged only
+as a scanner-gated discovery component:
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 396281 | `7474236AF4F87514F8E46A3487D84EBE93720131478E68C4CDC59E0B3E88C587` |
-| `hudmenu_lrg.gfx` | 396464 | `FE7FB45A5F1A36A668F14D707DD3D80DDC2AF580DCFE30C6F3EC8E3CC16241AF` |
-| `VenworksCUI/layout.xml` | 3539 | `B7027E8934BFAB7B04ADB2756F5DE6078C824C2D88FD6AAA44F0D077CA533F1A` |
+| `hudmenu.gfx` | 398708 | `6214D9A091D301C9F9FAFC1AC3C953C18271866F26E983BECC04C0D8682ABD64` |
+| `hudmenu_lrg.gfx` | 398891 | `EEB8DC39A742E5651547BDC6045D488A66C45211A335990B2361400AAC484B1F` |
+| `VenworksCUI/layout.xml` | 3710 | `4B0CA23278139753E6067816C35FFC1ED9E0F44442FA2B063D53B86D7C60BC03` |
+| `components/player-data-diagnostic-strip.xml` | 2893 | `1CE010AC5942B7E0FBCC378AD1B0533278E3AADB478C139EE060F96275A6DAE7` |
 | `components/environmental-hazard-scanner.xml` | 9856 | `055A9A7D51EF8016AAD3EAEC533885C430FD05888CCB5C76AC01FEE5A14BECA8` |
 | `components/environment-status.xml` | 1634 | `9DB8E41326E61D05798FAFDE38BFE87A4AB13A95DA0C47F5B554D9CC8B9D33E1` |
 

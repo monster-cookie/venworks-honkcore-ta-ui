@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUIFragment schemaVersion="1" runtimeVersion="1">
+  <group id="root" x="0" y="0" width="1440" height="156" opacity="1" visible="true"
+         rotation="0" scaleX="1" scaleY="1" z="0">
+    <panel id="panel" x="0" y="0" width="1440" height="156" opacity="1" visible="true"
+           rotation="0" scaleX="1" scaleY="1" z="0"
+           fillColor="#061B22" fillOpacity="0.82" strokeColor="#00BFC4" strokeOpacity="0.8" strokeWidth="2" />
+    <text id="title" x="18" y="8" width="500" height="24" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="1" value="PLAYER DATA PROVIDER PROBE"
+          font="$MAIN_Font_Bold" fontSize="14" color="#62DDF2" bold="false" align="left" />
+    <text id="scope" x="920" y="8" width="500" height="24" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="1" value="SCANNER ACTIVE // HUDMENU DIAGNOSTIC"
+          font="$MAIN_Font_Bold" fontSize="11" color="#62DDF2" bold="false" align="right" />
+    <divider id="rule" x="14" y="34" width="1412" height="0" opacity="1" visible="true"
+             rotation="0" scaleX="1" scaleY="1" z="1" color="#00BFC4" strokeOpacity="0.72" strokeWidth="1" />
+    <text id="fields" x="18" y="40" width="1404" height="23" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="1" source="diagnostic.playerFields" format="raw"
+          value="PLAYERDATA NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="10" color="#F2F7F9" bold="false" align="left" />
+    <text id="targets" x="18" y="65" width="1404" height="23" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="1" source="diagnostic.playerTargets" format="raw"
+          value="PLAYER TARGETS: WAITING" font="$MAIN_Font_Bold" fontSize="11" color="#F2F7F9" bold="false" align="left" />
+    <text id="identifiers" x="18" y="90" width="1404" height="23" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="1" source="diagnostic.playerIdentifiers" format="raw"
+          value="PLAYER ID / SERIAL CANDIDATES: WAITING" font="$MAIN_Font_Bold" fontSize="11" color="#F2B41C" bold="false" align="left" />
+    <text id="timeinventory" x="18" y="115" width="1404" height="23" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="1" source="diagnostic.playerTimeInventory" format="raw"
+          value="UT: WAITING // DIGIPICK: WAITING" font="$MAIN_Font_Bold" fontSize="11" color="#F2F7F9" bold="false" align="left" />
+    <text id="caution" x="18" y="139" width="1404" height="13" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="1"
+          value="FIELD DISCOVERY ONLY // NO SERIAL, XP, UT, OR DIGIPICK SOURCE ENTERS PRODUCTION UNTIL RUNTIME PROVEN"
+          font="$MAIN_Font_Bold" fontSize="7" color="#E64B4B" bold="false" align="center" />
+  </group>
+</venworksCUIFragment>
