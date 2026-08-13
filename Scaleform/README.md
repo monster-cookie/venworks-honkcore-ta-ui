@@ -91,7 +91,8 @@ with an independently hidden button, and an information panel with metadata,
 divider, and meter content. Goal 4G's positive and negative in-game checks are
 accepted. The staged `layout.xml` is the Goal 6 production HUD: it places the
 live allowlisted vanilla bottom-left Chronomark at the upper-left for O2/CO2
-comparison, hides the right-meter group, places the Player Data scanner at
+comparison, reapplies that configured placement after Bethesda's safe-rect
+lock, hides the right-meter group, places the Player Data scanner at
 lower-left and the Planet Data/environmental scanner at lower-right, and moves
 the temporary weapon/power presentation to upper-right.
 Malformed fixtures are

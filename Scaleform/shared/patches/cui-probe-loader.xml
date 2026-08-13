@@ -13,5 +13,11 @@
             this.VenworksCUIRuntimeInstance.load();
          }
 ]]></content></insertion>
+    <insertion position="after"><anchor><![CDATA[         CENTER_GROUP_POINT.y = this.CenterGroup_mc.y;]]></anchor><content><![CDATA[
+         if(this.VenworksCUIRuntimeInstance != null)
+         {
+            this.VenworksCUIRuntimeInstance.reapplyVanillaPlacements();
+         }
+]]></content></insertion>
   </insertions>
 </actionScriptPatch>

@@ -10,6 +10,8 @@ package venworks.cui
       private var initialAlphas:Array;
       private var initialXs:Array;
       private var initialYs:Array;
+      private var targetConfig:XML;
+      private var layoutEngine:CUILayoutEngine;
 
       public function CUIVanillaVisibilityAdapter(param1:DisplayObjectContainer, param2:XML, param3:CUIConditionExpression, param4:CUILayoutEngine)
       {
@@ -21,6 +23,8 @@ package venworks.cui
          initialAlphas = [];
          initialXs = [];
          initialYs = [];
+         targetConfig = param2.copy();
+         layoutEngine = param4;
          target = param1.getChildByName(this.getDisplayName(id));
          if(target == null)
          {
@@ -30,7 +34,7 @@ package venworks.cui
          initialAlphas.push(target.alpha);
          initialXs.push(target.x);
          initialYs.push(target.y);
-         param4.positionVanilla(target,param2);
+         this.reapplyPlacement();
          expression = param3;
       }
 
@@ -66,6 +70,20 @@ package venworks.cui
          }
       }
 
+      public function reapplyPlacement() : void
+      {
+         var index:int = 0;
+         if(layoutEngine == null || targetConfig == null)
+         {
+            return;
+         }
+         while(index < targets.length)
+         {
+            layoutEngine.positionVanilla(DisplayObject(targets[index]),targetConfig);
+            index++;
+         }
+      }
+
       public function dispose() : void
       {
          var index:int = 0;
@@ -80,6 +98,8 @@ package venworks.cui
          initialAlphas = [];
          initialXs = [];
          initialYs = [];
+         targetConfig = null;
+         layoutEngine = null;
       }
 
       private function getDisplayName(param1:String) : String

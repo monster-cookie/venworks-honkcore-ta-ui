@@ -461,6 +461,15 @@ area. HUDMenu continues to own that complete live Chronomark object, its
 providers, animations, and mode-driven `visible` state. `rightMeters` remains
 hidden and unchanged.
 
+The first runtime comparison build restored the Chronomark but left it behind
+the Player Data scanner. Static inspection and the capture confirmed the cause:
+Bethesda's `HUDMenu.onSetSafeRect()` calls `LockToSafeRect` for
+`BottomLeftGroup_mc` after CUI's initial placement. The corrected lifecycle
+keeps Bethesda's lock first, then asks the loaded CUI runtime to reapply only
+the configured whole-control position. The callback is null-safe during the
+initial HUD setup and runs again on later safe-rect changes; it does not clone,
+reparent, rescale, or replace the Chronomark.
+
 Runtime comparison must record whether the vanilla and CUI tracks agree during
 idle, sprint drain, O2 depletion, CO2 accumulation, and recovery before any
 change is made to `player.oxygenPercentage` or
@@ -490,8 +499,8 @@ normal/large pair across all four staging variants:
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 401814 | `22560D6446652C60235F6DB64030D932B4B863E7EBB5ED0644E97228C43CDF3D` |
-| `hudmenu_lrg.gfx` | 401997 | `7221DD1D0B3BA7C71695FA588989CC6D1ACB2DA9C847A97AAFFF04CB96F6490F` |
+| `hudmenu.gfx` | 402359 | `66F25999E6685D6CCE684593D8E87D28387C01B7BB765C7B0923E196B5A251D2` |
+| `hudmenu_lrg.gfx` | 402542 | `E0C9DA806CC5F20DA89D09065A1E33EE769BEB0A82614724A55C9204FF2DF1BD` |
 | `VenworksCUI/layout.xml` | 3769 | `57E149BCED7A650A57BD710900075F062513AF22939B9FC3C0DE851E23701F00` |
 | `components/player-status-scanner.xml` | 9099 | `34386032F9A491176E980A88D73572D21EC70E8C0212C95070515C4340202FF8` |
 | `components/environmental-hazard-scanner.xml` | 9854 | `C6743AE669B090F6802DD0F37B687ECC6ABCE300ABCD0C0FB0FEE5763A12F8B8` |

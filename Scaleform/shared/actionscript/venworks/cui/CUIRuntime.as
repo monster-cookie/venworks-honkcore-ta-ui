@@ -66,6 +66,28 @@ package venworks.cui
          loader.load();
       }
 
+      public function reapplyVanillaPlacements() : void
+      {
+         var adapter:CUIVanillaVisibilityAdapter = null;
+         if(vanillaAdapters == null)
+         {
+            return;
+         }
+         try
+         {
+            this.setDiagnosticContext("VANILLA SAFE-RECT PLACEMENT",null);
+            for each(adapter in vanillaAdapters)
+            {
+               adapter.reapplyPlacement();
+            }
+            this.clearDiagnosticContext();
+         }
+         catch(param1:Error)
+         {
+            this.showRuntimeError(param1);
+         }
+      }
+
       private function onLoaded(param1:Event) : void
       {
          var config:XML = loader.layout;

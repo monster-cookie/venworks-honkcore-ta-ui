@@ -618,6 +618,11 @@ try {
     if ($validationScriptMatches.Count -ne 1) {
       throw "Expected one reopened $scriptName.as; found $($validationScriptMatches.Count)."
     }
+    $reopenedHudMenuSource = Get-Content -LiteralPath $validationScriptMatches[0].FullName -Raw
+    if ($reopenedHudMenuSource -notmatch 'CENTER_GROUP_POINT\.y\s*=\s*this\.CenterGroup_mc\.y;\s*if\s*\(this\.VenworksCUIRuntimeInstance\s*!=\s*null\)\s*\{\s*this\.VenworksCUIRuntimeInstance\.reapplyVanillaPlacements\(\);' -or
+        $reopenedHudMenuSource -notmatch 'GlobalFunc\.LockToSafeRect\(this\.BottomLeftGroup_mc,"BL",SafeX,SafeY,true\)') {
+      throw 'Generated HUDMenu does not reapply configured vanilla placement after Bethesda safe-rect locking.'
+    }
 
     $originalScripts = @(Get-ChildItem -LiteralPath $exportedScriptsDirectory -Recurse -File -Filter "*.as")
     $validationScripts = @(Get-ChildItem -LiteralPath $validationScriptsDirectory -Recurse -File -Filter "*.as")
@@ -839,6 +844,7 @@ try {
     $reopenedSymbolPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUISymbol.as'
     $reopenedValueBindingPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIValueBinding.as'
     $reopenedVanillaVisibilityPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIVanillaVisibilityAdapter.as'
+    $reopenedRuntimePath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIRuntime.as'
     $reopenedAssetManagerSource = Get-Content -LiteralPath $reopenedAssetManagerPath -Raw
     $reopenedLayoutParserSource = Get-Content -LiteralPath $reopenedLayoutParserPath -Raw
     $reopenedLayoutEngineSource = Get-Content -LiteralPath $reopenedLayoutEnginePath -Raw
@@ -850,6 +856,7 @@ try {
     $reopenedSymbolSource = Get-Content -LiteralPath $reopenedSymbolPath -Raw
     $reopenedValueBindingSource = Get-Content -LiteralPath $reopenedValueBindingPath -Raw
     $reopenedVanillaVisibilitySource = Get-Content -LiteralPath $reopenedVanillaVisibilityPath -Raw
+    $reopenedRuntimeSource = Get-Content -LiteralPath $reopenedRuntimePath -Raw
     foreach ($identifierValidatorSource in @(
       $reopenedLayoutParserSource,
       $reopenedCompositionResolverSource,
@@ -881,7 +888,11 @@ try {
         $reopenedVanillaVisibilitySource -match 'PowerBarEmpty_mc|EquippedGrenadeIcon_mc|EquippedGrenadeCount_mc|JetpackMeterWrapper_mc|HUDVehicle_mc') {
       throw 'Generated rightMeters visibility adapter does not remain a whole-group alpha-only presentation gate.'
     }
-    if ($reopenedVanillaVisibilitySource -notmatch 'param4\.positionVanilla\(target,param2\)' -or
+    if ($reopenedVanillaVisibilitySource -notmatch 'function\s+reapplyPlacement' -or
+        $reopenedVanillaVisibilitySource -notmatch 'layoutEngine\.positionVanilla\(DisplayObject\(targets\[index\]\),targetConfig\)' -or
+        $reopenedRuntimeSource -notmatch 'function\s+reapplyVanillaPlacements' -or
+        $reopenedRuntimeSource -notmatch 'adapter\.reapplyPlacement\(\)' -or
+        $reopenedRuntimeSource -notmatch 'VANILLA SAFE-RECT PLACEMENT' -or
         $reopenedVanillaVisibilitySource -notmatch 'function\s+dispose' -or
         $reopenedLayoutEngineSource -notmatch 'function\s+positionVanilla' -or
         $reopenedLayoutEngineSource -notmatch 'param1\.getBounds\(parent\)' -or
