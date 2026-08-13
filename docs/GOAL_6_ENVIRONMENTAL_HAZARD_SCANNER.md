@@ -1,9 +1,10 @@
 # Goal 6 environmental hazard scanner
 
 **Status: The environmental hazard scanner and Planet Data presentation are
-runtime accepted. A bounded scanner-only player-data diagnostic is implemented
-for the final Goal 6 player-tricorder discovery; its runtime results are
-pending.**
+runtime accepted. The bounded player-data probe confirmed the final Goal 6
+player-tricorder providers. A scanner-only SharedObject persistence experiment
+is implemented for the requested generated serial; restart persistence remains
+pending runtime acceptance.**
 
 ## Product direction
 
@@ -136,38 +137,45 @@ bounded runtime probe as follows:
 | Carry weight | `PlayerInventoryData.fEncumbrance` / `fMaxEncumbrance` | Confirmed in HUD runtime |
 | Credits | `PlayerInventoryData.uCoin` | Confirmed in HUD runtime |
 | Boost charge | `HudJetpackData.fJetpackCharge` | Confirmed in HUD runtime |
-| Character name | `PlayerData.sName` | Confirmed in Status Menu; HUD lifetime unproven |
-| Player level | `PlayerData.uLevel` | Confirmed in Status Menu; HUD lifetime unproven |
-| XP progress | `PlayerData.fLevelXP` / `fNextLevelXP` | Confirmed in Status Menu; HUD lifetime unproven |
-| Universal time | `LocalEnvData_Frequent.fGalacticStandardTime` | Clean-room roadmap candidate; HUD field unproven |
-| Venworks actor value | `PlayerData.VWKS_PlayerLevel` candidate for Actor Value `000030:Venworks-Core.esm` | Custom provider projection unproven |
-| Digipick count | `PlayerInventoryData.aItems[*].uCount` for base form `00000A:Starfield.esm` | Item array is confirmed in HUD; identity and presence of this entry are unproven |
-| Save/player serial | ID-, serial-, save-, character-, actor-, form-, reference-, or `VWKS`-named `PlayerData` member | Unknown |
+| Character name | `PlayerData.sName` | Confirmed in HUD runtime |
+| Player level | `PlayerData.uLevel` | Confirmed in HUD runtime |
+| XP progress | `PlayerData.fLevelXP` / `fNextLevelXP` | Confirmed in HUD runtime |
+| Universal time | `LocalEnvData_Frequent.fGalacticStandardTime` | Confirmed in HUD runtime; production formatting remains unimplemented |
+| Venworks actor value | `PlayerData.VWKS_PlayerLevel` candidate for Actor Value `000030:Venworks-Core.esm` | Absent from the received HUD payload (`NULL`) |
+| Digipick count | `PlayerInventoryData.aItems[*].uCount` for base form `00000A:Starfield.esm` | Confirmed in HUD runtime by exact base form |
+| Save/player serial | ID-, serial-, save-, character-, actor-, form-, reference-, or `VWKS`-named `PlayerData` member | No candidate found by bounded HUD runtime enumeration |
 
 Bethesda's HUD movie subscribes to `PlayerData`, but its inspected bottom-left
-widget consumes only `bIsInCombat`. The Status Menu consumes the name, level,
-and XP fields from a menu lifetime that cannot be assumed equivalent to
-`HUDMenu`. Similarly, defining an Actor Value record does not by itself prove
-that its EditorID becomes a dynamic `PlayerData` member.
+widget consumes only `bIsInCombat`. Runtime testing independently proved that
+the same HUD-lifetime payload includes character name, level, current XP, and
+next-level XP. Defining an Actor Value record does not by itself project its
+EditorID into that payload: `VWKS_PlayerLevel` was `NULL` even though the
+`000030:Venworks-Core.esm` Actor Value exists.
 
-The scanner-only probe enumerates at most 32 `PlayerData` root fields and
-reports the five requested exact members separately. It also bounds serial-like
-candidate reporting to 12 fields. `LocalEnvData_Frequent` reports the exact
-Galactic Standard Time, local-time, and local-hours-per-day candidates without
-formatting them as production time.
+The scanner-only probe enumerated at most 32 `PlayerData` root fields and
+reported the five requested exact members separately. The runtime payload
+provided `sName`, `uLevel=150`, `fLevelXP=15104.5`, and
+`fNextLevelXP=17175`, while its bounded serial-like candidate search returned
+none. `LocalEnvData_Frequent` simultaneously provided
+`fGalacticStandardTime=2.85866472415698`,
+`fLocalPlanetTime=0.623948012487412`, and
+`fLocalPlanetHoursPerDay=41`. These values are provider evidence, not yet a
+production clock-format decision.
 
-The digipick search inspects at most 256 inventory entries. It prefers numeric
-base form `0x00000A`, then an EditorID equal to `Digipick`, and reports an
-English-name-only match solely as diagnostic evidence. Bethesda's Inventory
-Menu confirms that entries expose `sName`, `uCount`, and `uFormID`; the
-localized display name is not an acceptable production identity.
+The digipick search inspects at most 256 inventory entries. Runtime matched the
+numeric base form `0x00000A` with `uFormID=10`, `uCount=51`, and
+`sName=DIGIPICK`; `sEditorID` remained `NULL`. The exact base form is therefore
+the production-capable identity, independent of localized display name.
 
-No ActionScript-generated serial is used. A value generated inside HUDMenu
-would change when the movie is recreated, while Flash-local persistent storage
-would not naturally reset at a Unity transition. Production serial display
-therefore requires a Venworks Core value with the intended character/universe
-lifetime and a proven HUD provider projection; otherwise the character name is
-the approved fallback.
+No Bethesda save/player serial is exposed by the tested HUD provider. The
+approved experiment therefore uses the Flash `SharedObject` store
+`VenworksCUIPlayerSerials`. It indexes one raw 18-character uppercase
+alphanumeric value by the exact character name, flushes a newly generated value,
+reads it back, and displays it as `XXXXXXXX-XXXX-XXXXXX`. This storage is local
+to the Flash installation/profile rather than the save: same-named characters
+collide, renaming a character creates a new key, and the value is expected to
+survive Unity transitions. It remains diagnostic-only until HUD recreation,
+save reload, and full game restart prove persistence.
 
 ## Unknowns that must not be invented
 
@@ -397,6 +405,28 @@ verify:
 The accepted captures already cover the dangerous full-soak transition; no
 additional full-soak unsafe-water test is required.
 
+## Player-data and serial-persistence runtime acceptance plan
+
+The initial player-data runtime capture is accepted provider evidence. The
+remaining diagnostic deployment tests only Flash-local serial persistence:
+
+1. on first scanner open, the serial line reports an 8-4-6 formatted uppercase
+   alphanumeric value and `READBACK=MATCH`; a new character key may report
+   `CREATED THIS HUD SESSION`, while an existing key reports `LOADED`;
+2. closing and reopening the scanner retains the exact value; this does not
+   require HUDMenu recreation, so the lifecycle label may remain unchanged;
+3. saving and reloading retains the exact value and reports `LOADED` if the HUD
+   movie is recreated;
+4. fully exiting and restarting the game retains the exact value and reports
+   `LOADED`;
+5. a differently named character receives a different value; and
+6. returning to the first character restores its original value.
+
+Any `SHAREDOBJECT UNAVAILABLE`, persistence exception, `READBACK=MISMATCH`, or
+serial change for the same exact character name rejects this approach. The
+probe remains scanner-gated and must disappear when the scanner closes. The
+user commits the generated build before deployment.
+
 ## Automated validation and expected artifacts
 
 Run repository validation and the complete two-variant Scaleform build:
@@ -412,19 +442,20 @@ Run repository validation and the complete two-variant Scaleform build:
   -VanillaInterfacePath "<approved-vanilla-interface-path>"
 ```
 
-The scanner-only player-data diagnostic build passed on 2026-08-12. Both
-generated GFX variants compiled, imported, reopened, passed their build and
-staged-layout contracts, and reproduced from the approved source. All four
-staging variants contain the same normal/large pair. The retired environmental
-diagnostic remains absent, while the bounded player-data probe is staged only
-as a scanner-gated discovery component:
+The scanner-only player-data and SharedObject persistence diagnostic build
+passed automated validation on 2026-08-13. Both generated GFX variants
+compiled, imported, reopened, passed their build and staged-layout contracts,
+and reproduced from the approved source. All four staging variants contain the
+same normal/large pair. The retired environmental diagnostic remains absent,
+while the bounded persistence probe is staged only as a scanner-gated
+component; its in-game persistence sequence remains pending:
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 398708 | `6214D9A091D301C9F9FAFC1AC3C953C18271866F26E983BECC04C0D8682ABD64` |
-| `hudmenu_lrg.gfx` | 398891 | `EEB8DC39A742E5651547BDC6045D488A66C45211A335990B2361400AAC484B1F` |
+| `hudmenu.gfx` | 400785 | `1E46CA21F667C2534EBB98AC398AF9D3E47BAF6C5DE8BF642A1978C1E3868E70` |
+| `hudmenu_lrg.gfx` | 400968 | `6036455BEC814FB6301560A739CF35E9EDAB0C433AB8476096CA12A2EC48975F` |
 | `VenworksCUI/layout.xml` | 3710 | `4B0CA23278139753E6067816C35FFC1ED9E0F44442FA2B063D53B86D7C60BC03` |
-| `components/player-data-diagnostic-strip.xml` | 2893 | `1CE010AC5942B7E0FBCC378AD1B0533278E3AADB478C139EE060F96275A6DAE7` |
+| `components/player-data-diagnostic-strip.xml` | 2894 | `9DC41E49E6DD67C774A1213E21217C43A812F3AAA9D341DC456A9DE04AEC120E` |
 | `components/environmental-hazard-scanner.xml` | 9856 | `055A9A7D51EF8016AAD3EAEC533885C430FD05888CCB5C76AC01FEE5A14BECA8` |
 | `components/environment-status.xml` | 1634 | `9DB8E41326E61D05798FAFDE38BFE87A4AB13A95DA0C47F5B554D9CC8B9D33E1` |
 

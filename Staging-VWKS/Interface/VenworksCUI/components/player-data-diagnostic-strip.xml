@@ -21,13 +21,13 @@
           value="PLAYER TARGETS: WAITING" font="$MAIN_Font_Bold" fontSize="11" color="#F2F7F9" bold="false" align="left" />
     <text id="identifiers" x="18" y="90" width="1404" height="23" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="1" source="diagnostic.playerIdentifiers" format="raw"
-          value="PLAYER ID / SERIAL CANDIDATES: WAITING" font="$MAIN_Font_Bold" fontSize="11" color="#F2B41C" bold="false" align="left" />
+          value="SERIAL PERSISTENCE: WAITING FOR PLAYERDATA" font="$MAIN_Font_Bold" fontSize="11" color="#F2B41C" bold="false" align="left" />
     <text id="timeinventory" x="18" y="115" width="1404" height="23" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="1" source="diagnostic.playerTimeInventory" format="raw"
           value="UT: WAITING // DIGIPICK: WAITING" font="$MAIN_Font_Bold" fontSize="11" color="#F2F7F9" bold="false" align="left" />
     <text id="caution" x="18" y="139" width="1404" height="13" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="1"
-          value="FIELD DISCOVERY ONLY // NO SERIAL, XP, UT, OR DIGIPICK SOURCE ENTERS PRODUCTION UNTIL RUNTIME PROVEN"
+          value="PERSISTENCE PROBE // SERIAL MUST REMAIN IDENTICAL AFTER HUD RELOAD, SAVE RELOAD, AND GAME RESTART"
           font="$MAIN_Font_Bold" fontSize="7" color="#E64B4B" bold="false" align="center" />
   </group>
 </venworksCUIFragment>
