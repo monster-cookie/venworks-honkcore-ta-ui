@@ -59,5 +59,11 @@
     <include id="chronomark.weapon-status" src="weapon-status.xml"
              x="39" y="-11" anchor="top-right" visible="true" visibleWhen="always" z="102" />
   </includes>
-  <components />
+  <components>
+    <path id="helmet.bottom-seal" x="-64" y="36" width="1920" height="56" opacity="1" visible="true"
+          anchor="bottom-left" rotation="0" scaleX="1" scaleY="1" z="80"
+          data="M 0 0 L 385 0 C 399 0 407 6 417 16 Q 425 24 439 24 L 1481 24 Q 1495 24 1503 16 C 1513 6 1521 0 1535 0 L 1920 0 L 1920 56 L 0 56 Z"
+          viewBoxX="0" viewBoxY="0" viewBoxWidth="1920" viewBoxHeight="56"
+          fillColor="#03141D" fillOpacity="0.78" strokeColor="#62DDF2" strokeOpacity="0.76" strokeWidth="2" />
+  </components>
 </venworksCUI>

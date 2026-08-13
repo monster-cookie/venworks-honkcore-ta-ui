@@ -2,8 +2,8 @@
 
 **Status: The environmental hazard scanner, Planet Data presentation, Player
 Data presentation, deterministic display serial, and shared O2/CO2 behavior
-are runtime accepted. The final helmet-integration presentation is implemented
-and awaits one in-game visual acceptance check.**
+are runtime accepted. The final helmet-integration presentation now includes a
+linked lower helmet seal and awaits one in-game visual acceptance check.**
 
 ## Product direction
 
@@ -487,6 +487,16 @@ former full-width header divider remains absent so it cannot visually bridge
 the notch. All accepted text, provider bindings, meter geometry, root bounds,
 safe-area anchoring, and the temporary upper-right weapon panel remain
 unchanged.
+
+A separate 56-unit root-layout path now links the two independent tricorder
+panels behind their existing z-order. Its filled lower band uses the same dark
+translucent helmet material and cyan edge as the panels. The upper edge rises
+smoothly beneath each panel, then remains flat across the center so the result
+reads as the lower helmet/glass seal instead of a third information panel. The
+center intentionally has no decorative bump, label, waveform, or invented
+telemetry; a future goal may add the separately designed threat sensor there.
+The Player Data clock fields also move wholly inside the clock tab so its
+shoulder no longer crosses the full `UNIVERSAL` label.
 
 ## Automated validation and expected artifacts
 

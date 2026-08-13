@@ -1026,6 +1026,9 @@ try {
   $playerScannerIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'player-status-scanner'
   })
+  $helmetBottomSealPaths = @($providerProbeLayout.venworksCUI.components.path | Where-Object {
+    [string]$_.id -eq 'helmet.bottom-seal'
+  })
   $weaponStatusIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'chronomark.weapon-status'
   })
@@ -1046,8 +1049,9 @@ try {
   $stagedPlayerPanelPaths = @($stagedPlayerScannerGroup.path | Where-Object {
     [string]$_.id -eq 'panel'
   })
-  $expectedPlayerPanelPath = 'M -25 -32 L -25 321 L 352 321 Q 360 321 360 313 L 360 8 Q 360 0 352 0 L 260 0 Q 248 0 248 12 L 248 20 Q 248 30 236 30 L 132 30 Q 120 30 120 20 L 120 12 Q 120 0 108 0 L 8 0 Q -10 0 -25 -32 Z'
+  $expectedPlayerPanelPath = 'M -25 -32 L -25 321 L 352 321 Q 360 321 360 313 L 360 8 Q 360 0 352 0 L 260 0 Q 244 0 244 12 L 244 20 Q 244 30 232 30 L 132 30 Q 120 30 120 20 L 120 12 Q 120 0 108 0 L 8 0 Q -10 0 -25 -32 Z'
   $expectedEnvironmentalPanelPath = 'M 8 0 L 108 0 Q 120 0 120 12 L 120 20 Q 120 30 132 30 L 236 30 Q 248 30 248 20 L 248 12 Q 248 0 260 0 L 352 0 Q 370 0 385 -32 L 385 337 L 8 337 Q 0 337 0 329 L 0 8 Q 0 0 8 0 Z'
+  $expectedHelmetBottomSealPath = 'M 0 0 L 385 0 C 399 0 407 6 417 16 Q 425 24 439 24 L 1481 24 Q 1495 24 1503 16 C 1513 6 1521 0 1535 0 L 1920 0 L 1920 56 L 0 56 Z'
   if ($environmentalDiagnosticIncludes.Count -ne 0 -or
       $retiredStagedComponents.Count -ne 0 -or
       $environmentalScannerIncludes.Count -ne 1 -or
@@ -1062,6 +1066,21 @@ try {
       [string]$playerScannerIncludes[0].visibleWhen -ne 'always' -or
       [int]$playerScannerIncludes[0].x -ne -39 -or
       [int]$playerScannerIncludes[0].y -ne 11 -or
+      $helmetBottomSealPaths.Count -ne 1 -or
+      [string]$helmetBottomSealPaths[0].anchor -ne 'bottom-left' -or
+      [int]$helmetBottomSealPaths[0].x -ne -64 -or
+      [int]$helmetBottomSealPaths[0].y -ne 36 -or
+      [int]$helmetBottomSealPaths[0].width -ne 1920 -or
+      [int]$helmetBottomSealPaths[0].height -ne 56 -or
+      [int]$helmetBottomSealPaths[0].z -ne 80 -or
+      [string]$helmetBottomSealPaths[0].data -ne $expectedHelmetBottomSealPath -or
+      [string]$helmetBottomSealPaths[0].fillColor -ne '#03141D' -or
+      [double]$helmetBottomSealPaths[0].fillOpacity -ne 0.78 -or
+      [string]$helmetBottomSealPaths[0].strokeColor -ne '#62DDF2' -or
+      [double]$helmetBottomSealPaths[0].strokeOpacity -ne 0.76 -or
+      [int]$helmetBottomSealPaths[0].strokeWidth -ne 2 -or
+      [int]$helmetBottomSealPaths[0].viewBoxWidth -ne 1920 -or
+      [int]$helmetBottomSealPaths[0].viewBoxHeight -ne 56 -or
       $weaponStatusIncludes.Count -ne 1 -or
       [string]$weaponStatusIncludes[0].anchor -ne 'top-right' -or
       [int]$weaponStatusIncludes[0].x -ne 39 -or
@@ -1081,6 +1100,8 @@ try {
       $stagedPlayerScannerText -notmatch 'value="PLAYER DATA"' -or
       $stagedPlayerScannerText -notmatch 'source="player\.serial"' -or
       $stagedPlayerScannerText -notmatch 'source="player\.universalTime"' -or
+      $stagedPlayerScannerText -notmatch 'id="time\.label" x="250" y="8" width="44"' -or
+      $stagedPlayerScannerText -notmatch 'id="time" x="298" y="6" width="48"' -or
       $stagedPlayerScannerText -notmatch 'source="player\.xpPercentage"' -or
       $stagedPlayerScannerText -notmatch 'source="player\.healthPercentage"' -or
       $stagedPlayerScannerText -notmatch 'source="player\.oxygenPercentage"' -or
