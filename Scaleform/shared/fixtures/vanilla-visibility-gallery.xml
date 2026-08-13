@@ -8,7 +8,7 @@
   </definitions>
   <vanillaVisibility>
     <target id="topCenter" visibleWhen="never" />
-    <target id="bottomLeft" visibleWhen="always" />
+    <target id="bottomLeft" visibleWhen="always" x="25" y="25" anchor="top-left" />
     <target id="socialCommandIcons" visibleWhen="always" />
     <target id="floatingQuestMarkers" visibleWhen="always" />
     <target id="crewBuffWidget" visibleWhen="always" />

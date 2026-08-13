@@ -442,6 +442,30 @@ runtime pass verifies the production presentation:
 
 The user commits the generated build before deployment.
 
+## Chronomark O2/CO2 comparison pass
+
+The first production Player Data capture exposed several bounded-text
+collisions: the 8-4-6 deterministic serial overlapped the player level, the
+combined O2/CO2 readout clipped its right edge, and local time competed with
+the planet name. The correction gives the serial the complete identity row,
+moves level to the XP heading, moves mass to the encumbrance heading, splits
+the O2 and CO2 text into separately bounded fields, and puts local time in the
+Planet Data header. The provider sources and normalization are unchanged.
+
+CUI only observes `PlayerFrequentData`; it does not apply or suppress
+Bethesda's oxygen warnings, carbon-dioxide penalties, or health effects. To
+resolve the reported mismatch between a full CUI CO2 track and absent vanilla
+penalties, the existing Bethesda-owned `BottomLeftGroup_mc` is temporarily
+restored and moved, unscaled, to `top-left +25,+25` inside the configured safe
+area. HUDMenu continues to own that complete live Chronomark object, its
+providers, animations, and mode-driven `visible` state. `rightMeters` remains
+hidden and unchanged.
+
+Runtime comparison must record whether the vanilla and CUI tracks agree during
+idle, sprint drain, O2 depletion, CO2 accumulation, and recovery before any
+change is made to `player.oxygenPercentage` or
+`player.carbonDioxidePercentage`.
+
 ## Automated validation and expected artifacts
 
 Run repository validation and the complete two-variant Scaleform build:
@@ -460,17 +484,20 @@ Run repository validation and the complete two-variant Scaleform build:
 The earlier SharedObject diagnostic passed automated build validation but was
 rejected by runtime Error #1501 because the Scaleform host does not install a
 `SharedObjectManager`. The deterministic replacement removes the rejected
-storage path. On 2026-08-13 the production Player Data build compiled, imported,
+storage path. On 2026-08-13 the Chronomark comparison build compiled, imported,
 reopened, passed its source and staged-layout contracts, and reproduced the
 normal/large pair across all four staging variants:
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 400628 | `543B21D698B8356F8F00DCD2522754A84343ECCE486F2D75A94E67D797C624F6` |
-| `hudmenu_lrg.gfx` | 400811 | `975EDB52FDF3082B1874411B66392A85B7010C86A889EC875407EBACF26C94B7` |
-| `VenworksCUI/layout.xml` | 3736 | `51D2128ABA3E0154D210DD061A095A2D20602255D059FFEB0F93786DB923443C` |
-| `components/player-status-scanner.xml` | 8819 | `60D28CBEFB55DE21316571BA2224EB7429054FA3DE2AA3F8CA3B250F3121E94C` |
-| `components/environmental-hazard-scanner.xml` | 9856 | `055A9A7D51EF8016AAD3EAEC533885C430FD05888CCB5C76AC01FEE5A14BECA8` |
+| `hudmenu.gfx` | 401814 | `22560D6446652C60235F6DB64030D932B4B863E7EBB5ED0644E97228C43CDF3D` |
+| `hudmenu_lrg.gfx` | 401997 | `7221DD1D0B3BA7C71695FA588989CC6D1ACB2DA9C847A97AAFFF04CB96F6490F` |
+| `VenworksCUI/layout.xml` | 3769 | `57E149BCED7A650A57BD710900075F062513AF22939B9FC3C0DE851E23701F00` |
+| `components/player-status-scanner.xml` | 9099 | `34386032F9A491176E980A88D73572D21EC70E8C0212C95070515C4340202FF8` |
+| `components/environmental-hazard-scanner.xml` | 9854 | `C6743AE669B090F6802DD0F37B687ECC6ABCE300ABCD0C0FB0FEE5763A12F8B8` |
 | `components/weapon-status.xml` | 4455 | `81FF1E81CC4647736A4C360C131BDF68D84D566338268BFF2AEC68D508248894` |
+
+The table above records the accepted Chronomark comparison build after both HUD
+variants passed the same compile, reopen, staging, and hash validation.
 
 Runtime deployment must use artifacts from the user-committed Goal 6 worktree.

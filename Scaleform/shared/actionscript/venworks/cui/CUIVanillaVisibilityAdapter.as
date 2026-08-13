@@ -8,21 +8,29 @@ package venworks.cui
       private var targets:Array;
       private var expression:CUIConditionExpression;
       private var initialAlphas:Array;
+      private var initialXs:Array;
+      private var initialYs:Array;
 
-      public function CUIVanillaVisibilityAdapter(param1:DisplayObjectContainer, param2:String, param3:CUIConditionExpression)
+      public function CUIVanillaVisibilityAdapter(param1:DisplayObjectContainer, param2:XML, param3:CUIConditionExpression, param4:CUILayoutEngine)
       {
          super();
-         var targetName:String = normalizeTarget(param2);
+         var id:String = String(param2.@id);
+         var targetName:String = normalizeTarget(id);
          var target:DisplayObject = null;
          targets = [];
          initialAlphas = [];
-         target = param1.getChildByName(this.getDisplayName(param2));
+         initialXs = [];
+         initialYs = [];
+         target = param1.getChildByName(this.getDisplayName(id));
          if(target == null)
          {
-            throw new Error("INVALID|Allowlisted vanilla HUD target is missing: " + param2);
+            throw new Error("INVALID|Allowlisted vanilla HUD target is missing: " + id);
          }
          targets.push(target);
          initialAlphas.push(target.alpha);
+         initialXs.push(target.x);
+         initialYs.push(target.y);
+         param4.positionVanilla(target,param2);
          expression = param3;
       }
 
@@ -56,6 +64,22 @@ package venworks.cui
             }
             index++;
          }
+      }
+
+      public function dispose() : void
+      {
+         var index:int = 0;
+         while(index < targets.length)
+         {
+            DisplayObject(targets[index]).alpha = Number(initialAlphas[index]);
+            DisplayObject(targets[index]).x = Number(initialXs[index]);
+            DisplayObject(targets[index]).y = Number(initialYs[index]);
+            index++;
+         }
+         targets = [];
+         initialAlphas = [];
+         initialXs = [];
+         initialYs = [];
       }
 
       private function getDisplayName(param1:String) : String

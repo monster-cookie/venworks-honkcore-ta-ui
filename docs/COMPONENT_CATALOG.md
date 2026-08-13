@@ -62,7 +62,7 @@ diagnostic.
 | Repeater/list layout | Implemented | Lay out up to 64 declared items vertically, horizontally, or in a grid; hidden items collapse. |
 | Bounded state selection | Implemented | Select one of up to 16 declared templates without expressions or arbitrary method calls. |
 | Data-only conditions | Implemented | Evaluate bounded, case-insensitive visibility expressions against verified vanilla state with fail-hidden unknown initialization. |
-| Vanilla visibility adapter | Implemented | Apply alpha presentation gates only to explicitly mapped default UI pieces while preserving vanilla visibility and lifecycle behavior. |
+| Vanilla visibility adapter | Implemented | Apply alpha presentation gates and optional bounded safe-area placement only to explicitly mapped whole default UI pieces while preserving vanilla visibility, providers, and lifecycle behavior. |
 
 Goal 4A keeps a fixed 1920-by-1080 design coordinate system and relies on
 Starfield's `Extensions.visibleRect` for viewport boundaries. It does not

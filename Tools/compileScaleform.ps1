@@ -830,6 +830,7 @@ try {
 
     $reopenedAssetManagerPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIAssetManager.as'
     $reopenedLayoutParserPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUILayoutParser.as'
+    $reopenedLayoutEnginePath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUILayoutEngine.as'
     $reopenedCompositionResolverPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUICompositionResolver.as'
     $reopenedCompositeResolverPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUICompositeResolver.as'
     $reopenedIconLibraryPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIIconLibrary.as'
@@ -840,6 +841,7 @@ try {
     $reopenedVanillaVisibilityPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIVanillaVisibilityAdapter.as'
     $reopenedAssetManagerSource = Get-Content -LiteralPath $reopenedAssetManagerPath -Raw
     $reopenedLayoutParserSource = Get-Content -LiteralPath $reopenedLayoutParserPath -Raw
+    $reopenedLayoutEngineSource = Get-Content -LiteralPath $reopenedLayoutEnginePath -Raw
     $reopenedCompositionResolverSource = Get-Content -LiteralPath $reopenedCompositionResolverPath -Raw
     $reopenedCompositeResolverSource = Get-Content -LiteralPath $reopenedCompositeResolverPath -Raw
     $reopenedIconLibrarySource = Get-Content -LiteralPath $reopenedIconLibraryPath -Raw
@@ -878,6 +880,14 @@ try {
         $reopenedVanillaVisibilitySource -notmatch 'return\s+"RightMeters_mc"' -or
         $reopenedVanillaVisibilitySource -match 'PowerBarEmpty_mc|EquippedGrenadeIcon_mc|EquippedGrenadeCount_mc|JetpackMeterWrapper_mc|HUDVehicle_mc') {
       throw 'Generated rightMeters visibility adapter does not remain a whole-group alpha-only presentation gate.'
+    }
+    if ($reopenedVanillaVisibilitySource -notmatch 'param4\.positionVanilla\(target,param2\)' -or
+        $reopenedVanillaVisibilitySource -notmatch 'function\s+dispose' -or
+        $reopenedLayoutEngineSource -notmatch 'function\s+positionVanilla' -or
+        $reopenedLayoutEngineSource -notmatch 'param1\.getBounds\(parent\)' -or
+        $reopenedLayoutEngineSource -notmatch 'createRootSafeRect\(rootConfig,parent\)' -or
+        $reopenedLayoutParserSource -notmatch 'Vanilla target placement requires x, y, and anchor together') {
+      throw 'Generated vanilla visibility adapter does not retain bounded safe-area placement for allowlisted whole targets.'
     }
     if ($reopenedSymbolSource -notmatch '"vehicle-exit-prompt"' -or
         $reopenedSymbolSource -notmatch '"classes":\["HUDVehicle"\]' -or
@@ -1008,6 +1018,9 @@ try {
   $weaponStatusIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'chronomark.weapon-status'
   })
+  $bottomLeftTargets = @($providerProbeLayout.venworksCUI.vanillaVisibility.target | Where-Object {
+    [string]$_.id -eq 'bottomLeft'
+  })
   $environmentalProtectionStyles = @($providerProbeLayout.venworksCUI.definitions.meterStyle | Where-Object {
     [string]$_.id -eq 'environment.protection'
   })
@@ -1034,6 +1047,11 @@ try {
       [string]$weaponStatusIncludes[0].anchor -ne 'top-right' -or
       [int]$weaponStatusIncludes[0].x -ne 39 -or
       [int]$weaponStatusIncludes[0].y -ne -11 -or
+      $bottomLeftTargets.Count -ne 1 -or
+      [string]$bottomLeftTargets[0].visibleWhen -ne 'always' -or
+      [string]$bottomLeftTargets[0].anchor -ne 'top-left' -or
+      [int]$bottomLeftTargets[0].x -ne 25 -or
+      [int]$bottomLeftTargets[0].y -ne 25 -or
       [int]$stagedPlayerScannerGroup.width -ne 360 -or
       [int]$stagedPlayerScannerGroup.height -ne 296 -or
       $stagedPlayerScannerText -notmatch 'value="PLAYER DATA"' -or
@@ -1045,6 +1063,10 @@ try {
       $stagedPlayerScannerText -notmatch 'source="player\.carbonDioxidePercentage"' -or
       $stagedPlayerScannerText -notmatch 'source="boost\.percentage"' -or
       $stagedPlayerScannerText -notmatch 'source="carry\.percentage"' -or
+      $stagedPlayerScannerText -notmatch 'id="level" x="174" y="92"' -or
+      $stagedPlayerScannerText -notmatch 'id="mass" x="126" y="256"' -or
+      $stagedPlayerScannerText -notmatch 'id="oxygen\.value" x="132" y="174"' -or
+      $stagedPlayerScannerText -notmatch 'id="carbondioxide\.value" x="226" y="174"' -or
       $stagedPlayerScannerText -notmatch 'visibleWhen="digipicksAvailable"' -or
       $stagedPlayerScannerText -notmatch 'player\.digipicks:integer' -or
       ([regex]::Matches($stagedPlayerScannerText, 'max="100"')).Count -ne 6 -or
@@ -1058,6 +1080,8 @@ try {
       $stagedEnvironmentalScannerText -notmatch 'value="ENVIRONMENTAL HAZARDS"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="location\.name"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.localTime"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="planet\.time\.label" x="214" y="8"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="planet\.time" x="288" y="6"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.oxygenPercentage"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.temperature"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.gravity"' -or

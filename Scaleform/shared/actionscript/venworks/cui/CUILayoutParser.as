@@ -151,7 +151,7 @@ package venworks.cui
             {
                throw new Error("INVALID|vanillaVisibility exceeds the 16-target limit.");
             }
-            this.requireAttributes(target,["id","visibleWhen"]);
+            this.requireAttributes(target,["id","visibleWhen","x","y","anchor"]);
             id = this.requireId(target);
             normalized = CUIVanillaVisibilityAdapter.normalizeTarget(id);
             if(targets[normalized] != null)
@@ -164,6 +164,16 @@ package venworks.cui
             }
             targets[normalized] = true;
             this.requireCondition(target,"visibleWhen");
+            if(target.@x.length() + target.@y.length() + target.@anchor.length() != 0)
+            {
+               if(target.@x.length() != 1 || target.@y.length() != 1 || target.@anchor.length() != 1)
+               {
+                  throw new Error("INVALID|Vanilla target placement requires x, y, and anchor together: " + id);
+               }
+               this.requireFinite(target,"x");
+               this.requireFinite(target,"y");
+               this.requireOptionalAnchor(target);
+            }
             vanillaVisibilityRoot.appendChild(target.copy());
          }
          if(count == 0)

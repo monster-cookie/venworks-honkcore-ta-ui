@@ -78,8 +78,9 @@ vertical/horizontal/grid repeaters, collapsed hidden items, and static state
 selection. The Goal 4C condition gallery is the staged `layout.xml`; it
 exercises case-insensitive visibility expressions, confirmed HUD providers,
 composition visibility, and dynamic repeater-item gates. The separate vanilla
-visibility gallery hides only the allowlisted top-center group for an isolated
-adapter test. The Goal 4D meter gallery uses two compact top panels to exercise
+visibility gallery hides the allowlisted top-center group and exercises bounded
+safe-area placement of the complete bottom-left group for an isolated adapter
+test. The Goal 4D meter gallery uses two compact top panels to exercise
 continuous, rectangle, dot, uniform-triangle, alternating-triangle, vertical,
 reverse, and radial renderers without live HUD data. The Goal 4F asset and icon
 gallery exercises all 21 built-in icons, packaged SVG,
@@ -88,10 +89,11 @@ embedded symbols. The Goal 4G composite gallery exercises
 exercises all four warning severities and button states, a bounded quick bar
 with an independently hidden button, and an information panel with metadata,
 divider, and meter content. Goal 4G's positive and negative in-game checks are
-accepted. The staged `layout.xml` is the Goal 6 production HUD: it hides the
-allowlisted vanilla bottom-left and right-meter groups, places the Player Data
-scanner at lower-left and the Planet Data/environmental scanner at lower-right,
-and moves the temporary weapon/power presentation to upper-right.
+accepted. The staged `layout.xml` is the Goal 6 production HUD: it places the
+live allowlisted vanilla bottom-left Chronomark at the upper-left for O2/CO2
+comparison, hides the right-meter group, places the Player Data scanner at
+lower-left and the Planet Data/environmental scanner at lower-right, and moves
+the temporary weapon/power presentation to upper-right.
 Malformed fixtures are
 intentionally not well-formed XML, while other negative fixtures may be
 schema-valid and rejected by runtime semantic checks. See
@@ -110,6 +112,12 @@ An optional component `anchor` uses one of `top-left`, `top-center`,
 absolute parent-relative meaning. Root anchors use Starfield's
 `Extensions.visibleRect` with the four configured safe-area insets; nested
 anchors use the parent group's configured bounds.
+
+An allowlisted `vanillaVisibility` target may also provide `x`, `y`, and
+`anchor` together. That bounded placement uses the same visible-rectangle and
+safe-area convention while moving the existing Bethesda-owned display object;
+it does not clone the object, expose a display path, or override the object's
+provider-driven `visible` state.
 
 Templates are declared in `definitions` and contain exactly one primitive-only
 root group. `instance`, `repeater`, and `state` elements expand those templates

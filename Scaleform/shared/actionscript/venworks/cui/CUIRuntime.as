@@ -348,8 +348,9 @@ package venworks.cui
             this.setDiagnosticContext("VANILLA ADAPTER CREATION",target);
             vanillaAdapters.push(new CUIVanillaVisibilityAdapter(
                owner,
-               String(target.@id),
-               conditionParser.compile(String(target.@visibleWhen))
+               target,
+               conditionParser.compile(String(target.@visibleWhen)),
+               layoutEngine
             ));
          }
       }
@@ -407,6 +408,7 @@ package venworks.cui
 
       private function clearComponentLayer() : void
       {
+         var adapter:CUIVanillaVisibilityAdapter = null;
          if(conditionContext != null)
          {
             conditionContext.removeEventListener(Event.CHANGE,this.onConditionChanged);
@@ -415,6 +417,13 @@ package venworks.cui
          {
             valueContext.removeEventListener(Event.CHANGE,this.onValueChanged);
             valueContext.dispose();
+         }
+         if(vanillaAdapters != null)
+         {
+            for each(adapter in vanillaAdapters)
+            {
+               adapter.dispose();
+            }
          }
          while(componentLayer.numChildren > 0)
          {

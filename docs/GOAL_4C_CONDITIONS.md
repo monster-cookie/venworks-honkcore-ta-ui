@@ -116,6 +116,7 @@ An optional root section controls approved vanilla groups:
 ```xml
 <vanillaVisibility>
   <target id="topCenter" visibleWhen="NOT inCombat" />
+  <target id="bottomLeft" visibleWhen="always" x="25" y="25" anchor="top-left" />
 </vanillaVisibility>
 ```
 
@@ -133,6 +134,12 @@ This preserves Starfield's own HUD-mode decisions and lets timelines continue
 advancing under `Extensions.noInvisibleAdvance`. A condition can make an
 allowlisted target transparent, but it cannot force a vanilla-hidden target
 visible.
+
+Optional `x`, `y`, and `anchor` attributes must be supplied together. They move
+the existing allowlisted whole display object against the same visible
+rectangle and safe-area insets as root CUI components. Configuration still
+cannot supply a display path or address an arbitrary child, and placement does
+not change Bethesda's provider-driven `visible` state.
 
 `rightMeters` is a fixed whole-group presentation adapter for `RightMeters_mc`.
 It changes only the group's alpha and never changes its `visible` property or
