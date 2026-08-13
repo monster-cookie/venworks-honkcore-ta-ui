@@ -769,7 +769,10 @@ try {
       'ACTIVITY_RELEASE_STEP',
       'this.oxygenActivity = Math.min(1,this.oxygenActivity + ACTIVITY_ATTACK_STEP)',
       'this.oxygenActivity = Math.max(0,this.oxygenActivity - ACTIVITY_RELEASE_STEP)',
-      '0.05 + 0.1 * randomValue + 0.25 * activity + 0.6 * depletion',
+      'this.currentFullSoak = fullSoak',
+      'this.environmentalCritical = nextCritical',
+      'this.exposureCurrent[index] = 1',
+      '0.05 + 0.1 * randomValue + 0.25 * activity + 0.7 * depletion',
       'environment.hazard.airwaterexposurelevel',
       'environment.hazard.thermalexposurelevel',
       'environment.hazard.corrosiveexposurelevel',
@@ -989,8 +992,9 @@ try {
       $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.activityEnvelope"' -or
       $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.activityProtection"' -or
       $stagedEnvironmentalDiagnosticText -notmatch 'source="diagnostic\.activityLoads"' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'ATMOSPHERIC O2 IS NOT ACTIVITY' -or
-      $stagedEnvironmentalDiagnosticText -notmatch 'BOOST EXCLUDED' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'FULL-SOAK FLAG \+ 0% PROTECTION \+ ACTIVE CATEGORY = 100%' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'GENERIC HEALTH LOSS EXCLUDED' -or
+      $stagedEnvironmentalDiagnosticText -notmatch 'ATMOSPHERIC O2 AND BOOST ARE EXCLUDED' -or
       $stagedEnvironmentalDiagnosticText -match 'source="diagnostic\.activity(Boost|Combined)"' -or
       $stagedEnvironmentalDiagnosticText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE)' -or
       $stagedEnvironmentalScannerText -notmatch 'RELATIVE LOAD' -or

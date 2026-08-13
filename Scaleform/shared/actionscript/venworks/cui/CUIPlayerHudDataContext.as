@@ -35,6 +35,8 @@ package venworks.cui
       private var exposureRandom:Array;
       private var currentProtection:Number = 1;
       private var protectionKnown:Boolean = false;
+      private var currentFullSoak:Boolean = false;
+      private var environmentalCritical:Boolean = false;
       private var currentOxygen:Number = NaN;
       private var previousOxygen:Number = NaN;
       private var oxygenDrainDetected:Boolean = false;
@@ -70,7 +72,7 @@ package venworks.cui
          this.setText("diagnostic.starmapprovider","STARMAP BODY PROVIDER NOT RECEIVED IN HUD");
          this.setText("diagnostic.activityoxygen","PLAYER O2 RESERVE: WAITING // DOWNWARD DRAIN: FALSE");
          this.setText("diagnostic.activityenvelope","O2 ACTIVITY ENVELOPE: 0%");
-         this.setText("diagnostic.activityprotection","SUIT PROTECTION: WAITING // DEPLETION: 0%");
+         this.setText("diagnostic.activityprotection","SUIT PROTECTION: WAITING // FULL-SOAK FLAG: FALSE // CRITICAL OVERRIDE: FALSE");
          this.setText("diagnostic.activityloads","LOADS: AIR/WATER 0% // THERMAL 0% // CORROSIVE 0% // RADIATION 0%");
          this.resetEnvironmentalHazards();
          this.setText("environment.protectionstatus","ENVIRONMENT PROVIDER NOT RECEIVED");
@@ -182,6 +184,8 @@ package venworks.cui
             this.listCandidateFields(param1.data,["pulse","speed","threat","severity","exposure","soak"],8));
          this.setFinite("environment.soakcandidate",param1.data.fSoakDamagePct);
          this.setBoolean("environment.fullsoakalertcandidate",param1.data.bShouldPlayAlertAtFullSoak);
+         this.currentFullSoak = fullSoak;
+         this.protectionKnown = false;
          if(!isNaN(soakProtection) && isFinite(soakProtection))
          {
             normalizedProtection = Math.max(0,Math.min(1,soakProtection));
@@ -568,14 +572,31 @@ package venworks.cui
 
       private function updateExposureActivity(param1:Array) : void
       {
+         var wasCritical:Boolean = this.environmentalCritical;
+         var nextCritical:Boolean = this.currentFullSoak && this.protectionKnown &&
+            this.currentProtection <= 0 && this.hasActiveFlags(param1);
+         var wasActive:Boolean = false;
          var index:int = 0;
+         this.environmentalCritical = nextCritical;
          while(index < EXPOSURE_SOURCES.length)
          {
             if(Boolean(param1[index]))
             {
-               if(!Boolean(this.exposureActive[index]))
+               wasActive = Boolean(this.exposureActive[index]);
+               this.exposureActive[index] = true;
+               if(this.environmentalCritical)
                {
-                  this.exposureActive[index] = true;
+                  this.exposureCurrent[index] = 1;
+                  this.exposureTarget[index] = 1;
+                  this.exposureTargetTicks[index] = 0;
+               }
+               else if(wasCritical)
+               {
+                  this.chooseExposureTarget(index);
+                  this.exposureCurrent[index] = this.exposureTarget[index];
+               }
+               else if(!wasActive)
+               {
                   this.chooseExposureTarget(index);
                   this.exposureCurrent[index] = this.exposureTarget[index];
                }
@@ -626,25 +647,34 @@ package venworks.cui
          {
             if(Boolean(this.exposureActive[index]))
             {
-               this.exposureTargetTicks[index] = int(this.exposureTargetTicks[index]) - 1;
-               if(int(this.exposureTargetTicks[index]) <= 0 ||
-                  isNaN(Number(this.exposureTarget[index])))
+               if(this.environmentalCritical)
                {
-                  this.chooseExposureTarget(index);
+                  this.exposureCurrent[index] = 1;
+                  this.exposureTarget[index] = 1;
+                  this.exposureTargetTicks[index] = 0;
                }
                else
                {
-                  this.refreshExposureTarget(index);
+                  this.exposureTargetTicks[index] = int(this.exposureTargetTicks[index]) - 1;
+                  if(int(this.exposureTargetTicks[index]) <= 0 ||
+                     isNaN(Number(this.exposureTarget[index])))
+                  {
+                     this.chooseExposureTarget(index);
+                  }
+                  else
+                  {
+                     this.refreshExposureTarget(index);
+                  }
+                  current = Number(this.exposureCurrent[index]);
+                  target = Number(this.exposureTarget[index]);
+                  current += (target - current) * EXPOSURE_LERP;
+                  if(Math.abs(target - current) < 0.0025)
+                  {
+                     current = target;
+                  }
+                  this.exposureCurrent[index] = current;
                }
-               current = Number(this.exposureCurrent[index]);
-               target = Number(this.exposureTarget[index]);
-               current += (target - current) * EXPOSURE_LERP;
-               if(Math.abs(target - current) < 0.0025)
-               {
-                  current = target;
-               }
-               this.exposureCurrent[index] = current;
-               this.setFinite(String(EXPOSURE_SOURCES[index]),current);
+               this.setFinite(String(EXPOSURE_SOURCES[index]),Number(this.exposureCurrent[index]));
                changed = true;
             }
             ++index;
@@ -670,8 +700,13 @@ package venworks.cui
          var depletion:Number = 1 - this.currentProtection;
          var activity:Number = this.oxygenActivity;
          var randomValue:Number = Number(this.exposureRandom[param1]);
+         if(this.environmentalCritical)
+         {
+            this.exposureTarget[param1] = 1;
+            return;
+         }
          this.exposureTarget[param1] = Math.max(0,Math.min(1,
-            0.05 + 0.10 * randomValue + 0.25 * activity + 0.60 * depletion));
+            0.05 + 0.10 * randomValue + 0.25 * activity + 0.70 * depletion));
       }
 
       private function updateExposureTargets() : void
@@ -732,6 +767,20 @@ package venworks.cui
          return false;
       }
 
+      private function hasActiveFlags(param1:Array) : Boolean
+      {
+         var index:int = 0;
+         while(index < param1.length)
+         {
+            if(Boolean(param1[index]))
+            {
+               return true;
+            }
+            ++index;
+         }
+         return false;
+      }
+
       private function updateActivityDiagnostic() : void
       {
          var protectionText:String = this.protectionKnown ? this.formatNormalized(this.currentProtection) : "WAITING";
@@ -741,7 +790,9 @@ package venworks.cui
          this.setText("diagnostic.activityenvelope","O2 ACTIVITY ENVELOPE: " +
             this.formatNormalized(this.oxygenActivity) + " // ATTACK +8%/TICK // RELEASE -10%/TICK");
          this.setText("diagnostic.activityprotection","SUIT PROTECTION: " + protectionText +
-            " // DEPLETION: " + depletionText);
+            " // DEPLETION: " + depletionText + " // FULL-SOAK FLAG: " +
+            (this.currentFullSoak ? "TRUE" : "FALSE") + " // CRITICAL OVERRIDE: " +
+            (this.environmentalCritical ? "TRUE" : "FALSE"));
          this.setText("diagnostic.activityloads","LOADS: AIR/WATER " + this.formatNormalized(Number(this.exposureCurrent[0])) +
             " // THERMAL " + this.formatNormalized(Number(this.exposureCurrent[1])) +
             " // CORROSIVE " + this.formatNormalized(Number(this.exposureCurrent[2])) +

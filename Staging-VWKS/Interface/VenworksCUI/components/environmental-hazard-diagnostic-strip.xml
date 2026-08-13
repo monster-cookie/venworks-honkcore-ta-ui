@@ -22,17 +22,17 @@
           value="O2 ACTIVITY ENVELOPE: 0%" font="$MAIN_Font_Bold" fontSize="10" color="#A7C5CE" bold="false" align="left" />
     <text id="diagnostic.protection" x="18" y="95" width="1124" height="20" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.activityProtection" format="raw"
-          value="SUIT PROTECTION: WAITING // DEPLETION: 0%" font="$MAIN_Font_Bold" fontSize="10" color="#D89B2B" bold="false" align="left" />
+          value="SUIT PROTECTION: WAITING // FULL-SOAK FLAG: FALSE // CRITICAL OVERRIDE: FALSE" font="$MAIN_Font_Bold" fontSize="10" color="#D89B2B" bold="false" align="left" />
     <text id="diagnostic.loads" x="18" y="121" width="1124" height="20" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.activityLoads" format="raw"
           value="LOADS: AIR/WATER 0% // THERMAL 0% // CORROSIVE 0% // RADIATION 0%" font="$MAIN_Font_Bold" fontSize="10" color="#E6B840" bold="false" align="left" />
     <text id="diagnostic.context" x="18" y="147" width="1124" height="20" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2"
-          value="PLAYER O2 = PINK RESERVE BAR // ATMOSPHERIC O2 IS NOT ACTIVITY // BOOST EXCLUDED"
+          value="FULL-SOAK FLAG + 0% PROTECTION + ACTIVE CATEGORY = 100% // GENERIC HEALTH LOSS EXCLUDED"
           font="$MAIN_Font_Bold" fontSize="10" color="#62DDF2" bold="false" align="left" />
     <text id="diagnostic.note" x="18" y="177" width="1124" height="15" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2"
-          value="O2 ACTIVITY BUILDS DURING SUSTAINED DRAIN AND RELEASES AFTER DRAIN STOPS"
+          value="PLAYER O2 = PINK RESERVE BAR // ATMOSPHERIC O2 AND BOOST ARE EXCLUDED"
           font="$MAIN_Font_Bold" fontSize="8" color="#E64B4B" bold="false" align="center" />
   </group>
 </venworksCUIFragment>

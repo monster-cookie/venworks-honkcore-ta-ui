@@ -1,8 +1,9 @@
 # Goal 6 environmental hazard scanner
 
 **Status: Hazard-transition runtime acceptance, compact relative-load scanner,
-movement-provider discovery, gradual player-O2-only recalibration, and
-automated build acceptance are complete. Runtime calibration is pending.**
+movement-provider discovery, gradual player-O2-only recalibration,
+environmental full-soak critical override, and automated build acceptance are
+complete. Runtime verification is pending.**
 
 ## Product direction
 
@@ -278,7 +279,7 @@ is:
 depletion = 1 - protection
 activity = gradual player-O2 drain envelope
 relativeLoad = clamp(
-    0.05 + 0.10 * independentRandom + 0.25 * activity + 0.60 * depletion,
+    0.05 + 0.10 * independentRandom + 0.25 * activity + 0.70 * depletion,
     0,
     1
 )
@@ -287,12 +288,19 @@ relativeLoad = clamp(
 Random targets are independently selected per category and eased toward at a
 bounded 250 ms update cadence. At full protection and idle, active bars range
 from 5% to 15%; sustained player-O2 drain adds up to 25 percentage points.
-Half protection adds 30 points, and exhausted protection adds 60 points. Idle
-load with no protection is therefore 65% to 75%; sustained running can bring it
-to 90% to 100%. Higher bars mean greater relative exposure load and health
+Half protection adds 35 points, and exhausted protection adds 70 points. Idle
+load with no protection is therefore 75% to 85%; sustained running can bring it
+to 100%. Higher bars mean greater relative exposure load and health
 risk, not more remaining protection. Player-O2 use is an explicitly modeled
 activity proxy, not physical speed or Bethesda per-channel severity. Boost was
 removed after a runtime tap drove the binary proxy immediately to full activity.
+
+An active category bypasses randomness and interpolation and snaps to `100%`
+when protection is `0` and Bethesda's `bShouldPlayAlertAtFullSoak` is true. It
+remains fixed at `100%` while those environmental conditions remain true, then
+snaps back to the normal model when the flag or exhausted-protection condition
+clears. Generic player-health loss is not inspected because HUDMenu exposes no
+proven field attributing an individual damage event to the environment.
 
 The layout does not display CO2, atmospheric pressure, a vacuum state, a raw
 per-channel magnitude, a Threat Index formula, or physical units. The separate
@@ -320,10 +328,13 @@ verify:
 9. simultaneous effects produce independent drifting bars;
 10. if protection safely drops partway, active bars shift upward while the
    shared protection bar shifts downward; and
-11. at zero protection, confirm an idle active channel remains within the
-    expected 65% to 75% range; and
-12. leaving exposure immediately returns the inactive channel to zero while
-   Bethesda restores protection on its own schedule.
+11. at zero protection before the full-soak flag, confirm an idle active
+    channel remains within the expected 75% to 85% range;
+12. when the full-soak flag becomes true with zero protection, confirm every
+    active category snaps immediately to 100% and remains there without O2 use;
+13. confirm unrelated health loss does not activate the critical override; and
+14. leaving exposure immediately returns the inactive channel to zero while
+    Bethesda restores protection on its own schedule.
 
 The accepted captures already cover the dangerous full-soak transition; no
 additional full-soak unsafe-water test is required.
@@ -343,17 +354,17 @@ Run repository validation and the complete two-variant Scaleform build:
   -VanillaInterfacePath "<approved-vanilla-interface-path>"
 ```
 
-The complete O2-only recalibration build passed on 2026-08-12. Both generated
+The complete environmental-critical build passed on 2026-08-12. Both generated
 GFX variants compiled, imported, reopened, passed their build and staged-layout
 contracts, and reproduced from the final source. All four staging variants
 contain the same normal/large pair:
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 395645 | `6490F0B278DE3DD743836F197AE30919B64633B6060AB0FA39909A2289D824EC` |
-| `hudmenu_lrg.gfx` | 395828 | `97CF80E0E7628A923F621E7C2DBFC3409A797B41A9A4852718F7B81306FC7205` |
+| `hudmenu.gfx` | 396286 | `9323CE5CD1782B404805AC5C84406B171F05BC1AC779537B071337B86694C810` |
+| `hudmenu_lrg.gfx` | 396469 | `FE6CCFB03C8F778947EC2A077974B200F4981E5D2515B806995DA595DB1FF033` |
 | `VenworksCUI/layout.xml` | 3734 | `7112EA7DA33DAC0C02AD6A16F2D3086B265EEDF7AE7976F44A84841E28CF4862` |
 | `components/environmental-hazard-scanner.xml` | 6860 | `FC822EE57ED481345C43E7460DC2219A2771D16BE1BC3A26C6AB2A6D1F6825BC` |
-| `components/environmental-hazard-diagnostic-strip.xml` | 3344 | `96FA10B4A4E0D53D149557CD11D6D0C31EA5281554CAD068D95A3F64D28F3B9A` |
+| `components/environmental-hazard-diagnostic-strip.xml` | 3384 | `626C08B2EFA574C9B07398BD686A2F71FA5A6BDBB9C3B5573365EA5B65D5EEEF` |
 
 Runtime deployment must use artifacts from the user-committed Goal 6 worktree.

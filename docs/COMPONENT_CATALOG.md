@@ -272,10 +272,12 @@ four `...ExposureLevel` values are explicitly modeled display values rather
 than Bethesda telemetry or physical measurements. Inactive channels are
 exactly `0`. Each active channel uses an independent slowly changing random
 value and the bounded model `clamp(0.05 + 0.10 * random + 0.25 * activity +
-0.60 * depletion, 0, 1)`. `depletion` is `1 - protection`; `activity` is a
+0.70 * depletion, 0, 1)`. `depletion` is `1 - protection`; `activity` is a
 gradual envelope driven only by sustained downward changes in the normalized
 player-O2 reserve represented by the pink HUD meter. Boost charge and
-atmospheric O2 do not contribute.
+atmospheric O2 do not contribute. An active category snaps to `1` while
+protection is `0` and Bethesda's `bShouldPlayAlertAtFullSoak` is true. This
+environmental critical override does not inspect generic player-health loss.
 
 Local temperature can provide hot/cold context but is not Thermal severity.
 O2 `0%` cannot distinguish vacuum from an oxygen-free atmosphere. No
