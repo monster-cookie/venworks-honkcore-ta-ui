@@ -522,6 +522,23 @@ remain available to preserve the provider and automated-build contracts. The
 Player Data clock gives the complete `UNIVERSAL` label and five-character UT
 separate widened bounds.
 
+## Runtime text-bound correction
+
+The first unified-helmet runtime capture confirmed the frame architecture but
+exposed Scaleform text clipping inside both 360-by-236 data regions. The
+underlying Bethesda `PromptMessageWidget` text field needs more vertical room
+than the nominal font size suggests. Eighteen-unit player and planet readouts
+lost their lower glyph edge, while the four fourteen-unit elemental status
+fields severely clipped `CLEAR`.
+
+The correction keeps both scanner roots, the root-owned helmet geometry, all
+font sizes, and every provider binding unchanged. Player metric rows move up one
+unit and use 22-unit text envelopes. Planet, clock, and protection readouts also
+receive safe 22-unit envelopes. Each elemental label now has 18 units and each
+short status has 20 units. The four upward eight-segment meters move from
+`y=184, height=40` to `y=190, height=34`, preserving the accepted compact
+footprint while providing a clear two-unit gap below the status fields.
+
 ## Automated validation and expected artifacts
 
 Run repository validation and the complete two-variant Scaleform build:
@@ -550,8 +567,8 @@ variants:
 | `hudmenu.gfx` | 402704 | `C13AA15D0D0ED467FFA25A2BFC22A76038E91662A42B11455E94DDAC6E06637C` |
 | `hudmenu_lrg.gfx` | 402887 | `0CE34ECB3B78A1C8B0585B835D9E8E49B39679E8BA15FF36338A53FBAAF010A0` |
 | `VenworksCUI/layout.xml` | 5563 | `F8F01FFC315C86C0CEAC8C019CAC9D6932D14688A4BC334F9B64518DA779A823` |
-| `components/player-status-scanner.xml` | 8643 | `EA283A96517EBCA285FD541785AE9DBD05A45B978105E8EFDAB465787054A2B5` |
-| `components/environmental-hazard-scanner.xml` | 9411 | `C41ADF7B6DB0246894A230560E4FA494463E91B16989BF43E68CD184EB3D97AB` |
+| `components/player-status-scanner.xml` | 8643 | `031D4BD34954325A6ADE5A19293EFA831A36C420FF14115F133C82138659876D` |
+| `components/environmental-hazard-scanner.xml` | 9411 | `B13E5559452491AB62F0F05990F2553BAFA91BA589E3D103BAC31FF260B10526` |
 | `components/weapon-status.xml` | 4455 | `81FF1E81CC4647736A4C360C131BDF68D84D566338268BFF2AEC68D508248894` |
 
 The table above records the decimal-hours UT correction and unified helmet
@@ -559,6 +576,9 @@ architecture after both HUD variants passed the same compile, reopen, staging,
 and hash validation. The loose XML hashes record the production-hidden
 Chronomark, widened Player clock, root-owned upper and lower frame, inactive
 Threat Index recess, content-only scanner fragments, and vertical elemental
-channels.
+channels. The final component hashes also include the accepted fixed-footprint
+text-bound correction described above; the unchanged GFX and layout hashes
+confirm that no ActionScript, provider, anchor, or helmet-frame change was
+introduced.
 
 Runtime deployment must use artifacts from the user-committed Goal 6 worktree.

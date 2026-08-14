@@ -1121,18 +1121,19 @@ try {
       $stagedPlayerScannerText -notmatch 'value="PLAYER DATA"' -or
       $stagedPlayerScannerText -notmatch 'source="player\.serial"' -or
       $stagedPlayerScannerText -notmatch 'source="player\.universalTime"' -or
-      $stagedPlayerScannerText -notmatch 'id="time\.label" x="218" y="8" width="60"' -or
-      $stagedPlayerScannerText -notmatch 'id="time" x="282" y="6" width="72"' -or
+      $stagedPlayerScannerText -notmatch 'id="time\.label" x="218" y="8" width="60" height="22"' -or
+      $stagedPlayerScannerText -notmatch 'id="time" x="282" y="6" width="72" height="22"' -or
       $stagedPlayerScannerText -notmatch 'source="player\.xpPercentage"' -or
       $stagedPlayerScannerText -notmatch 'source="player\.healthPercentage"' -or
       $stagedPlayerScannerText -notmatch 'source="player\.oxygenPercentage"' -or
       $stagedPlayerScannerText -notmatch 'source="player\.carbonDioxidePercentage"' -or
       $stagedPlayerScannerText -notmatch 'source="boost\.percentage"' -or
       $stagedPlayerScannerText -notmatch 'source="carry\.percentage"' -or
-      $stagedPlayerScannerText -notmatch 'id="level" x="174" y="79"' -or
-      $stagedPlayerScannerText -notmatch 'id="mass" x="126" y="203"' -or
-      $stagedPlayerScannerText -notmatch 'id="oxygen\.value" x="132" y="141"' -or
-      $stagedPlayerScannerText -notmatch 'id="carbondioxide\.value" x="226" y="141"' -or
+      $stagedPlayerScannerText -notmatch 'id="serial" x="58" y="34" width="288" height="20"' -or
+      $stagedPlayerScannerText -notmatch 'id="level" x="174" y="78" width="90" height="22"' -or
+      $stagedPlayerScannerText -notmatch 'id="mass" x="126" y="202" width="146" height="22"' -or
+      $stagedPlayerScannerText -notmatch 'id="oxygen\.value" x="132" y="140" width="92" height="22"' -or
+      $stagedPlayerScannerText -notmatch 'id="carbondioxide\.value" x="226" y="140" width="122" height="22"' -or
       $stagedPlayerScannerText -notmatch 'visibleWhen="digipicksAvailable"' -or
       $stagedPlayerScannerText -notmatch 'player\.digipicks:integer' -or
       ([regex]::Matches($stagedPlayerScannerText, 'max="100"')).Count -ne 6 -or
@@ -1154,8 +1155,9 @@ try {
       $stagedEnvironmentalScannerText -notmatch 'value="ENVIRONMENTAL HAZARDS"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="location\.name"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.localTime"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="planet\.time\.label" x="214" y="8"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="planet\.time" x="288" y="6"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="planet\.time\.label" x="214" y="8" width="68" height="22"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="planet\.time" x="288" y="6" width="58" height="22"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="planet\.name" x="14" y="34" width="332" height="22"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.oxygenPercentage"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.temperature"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.gravity"' -or
@@ -1171,10 +1173,16 @@ try {
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.thermalShortStatus"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.corrosiveShortStatus"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.radiationShortStatus"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="airwater\.exposure" x="30" y="184" width="44" height="40"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="thermal\.exposure" x="114" y="184" width="44" height="40"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="corrosive\.exposure" x="198" y="184" width="44" height="40"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="radiation\.exposure" x="282" y="184" width="44" height="40"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="protection\.status" x="122" y="108" width="166" height="22"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="airwater\.label" x="12" y="151" width="80" height="18"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="airwater\.status" x="12" y="168" width="80" height="20"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="thermal\.status" x="96" y="168" width="80" height="20"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="corrosive\.status" x="180" y="168" width="80" height="20"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="radiation\.status" x="264" y="168" width="80" height="20"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="airwater\.exposure" x="30" y="190" width="44" height="34"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="thermal\.exposure" x="114" y="190" width="44" height="34"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="corrosive\.exposure" x="198" y="190" width="44" height="34"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="radiation\.exposure" x="282" y="190" width="44" height="34"' -or
       $stagedEnvironmentalScannerText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE|THREAT INDEX|VACUUM)') {
     throw 'Goal 6 must stage the unified helmet architecture, content-only player and environmental scanners, vertical elemental channels, reserved threat recess, hidden diagnostic Chronomark, and temporary upper-right weapon/power presentation with no retired diagnostics or invented data.'
   }
