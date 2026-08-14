@@ -91,7 +91,7 @@ package venworks.cui
          this.setText("diagnostic.playertargets","PLAYER TARGETS: WAITING");
          this.setText("diagnostic.playeridentifiers","DETERMINISTIC SERIAL: WAITING FOR PLAYERDATA");
          this.setText("diagnostic.favoritesprovider","FAVORITESDATA NOT RECEIVED");
-         this.setText("diagnostic.favoritesfields","FAVORITES ROOT FIELDS UNAVAILABLE");
+         this.resetFavoriteFieldDiagnostics();
          this.setText("diagnostic.favoritesroot","ROOT: aFavoriteItems=UNAVAILABLE // uStartingSelection=UNAVAILABLE");
          this.resetFavoriteDiagnostics();
          this.updatePlayerTimeInventoryDiagnostic();
@@ -135,7 +135,9 @@ package venworks.cui
             source == "diagnostic.activityloads" ||
             source == "diagnostic.playerfields" || source == "diagnostic.playertargets" ||
             source == "diagnostic.playeridentifiers" || source == "diagnostic.playertimeinventory" ||
-            source == "diagnostic.favoritesprovider" || source == "diagnostic.favoritesfields" ||
+            source == "diagnostic.favoritesprovider" || source == "diagnostic.favoritesfields01" ||
+            source == "diagnostic.favoritesfields02" || source == "diagnostic.favoritesfields03" ||
+            source == "diagnostic.favoritesfields04" ||
             source == "diagnostic.favoritesroot" ||
             source == "diagnostic.effect0" || source == "diagnostic.effect1" ||
             source == "diagnostic.effect2" || source == "diagnostic.effect3" ||
@@ -475,14 +477,13 @@ package venworks.cui
          {
             this.setText("diagnostic.favoritesprovider","FAVORITESDATA RECEIVED // UPDATE " +
                this.favoritesUpdateCount.toString() + " // DATA UNAVAILABLE");
-            this.setText("diagnostic.favoritesfields","ROOT FIELDS: NULL");
+            this.setFavoriteFieldDiagnostics(null);
             this.setText("diagnostic.favoritesroot","ROOT: aFavoriteItems=NULL // uStartingSelection=NULL");
             this.notifyChanged();
             return;
          }
          favorites = data.aFavoriteItems as Array;
-         this.setText("diagnostic.favoritesfields","ROOT FIELDS: " +
-            this.listFieldNames(data,MAX_PLAYER_DIAGNOSTIC_FIELDS));
+         this.setFavoriteFieldDiagnostics(data);
          this.setText("diagnostic.favoritesroot","ROOT: aFavoriteItems=" +
             (favorites == null ? this.formatDiagnosticValue(data.aFavoriteItems) :
                "ARRAY[" + favorites.length.toString() + "]") + " // uStartingSelection=" +
@@ -1091,6 +1092,50 @@ package venworks.cui
                " A-- Q-- EQ- PW- FX-- IMG-");
             this.setText("diagnostic.favorite" + slotLabel + "name","EMPTY / NOT RECEIVED");
             ++index;
+         }
+      }
+
+      private function resetFavoriteFieldDiagnostics() : void
+      {
+         this.setText("diagnostic.favoritesfields01","ROOT FIELDS 01-08: NOT RECEIVED");
+         this.setText("diagnostic.favoritesfields02","ROOT FIELDS 09-16: NOT RECEIVED");
+         this.setText("diagnostic.favoritesfields03","ROOT FIELDS 17-24: NOT RECEIVED");
+         this.setText("diagnostic.favoritesfields04","ROOT FIELDS 25-32: NOT RECEIVED");
+      }
+
+      private function setFavoriteFieldDiagnostics(param1:Object) : void
+      {
+         var fields:Array = [];
+         var field:String = null;
+         var row:int = 0;
+         var rowFields:Array = null;
+         var start:int = 0;
+         var end:int = 0;
+         var suffix:String = null;
+         if(param1 == null)
+         {
+            this.setText("diagnostic.favoritesfields01","ROOT FIELDS: NULL");
+            this.setText("diagnostic.favoritesfields02","ROOT FIELDS 09-16: -");
+            this.setText("diagnostic.favoritesfields03","ROOT FIELDS 17-24: -");
+            this.setText("diagnostic.favoritesfields04","ROOT FIELDS 25-32: -");
+            return;
+         }
+         for(field in param1)
+         {
+            fields.push(field);
+         }
+         fields.sort(Array.CASEINSENSITIVE);
+         while(row < 4)
+         {
+            start = row * 8;
+            end = Math.min(start + 8,Math.min(fields.length,MAX_PLAYER_DIAGNOSTIC_FIELDS));
+            rowFields = fields.slice(start,end);
+            suffix = row == 3 && fields.length > MAX_PLAYER_DIAGNOSTIC_FIELDS ? ",..." : "";
+            this.setText("diagnostic.favoritesfields0" + (row + 1).toString(),
+               "ROOT FIELDS " + (start + 1).toString() + "-" + (start + 8).toString() +
+               " [" + fields.length.toString() + "]: " +
+               (rowFields.length == 0 ? "-" : rowFields.join(",") + suffix));
+            ++row;
          }
       }
 

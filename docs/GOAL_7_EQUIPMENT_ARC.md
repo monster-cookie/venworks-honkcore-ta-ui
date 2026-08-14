@@ -1,7 +1,9 @@
 # Goal 7 equipment rail
 
 **Status: Goal 7A FavoritesData discovery diagnostic is implemented and awaits
-runtime evidence. The selected production rail is not implemented yet.**
+runtime evidence. The first compact scanner-only presentation was rejected as
+unreadable and incompatible with Favorites-menu input. The selected production
+rail is not implemented yet.**
 
 ## Product direction
 
@@ -64,10 +66,17 @@ unknowns.
 ## Goal 7A bounded diagnostic
 
 The diagnostic subscribes to `FavoritesData` from the existing HUD data
-context. It is a 1160-by-196 top-center strip shown only while the scanner is
-active. It records provider receipt count, at most 32 root field names, the raw
+context. The rejected first runtime build used a 1160-by-196 top-center strip
+shown only while the scanner was active. Runtime testing proved that four
+entries per row clipped most item evidence and that Starfield does not permit
+the Favorites menu to open while scanner mode owns the input.
+
+The corrected diagnostic is a temporary 1760-by-454 top-center panel shown
+whenever HUDMenu is visible. It records provider receipt count, at most 32 root
+field names split deterministically across four wide rows, the raw
 `uStartingSelection` value, favorite-array availability and length, and at most
-12 array entries.
+12 array entries arranged in two columns. This panel intentionally obscures a
+large part of the upper HUD during discovery and is not a production layout.
 
 Each entry has two bounded lines. The metadata legend is:
 
@@ -84,17 +93,22 @@ IMG# iconImage presence only
 The second line shows a bounded name, ammunition name/count, and item count.
 Missing members display `-`. The probe does not render `iconImage`, does not
 load the Favorites Menu image buffer, and does not treat `uStartingSelection`
-as an equipped or active state.
+as an equipped or active state. The probe must be removed immediately after
+the required runtime evidence is accepted.
 
 ## Runtime evidence matrix
 
-After the user commits and deploys the built artifacts, capture the diagnostic
-in these states:
+After the user commits and deploys the built artifacts, use a
+change-menu-close-capture sequence. HUDMenu evidence is inspected immediately
+after the Favorites menu closes; the probe is not expected to render over the
+menu itself. Capture the diagnostic in these states:
 
-1. scanner opened immediately after loading a save, before Favorites Menu has
-   been opened during that session;
-2. Favorites Menu opened and closed without changing a slot;
-3. assign, move, and remove favorite entries, then reopen the scanner;
+1. immediately after loading a save, before Favorites Menu has been opened
+   during that session;
+2. Favorites Menu opened and closed without changing a slot, followed by an
+   immediate diagnostic capture;
+3. assign, move, and remove favorite entries, close the menu, then capture the
+   diagnostic;
 4. switch and fire a favorited weapon;
 5. use a favorited consumable;
 6. favorite and activate a power;
@@ -102,8 +116,11 @@ in these states:
 8. save, reload, and inspect before reopening Favorites Menu.
 
 For each capture, record whether the provider was received, its update count,
-the root selection value, array length, and all affected `A`/`Q` rows. This is
-the minimum evidence needed before implementing the production 1-15 rail.
+the root selection value, array length, all four root-field rows, and all
+affected `A`/`Q` rows. This is the minimum evidence needed before implementing
+the production 1-15 rail. Once those fields and update semantics are proven,
+the next diagnostic-removal build restores the accepted helmet HUD before any
+production equipment rail is introduced.
 
 ## Validation and artifacts
 
@@ -131,19 +148,20 @@ payload hashes across the VWKS, CF, FC, and TA staging variants.
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 405190 | `6CB4EE1D2BCE7A278A810E2549606AE54E09F4AB7E7F9FB4616876876EC16ABA` |
-| `hudmenu_lrg.gfx` | 405373 | `9F581008CE6124065331E6BB23955B99FFCDF1B4F8329C77D3AA0BB667B087F2` |
-| `VenworksCUI/layout.xml` | 5746 | `221B8580C5304A08D0C52E73228593087F9C6F44B7B9DEEE856CF015827B4E14` |
-| `components/favorites-provider-diagnostic.xml` | 9547 | `6B0B3C6FA43B0941BAC4C1B9B3D20F9F8C9D1FF9592F12A74EE67F7263F5693C` |
+| `hudmenu.gfx` | 406188 | `99DB2893EBDF01FABAF0CC76B71535F8B0F4D23F4AED6FFF8AACE78AE2893FA3` |
+| `hudmenu_lrg.gfx` | 406371 | `19269A3330D160DB7970F094E2E9E7DDA63FCF67039D6AAD1B4FD81830933195` |
+| `VenworksCUI/layout.xml` | 5743 | `E5E0DA87BF8350850E0F44CE77D49A83CB32CB1614165A68502F9A176D1B9501` |
+| `components/favorites-provider-diagnostic.xml` | 10999 | `01CAFEF81A894E1AAF9EC4ABDA0CB12BF3AF49B4087AA333B46E37CA67790001` |
 | `components/player-status-scanner.xml` | 8643 | `031D4BD34954325A6ADE5A19293EFA831A36C420FF14115F133C82138659876D` |
 | `components/environmental-hazard-scanner.xml` | 9411 | `B13E5559452491AB62F0F05990F2553BAFA91BA589E3D103BAC31FF260B10526` |
 | `components/weapon-status.xml` | 4455 | `81FF1E81CC4647736A4C360C131BDF68D84D566338268BFF2AEC68D508248894` |
 
 ## Risks and rollback
 
-The diagnostic is scanner-gated and bounded, but `FavoritesData` may never be
+The diagnostic is always visible and bounded, but `FavoritesData` may never be
 delivered in HUDMenu. That negative result is useful evidence and leaves the
-accepted Goal 6 production panels unchanged. Rollback is surgical: remove the
+accepted Goal 6 production panels unchanged beneath the temporary probe.
+Rollback and the required post-evidence cleanup are surgical: remove the
 diagnostic include and fragment plus the FavoritesData subscription and
 diagnostic bindings. No save data, native plugin, schema, dependency, or
 configuration changes are introduced.

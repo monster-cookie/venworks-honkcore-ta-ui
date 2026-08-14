@@ -59,7 +59,7 @@
     <include id="chronomark.weapon-status" src="weapon-status.xml"
              x="39" y="-11" anchor="top-right" visible="true" visibleWhen="always" z="102" />
     <include id="favorites-provider-diagnostic" src="favorites-provider-diagnostic.xml"
-             x="0" y="0" anchor="top-center" visible="true" visibleWhen="inScanner" z="110" />
+             x="0" y="0" anchor="top-center" visible="true" visibleWhen="always" z="110" />
   </includes>
   <components>
     <path id="helmet.lower-frame.fill" x="-64" y="36" width="1920" height="293" opacity="1" visible="true"

@@ -1,60 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
 <venworksCUIFragment schemaVersion="1" runtimeVersion="1">
-  <group id="root" x="0" y="0" width="1160" height="196" opacity="1" visible="true"
+  <group id="root" x="0" y="0" width="1760" height="454" opacity="1" visible="true"
          rotation="0" scaleX="1" scaleY="1" z="0">
-    <panel id="panel" x="0" y="0" width="1160" height="196" opacity="1" visible="true"
+    <panel id="panel" x="0" y="0" width="1760" height="454" opacity="1" visible="true"
            rotation="0" scaleX="1" scaleY="1" z="0"
-           fillColor="#03141D" fillOpacity="0.82" strokeColor="#62DDF2" strokeOpacity="0.72" strokeWidth="2" />
-    <text id="title" x="18" y="7" width="360" height="24" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" value="FAVORITES PROVIDER PROBE"
-          font="$MAIN_Font_Bold" fontSize="15" color="#62DDF2" bold="false" align="left" />
-    <text id="state" x="700" y="8" width="442" height="22" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" value="SCANNER ACTIVE // HUDMENU DIAGNOSTIC"
-          font="$MAIN_Font_Bold" fontSize="11" color="#62DDF2" bold="false" align="right" />
-    <divider id="head" x="12" y="35" width="1136" height="0" opacity="1" visible="true"
-             rotation="0" scaleX="1" scaleY="1" z="1" color="#62DDF2" strokeOpacity="0.72" strokeWidth="1" />
+           fillColor="#03141D" fillOpacity="0.9" strokeColor="#62DDF2" strokeOpacity="0.82" strokeWidth="2" />
+    <text id="title" x="24" y="8" width="500" height="25" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="2" value="FAVORITESDATA PROVIDER PROBE"
+          font="$MAIN_Font_Bold" fontSize="16" color="#62DDF2" bold="false" align="left" />
+    <text id="state" x="980" y="9" width="756" height="23" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="2" value="HUDMENU DIAGNOSTIC // CLOSE FAVORITES TO INSPECT"
+          font="$MAIN_Font_Bold" fontSize="12" color="#62DDF2" bold="false" align="right" />
+    <divider id="head" x="16" y="37" width="1728" height="0" opacity="1" visible="true"
+             rotation="0" scaleX="1" scaleY="1" z="1" color="#62DDF2" strokeOpacity="0.82" strokeWidth="1" />
 
-    <text id="provider" x="18" y="39" width="1124" height="17" opacity="1" visible="true"
+    <text id="provider" x="24" y="42" width="1712" height="20" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favoritesProvider" format="raw"
-          value="FAVORITESDATA NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="9" color="#62DDF2" bold="false" align="left" />
-    <text id="rootdata" x="18" y="56" width="1124" height="17" opacity="1" visible="true"
+          value="FAVORITESDATA NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="11" color="#62DDF2" bold="false" align="left" />
+    <text id="rootdata" x="24" y="64" width="1712" height="19" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favoritesRoot" format="raw"
           value="ROOT: aFavoriteItems=UNAVAILABLE // uStartingSelection=UNAVAILABLE"
-          font="$MAIN_Font_Bold" fontSize="8" color="#D89B2B" bold="false" align="left" />
-    <text id="fields" x="18" y="73" width="1124" height="17" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favoritesFields" format="raw"
-          value="FAVORITES ROOT FIELDS UNAVAILABLE" font="$MAIN_Font_Bold" fontSize="8" color="#8CB1BC" bold="false" align="left" />
+          font="$MAIN_Font_Bold" fontSize="10" color="#D89B2B" bold="false" align="left" />
+    <text id="fields01" x="24" y="86" width="1712" height="17" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favoritesFields01" format="raw"
+          value="ROOT FIELDS 01-08: NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="9" color="#8CB1BC" bold="false" align="left" />
+    <text id="fields02" x="24" y="104" width="1712" height="17" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favoritesFields02" format="raw"
+          value="ROOT FIELDS 09-16: NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="9" color="#8CB1BC" bold="false" align="left" />
+    <text id="fields03" x="24" y="122" width="1712" height="17" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favoritesFields03" format="raw"
+          value="ROOT FIELDS 17-24: NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="9" color="#8CB1BC" bold="false" align="left" />
+    <text id="fields04" x="24" y="140" width="1712" height="17" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favoritesFields04" format="raw"
+          value="ROOT FIELDS 25-32: NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="9" color="#8CB1BC" bold="false" align="left" />
+    <divider id="body" x="16" y="163" width="1728" height="0" opacity="1" visible="true"
+             rotation="0" scaleX="1" scaleY="1" z="1" color="#62DDF2" strokeOpacity="0.52" strokeWidth="1" />
+    <divider id="columns" x="880" y="169" width="0" height="251" opacity="1" visible="true"
+             rotation="0" scaleX="1" scaleY="1" z="1" color="#62DDF2" strokeOpacity="0.38" strokeWidth="1" />
 
-    <text id="f01m" x="18" y="94" width="270" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite01Meta" format="raw" value="S01 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="7" color="#62DDF2" bold="false" align="left" />
-    <text id="f01n" x="18" y="106" width="270" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite01Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="7" color="#F2F7F9" bold="false" align="left" />
-    <text id="f02m" x="300" y="94" width="270" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite02Meta" format="raw" value="S02 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="7" color="#62DDF2" bold="false" align="left" />
-    <text id="f02n" x="300" y="106" width="270" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite02Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="7" color="#F2F7F9" bold="false" align="left" />
-    <text id="f03m" x="582" y="94" width="270" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite03Meta" format="raw" value="S03 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="7" color="#62DDF2" bold="false" align="left" />
-    <text id="f03n" x="582" y="106" width="270" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite03Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="7" color="#F2F7F9" bold="false" align="left" />
-    <text id="f04m" x="864" y="94" width="278" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite04Meta" format="raw" value="S04 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="7" color="#62DDF2" bold="false" align="left" />
-    <text id="f04n" x="864" y="106" width="278" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite04Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="7" color="#F2F7F9" bold="false" align="left" />
+    <text id="f01m" x="28" y="172" width="824" height="17" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite01Meta" format="raw" value="S01 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="10" color="#62DDF2" bold="false" align="left" />
+    <text id="f01n" x="28" y="190" width="824" height="18" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite01Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="10" color="#F2F7F9" bold="false" align="left" />
+    <text id="f02m" x="908" y="172" width="824" height="17" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite02Meta" format="raw" value="S02 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="10" color="#62DDF2" bold="false" align="left" />
+    <text id="f02n" x="908" y="190" width="824" height="18" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite02Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="10" color="#F2F7F9" bold="false" align="left" />
 
-    <text id="f05m" x="18" y="121" width="270" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite05Meta" format="raw" value="S05 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="7" color="#62DDF2" bold="false" align="left" />
-    <text id="f05n" x="18" y="133" width="270" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite05Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="7" color="#F2F7F9" bold="false" align="left" />
-    <text id="f06m" x="300" y="121" width="270" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite06Meta" format="raw" value="S06 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="7" color="#62DDF2" bold="false" align="left" />
-    <text id="f06n" x="300" y="133" width="270" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite06Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="7" color="#F2F7F9" bold="false" align="left" />
-    <text id="f07m" x="582" y="121" width="270" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite07Meta" format="raw" value="S07 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="7" color="#62DDF2" bold="false" align="left" />
-    <text id="f07n" x="582" y="133" width="270" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite07Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="7" color="#F2F7F9" bold="false" align="left" />
-    <text id="f08m" x="864" y="121" width="278" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite08Meta" format="raw" value="S08 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="7" color="#62DDF2" bold="false" align="left" />
-    <text id="f08n" x="864" y="133" width="278" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite08Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="7" color="#F2F7F9" bold="false" align="left" />
+    <text id="f03m" x="28" y="214" width="824" height="17" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite03Meta" format="raw" value="S03 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="10" color="#62DDF2" bold="false" align="left" />
+    <text id="f03n" x="28" y="232" width="824" height="18" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite03Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="10" color="#F2F7F9" bold="false" align="left" />
+    <text id="f04m" x="908" y="214" width="824" height="17" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite04Meta" format="raw" value="S04 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="10" color="#62DDF2" bold="false" align="left" />
+    <text id="f04n" x="908" y="232" width="824" height="18" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite04Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="10" color="#F2F7F9" bold="false" align="left" />
 
-    <text id="f09m" x="18" y="148" width="270" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite09Meta" format="raw" value="S09 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="7" color="#62DDF2" bold="false" align="left" />
-    <text id="f09n" x="18" y="160" width="270" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite09Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="7" color="#F2F7F9" bold="false" align="left" />
-    <text id="f10m" x="300" y="148" width="270" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite10Meta" format="raw" value="S10 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="7" color="#62DDF2" bold="false" align="left" />
-    <text id="f10n" x="300" y="160" width="270" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite10Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="7" color="#F2F7F9" bold="false" align="left" />
-    <text id="f11m" x="582" y="148" width="270" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite11Meta" format="raw" value="S11 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="7" color="#62DDF2" bold="false" align="left" />
-    <text id="f11n" x="582" y="160" width="270" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite11Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="7" color="#F2F7F9" bold="false" align="left" />
-    <text id="f12m" x="864" y="148" width="278" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite12Meta" format="raw" value="S12 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="7" color="#62DDF2" bold="false" align="left" />
-    <text id="f12n" x="864" y="160" width="278" height="13" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite12Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="7" color="#F2F7F9" bold="false" align="left" />
+    <text id="f05m" x="28" y="256" width="824" height="17" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite05Meta" format="raw" value="S05 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="10" color="#62DDF2" bold="false" align="left" />
+    <text id="f05n" x="28" y="274" width="824" height="18" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite05Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="10" color="#F2F7F9" bold="false" align="left" />
+    <text id="f06m" x="908" y="256" width="824" height="17" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite06Meta" format="raw" value="S06 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="10" color="#62DDF2" bold="false" align="left" />
+    <text id="f06n" x="908" y="274" width="824" height="18" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite06Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="10" color="#F2F7F9" bold="false" align="left" />
 
-    <text id="note" x="18" y="178" width="1124" height="15" opacity="1" visible="true"
+    <text id="f07m" x="28" y="298" width="824" height="17" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite07Meta" format="raw" value="S07 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="10" color="#62DDF2" bold="false" align="left" />
+    <text id="f07n" x="28" y="316" width="824" height="18" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite07Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="10" color="#F2F7F9" bold="false" align="left" />
+    <text id="f08m" x="908" y="298" width="824" height="17" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite08Meta" format="raw" value="S08 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="10" color="#62DDF2" bold="false" align="left" />
+    <text id="f08n" x="908" y="316" width="824" height="18" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite08Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="10" color="#F2F7F9" bold="false" align="left" />
+
+    <text id="f09m" x="28" y="340" width="824" height="17" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite09Meta" format="raw" value="S09 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="10" color="#62DDF2" bold="false" align="left" />
+    <text id="f09n" x="28" y="358" width="824" height="18" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite09Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="10" color="#F2F7F9" bold="false" align="left" />
+    <text id="f10m" x="908" y="340" width="824" height="17" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite10Meta" format="raw" value="S10 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="10" color="#62DDF2" bold="false" align="left" />
+    <text id="f10n" x="908" y="358" width="824" height="18" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite10Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="10" color="#F2F7F9" bold="false" align="left" />
+
+    <text id="f11m" x="28" y="382" width="824" height="17" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite11Meta" format="raw" value="S11 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="10" color="#62DDF2" bold="false" align="left" />
+    <text id="f11n" x="28" y="400" width="824" height="18" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite11Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="10" color="#F2F7F9" bold="false" align="left" />
+    <text id="f12m" x="908" y="382" width="824" height="17" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite12Meta" format="raw" value="S12 A-- Q-- EQ- PW- FX-- IMG-" font="$MAIN_Font_Bold" fontSize="10" color="#62DDF2" bold="false" align="left" />
+    <text id="f12n" x="908" y="400" width="824" height="18" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="diagnostic.favorite12Name" format="raw" value="EMPTY / NOT RECEIVED" font="$MAIN_Font_Bold" fontSize="10" color="#F2F7F9" bold="false" align="left" />
+
+    <text id="note" x="24" y="430" width="1712" height="18" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2"
-          value="RAW VANILLA FAVORITESDATA // NO ACTIVE-SLOT INFERENCE // ICONS NOT RENDERED"
-          font="$MAIN_Font_Bold" fontSize="8" color="#E64B4B" bold="false" align="center" />
+          value="TEMPORARY RAW VANILLA FAVORITESDATA // NO ACTIVE-SLOT INFERENCE // ICONS NOT RENDERED // REMOVE AFTER EVIDENCE"
+          font="$MAIN_Font_Bold" fontSize="9" color="#E64B4B" bold="false" align="center" />
   </group>
 </venworksCUIFragment>
