@@ -2,14 +2,17 @@
 
 **Status: The environmental hazard scanner, Planet Data presentation, Player
 Data presentation, deterministic display serial, and shared O2/CO2 behavior
-are runtime accepted. The final helmet-integration presentation now includes a
-linked lower helmet seal and awaits one in-game visual acceptance check.**
+are runtime accepted. The root layout now owns a unified upper and lower helmet
+frame, the compact scanner fragments are content-only, and the four elemental
+channels are vertical. This final Goal 6 presentation awaits one in-game visual
+acceptance check.**
 
 ## Product direction
 
 Goal 6 adds an independent helmet-HUD environmental scanner layout. The
-selected visual direction is a wide scientific panel with four vertically
-stacked sensor channels:
+selected visual direction is a scientific quad-channel panel. The accepted
+compact helmet treatment presents the four channels as adjacent vertical
+columns:
 
 1. air/water toxins;
 2. thermal exposure;
@@ -405,21 +408,27 @@ reinterpreted as an environmental aggregate here.
 After both HUD artifacts are built, hashed, and committed, deploy them and
 verify:
 
-1. the combined lower-right border sits approximately 25 design units from the
-   physical right and bottom edges at normal and large HUD scale;
-2. `PLANET DATA` appears above `ENVIRONMENTAL HAZARDS` and shows the live
+1. the root-owned lower helmet frame reads as one filled structure from the
+   Player Data side through the center seal to the environmental side, with no
+   foreground or background seams at either scanner boundary;
+2. the shallow upper brow preserves the field of view and its centered Threat
+   Index recess remains visually reserved and empty;
+3. both compact scanner content areas remain approximately 25 design units from
+   their physical side and bottom edges at normal and large HUD scale;
+4. `PLANET DATA` appears above `ENVIRONMENTAL HAZARDS` and shows the live
    location/body label, local time, atmospheric O2, temperature, and gravity;
-3. those five values no longer appear in the lower-left panel, while the
+5. those five values no longer appear in the lower-left panel, while the
    consolidated Player Data panel remains functional;
-4. `RELATIVE LOAD` and `FULL SOAK // HEALTH RISK` are absent, and exhausted
+6. `RELATIVE LOAD` and `FULL SOAK // HEALTH RISK` are absent, and exhausted
    protection reads `PROTECTION DEPLETED`;
-5. opening the scanner does not render the retired diagnostic strip;
-6. nominal environments still show four empty channels and ready protection;
-7. active and simultaneous categories still use independent drifting bars;
-8. zero protection before the full-soak flag remains within the accepted idle
+7. opening the scanner does not render the retired diagnostic strip;
+8. suit protection remains horizontal, while nominal elemental channels are
+   empty vertical columns and active channels fill upward independently;
+9. active and simultaneous categories still use independent drifting loads;
+10. zero protection before the full-soak flag remains within the accepted idle
    range, and the full-soak critical state still snaps active categories to
    100%; and
-9. leaving exposure immediately returns inactive channels to zero while
+11. leaving exposure immediately returns inactive channels to zero while
    Bethesda restores protection on its own schedule.
 
 The accepted captures already cover the dangerous full-soak transition; no
@@ -481,26 +490,37 @@ Player Data panel remains the production presentation.
 
 ## Helmet-integration presentation
 
-The final Goal 6 visual pass changes only the two lower tricorder panels. Each
-panel background is one continuous CUI vector path with a rounded title tab at
-upper-left, a rounded clock tab at upper-right, and a wide transparent center
-notch following the accepted runtime annotation. Mirrored 25-unit side and
-bottom overflow rails continue through the matching safe-area margins, while a
-32-unit curved rise makes each panel emerge from its nearest helmet edge. The
-former full-width header divider remains absent so it cannot visually bridge
-the notch. All accepted text, provider bindings, meter geometry, root bounds,
-safe-area anchoring, and the temporary upper-right weapon panel remain
-unchanged.
+The first seal implementation used three independent outlined shapes: two
+scanner housings plus a center connector. Runtime captures showed that this
+could only move the visible seams in front of or behind the panels; it could not
+make the three shapes read as one helmet component. The accepted architecture
+therefore gives structural ownership to the root layout. The Player Data and
+environmental fragments contain only their bounded data regions, labels,
+dividers, and meters. They no longer draw independent outer fills or outlines.
 
-A center-only 56-unit root-layout connector now occupies the exact 1150-unit
-gap between the two independent tricorder panels. Panel and connector fills use
-the same helmet material. Their cyan outlines are separate open paths: each
-panel's lower inner outline stops where the connector begins, and the connector
-draws only its exposed rounded/flat upper rail. That removes the earlier hidden
-overlap, doubled vertical seams, and behind-the-panel appearance while retaining
-the flat center reserved for a future threat sensor. The Player Data clock tab
-also gives the full `UNIVERSAL` label and five-character clock separate,
-non-clipping bounds.
+One 1920-unit lower-frame path now spans the complete physical width, including
+the configured safe-area margins. Its single fill incorporates the left title
+and widened universal-time tabs, the compact Player Data housing, the curved
+center lower seal, the environmental housing, the Planet Data and local-time
+tabs, and both outer helmet-edge rises. Because that geometry is one filled
+path with no structural cyan stroke, there are no overlap lines to expose and
+no foreground/background ordering can split the three XML owners visually.
+
+A separate root-owned upper brow compresses the NASA-concept architecture into
+a shallow fixed helmet edge rather than copying its styling or obstructing the
+field of view. A centered, inactive 320-by-48 recess reserves space for the
+future combat Threat Index. The existing Chronomark, weapon presentation,
+compass, minimap, and faction work remain outside this Goal 6 visual conversion.
+
+Both scanner fragments are reduced from their former tall housings to
+360-by-236 content areas. Player XP, health, shared O2/CO2, boost, and
+encumbrance remain horizontal. Planet Data and global suit protection also
+remain horizontal. Only the four elemental exposure channels change to compact
+eight-segment vertical columns that fill upward. Their production display uses
+short `CLEAR`/`DETECTED` statuses, while the canonical long diagnostic strings
+remain available to preserve the provider and automated-build contracts. The
+Player Data clock gives the complete `UNIVERSAL` label and five-character UT
+separate widened bounds.
 
 ## Automated validation and expected artifacts
 
@@ -520,22 +540,25 @@ Run repository validation and the complete two-variant Scaleform build:
 The earlier SharedObject diagnostic passed automated build validation but was
 rejected by runtime Error #1501 because the Scaleform host does not install a
 `SharedObjectManager`. The deterministic replacement removes the rejected
-storage path. On 2026-08-13 the helmet-integration build compiled, imported,
+storage path. On 2026-08-13 the unified-helmet build compiled, imported,
 reopened, passed its source and staged-layout contracts, and reproduced the
-normal/large pair across all four staging variants:
+normal/large pair and loose CUI payload byte-for-byte across all four staging
+variants:
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 402362 | `EEBBEBB487CB85A09D777E034E5C97073DC5FF31EFEE3BF2C98C25786DEDF2CB` |
-| `hudmenu_lrg.gfx` | 402545 | `9A585346BEACEAC44D48BE8308D01A85210DD6D2D3AEF3663210BA6D0DEEA36F` |
-| `VenworksCUI/layout.xml` | 4708 | `FCBFCC1DB0FA2F4764B6FE6CAF68C437439E61F3FE2CB93E7A2DEDB64B280838` |
-| `components/player-status-scanner.xml` | 9680 | `CA8B1529C30B8B3EEB89D211EF107427D27C9EE5629F156F8669885C089B7A0C` |
-| `components/environmental-hazard-scanner.xml` | 10415 | `212454DC7F8E4D6DC4C8DAFDC66446C8166521C7B1090E36FB8101C7D057DBF7` |
+| `hudmenu.gfx` | 402704 | `C13AA15D0D0ED467FFA25A2BFC22A76038E91662A42B11455E94DDAC6E06637C` |
+| `hudmenu_lrg.gfx` | 402887 | `0CE34ECB3B78A1C8B0585B835D9E8E49B39679E8BA15FF36338A53FBAAF010A0` |
+| `VenworksCUI/layout.xml` | 5563 | `F8F01FFC315C86C0CEAC8C019CAC9D6932D14688A4BC334F9B64518DA779A823` |
+| `components/player-status-scanner.xml` | 8643 | `EA283A96517EBCA285FD541785AE9DBD05A45B978105E8EFDAB465787054A2B5` |
+| `components/environmental-hazard-scanner.xml` | 9411 | `C41ADF7B6DB0246894A230560E4FA494463E91B16989BF43E68CD184EB3D97AB` |
 | `components/weapon-status.xml` | 4455 | `81FF1E81CC4647736A4C360C131BDF68D84D566338268BFF2AEC68D508248894` |
 
-The table above records the decimal-hours UT correction and seam-integration
-build after both HUD variants passed the same compile, reopen, staging, and hash
-validation. The loose XML hashes record the production-hidden Chronomark,
-non-clipping Player clock tab, open panel outlines, and center-only helmet seal.
+The table above records the decimal-hours UT correction and unified helmet
+architecture after both HUD variants passed the same compile, reopen, staging,
+and hash validation. The loose XML hashes record the production-hidden
+Chronomark, widened Player clock, root-owned upper and lower frame, inactive
+Threat Index recess, content-only scanner fragments, and vertical elemental
+channels.
 
 Runtime deployment must use artifacts from the user-committed Goal 6 worktree.
