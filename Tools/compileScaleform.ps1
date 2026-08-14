@@ -206,7 +206,7 @@ $resolvedWorkDirectory = [System.IO.Path]::GetFullPath($WorkDirectory)
 $decompileScript = Resolve-RequiredFile -Path (Join-Path $PSScriptRoot "decompileScaleform.ps1") -Description "Scaleform decompile helper"
 $providerProbeLayoutSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\fixtures\chronomark-provider-probe.xml") `
-  -Description "Goal 6 environmental provider probe"
+  -Description "Goal 6 production HUD with Goal 7 favorites provider probe"
 $providerProbeComponentDirectory = Resolve-RequiredDirectory `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\fixtures\components") `
   -Description "Goal 6 HUD component directory"
@@ -289,7 +289,8 @@ foreach ($meterStyle in @($providerProbeLayout.venworksCUI.definitions.meterStyl
 foreach ($componentFixtureName in @(
   'weapon-status.xml',
   'environmental-hazard-scanner.xml',
-  'player-status-scanner.xml'
+  'player-status-scanner.xml',
+  'favorites-provider-diagnostic.xml'
 )) {
   $componentFixturePath = Resolve-RequiredFile `
     -Path (Join-Path $providerProbeComponentDirectory $componentFixtureName) `
@@ -819,6 +820,11 @@ try {
       'digipicksavailable',
       'WeaponData',
       'HUDStarbornPowersData',
+      'FavoritesData',
+      'MAX_FAVORITE_DIAGNOSTIC_ITEMS',
+      'uStartingSelection',
+      'uQuickkeyIndex',
+      'iconImage',
       'Meter direction must be right, left, down, or up',
       'Meter segmentCount must be between 1 and 64',
       'Radial thickness exceeds meter bounds',
@@ -997,7 +1003,7 @@ try {
       Remove-Item -LiteralPath $retiredComponentPath -Force
     }
   }
-  foreach ($componentFixtureName in @('weapon-status.xml','environmental-hazard-scanner.xml','player-status-scanner.xml')) {
+  foreach ($componentFixtureName in @('weapon-status.xml','environmental-hazard-scanner.xml','player-status-scanner.xml','favorites-provider-diagnostic.xml')) {
     Copy-Item -LiteralPath (Join-Path $providerProbeComponentDirectory $componentFixtureName) -Destination (Join-Path $componentOutputDirectory $componentFixtureName) -Force
   }
   $stagedPlayerScannerText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'player-status-scanner.xml') -Raw
@@ -1008,6 +1014,8 @@ try {
   $stagedWeaponStatusText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'weapon-status.xml') -Raw
   $stagedEnvironmentalScannerText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'environmental-hazard-scanner.xml') -Raw
   $stagedEnvironmentalScanner = [xml]$stagedEnvironmentalScannerText
+  $stagedFavoritesDiagnosticText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'favorites-provider-diagnostic.xml') -Raw
+  $stagedFavoritesDiagnostic = [xml]$stagedFavoritesDiagnosticText
   if ($stagedWeaponStatusText -notmatch 'name="vehicle-exit-prompt"' -or
       $stagedWeaponStatusText -notmatch 'value="\$EXIT HOLD"' -or
       $stagedWeaponStatusText -notmatch 'fontSize="21"' -or
@@ -1026,6 +1034,9 @@ try {
   })
   $playerScannerIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'player-status-scanner'
+  })
+  $favoritesDiagnosticIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
+    [string]$_.id -eq 'favorites-provider-diagnostic'
   })
   $helmetLowerFrameFillPaths = @($providerProbeLayout.venworksCUI.components.SelectNodes("path[@id='helmet.lower-frame.fill']"))
   $helmetUpperFrameFillPaths = @($providerProbeLayout.venworksCUI.components.SelectNodes("path[@id='helmet.upper-frame.fill']"))
@@ -1049,6 +1060,23 @@ try {
   })
   $stagedPlayerScannerGroup = $stagedPlayerScanner.venworksCUIFragment.group
   $stagedPlayerStructuralPaths = @($stagedPlayerScannerGroup.SelectNodes('path'))
+  $favoriteDiagnosticBindings = @($stagedFavoritesDiagnostic.venworksCUIFragment.group.text | Where-Object {
+    $_.HasAttribute('source') -and $_.GetAttribute('source') -match '^diagnostic\.favorite(0[1-9]|1[0-2])(Meta|Name)$'
+  })
+  if ($favoritesDiagnosticIncludes.Count -ne 1 -or
+      [string]$favoritesDiagnosticIncludes[0].src -ne 'favorites-provider-diagnostic.xml' -or
+      [string]$favoritesDiagnosticIncludes[0].anchor -ne 'top-center' -or
+      [string]$favoritesDiagnosticIncludes[0].visibleWhen -ne 'inScanner' -or
+      [int]$favoritesDiagnosticIncludes[0].x -ne 0 -or
+      [int]$favoritesDiagnosticIncludes[0].y -ne 0 -or
+      $favoriteDiagnosticBindings.Count -ne 24 -or
+      $stagedFavoritesDiagnosticText -notmatch 'source="diagnostic\.favoritesProvider"' -or
+      $stagedFavoritesDiagnosticText -notmatch 'source="diagnostic\.favoritesFields"' -or
+      $stagedFavoritesDiagnosticText -notmatch 'source="diagnostic\.favoritesRoot"' -or
+      $stagedFavoritesDiagnosticText -notmatch 'RAW VANILLA FAVORITESDATA // NO ACTIVE-SLOT INFERENCE // ICONS NOT RENDERED' -or
+      $stagedFavoritesDiagnosticText -match '<providerSymbol|<providerImage') {
+    throw 'Goal 7A must stage one scanner-only, top-center FavoritesData diagnostic with exactly 12 bounded metadata/name pairs, raw root evidence, no active-slot inference, and no icon rendering.'
+  }
   $expectedHelmetLowerFrameFillPath = 'M 0 0 L 33 32 L 157 32 Q 169 32 169 44 L 169 52 Q 169 62 181 62 L 219 62 Q 231 62 231 52 L 231 44 Q 231 32 243 32 L 377 32 Q 385 32 385 40 L 385 237 C 399 237 407 243 417 253 Q 425 261 439 261 L 1481 261 Q 1495 261 1503 253 C 1513 243 1521 237 1535 237 L 1535 40 Q 1535 32 1543 32 L 1643 32 Q 1655 32 1655 44 L 1655 52 Q 1655 62 1667 62 L 1771 62 Q 1783 62 1783 52 L 1783 44 Q 1783 32 1795 32 L 1887 32 L 1920 0 L 1920 293 L 0 293 Z'
   $expectedHelmetUpperFrameFillPath = 'M 0 0 L 1920 0 L 1920 70 Q 1680 76 1450 92 L 1260 106 Q 1228 108 1204 118 Q 1190 126 1170 126 L 750 126 Q 730 126 716 118 Q 692 108 660 106 L 470 92 Q 240 76 0 70 Z'
   $expectedHelmetThreatRecessFillPath = 'M 16 0 L 304 0 Q 320 0 320 16 L 320 32 Q 320 48 304 48 L 16 48 Q 0 48 0 32 L 0 16 Q 0 0 16 0 Z'
@@ -1197,7 +1225,7 @@ try {
       New-Item -ItemType Directory -Force -Path $variantAssetOutputDirectory | Out-Null
       New-Item -ItemType Directory -Force -Path $variantComponentOutputDirectory | Out-Null
       Copy-Item -LiteralPath (Join-Path $cuiOutputDirectory "layout.xml") -Destination (Join-Path $variantCuiOutputDirectory "layout.xml") -Force
-      foreach ($componentFixtureName in @('weapon-status.xml','environmental-hazard-scanner.xml','player-status-scanner.xml')) {
+      foreach ($componentFixtureName in @('weapon-status.xml','environmental-hazard-scanner.xml','player-status-scanner.xml','favorites-provider-diagnostic.xml')) {
         Copy-Item -LiteralPath (Join-Path $componentOutputDirectory $componentFixtureName) -Destination (Join-Path $variantComponentOutputDirectory $componentFixtureName) -Force
       }
       foreach ($assetFileName in @('gallery-vector.svg','venworks-logo.svg','gallery-invalid.svg')) {
@@ -1215,6 +1243,7 @@ try {
       'components\weapon-status.xml',
       'components\environmental-hazard-scanner.xml',
       'components\player-status-scanner.xml',
+      'components\favorites-provider-diagnostic.xml',
       'Assets\gallery-vector.svg',
       'Assets\venworks-logo.svg',
       'Assets\gallery-invalid.svg'
@@ -1225,7 +1254,7 @@ try {
         throw "Staged CUI payload mismatch for $relativeCuiPath in $variantCuiOutputDirectory."
       }
     }
-    Write-Host -ForegroundColor Green "Staged the accepted Goal 6 environmental control and production player scanner in $variantCuiOutputDirectory"
+    Write-Host -ForegroundColor Green "Staged the accepted Goal 6 HUD and Goal 7A favorites provider diagnostic in $variantCuiOutputDirectory"
   }
 }
 finally {

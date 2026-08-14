@@ -14,6 +14,7 @@ package venworks.cui
       private static const MAX_DIAGNOSTIC_EFFECTS:int = 4;
       private static const MAX_HAZARD_EFFECTS:int = 32;
       private static const MAX_DIAGNOSTIC_INVENTORY_ITEMS:int = 256;
+      private static const MAX_FAVORITE_DIAGNOSTIC_ITEMS:int = 12;
       private static const DIGIPICK_FORM_ID:Number = 10;
       private static const PLAYER_SERIAL_ALPHABET:String = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
       private static const PLAYER_SERIAL_LENGTH:int = 18;
@@ -50,6 +51,7 @@ package venworks.cui
       private var oxygenActivity:Number = 0;
       private var universalTimeDiagnostic:String = "UT: LOCAL ENV FREQUENT DATA NOT RECEIVED";
       private var digipickDiagnostic:String = "DIGIPICK: PLAYER INVENTORY DATA NOT RECEIVED";
+      private var favoritesUpdateCount:int = 0;
 
       public function CUIPlayerHudDataContext()
       {
@@ -70,6 +72,7 @@ package venworks.cui
          BSUIDataManager.Subscribe("WeaponData",this.onWeaponData);
          BSUIDataManager.Subscribe("HudJetpackData",this.onJetpackData);
          BSUIDataManager.Subscribe("HUDStarbornPowersData",this.onStarbornPowersData);
+         BSUIDataManager.Subscribe("FavoritesData",this.onFavoritesData);
          BSUIDataManager.Subscribe("EnvironmentEffectsData",this.onEnvironmentEffectsData);
          BSUIDataManager.Subscribe("StarmapSystemBodyInfoProvider",this.onStarmapSystemBodyInfoData);
          this.setText("diagnostic.inventoryprovider","PLAYERINVENTORYDATA NOT RECEIVED");
@@ -87,6 +90,10 @@ package venworks.cui
          this.setText("diagnostic.playerfields","PLAYERDATA NOT RECEIVED");
          this.setText("diagnostic.playertargets","PLAYER TARGETS: WAITING");
          this.setText("diagnostic.playeridentifiers","DETERMINISTIC SERIAL: WAITING FOR PLAYERDATA");
+         this.setText("diagnostic.favoritesprovider","FAVORITESDATA NOT RECEIVED");
+         this.setText("diagnostic.favoritesfields","FAVORITES ROOT FIELDS UNAVAILABLE");
+         this.setText("diagnostic.favoritesroot","ROOT: aFavoriteItems=UNAVAILABLE // uStartingSelection=UNAVAILABLE");
+         this.resetFavoriteDiagnostics();
          this.updatePlayerTimeInventoryDiagnostic();
          this.resetEnvironmentalHazards();
          this.setText("environment.protectionstatus","ENVIRONMENT PROVIDER NOT RECEIVED");
@@ -108,6 +115,10 @@ package venworks.cui
       public static function getKind(param1:String) : String
       {
          var source:String = normalizeSource(param1);
+         if(/^diagnostic\.favorite(0[1-9]|1[0-2])(meta|name)$/.test(source))
+         {
+            return "string";
+         }
          if(source == "location.name" || source == "player.serial" ||
             source == "power.key" || source == "power.name" ||
             source == "weapon.name" || source == "weapon.icon" || source == "weapon.ammotype" ||
@@ -124,6 +135,8 @@ package venworks.cui
             source == "diagnostic.activityloads" ||
             source == "diagnostic.playerfields" || source == "diagnostic.playertargets" ||
             source == "diagnostic.playeridentifiers" || source == "diagnostic.playertimeinventory" ||
+            source == "diagnostic.favoritesprovider" || source == "diagnostic.favoritesfields" ||
+            source == "diagnostic.favoritesroot" ||
             source == "diagnostic.effect0" || source == "diagnostic.effect1" ||
             source == "diagnostic.effect2" || source == "diagnostic.effect3" ||
             source == "diagnostic.armorresistance" || source == "diagnostic.starmapprovider")
@@ -443,6 +456,73 @@ package venworks.cui
          {
             this.clearValue("weapon.ammotype");
             this.setText("diagnostic.inventoryprovider","PLAYERINVENTORYDATA RECEIVED — " + equippedWeaponCount.toString() + " EQUIPPED WEAPON — NO AMMO NAME");
+         }
+         this.notifyChanged();
+      }
+
+      private function onFavoritesData(param1:FromClientDataEvent) : void
+      {
+         var data:Object = param1 == null ? null : param1.data;
+         var favorites:Array = null;
+         var item:Object = null;
+         var index:int = 0;
+         var limit:int = 0;
+         var slotLabel:String = null;
+         var iconPresent:Boolean = false;
+         ++this.favoritesUpdateCount;
+         this.resetFavoriteDiagnostics();
+         if(data == null)
+         {
+            this.setText("diagnostic.favoritesprovider","FAVORITESDATA RECEIVED // UPDATE " +
+               this.favoritesUpdateCount.toString() + " // DATA UNAVAILABLE");
+            this.setText("diagnostic.favoritesfields","ROOT FIELDS: NULL");
+            this.setText("diagnostic.favoritesroot","ROOT: aFavoriteItems=NULL // uStartingSelection=NULL");
+            this.notifyChanged();
+            return;
+         }
+         favorites = data.aFavoriteItems as Array;
+         this.setText("diagnostic.favoritesfields","ROOT FIELDS: " +
+            this.listFieldNames(data,MAX_PLAYER_DIAGNOSTIC_FIELDS));
+         this.setText("diagnostic.favoritesroot","ROOT: aFavoriteItems=" +
+            (favorites == null ? this.formatDiagnosticValue(data.aFavoriteItems) :
+               "ARRAY[" + favorites.length.toString() + "]") + " // uStartingSelection=" +
+            this.formatDiagnosticValue(data.uStartingSelection));
+         if(favorites == null)
+         {
+            this.setText("diagnostic.favoritesprovider","FAVORITESDATA RECEIVED // UPDATE " +
+               this.favoritesUpdateCount.toString() + " // ITEM ARRAY UNAVAILABLE");
+            this.notifyChanged();
+            return;
+         }
+         this.setText("diagnostic.favoritesprovider","FAVORITESDATA RECEIVED // UPDATE " +
+            this.favoritesUpdateCount.toString() + " // ITEMS " + favorites.length.toString());
+         limit = Math.min(favorites.length,MAX_FAVORITE_DIAGNOSTIC_ITEMS);
+         while(index < limit)
+         {
+            item = favorites[index];
+            slotLabel = this.formatFavoriteSlot(index + 1);
+            if(item == null)
+            {
+               this.setText("diagnostic.favorite" + slotLabel + "meta","S" + slotLabel +
+                  " A" + index.toString() + " NULL");
+               this.setText("diagnostic.favorite" + slotLabel + "name","EMPTY / UNASSIGNED");
+            }
+            else
+            {
+               iconPresent = item.iconImage !== undefined && item.iconImage !== null;
+               this.setText("diagnostic.favorite" + slotLabel + "meta","S" + slotLabel +
+                  " A" + index.toString() + " Q" + this.formatFavoriteValue(item.uQuickkeyIndex,3) +
+                  " EQ" + this.formatFavoriteFlag(item.bIsEquippable) +
+                  " PW" + this.formatFavoriteFlag(item.bIsPower) +
+                  " FX" + this.formatFavoriteValue(item.iFixtureType,3) +
+                  " IMG" + (iconPresent ? "Y" : "N"));
+               this.setText("diagnostic.favorite" + slotLabel + "name",
+                  this.formatFavoriteValue(item.sName,18) + " | AM " +
+                  this.formatFavoriteValue(item.sAmmoName,8) + "/" +
+                  this.formatFavoriteValue(item.uAmmoCount,5) + " | CT " +
+                  this.formatFavoriteValue(item.uCount,5));
+            }
+            ++index;
          }
          this.notifyChanged();
       }
@@ -998,6 +1078,48 @@ package venworks.cui
       {
          this.setText("diagnostic.playertimeinventory",this.universalTimeDiagnostic +
             " // " + this.digipickDiagnostic);
+      }
+
+      private function resetFavoriteDiagnostics() : void
+      {
+         var index:int = 1;
+         var slotLabel:String = null;
+         while(index <= MAX_FAVORITE_DIAGNOSTIC_ITEMS)
+         {
+            slotLabel = this.formatFavoriteSlot(index);
+            this.setText("diagnostic.favorite" + slotLabel + "meta","S" + slotLabel +
+               " A-- Q-- EQ- PW- FX-- IMG-");
+            this.setText("diagnostic.favorite" + slotLabel + "name","EMPTY / NOT RECEIVED");
+            ++index;
+         }
+      }
+
+      private function formatFavoriteSlot(param1:int) : String
+      {
+         return (param1 < 10 ? "0" : "") + param1.toString();
+      }
+
+      private function formatFavoriteFlag(param1:Object) : String
+      {
+         if(param1 === undefined || param1 === null)
+         {
+            return "-";
+         }
+         return Boolean(param1) ? "1" : "0";
+      }
+
+      private function formatFavoriteValue(param1:Object, param2:int) : String
+      {
+         if(param1 === undefined || param1 === null)
+         {
+            return "-";
+         }
+         var value:String = this.formatDiagnosticValue(param1);
+         if(value.length > param2)
+         {
+            value = value.substring(0,param2);
+         }
+         return value;
       }
 
       private function formatOptionalNormalized(param1:Number) : String
