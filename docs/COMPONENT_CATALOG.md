@@ -73,7 +73,7 @@ surface.
 | Component | Status | Required behavior |
 |---|---|---|
 | Group | Implemented | Nest children and apply bounds, transforms, opacity, visibility, and z-order. |
-| Text | Implemented | Style a bounded, timeline-linked Starfield text field with configurable size, color, weight, and alignment. |
+| Text | Implemented | Style a bounded, timeline-linked Starfield text field with configurable size, color, weight, and alignment. Static text requires a nonempty value; source- or template-bound text may use an empty fallback until live data publishes. |
 | Panel | Implemented | Render a rectangular fill and stroke for cards, readouts, warnings, and composite backgrounds. |
 | Shape | Implemented | Render rectangle and ellipse primitives with independent fill and stroke styling. |
 | Divider | Implemented | Render configurable horizontal, vertical, or diagonal line geometry. |

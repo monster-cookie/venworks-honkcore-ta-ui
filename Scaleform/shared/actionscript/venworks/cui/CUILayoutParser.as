@@ -324,7 +324,7 @@ package venworks.cui
          else if(type == "text")
          {
             this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","value","source","format","valueTemplate","font","fontSize","color","bold","align"]);
-            if(String(param1.@value).length == 0)
+            if(String(param1.@value).length == 0 && param1.@source.length() == 0 && param1.@valueTemplate.length() == 0)
             {
                throw new Error("INVALID|Text value cannot be empty: " + String(param1.@id));
             }

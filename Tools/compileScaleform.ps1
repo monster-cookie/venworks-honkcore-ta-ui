@@ -303,6 +303,35 @@ foreach ($componentFixtureName in @(
   }
 }
 
+$equipmentRailFixturePath = Resolve-RequiredFile `
+  -Path (Join-Path $providerProbeComponentDirectory 'equipment-rail.xml') `
+  -Description 'Goal 7 equipment rail component'
+[xml]$equipmentRailFixture = Get-Content -LiteralPath $equipmentRailFixturePath -Raw
+$dynamicEmptyFavoriteDetails = @($equipmentRailFixture.SelectNodes(
+  '//text[string-length(@value) = 0 and @source and starts-with(@id, "contact.") and contains(@id, ".detail")]'
+))
+if ($dynamicEmptyFavoriteDetails.Count -ne 12) {
+  throw "Goal 7 equipment rail must retain exactly 12 source-bound empty detail fallbacks; found $($dynamicEmptyFavoriteDetails.Count)."
+}
+if ($equipmentRailFixture.SelectNodes('//text[string-length(@value) = 0 and not(@source) and not(@valueTemplate)]').Count -ne 0) {
+  throw 'Goal 7 equipment rail contains an empty static text value.'
+}
+
+$emptyStaticTextFixturePath = Resolve-RequiredFile `
+  -Path (Join-Path $fixtureDirectory 'layout-invalid-empty-static-text.xml') `
+  -Description 'Semantically invalid empty static-text fixture'
+$emptyStaticTextSchemaErrors = @(Get-XmlSchemaErrors -XmlPath $emptyStaticTextFixturePath -SchemaPath $layoutSchemaPath)
+if ($emptyStaticTextSchemaErrors.Count -ne 0) {
+  throw "Empty static-text fixture should pass structural schema validation: $($emptyStaticTextSchemaErrors -join '; ')"
+}
+[xml]$emptyStaticTextFixture = Get-Content -LiteralPath $emptyStaticTextFixturePath -Raw
+$invalidEmptyStaticTextNodes = @($emptyStaticTextFixture.SelectNodes(
+  '//text[string-length(@value) = 0 and not(@source) and not(@valueTemplate)]'
+))
+if ($invalidEmptyStaticTextNodes.Count -ne 1 -or [string]$invalidEmptyStaticTextNodes[0].id -ne 'empty.static.text') {
+  throw 'Empty static-text fixture must contain exactly one unbound empty text value.'
+}
+
 $legacyOverlongResolvedId = 'environmental-hazard-diagnostic-strip.diagnostic.environment.candidates'
 try {
   Assert-CuiIdentifier -Identifier $legacyOverlongResolvedId -Context 'Goal 6 composed-id regression'
@@ -867,6 +896,10 @@ try {
     $reopenedValueBindingSource = Get-Content -LiteralPath $reopenedValueBindingPath -Raw
     $reopenedVanillaVisibilitySource = Get-Content -LiteralPath $reopenedVanillaVisibilityPath -Raw
     $reopenedRuntimeSource = Get-Content -LiteralPath $reopenedRuntimePath -Raw
+    if ($reopenedLayoutParserSource -notmatch 'String\(param1\.@value\)\.length\s*==\s*0\s*&&\s*param1\.@source\.length\(\)\s*==\s*0\s*&&\s*param1\.@valueTemplate\.length\(\)\s*==\s*0' -or
+        !$reopenedLayoutParserSource.Contains('Text value cannot be empty: ')) {
+      throw 'Generated layout parser does not allow empty dynamic text fallbacks while rejecting empty static text.'
+    }
     foreach ($identifierValidatorSource in @(
       $reopenedLayoutParserSource,
       $reopenedCompositionResolverSource,

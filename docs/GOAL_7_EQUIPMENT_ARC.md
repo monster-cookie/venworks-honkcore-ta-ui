@@ -90,6 +90,14 @@ an accepted bounded fallback and may be revised after visual runtime review.
 - All four staging variants receive byte-identical loose XML and compiled HUD
   artifacts.
 
+Dynamic text may intentionally declare `value=""` when it also declares a
+live `source` or `valueTemplate`. Static text with neither binding still
+requires a nonempty value. The initial equipment-rail build exposed that the
+runtime parser applied the static rule unconditionally before bindings were
+created. The corrected parser and build regression distinguish these cases, so
+the twelve favorite-detail fields remain genuinely blank until data publishes
+without weakening validation for authored static labels.
+
 ## Validation and artifacts
 
 Run:
@@ -105,15 +113,17 @@ Run:
   -VanillaInterfacePath "<approved-vanilla-interface-path>"
 ```
 
-On 2026-08-14, the complete normal/large Scaleform build succeeded. It compiled
-and reopened all 205 seeded and generated classes, validated the bounded
-ActionScript and XML contracts, rejected retired diagnostic/weapon fragments,
-and proved byte-identical payload hashes across VWKS, CF, FC, and TA staging.
+On 2026-08-14, the corrected complete normal/large Scaleform build succeeded.
+It compiled and reopened all 205 seeded and generated classes, validated the
+bounded ActionScript and XML contracts, accepted the twelve source-bound empty
+favorite-detail fallbacks, retained rejection of an empty static-text fixture,
+rejected retired diagnostic/weapon fragments, and proved byte-identical payload
+hashes across VWKS, CF, FC, and TA staging.
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 407061 | `CEA7FD6FD462BCFB704F6F129913AFA532105F3735723FAA57B8263F3AAE1677` |
-| `hudmenu_lrg.gfx` | 407244 | `A5E6E87E1572770E226AF58EDC667595F9C48FE765493FE9036E87099CA0FC0C` |
+| `hudmenu.gfx` | 407096 | `2AF13F9D45AED5C603C1112CE583C302E4B97CE8E8A1AF1C39E7D7A319D7315B` |
+| `hudmenu_lrg.gfx` | 407279 | `9A8312B926D215B9E68E180A334F39FF38BF27F41674EEFAEF6D266FAB419A9D` |
 | `VenworksCUI/layout.xml` | 5553 | `D7DE6DCD1E3F8AD2E17ECAC7ADEBBEE0C49C96C176B20307634169CE495C3F44` |
 | `components/equipment-rail.xml` | 31444 | `9AB149557453E6DE04EA005774F539A5154AFD966080FC6C7122FEF8319CD2E0` |
 | `components/player-status-scanner.xml` | 8643 | `031D4BD34954325A6ADE5A19293EFA831A36C420FF14115F133C82138659876D` |
