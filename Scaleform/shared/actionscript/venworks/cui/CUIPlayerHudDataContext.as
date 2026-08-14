@@ -14,7 +14,7 @@ package venworks.cui
       private static const MAX_DIAGNOSTIC_EFFECTS:int = 4;
       private static const MAX_HAZARD_EFFECTS:int = 32;
       private static const MAX_DIAGNOSTIC_INVENTORY_ITEMS:int = 256;
-      private static const MAX_FAVORITE_DIAGNOSTIC_ITEMS:int = 12;
+      private static const MAX_FAVORITE_SLOTS:int = 12;
       private static const DIGIPICK_FORM_ID:Number = 10;
       private static const PLAYER_SERIAL_ALPHABET:String = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
       private static const PLAYER_SERIAL_LENGTH:int = 18;
@@ -51,7 +51,6 @@ package venworks.cui
       private var oxygenActivity:Number = 0;
       private var universalTimeDiagnostic:String = "UT: LOCAL ENV FREQUENT DATA NOT RECEIVED";
       private var digipickDiagnostic:String = "DIGIPICK: PLAYER INVENTORY DATA NOT RECEIVED";
-      private var favoritesUpdateCount:int = 0;
 
       public function CUIPlayerHudDataContext()
       {
@@ -90,10 +89,7 @@ package venworks.cui
          this.setText("diagnostic.playerfields","PLAYERDATA NOT RECEIVED");
          this.setText("diagnostic.playertargets","PLAYER TARGETS: WAITING");
          this.setText("diagnostic.playeridentifiers","DETERMINISTIC SERIAL: WAITING FOR PLAYERDATA");
-         this.setText("diagnostic.favoritesprovider","FAVORITESDATA NOT RECEIVED");
-         this.resetFavoriteFieldDiagnostics();
-         this.setText("diagnostic.favoritesroot","ROOT: aFavoriteItems=UNAVAILABLE // uStartingSelection=UNAVAILABLE");
-         this.resetFavoriteDiagnostics();
+         this.resetFavoriteSlots();
          this.updatePlayerTimeInventoryDiagnostic();
          this.resetEnvironmentalHazards();
          this.setText("environment.protectionstatus","ENVIRONMENT PROVIDER NOT RECEIVED");
@@ -115,7 +111,7 @@ package venworks.cui
       public static function getKind(param1:String) : String
       {
          var source:String = normalizeSource(param1);
-         if(/^diagnostic\.favorite(0[1-9]|1[0-2])(meta|name)$/.test(source))
+         if(/^favorite\.(0[1-9]|1[0-2])\.(name|detail)$/.test(source))
          {
             return "string";
          }
@@ -134,11 +130,7 @@ package venworks.cui
             source == "diagnostic.activityprotection" ||
             source == "diagnostic.activityloads" ||
             source == "diagnostic.playerfields" || source == "diagnostic.playertargets" ||
-            source == "diagnostic.playeridentifiers" || source == "diagnostic.playertimeinventory" ||
-            source == "diagnostic.favoritesprovider" || source == "diagnostic.favoritesfields01" ||
-            source == "diagnostic.favoritesfields02" || source == "diagnostic.favoritesfields03" ||
-            source == "diagnostic.favoritesfields04" ||
-            source == "diagnostic.favoritesroot" ||
+             source == "diagnostic.playeridentifiers" || source == "diagnostic.playertimeinventory" ||
             source == "diagnostic.effect0" || source == "diagnostic.effect1" ||
             source == "diagnostic.effect2" || source == "diagnostic.effect3" ||
             source == "diagnostic.armorresistance" || source == "diagnostic.starmapprovider")
@@ -470,58 +462,53 @@ package venworks.cui
          var index:int = 0;
          var limit:int = 0;
          var slotLabel:String = null;
-         var iconPresent:Boolean = false;
-         ++this.favoritesUpdateCount;
-         this.resetFavoriteDiagnostics();
+         var name:String = "";
+         var ammoName:String = "";
+         var ammoCount:Number = NaN;
+         var count:Number = NaN;
+         var detail:String = "";
+         this.resetFavoriteSlots();
          if(data == null)
          {
-            this.setText("diagnostic.favoritesprovider","FAVORITESDATA RECEIVED // UPDATE " +
-               this.favoritesUpdateCount.toString() + " // DATA UNAVAILABLE");
-            this.setFavoriteFieldDiagnostics(null);
-            this.setText("diagnostic.favoritesroot","ROOT: aFavoriteItems=NULL // uStartingSelection=NULL");
             this.notifyChanged();
             return;
          }
          favorites = data.aFavoriteItems as Array;
-         this.setFavoriteFieldDiagnostics(data);
-         this.setText("diagnostic.favoritesroot","ROOT: aFavoriteItems=" +
-            (favorites == null ? this.formatDiagnosticValue(data.aFavoriteItems) :
-               "ARRAY[" + favorites.length.toString() + "]") + " // uStartingSelection=" +
-            this.formatDiagnosticValue(data.uStartingSelection));
          if(favorites == null)
          {
-            this.setText("diagnostic.favoritesprovider","FAVORITESDATA RECEIVED // UPDATE " +
-               this.favoritesUpdateCount.toString() + " // ITEM ARRAY UNAVAILABLE");
             this.notifyChanged();
             return;
          }
-         this.setText("diagnostic.favoritesprovider","FAVORITESDATA RECEIVED // UPDATE " +
-            this.favoritesUpdateCount.toString() + " // ITEMS " + favorites.length.toString());
-         limit = Math.min(favorites.length,MAX_FAVORITE_DIAGNOSTIC_ITEMS);
+         limit = Math.min(favorites.length,MAX_FAVORITE_SLOTS);
          while(index < limit)
          {
             item = favorites[index];
             slotLabel = this.formatFavoriteSlot(index + 1);
-            if(item == null)
+            if(item != null)
             {
-               this.setText("diagnostic.favorite" + slotLabel + "meta","S" + slotLabel +
-                  " A" + index.toString() + " NULL");
-               this.setText("diagnostic.favorite" + slotLabel + "name","EMPTY / UNASSIGNED");
-            }
-            else
-            {
-               iconPresent = item.iconImage !== undefined && item.iconImage !== null;
-               this.setText("diagnostic.favorite" + slotLabel + "meta","S" + slotLabel +
-                  " A" + index.toString() + " Q" + this.formatFavoriteValue(item.uQuickkeyIndex,3) +
-                  " EQ" + this.formatFavoriteFlag(item.bIsEquippable) +
-                  " PW" + this.formatFavoriteFlag(item.bIsPower) +
-                  " FX" + this.formatFavoriteValue(item.iFixtureType,3) +
-                  " IMG" + (iconPresent ? "Y" : "N"));
-               this.setText("diagnostic.favorite" + slotLabel + "name",
-                  this.formatFavoriteValue(item.sName,18) + " | AM " +
-                  this.formatFavoriteValue(item.sAmmoName,8) + "/" +
-                  this.formatFavoriteValue(item.uAmmoCount,5) + " | CT " +
-                  this.formatFavoriteValue(item.uCount,5));
+               name = this.cleanFavoriteText(item.sName);
+               ammoName = this.cleanFavoriteText(item.sAmmoName);
+               ammoCount = Number(item.uAmmoCount);
+               count = Number(item.uCount);
+               detail = "ITEM";
+               if(Boolean(item.bIsPower))
+               {
+                  detail = "POWER";
+               }
+               else if(ammoName.length != 0)
+               {
+                  detail = ammoName;
+                  if(!isNaN(ammoCount) && isFinite(ammoCount))
+                  {
+                     detail += "  " + Math.max(0,Math.round(ammoCount)).toString();
+                  }
+               }
+               else if(!isNaN(count) && isFinite(count) && count > 1)
+               {
+                  detail = "COUNT  " + Math.max(0,Math.round(count)).toString();
+               }
+               this.setText("favorite." + slotLabel + ".name",name.length == 0 ? "UNNAMED" : name);
+               this.setText("favorite." + slotLabel + ".detail",detail);
             }
             ++index;
          }
@@ -1081,90 +1068,34 @@ package venworks.cui
             " // " + this.digipickDiagnostic);
       }
 
-      private function resetFavoriteDiagnostics() : void
+      private function resetFavoriteSlots() : void
       {
          var index:int = 1;
          var slotLabel:String = null;
-         while(index <= MAX_FAVORITE_DIAGNOSTIC_ITEMS)
+         while(index <= MAX_FAVORITE_SLOTS)
          {
             slotLabel = this.formatFavoriteSlot(index);
-            this.setText("diagnostic.favorite" + slotLabel + "meta","S" + slotLabel +
-               " A-- Q-- EQ- PW- FX-- IMG-");
-            this.setText("diagnostic.favorite" + slotLabel + "name","EMPTY / NOT RECEIVED");
+            this.setText("favorite." + slotLabel + ".name","EMPTY");
+            this.setText("favorite." + slotLabel + ".detail","");
             ++index;
          }
       }
 
-      private function resetFavoriteFieldDiagnostics() : void
+      private function cleanFavoriteText(param1:Object) : String
       {
-         this.setText("diagnostic.favoritesfields01","ROOT FIELDS 01-08: NOT RECEIVED");
-         this.setText("diagnostic.favoritesfields02","ROOT FIELDS 09-16: NOT RECEIVED");
-         this.setText("diagnostic.favoritesfields03","ROOT FIELDS 17-24: NOT RECEIVED");
-         this.setText("diagnostic.favoritesfields04","ROOT FIELDS 25-32: NOT RECEIVED");
-      }
-
-      private function setFavoriteFieldDiagnostics(param1:Object) : void
-      {
-         var fields:Array = [];
-         var field:String = null;
-         var row:int = 0;
-         var rowFields:Array = null;
-         var start:int = 0;
-         var end:int = 0;
-         var suffix:String = null;
-         if(param1 == null)
+         var value:String = "";
+         if(param1 === undefined || param1 === null)
          {
-            this.setText("diagnostic.favoritesfields01","ROOT FIELDS: NULL");
-            this.setText("diagnostic.favoritesfields02","ROOT FIELDS 09-16: -");
-            this.setText("diagnostic.favoritesfields03","ROOT FIELDS 17-24: -");
-            this.setText("diagnostic.favoritesfields04","ROOT FIELDS 25-32: -");
-            return;
+            return value;
          }
-         for(field in param1)
-         {
-            fields.push(field);
-         }
-         fields.sort(Array.CASEINSENSITIVE);
-         while(row < 4)
-         {
-            start = row * 8;
-            end = Math.min(start + 8,Math.min(fields.length,MAX_PLAYER_DIAGNOSTIC_FIELDS));
-            rowFields = fields.slice(start,end);
-            suffix = row == 3 && fields.length > MAX_PLAYER_DIAGNOSTIC_FIELDS ? ",..." : "";
-            this.setText("diagnostic.favoritesfields0" + (row + 1).toString(),
-               "ROOT FIELDS " + (start + 1).toString() + "-" + (start + 8).toString() +
-               " [" + fields.length.toString() + "]: " +
-               (rowFields.length == 0 ? "-" : rowFields.join(",") + suffix));
-            ++row;
-         }
+         value = String(param1).replace(/[\r\n\t]+/g," ");
+         value = value.replace(/^\s+|\s+$/g,"");
+         return value;
       }
 
       private function formatFavoriteSlot(param1:int) : String
       {
          return (param1 < 10 ? "0" : "") + param1.toString();
-      }
-
-      private function formatFavoriteFlag(param1:Object) : String
-      {
-         if(param1 === undefined || param1 === null)
-         {
-            return "-";
-         }
-         return Boolean(param1) ? "1" : "0";
-      }
-
-      private function formatFavoriteValue(param1:Object, param2:int) : String
-      {
-         if(param1 === undefined || param1 === null)
-         {
-            return "-";
-         }
-         var value:String = this.formatDiagnosticValue(param1);
-         if(value.length > param2)
-         {
-            value = value.substring(0,param2);
-         }
-         return value;
       }
 
       private function formatOptionalNormalized(param1:Number) : String

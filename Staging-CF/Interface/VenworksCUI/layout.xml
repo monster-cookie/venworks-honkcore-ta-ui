@@ -56,10 +56,8 @@
              x="39" y="11" anchor="bottom-right" visible="true" visibleWhen="always" z="90" />
     <include id="player-status-scanner" src="player-status-scanner.xml"
              x="-39" y="11" anchor="bottom-left" visible="true" visibleWhen="always" z="100" />
-    <include id="chronomark.weapon-status" src="weapon-status.xml"
-             x="39" y="-11" anchor="top-right" visible="true" visibleWhen="always" z="102" />
-    <include id="favorites-provider-diagnostic" src="favorites-provider-diagnostic.xml"
-             x="0" y="0" anchor="top-center" visible="true" visibleWhen="always" z="110" />
+    <include id="equipment-rail" src="equipment-rail.xml"
+             x="39" y="96" anchor="top-right" visible="true" visibleWhen="always" z="102" />
   </includes>
   <components>
     <path id="helmet.lower-frame.fill" x="-64" y="36" width="1920" height="293" opacity="1" visible="true"

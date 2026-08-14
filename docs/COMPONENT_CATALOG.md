@@ -134,7 +134,7 @@ gamer-facing configuration surface.
 | Composite | Status | Composition and behavior |
 |---|---|---|
 | Button | Future | Panel/shape, icon, label, key hint, enabled state, selected state, and cooldown/quantity overlay. |
-| Quick bar | Future | A panel containing an ordered, bounded collection of buttons. Each button can be enabled, disabled, or reordered in configuration. |
+| Tactical equipment rail | Implemented; acceptance pending | Fifteen passive contacts: a bounded twelve-entry FavoritesData snapshot followed by independently live weapon, explosive, and power readouts. Contacts do not own input or present themselves as buttons. |
 | Compass | Research | Line/divider, heading label, direction ticks, markers, and optional background; marker data must remain owned by the vanilla compass provider. |
 | Minimap/radar | Research | Bounded panel, player marker, contacts/POIs, sweep/cone, grid, scale label, and clip mask. Feasibility depends on vanilla data exposed to the owning movie. |
 | Information panel | Future | Panel, title, key/value text, dividers, optional scroll/overflow indicator, and status accents. |
@@ -144,10 +144,11 @@ gamer-facing configuration surface.
 | Status-effect row | Research | Bounded list of icons, labels, timers/stacks, and severity states using only available vanilla data. |
 | Reticle/crosshair | Research | Vector/symbol parts, spread/state transitions, hit feedback, and weapon-specific visibility. |
 
-The quick bar is intentionally modeled as a panel plus buttons rather than one
-fixed image. Configuration should allow a theme author to disable individual
-buttons, change their order, and style the shared button template without
-editing ActionScript.
+The Goal 7 equipment rail is intentionally passive. Favorites Menu remains the
+only owner of favorite assignment and input. Contacts 1-12 preserve the latest
+twelve-entry snapshot, while contacts 13-15 remain independently live. Exact
+weapon/power name matches may accent a favorite contact; menu cursor state and
+stale equipped flags are not treated as active state.
 
 ## Player HUD coverage targets
 
@@ -320,6 +321,18 @@ bottom edges. Its production sources are:
 | `carry.percentage` | Number `0..100` | Bounded current/max encumbrance ratio; full at or above capacity. |
 
 O2 and CO2 use one visual track with a transparent-empty red CO2 overlay. All
-five player tracks use the same bounded percentage contract. The temporary
-upper-right weapon fragment also displays `power.name`; it does not move input
-ownership or add interaction callbacks.
+five player tracks use the same bounded percentage contract.
+
+## Goal 7 tactical equipment rail
+
+Goal 7 retires the temporary FavoritesData diagnostic and the standalone
+upper-right weapon fragment. The production 330-by-650 rail is anchored below
+the upper helmet brow and above Planet Data. Contacts 1-12 render the latest
+bounded FavoritesData snapshot with generic same-domain icons. Contact 13 uses
+live WeaponData and equipped-ammunition data; contact 14 uses the live generic
+grenade/mine category and count; contact 15 uses the live mapped power name.
+
+Favorite weapon and power accents require an exact normalized match to the
+independently live name. `uStartingSelection`, `bIsEquipped`, menu-owned image
+buffers, and unproven slot indices are not production inputs. The rail contains
+no actions or input handlers and preserves the existing vehicle-exit prompt.

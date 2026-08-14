@@ -1,126 +1,94 @@
 # Goal 7 equipment rail
 
-**Status: Goal 7A FavoritesData discovery diagnostic is implemented and awaits
-runtime evidence. The first compact scanner-only presentation was rejected as
-unreadable and incompatible with Favorites-menu input. The selected production
-rail is not implemented yet.**
+**Status: The production equipment rail is implemented, built, and staged in
+all four variants. Runtime visual and behavior acceptance remains required
+before Goal 7 closes. The temporary full-screen FavoritesData diagnostic and
+the retired standalone weapon panel are not present in the production layout
+or staging payloads.**
 
 ## Product direction
 
-Goal 7 replaces the passive upper-right weapon presentation with one compact
-helmet-integrated equipment rail. The selected target spans from the lower edge
-of the upper helmet brow to the top of the Planet Data region and keeps the
-center field of view clear.
+Goal 7 replaces the passive upper-right weapon presentation with one compact,
+helmet-integrated tactical loadout rail. The 330-by-650 design-unit rail is
+anchored at the upper right, spans from beneath the upper helmet brow to above
+Planet Data, and leaves the center field of view clear.
 
-The production target reserves:
+The rail contains fifteen passive contacts:
 
-1. twelve compact favorite-slot contacts, with empty contacts dimmed;
-2. contact 13 for the active weapon;
-3. contact 14 for the active grenade or mine; and
-4. contact 15 for the active power.
+1. contacts 1-12 display the latest bounded `FavoritesData` snapshot;
+2. contact 13 displays the live weapon icon, name, ammunition type, clip, and
+   reserve values;
+3. contact 14 displays the live explosive category as `GRENADE` or `MINE` and
+   its count; and
+4. contact 15 displays the live active-power name.
 
-Weapon contacts should show the weapon icon, ammunition type, and ammunition
-counts. Consumables should show their count. Powers should show icon and name.
-The active weapon, explosive, and power may be highlighted simultaneously.
-The contacts are passive status displays, not on-screen buttons.
+The contacts are status displays, not buttons. They do not handle input,
+replace Favorites Menu ownership, or imply that the player can activate a
+contact by clicking it. Bethesda's vehicle-exit prompt remains available at
+the bottom of the rail.
 
-## Provider classification
+## Provider evidence
 
 ### Confirmed in HUDMenu
 
-| Concept | Provider fields | Classification |
+| Concept | Provider fields | Production use |
 | --- | --- | --- |
-| Active weapon | `WeaponData.sWeaponName`, `sIconLinkageName` | Confirmed in HUD |
-| Weapon ammunition | `WeaponData.uClipAmmo`, `uTotalAmmo`, `bDisplayAmmo`, `bShowAmmoAsPercent` | Confirmed in HUD |
-| Equipped ammunition name | `PlayerInventoryData.aItems[*].WeaponInfo.sAmmoType` | Confirmed in HUD for the equipped weapon |
-| Explosive count/type | `WeaponData.uExplosiveCount`, `uExplosiveIndicatorType` | Confirmed in HUD; identity and icon are not proven |
-| Active power | `HUDStarbornPowersData.sKey`, `bHasSpell`, `fCost`, `uCooldown` | Confirmed in HUD; name mapping is available, icon is not proven |
+| Favorite snapshot | `FavoritesData.aFavoriteItems[0..11]` | Contacts 1-12 preserve array order and empty slots. |
+| Favorite text/type | `sName`, `bIsPower`, `sAmmoName`, `uAmmoCount`, `uCount` | Bounded name/detail text and generic power/weapon/item icon selection. |
+| Active weapon | `WeaponData.sWeaponName`, `sIconLinkageName` | Live contact 13 and exact favorite-name highlighting. |
+| Weapon ammunition | `WeaponData.uClipAmmo`, `uTotalAmmo`, `bDisplayAmmo`, `bShowAmmoAsPercent` | Live contact 13 ammunition values. |
+| Equipped ammunition name | `PlayerInventoryData.aItems[*].WeaponInfo.sAmmoType` | Live contact 13 ammunition label. |
+| Explosive count/type | `WeaponData.uExplosiveCount`, `uExplosiveIndicatorType` | Live contact 14 generic category and count. |
+| Active power | `HUDStarbornPowersData.sKey`, `bHasSpell`, `fCost`, `uCooldown` | Mapped live name in contact 15 and exact favorite-name highlighting. |
 
-### Confirmed elsewhere or menu-owned
+### Runtime discovery results
 
-Vanilla `favoritesmenu.swf` subscribes to `FavoritesData`. Its root consumes
-`aFavoriteItems` and `uStartingSelection`. Each visible favorite item may expose
-`uQuickkeyIndex`, `sName`, `iconImage`, `bIsEquippable`, `bIsPower`,
-`sAmmoName`, `uAmmoCount`, `uCount`, and `iFixtureType`. The menu also uses
-`ImageFixture`, `LoadImageFixtureFromUIData`, and `FavoritesIconBuffer`.
+The temporary Goal 7A probe established that:
 
-These contracts prove Favorites Menu ownership only. They do not prove that
-`FavoritesData`, its image buffer, or its selection semantics are available or
-lifetime-safe in `HUDMenu`.
+- `FavoritesData` is delivered to HUDMenu as a fixed twelve-entry array;
+- null/empty contacts are preserved rather than compacted;
+- the snapshot refreshes after Favorites Menu closes;
+- changing the active weapon, power, grenade, or mine does not independently
+  refresh the FavoritesData snapshot;
+- `uStartingSelection` did not identify the highlighted or active contact and
+  is not a production input;
+- `uQuickkeyIndex` and `iFixtureType` were absent in the captured HUD payload;
+- `iconImage` was present for populated entries, but its menu-owned image
+  buffer was not proven safe or lifetime-valid in HUDMenu; and
+- grenade and mine favorites were visible by name, while the live HUD
+  provider supplied only a generic explosive category and count.
 
-### Unknown before Goal 7A runtime
+The probe was deliberately removed after this evidence was accepted. No
+production source or staged loose file contains its diagnostic bindings.
 
-- whether `FavoritesData` is delivered before Favorites Menu opens;
-- whether it is delivered or refreshed while the HUD remains open;
-- whether the favorite array is dense, sparse, or compacted;
-- the exact relationship between array index and `uQuickkeyIndex`;
-- whether `uStartingSelection` means current menu cursor, equipped favorite, or
-  another menu-owned state;
-- whether `iconImage` and its underlying image buffer can render in HUDMenu;
-- the identity and icon of the active grenade or mine; and
-- an active-power icon source.
+## Production behavior
 
-No production slot, active-state, or icon behavior will be inferred from these
-unknowns.
+Contacts 1-12 use generic same-domain CUI icons. A favorite is classified as a
+power when `bIsPower` is true, as a weapon when a nonempty ammunition name is
+present, and otherwise as an item. Missing entries display `EMPTY`.
 
-## Goal 7A bounded diagnostic
+Favorite weapon and power contacts become active only when their bounded,
+trimmed, case-insensitive names exactly match the independently live weapon or
+mapped power name. The implementation does not infer active state from
+`uStartingSelection`, `bIsEquipped`, menu cursor position, or stale snapshot
+state. Item and explosive identity cannot be highlighted from the currently
+confirmed live HUD contract.
 
-The diagnostic subscribes to `FavoritesData` from the existing HUD data
-context. The rejected first runtime build used a 1160-by-196 top-center strip
-shown only while the scanner was active. Runtime testing proved that four
-entries per row clipped most item evidence and that Starfield does not permit
-the Favorites menu to open while scanner mode owns the input.
+Contacts 13-15 remain live even when the FavoritesData snapshot is stale.
+Contact 14 intentionally says only `GRENADE` or `MINE`; exact explosive identity
+and an independently renderable active explosive icon remain unproven. This is
+an accepted bounded fallback and may be revised after visual runtime review.
 
-The corrected diagnostic is a temporary 1760-by-454 top-center panel shown
-whenever HUDMenu is visible. It records provider receipt count, at most 32 root
-field names split deterministically across four wide rows, the raw
-`uStartingSelection` value, favorite-array availability and length, and at most
-12 array entries arranged in two columns. This panel intentionally obscures a
-large part of the upper HUD during discovery and is not a production layout.
+## Implementation boundaries
 
-Each entry has two bounded lines. The metadata legend is:
-
-```text
-S##  diagnostic row
-A#   source array index
-Q#   raw uQuickkeyIndex
-EQ#  bIsEquippable
-PW#  bIsPower
-FX#  iFixtureType
-IMG# iconImage presence only
-```
-
-The second line shows a bounded name, ammunition name/count, and item count.
-Missing members display `-`. The probe does not render `iconImage`, does not
-load the Favorites Menu image buffer, and does not treat `uStartingSelection`
-as an equipped or active state. The probe must be removed immediately after
-the required runtime evidence is accepted.
-
-## Runtime evidence matrix
-
-After the user commits and deploys the built artifacts, use a
-change-menu-close-capture sequence. HUDMenu evidence is inspected immediately
-after the Favorites menu closes; the probe is not expected to render over the
-menu itself. Capture the diagnostic in these states:
-
-1. immediately after loading a save, before Favorites Menu has been opened
-   during that session;
-2. Favorites Menu opened and closed without changing a slot, followed by an
-   immediate diagnostic capture;
-3. assign, move, and remove favorite entries, close the menu, then capture the
-   diagnostic;
-4. switch and fire a favorited weapon;
-5. use a favorited consumable;
-6. favorite and activate a power;
-7. favorite, equip, cycle, and use a grenade or mine; and
-8. save, reload, and inspect before reopening Favorites Menu.
-
-For each capture, record whether the provider was received, its update count,
-the root selection value, array length, all four root-field rows, and all
-affected `A`/`Q` rows. This is the minimum evidence needed before implementing
-the production 1-15 rail. Once those fields and update semantics are proven,
-the next diagnostic-removal build restores the accepted helmet HUD before any
-production equipment rail is introduced.
+- No SFSE or native dependency is introduced.
+- No save data, persistence, schema migration, environment variable, or
+  configuration path is added.
+- No menu-owned image buffer is loaded into HUDMenu.
+- The rail has no button, action, callback, or routed-input element.
+- Both normal and large HUD movies use the same production layout contract.
+- All four staging variants receive byte-identical loose XML and compiled HUD
+  artifacts.
 
 ## Validation and artifacts
 
@@ -137,31 +105,38 @@ Run:
   -VanillaInterfacePath "<approved-vanilla-interface-path>"
 ```
 
-The build must compile and reopen normal and large HUD artifacts, validate the
-bounded ActionScript and XML contracts, stage the loose diagnostic in all four
-variants, and prove byte-identical staged payload hashes across variants.
-
-On 2026-08-14, repository validation and the complete normal/large build
-succeeded. The build reopened all 205 seeded and generated classes, passed the
-FavoritesData source and staged-layout contracts, and proved byte-identical
-payload hashes across the VWKS, CF, FC, and TA staging variants.
+On 2026-08-14, the complete normal/large Scaleform build succeeded. It compiled
+and reopened all 205 seeded and generated classes, validated the bounded
+ActionScript and XML contracts, rejected retired diagnostic/weapon fragments,
+and proved byte-identical payload hashes across VWKS, CF, FC, and TA staging.
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 406188 | `99DB2893EBDF01FABAF0CC76B71535F8B0F4D23F4AED6FFF8AACE78AE2893FA3` |
-| `hudmenu_lrg.gfx` | 406371 | `19269A3330D160DB7970F094E2E9E7DDA63FCF67039D6AAD1B4FD81830933195` |
-| `VenworksCUI/layout.xml` | 5743 | `E5E0DA87BF8350850E0F44CE77D49A83CB32CB1614165A68502F9A176D1B9501` |
-| `components/favorites-provider-diagnostic.xml` | 10999 | `01CAFEF81A894E1AAF9EC4ABDA0CB12BF3AF49B4087AA333B46E37CA67790001` |
+| `hudmenu.gfx` | 407061 | `CEA7FD6FD462BCFB704F6F129913AFA532105F3735723FAA57B8263F3AAE1677` |
+| `hudmenu_lrg.gfx` | 407244 | `A5E6E87E1572770E226AF58EDC667595F9C48FE765493FE9036E87099CA0FC0C` |
+| `VenworksCUI/layout.xml` | 5553 | `D7DE6DCD1E3F8AD2E17ECAC7ADEBBEE0C49C96C176B20307634169CE495C3F44` |
+| `components/equipment-rail.xml` | 31444 | `9AB149557453E6DE04EA005774F539A5154AFD966080FC6C7122FEF8319CD2E0` |
 | `components/player-status-scanner.xml` | 8643 | `031D4BD34954325A6ADE5A19293EFA831A36C420FF14115F133C82138659876D` |
 | `components/environmental-hazard-scanner.xml` | 9411 | `B13E5559452491AB62F0F05990F2553BAFA91BA589E3D103BAC31FF260B10526` |
-| `components/weapon-status.xml` | 4455 | `81FF1E81CC4647736A4C360C131BDF68D84D566338268BFF2AEC68D508248894` |
+
+## Runtime acceptance
+
+After the user commits and deploys this exact build, verify:
+
+1. the full-screen diagnostic is absent in scanner and ordinary HUD states;
+2. the rail fits between the upper brow and Planet Data without clipping;
+3. contacts 1-12 preserve empty slots and refresh after Favorites Menu closes;
+4. live weapon and power contacts update without reopening Favorites Menu;
+5. exact matching favorite weapon/power contacts receive the active accent;
+6. contact 14 switches among no explosive, grenade, and mine with the correct
+   live count;
+7. vehicle exit remains readable and functional; and
+8. normal and large-menu HUD variants remain error-free.
 
 ## Risks and rollback
 
-The diagnostic is always visible and bounded, but `FavoritesData` may never be
-delivered in HUDMenu. That negative result is useful evidence and leaves the
-accepted Goal 6 production panels unchanged beneath the temporary probe.
-Rollback and the required post-evidence cleanup are surgical: remove the
-diagnostic include and fragment plus the FavoritesData subscription and
-diagnostic bindings. No save data, native plugin, schema, dependency, or
-configuration changes are introduced.
+Favorite names can be localized or duplicated, so exact name matching is a
+bounded presentation heuristic rather than an inventory identity contract.
+Explosive identity remains generic. Rollback is surgical: remove the
+`equipment-rail` include and fragment and remove the bounded FavoritesData
+adapters. No persistent state or native component needs recovery.

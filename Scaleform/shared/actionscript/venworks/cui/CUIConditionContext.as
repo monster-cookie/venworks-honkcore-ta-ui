@@ -7,18 +7,31 @@ package venworks.cui
 
    public final class CUIConditionContext extends EventDispatcher
    {
+      private static const FAVORITE_SLOT_COUNT:int = 12;
+
       private var values:Object;
+      private var favoriteNames:Array;
+      private var favoritePowers:Array;
+      private var favoriteWeapons:Array;
+      private var activeWeaponName:String = "";
+      private var activePowerName:String = "";
 
       public function CUIConditionContext()
       {
          super();
          values = {};
+         favoriteNames = [];
+         favoritePowers = [];
+         favoriteWeapons = [];
+         this.resetFavoriteConditions();
          BSUIDataManager.Subscribe("HudCrosshairData",this.onCrosshairData);
          BSUIDataManager.Subscribe("HUDStealthData",this.onStealthData);
          BSUIDataManager.Subscribe("HudCompassData",this.onCompassData);
          BSUIDataManager.Subscribe("HUDVehicleData",this.onVehicleData);
          BSUIDataManager.Subscribe("HUDOpacityData",this.onOpacityData);
          BSUIDataManager.Subscribe("WeaponData",this.onWeaponData);
+         BSUIDataManager.Subscribe("HUDStarbornPowersData",this.onStarbornPowersData);
+         BSUIDataManager.Subscribe("FavoritesData",this.onFavoritesData);
          BSUIDataManager.Subscribe("HudJetpackData",this.onJetpackData);
          BSUIDataManager.Subscribe("PlayerInventoryData",this.onPlayerInventoryData);
       }
@@ -31,6 +44,10 @@ package venworks.cui
       public static function getKind(param1:String) : String
       {
          var name:String = normalizeName(param1);
+         if(/^favorite(0[1-9]|1[0-2])(active|populated|power|weapon|item)$/.test(name))
+         {
+            return "boolean";
+         }
          if(name == "always" || name == "never" || name == "firstperson" || name == "thirdperson" ||
             name == "incombat" || name == "inscanner" || name == "issneaking" ||
             name == "weaponaiming" || name == "weaponhasammo" || name == "weaponhasexplosive" ||
@@ -116,9 +133,55 @@ package venworks.cui
 
       private function onWeaponData(param1:FromClientDataEvent) : void
       {
+         this.activeWeaponName = this.cleanName(param1.data.sWeaponName);
          this.setValue("weaponhasammo",Boolean(param1.data.bDisplayAmmo));
          this.setValue("weaponhasexplosive",Number(param1.data.uExplosiveCount) > 0);
          this.setValue("weaponexplosiveismine",Number(param1.data.uExplosiveIndicatorType) != 0);
+         this.updateFavoriteActiveConditions();
+         this.notifyChanged();
+      }
+
+      private function onStarbornPowersData(param1:FromClientDataEvent) : void
+      {
+         this.activePowerName = Boolean(param1.data.bHasSpell) ?
+            this.resolvePowerName(param1.data.sKey) : "";
+         this.updateFavoriteActiveConditions();
+         this.notifyChanged();
+      }
+
+      private function onFavoritesData(param1:FromClientDataEvent) : void
+      {
+         var favorites:Array = param1 == null || param1.data == null ? null :
+            param1.data.aFavoriteItems as Array;
+         var item:Object = null;
+         var index:int = 0;
+         var limit:int = 0;
+         var slotLabel:String = null;
+         var populated:Boolean = false;
+         var isPower:Boolean = false;
+         var isWeapon:Boolean = false;
+         this.resetFavoriteConditions();
+         if(favorites != null)
+         {
+            limit = Math.min(favorites.length,FAVORITE_SLOT_COUNT);
+            while(index < limit)
+            {
+               item = favorites[index];
+               slotLabel = this.formatFavoriteSlot(index + 1);
+               populated = item != null;
+               isPower = populated && Boolean(item.bIsPower);
+               isWeapon = populated && !isPower && this.cleanName(item.sAmmoName).length != 0;
+               favoriteNames[index] = populated ? this.cleanName(item.sName) : "";
+               favoritePowers[index] = isPower;
+               favoriteWeapons[index] = isWeapon;
+               this.setValue("favorite" + slotLabel + "populated",populated);
+               this.setValue("favorite" + slotLabel + "power",isPower);
+               this.setValue("favorite" + slotLabel + "weapon",isWeapon);
+               this.setValue("favorite" + slotLabel + "item",populated && !isPower && !isWeapon);
+               ++index;
+            }
+         }
+         this.updateFavoriteActiveConditions();
          this.notifyChanged();
       }
 
@@ -137,6 +200,90 @@ package venworks.cui
       {
          this.setValue("digipicksavailable",param1.data.aItems is Array);
          this.notifyChanged();
+      }
+
+      private function resetFavoriteConditions() : void
+      {
+         var index:int = 0;
+         var slotLabel:String = null;
+         while(index < FAVORITE_SLOT_COUNT)
+         {
+            slotLabel = this.formatFavoriteSlot(index + 1);
+            favoriteNames[index] = "";
+            favoritePowers[index] = false;
+            favoriteWeapons[index] = false;
+            this.setValue("favorite" + slotLabel + "active",false);
+            this.setValue("favorite" + slotLabel + "populated",false);
+            this.setValue("favorite" + slotLabel + "power",false);
+            this.setValue("favorite" + slotLabel + "weapon",false);
+            this.setValue("favorite" + slotLabel + "item",false);
+            ++index;
+         }
+      }
+
+      private function updateFavoriteActiveConditions() : void
+      {
+         var index:int = 0;
+         var slotLabel:String = null;
+         var name:String = null;
+         var active:Boolean = false;
+         while(index < FAVORITE_SLOT_COUNT)
+         {
+            slotLabel = this.formatFavoriteSlot(index + 1);
+            name = String(favoriteNames[index]);
+            active = name.length != 0 &&
+               ((Boolean(favoritePowers[index]) && activePowerName.length != 0 && name == activePowerName) ||
+                (Boolean(favoriteWeapons[index]) && activeWeaponName.length != 0 && name == activeWeaponName));
+            this.setValue("favorite" + slotLabel + "active",active);
+            ++index;
+         }
+      }
+
+      private function formatFavoriteSlot(param1:int) : String
+      {
+         return (param1 < 10 ? "0" : "") + param1.toString();
+      }
+
+      private function cleanName(param1:Object) : String
+      {
+         if(param1 === undefined || param1 === null)
+         {
+            return "";
+         }
+         return String(param1).replace(/[\r\n\t]+/g," ").replace(/^\s+|\s+$/g,"").toLowerCase();
+      }
+
+      private function resolvePowerName(param1:Object) : String
+      {
+         var key:String = param1 === undefined || param1 === null ? "" : String(param1);
+         switch(key)
+         {
+            case "ArtifactPower_AlienReanim": return "alien reanimation";
+            case "ArtifactPower_AntiGravityField": return "anti-gravity field";
+            case "ArtifactPower_CreateVacuum": return "create vacuum";
+            case "ArtifactPower_CreatorsPeace": return "creators' peace";
+            case "ArtifactPower_Earthbound": return "earthbound";
+            case "ArtifactPower_ElementalBlast": return "elemental blast";
+            case "ArtifactPower_EternalHarvest": return "eternal harvest";
+            case "ArtifactPower_GravDash": return "grav dash";
+            case "ArtifactPower_GravWave": return "gravity wave";
+            case "ArtifactPower_GravWell": return "gravity well";
+            case "ArtifactPower_InnerDemon": return "inner demon";
+            case "ArtifactPower_LifeForced": return "life forced";
+            case "ArtifactPower_MoonForm": return "moon form";
+            case "ArtifactPower_ParallelSelf": return "parallel self";
+            case "ArtifactPower_ParticleBeam": return "particle beam";
+            case "ArtifactPower_PersonalAtmo": return "personal atmosphere";
+            case "ArtifactPower_PhasedTime": return "phased time";
+            case "ArtifactPower_Precognition": return "precognition";
+            case "ArtifactPower_ReactiveShield": return "reactive shield";
+            case "ArtifactPower_SenseStarStuff": return "sense star stuff";
+            case "ArtifactPower_SolarFlare": return "solar flare";
+            case "ArtifactPower_SunlessSpace": return "sunless space";
+            case "ArtifactPower_Supernova": return "supernova";
+            case "ArtifactPower_VoidForm": return "void form";
+         }
+         return "";
       }
 
       private function setValue(param1:String, param2:Object) : void
