@@ -46,7 +46,7 @@ formula or animation.
 | Local temperature | `LocalEnvironmentData.fTemperature` | Confirmed in HUD runtime by Goal 5 | Live temperature; not treated as hazard magnitude |
 | Local gravity | `LocalEnvironmentData.fGravity` | Confirmed in HUD runtime by Goal 5 | Context only |
 | Planetary local time | `LocalEnvData_Frequent.fLocalPlanetTime` | Confirmed in Bethesda HUD movie and Goal 5 runtime | Live local 24-hour display |
-| Galactic Standard Time / UT | `LocalEnvData_Frequent.fGalacticStandardTime` | Clean-room roadmap candidate only; not independently confirmed in Bethesda HUD runtime | Future player-scanner probe; not displayed in Goal 6 |
+| Galactic Standard Time / UT | `LocalEnvData_Frequent.fGalacticStandardTime` | Confirmed in Goal 6 HUD runtime as decimal hours | Normalize by 24 before the shared day-fraction clock formatter |
 | Active environmental effects | `EnvironmentEffectsData.aEnvironmentEffects` | Provider is a HONKCORE roadmap candidate; array field is confirmed in Bethesda HUD-related code | Bounded receipt and field probe |
 | Hazard category | `aEnvironmentEffects[*].sEffectIcon` | Confirmed in Bethesda `EnvironmentEffectsWidget` and `WatchIconsWidget` contracts | Four categorical activity gates |
 | Radiation category | `HazardEffect_Radiation` | Confirmed in Bethesda HUD movie | Detected/clear only |
@@ -139,7 +139,7 @@ bounded runtime probe as follows:
 | Character name | `PlayerData.sName` | Confirmed in HUD runtime |
 | Player level | `PlayerData.uLevel` | Confirmed in HUD runtime |
 | XP progress | `PlayerData.fLevelXP` / `fNextLevelXP` | Confirmed in HUD runtime |
-| Universal time | `LocalEnvData_Frequent.fGalacticStandardTime` | Confirmed in HUD runtime and formatted by the production player panel |
+| Universal time | `LocalEnvData_Frequent.fGalacticStandardTime` | Confirmed in HUD runtime as decimal hours and normalized by the production player panel |
 | Venworks actor value | `PlayerData.VWKS_PlayerLevel` candidate for Actor Value `000030:Venworks-Core.esm` | Absent from the received HUD payload (`NULL`) |
 | Digipick count | `PlayerInventoryData.aItems[*].uCount` for base form `00000A:Starfield.esm` | Confirmed in HUD runtime by exact base form |
 | Save/player serial | ID-, serial-, save-, character-, actor-, form-, reference-, or `VWKS`-named `PlayerData` member | No candidate found by bounded HUD runtime enumeration |
@@ -158,8 +158,12 @@ provided `sName`, `uLevel=150`, `fLevelXP=15104.5`, and
 none. `LocalEnvData_Frequent` simultaneously provided
 `fGalacticStandardTime=2.85866472415698`,
 `fLocalPlanetTime=0.623948012487412`, and
-`fLocalPlanetHoursPerDay=41`. These values are provider evidence, not yet a
-production clock-format decision.
+`fLocalPlanetHoursPerDay=41`. A production/Character Menu comparison later
+confirmed that `fGalacticStandardTime` is decimal UT hours, while
+`fLocalPlanetTime` is a normalized local-day fraction. Treating both as a day
+fraction incorrectly turned a UT value around `3.35` (`03:21`) into `08:24`.
+The production context therefore divides only Galactic Standard Time by 24
+before passing it to the shared `time24` formatter.
 
 The digipick search inspects at most 256 inventory entries. Runtime matched the
 numeric base form `0x00000A` with `uFormID=10`, `uCount=51`, and
@@ -488,15 +492,15 @@ the notch. All accepted text, provider bindings, meter geometry, root bounds,
 safe-area anchoring, and the temporary upper-right weapon panel remain
 unchanged.
 
-A separate 56-unit root-layout path now links the two independent tricorder
-panels behind their existing z-order. Its filled lower band uses the same dark
-translucent helmet material and cyan edge as the panels. The upper edge rises
-smoothly beneath each panel, then remains flat across the center so the result
-reads as the lower helmet/glass seal instead of a third information panel. The
-center intentionally has no decorative bump, label, waveform, or invented
-telemetry; a future goal may add the separately designed threat sensor there.
-The Player Data clock fields also move wholly inside the clock tab so its
-shoulder no longer crosses the full `UNIVERSAL` label.
+A center-only 56-unit root-layout connector now occupies the exact 1150-unit
+gap between the two independent tricorder panels. Panel and connector fills use
+the same helmet material. Their cyan outlines are separate open paths: each
+panel's lower inner outline stops where the connector begins, and the connector
+draws only its exposed rounded/flat upper rail. That removes the earlier hidden
+overlap, doubled vertical seams, and behind-the-panel appearance while retaining
+the flat center reserved for a future threat sensor. The Player Data clock tab
+also gives the full `UNIVERSAL` label and five-character clock separate,
+non-clipping bounds.
 
 ## Automated validation and expected artifacts
 
@@ -522,15 +526,16 @@ normal/large pair across all four staging variants:
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 402359 | `66F25999E6685D6CCE684593D8E87D28387C01B7BB765C7B0923E196B5A251D2` |
-| `hudmenu_lrg.gfx` | 402542 | `E0C9DA806CC5F20DA89D09065A1E33EE769BEB0A82614724A55C9204FF2DF1BD` |
-| `VenworksCUI/layout.xml` | 3736 | `51D2128ABA3E0154D210DD061A095A2D20602255D059FFEB0F93786DB923443C` |
-| `components/player-status-scanner.xml` | 9174 | `FF920F831877489D66E5067284DF17727BE15AA97F111BF6F737E78B6FB4DB53` |
-| `components/environmental-hazard-scanner.xml` | 9915 | `936AFD567C6A3629950A8870C1803B189F3C469871D7D638D2F3E37C03BEC7C2` |
+| `hudmenu.gfx` | 402362 | `EEBBEBB487CB85A09D777E034E5C97073DC5FF31EFEE3BF2C98C25786DEDF2CB` |
+| `hudmenu_lrg.gfx` | 402545 | `9A585346BEACEAC44D48BE8308D01A85210DD6D2D3AEF3663210BA6D0DEEA36F` |
+| `VenworksCUI/layout.xml` | 4708 | `FCBFCC1DB0FA2F4764B6FE6CAF68C437439E61F3FE2CB93E7A2DEDB64B280838` |
+| `components/player-status-scanner.xml` | 9680 | `CA8B1529C30B8B3EEB89D211EF107427D27C9EE5629F156F8669885C089B7A0C` |
+| `components/environmental-hazard-scanner.xml` | 10415 | `212454DC7F8E4D6DC4C8DAFDC66446C8166521C7B1090E36FB8101C7D057DBF7` |
 | `components/weapon-status.xml` | 4455 | `81FF1E81CC4647736A4C360C131BDF68D84D566338268BFF2AEC68D508248894` |
 
-The table above records the helmet-integration build after both HUD variants
-passed the same compile, reopen, staging, and hash validation. The loose XML
-hashes record the production-hidden Chronomark and final split-tab silhouettes.
+The table above records the decimal-hours UT correction and seam-integration
+build after both HUD variants passed the same compile, reopen, staging, and hash
+validation. The loose XML hashes record the production-hidden Chronomark,
+non-clipping Player clock tab, open panel outlines, and center-only helmet seal.
 
 Runtime deployment must use artifacts from the user-committed Goal 6 worktree.

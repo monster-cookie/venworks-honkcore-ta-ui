@@ -261,8 +261,10 @@ validated against Starfield or explicitly marked unavailable/unknown.
 ## Goal 9: Packaging and release integration
 
 Add the required runtime artifacts directly to the four themed staging
-variants. `Staging-VWKS` is the initial layout project; CF, FC, and TA receive
-their layouts as they are migrated. Update the existing release workflow
+variants. `Staging-VWKS` remains the initial runtime-tested layout project;
+Goal 6 synchronizes its accepted loose CUI payload to CF, FC, and TA so compiled
+HUD and editable layout artifacts cannot drift while those themes await their
+own conversion passes. Update the existing release workflow
 rather than creating an application-specific workflow.
 
 Packages must:

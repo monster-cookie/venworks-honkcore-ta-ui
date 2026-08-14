@@ -289,7 +289,7 @@ package venworks.cui
       private function onLocalEnvironmentFrequentData(param1:FromClientDataEvent) : void
       {
          this.setFinite("environment.localtime",param1.data.fLocalPlanetTime);
-         this.setFinite("player.universaltime",param1.data.fGalacticStandardTime);
+         this.setFinite("player.universaltime",param1.data.fGalacticStandardTime / 24);
          this.universalTimeDiagnostic = "UT: fGalacticStandardTime=" +
             this.formatDiagnosticValue(param1.data.fGalacticStandardTime) +
             " | fLocalPlanetTime=" + this.formatDiagnosticValue(param1.data.fLocalPlanetTime) +

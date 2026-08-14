@@ -2,11 +2,16 @@
 <venworksCUIFragment schemaVersion="1" runtimeVersion="1">
   <group id="root" x="0" y="0" width="360" height="312" opacity="1" visible="true"
          rotation="0" scaleX="1" scaleY="1" z="0">
-    <path id="panel" x="0" y="0" width="360" height="312" opacity="1" visible="true"
+    <path id="panel.fill" x="0" y="0" width="360" height="312" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="0"
           data="M 8 0 L 108 0 Q 120 0 120 12 L 120 20 Q 120 30 132 30 L 236 30 Q 248 30 248 20 L 248 12 Q 248 0 260 0 L 352 0 Q 370 0 385 -32 L 385 337 L 8 337 Q 0 337 0 329 L 0 8 Q 0 0 8 0 Z"
           viewBoxX="0" viewBoxY="0" viewBoxWidth="360" viewBoxHeight="312"
-          fillColor="#03141D" fillOpacity="0.88" strokeColor="#62DDF2" strokeOpacity="0.76" strokeWidth="2" />
+          fillColor="#03141D" fillOpacity="0.88" strokeColor="#62DDF2" strokeOpacity="0" strokeWidth="0" />
+    <path id="panel.outline" x="0" y="0" width="360" height="312" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="1"
+          data="M 0 281 L 0 8 Q 0 0 8 0 L 108 0 Q 120 0 120 12 L 120 20 Q 120 30 132 30 L 236 30 Q 248 30 248 20 L 248 12 Q 248 0 260 0 L 352 0 Q 370 0 385 -32 L 385 337"
+          viewBoxX="0" viewBoxY="0" viewBoxWidth="360" viewBoxHeight="312"
+          fillColor="#03141D" fillOpacity="0" strokeColor="#62DDF2" strokeOpacity="0.76" strokeWidth="2" />
 
     <text id="planet.title" x="12" y="6" width="156" height="22" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" value="PLANET DATA"

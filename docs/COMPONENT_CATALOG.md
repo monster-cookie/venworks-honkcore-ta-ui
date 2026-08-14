@@ -294,9 +294,11 @@ calibration strip established current player-O2 reserve, downward-drain
 detection, the gradual O2 activity envelope, protection depletion, and the four
 modeled channel loads; it is not included in the accepted production layout.
 
-`LocalEnvData_Frequent.fGalacticStandardTime` is a precise universal-time value
-confirmed by the bounded HUD runtime probe. The production Player Data fragment
-formats it independently from the Planet Data fragment's local time.
+`LocalEnvData_Frequent.fGalacticStandardTime` is a decimal-hours universal-time
+value confirmed by the bounded HUD runtime probe and a Character Menu comparison.
+The production data context divides it by 24 before the shared day-fraction
+clock formatter. `fLocalPlanetTime` is already a normalized local-day fraction
+and is not converted.
 
 ## Goal 6 player scanner bindings
 
@@ -309,7 +311,7 @@ bottom edges. Its production sources are:
 | `player.serial` | String | Display-only deterministic 8-4-6 serial derived from the exact character name. |
 | `player.level` | Number | `PlayerData.uLevel`. |
 | `player.xpPercentage` | Number `0..100` | Bounded ratio of `fLevelXP` to `fNextLevelXP`. |
-| `player.universalTime` | Number | `LocalEnvData_Frequent.fGalacticStandardTime`, formatted as a 24-hour clock. |
+| `player.universalTime` | Number | `LocalEnvData_Frequent.fGalacticStandardTime / 24`, normalized for the shared 24-hour clock formatter. |
 | `player.healthPercentage` | Number `0..100` | Bounded health ratio. |
 | `player.oxygenPercentage` | Number `0..100` | Bounded remaining O2 ratio. |
 | `player.carbonDioxidePercentage` | Number `0..100` | Bounded CO2 ratio using the shared O2/CO2 maximum. |
