@@ -1027,12 +1027,9 @@ try {
   $playerScannerIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'player-status-scanner'
   })
-  $helmetBottomSealFillPaths = @($providerProbeLayout.venworksCUI.components.path | Where-Object {
-    [string]$_.id -eq 'helmet.bottom-seal.fill'
-  })
-  $helmetBottomSealOutlinePaths = @($providerProbeLayout.venworksCUI.components.path | Where-Object {
-    [string]$_.id -eq 'helmet.bottom-seal.outline'
-  })
+  $helmetLowerFrameFillPaths = @($providerProbeLayout.venworksCUI.components.SelectNodes("path[@id='helmet.lower-frame.fill']"))
+  $helmetUpperFrameFillPaths = @($providerProbeLayout.venworksCUI.components.SelectNodes("path[@id='helmet.upper-frame.fill']"))
+  $helmetThreatRecessFillPaths = @($providerProbeLayout.venworksCUI.components.SelectNodes("path[@id='helmet.threat-recess.fill']"))
   $weaponStatusIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'chronomark.weapon-status'
   })
@@ -1042,29 +1039,19 @@ try {
   $environmentalProtectionStyles = @($providerProbeLayout.venworksCUI.definitions.meterStyle | Where-Object {
     [string]$_.id -eq 'environment.protection'
   })
+  $environmentalExposureStyles = @($providerProbeLayout.venworksCUI.definitions.meterStyle | Where-Object {
+    [string]$_.id -in @('environment.air','environment.thermal','environment.corrosive','environment.radiation')
+  })
   $stagedEnvironmentalScannerGroup = $stagedEnvironmentalScanner.venworksCUIFragment.group
-  $stagedEnvironmentalPanelFillPaths = @($stagedEnvironmentalScannerGroup.path | Where-Object {
-    [string]$_.id -eq 'panel.fill'
-  })
-  $stagedEnvironmentalPanelOutlinePaths = @($stagedEnvironmentalScannerGroup.path | Where-Object {
-    [string]$_.id -eq 'panel.outline'
-  })
+  $stagedEnvironmentalStructuralPaths = @($stagedEnvironmentalScannerGroup.SelectNodes('path'))
   $retiredStagedComponents = @($retiredComponentNames | Where-Object {
     Test-Path -LiteralPath (Join-Path $componentOutputDirectory $_)
   })
   $stagedPlayerScannerGroup = $stagedPlayerScanner.venworksCUIFragment.group
-  $stagedPlayerPanelFillPaths = @($stagedPlayerScannerGroup.path | Where-Object {
-    [string]$_.id -eq 'panel.fill'
-  })
-  $stagedPlayerPanelOutlinePaths = @($stagedPlayerScannerGroup.path | Where-Object {
-    [string]$_.id -eq 'panel.outline'
-  })
-  $expectedPlayerPanelFillPath = 'M -25 -32 L -25 321 L 352 321 Q 360 321 360 313 L 360 8 Q 360 0 352 0 L 260 0 Q 244 0 244 12 L 244 20 Q 244 30 232 30 L 132 30 Q 120 30 120 20 L 120 12 Q 120 0 108 0 L 8 0 Q -10 0 -25 -32 Z'
-  $expectedPlayerPanelOutlinePath = 'M 360 265 L 360 8 Q 360 0 352 0 L 260 0 Q 244 0 244 12 L 244 20 Q 244 30 232 30 L 132 30 Q 120 30 120 20 L 120 12 Q 120 0 108 0 L 8 0 Q -10 0 -25 -32 L -25 321'
-  $expectedEnvironmentalPanelFillPath = 'M 8 0 L 108 0 Q 120 0 120 12 L 120 20 Q 120 30 132 30 L 236 30 Q 248 30 248 20 L 248 12 Q 248 0 260 0 L 352 0 Q 370 0 385 -32 L 385 337 L 8 337 Q 0 337 0 329 L 0 8 Q 0 0 8 0 Z'
-  $expectedEnvironmentalPanelOutlinePath = 'M 0 281 L 0 8 Q 0 0 8 0 L 108 0 Q 120 0 120 12 L 120 20 Q 120 30 132 30 L 236 30 Q 248 30 248 20 L 248 12 Q 248 0 260 0 L 352 0 Q 370 0 385 -32 L 385 337'
-  $expectedHelmetBottomSealFillPath = 'M 0 0 C 14 0 22 6 32 16 Q 40 24 54 24 L 1096 24 Q 1110 24 1118 16 C 1128 6 1136 0 1150 0 L 1150 56 L 0 56 Z'
-  $expectedHelmetBottomSealOutlinePath = 'M 0 0 C 14 0 22 6 32 16 Q 40 24 54 24 L 1096 24 Q 1110 24 1118 16 C 1128 6 1136 0 1150 0'
+  $stagedPlayerStructuralPaths = @($stagedPlayerScannerGroup.SelectNodes('path'))
+  $expectedHelmetLowerFrameFillPath = 'M 0 0 L 33 32 L 157 32 Q 169 32 169 44 L 169 52 Q 169 62 181 62 L 219 62 Q 231 62 231 52 L 231 44 Q 231 32 243 32 L 377 32 Q 385 32 385 40 L 385 237 C 399 237 407 243 417 253 Q 425 261 439 261 L 1481 261 Q 1495 261 1503 253 C 1513 243 1521 237 1535 237 L 1535 40 Q 1535 32 1543 32 L 1643 32 Q 1655 32 1655 44 L 1655 52 Q 1655 62 1667 62 L 1771 62 Q 1783 62 1783 52 L 1783 44 Q 1783 32 1795 32 L 1887 32 L 1920 0 L 1920 293 L 0 293 Z'
+  $expectedHelmetUpperFrameFillPath = 'M 0 0 L 1920 0 L 1920 70 Q 1680 76 1450 92 L 1260 106 Q 1228 108 1204 118 Q 1190 126 1170 126 L 750 126 Q 730 126 716 118 Q 692 108 660 106 L 470 92 Q 240 76 0 70 Z'
+  $expectedHelmetThreatRecessFillPath = 'M 16 0 L 304 0 Q 320 0 320 16 L 320 32 Q 320 48 304 48 L 16 48 Q 0 48 0 32 L 0 16 Q 0 0 16 0 Z'
   if ($environmentalDiagnosticIncludes.Count -ne 0 -or
       $retiredStagedComponents.Count -ne 0 -or
       $environmentalScannerIncludes.Count -ne 1 -or
@@ -1079,31 +1066,45 @@ try {
       [string]$playerScannerIncludes[0].visibleWhen -ne 'always' -or
       [int]$playerScannerIncludes[0].x -ne -39 -or
       [int]$playerScannerIncludes[0].y -ne 11 -or
-      $helmetBottomSealFillPaths.Count -ne 1 -or
-      $helmetBottomSealOutlinePaths.Count -ne 1 -or
-      [string]$helmetBottomSealFillPaths[0].anchor -ne 'bottom-left' -or
-      [int]$helmetBottomSealFillPaths[0].x -ne 321 -or
-      [int]$helmetBottomSealFillPaths[0].y -ne 36 -or
-      [int]$helmetBottomSealFillPaths[0].width -ne 1150 -or
-      [int]$helmetBottomSealFillPaths[0].height -ne 56 -or
-      [int]$helmetBottomSealFillPaths[0].z -ne 80 -or
-      [string]$helmetBottomSealFillPaths[0].data -ne $expectedHelmetBottomSealFillPath -or
-      [string]$helmetBottomSealFillPaths[0].fillColor -ne '#03141D' -or
-      [double]$helmetBottomSealFillPaths[0].fillOpacity -ne 0.88 -or
-      [double]$helmetBottomSealFillPaths[0].strokeOpacity -ne 0 -or
-      [int]$helmetBottomSealFillPaths[0].viewBoxWidth -ne 1150 -or
-      [int]$helmetBottomSealFillPaths[0].viewBoxHeight -ne 56 -or
-      [string]$helmetBottomSealOutlinePaths[0].anchor -ne 'bottom-left' -or
-      [int]$helmetBottomSealOutlinePaths[0].x -ne 321 -or
-      [int]$helmetBottomSealOutlinePaths[0].y -ne 36 -or
-      [int]$helmetBottomSealOutlinePaths[0].width -ne 1150 -or
-      [int]$helmetBottomSealOutlinePaths[0].height -ne 56 -or
-      [int]$helmetBottomSealOutlinePaths[0].z -ne 81 -or
-      [string]$helmetBottomSealOutlinePaths[0].data -ne $expectedHelmetBottomSealOutlinePath -or
-      [double]$helmetBottomSealOutlinePaths[0].fillOpacity -ne 0 -or
-      [string]$helmetBottomSealOutlinePaths[0].strokeColor -ne '#62DDF2' -or
-      [double]$helmetBottomSealOutlinePaths[0].strokeOpacity -ne 0.76 -or
-      [int]$helmetBottomSealOutlinePaths[0].strokeWidth -ne 2 -or
+      $helmetLowerFrameFillPaths.Count -ne 1 -or
+      [string]$helmetLowerFrameFillPaths[0].anchor -ne 'bottom-left' -or
+      [int]$helmetLowerFrameFillPaths[0].x -ne -64 -or
+      [int]$helmetLowerFrameFillPaths[0].y -ne 36 -or
+      [int]$helmetLowerFrameFillPaths[0].width -ne 1920 -or
+      [int]$helmetLowerFrameFillPaths[0].height -ne 293 -or
+      [int]$helmetLowerFrameFillPaths[0].z -ne 80 -or
+      [string]$helmetLowerFrameFillPaths[0].data -ne $expectedHelmetLowerFrameFillPath -or
+      [string]$helmetLowerFrameFillPaths[0].fillColor -ne '#03141D' -or
+      [double]$helmetLowerFrameFillPaths[0].fillOpacity -ne 0.88 -or
+      [double]$helmetLowerFrameFillPaths[0].strokeOpacity -ne 0 -or
+      [int]$helmetLowerFrameFillPaths[0].viewBoxWidth -ne 1920 -or
+      [int]$helmetLowerFrameFillPaths[0].viewBoxHeight -ne 293 -or
+      $helmetUpperFrameFillPaths.Count -ne 1 -or
+      [string]$helmetUpperFrameFillPaths[0].anchor -ne 'top-left' -or
+      [int]$helmetUpperFrameFillPaths[0].x -ne -64 -or
+      [int]$helmetUpperFrameFillPaths[0].y -ne -36 -or
+      [int]$helmetUpperFrameFillPaths[0].width -ne 1920 -or
+      [int]$helmetUpperFrameFillPaths[0].height -ne 126 -or
+      [int]$helmetUpperFrameFillPaths[0].z -ne 80 -or
+      [string]$helmetUpperFrameFillPaths[0].data -ne $expectedHelmetUpperFrameFillPath -or
+      [string]$helmetUpperFrameFillPaths[0].fillColor -ne '#03141D' -or
+      [double]$helmetUpperFrameFillPaths[0].fillOpacity -ne 0.84 -or
+      [double]$helmetUpperFrameFillPaths[0].strokeOpacity -ne 0 -or
+      [int]$helmetUpperFrameFillPaths[0].viewBoxWidth -ne 1920 -or
+      [int]$helmetUpperFrameFillPaths[0].viewBoxHeight -ne 126 -or
+      $helmetThreatRecessFillPaths.Count -ne 1 -or
+      [string]$helmetThreatRecessFillPaths[0].anchor -ne 'top-center' -or
+      [int]$helmetThreatRecessFillPaths[0].x -ne 0 -or
+      [int]$helmetThreatRecessFillPaths[0].y -ne 22 -or
+      [int]$helmetThreatRecessFillPaths[0].width -ne 320 -or
+      [int]$helmetThreatRecessFillPaths[0].height -ne 48 -or
+      [int]$helmetThreatRecessFillPaths[0].z -ne 81 -or
+      [string]$helmetThreatRecessFillPaths[0].data -ne $expectedHelmetThreatRecessFillPath -or
+      [string]$helmetThreatRecessFillPaths[0].fillColor -ne '#020B10' -or
+      [double]$helmetThreatRecessFillPaths[0].fillOpacity -ne 0.72 -or
+      [double]$helmetThreatRecessFillPaths[0].strokeOpacity -ne 0 -or
+      [int]$helmetThreatRecessFillPaths[0].viewBoxWidth -ne 320 -or
+      [int]$helmetThreatRecessFillPaths[0].viewBoxHeight -ne 48 -or
       $weaponStatusIncludes.Count -ne 1 -or
       [string]$weaponStatusIncludes[0].anchor -ne 'top-right' -or
       [int]$weaponStatusIncludes[0].x -ne 39 -or
@@ -1114,29 +1115,24 @@ try {
       $bottomLeftTargets[0].HasAttribute('x') -or
       $bottomLeftTargets[0].HasAttribute('y') -or
       [int]$stagedPlayerScannerGroup.width -ne 360 -or
-      [int]$stagedPlayerScannerGroup.height -ne 296 -or
-      $stagedPlayerPanelFillPaths.Count -ne 1 -or
-      $stagedPlayerPanelOutlinePaths.Count -ne 1 -or
-      [string]$stagedPlayerPanelFillPaths[0].data -ne $expectedPlayerPanelFillPath -or
-      [string]$stagedPlayerPanelOutlinePaths[0].data -ne $expectedPlayerPanelOutlinePath -or
-      [int]$stagedPlayerPanelFillPaths[0].viewBoxWidth -ne 360 -or
-      [int]$stagedPlayerPanelFillPaths[0].viewBoxHeight -ne 296 -or
+      [int]$stagedPlayerScannerGroup.height -ne 236 -or
+      $stagedPlayerStructuralPaths.Count -ne 0 -or
       $stagedPlayerScannerText -match 'id="header\.line"' -or
       $stagedPlayerScannerText -notmatch 'value="PLAYER DATA"' -or
       $stagedPlayerScannerText -notmatch 'source="player\.serial"' -or
       $stagedPlayerScannerText -notmatch 'source="player\.universalTime"' -or
-      $stagedPlayerScannerText -notmatch 'id="time\.label" x="244" y="8" width="46"' -or
-      $stagedPlayerScannerText -notmatch 'id="time" x="292" y="6" width="62"' -or
+      $stagedPlayerScannerText -notmatch 'id="time\.label" x="218" y="8" width="60"' -or
+      $stagedPlayerScannerText -notmatch 'id="time" x="282" y="6" width="72"' -or
       $stagedPlayerScannerText -notmatch 'source="player\.xpPercentage"' -or
       $stagedPlayerScannerText -notmatch 'source="player\.healthPercentage"' -or
       $stagedPlayerScannerText -notmatch 'source="player\.oxygenPercentage"' -or
       $stagedPlayerScannerText -notmatch 'source="player\.carbonDioxidePercentage"' -or
       $stagedPlayerScannerText -notmatch 'source="boost\.percentage"' -or
       $stagedPlayerScannerText -notmatch 'source="carry\.percentage"' -or
-      $stagedPlayerScannerText -notmatch 'id="level" x="174" y="92"' -or
-      $stagedPlayerScannerText -notmatch 'id="mass" x="126" y="256"' -or
-      $stagedPlayerScannerText -notmatch 'id="oxygen\.value" x="132" y="174"' -or
-      $stagedPlayerScannerText -notmatch 'id="carbondioxide\.value" x="226" y="174"' -or
+      $stagedPlayerScannerText -notmatch 'id="level" x="174" y="79"' -or
+      $stagedPlayerScannerText -notmatch 'id="mass" x="126" y="203"' -or
+      $stagedPlayerScannerText -notmatch 'id="oxygen\.value" x="132" y="141"' -or
+      $stagedPlayerScannerText -notmatch 'id="carbondioxide\.value" x="226" y="141"' -or
       $stagedPlayerScannerText -notmatch 'visibleWhen="digipicksAvailable"' -or
       $stagedPlayerScannerText -notmatch 'player\.digipicks:integer' -or
       ([regex]::Matches($stagedPlayerScannerText, 'max="100"')).Count -ne 6 -or
@@ -1144,14 +1140,15 @@ try {
       [string]$environmentalProtectionStyles[0].renderer -ne 'segments' -or
       [string]$environmentalProtectionStyles[0].direction -ne 'right' -or
       [int]$environmentalProtectionStyles[0].segmentCount -ne 16 -or
+      $environmentalExposureStyles.Count -ne 4 -or
+      @($environmentalExposureStyles | Where-Object {
+        [string]$_.renderer -ne 'segments' -or
+        [string]$_.direction -ne 'up' -or
+        [int]$_.segmentCount -ne 8
+      }).Count -ne 0 -or
       [int]$stagedEnvironmentalScannerGroup.width -ne 360 -or
-      [int]$stagedEnvironmentalScannerGroup.height -ne 312 -or
-      $stagedEnvironmentalPanelFillPaths.Count -ne 1 -or
-      $stagedEnvironmentalPanelOutlinePaths.Count -ne 1 -or
-      [string]$stagedEnvironmentalPanelFillPaths[0].data -ne $expectedEnvironmentalPanelFillPath -or
-      [string]$stagedEnvironmentalPanelOutlinePaths[0].data -ne $expectedEnvironmentalPanelOutlinePath -or
-      [int]$stagedEnvironmentalPanelFillPaths[0].viewBoxWidth -ne 360 -or
-      [int]$stagedEnvironmentalPanelFillPaths[0].viewBoxHeight -ne 312 -or
+      [int]$stagedEnvironmentalScannerGroup.height -ne 236 -or
+      $stagedEnvironmentalStructuralPaths.Count -ne 0 -or
       $stagedEnvironmentalScannerText -match 'id="planet\.line"' -or
       $stagedEnvironmentalScannerText -notmatch 'value="PLANET DATA"' -or
       $stagedEnvironmentalScannerText -notmatch 'value="ENVIRONMENTAL HAZARDS"' -or
@@ -1170,8 +1167,16 @@ try {
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.thermalExposureLevel"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.corrosiveExposureLevel"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.radiationExposureLevel"' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.airWaterShortStatus"' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.thermalShortStatus"' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.corrosiveShortStatus"' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.radiationShortStatus"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="airwater\.exposure" x="30" y="184" width="44" height="40"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="thermal\.exposure" x="114" y="184" width="44" height="40"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="corrosive\.exposure" x="198" y="184" width="44" height="40"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="radiation\.exposure" x="282" y="184" width="44" height="40"' -or
       $stagedEnvironmentalScannerText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE|THREAT INDEX|VACUUM)') {
-    throw 'Goal 6 must stage the helmet-integrated environmental and player scanners, hidden diagnostic Chronomark, and temporary upper-right weapon/power presentation with no retired diagnostics or invented data.'
+    throw 'Goal 6 must stage the unified helmet architecture, content-only player and environmental scanners, vertical elemental channels, reserved threat recess, hidden diagnostic Chronomark, and temporary upper-right weapon/power presentation with no retired diagnostics or invented data.'
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force

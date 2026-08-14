@@ -28,20 +28,20 @@
                 direction="right" partialSegments="true" />
     <meterStyle id="environment.air" renderer="segments"
                 fillColor="#62DDF2" emptyColor="#123642"
-                fillOpacity="1" emptyOpacity="0.72" segmentCount="16" gap="2"
-                direction="right" partialSegments="true" />
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="8" gap="2"
+                direction="up" partialSegments="true" />
     <meterStyle id="environment.thermal" renderer="segments"
                 fillColor="#D89B2B" emptyColor="#3A2C16"
-                fillOpacity="1" emptyOpacity="0.72" segmentCount="16" gap="2"
-                direction="right" partialSegments="true" />
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="8" gap="2"
+                direction="up" partialSegments="true" />
     <meterStyle id="environment.corrosive" renderer="segments"
                 fillColor="#E6B840" emptyColor="#3D3218"
-                fillOpacity="1" emptyOpacity="0.72" segmentCount="16" gap="2"
-                direction="right" partialSegments="true" />
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="8" gap="2"
+                direction="up" partialSegments="true" />
     <meterStyle id="environment.radiation" renderer="segments"
                 fillColor="#E64B4B" emptyColor="#3D1C22"
-                fillOpacity="1" emptyOpacity="0.72" segmentCount="16" gap="2"
-                direction="right" partialSegments="true" />
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="8" gap="2"
+                direction="up" partialSegments="true" />
     <meterStyle id="environment.protection" renderer="segments"
                 fillColor="#62DDF2" emptyColor="#3D1C22"
                 fillOpacity="1" emptyOpacity="0.78" segmentCount="16" gap="2"
@@ -60,15 +60,20 @@
              x="39" y="-11" anchor="top-right" visible="true" visibleWhen="always" z="102" />
   </includes>
   <components>
-    <path id="helmet.bottom-seal.fill" x="321" y="36" width="1150" height="56" opacity="1" visible="true"
+    <path id="helmet.lower-frame.fill" x="-64" y="36" width="1920" height="293" opacity="1" visible="true"
           anchor="bottom-left" rotation="0" scaleX="1" scaleY="1" z="80"
-          data="M 0 0 C 14 0 22 6 32 16 Q 40 24 54 24 L 1096 24 Q 1110 24 1118 16 C 1128 6 1136 0 1150 0 L 1150 56 L 0 56 Z"
-          viewBoxX="0" viewBoxY="0" viewBoxWidth="1150" viewBoxHeight="56"
+          data="M 0 0 L 33 32 L 157 32 Q 169 32 169 44 L 169 52 Q 169 62 181 62 L 219 62 Q 231 62 231 52 L 231 44 Q 231 32 243 32 L 377 32 Q 385 32 385 40 L 385 237 C 399 237 407 243 417 253 Q 425 261 439 261 L 1481 261 Q 1495 261 1503 253 C 1513 243 1521 237 1535 237 L 1535 40 Q 1535 32 1543 32 L 1643 32 Q 1655 32 1655 44 L 1655 52 Q 1655 62 1667 62 L 1771 62 Q 1783 62 1783 52 L 1783 44 Q 1783 32 1795 32 L 1887 32 L 1920 0 L 1920 293 L 0 293 Z"
+          viewBoxX="0" viewBoxY="0" viewBoxWidth="1920" viewBoxHeight="293"
           fillColor="#03141D" fillOpacity="0.88" strokeColor="#62DDF2" strokeOpacity="0" strokeWidth="0" />
-    <path id="helmet.bottom-seal.outline" x="321" y="36" width="1150" height="56" opacity="1" visible="true"
-          anchor="bottom-left" rotation="0" scaleX="1" scaleY="1" z="81"
-          data="M 0 0 C 14 0 22 6 32 16 Q 40 24 54 24 L 1096 24 Q 1110 24 1118 16 C 1128 6 1136 0 1150 0"
-          viewBoxX="0" viewBoxY="0" viewBoxWidth="1150" viewBoxHeight="56"
-          fillColor="#03141D" fillOpacity="0" strokeColor="#62DDF2" strokeOpacity="0.76" strokeWidth="2" />
+    <path id="helmet.upper-frame.fill" x="-64" y="-36" width="1920" height="126" opacity="1" visible="true"
+          anchor="top-left" rotation="0" scaleX="1" scaleY="1" z="80"
+          data="M 0 0 L 1920 0 L 1920 70 Q 1680 76 1450 92 L 1260 106 Q 1228 108 1204 118 Q 1190 126 1170 126 L 750 126 Q 730 126 716 118 Q 692 108 660 106 L 470 92 Q 240 76 0 70 Z"
+          viewBoxX="0" viewBoxY="0" viewBoxWidth="1920" viewBoxHeight="126"
+          fillColor="#03141D" fillOpacity="0.84" strokeColor="#62DDF2" strokeOpacity="0" strokeWidth="0" />
+    <path id="helmet.threat-recess.fill" x="0" y="22" width="320" height="48" opacity="1" visible="true"
+          anchor="top-center" rotation="0" scaleX="1" scaleY="1" z="81"
+          data="M 16 0 L 304 0 Q 320 0 320 16 L 320 32 Q 320 48 304 48 L 16 48 Q 0 48 0 32 L 0 16 Q 0 0 16 0 Z"
+          viewBoxX="0" viewBoxY="0" viewBoxWidth="320" viewBoxHeight="48"
+          fillColor="#020B10" fillOpacity="0.72" strokeColor="#62DDF2" strokeOpacity="0" strokeWidth="0" />
   </components>
 </venworksCUI>

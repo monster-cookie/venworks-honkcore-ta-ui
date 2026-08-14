@@ -94,6 +94,10 @@ package venworks.cui
          this.setText("environment.hazard.thermalstatus","ENVIRONMENT PROVIDER NOT RECEIVED");
          this.setText("environment.hazard.corrosivestatus","ENVIRONMENT PROVIDER NOT RECEIVED");
          this.setText("environment.hazard.radiationstatus","ENVIRONMENT PROVIDER NOT RECEIVED");
+         this.setText("environment.hazard.airwatershortstatus","WAITING");
+         this.setText("environment.hazard.thermalshortstatus","WAITING");
+         this.setText("environment.hazard.corrosiveshortstatus","WAITING");
+         this.setText("environment.hazard.radiationshortstatus","WAITING");
       }
 
       public static function normalizeSource(param1:String) : String
@@ -111,6 +115,8 @@ package venworks.cui
             source == "environment.protectionstatus" ||
             source == "environment.hazard.airwaterstatus" || source == "environment.hazard.thermalstatus" ||
             source == "environment.hazard.corrosivestatus" || source == "environment.hazard.radiationstatus" ||
+            source == "environment.hazard.airwatershortstatus" || source == "environment.hazard.thermalshortstatus" ||
+            source == "environment.hazard.corrosiveshortstatus" || source == "environment.hazard.radiationshortstatus" ||
             source == "diagnostic.environmentprovider" || source == "diagnostic.environmentfields" ||
             source == "diagnostic.environmentcandidates" || source == "diagnostic.localenvironmentfields" ||
             source == "diagnostic.activityoxygen" || source == "diagnostic.activityenvelope" ||
@@ -251,24 +257,28 @@ package venworks.cui
                         activeEffects[0] = true;
                         this.setFinite("environment.hazard.airwaterlevel",1);
                         this.setText("environment.hazard.airwaterstatus","AIR / WATER DETECTED");
+                        this.setText("environment.hazard.airwatershortstatus","DETECTED");
                      }
                      else if(normalizedIcon.indexOf("thermal") >= 0)
                      {
                         activeEffects[1] = true;
                         this.setFinite("environment.hazard.thermallevel",1);
                         this.setText("environment.hazard.thermalstatus","THERMAL EFFECT DETECTED");
+                        this.setText("environment.hazard.thermalshortstatus","DETECTED");
                      }
                      else if(normalizedIcon.indexOf("corrosive") >= 0)
                      {
                         activeEffects[2] = true;
                         this.setFinite("environment.hazard.corrosivelevel",1);
                         this.setText("environment.hazard.corrosivestatus","CORROSIVE EFFECT DETECTED");
+                        this.setText("environment.hazard.corrosiveshortstatus","DETECTED");
                      }
                      else if(normalizedIcon.indexOf("radiation") >= 0)
                      {
                         activeEffects[3] = true;
                         this.setFinite("environment.hazard.radiationlevel",1);
                         this.setText("environment.hazard.radiationstatus","RADIATION EFFECT DETECTED");
+                        this.setText("environment.hazard.radiationshortstatus","DETECTED");
                      }
                   }
                }
@@ -614,6 +624,10 @@ package venworks.cui
          this.setText("environment.hazard.thermalstatus","CLEAR");
          this.setText("environment.hazard.corrosivestatus","CLEAR");
          this.setText("environment.hazard.radiationstatus","CLEAR");
+         this.setText("environment.hazard.airwatershortstatus","CLEAR");
+         this.setText("environment.hazard.thermalshortstatus","CLEAR");
+         this.setText("environment.hazard.corrosiveshortstatus","CLEAR");
+         this.setText("environment.hazard.radiationshortstatus","CLEAR");
          while(index < MAX_DIAGNOSTIC_EFFECTS)
          {
             this.setText("diagnostic.effect" + index.toString(),"EFFECT " + index.toString() + ": UNUSED");
