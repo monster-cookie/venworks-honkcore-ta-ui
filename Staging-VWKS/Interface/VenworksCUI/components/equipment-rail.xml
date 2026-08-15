@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <venworksCUIFragment schemaVersion="1" runtimeVersion="1">
-  <group id="root" x="0" y="0" width="720" height="801" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0">
-    <path id="rail.ribbon.body" x="0" y="0" width="720" height="801" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" data="M 270 0 C 310 100 330 190 338 286 C 346 420 330 552 294 676 C 282 720 260 764 230 801 L 720 801 L 720 0 Z" viewBoxX="0" viewBoxY="0" viewBoxWidth="720" viewBoxHeight="801" fillColor="#03141D" fillOpacity="0.24" strokeColor="#62DDF2" strokeOpacity="0" strokeWidth="0" />
+  <group id="root" x="0" y="0" width="720" height="747" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0">
+    <path id="rail.ribbon.body" x="0" y="0" width="720" height="747" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" data="M 270 0 C 310 100 330 190 338 286 C 346 420 330 552 294 676 C 282 704 260 730 230 747 L 720 747 L 720 0 Z" viewBoxX="0" viewBoxY="0" viewBoxWidth="720" viewBoxHeight="747" fillColor="#03141D" fillOpacity="0.24" strokeColor="#62DDF2" strokeOpacity="0" strokeWidth="0" />
     <text id="rail.title" x="420" y="8" width="280" height="24" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="3" value="TACTICAL LOADOUT" font="$MAIN_Font_Bold" fontSize="10" color="#62DDF2" bold="false" align="right" />
 
     <panel id="contact.01.active" x="340" y="38" width="3" height="34" opacity="1" visible="true" visibleWhen="favorite01Active" rotation="0" scaleX="1" scaleY="1" z="4" fillColor="#FF4FE1" fillOpacity="1" strokeColor="#FF4FE1" strokeOpacity="0" strokeWidth="0" />
@@ -129,7 +129,5 @@
     <text id="contact.12.detail" x="388" y="686" width="312" height="16" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="3" source="favorite.12.detail" format="raw" value="" font="$MAIN_Font_Bold" fontSize="8" color="#8CB1BC" bold="false" align="right" />
     <divider id="contact.12.divider" x="388" y="704" width="312" height="0" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" color="#2AAFC4" strokeOpacity="0.22" strokeWidth="1" />
 
-    <text id="vehicle.exit.label" x="480" y="744" width="130" height="28" opacity="1" visible="true" visibleWhen="inVehicle" rotation="0" scaleX="1" scaleY="1" z="4" value="$EXIT HOLD" font="$MAIN_Font_Bold" fontSize="11" color="#F2F7F9" bold="false" align="right" />
-    <symbol id="vehicle.exit.glyph" x="618" y="740" width="36" height="36" opacity="1" visible="true" visibleWhen="inVehicle" rotation="0" scaleX="1" scaleY="1" z="4" name="vehicle-exit-prompt" fit="contain" alignX="left" alignY="center" />
   </group>
 </venworksCUIFragment>

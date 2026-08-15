@@ -94,7 +94,8 @@ diagnostic vanilla bottom-left Chronomark and right-meter group, places the
 split-tab Player Data scanner at lower-left and the split-tab Planet
 Data/environmental scanner at lower-right, and places the passive Goal 7
 tactical loadout ribbon at upper-right. The ribbon begins at the physical right
-edge, runs from the upper helmet brow into Planet Data, and widens its single
+edge, runs from the upper helmet brow to the exact top of Planet Data without
+extending behind it, and widens its single
 translucent silhouette enough to contain every contact without a cyan outer arc
 or decorative guide. It orders favorite contacts 1-5 around gold-outlined live
 weapon/explosive/power contacts and then favorites 6-12, and resolves favorite
@@ -105,7 +106,9 @@ exact grenade/mine favorite, so those favorite rows remain neutral. Each lower s
 continuous rounded path with separate title and clock tabs around a wide
 transparent center notch. Mirrored overflow rails extend through the nearest
 side and bottom screen margins so both scanners appear integrated into the
-helmet edge without moving their accepted content geometry.
+helmet edge without moving their accepted content geometry. The vehicle-only
+exit label and Bethesda hold glyph are centered in the fixed lower helmet seal
+instead of extending the tactical ribbon behind Planet Data.
 Malformed fixtures are
 intentionally not well-formed XML, while other negative fixtures may be
 schema-valid and rejected by runtime semantic checks. See

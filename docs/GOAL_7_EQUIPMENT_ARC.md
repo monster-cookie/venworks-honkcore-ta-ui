@@ -9,15 +9,17 @@ or staging payloads.**
 ## Product direction
 
 Goal 7 replaces the passive upper-right weapon presentation with one compact,
-helmet-integrated tactical loadout ribbon. The 720-by-801 design-unit group is
-anchored directly to the physical right edge and begins 36 units below the
-upper edge. Its wider owned curved path keeps every contact fully over the
+helmet-integrated tactical loadout ribbon. The 720-by-747 design-unit group
+offsets the top-right safe-area anchor by 64 units so its outer edge lands on
+the physical right edge. It begins at screen coordinate 72 and terminates at
+screen coordinate 819, exactly where Planet Data begins. Its owned curved path
+keeps every contact fully over the
 24-percent-maximum translucent fill; there is no opaque rectangular backing,
 cyan outer arc, or decorative guide. The contacts follow the silhouette from
 beneath the upper helmet brow into Planet Data while leaving the center field
-of view clear. Increasing the group height preserves the accepted lower join
-at screen coordinate 837, so the separately authored surfaces still read as
-one helmet assembly without drawing horizontal seams across either join.
+of view clear. The ribbon no longer extends beneath Planet Data, so the
+separately authored surfaces meet without a hidden underlap or horizontal join
+seam.
 
 The rail contains fifteen passive contacts:
 
@@ -39,8 +41,8 @@ equipped state rather than favorite inputs.
 
 The contacts are status displays, not buttons. They do not handle input,
 replace Favorites Menu ownership, or imply that the player can activate a
-contact by clicking it. Bethesda's vehicle-exit prompt remains available at
-the bottom of the rail.
+contact by clicking it. Bethesda's vehicle-exit prompt remains available in a
+separate `inVehicle`-conditioned group centered in the fixed lower helmet seal.
 
 ## Provider evidence
 
@@ -139,23 +141,24 @@ Run:
   -VanillaInterfacePath "<approved-vanilla-interface-path>"
 ```
 
-On 2026-08-14, the corrected complete normal/large Scaleform build succeeded.
+On 2026-08-15, the corrected complete normal/large Scaleform build succeeded.
 It compiled and reopened all 205 seeded and generated classes, validated the
 bounded ActionScript and XML contracts, accepted the twelve source-bound empty
 favorite-detail fallbacks, resolved all twelve Quickkeys through Bethesda's
 control-map helper, retained rejection of an empty static-text fixture,
 rejected the opaque rail, retired diagnostic/weapon fragments and input hooks,
 validated the exact `1-5, 13-15, 6-12` visual order, enforced the
-physical-right-edge include, single-path containment, two-line favorite rows,
-and gold live-contact outlines, and proved byte-identical payload hashes across
-VWKS, CF, FC, and TA staging.
+physical-right-edge include, exact Planet Data termination, bottom-center
+vehicle prompt, single-path containment, two-line favorite rows, and gold live
+contact outlines, and proved byte-identical payload hashes across VWKS, CF, FC,
+and TA staging.
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
 | `hudmenu.gfx` | 408518 | `3A6AF5E152ED0BC9146C9BFB05AADD549BB2AFF8C94B81D3BF21478A156A2773` |
 | `hudmenu_lrg.gfx` | 408701 | `AC600A04272FE03762B4A17C18B62EB6D3069D2314AADD9884461F1141156C04` |
-| `VenworksCUI/layout.xml` | 5552 | `FE6D162545DCB8E76CCF2BA4495D58AC687B0805DFB9C6F26A0C3A46EE217045` |
-| `components/equipment-rail.xml` | 29517 | `A7E259041F56E461E7C275C304D26E6F2F0EC218D54A1FD554768B5D64C12F13` |
+| `VenworksCUI/layout.xml` | 6279 | `4143B59B71E8009D16B15D926C9BA4F67188FA8336C8135F9F50DDC60617AF2B` |
+| `components/equipment-rail.xml` | 29008 | `96DF27D1691FD269CAEFAA338CE6C62E51DBC21C48414DCDCCE576A4BDFF4264` |
 | `components/player-status-scanner.xml` | 8643 | `031D4BD34954325A6ADE5A19293EFA831A36C420FF14115F133C82138659876D` |
 | `components/environmental-hazard-scanner.xml` | 9411 | `B13E5559452491AB62F0F05990F2553BAFA91BA589E3D103BAC31FF260B10526` |
 
@@ -164,10 +167,10 @@ VWKS, CF, FC, and TA staging.
 After the user commits and deploys this exact build, verify:
 
 1. the full-screen diagnostic is absent in scanner and ordinary HUD states;
-2. the widened transparent ribbon begins at the physical right edge, replaces
+2. the widened transparent ribbon lands on the physical right edge, replaces
    the opaque rectangular rail, contains every contact over its fill, omits the
-   former cyan arc/guide, joins the upper brow and Planet Data without a visible
-   seam, and does not clip;
+   former cyan arc/guide, terminates exactly at the top of Planet Data without
+   extending behind it, and does not clip;
 3. the contacts read top-to-bottom as 1-5, live weapon/explosive/power, and
    6-12, with all rows fitting inside the ribbon;
 4. contacts 1-12 preserve empty slots, refresh after Favorites Menu closes,
@@ -181,7 +184,8 @@ After the user commits and deploys this exact build, verify:
    correct live count and never displays `UNKNOWN`, while matching favorite
    explosives remain intentionally neutral;
 8. contacts 13-15 have strong gold outlines and no fake hotkey labels;
-9. vehicle exit remains readable and functional; and
+9. vehicle exit remains readable and functional at the bottom-center helmet
+   seal; and
 10. normal and large-menu HUD variants remain error-free.
 
 ## Risks and rollback

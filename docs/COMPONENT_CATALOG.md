@@ -113,7 +113,7 @@ vanilla owner and provider contract.
 
 | Component | Status | Required behavior |
 |---|---|---|
-| Bethesda embedded symbol | Implemented; acceptance pending | Reference a semantic name from a movie-aware hardcoded allowlist of symbols embedded in the owning vanilla movie; mappings are `environment-alert`, `quest-door-marker`, `boost-fill`, and noninteractive `vehicle-exit-prompt`. The vehicle mapping extracts Bethesda's initialized `GetUpButton_mc` hold-button child and bounds its presentation to the union of the keyboard and controller glyph children, so the full HUD timeline and the hold-button label area are never fitted into the CUI box. The bottom-left weapon fragment composes that live mapped glyph with Bethesda's localized `$EXIT HOLD` label above the weapon row. |
+| Bethesda embedded symbol | Implemented; acceptance pending | Reference a semantic name from a movie-aware hardcoded allowlist of symbols embedded in the owning vanilla movie; mappings are `environment-alert`, `quest-door-marker`, `boost-fill`, and noninteractive `vehicle-exit-prompt`. The vehicle mapping extracts Bethesda's initialized `GetUpButton_mc` hold-button child and bounds its presentation to the union of the keyboard and controller glyph children, so the full HUD timeline and the hold-button label area are never fitted into the CUI box. The production layout composes that live mapped glyph with Bethesda's localized `$EXIT HOLD` label in an `inVehicle`-conditioned group centered in the lower helmet seal. |
 | Built-in icon | Implemented; acceptance pending | Reference one of 21 generated semantic icons compiled directly into each HUD movie; supports tint, fit, and alignment without a runtime asset handle. |
 | Supplemental symbol library | Retired | Starfield raised Error #1034 across the child-domain SWF compatibility attempts; external SWF libraries are no longer loaded. |
 | SVG path | Implemented; acceptance pending | Render a bounded authored path with fill, stroke, transform, and view box; arc commands are rejected. |
@@ -242,8 +242,8 @@ to resolve the active power key to a player-facing name. Arbitrary
 provider/member selection remains prohibited.
 
 Goal 5 also exposes bounded explosive count/type and jetpack charge values.
-The weapon fragment uses them for grenade/mine presentation and owns an
-`inVehicle`-conditioned vehicle prompt. The prompt
+The production layout uses the explosive fields for grenade/mine presentation
+and owns a bottom-center `inVehicle`-conditioned vehicle prompt. The prompt
 extracts the initialized `GetUpButton_mc` child from a temporary embedded
 Bethesda vehicle control, then fits only that bounded hold button. It disables
 mouse interaction and receives no routed user events. The hidden vanilla
@@ -329,9 +329,10 @@ five player tracks use the same bounded percentage contract.
 ## Goal 7 tactical equipment rail
 
 Goal 7 retires the temporary FavoritesData diagnostic and the standalone
-upper-right weapon fragment. The production 720-by-801 group begins at the
-physical right edge and preserves the accepted lower join with Planet Data so
-its separately authored path reads as one joined surface. A widened curved,
+upper-right weapon fragment. The production 720-by-747 group offsets its
+top-right safe-area anchor to land on the physical right edge and terminates
+exactly where Planet Data begins, so the separately authored surfaces meet
+without a hidden underlap. A widened curved,
 maximum-24-percent-opacity path fully contains contacts in the exact visual
 order 1-5, 13-15, then 6-12 without an opaque rectangular backing, cyan outer
 arc, decorative guide, or join seams.
@@ -353,7 +354,8 @@ every ammo-less favorite as a weapon. Bethesda key
 `ArtifactPower_ElementalBlast` maps to `Elemental Pull` in both the data and
 condition contexts. `uStartingSelection`, `bIsEquipped`, menu-owned image
 buffers, and unproven slot indices are not production inputs. The ribbon
-contains no actions or input handlers and preserves the vehicle-exit prompt.
+contains no actions or input handlers. The vehicle-exit prompt is independently
+centered in the fixed lower helmet seal and remains visible only in a vehicle.
 Because no confirmed provider correlates the generic live explosive category
 to an exact favorite, grenade and mine favorite rows remain neutral; this
 limitation must be included in end-user documentation.
