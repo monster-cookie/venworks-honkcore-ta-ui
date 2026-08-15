@@ -9,17 +9,21 @@ or staging payloads.**
 ## Product direction
 
 Goal 7 replaces the passive upper-right weapon presentation with one compact,
-helmet-integrated tactical loadout rail. The 330-by-650 design-unit rail is
-anchored at the upper right, spans from beneath the upper helmet brow to above
-Planet Data, and leaves the center field of view clear.
+helmet-integrated tactical loadout ribbon. The 720-by-650 design-unit group is
+anchored at the upper right, 25 units from the physical edge and 92 units below
+the upper edge. Its owned curved path hugs the right side with a 24-percent
+maximum fill opacity; there is no opaque rectangular rail backing. The contacts
+follow the curve from beneath the upper helmet brow to above Planet Data while
+leaving the center field of view clear.
 
 The rail contains fifteen passive contacts:
 
-1. contacts 1-12 display the latest bounded `FavoritesData` snapshot;
+1. contacts 1-12 display the latest bounded `FavoritesData` snapshot along the
+   curve (visually ordered 12 down to 1);
 2. contact 13 displays the live weapon icon, name, ammunition type, clip, and
    reserve values;
-3. contact 14 displays the live explosive category as `GRENADE` or `MINE` and
-   its count; and
+3. contact 14 displays `NO THROWABLE`, `GRENADE`, or `MINE` from the live
+   explosive count/type pair; and
 4. contact 15 displays the live active-power name.
 
 The contacts are status displays, not buttons. They do not handle input,
@@ -39,7 +43,7 @@ the bottom of the rail.
 | Weapon ammunition | `WeaponData.uClipAmmo`, `uTotalAmmo`, `bDisplayAmmo`, `bShowAmmoAsPercent` | Live contact 13 ammunition values. |
 | Equipped ammunition name | `PlayerInventoryData.aItems[*].WeaponInfo.sAmmoType` | Live contact 13 ammunition label. |
 | Explosive count/type | `WeaponData.uExplosiveCount`, `uExplosiveIndicatorType` | Live contact 14 generic category and count. |
-| Active power | `HUDStarbornPowersData.sKey`, `bHasSpell`, `fCost`, `uCooldown` | Mapped live name in contact 15 and exact favorite-name highlighting. |
+| Active power | `HUDStarbornPowersData.sKey`, `bHasSpell`, `fCost`, `uCooldown` | Mapped live name in contact 15 and exact favorite-name highlighting; Bethesda key `ArtifactPower_ElementalBlast` maps to the displayed `Elemental Pull` name. |
 
 ### Runtime discovery results
 
@@ -64,8 +68,11 @@ production source or staged loose file contains its diagnostic bindings.
 ## Production behavior
 
 Contacts 1-12 use generic same-domain CUI icons. A favorite is classified as a
-power when `bIsPower` is true, as a weapon when a nonempty ammunition name is
-present, and otherwise as an item. Missing entries display `EMPTY`.
+power when `bIsPower` is true and as a ranged weapon when a nonempty ammunition
+name is present. An ammo-less entry remains a generic item until its normalized
+name exactly matches the independently live weapon name; at that point it is
+classified and labeled as the active melee weapon. Missing entries display
+`EMPTY`.
 
 Favorite weapon and power contacts become active only when their bounded,
 trimmed, case-insensitive names exactly match the independently live weapon or
@@ -75,9 +82,10 @@ state. Item and explosive identity cannot be highlighted from the currently
 confirmed live HUD contract.
 
 Contacts 13-15 remain live even when the FavoritesData snapshot is stale.
-Contact 14 intentionally says only `GRENADE` or `MINE`; exact explosive identity
-and an independently renderable active explosive icon remain unproven. This is
-an accepted bounded fallback and may be revised after visual runtime review.
+Contact 14 intentionally reports only `NO THROWABLE`, `GRENADE`, or `MINE` plus
+the count; exact explosive identity and an independently renderable active
+explosive icon remain unproven. This is an accepted bounded fallback and may be
+revised after visual runtime review.
 
 ## Implementation boundaries
 
@@ -117,15 +125,15 @@ On 2026-08-14, the corrected complete normal/large Scaleform build succeeded.
 It compiled and reopened all 205 seeded and generated classes, validated the
 bounded ActionScript and XML contracts, accepted the twelve source-bound empty
 favorite-detail fallbacks, retained rejection of an empty static-text fixture,
-rejected retired diagnostic/weapon fragments, and proved byte-identical payload
-hashes across VWKS, CF, FC, and TA staging.
+rejected the opaque rail, retired diagnostic/weapon fragments, and input hooks,
+and proved byte-identical payload hashes across VWKS, CF, FC, and TA staging.
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 407096 | `2AF13F9D45AED5C603C1112CE583C302E4B97CE8E8A1AF1C39E7D7A319D7315B` |
-| `hudmenu_lrg.gfx` | 407279 | `9A8312B926D215B9E68E180A334F39FF38BF27F41674EEFAEF6D266FAB419A9D` |
-| `VenworksCUI/layout.xml` | 5553 | `D7DE6DCD1E3F8AD2E17ECAC7ADEBBEE0C49C96C176B20307634169CE495C3F44` |
-| `components/equipment-rail.xml` | 31444 | `9AB149557453E6DE04EA005774F539A5154AFD966080FC6C7122FEF8319CD2E0` |
+| `hudmenu.gfx` | 408085 | `7479435DFD8D6FF92F51DB7CE1E12F8A68BC72D9CCA11924993F9021D4B534FF` |
+| `hudmenu_lrg.gfx` | 408268 | `0800B0028033338F56DFF010FD8345B14A8F478F7082F7469F1F4E766DC65135` |
+| `VenworksCUI/layout.xml` | 5553 | `6DD5576D820D7CCD0F7AF38C72D7079040723CCC1B61AF4DE83B06B0EA0E833E` |
+| `components/equipment-rail.xml` | 30521 | `DCB53FA5DD908DE3AA5AE5204C944148211177FFF45F1E05EA0B8CC954A7ACB3` |
 | `components/player-status-scanner.xml` | 8643 | `031D4BD34954325A6ADE5A19293EFA831A36C420FF14115F133C82138659876D` |
 | `components/environmental-hazard-scanner.xml` | 9411 | `B13E5559452491AB62F0F05990F2553BAFA91BA589E3D103BAC31FF260B10526` |
 
@@ -134,12 +142,15 @@ hashes across VWKS, CF, FC, and TA staging.
 After the user commits and deploys this exact build, verify:
 
 1. the full-screen diagnostic is absent in scanner and ordinary HUD states;
-2. the rail fits between the upper brow and Planet Data without clipping;
+2. the curved transparent ribbon replaces the opaque rectangular rail, fits
+   between the upper brow and Planet Data, and does not clip;
 3. contacts 1-12 preserve empty slots and refresh after Favorites Menu closes;
-4. live weapon and power contacts update without reopening Favorites Menu;
-5. exact matching favorite weapon/power contacts receive the active accent;
-6. contact 14 switches among no explosive, grenade, and mine with the correct
-   live count;
+4. Elemental Pull fills contact 15 and its mapped favorite contact receives the
+   active accent;
+5. an equipped melee weapon fills contact 13 and its exact matching favorite
+   contact receives the active weapon icon/accent;
+6. contact 14 switches among `NO THROWABLE`, `GRENADE`, and `MINE` with the
+   correct live count and never displays `UNKNOWN`;
 7. vehicle exit remains readable and functional; and
 8. normal and large-menu HUD variants remain error-free.
 
@@ -147,6 +158,10 @@ After the user commits and deploys this exact build, verify:
 
 Favorite names can be localized or duplicated, so exact name matching is a
 bounded presentation heuristic rather than an inventory identity contract.
-Explosive identity remains generic. Rollback is surgical: remove the
-`equipment-rail` include and fragment and remove the bounded FavoritesData
-adapters. No persistent state or native component needs recovery.
+Explosive identity remains generic. One Starfield crash occurred during the
+rejected opaque-rail build, but Windows produced no application event, dump, or
+relevant log; no causal claim is possible. If a crash repeats during weapon
+switching, capture the time and any new log before expanding this scope.
+Rollback is surgical: remove the `equipment-rail` include and fragment and
+remove the bounded FavoritesData adapters. No persistent state or native
+component needs recovery.

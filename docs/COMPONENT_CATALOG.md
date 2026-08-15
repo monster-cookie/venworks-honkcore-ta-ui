@@ -326,13 +326,18 @@ five player tracks use the same bounded percentage contract.
 ## Goal 7 tactical equipment rail
 
 Goal 7 retires the temporary FavoritesData diagnostic and the standalone
-upper-right weapon fragment. The production 330-by-650 rail is anchored below
-the upper helmet brow and above Planet Data. Contacts 1-12 render the latest
-bounded FavoritesData snapshot with generic same-domain icons. Contact 13 uses
-live WeaponData and equipped-ammunition data; contact 14 uses the live generic
-grenade/mine category and count; contact 15 uses the live mapped power name.
+upper-right weapon fragment. The production 720-by-650 group is anchored below
+the upper helmet brow and above Planet Data. A curved, maximum-24-percent-opacity
+path carries contacts 12 through 1 without an opaque rectangular backing.
+Contact 13 uses live WeaponData and equipped-ammunition data; contact 14 derives
+`NO THROWABLE`, `GRENADE`, or `MINE` plus count from the live explosive fields;
+contact 15 uses the live mapped power name.
 
 Favorite weapon and power accents require an exact normalized match to the
-independently live name. `uStartingSelection`, `bIsEquipped`, menu-owned image
-buffers, and unproven slot indices are not production inputs. The rail contains
-no actions or input handlers and preserves the existing vehicle-exit prompt.
+independently live name. This permits an ammo-less active melee entry to change
+from the generic item presentation to the weapon presentation without treating
+every ammo-less favorite as a weapon. Bethesda key
+`ArtifactPower_ElementalBlast` maps to `Elemental Pull` in both the data and
+condition contexts. `uStartingSelection`, `bIsEquipped`, menu-owned image
+buffers, and unproven slot indices are not production inputs. The ribbon
+contains no actions or input handlers and preserves the vehicle-exit prompt.
