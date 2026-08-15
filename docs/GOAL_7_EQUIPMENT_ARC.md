@@ -1,10 +1,13 @@
 # Goal 7 equipment rail
 
-**Status: The production equipment rail is implemented, built, and staged in
-all four variants. Runtime visual and behavior acceptance remains required
-before Goal 7 closes. The temporary full-screen FavoritesData diagnostic and
-the retired standalone weapon panel are not present in the production layout
-or staging payloads.**
+**Status: Complete.** The production equipment rail is implemented, built, and
+staged in all four variants. Runtime visual and behavior acceptance completed
+on 2026-08-15 in the available keyboard/mouse test environment. The temporary
+full-screen FavoritesData diagnostic and the retired standalone weapon panel
+are not present in the production layout or staging payloads. Bethesda's
+control-map path structurally retains controller/remapping presentation, but a
+controller was not separately exercised and is a non-blocking verification
+limitation.
 
 ## Product direction
 
@@ -168,33 +171,40 @@ byte-identical payload hashes across VWKS, CF, FC, and TA staging.
 
 ## Runtime acceptance
 
-After the user commits and deploys this exact build, verify:
+On 2026-08-15, the user deployed the exact artifact set recorded above and
+accepted the final runtime presentation as functional. The supplied final
+runtime evidence confirms the following closeout results:
 
-1. the full-screen diagnostic is absent in scanner and ordinary HUD states;
-2. the tightly fitted transparent ribbon lands on the physical right edge, replaces
-   the opaque rectangular rail, contains every contact over its fill, omits the
-   former cyan arc/guide, widens through its middle around contacts 13-15,
-   curves inward only at the bottom to meet Planet Data, terminates exactly at
+1. the full-screen diagnostic is absent from the production HUD;
+2. the tightly fitted transparent ribbon lands on the physical right edge,
+   replaces the opaque rectangular rail, contains every contact over its fill,
+   omits the former cyan arc/guide, widens through its middle around contacts
+   13-15, curves inward only at the bottom to meet Planet Data, terminates at
    the panel top without extending behind it, and does not clip;
-3. the contacts read top-to-bottom as 1-5, live weapon/explosive/power, and
-   6-12, with contacts 1 and 12 sharing mirrored endpoints, both favorite halves
-   stepping evenly toward the center, and all rows fitting inside the ribbon;
-4. contacts 1-12 preserve empty slots, refresh after Favorites Menu closes,
-   show the current PC/controller/remapped Quickkey plus icon/name on line one,
-   show only meaningful ammunition or stack counts without clipping in the
-   20-unit second-line field,
-   and use a distinct magenta `>` only for an exact active weapon or power match;
+3. contacts read top-to-bottom as 1-5, live weapon/explosive/power, and 6-12,
+   with mirrored outer endpoints, evenly stepped favorite halves, and every row
+   contained by the ribbon;
+4. contacts 1-12 preserve empty slots, refresh from Favorites Menu, show the
+   current keyboard/mouse Quickkey plus icon/name on line one, show meaningful
+   ammunition or stack counts without clipping in the 20-unit second-line
+   field, and use a distinct magenta `>` for an exact active weapon or power
+   match;
 5. Elemental Pull fills contact 15 and its mapped favorite contact receives the
    active accent;
-6. an equipped melee weapon fills contact 13 and its exact matching favorite
-   contact receives the active weapon icon/accent;
-7. contact 14 switches among `NO THROWABLE`, `GRENADE`, and `MINE` with the
-   correct live count and never displays `UNKNOWN`, while matching favorite
-   explosives remain intentionally neutral;
-8. contacts 13-15 have strong gold outlines and no fake hotkey labels;
-9. vehicle exit remains readable and functional at the bottom-center helmet
-   seal; and
-10. normal and large-menu HUD variants remain error-free.
+6. ranged and melee weapons fill contact 13, with exact matching favorites
+   receiving the weapon presentation and active accent;
+7. contact 14 switches among the bounded throwable states with the live count,
+   never displays `UNKNOWN`, and leaves favorite explosives intentionally
+   neutral because Bethesda does not identify the exact equipped favorite;
+8. contacts 13-15 use strong gold outlines without fake hotkey labels;
+9. the vehicle-exit presentation remains independently owned by the fixed
+   bottom-center helmet seal; and
+10. the accepted production HUD remained functional and error-free during the
+    final runtime review.
+
+These results close Goal 7. Controller glyph switching remains structurally
+owned by Bethesda's control-map helper and is not an incomplete Goal 7
+implementation requirement.
 
 ## Risks and rollback
 

@@ -134,7 +134,7 @@ gamer-facing configuration surface.
 | Composite | Status | Composition and behavior |
 |---|---|---|
 | Button | Future | Panel/shape, icon, label, key hint, enabled state, selected state, and cooldown/quantity overlay. |
-| Tactical equipment rail | Implemented; acceptance pending | Fifteen passive contacts: twelve remapping-aware FavoritesData readouts wrapped around independently live weapon, explosive, and power contacts in the center of the ribbon. Contacts do not own input or present themselves as buttons. |
+| Tactical equipment rail | Complete | Fifteen passive contacts: twelve remapping-aware FavoritesData readouts wrapped around independently live weapon, explosive, and power contacts in the center of the ribbon. Contacts do not own input or present themselves as buttons. Runtime visual and behavior acceptance completed on 2026-08-15. |
 | Compass | Research | Line/divider, heading label, direction ticks, markers, and optional background; marker data must remain owned by the vanilla compass provider. |
 | Minimap/radar | Research | Bounded panel, player marker, contacts/POIs, sweep/cone, grid, scale label, and clip mask. Feasibility depends on vanilla data exposed to the owning movie. |
 | Information panel | Future | Panel, title, key/value text, dividers, optional scroll/overflow indicator, and status accents. |
