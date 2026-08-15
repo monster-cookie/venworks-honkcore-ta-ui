@@ -145,15 +145,17 @@ bounded ActionScript and XML contracts, accepted the twelve source-bound empty
 favorite-detail fallbacks, resolved all twelve Quickkeys through Bethesda's
 control-map helper, retained rejection of an empty static-text fixture,
 rejected the opaque rail, retired diagnostic/weapon fragments and input hooks,
-validated the exact `1-5, 13-15, 6-12` visual order, and proved byte-identical
-payload hashes across VWKS, CF, FC, and TA staging.
+validated the exact `1-5, 13-15, 6-12` visual order, enforced the
+physical-right-edge include, single-path containment, two-line favorite rows,
+and gold live-contact outlines, and proved byte-identical payload hashes across
+VWKS, CF, FC, and TA staging.
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
 | `hudmenu.gfx` | 408518 | `3A6AF5E152ED0BC9146C9BFB05AADD549BB2AFF8C94B81D3BF21478A156A2773` |
 | `hudmenu_lrg.gfx` | 408701 | `AC600A04272FE03762B4A17C18B62EB6D3069D2314AADD9884461F1141156C04` |
-| `VenworksCUI/layout.xml` | 5553 | `BFB5C585F8C7C472CE512B908C564166B94F8AE74FB6B3364E7E715140CC1507` |
-| `components/equipment-rail.xml` | 30209 | `127F22572661741D09251806862D8207E0455D35E6279A522CD1035B09EA1176` |
+| `VenworksCUI/layout.xml` | 5552 | `FE6D162545DCB8E76CCF2BA4495D58AC687B0805DFB9C6F26A0C3A46EE217045` |
+| `components/equipment-rail.xml` | 29517 | `A7E259041F56E461E7C275C304D26E6F2F0EC218D54A1FD554768B5D64C12F13` |
 | `components/player-status-scanner.xml` | 8643 | `031D4BD34954325A6ADE5A19293EFA831A36C420FF14115F133C82138659876D` |
 | `components/environmental-hazard-scanner.xml` | 9411 | `B13E5559452491AB62F0F05990F2553BAFA91BA589E3D103BAC31FF260B10526` |
 
