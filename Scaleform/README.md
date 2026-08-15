@@ -93,13 +93,15 @@ accepted. The staged `layout.xml` is the Goal 6 production HUD: it hides the
 diagnostic vanilla bottom-left Chronomark and right-meter group, places the
 split-tab Player Data scanner at lower-left and the split-tab Planet
 Data/environmental scanner at lower-right, and places the passive Goal 7
-tactical loadout ribbon at upper-right. The ribbon runs from the upper helmet
-brow into Planet Data, orders favorite contacts 1-5 around centered live
+tactical loadout ribbon at upper-right. The ribbon begins at the physical right
+edge, runs from the upper helmet brow into Planet Data, and widens its single
+translucent silhouette enough to contain every contact without a cyan outer arc
+or decorative guide. It orders favorite contacts 1-5 around gold-outlined live
 weapon/explosive/power contacts and then favorites 6-12, and resolves favorite
-hotkeys through Bethesda's current PC/controller control map. Favorite detail
-text is limited to meaningful ammunition or stack counts; the live explosive
-provider cannot authoritatively identify an exact grenade/mine favorite, so
-those favorite rows remain neutral. Each lower scanner uses one
+hotkeys through Bethesda's current PC/controller control map. Favorite rows put
+hotkey/icon/name on line one and limit line two to meaningful ammunition or
+stack counts; the live explosive provider cannot authoritatively identify an
+exact grenade/mine favorite, so those favorite rows remain neutral. Each lower scanner uses one
 continuous rounded path with separate title and clock tabs around a wide
 transparent center notch. Mirrored overflow rails extend through the nearest
 side and bottom screen margins so both scanners appear integrated into the

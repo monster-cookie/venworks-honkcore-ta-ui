@@ -57,7 +57,7 @@
     <include id="player-status-scanner" src="player-status-scanner.xml"
              x="-39" y="11" anchor="bottom-left" visible="true" visibleWhen="always" z="100" />
     <include id="equipment-rail" src="equipment-rail.xml"
-             x="25" y="68" anchor="top-right" visible="true" visibleWhen="always" z="102" />
+             x="0" y="36" anchor="top-right" visible="true" visibleWhen="always" z="102" />
   </includes>
   <components>
     <path id="helmet.lower-frame.fill" x="-64" y="36" width="1920" height="293" opacity="1" visible="true"

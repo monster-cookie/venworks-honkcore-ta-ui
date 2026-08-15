@@ -329,20 +329,22 @@ five player tracks use the same bounded percentage contract.
 ## Goal 7 tactical equipment rail
 
 Goal 7 retires the temporary FavoritesData diagnostic and the standalone
-upper-right weapon fragment. The production 720-by-769 group overlaps the
-upper helmet brow and Planet Data by a few design units so its separately
-authored path reads as one joined surface. A curved,
-maximum-24-percent-opacity path carries contacts in the exact visual order
-1-5, 13-15, then 6-12 without an opaque rectangular backing or join seams.
+upper-right weapon fragment. The production 720-by-801 group begins at the
+physical right edge and preserves the accepted lower join with Planet Data so
+its separately authored path reads as one joined surface. A widened curved,
+maximum-24-percent-opacity path fully contains contacts in the exact visual
+order 1-5, 13-15, then 6-12 without an opaque rectangular backing, cyan outer
+arc, decorative guide, or join seams.
 Contact 13 uses live WeaponData and equipped-ammunition data; contact 14 derives
 `NO THROWABLE`, `GRENADE`, or `MINE` plus count from the live explosive fields;
 contact 15 uses the live mapped power name.
 
 Favorite rows show the current PC/controller/remapped Quickkey resolved from
-`ControlMapData.vMappedEvents`. Their detail field is blank unless meaningful
-ammunition or stack quantity exists, and then it shows only the compact count.
-Redundant item, power, and weapon-type labels and fake 13-15 key numbers are
-not authored.
+`ControlMapData.vMappedEvents`, generic icon, and name on their first line. A
+dedicated second detail line is blank unless meaningful ammunition or stack
+quantity exists, and then it shows only the compact count. Live contacts 13-15
+use strong gold outlines. Redundant item, power, and weapon-type labels and
+fake 13-15 key numbers are not authored.
 
 Favorite weapon and power accents require an exact normalized match to the
 independently live name. This permits an ammo-less active melee entry to change

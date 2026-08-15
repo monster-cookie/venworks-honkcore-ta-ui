@@ -9,14 +9,15 @@ or staging payloads.**
 ## Product direction
 
 Goal 7 replaces the passive upper-right weapon presentation with one compact,
-helmet-integrated tactical loadout ribbon. The 720-by-769 design-unit group is
-anchored at the upper right, 25 units from the physical edge and 68 units below
-the upper edge. Its owned curved path hugs the right side with a 24-percent
-maximum fill opacity; there is no opaque rectangular rail backing. The contacts
-follow the curve from beneath the upper helmet brow into Planet Data while
-leaving the center field of view clear. The slight upper and lower overlaps
-make the separately authored surfaces read as one helmet assembly without
-drawing horizontal seams across either join.
+helmet-integrated tactical loadout ribbon. The 720-by-801 design-unit group is
+anchored directly to the physical right edge and begins 36 units below the
+upper edge. Its wider owned curved path keeps every contact fully over the
+24-percent-maximum translucent fill; there is no opaque rectangular backing,
+cyan outer arc, or decorative guide. The contacts follow the silhouette from
+beneath the upper helmet brow into Planet Data while leaving the center field
+of view clear. Increasing the group height preserves the accepted lower join
+at screen coordinate 837, so the separately authored surfaces still read as
+one helmet assembly without drawing horizontal seams across either join.
 
 The rail contains fifteen passive contacts:
 
@@ -30,9 +31,11 @@ The rail contains fifteen passive contacts:
 4. contact 15 displays the live active-power name.
 
 The visual order is contacts 1-5, centered live contacts 13-15, then contacts
-6-12. The live contacts deliberately have no fake `13`, `14`, or `15` key
-labels because they describe independently equipped state rather than favorite
-inputs.
+6-12. Favorite rows use two levels: Bethesda's current hotkey, generic icon,
+and item name on the first line, then authoritative ammunition or stack count
+on the second line. The live contacts use strong gold outlines and deliberately
+have no fake `13`, `14`, or `15` key labels because they describe independently
+equipped state rather than favorite inputs.
 
 The contacts are status displays, not buttons. They do not handle input,
 replace Favorites Menu ownership, or imply that the player can activate a
@@ -82,9 +85,9 @@ true and as a ranged weapon when a nonempty ammunition name is present. An
 ammo-less entry remains a generic item until its normalized name exactly
 matches the independently live weapon name; at that point it is classified as
 the active melee weapon. Missing entries display `EMPTY`. Favorite detail text
-is intentionally absent unless the entry has meaningful ammunition or stack
-quantity, in which case only the compact count is shown; redundant `ITEM`,
-`POWER`, and weapon-type wording is omitted.
+occupies a dedicated second line and is intentionally blank unless the entry
+has meaningful ammunition or stack quantity, in which case only the compact
+count is shown; redundant `ITEM`, `POWER`, and weapon-type wording is omitted.
 
 Favorite weapon and power contacts become active only when their bounded,
 trimmed, case-insensitive names exactly match the independently live weapon or
@@ -159,13 +162,15 @@ payload hashes across VWKS, CF, FC, and TA staging.
 After the user commits and deploys this exact build, verify:
 
 1. the full-screen diagnostic is absent in scanner and ordinary HUD states;
-2. the curved transparent ribbon replaces the opaque rectangular rail, joins
-   the upper brow and Planet Data without a visible seam, and does not clip;
+2. the widened transparent ribbon begins at the physical right edge, replaces
+   the opaque rectangular rail, contains every contact over its fill, omits the
+   former cyan arc/guide, joins the upper brow and Planet Data without a visible
+   seam, and does not clip;
 3. the contacts read top-to-bottom as 1-5, live weapon/explosive/power, and
    6-12, with all rows fitting inside the ribbon;
 4. contacts 1-12 preserve empty slots, refresh after Favorites Menu closes,
-   show the current PC/controller/remapped Quickkey, and show only meaningful
-   ammunition or stack counts;
+   show the current PC/controller/remapped Quickkey plus icon/name on line one,
+   and show only meaningful ammunition or stack counts on line two;
 5. Elemental Pull fills contact 15 and its mapped favorite contact receives the
    active accent;
 6. an equipped melee weapon fills contact 13 and its exact matching favorite
@@ -173,7 +178,7 @@ After the user commits and deploys this exact build, verify:
 7. contact 14 switches among `NO THROWABLE`, `GRENADE`, and `MINE` with the
    correct live count and never displays `UNKNOWN`, while matching favorite
    explosives remain intentionally neutral;
-8. contacts 13-15 have no fake hotkey labels;
+8. contacts 13-15 have strong gold outlines and no fake hotkey labels;
 9. vehicle exit remains readable and functional; and
 10. normal and large-menu HUD variants remain error-free.
 
