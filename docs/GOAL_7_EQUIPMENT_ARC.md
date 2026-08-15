@@ -15,12 +15,14 @@ the physical right edge. It begins at screen coordinate 72 and terminates at
 screen coordinate 819, exactly where Planet Data begins. Its owned curved path
 keeps every contact fully over a tightly fitted, 24-percent-maximum translucent
 fill; there is no opaque rectangular backing, cyan outer arc, or decorative
-guide. Favorite contacts 1 and 12 share an exact mirrored endpoint, while both
-favorite halves step evenly toward the center live-contact group. The contacts
-follow the silhouette from beneath the upper helmet brow into Planet Data while
-leaving the center field of view clear. The ribbon no longer extends beneath
-Planet Data, so the separately authored surfaces meet without a hidden underlap
-or horizontal join seam.
+guide. The silhouette widens through its middle to contain live contacts 13-15,
+then curves inward only at the bottom return to meet the existing 360-unit
+Planet Data width. Favorite contacts 1 and 12 share an exact mirrored endpoint,
+while both favorite halves step evenly toward the center live-contact group.
+The contacts follow the silhouette from beneath the upper helmet brow into
+Planet Data while leaving the center field of view clear. The ribbon no longer
+extends beneath Planet Data, so the separately authored surfaces meet without a
+hidden underlap or horizontal join seam.
 
 The rail contains fifteen passive contacts:
 
@@ -150,17 +152,17 @@ control-map helper, retained rejection of an empty static-text fixture,
 rejected the opaque rail, retired diagnostic/weapon fragments and input hooks,
 validated the exact `1-5, 13-15, 6-12` visual order, enforced the
 physical-right-edge include, exact Planet Data termination, bottom-center
-vehicle prompt, single-path containment, mirrored and uniformly stepped
-two-line favorite rows, 18-unit detail fields, magenta active chevrons, and gold
-live contact outlines, and proved byte-identical payload hashes across VWKS,
-CF, FC, and TA staging.
+vehicle prompt, single-path containment, a bottom-only Planet Data return,
+mirrored and uniformly stepped two-line favorite rows, 20-unit name/detail
+fields, magenta active chevrons, and gold live contact outlines, and proved
+byte-identical payload hashes across VWKS, CF, FC, and TA staging.
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
 | `hudmenu.gfx` | 408518 | `3A6AF5E152ED0BC9146C9BFB05AADD549BB2AFF8C94B81D3BF21478A156A2773` |
 | `hudmenu_lrg.gfx` | 408701 | `AC600A04272FE03762B4A17C18B62EB6D3069D2314AADD9884461F1141156C04` |
 | `VenworksCUI/layout.xml` | 6279 | `4143B59B71E8009D16B15D926C9BA4F67188FA8336C8135F9F50DDC60617AF2B` |
-| `components/equipment-rail.xml` | 29070 | `54975AB9F93351B6C0AFD9D16E445D72034E825AEFE4B4A031EADCB524F42B9F` |
+| `components/equipment-rail.xml` | 29096 | `0ACCCBDBE7963076DF26D11C21FC9AC2B48EE3B270303F44CA5A607AE3819597` |
 | `components/player-status-scanner.xml` | 8643 | `031D4BD34954325A6ADE5A19293EFA831A36C420FF14115F133C82138659876D` |
 | `components/environmental-hazard-scanner.xml` | 9411 | `B13E5559452491AB62F0F05990F2553BAFA91BA589E3D103BAC31FF260B10526` |
 
@@ -171,14 +173,16 @@ After the user commits and deploys this exact build, verify:
 1. the full-screen diagnostic is absent in scanner and ordinary HUD states;
 2. the tightly fitted transparent ribbon lands on the physical right edge, replaces
    the opaque rectangular rail, contains every contact over its fill, omits the
-   former cyan arc/guide, terminates exactly at the top of Planet Data without
-   extending behind it, and does not clip;
+   former cyan arc/guide, widens through its middle around contacts 13-15,
+   curves inward only at the bottom to meet Planet Data, terminates exactly at
+   the panel top without extending behind it, and does not clip;
 3. the contacts read top-to-bottom as 1-5, live weapon/explosive/power, and
    6-12, with contacts 1 and 12 sharing mirrored endpoints, both favorite halves
    stepping evenly toward the center, and all rows fitting inside the ribbon;
 4. contacts 1-12 preserve empty slots, refresh after Favorites Menu closes,
    show the current PC/controller/remapped Quickkey plus icon/name on line one,
-   show only meaningful ammunition or stack counts without clipping on line two,
+   show only meaningful ammunition or stack counts without clipping in the
+   20-unit second-line field,
    and use a distinct magenta `>` only for an exact active weapon or power match;
 5. Elemental Pull fills contact 15 and its mapped favorite contact receives the
    active accent;

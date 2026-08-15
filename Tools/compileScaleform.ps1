@@ -1175,24 +1175,25 @@ try {
         [double]$detailNode.y -lt ([double]$nameNode.y + [double]$nameNode.height) -or
         [double]$detailNode.x -ne [double]$nameNode.x -or
         [double]$detailNode.width -ne [double]$nameNode.width -or
-        [double]$detailNode.height -lt 18 -or
+        [double]$nameNode.height -lt 20 -or
+        [double]$detailNode.height -lt 20 -or
         [double]$dividerNode.y -lt ([double]$detailNode.y + [double]$detailNode.height)) {
       $contactId
     }
   })
   $expectedFavoriteGeometry = @(
-    [pscustomobject]@{ ContactId = '01'; MarkerX = 332; HotkeyX = 348; IconX = 390; TextX = 416; TextWidth = 284 },
-    [pscustomobject]@{ ContactId = '02'; MarkerX = 355; HotkeyX = 371; IconX = 413; TextX = 439; TextWidth = 261 },
-    [pscustomobject]@{ ContactId = '03'; MarkerX = 378; HotkeyX = 394; IconX = 436; TextX = 462; TextWidth = 238 },
-    [pscustomobject]@{ ContactId = '04'; MarkerX = 401; HotkeyX = 417; IconX = 459; TextX = 485; TextWidth = 215 },
-    [pscustomobject]@{ ContactId = '05'; MarkerX = 424; HotkeyX = 440; IconX = 482; TextX = 508; TextWidth = 192 },
-    [pscustomobject]@{ ContactId = '06'; MarkerX = 424; HotkeyX = 440; IconX = 482; TextX = 508; TextWidth = 192 },
-    [pscustomobject]@{ ContactId = '07'; MarkerX = 409; HotkeyX = 425; IconX = 467; TextX = 493; TextWidth = 207 },
-    [pscustomobject]@{ ContactId = '08'; MarkerX = 393; HotkeyX = 409; IconX = 451; TextX = 477; TextWidth = 223 },
-    [pscustomobject]@{ ContactId = '09'; MarkerX = 378; HotkeyX = 394; IconX = 436; TextX = 462; TextWidth = 238 },
-    [pscustomobject]@{ ContactId = '10'; MarkerX = 363; HotkeyX = 379; IconX = 421; TextX = 447; TextWidth = 253 },
-    [pscustomobject]@{ ContactId = '11'; MarkerX = 347; HotkeyX = 363; IconX = 405; TextX = 431; TextWidth = 269 },
-    [pscustomobject]@{ ContactId = '12'; MarkerX = 332; HotkeyX = 348; IconX = 390; TextX = 416; TextWidth = 284 }
+    [pscustomobject]@{ ContactId = '01'; MarkerX = 332; MarkerY = 34;  HotkeyX = 348; HotkeyY = 36;  IconX = 390; IconY = 37;  TextX = 416; NameY = 36;  DetailY = 56;  DividerY = 76;  TextWidth = 284 },
+    [pscustomobject]@{ ContactId = '02'; MarkerX = 355; MarkerY = 76;  HotkeyX = 371; HotkeyY = 78;  IconX = 413; IconY = 79;  TextX = 439; NameY = 78;  DetailY = 98;  DividerY = 118; TextWidth = 261 },
+    [pscustomobject]@{ ContactId = '03'; MarkerX = 378; MarkerY = 118; HotkeyX = 394; HotkeyY = 120; IconX = 436; IconY = 121; TextX = 462; NameY = 120; DetailY = 140; DividerY = 160; TextWidth = 238 },
+    [pscustomobject]@{ ContactId = '04'; MarkerX = 401; MarkerY = 160; HotkeyX = 417; HotkeyY = 162; IconX = 459; IconY = 163; TextX = 485; NameY = 162; DetailY = 182; DividerY = 202; TextWidth = 215 },
+    [pscustomobject]@{ ContactId = '05'; MarkerX = 424; MarkerY = 202; HotkeyX = 440; HotkeyY = 204; IconX = 482; IconY = 205; TextX = 508; NameY = 204; DetailY = 224; DividerY = 244; TextWidth = 192 },
+    [pscustomobject]@{ ContactId = '06'; MarkerX = 424; MarkerY = 453; HotkeyX = 440; HotkeyY = 455; IconX = 482; IconY = 456; TextX = 508; NameY = 455; DetailY = 475; DividerY = 495; TextWidth = 192 },
+    [pscustomobject]@{ ContactId = '07'; MarkerX = 409; MarkerY = 495; HotkeyX = 425; HotkeyY = 497; IconX = 467; IconY = 498; TextX = 493; NameY = 497; DetailY = 517; DividerY = 537; TextWidth = 207 },
+    [pscustomobject]@{ ContactId = '08'; MarkerX = 393; MarkerY = 537; HotkeyX = 409; HotkeyY = 539; IconX = 451; IconY = 540; TextX = 477; NameY = 539; DetailY = 559; DividerY = 579; TextWidth = 223 },
+    [pscustomobject]@{ ContactId = '09'; MarkerX = 378; MarkerY = 579; HotkeyX = 394; HotkeyY = 581; IconX = 436; IconY = 582; TextX = 462; NameY = 581; DetailY = 601; DividerY = 621; TextWidth = 238 },
+    [pscustomobject]@{ ContactId = '10'; MarkerX = 363; MarkerY = 621; HotkeyX = 379; HotkeyY = 623; IconX = 421; IconY = 624; TextX = 447; NameY = 623; DetailY = 643; DividerY = 663; TextWidth = 253 },
+    [pscustomobject]@{ ContactId = '11'; MarkerX = 347; MarkerY = 663; HotkeyX = 363; HotkeyY = 665; IconX = 405; IconY = 666; TextX = 431; NameY = 665; DetailY = 685; DividerY = 705; TextWidth = 269 },
+    [pscustomobject]@{ ContactId = '12'; MarkerX = 332; MarkerY = 705; HotkeyX = 348; HotkeyY = 707; IconX = 390; IconY = 708; TextX = 416; NameY = 707; DetailY = 727; DividerY = 747; TextWidth = 284 }
   )
   $favoriteGeometryFailures = @($expectedFavoriteGeometry | ForEach-Object {
     $geometry = $_
@@ -1209,13 +1210,21 @@ try {
         $null -eq $detailNode -or
         $null -eq $dividerNode -or
         [int]$markerNode.x -ne $geometry.MarkerX -or
+        [int]$markerNode.y -ne $geometry.MarkerY -or
         [int]$hotkeyNode.x -ne $geometry.HotkeyX -or
+        [int]$hotkeyNode.y -ne $geometry.HotkeyY -or
         @($iconNodes | Where-Object { [int]$_.x -ne $geometry.IconX }).Count -ne 0 -or
+        @($iconNodes | Where-Object { [int]$_.y -ne $geometry.IconY }).Count -ne 0 -or
         [int]$nameNode.x -ne $geometry.TextX -or
+        [int]$nameNode.y -ne $geometry.NameY -or
         [int]$detailNode.x -ne $geometry.TextX -or
+        [int]$detailNode.y -ne $geometry.DetailY -or
         [int]$dividerNode.x -ne $geometry.TextX -or
+        [int]$dividerNode.y -ne $geometry.DividerY -or
         [int]$nameNode.width -ne $geometry.TextWidth -or
+        [int]$nameNode.height -ne 20 -or
         [int]$detailNode.width -ne $geometry.TextWidth -or
+        [int]$detailNode.height -ne 20 -or
         [int]$dividerNode.width -ne $geometry.TextWidth) {
       $geometry.ContactId
     }
@@ -1230,7 +1239,7 @@ try {
     ForEach-Object { [regex]::Match($_.GetAttribute('id'), '^contact\.(\d{2})\.').Groups[1].Value })
   $expectedContactVisualOrder = @('01','02','03','04','05','13','14','15','06','07','08','09','10','11','12')
   $contactVisualOrderDifferences = @(Compare-Object -ReferenceObject $expectedContactVisualOrder -DifferenceObject $contactVisualOrder -SyncWindow 0)
-  $expectedEquipmentRibbonBodyPath = 'M 304 0 C 324 44 352 96 382 142 C 408 182 426 218 430 286 C 434 352 430 402 412 450 C 392 514 356 586 326 652 C 318 682 316 716 320 747 L 720 747 L 720 0 Z'
+  $expectedEquipmentRibbonBodyPath = 'M 304 0 C 324 44 352 96 382 142 C 400 176 400 216 398 252 C 396 318 398 382 400 430 C 392 486 368 552 340 620 C 326 654 318 688 320 712 C 322 728 340 740 360 747 L 720 747 L 720 0 Z'
   $equipmentRailScreenBottom = [double]$providerProbeLayout.venworksCUI.safeTop + [double]$equipmentRailIncludes[0].y + [double]$stagedEquipmentRailGroup.height
   $environmentalScannerScreenTop = [double]$providerProbeLayout.venworksCUI.designHeight - [double]$providerProbeLayout.venworksCUI.safeBottom + [double]$environmentalScannerIncludes[0].y - [double]$stagedEnvironmentalScannerGroup.height
   if ($equipmentRailIncludes.Count -ne 1 -or
@@ -1272,7 +1281,7 @@ try {
       $stagedEquipmentRailText -match 'uStartingSelection|diagnostic\.' -or
       $stagedEquipmentRailText -match 'value="(ITEM|POWER|COUNT\s*)"' -or
       $stagedEquipmentRailText -match 'id="rail\.panel"|id="contact\.14\.(none|grenade|mine)"') {
-    throw 'Goal 7 must stage one compact transparent passive ribbon at the physical right edge, terminate exactly at Planet Data without underlap, remain ordered 1-5, weapon, throwable, power, 6-12 with mirrored and uniformly stepped two-line remapping-aware favorites, magenta chevron active markers, gold live-contact outlines, compact authoritative counts, and contain no vehicle prompt, cyan guide, opaque rail panel, diagnostic, or input behavior.'
+    throw 'Goal 7 must stage one compact transparent passive ribbon at the physical right edge, use a bottom-only return aligned to Planet Data, contain the live contacts over its middle fill, remain ordered 1-5, weapon, throwable, power, 6-12 with mirrored uniformly stepped 20-unit two-line remapping-aware favorites, magenta chevron active markers, gold live-contact outlines, compact authoritative counts, and contain no vehicle prompt, cyan guide, opaque rail panel, diagnostic, or input behavior.'
   }
   $expectedHelmetLowerFrameFillPath = 'M 0 0 L 33 32 L 157 32 Q 169 32 169 44 L 169 52 Q 169 62 181 62 L 219 62 Q 231 62 231 52 L 231 44 Q 231 32 243 32 L 377 32 Q 385 32 385 40 L 385 237 C 399 237 407 243 417 253 Q 425 261 439 261 L 1481 261 Q 1495 261 1503 253 C 1513 243 1521 237 1535 237 L 1535 40 Q 1535 32 1543 32 L 1643 32 Q 1655 32 1655 44 L 1655 52 Q 1655 62 1667 62 L 1771 62 Q 1783 62 1783 52 L 1783 44 Q 1783 32 1795 32 L 1887 32 L 1920 0 L 1920 293 L 0 293 Z'
   $expectedHelmetUpperFrameFillPath = 'M 0 0 L 1920 0 L 1920 70 Q 1680 76 1450 92 L 1260 106 Q 1228 108 1204 118 Q 1190 126 1170 126 L 750 126 Q 730 126 716 118 Q 692 108 660 106 L 470 92 Q 240 76 0 70 Z'

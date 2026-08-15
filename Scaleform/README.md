@@ -95,14 +95,17 @@ split-tab Player Data scanner at lower-left and the split-tab Planet
 Data/environmental scanner at lower-right, and places the passive Goal 7
 tactical loadout ribbon at upper-right. The ribbon begins at the physical right
 edge, runs from the upper helmet brow to the exact top of Planet Data without
-extending behind it, and tightens its single translucent silhouette around
-every contact without a cyan outer arc or decorative guide. It orders favorite
+extending behind it, widens through the middle to contain the three live
+contacts, and curves inward only at its bottom return to meet the existing
+Planet Data width. Its single translucent silhouette contains every contact
+without a cyan outer arc or decorative guide. It orders favorite
 contacts 1-5 around gold-outlined live weapon/explosive/power contacts and then
 favorites 6-12, with mirrored outer endpoints and evenly stepped inner rows.
 Favorite hotkeys resolve through Bethesda's current PC/controller control map,
 and a magenta chevron marks an exact live weapon or power match. Favorite rows
-put hotkey/icon/name on line one and reserve a taller second line for meaningful
-ammunition or stack counts; the live explosive provider cannot authoritatively
+put hotkey/icon/name on line one and reserve 20 design units on each of the name
+and detail lines for meaningful ammunition or stack counts; the live explosive
+provider cannot authoritatively
 identify an exact grenade/mine favorite, so those favorite rows remain neutral.
 Each lower scanner uses one continuous rounded path with separate title and
 clock tabs around a wide transparent center notch. Mirrored overflow rails extend through the nearest

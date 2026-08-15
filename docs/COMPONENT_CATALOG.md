@@ -333,7 +333,9 @@ upper-right weapon fragment. The production 720-by-747 group offsets its
 top-right safe-area anchor to land on the physical right edge and terminates
 exactly where Planet Data begins, so the separately authored surfaces meet
 without a hidden underlap. A compact curved path at no more than 24 percent
-opacity tightly contains contacts in the exact visual order 1-5, 13-15, then
+opacity widens through its middle to contain live contacts 13-15, then curves
+inward only at its bottom return to meet the existing Planet Data width. It
+tightly contains contacts in the exact visual order 1-5, 13-15, then
 6-12 without an opaque rectangular backing, cyan outer arc, decorative guide,
 or join seams. Favorite contacts 1 and 12 share an exact mirrored endpoint, and
 the upper and lower favorite rows step evenly toward the center live-contact
@@ -345,8 +347,9 @@ contact 15 uses the live mapped power name.
 Favorite rows show the current PC/controller/remapped Quickkey resolved from
 `ControlMapData.vMappedEvents`, generic icon, and name on their first line. A
 dedicated second detail line is blank unless meaningful ammunition or stack
-quantity exists, and then it shows only the compact count in an 18-unit-high
-field. A magenta chevron marks an exact active weapon or power favorite, while
+quantity exists, and then it shows only the compact count. Both the name and
+detail fields are 20 design units high. A magenta chevron marks an exact active
+weapon or power favorite, while
 live contacts 13-15 use strong gold outlines. Redundant item, power, and
 weapon-type labels and fake 13-15 key numbers are not authored.
 
