@@ -213,6 +213,9 @@ $providerProbeComponentDirectory = Resolve-RequiredDirectory `
 $playerHudDataContextSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\actionscript\venworks\cui\CUIPlayerHudDataContext.as") `
   -Description "Goal 6 player HUD data adapter"
+$conditionContextSource = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\actionscript\venworks\cui\CUIConditionContext.as") `
+  -Description "Goal 7 condition context"
 $gallerySvgSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\gallery-vector.svg") `
   -Description "Owned SVG gallery asset"
@@ -251,6 +254,7 @@ foreach ($positiveFixtureName in @(
 
 $providerProbeLayout = [xml](Get-Content -LiteralPath $providerProbeLayoutSource -Raw)
 $playerHudDataContextText = Get-Content -LiteralPath $playerHudDataContextSource -Raw
+$conditionContextText = Get-Content -LiteralPath $conditionContextSource -Raw
 $playerSerialDerivation = [regex]::Match(
   $playerHudDataContextText,
   '(?s)private function derivePlayerSerial\(param1:String\).*?private function formatPlayerSerial')
@@ -271,6 +275,21 @@ if (-not $playerSerialDerivation.Success -or
 }
 if ($playerHudDataContextText -match 'diagnostic\.favorites|uStartingSelection|uQuickkeyIndex|iconImage') {
   throw 'Goal 7 production data bindings must not retain the temporary FavoritesData diagnostic or infer active state from menu-owned selection/image fields.'
+}
+if ($playerHudDataContextText -notmatch 'case "ArtifactPower_ElementalBlast":\s+name = "Elemental Pull"' -or
+    $conditionContextText -notmatch 'case "ArtifactPower_ElementalBlast": return "elemental pull"') {
+  throw 'Goal 7 must map Bethesda ArtifactPower_ElementalBlast to the user-facing Elemental Pull name in both data and condition contexts.'
+}
+if ($playerHudDataContextText -notmatch 'weapon\.explosivelabel' -or
+    $playerHudDataContextText -notmatch 'explosiveType != 0 \? "MINE" : "GRENADE"' -or
+    $playerHudDataContextText -notmatch '"NO THROWABLE"') {
+  throw 'Goal 7 must derive a deterministic generic throwable label from the live explosive count and type.'
+}
+if ($playerHudDataContextText -notmatch 'refreshFavoriteSlotText\(\)' -or
+    $playerHudDataContextText -notmatch 'detail = "MELEE"' -or
+    $conditionContextText -notmatch 'weaponMatch = populated.*activeWeaponName\.length != 0.*name == activeWeaponName' -or
+    $conditionContextText -notmatch 'effectiveWeapon = Boolean\(favoriteWeapons\[index\]\) \|\| weaponMatch') {
+  throw 'Goal 7 must classify and highlight an ammo-less melee favorite only when its normalized name exactly matches the live weapon name.'
 }
 foreach ($meterStyle in @($providerProbeLayout.venworksCUI.definitions.meterStyle)) {
   $renderer = [string]$meterStyle.renderer
@@ -728,6 +747,7 @@ try {
       'RightMeters_mc',
       'weapon.explosivecount',
       'weapon.explosivetype',
+      'weapon.explosivelabel',
       'boost.charge',
       'weaponhasexplosive',
       'weaponexplosiveismine',
@@ -1094,6 +1114,12 @@ try {
   $favoriteActiveMarkers = @($stagedEquipmentRailGroup.panel | Where-Object {
     $_.HasAttribute('id') -and $_.GetAttribute('id') -match '^contact\.(0[1-9]|1[0-2])\.active$'
   })
+  $equipmentRibbonPaths = @($stagedEquipmentRailGroup.path | Where-Object {
+    $_.HasAttribute('id') -and $_.GetAttribute('id') -match '^rail\.ribbon\.(body|edge|guide)$'
+  })
+  $equipmentRibbonBody = @($stagedEquipmentRailGroup.path | Where-Object {
+    $_.HasAttribute('id') -and $_.GetAttribute('id') -eq 'rail.ribbon.body'
+  })
   $contactNumbers = @($stagedEquipmentRailGroup.text | Where-Object {
     $_.HasAttribute('id') -and $_.GetAttribute('id') -match '^contact\.(0[1-9]|1[0-5])\.number$'
   })
@@ -1101,10 +1127,13 @@ try {
       [string]$equipmentRailIncludes[0].src -ne 'equipment-rail.xml' -or
       [string]$equipmentRailIncludes[0].anchor -ne 'top-right' -or
       [string]$equipmentRailIncludes[0].visibleWhen -ne 'always' -or
-      [int]$equipmentRailIncludes[0].x -ne 39 -or
-      [int]$equipmentRailIncludes[0].y -ne 96 -or
-      [int]$stagedEquipmentRailGroup.width -ne 330 -or
+      [int]$equipmentRailIncludes[0].x -ne 25 -or
+      [int]$equipmentRailIncludes[0].y -ne 92 -or
+      [int]$stagedEquipmentRailGroup.width -ne 720 -or
       [int]$stagedEquipmentRailGroup.height -ne 650 -or
+      $equipmentRibbonPaths.Count -ne 3 -or
+      $equipmentRibbonBody.Count -ne 1 -or
+      [double]$equipmentRibbonBody[0].fillOpacity -gt 0.24 -or
       $favoriteNameBindings.Count -ne 12 -or
       $favoriteDetailBindings.Count -ne 12 -or
       $favoriteActiveMarkers.Count -ne 12 -or
@@ -1112,8 +1141,8 @@ try {
       $stagedEquipmentRailText -notmatch 'id="contact\.13\.icon"' -or
       $stagedEquipmentRailText -notmatch 'source="weapon\.icon"' -or
       $stagedEquipmentRailText -notmatch 'source="weapon\.ammoType"' -or
-      $stagedEquipmentRailText -notmatch 'id="contact\.14\.grenade"' -or
-      $stagedEquipmentRailText -notmatch 'id="contact\.14\.mine"' -or
+      $stagedEquipmentRailText -notmatch 'id="contact\.14\.name"' -or
+      $stagedEquipmentRailText -notmatch 'source="weapon\.explosiveLabel"' -or
       $stagedEquipmentRailText -notmatch 'source="weapon\.explosiveCount"' -or
       $stagedEquipmentRailText -notmatch 'id="contact\.15\.name"' -or
       $stagedEquipmentRailText -notmatch 'source="power\.name"' -or
@@ -1121,8 +1150,9 @@ try {
       $stagedEquipmentRailText -notmatch 'value="\$EXIT HOLD"' -or
       ([regex]::Matches($stagedEquipmentRailText, 'visibleWhen="inVehicle"')).Count -lt 2 -or
       $stagedEquipmentRailText -match '<button|action=|event=|callback=|userEvent=|key=' -or
-      $stagedEquipmentRailText -match 'uStartingSelection|diagnostic\.') {
-    throw 'Goal 7 must stage one bounded passive 15-contact equipment rail with 12 snapshot favorites, authoritative live weapon/throwable/power contacts, active-match markers, and no diagnostic or input behavior.'
+      $stagedEquipmentRailText -match 'uStartingSelection|diagnostic\.' -or
+      $stagedEquipmentRailText -match 'id="rail\.panel"|id="contact\.14\.(none|grenade|mine)"') {
+    throw 'Goal 7 must stage one curved transparent passive 15-contact ribbon with 12 snapshot favorites, compact authoritative live weapon/throwable/power contacts, active-match markers, and no opaque rail panel, diagnostic, or input behavior.'
   }
   $expectedHelmetLowerFrameFillPath = 'M 0 0 L 33 32 L 157 32 Q 169 32 169 44 L 169 52 Q 169 62 181 62 L 219 62 Q 231 62 231 52 L 231 44 Q 231 32 243 32 L 377 32 Q 385 32 385 40 L 385 237 C 399 237 407 243 417 253 Q 425 261 439 261 L 1481 261 Q 1495 261 1503 253 C 1513 243 1521 237 1535 237 L 1535 40 Q 1535 32 1543 32 L 1643 32 Q 1655 32 1655 44 L 1655 52 Q 1655 62 1667 62 L 1771 62 Q 1783 62 1783 52 L 1783 44 Q 1783 32 1795 32 L 1887 32 L 1920 0 L 1920 293 L 0 293 Z'
   $expectedHelmetUpperFrameFillPath = 'M 0 0 L 1920 0 L 1920 70 Q 1680 76 1450 92 L 1260 106 Q 1228 108 1204 118 Q 1190 126 1170 126 L 750 126 Q 730 126 716 118 Q 692 108 660 106 L 470 92 Q 240 76 0 70 Z'

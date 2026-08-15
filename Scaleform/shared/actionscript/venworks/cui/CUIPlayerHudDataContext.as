@@ -49,6 +49,9 @@ package venworks.cui
       private var previousOxygen:Number = NaN;
       private var oxygenDrainDetected:Boolean = false;
       private var oxygenActivity:Number = 0;
+      private var favoriteNames:Array;
+      private var favoriteDetails:Array;
+      private var activeWeaponName:String = "";
       private var universalTimeDiagnostic:String = "UT: LOCAL ENV FREQUENT DATA NOT RECEIVED";
       private var digipickDiagnostic:String = "DIGIPICK: PLAYER INVENTORY DATA NOT RECEIVED";
 
@@ -61,6 +64,8 @@ package venworks.cui
          exposureTarget = [0,0,0,0];
          exposureTargetTicks = [0,0,0,0];
          exposureRandom = [0,0,0,0];
+         favoriteNames = [];
+         favoriteDetails = [];
          exposureTimer = new Timer(EXPOSURE_UPDATE_MS);
          exposureTimer.addEventListener(TimerEvent.TIMER,this.onExposureTimer);
          BSUIDataManager.Subscribe("LocalEnvironmentData",this.onLocalEnvironmentData);
@@ -118,6 +123,7 @@ package venworks.cui
          if(source == "location.name" || source == "player.serial" ||
             source == "power.key" || source == "power.name" ||
             source == "weapon.name" || source == "weapon.icon" || source == "weapon.ammotype" ||
+            source == "weapon.explosivelabel" ||
             source == "diagnostic.inventoryprovider" || source == "diagnostic.powernameprovider" ||
             source == "environment.protectionstatus" ||
             source == "environment.hazard.airwaterstatus" || source == "environment.hazard.thermalstatus" ||
@@ -355,6 +361,9 @@ package venworks.cui
       {
          var clip:Number = Number(param1.data.uClipAmmo);
          var total:Number = Number(param1.data.uTotalAmmo);
+         var explosiveCount:Number = Number(param1.data.uExplosiveCount);
+         var explosiveType:Number = Number(param1.data.uExplosiveIndicatorType);
+         this.activeWeaponName = this.normalizeFavoriteName(param1.data.sWeaponName);
          this.setText("weapon.name",param1.data.sWeaponName);
          this.setText("weapon.icon",param1.data.sIconLinkageName);
          this.setFinite("weapon.clipammo",clip);
@@ -365,8 +374,17 @@ package venworks.cui
          }
          this.setBoolean("weapon.displayammo",param1.data.bDisplayAmmo);
          this.setBoolean("weapon.ammoaspercent",param1.data.bShowAmmoAsPercent);
-         this.setFinite("weapon.explosivecount",param1.data.uExplosiveCount);
-         this.setFinite("weapon.explosivetype",param1.data.uExplosiveIndicatorType);
+         this.setFinite("weapon.explosivecount",explosiveCount);
+         this.setFinite("weapon.explosivetype",explosiveType);
+         if(!isNaN(explosiveCount) && isFinite(explosiveCount) && explosiveCount > 0)
+         {
+            this.setText("weapon.explosivelabel",!isNaN(explosiveType) && isFinite(explosiveType) && explosiveType != 0 ? "MINE" : "GRENADE");
+         }
+         else
+         {
+            this.setText("weapon.explosivelabel","NO THROWABLE");
+         }
+         this.refreshFavoriteSlotText();
          this.notifyChanged();
       }
 
@@ -507,11 +525,12 @@ package venworks.cui
                {
                   detail = "COUNT  " + Math.max(0,Math.round(count)).toString();
                }
-               this.setText("favorite." + slotLabel + ".name",name.length == 0 ? "UNNAMED" : name);
-               this.setText("favorite." + slotLabel + ".detail",detail);
+               favoriteNames[index] = name.length == 0 ? "UNNAMED" : name;
+               favoriteDetails[index] = detail;
             }
             ++index;
          }
+         this.refreshFavoriteSlotText();
          this.notifyChanged();
       }
 
@@ -549,7 +568,7 @@ package venworks.cui
                name = "Earthbound";
                break;
             case "ArtifactPower_ElementalBlast":
-               name = "Elemental Blast";
+               name = "Elemental Pull";
                break;
             case "ArtifactPower_EternalHarvest":
                name = "Eternal Harvest";
@@ -1075,10 +1094,38 @@ package venworks.cui
          while(index <= MAX_FAVORITE_SLOTS)
          {
             slotLabel = this.formatFavoriteSlot(index);
+            favoriteNames[index - 1] = "EMPTY";
+            favoriteDetails[index - 1] = "";
             this.setText("favorite." + slotLabel + ".name","EMPTY");
             this.setText("favorite." + slotLabel + ".detail","");
             ++index;
          }
+      }
+
+      private function refreshFavoriteSlotText() : void
+      {
+         var index:int = 0;
+         var slotLabel:String = null;
+         var name:String = null;
+         var detail:String = null;
+         while(index < MAX_FAVORITE_SLOTS)
+         {
+            slotLabel = this.formatFavoriteSlot(index + 1);
+            name = String(favoriteNames[index]);
+            detail = String(favoriteDetails[index]);
+            if(detail == "ITEM" && activeWeaponName.length != 0 && this.normalizeFavoriteName(name) == activeWeaponName)
+            {
+               detail = "MELEE";
+            }
+            this.setText("favorite." + slotLabel + ".name",name);
+            this.setText("favorite." + slotLabel + ".detail",detail);
+            ++index;
+         }
+      }
+
+      private function normalizeFavoriteName(param1:Object) : String
+      {
+         return this.cleanFavoriteText(param1).toLowerCase();
       }
 
       private function cleanFavoriteText(param1:Object) : String

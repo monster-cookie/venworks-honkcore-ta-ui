@@ -226,14 +226,24 @@ package venworks.cui
          var index:int = 0;
          var slotLabel:String = null;
          var name:String = null;
+         var populatedValue:Object = null;
+         var populated:Boolean = false;
+         var weaponMatch:Boolean = false;
+         var effectiveWeapon:Boolean = false;
          var active:Boolean = false;
          while(index < FAVORITE_SLOT_COUNT)
          {
             slotLabel = this.formatFavoriteSlot(index + 1);
             name = String(favoriteNames[index]);
+            populatedValue = values["favorite" + slotLabel + "populated"];
+            populated = populatedValue != null && Boolean(populatedValue.known) && Boolean(populatedValue.value);
+            weaponMatch = populated && !Boolean(favoritePowers[index]) && activeWeaponName.length != 0 && name == activeWeaponName;
+            effectiveWeapon = Boolean(favoriteWeapons[index]) || weaponMatch;
+            this.setValue("favorite" + slotLabel + "weapon",effectiveWeapon);
+            this.setValue("favorite" + slotLabel + "item",populated && !Boolean(favoritePowers[index]) && !effectiveWeapon);
             active = name.length != 0 &&
                ((Boolean(favoritePowers[index]) && activePowerName.length != 0 && name == activePowerName) ||
-                (Boolean(favoriteWeapons[index]) && activeWeaponName.length != 0 && name == activeWeaponName));
+                weaponMatch);
             this.setValue("favorite" + slotLabel + "active",active);
             ++index;
          }
@@ -263,7 +273,7 @@ package venworks.cui
             case "ArtifactPower_CreateVacuum": return "create vacuum";
             case "ArtifactPower_CreatorsPeace": return "creators' peace";
             case "ArtifactPower_Earthbound": return "earthbound";
-            case "ArtifactPower_ElementalBlast": return "elemental blast";
+            case "ArtifactPower_ElementalBlast": return "elemental pull";
             case "ArtifactPower_EternalHarvest": return "eternal harvest";
             case "ArtifactPower_GravDash": return "grav dash";
             case "ArtifactPower_GravWave": return "gravity wave";
