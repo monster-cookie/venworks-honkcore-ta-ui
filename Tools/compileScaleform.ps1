@@ -890,6 +890,14 @@ try {
       'HudCrosshairData',
       'HUDStealthData',
       'HudCompassData',
+      'PlayerStatusData',
+      'MAX_RADAR_DIAGNOSTIC_MARKERS',
+      'MAX_EQUIPMENT_DIAGNOSTIC_ITEMS',
+      'diagnostic.radar.root',
+      'diagnostic.radar.counts',
+      'diagnostic.radar.status',
+      'describeRadarMarker',
+      'describeEquipmentItem',
       'HUDVehicleData'
     )) {
       if (!$validationSource.Contains($requiredValue)) {
@@ -1066,7 +1074,7 @@ try {
       Remove-Item -LiteralPath $retiredComponentPath -Force
     }
   }
-  foreach ($componentFixtureName in @('equipment-rail.xml','environmental-hazard-scanner.xml','player-status-scanner.xml')) {
+  foreach ($componentFixtureName in @('contact-radar-diagnostic.xml','equipment-rail.xml','environmental-hazard-scanner.xml','player-status-scanner.xml')) {
     Copy-Item -LiteralPath (Join-Path $providerProbeComponentDirectory $componentFixtureName) -Destination (Join-Path $componentOutputDirectory $componentFixtureName) -Force
   }
   $stagedPlayerScannerText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'player-status-scanner.xml') -Raw
@@ -1078,6 +1086,24 @@ try {
   $stagedEquipmentRail = [xml]$stagedEquipmentRailText
   $stagedEnvironmentalScannerText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'environmental-hazard-scanner.xml') -Raw
   $stagedEnvironmentalScanner = [xml]$stagedEnvironmentalScannerText
+  $stagedRadarDiagnosticText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'contact-radar-diagnostic.xml') -Raw
+  $stagedRadarDiagnostic = [xml]$stagedRadarDiagnosticText
+  $radarDiagnosticIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
+    [string]$_.id -eq 'radar-probe'
+  })
+  $radarDiagnosticBindings = @($stagedRadarDiagnostic.venworksCUIFragment.group.text | Where-Object {
+    $_.HasAttribute('source') -and $_.GetAttribute('source') -match '^diagnostic\.radar\.'
+  })
+  $radarDiagnosticInteractiveNodes = @($stagedRadarDiagnostic.SelectNodes('//*[@action or @event or @onClick or @mouseEnabled]'))
+  if ($radarDiagnosticIncludes.Count -ne 1 -or
+      [string]$radarDiagnosticIncludes[0].src -ne 'contact-radar-diagnostic.xml' -or
+      [string]$radarDiagnosticIncludes[0].visibleWhen -ne 'always' -or
+      $radarDiagnosticBindings.Count -ne 23 -or
+      $radarDiagnosticInteractiveNodes.Count -ne 0 -or
+      $stagedRadarDiagnosticText -notmatch 'RAW CANDIDATES ONLY' -or
+      $stagedRadarDiagnosticText -notmatch 'PLAYERSTATUSDATA NOT RECEIVED IN HUD') {
+    throw 'Goal 8A must stage one passive, bounded contact-radar provider diagnostic with 23 candidate-only bindings.'
+  }
   $environmentalDiagnosticIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'environmental-hazard-diagnostic'
   })
@@ -1438,7 +1464,7 @@ try {
       New-Item -ItemType Directory -Force -Path $variantAssetOutputDirectory | Out-Null
       New-Item -ItemType Directory -Force -Path $variantComponentOutputDirectory | Out-Null
       Copy-Item -LiteralPath (Join-Path $cuiOutputDirectory "layout.xml") -Destination (Join-Path $variantCuiOutputDirectory "layout.xml") -Force
-      foreach ($componentFixtureName in @('equipment-rail.xml','environmental-hazard-scanner.xml','player-status-scanner.xml')) {
+      foreach ($componentFixtureName in @('contact-radar-diagnostic.xml','equipment-rail.xml','environmental-hazard-scanner.xml','player-status-scanner.xml')) {
         Copy-Item -LiteralPath (Join-Path $componentOutputDirectory $componentFixtureName) -Destination (Join-Path $variantComponentOutputDirectory $componentFixtureName) -Force
       }
       foreach ($assetFileName in @('gallery-vector.svg','venworks-logo.svg','gallery-invalid.svg')) {
@@ -1453,6 +1479,7 @@ try {
     }
     foreach ($relativeCuiPath in @(
       'layout.xml',
+      'components\contact-radar-diagnostic.xml',
       'components\equipment-rail.xml',
       'components\environmental-hazard-scanner.xml',
       'components\player-status-scanner.xml',
@@ -1466,7 +1493,7 @@ try {
         throw "Staged CUI payload mismatch for $relativeCuiPath in $variantCuiOutputDirectory."
       }
     }
-    Write-Host -ForegroundColor Green "Staged the accepted Goal 6 HUD and Goal 7 production equipment rail in $variantCuiOutputDirectory"
+    Write-Host -ForegroundColor Green "Staged the Goal 8A radar diagnostic over the accepted Goal 6 HUD and Goal 7 equipment rail in $variantCuiOutputDirectory"
   }
 }
 finally {

@@ -52,6 +52,8 @@
     <target id="rightMeters" visibleWhen="never" />
   </vanillaVisibility>
   <includes>
+    <include id="radar-probe" src="contact-radar-diagnostic.xml"
+             x="-39" y="36" anchor="top-left" visible="true" visibleWhen="always" z="104" />
     <include id="environmental-hazard-scanner" src="environmental-hazard-scanner.xml"
              x="39" y="11" anchor="bottom-right" visible="true" visibleWhen="always" z="90" />
     <include id="player-status-scanner" src="player-status-scanner.xml"
