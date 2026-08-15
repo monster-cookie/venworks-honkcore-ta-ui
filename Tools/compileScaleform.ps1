@@ -1122,8 +1122,17 @@ try {
   $favoriteHotkeyBindings = @($stagedEquipmentRailGroup.text | Where-Object {
     $_.HasAttribute('source') -and $_.GetAttribute('source') -match '^favorite\.(0[1-9]|1[0-2])\.hotkey$'
   })
-  $favoriteActiveMarkers = @($stagedEquipmentRailGroup.panel | Where-Object {
+  $favoriteActiveMarkers = @($stagedEquipmentRailGroup.text | Where-Object {
     $_.HasAttribute('id') -and $_.GetAttribute('id') -match '^contact\.(0[1-9]|1[0-2])\.active$'
+  })
+  $favoriteActiveMarkerFailures = @($favoriteActiveMarkers | Where-Object {
+    [string]$_.value -ne '>' -or
+    [string]$_.color -ne '#FF4FE1' -or
+    [int]$_.width -ne 12 -or
+    [int]$_.height -ne 22 -or
+    [int]$_.fontSize -ne 12 -or
+    [string]$_.bold -ne 'true' -or
+    [string]$_.visibleWhen -notmatch '^favorite(0[1-9]|1[0-2])Active$'
   })
   $equipmentRibbonPaths = @($stagedEquipmentRailGroup.path | Where-Object {
     $_.HasAttribute('id') -and $_.GetAttribute('id') -match '^rail\.ribbon\.'
@@ -1159,23 +1168,69 @@ try {
     $contactId = $_.ToString('00')
     $nameNode = $stagedEquipmentRailGroup.SelectSingleNode("text[@id='contact.$contactId.name']")
     $detailNode = $stagedEquipmentRailGroup.SelectSingleNode("text[@id='contact.$contactId.detail']")
+    $dividerNode = $stagedEquipmentRailGroup.SelectSingleNode("divider[@id='contact.$contactId.divider']")
     if ($null -eq $nameNode -or
         $null -eq $detailNode -or
+        $null -eq $dividerNode -or
         [double]$detailNode.y -lt ([double]$nameNode.y + [double]$nameNode.height) -or
         [double]$detailNode.x -ne [double]$nameNode.x -or
-        [double]$detailNode.width -ne [double]$nameNode.width) {
+        [double]$detailNode.width -ne [double]$nameNode.width -or
+        [double]$detailNode.height -lt 18 -or
+        [double]$dividerNode.y -lt ([double]$detailNode.y + [double]$detailNode.height)) {
       $contactId
+    }
+  })
+  $expectedFavoriteGeometry = @(
+    [pscustomobject]@{ ContactId = '01'; MarkerX = 332; HotkeyX = 348; IconX = 390; TextX = 416; TextWidth = 284 },
+    [pscustomobject]@{ ContactId = '02'; MarkerX = 355; HotkeyX = 371; IconX = 413; TextX = 439; TextWidth = 261 },
+    [pscustomobject]@{ ContactId = '03'; MarkerX = 378; HotkeyX = 394; IconX = 436; TextX = 462; TextWidth = 238 },
+    [pscustomobject]@{ ContactId = '04'; MarkerX = 401; HotkeyX = 417; IconX = 459; TextX = 485; TextWidth = 215 },
+    [pscustomobject]@{ ContactId = '05'; MarkerX = 424; HotkeyX = 440; IconX = 482; TextX = 508; TextWidth = 192 },
+    [pscustomobject]@{ ContactId = '06'; MarkerX = 424; HotkeyX = 440; IconX = 482; TextX = 508; TextWidth = 192 },
+    [pscustomobject]@{ ContactId = '07'; MarkerX = 409; HotkeyX = 425; IconX = 467; TextX = 493; TextWidth = 207 },
+    [pscustomobject]@{ ContactId = '08'; MarkerX = 393; HotkeyX = 409; IconX = 451; TextX = 477; TextWidth = 223 },
+    [pscustomobject]@{ ContactId = '09'; MarkerX = 378; HotkeyX = 394; IconX = 436; TextX = 462; TextWidth = 238 },
+    [pscustomobject]@{ ContactId = '10'; MarkerX = 363; HotkeyX = 379; IconX = 421; TextX = 447; TextWidth = 253 },
+    [pscustomobject]@{ ContactId = '11'; MarkerX = 347; HotkeyX = 363; IconX = 405; TextX = 431; TextWidth = 269 },
+    [pscustomobject]@{ ContactId = '12'; MarkerX = 332; HotkeyX = 348; IconX = 390; TextX = 416; TextWidth = 284 }
+  )
+  $favoriteGeometryFailures = @($expectedFavoriteGeometry | ForEach-Object {
+    $geometry = $_
+    $markerNode = $stagedEquipmentRailGroup.SelectSingleNode("text[@id='contact.$($geometry.ContactId).active']")
+    $hotkeyNode = $stagedEquipmentRailGroup.SelectSingleNode("text[@id='contact.$($geometry.ContactId).hotkey']")
+    $iconNodes = @($stagedEquipmentRailGroup.SelectNodes("icon[starts-with(@id,'contact.$($geometry.ContactId).') and (@id='contact.$($geometry.ContactId).weapon' or @id='contact.$($geometry.ContactId).power' or @id='contact.$($geometry.ContactId).item')]") )
+    $nameNode = $stagedEquipmentRailGroup.SelectSingleNode("text[@id='contact.$($geometry.ContactId).name']")
+    $detailNode = $stagedEquipmentRailGroup.SelectSingleNode("text[@id='contact.$($geometry.ContactId).detail']")
+    $dividerNode = $stagedEquipmentRailGroup.SelectSingleNode("divider[@id='contact.$($geometry.ContactId).divider']")
+    if ($null -eq $markerNode -or
+        $null -eq $hotkeyNode -or
+        $iconNodes.Count -ne 3 -or
+        $null -eq $nameNode -or
+        $null -eq $detailNode -or
+        $null -eq $dividerNode -or
+        [int]$markerNode.x -ne $geometry.MarkerX -or
+        [int]$hotkeyNode.x -ne $geometry.HotkeyX -or
+        @($iconNodes | Where-Object { [int]$_.x -ne $geometry.IconX }).Count -ne 0 -or
+        [int]$nameNode.x -ne $geometry.TextX -or
+        [int]$detailNode.x -ne $geometry.TextX -or
+        [int]$dividerNode.x -ne $geometry.TextX -or
+        [int]$nameNode.width -ne $geometry.TextWidth -or
+        [int]$detailNode.width -ne $geometry.TextWidth -or
+        [int]$dividerNode.width -ne $geometry.TextWidth) {
+      $geometry.ContactId
     }
   })
   $contactNumbers = @($stagedEquipmentRailGroup.text | Where-Object {
     $_.HasAttribute('id') -and $_.GetAttribute('id') -match '^contact\.(0[1-9]|1[0-5])\.number$'
   })
-  $contactVisualOrder = @($stagedEquipmentRailGroup.SelectNodes("panel[starts-with(@id,'contact.') and (contains(@id,'.active') or contains(@id,'.panel'))]") |
+  $contactVisualOrder = @($stagedEquipmentRailGroup.ChildNodes | Where-Object {
+      $_.HasAttribute('id') -and $_.GetAttribute('id') -match '^contact\.(0[1-9]|1[0-5])\.(active|panel)$'
+    } |
     Sort-Object { [int]$_.GetAttribute('y') } |
     ForEach-Object { [regex]::Match($_.GetAttribute('id'), '^contact\.(\d{2})\.').Groups[1].Value })
   $expectedContactVisualOrder = @('01','02','03','04','05','13','14','15','06','07','08','09','10','11','12')
   $contactVisualOrderDifferences = @(Compare-Object -ReferenceObject $expectedContactVisualOrder -DifferenceObject $contactVisualOrder -SyncWindow 0)
-  $expectedEquipmentRibbonBodyPath = 'M 270 0 C 310 100 330 190 338 286 C 346 420 330 552 294 676 C 282 704 260 730 230 747 L 720 747 L 720 0 Z'
+  $expectedEquipmentRibbonBodyPath = 'M 304 0 C 324 44 352 96 382 142 C 408 182 426 218 430 286 C 434 352 430 402 412 450 C 392 514 356 586 326 652 C 318 682 316 716 320 747 L 720 747 L 720 0 Z'
   $equipmentRailScreenBottom = [double]$providerProbeLayout.venworksCUI.safeTop + [double]$equipmentRailIncludes[0].y + [double]$stagedEquipmentRailGroup.height
   $environmentalScannerScreenTop = [double]$providerProbeLayout.venworksCUI.designHeight - [double]$providerProbeLayout.venworksCUI.safeBottom + [double]$environmentalScannerIncludes[0].y - [double]$stagedEnvironmentalScannerGroup.height
   if ($equipmentRailIncludes.Count -ne 1 -or
@@ -1196,10 +1251,12 @@ try {
       $liveContactOutlineFailures.Count -ne 0 -or
       $equipmentOutOfBoundsNodes.Count -ne 0 -or
       $favoriteTwoLineFailures.Count -ne 0 -or
+      $favoriteGeometryFailures.Count -ne 0 -or
       $favoriteNameBindings.Count -ne 12 -or
       $favoriteDetailBindings.Count -ne 12 -or
       $favoriteHotkeyBindings.Count -ne 12 -or
       $favoriteActiveMarkers.Count -ne 12 -or
+      $favoriteActiveMarkerFailures.Count -ne 0 -or
       $contactNumbers.Count -ne 0 -or
       $contactVisualOrderDifferences.Count -ne 0 -or
       $stagedEquipmentRailText -notmatch 'id="contact\.13\.icon"' -or
@@ -1215,7 +1272,7 @@ try {
       $stagedEquipmentRailText -match 'uStartingSelection|diagnostic\.' -or
       $stagedEquipmentRailText -match 'value="(ITEM|POWER|COUNT\s*)"' -or
       $stagedEquipmentRailText -match 'id="rail\.panel"|id="contact\.14\.(none|grenade|mine)"') {
-    throw 'Goal 7 must stage one fully containing transparent passive ribbon at the physical right edge, terminate exactly at Planet Data without underlap, remain ordered 1-5, weapon, throwable, power, 6-12 with two-line remapping-aware favorites, gold live-contact outlines, compact authoritative counts, and contain no vehicle prompt, cyan guide, opaque rail panel, diagnostic, or input behavior.'
+    throw 'Goal 7 must stage one compact transparent passive ribbon at the physical right edge, terminate exactly at Planet Data without underlap, remain ordered 1-5, weapon, throwable, power, 6-12 with mirrored and uniformly stepped two-line remapping-aware favorites, magenta chevron active markers, gold live-contact outlines, compact authoritative counts, and contain no vehicle prompt, cyan guide, opaque rail panel, diagnostic, or input behavior.'
   }
   $expectedHelmetLowerFrameFillPath = 'M 0 0 L 33 32 L 157 32 Q 169 32 169 44 L 169 52 Q 169 62 181 62 L 219 62 Q 231 62 231 52 L 231 44 Q 231 32 243 32 L 377 32 Q 385 32 385 40 L 385 237 C 399 237 407 243 417 253 Q 425 261 439 261 L 1481 261 Q 1495 261 1503 253 C 1513 243 1521 237 1535 237 L 1535 40 Q 1535 32 1543 32 L 1643 32 Q 1655 32 1655 44 L 1655 52 Q 1655 62 1667 62 L 1771 62 Q 1783 62 1783 52 L 1783 44 Q 1783 32 1795 32 L 1887 32 L 1920 0 L 1920 293 L 0 293 Z'
   $expectedHelmetUpperFrameFillPath = 'M 0 0 L 1920 0 L 1920 70 Q 1680 76 1450 92 L 1260 106 Q 1228 108 1204 118 Q 1190 126 1170 126 L 750 126 Q 730 126 716 118 Q 692 108 660 106 L 470 92 Q 240 76 0 70 Z'

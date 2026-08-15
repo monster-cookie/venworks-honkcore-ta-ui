@@ -95,16 +95,17 @@ split-tab Player Data scanner at lower-left and the split-tab Planet
 Data/environmental scanner at lower-right, and places the passive Goal 7
 tactical loadout ribbon at upper-right. The ribbon begins at the physical right
 edge, runs from the upper helmet brow to the exact top of Planet Data without
-extending behind it, and widens its single
-translucent silhouette enough to contain every contact without a cyan outer arc
-or decorative guide. It orders favorite contacts 1-5 around gold-outlined live
-weapon/explosive/power contacts and then favorites 6-12, and resolves favorite
-hotkeys through Bethesda's current PC/controller control map. Favorite rows put
-hotkey/icon/name on line one and limit line two to meaningful ammunition or
-stack counts; the live explosive provider cannot authoritatively identify an
-exact grenade/mine favorite, so those favorite rows remain neutral. Each lower scanner uses one
-continuous rounded path with separate title and clock tabs around a wide
-transparent center notch. Mirrored overflow rails extend through the nearest
+extending behind it, and tightens its single translucent silhouette around
+every contact without a cyan outer arc or decorative guide. It orders favorite
+contacts 1-5 around gold-outlined live weapon/explosive/power contacts and then
+favorites 6-12, with mirrored outer endpoints and evenly stepped inner rows.
+Favorite hotkeys resolve through Bethesda's current PC/controller control map,
+and a magenta chevron marks an exact live weapon or power match. Favorite rows
+put hotkey/icon/name on line one and reserve a taller second line for meaningful
+ammunition or stack counts; the live explosive provider cannot authoritatively
+identify an exact grenade/mine favorite, so those favorite rows remain neutral.
+Each lower scanner uses one continuous rounded path with separate title and
+clock tabs around a wide transparent center notch. Mirrored overflow rails extend through the nearest
 side and bottom screen margins so both scanners appear integrated into the
 helmet edge without moving their accepted content geometry. The vehicle-only
 exit label and Bethesda hold glyph are centered in the fixed lower helmet seal
