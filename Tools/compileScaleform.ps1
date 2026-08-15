@@ -285,8 +285,13 @@ if ($playerHudDataContextText -notmatch 'weapon\.explosivelabel' -or
     $playerHudDataContextText -notmatch '"NO THROWABLE"') {
   throw 'Goal 7 must derive a deterministic generic throwable label from the live explosive count and type.'
 }
+if ($playerHudDataContextText -notmatch 'ButtonKeyHelper' -or
+    $playerHudDataContextText -notmatch 'Subscribe\("ControlMapData",this\.onControlMapData\)' -or
+    $playerHudDataContextText -notmatch 'GetButtonNameForEvent\("Quickkey" \+ index\.toString\(\)\)' -or
+    $playerHudDataContextText -notmatch 'favorite\." \+ this\.formatFavoriteSlot\(index\) \+ "\.hotkey"') {
+  throw 'Goal 7 favorite labels must resolve Quickkey1 through Quickkey12 from Bethesda ControlMapData with ButtonKeyHelper.'
+}
 if ($playerHudDataContextText -notmatch 'refreshFavoriteSlotText\(\)' -or
-    $playerHudDataContextText -notmatch 'detail = "MELEE"' -or
     $conditionContextText -notmatch 'weaponMatch = populated.*activeWeaponName\.length != 0.*name == activeWeaponName' -or
     $conditionContextText -notmatch 'effectiveWeapon = Boolean\(favoriteWeapons\[index\]\) \|\| weaponMatch') {
   throw 'Goal 7 must classify and highlight an ammo-less melee favorite only when its normalized name exactly matches the live weapon name.'
@@ -1111,6 +1116,9 @@ try {
   $favoriteDetailBindings = @($stagedEquipmentRailGroup.text | Where-Object {
     $_.HasAttribute('source') -and $_.GetAttribute('source') -match '^favorite\.(0[1-9]|1[0-2])\.detail$'
   })
+  $favoriteHotkeyBindings = @($stagedEquipmentRailGroup.text | Where-Object {
+    $_.HasAttribute('source') -and $_.GetAttribute('source') -match '^favorite\.(0[1-9]|1[0-2])\.hotkey$'
+  })
   $favoriteActiveMarkers = @($stagedEquipmentRailGroup.panel | Where-Object {
     $_.HasAttribute('id') -and $_.GetAttribute('id') -match '^contact\.(0[1-9]|1[0-2])\.active$'
   })
@@ -1123,21 +1131,28 @@ try {
   $contactNumbers = @($stagedEquipmentRailGroup.text | Where-Object {
     $_.HasAttribute('id') -and $_.GetAttribute('id') -match '^contact\.(0[1-9]|1[0-5])\.number$'
   })
+  $contactVisualOrder = @($stagedEquipmentRailGroup.SelectNodes("panel[starts-with(@id,'contact.') and (contains(@id,'.active') or contains(@id,'.panel'))]") |
+    Sort-Object { [int]$_.GetAttribute('y') } |
+    ForEach-Object { [regex]::Match($_.GetAttribute('id'), '^contact\.(\d{2})\.').Groups[1].Value })
+  $expectedContactVisualOrder = @('01','02','03','04','05','13','14','15','06','07','08','09','10','11','12')
+  $contactVisualOrderDifferences = @(Compare-Object -ReferenceObject $expectedContactVisualOrder -DifferenceObject $contactVisualOrder -SyncWindow 0)
   if ($equipmentRailIncludes.Count -ne 1 -or
       [string]$equipmentRailIncludes[0].src -ne 'equipment-rail.xml' -or
       [string]$equipmentRailIncludes[0].anchor -ne 'top-right' -or
       [string]$equipmentRailIncludes[0].visibleWhen -ne 'always' -or
       [int]$equipmentRailIncludes[0].x -ne 25 -or
-      [int]$equipmentRailIncludes[0].y -ne 92 -or
+      [int]$equipmentRailIncludes[0].y -ne 68 -or
       [int]$stagedEquipmentRailGroup.width -ne 720 -or
-      [int]$stagedEquipmentRailGroup.height -ne 650 -or
+      [int]$stagedEquipmentRailGroup.height -ne 769 -or
       $equipmentRibbonPaths.Count -ne 3 -or
       $equipmentRibbonBody.Count -ne 1 -or
       [double]$equipmentRibbonBody[0].fillOpacity -gt 0.24 -or
       $favoriteNameBindings.Count -ne 12 -or
       $favoriteDetailBindings.Count -ne 12 -or
+      $favoriteHotkeyBindings.Count -ne 12 -or
       $favoriteActiveMarkers.Count -ne 12 -or
-      $contactNumbers.Count -ne 15 -or
+      $contactNumbers.Count -ne 0 -or
+      $contactVisualOrderDifferences.Count -ne 0 -or
       $stagedEquipmentRailText -notmatch 'id="contact\.13\.icon"' -or
       $stagedEquipmentRailText -notmatch 'source="weapon\.icon"' -or
       $stagedEquipmentRailText -notmatch 'source="weapon\.ammoType"' -or
@@ -1151,8 +1166,9 @@ try {
       ([regex]::Matches($stagedEquipmentRailText, 'visibleWhen="inVehicle"')).Count -lt 2 -or
       $stagedEquipmentRailText -match '<button|action=|event=|callback=|userEvent=|key=' -or
       $stagedEquipmentRailText -match 'uStartingSelection|diagnostic\.' -or
+      $stagedEquipmentRailText -match 'value="(ITEM|POWER|COUNT\s*)"' -or
       $stagedEquipmentRailText -match 'id="rail\.panel"|id="contact\.14\.(none|grenade|mine)"') {
-    throw 'Goal 7 must stage one curved transparent passive 15-contact ribbon with 12 snapshot favorites, compact authoritative live weapon/throwable/power contacts, active-match markers, and no opaque rail panel, diagnostic, or input behavior.'
+    throw 'Goal 7 must stage one curved transparent passive ribbon ordered 1-5, weapon, throwable, power, 6-12 with remapping-aware hotkeys, compact authoritative counts, active-match markers, joined helmet endpoints, and no opaque rail panel, diagnostic, or input behavior.'
   }
   $expectedHelmetLowerFrameFillPath = 'M 0 0 L 33 32 L 157 32 Q 169 32 169 44 L 169 52 Q 169 62 181 62 L 219 62 Q 231 62 231 52 L 231 44 Q 231 32 243 32 L 377 32 Q 385 32 385 40 L 385 237 C 399 237 407 243 417 253 Q 425 261 439 261 L 1481 261 Q 1495 261 1503 253 C 1513 243 1521 237 1535 237 L 1535 40 Q 1535 32 1543 32 L 1643 32 Q 1655 32 1655 44 L 1655 52 Q 1655 62 1667 62 L 1771 62 Q 1783 62 1783 52 L 1783 44 Q 1783 32 1795 32 L 1887 32 L 1920 0 L 1920 293 L 0 293 Z'
   $expectedHelmetUpperFrameFillPath = 'M 0 0 L 1920 0 L 1920 70 Q 1680 76 1450 92 L 1260 106 Q 1228 108 1204 118 Q 1190 126 1170 126 L 750 126 Q 730 126 716 118 Q 692 108 660 106 L 470 92 Q 240 76 0 70 Z'

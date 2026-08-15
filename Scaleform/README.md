@@ -92,8 +92,14 @@ divider, and meter content. Goal 4G's positive and negative in-game checks are
 accepted. The staged `layout.xml` is the Goal 6 production HUD: it hides the
 diagnostic vanilla bottom-left Chronomark and right-meter group, places the
 split-tab Player Data scanner at lower-left and the split-tab Planet
-Data/environmental scanner at lower-right, and moves the temporary
-weapon/power presentation to upper-right. Each lower scanner uses one
+Data/environmental scanner at lower-right, and places the passive Goal 7
+tactical loadout ribbon at upper-right. The ribbon runs from the upper helmet
+brow into Planet Data, orders favorite contacts 1-5 around centered live
+weapon/explosive/power contacts and then favorites 6-12, and resolves favorite
+hotkeys through Bethesda's current PC/controller control map. Favorite detail
+text is limited to meaningful ammunition or stack counts; the live explosive
+provider cannot authoritatively identify an exact grenade/mine favorite, so
+those favorite rows remain neutral. Each lower scanner uses one
 continuous rounded path with separate title and clock tabs around a wide
 transparent center notch. Mirrored overflow rails extend through the nearest
 side and bottom screen margins so both scanners appear integrated into the
@@ -108,6 +114,7 @@ schema-valid and rejected by runtime semantic checks. See
 `../docs/GOAL_4D_METER_RENDERERS.md`,
 `../docs/GOAL_4E_ASSET_PRIMITIVES.md`, and
 `../docs/GOAL_5_CHRONOMARK_REPLACEMENT.md`, and
+`../docs/GOAL_7_EQUIPMENT_ARC.md`, and
 `../docs/COMPONENT_CATALOG.md`.
 
 An optional component `anchor` uses one of `top-left`, `top-center`,

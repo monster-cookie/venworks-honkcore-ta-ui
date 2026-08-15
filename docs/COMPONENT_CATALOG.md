@@ -134,7 +134,7 @@ gamer-facing configuration surface.
 | Composite | Status | Composition and behavior |
 |---|---|---|
 | Button | Future | Panel/shape, icon, label, key hint, enabled state, selected state, and cooldown/quantity overlay. |
-| Tactical equipment rail | Implemented; acceptance pending | Fifteen passive contacts: a bounded twelve-entry FavoritesData snapshot followed by independently live weapon, explosive, and power readouts. Contacts do not own input or present themselves as buttons. |
+| Tactical equipment rail | Implemented; acceptance pending | Fifteen passive contacts: twelve remapping-aware FavoritesData readouts wrapped around independently live weapon, explosive, and power contacts in the center of the ribbon. Contacts do not own input or present themselves as buttons. |
 | Compass | Research | Line/divider, heading label, direction ticks, markers, and optional background; marker data must remain owned by the vanilla compass provider. |
 | Minimap/radar | Research | Bounded panel, player marker, contacts/POIs, sweep/cone, grid, scale label, and clip mask. Feasibility depends on vanilla data exposed to the owning movie. |
 | Information panel | Future | Panel, title, key/value text, dividers, optional scroll/overflow indicator, and status accents. |
@@ -146,9 +146,12 @@ gamer-facing configuration surface.
 
 The Goal 7 equipment rail is intentionally passive. Favorites Menu remains the
 only owner of favorite assignment and input. Contacts 1-12 preserve the latest
-twelve-entry snapshot, while contacts 13-15 remain independently live. Exact
+twelve-entry snapshot and resolve `Quickkey1..12` through Bethesda's
+`ButtonKeyHelper`, while contacts 13-15 remain independently live. Exact
 weapon/power name matches may accent a favorite contact; menu cursor state and
-stale equipped flags are not treated as active state.
+stale equipped flags are not treated as active state. The live explosive
+provider supplies only generic category and count, so exact favorite
+grenade/mine highlighting is unsupported rather than heuristically inferred.
 
 ## Player HUD coverage targets
 
@@ -326,12 +329,20 @@ five player tracks use the same bounded percentage contract.
 ## Goal 7 tactical equipment rail
 
 Goal 7 retires the temporary FavoritesData diagnostic and the standalone
-upper-right weapon fragment. The production 720-by-650 group is anchored below
-the upper helmet brow and above Planet Data. A curved, maximum-24-percent-opacity
-path carries contacts 12 through 1 without an opaque rectangular backing.
+upper-right weapon fragment. The production 720-by-769 group overlaps the
+upper helmet brow and Planet Data by a few design units so its separately
+authored path reads as one joined surface. A curved,
+maximum-24-percent-opacity path carries contacts in the exact visual order
+1-5, 13-15, then 6-12 without an opaque rectangular backing or join seams.
 Contact 13 uses live WeaponData and equipped-ammunition data; contact 14 derives
 `NO THROWABLE`, `GRENADE`, or `MINE` plus count from the live explosive fields;
 contact 15 uses the live mapped power name.
+
+Favorite rows show the current PC/controller/remapped Quickkey resolved from
+`ControlMapData.vMappedEvents`. Their detail field is blank unless meaningful
+ammunition or stack quantity exists, and then it shows only the compact count.
+Redundant item, power, and weapon-type labels and fake 13-15 key numbers are
+not authored.
 
 Favorite weapon and power accents require an exact normalized match to the
 independently live name. This permits an ammo-less active melee entry to change
@@ -341,3 +352,6 @@ every ammo-less favorite as a weapon. Bethesda key
 condition contexts. `uStartingSelection`, `bIsEquipped`, menu-owned image
 buffers, and unproven slot indices are not production inputs. The ribbon
 contains no actions or input handlers and preserves the vehicle-exit prompt.
+Because no confirmed provider correlates the generic live explosive category
+to an exact favorite, grenade and mine favorite rows remain neutral; this
+limitation must be included in end-user documentation.

@@ -2,6 +2,7 @@ package venworks.cui
 {
    import Shared.AS3.Data.BSUIDataManager;
    import Shared.AS3.Data.FromClientDataEvent;
+   import Shared.Components.ButtonControls.Utils.ButtonKeyHelper;
    import flash.events.Event;
    import flash.events.EventDispatcher;
    import flash.events.TimerEvent;
@@ -51,7 +52,7 @@ package venworks.cui
       private var oxygenActivity:Number = 0;
       private var favoriteNames:Array;
       private var favoriteDetails:Array;
-      private var activeWeaponName:String = "";
+      private var buttonKeyHelper:ButtonKeyHelper;
       private var universalTimeDiagnostic:String = "UT: LOCAL ENV FREQUENT DATA NOT RECEIVED";
       private var digipickDiagnostic:String = "DIGIPICK: PLAYER INVENTORY DATA NOT RECEIVED";
 
@@ -66,6 +67,7 @@ package venworks.cui
          exposureRandom = [0,0,0,0];
          favoriteNames = [];
          favoriteDetails = [];
+         buttonKeyHelper = new ButtonKeyHelper();
          exposureTimer = new Timer(EXPOSURE_UPDATE_MS);
          exposureTimer.addEventListener(TimerEvent.TIMER,this.onExposureTimer);
          BSUIDataManager.Subscribe("LocalEnvironmentData",this.onLocalEnvironmentData);
@@ -77,6 +79,7 @@ package venworks.cui
          BSUIDataManager.Subscribe("HudJetpackData",this.onJetpackData);
          BSUIDataManager.Subscribe("HUDStarbornPowersData",this.onStarbornPowersData);
          BSUIDataManager.Subscribe("FavoritesData",this.onFavoritesData);
+         BSUIDataManager.Subscribe("ControlMapData",this.onControlMapData);
          BSUIDataManager.Subscribe("EnvironmentEffectsData",this.onEnvironmentEffectsData);
          BSUIDataManager.Subscribe("StarmapSystemBodyInfoProvider",this.onStarmapSystemBodyInfoData);
          this.setText("diagnostic.inventoryprovider","PLAYERINVENTORYDATA NOT RECEIVED");
@@ -94,6 +97,7 @@ package venworks.cui
          this.setText("diagnostic.playerfields","PLAYERDATA NOT RECEIVED");
          this.setText("diagnostic.playertargets","PLAYER TARGETS: WAITING");
          this.setText("diagnostic.playeridentifiers","DETERMINISTIC SERIAL: WAITING FOR PLAYERDATA");
+         this.resetFavoriteHotkeys();
          this.resetFavoriteSlots();
          this.updatePlayerTimeInventoryDiagnostic();
          this.resetEnvironmentalHazards();
@@ -116,7 +120,7 @@ package venworks.cui
       public static function getKind(param1:String) : String
       {
          var source:String = normalizeSource(param1);
-         if(/^favorite\.(0[1-9]|1[0-2])\.(name|detail)$/.test(source))
+         if(/^favorite\.(0[1-9]|1[0-2])\.(name|detail|hotkey)$/.test(source))
          {
             return "string";
          }
@@ -363,7 +367,6 @@ package venworks.cui
          var total:Number = Number(param1.data.uTotalAmmo);
          var explosiveCount:Number = Number(param1.data.uExplosiveCount);
          var explosiveType:Number = Number(param1.data.uExplosiveIndicatorType);
-         this.activeWeaponName = this.normalizeFavoriteName(param1.data.sWeaponName);
          this.setText("weapon.name",param1.data.sWeaponName);
          this.setText("weapon.icon",param1.data.sIconLinkageName);
          this.setFinite("weapon.clipammo",clip);
@@ -508,22 +511,21 @@ package venworks.cui
                ammoName = this.cleanFavoriteText(item.sAmmoName);
                ammoCount = Number(item.uAmmoCount);
                count = Number(item.uCount);
-               detail = "ITEM";
+               detail = "";
                if(Boolean(item.bIsPower))
                {
-                  detail = "POWER";
+                  detail = "";
                }
                else if(ammoName.length != 0)
                {
-                  detail = ammoName;
                   if(!isNaN(ammoCount) && isFinite(ammoCount))
                   {
-                     detail += "  " + Math.max(0,Math.round(ammoCount)).toString();
+                     detail = "×" + Math.max(0,Math.round(ammoCount)).toString();
                   }
                }
                else if(!isNaN(count) && isFinite(count) && count > 1)
                {
-                  detail = "COUNT  " + Math.max(0,Math.round(count)).toString();
+                  detail = "×" + Math.max(0,Math.round(count)).toString();
                }
                favoriteNames[index] = name.length == 0 ? "UNNAMED" : name;
                favoriteDetails[index] = detail;
@@ -531,6 +533,25 @@ package venworks.cui
             ++index;
          }
          this.refreshFavoriteSlotText();
+         this.notifyChanged();
+      }
+
+      private function onControlMapData(param1:FromClientDataEvent) : void
+      {
+         var data:Object = param1 == null ? null : param1.data;
+         var index:int = 1;
+         var hotkey:String = "";
+         if(data == null || !(data.vMappedEvents is Array))
+         {
+            return;
+         }
+         buttonKeyHelper.OnControlMapChanged(data);
+         while(index <= MAX_FAVORITE_SLOTS)
+         {
+            hotkey = this.cleanFavoriteText(buttonKeyHelper.GetButtonNameForEvent("Quickkey" + index.toString()));
+            this.setText("favorite." + this.formatFavoriteSlot(index) + ".hotkey",hotkey.length == 0 ? "--" : hotkey);
+            ++index;
+         }
          this.notifyChanged();
       }
 
@@ -1102,6 +1123,16 @@ package venworks.cui
          }
       }
 
+      private function resetFavoriteHotkeys() : void
+      {
+         var index:int = 1;
+         while(index <= MAX_FAVORITE_SLOTS)
+         {
+            this.setText("favorite." + this.formatFavoriteSlot(index) + ".hotkey","--");
+            ++index;
+         }
+      }
+
       private function refreshFavoriteSlotText() : void
       {
          var index:int = 0;
@@ -1113,19 +1144,10 @@ package venworks.cui
             slotLabel = this.formatFavoriteSlot(index + 1);
             name = String(favoriteNames[index]);
             detail = String(favoriteDetails[index]);
-            if(detail == "ITEM" && activeWeaponName.length != 0 && this.normalizeFavoriteName(name) == activeWeaponName)
-            {
-               detail = "MELEE";
-            }
             this.setText("favorite." + slotLabel + ".name",name);
             this.setText("favorite." + slotLabel + ".detail",detail);
             ++index;
          }
-      }
-
-      private function normalizeFavoriteName(param1:Object) : String
-      {
-         return this.cleanFavoriteText(param1).toLowerCase();
       }
 
       private function cleanFavoriteText(param1:Object) : String
