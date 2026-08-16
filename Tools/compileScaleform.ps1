@@ -1021,6 +1021,11 @@ try {
     if ($reopenedCompositionResolverSource -notmatch 'type\s*==\s*"icon"') {
       throw 'Generated CUICompositionResolver does not accept icon leaf components.'
     }
+    if ($reopenedCompositionResolverSource -notmatch 'type\s*==\s*"contactRadar"' -or
+        $reopenedLayoutParserSource -notmatch 'type\s*==\s*"contactRadar"' -or
+        $reopenedRuntimeSource -notmatch 'type\s*==\s*"contactRadar"') {
+      throw 'Generated ActionScript does not register contactRadar across composition, parsing, and runtime construction.'
+    }
     if ($reopenedCompositionResolverSource -notmatch 'compositeResolver\.isComposite' -or
         $reopenedCompositeResolverSource -notmatch 'param1\s*==\s*"button"' -or
         $reopenedCompositeResolverSource -notmatch 'param1\s*==\s*"quickBar"' -or

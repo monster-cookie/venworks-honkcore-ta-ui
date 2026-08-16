@@ -50,3 +50,19 @@ repository sources during the normal build.
 After regeneration, run `Tools/checkRepo.ps1` followed by the complete
 `Tools/compileScaleform.ps1` command. A successful build must import, reopen, and
 validate every authored class in both normal and large HUD movies.
+
+## Component registration contract
+
+Components loaded from an included fragment pass through three independent
+runtime gates: `CUICompositionResolver` must accept the XML element,
+`CUILayoutParser` must validate its attributes, and `CUIRuntime` must construct
+the display component. Registering a component in only the parser and runtime
+is insufficient. The composition resolver processes included fragments first
+and reports the element as unknown before layout parsing can reach its branch.
+
+Goal 8B initially shipped `contactRadar` without adding it to the composition
+resolver's leaf-component list. Both deployed HUD movies contained the new
+parser and runtime code, but the included `contact-radar.xml` fragment failed at
+composition. The build now requires `contactRadar` registration to survive the
+movie import/reopen cycle in all three gates. Future included-fragment component
+types must extend this validation contract at the same time they are added.

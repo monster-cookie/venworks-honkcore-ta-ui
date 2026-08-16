@@ -164,3 +164,29 @@ TA, and the retired Goal 8A diagnostic payload was removed from every variant.
 Remove the `contact-radar` layout include and production fragment, unregister
 the `contactRadar` component, and remove its bounded compass adapter. No
 persistent data, schema migration, or native component requires recovery.
+
+## Goal 8B runtime correction
+
+The first production deployment displayed `CUI LAYOUT INVALID` with an unknown
+`contactRadar` component during layout parsing. Hash comparison proved that the
+deployed normal and large HUD movies were the intended Goal 8B artifacts. The
+failure was not a Vortex conflict or stale deployment: `contactRadar` had been
+registered in `CUILayoutParser` and `CUIRuntime` but omitted from
+`CUICompositionResolver`'s leaf-component list. Because the radar is delivered
+through an included fragment, composition rejected it before layout validation.
+
+The correction registers `contactRadar` with the composition resolver and adds
+a reopened-movie build assertion covering all three registration gates. Updated
+artifact hashes supersede the initial Goal 8B table after the corrective build.
+
+On 2026-08-15, `Tools/checkRepo.ps1` passed and the corrective normal/large
+Scaleform build compiled, imported, reopened, and validated all 207 scripts in
+both movies. The corrected movies and unchanged layout payload staged
+byte-identically across VWKS, CF, FC, and TA.
+
+| Artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `hudmenu.gfx` | 434779 | `BF5CA20615F292FDDE404465B04D4A8AA6D3D170B7FA355F48399D81565D16E6` |
+| `hudmenu_lrg.gfx` | 434962 | `EC8A4295A459F8025C43A36671446AF088923C758847224297413EA2E4E5BA2A` |
+| `VenworksCUI/layout.xml` | 6427 | `BA609EE350472D48C428B1AAADAE5DE4C3AF86BA5E29CBD9A3DE61E27B6C70F7` |
+| `components/contact-radar.xml` | 2637 | `BFA1CC6A30B87C21A02BE186B4B558B6D0461F1327F22539B9B51FA4F3D03E61` |
