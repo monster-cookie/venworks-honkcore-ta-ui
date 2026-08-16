@@ -378,22 +378,21 @@ or persistent state.
 
 The production semantic mapping is deliberately narrow: all
 `aEnemyMarkers` entries are red dots; general marker type 8 companions are white
-dots; candidate type 11 parked ships and candidate type 15 vehicles would be
-white squares if persistent `aMarkers` delivers them; and the player is a fixed
-purple center square. Runtime beside a parked ship produced no square, so ship
-and vehicle delivery is not yet confirmed. Locations, mission markers, unknown
-types, aggressive/defensive/passive distinctions, and claimed physical range
-are not rendered or inferred.
+dots; type 10 parked ships, type 13 parked-vehicle positions, and formal type 14
+vehicles are white squares; and the player is a fixed purple center square.
+Bethesda's decompiled enum names type 13 `MIT_MARKER_POSITION`, but runtime
+showed that it appears when the player exits the vehicle and disappears while
+the player occupies it. Type 10 was delivered beside the parked ship. Formal
+type 14 delivery remains unobserved. Locations, mission markers, unknown types,
+aggressive/defensive/passive distinctions, and claimed physical range are not
+rendered or inferred.
 
-A temporary 800-by-78 panel in the top-center helmet band reports the complete
-general-marker count and unique numeric marker types as
-`G:<count> TYPES:<types>`. Its centered 768-by-56 text field uses opt-in
-multiline wrapping; the complete value is not truncated by the data context.
-The initial narrow radar-adjacent field was removed completely after runtime
-review showed that it clipped the type list. The panel is a bounded probe of
-persistent `HudCompassData.aMarkers`, not another provider or a claim that types
-11 and 15 are available. It performs no recursive field dump and adds no input,
-callback, persistence, native, or SFSE behavior.
+The retired top-center probe reported the complete general-marker count and
+unique numeric marker types as `G:<count> TYPES:<types>`. It established the
+10/13 runtime mapping without adding another provider, recursive field dumping,
+input, callbacks, persistence, native code, or SFSE behavior. Its panel, binding,
+and count/type formatting are absent from the production HUD; the existing
+`HudCompassData` subscription remains solely to deliver radar data.
 
 The adjacent `faction-display` fragment owns the Venworks SVG crest and its
 panel separately from `contact-radar`. Each has an independent layout include,

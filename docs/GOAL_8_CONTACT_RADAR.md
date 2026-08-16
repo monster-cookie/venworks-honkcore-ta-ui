@@ -163,7 +163,7 @@ TA, and the retired Goal 8A diagnostic payload was removed from every variant.
 | `VenworksCUI/layout.xml` | 6427 | `BA609EE350472D48C428B1AAADAE5DE4C3AF86BA5E29CBD9A3DE61E27B6C70F7` |
 | `components/contact-radar.xml` | 2637 | `BFA1CC6A30B87C21A02BE186B4B558B6D0461F1327F22539B9B51FA4F3D03E61` |
 
-## Kill-event blackout correction and compact provider diagnostic
+## Kill-event blackout correction and provider evidence
 
 A user-supplied runtime recording confirmed that killing an enemy obscured
 gameplay with a black surface for approximately 1.5–2 seconds while other HUD
@@ -185,34 +185,57 @@ The same recording showed no ship or vehicle square while the player approached
 and stood directly beside a parked ship. The first correction placed a compact
 line beside the radar, but runtime screenshot review showed that the narrow field
 clipped the type list and was not part of the radar presentation. The accepted
-follow-up removes diagnostic presentation from `CUIContactRadar` completely.
+follow-up removed diagnostic presentation from `CUIContactRadar` and temporarily
+placed the complete marker count and unique numeric types in one wrapped
+800-by-78 design-unit panel at the top center.
 
-The existing `CUIPlayerHudDataContext` compass subscription now formats
-`G:<count> TYPES:<unique comma-separated marker types>`, where `G` is the full
-`HudCompassData.aMarkers` array length. Null or absent data reports
-`G:0 TYPES:-`; null records do not add a type. Values are deduplicated and sorted
-numerically without data-side truncation. One temporary 800-by-78 design-unit
-panel at the top center binds that complete value into a centered 768-by-56 text
-field with opt-in multiline wrapping. Existing text fields remain single-line
-and non-wrapping by default. The diagnostic adds no field dumping, input,
-additional provider subscription, persistence, native code, SFSE component, or
-menu-owned provider.
+That probe completed its purpose. Beside the parked ship and vehicle it reported
+`G:8 TYPES:4,7,10,13`. After the vehicle was driven away from the ship, the list
+contained only types 4 and 7 while the player occupied the vehicle; type 13
+appeared after the player exited. Bethesda's decompiled `MapMarkerUtils` maps
+type 10 to `MIT_MARKER_SHIP_PARKED`, type 13 to `MIT_MARKER_POSITION`, and type
+14 to `MIT_MARKER_VEHICLE`; `WatchIconsWidget` passes `uiMarkerIconType` directly
+to that mapping. The evidence therefore confirms that persistent HUD
+`aMarkers` delivers the parked ship as type 10 and correlates the type-13
+position marker with the player's parked vehicle. Formal type 14 delivery has
+not been observed.
+
+The production radar accepts types 10, 13, and 14 as square contacts. The former
+type-11 parked-ship and type-15 vehicle constants were incorrect: Bethesda maps
+11 to `MIT_MARKER_OUTPOST` and defines no type 15 in this enum. The completed
+probe removes the top-center group, its `diagnostic.compassmarkers` value, and
+the count/type formatting routine. The existing `HudCompassData` subscription
+and complete `currentCompassData` payload remain the radar's sole data path.
 
 On 2026-08-15, `Tools/checkRepo.ps1` passed and the complete normal/large
 Scaleform build imported, reopened, and validated all 207 scripts and all 39
 authored CUI classes in the single Venworks ABC linkage domain. The movies and
 layout staged byte-identically across VWKS, CF, FC, and TA.
 
-| Top-center diagnostic artifact | Bytes | SHA-256 |
+| Temporary top-center diagnostic artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
 | `hudmenu.gfx` | 412769 | `435E1C07DB163128B166CDF33A319609382DD67E034E4A268D704D883EE2B34D` |
 | `hudmenu_lrg.gfx` | 412952 | `A3A6F44EF2F53EB3C36DD8697C48121D954E6E4888BD587A21323D76D6B20A70` |
 | `VenworksCUI/layout.xml` | 7444 | `B26644F0719D7184C6E034A3E40A5D9425E6979B8D270B72F80BAB30BD08D490` |
 
-Runtime acceptance requires captures of the line in open terrain, beside the
-parked ship, beside a vehicle, and, when possible, before and after entering the
-vehicle. Types 11 and 15 remain candidate mappings until those captures prove
-that persistent HUD `aMarkers` actually delivers them.
+On 2026-08-16, the final radar-mapping and diagnostic-removal build passed
+`Tools/checkRepo.ps1` and the complete normal/large Scaleform import, reopen,
+207-script, 39-authored-class, and single-domain validation. The build assertions
+confirmed the 10/13/14 mapping, fixed marker scale, absence of `fDistanceScale`,
+continued compass delivery, and complete removal of the temporary diagnostic.
+Movies and layouts staged byte-identically across VWKS, CF, FC, and TA.
+
+| Final production artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `hudmenu.gfx` | 412184 | `E8DF143AFF9FCCD86EC3BB60837DD084C9401AFDDAAEA471BCC2F2CF33B75EB7` |
+| `hudmenu_lrg.gfx` | 412367 | `6974FE83DA3F3842A98052543A5676034F2EF240F2402597B98FB8C1AB343FFA` |
+| `VenworksCUI/layout.xml` | 6583 | `87649033E716119601D6EBD1D9D9C50C048A84D347E6CC59D9472B580D2D915E` |
+
+Final runtime acceptance requires the debug panel to be absent, type-10 parked
+ships and the type-13 parked-vehicle position to render as white squares, and no
+unrelated position marker to produce a false contact. Enemy and companion dots,
+the fixed player marker, fixed contact scale, and the runtime-confirmed absence
+of kill-event blackouts must remain unchanged.
 
 ## Goal 8B runtime confirmation and visual refinement
 

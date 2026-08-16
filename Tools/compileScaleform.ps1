@@ -913,6 +913,7 @@ try {
       'MIT_MARKER_ENEMY',
       'MIT_MARKER_COMPANION',
       'MIT_MARKER_SHIP_PARKED',
+      'MIT_MARKER_POSITION',
       'MIT_MARKER_VEHICLE',
       'HUDVehicleData'
     )) {
@@ -1051,16 +1052,23 @@ try {
     }
     if ($reopenedContactRadarSource -notmatch 'param1\.scaleX\s*=\s*1' -or
         $reopenedContactRadarSource -notmatch 'param1\.scaleY\s*=\s*1' -or
+        $reopenedContactRadarSource -notmatch 'MIT_MARKER_SHIP_PARKED\s*:\s*uint\s*=\s*10' -or
+        $reopenedContactRadarSource -notmatch 'MIT_MARKER_POSITION\s*:\s*uint\s*=\s*13' -or
+        $reopenedContactRadarSource -notmatch 'MIT_MARKER_VEHICLE\s*:\s*uint\s*=\s*14' -or
+        [regex]::Matches($reopenedContactRadarSource,'MIT_MARKER_SHIP_PARKED').Count -lt 3 -or
+        [regex]::Matches($reopenedContactRadarSource,'MIT_MARKER_POSITION').Count -lt 3 -or
+        [regex]::Matches($reopenedContactRadarSource,'MIT_MARKER_VEHICLE').Count -lt 3 -or
+        $reopenedContactRadarSource -match 'MIT_MARKER_SHIP_PARKED\s*:\s*uint\s*=\s*11' -or
+        $reopenedContactRadarSource -match 'MIT_MARKER_VEHICLE\s*:\s*uint\s*=\s*15' -or
         $reopenedContactRadarSource -match 'CUITextFieldHost|diagnosticField|"G:"|" TYPES:"' -or
         $reopenedContactRadarSource -match 'fDistanceScale') {
-      throw 'Generated contact radar does not retain fixed contact scaling or still owns diagnostic presentation.'
+      throw 'Generated contact radar does not retain fixed scaling and the Bethesda 10/13/14 ship-position-vehicle mapping, or still owns diagnostic presentation.'
     }
-    if (!$reopenedPlayerHudDataContextSource.Contains('"diagnostic.compassmarkers"') -or
-        !$reopenedPlayerHudDataContextSource.Contains('"G:"') -or
-        !$reopenedPlayerHudDataContextSource.Contains('" TYPES:"') -or
-        $reopenedPlayerHudDataContextSource -notmatch 'types\.sort\s*\(\s*Array\.NUMERIC\s*\)' -or
-        $reopenedPlayerHudDataContextSource -notmatch 'param1\.aMarkers\s+as\s+Array') {
-      throw 'Generated player HUD data context does not retain the complete deterministic compass-marker diagnostic.'
+    if ($reopenedPlayerHudDataContextSource -match 'diagnostic\.compassmarkers|updateCompassMarkerDiagnostic|"G:"|" TYPES:"' -or
+        !$reopenedPlayerHudDataContextSource.Contains('BSUIDataManager.Subscribe("HudCompassData",this.onRadarCompassData)') -or
+        !$reopenedPlayerHudDataContextSource.Contains('currentCompassData') -or
+        $reopenedPlayerHudDataContextSource -notmatch 'compassData\s*=\s*param1\s*==\s*null\s*\?\s*null\s*:\s*param1\.data') {
+      throw 'Generated player HUD data context does not retain radar compass delivery or still contains the retired marker-count diagnostic.'
     }
     if (!$reopenedTextSource.Contains('this.readBoolean(param1,"multiline",false)') -or
         !$reopenedTextSource.Contains('this.readBoolean(param1,"wordWrap",false)') -or
@@ -1206,28 +1214,11 @@ try {
   $bottomLeftTargets = @($providerProbeLayout.venworksCUI.vanillaVisibility.target | Where-Object {
     [string]$_.id -eq 'bottomLeft'
   })
-  if ($compassDiagnosticGroups.Count -ne 1 -or
-      $compassDiagnosticPanels.Count -ne 1 -or
-      $compassDiagnosticTexts.Count -ne 1 -or
-      $compassDiagnosticBindings.Count -ne 1 -or
-      [string]$compassDiagnosticGroups[0].anchor -ne 'top-center' -or
-      [string]$compassDiagnosticGroups[0].visibleWhen -ne 'always' -or
-      [int]$compassDiagnosticGroups[0].x -ne 0 -or
-      [int]$compassDiagnosticGroups[0].y -ne 22 -or
-      [int]$compassDiagnosticGroups[0].width -ne 800 -or
-      [int]$compassDiagnosticGroups[0].height -ne 78 -or
-      [int]$compassDiagnosticPanels[0].width -ne 800 -or
-      [int]$compassDiagnosticPanels[0].height -ne 78 -or
-      [int]$compassDiagnosticTexts[0].x -ne 16 -or
-      [int]$compassDiagnosticTexts[0].y -ne 10 -or
-      [int]$compassDiagnosticTexts[0].width -ne 768 -or
-      [int]$compassDiagnosticTexts[0].height -ne 56 -or
-      [int]$compassDiagnosticTexts[0].fontSize -ne 18 -or
-      [string]$compassDiagnosticTexts[0].align -ne 'center' -or
-      [string]$compassDiagnosticTexts[0].multiline -ne 'true' -or
-      [string]$compassDiagnosticTexts[0].wordWrap -ne 'true' -or
-      [string]$compassDiagnosticTexts[0].value -ne 'G:0 TYPES:-') {
-    throw 'Goal 8 compass-marker diagnostic must be one wrapped 800x78 passive top-center panel with a complete context-backed value.'
+  if ($compassDiagnosticGroups.Count -ne 0 -or
+      $compassDiagnosticPanels.Count -ne 0 -or
+      $compassDiagnosticTexts.Count -ne 0 -or
+      $compassDiagnosticBindings.Count -ne 0) {
+    throw 'The retired Goal 8 compass-marker diagnostic must not remain in the production layout.'
   }
   $environmentalProtectionStyles = @($providerProbeLayout.venworksCUI.definitions.meterStyle | Where-Object {
     [string]$_.id -eq 'environment.protection'

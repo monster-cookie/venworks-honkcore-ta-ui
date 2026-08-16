@@ -6,8 +6,9 @@ package venworks.cui.components
    {
       private static const MIT_MARKER_ENEMY:uint = 5;
       private static const MIT_MARKER_COMPANION:uint = 8;
-      private static const MIT_MARKER_SHIP_PARKED:uint = 11;
-      private static const MIT_MARKER_VEHICLE:uint = 15;
+      private static const MIT_MARKER_SHIP_PARKED:uint = 10;
+      private static const MIT_MARKER_POSITION:uint = 13;
+      private static const MIT_MARKER_VEHICLE:uint = 14;
       private static const MAX_CONTACTS:int = 32;
 
       private var contacts:Array;
@@ -77,10 +78,12 @@ package venworks.cui.components
             type = marker == null ? 0 : uint(marker.uiMarkerIconType);
             if(marker != null && Number(marker.uiHandle) != 0 &&
                (param4 == MIT_MARKER_ENEMY || type == MIT_MARKER_COMPANION ||
-                type == MIT_MARKER_SHIP_PARKED || type == MIT_MARKER_VEHICLE))
+                type == MIT_MARKER_SHIP_PARKED || type == MIT_MARKER_POSITION ||
+                type == MIT_MARKER_VEHICLE))
             {
                this.renderContact(Shape(contacts[param2]),marker,param3 == null ? 0 : Number(param3.fDirection),
-                  param4 == MIT_MARKER_ENEMY,type == MIT_MARKER_SHIP_PARKED || type == MIT_MARKER_VEHICLE);
+                  param4 == MIT_MARKER_ENEMY,type == MIT_MARKER_SHIP_PARKED ||
+                  type == MIT_MARKER_POSITION || type == MIT_MARKER_VEHICLE);
                ++param2;
             }
             ++sourceIndex;
