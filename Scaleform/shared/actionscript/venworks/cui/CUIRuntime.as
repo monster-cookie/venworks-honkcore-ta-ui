@@ -43,6 +43,11 @@ package venworks.cui
       private var vanillaAdapters:Array;
       private var hudModeVisibility:Array;
       private var contactRadars:Array;
+      private var pendingValueSources:Object;
+      private var pendingConditionNames:Object;
+      private var pendingCompassUpdate:Boolean = false;
+      private var pendingHudModeUpdate:Boolean = false;
+      private var frameUpdateScheduled:Boolean = false;
       private var diagnosticPhase:String = "";
       private var diagnosticNode:XML;
       private var diagnosticCheckpoint:String = "";
@@ -95,28 +100,13 @@ package venworks.cui
 
       public function updateVanillaHudModeVisibility(param1:Array) : void
       {
-         var adapter:CUIVanillaVisibilityAdapter = null;
          hudModeVisibility = param1 == null ? null : param1.concat();
          if(vanillaAdapters == null || conditionContext == null)
          {
             return;
          }
-         try
-         {
-            this.setDiagnosticContext("VANILLA HUD MODE VISIBILITY",null);
-            for each(adapter in vanillaAdapters)
-            {
-               if(adapter.updateHudMode(hudModeVisibility))
-               {
-                  adapter.apply(conditionContext);
-               }
-            }
-            this.clearDiagnosticContext();
-         }
-         catch(param2:Error)
-         {
-            this.showRuntimeError(param2);
-         }
+         pendingHudModeUpdate = true;
+         this.scheduleFrameUpdate();
       }
 
       private function onLoaded(param1:Event) : void
@@ -441,44 +431,120 @@ package venworks.cui
 
       private function onConditionChanged(param1:CustomEvent) : void
       {
-         try
-         {
-            this.setDiagnosticContext("LIVE VISIBILITY EVALUATION",null);
-            this.applyConditions(param1.params);
-            this.clearDiagnosticContext();
-         }
-         catch(param2:Error)
-         {
-            this.showRuntimeError(param2);
-         }
+         pendingConditionNames = this.mergeChanges(pendingConditionNames,param1.params);
+         this.scheduleFrameUpdate();
       }
 
       private function onValueChanged(param1:CustomEvent) : void
       {
+         pendingValueSources = this.mergeChanges(pendingValueSources,param1.params);
+         this.scheduleFrameUpdate();
+      }
+
+      private function onCompassChanged(param1:Event) : void
+      {
+         pendingCompassUpdate = true;
+         this.scheduleFrameUpdate();
+      }
+
+      private function mergeChanges(param1:Object, param2:Object) : Object
+      {
+         var name:String = null;
+         var result:Object = param1 == null ? {} : param1;
+         if(param2 != null)
+         {
+            for(name in param2)
+            {
+               if(param2[name] === true)
+               {
+                  result[name] = true;
+               }
+            }
+         }
+         return result;
+      }
+
+      private function scheduleFrameUpdate() : void
+      {
+         if(!frameUpdateScheduled)
+         {
+            frameUpdateScheduled = true;
+            owner.addEventListener(Event.ENTER_FRAME,this.onFrameUpdate);
+         }
+      }
+
+      private function onFrameUpdate(param1:Event) : void
+      {
+         var valueSources:Object = pendingValueSources;
+         var conditionNames:Object = pendingConditionNames;
+         var compassUpdate:Boolean = pendingCompassUpdate;
+         var hudModeUpdate:Boolean = pendingHudModeUpdate;
+         owner.removeEventListener(Event.ENTER_FRAME,this.onFrameUpdate);
+         frameUpdateScheduled = false;
+         pendingValueSources = null;
+         pendingConditionNames = null;
+         pendingCompassUpdate = false;
+         pendingHudModeUpdate = false;
+         if(valueSources != null && !this.applyPendingValues(valueSources))
+         {
+            return;
+         }
+         if(compassUpdate && !this.applyPendingContactRadars())
+         {
+            return;
+         }
+         if((conditionNames != null || hudModeUpdate) && !this.applyPendingVisibility(conditionNames,hudModeUpdate))
+         {
+            return;
+         }
+      }
+
+      private function applyPendingValues(param1:Object) : Boolean
+      {
          try
          {
             this.setDiagnosticContext("LIVE VALUE EVALUATION",null);
-            this.applyValues(param1.params);
+            this.applyValues(param1);
             this.clearDiagnosticContext();
+            return true;
          }
          catch(param2:Error)
          {
             this.showRuntimeError(param2);
          }
+         return false;
       }
 
-      private function onCompassChanged(param1:Event) : void
+      private function applyPendingContactRadars() : Boolean
       {
          try
          {
             this.setDiagnosticContext("LIVE CONTACT RADAR EVALUATION",null);
             this.applyContactRadars();
             this.clearDiagnosticContext();
+            return true;
          }
-         catch(param2:Error)
+         catch(param1:Error)
          {
-            this.showRuntimeError(param2);
+            this.showRuntimeError(param1);
          }
+         return false;
+      }
+
+      private function applyPendingVisibility(param1:Object, param2:Boolean) : Boolean
+      {
+         try
+         {
+            this.setDiagnosticContext(param2 ? "VANILLA HUD MODE VISIBILITY" : "LIVE VISIBILITY EVALUATION",null);
+            this.applyVisibilityChanges(param1,param2);
+            this.clearDiagnosticContext();
+            return true;
+         }
+         catch(param3:Error)
+         {
+            this.showRuntimeError(param3);
+         }
+         return false;
       }
 
       private function applyValues(param1:Object = null) : void
@@ -522,9 +588,48 @@ package venworks.cui
          }
       }
 
+      private function applyVisibilityChanges(param1:Object, param2:Boolean) : void
+      {
+         var binding:CUIVisibilityBinding = null;
+         var adapter:CUIVanillaVisibilityAdapter = null;
+         var hudModeChanged:Boolean = false;
+         if(param1 != null)
+         {
+            for each(binding in visibilityBindings)
+            {
+               if(binding.isAffectedBy(param1))
+               {
+                  binding.apply(conditionContext);
+               }
+            }
+         }
+         for each(adapter in vanillaAdapters)
+         {
+            hudModeChanged = param2 && adapter.updateHudMode(hudModeVisibility);
+            if(hudModeChanged || param1 != null && adapter.isAffectedBy(param1))
+            {
+               adapter.apply(conditionContext);
+            }
+         }
+      }
+
+      private function clearPendingFrameUpdate() : void
+      {
+         if(frameUpdateScheduled)
+         {
+            owner.removeEventListener(Event.ENTER_FRAME,this.onFrameUpdate);
+         }
+         frameUpdateScheduled = false;
+         pendingValueSources = null;
+         pendingConditionNames = null;
+         pendingCompassUpdate = false;
+         pendingHudModeUpdate = false;
+      }
+
       private function clearComponentLayer() : void
       {
          var adapter:CUIVanillaVisibilityAdapter = null;
+         this.clearPendingFrameUpdate();
          if(conditionContext != null)
          {
             conditionContext.removeEventListener(CUIConditionContext.CONDITION_CHANGE,this.onConditionChanged);

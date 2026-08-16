@@ -971,17 +971,29 @@ try {
     $reopenedVisibilityBindingSource = Get-Content -LiteralPath $reopenedVisibilityBindingPath -Raw
     $reopenedVanillaVisibilitySource = Get-Content -LiteralPath $reopenedVanillaVisibilityPath -Raw
     $reopenedRuntimeSource = Get-Content -LiteralPath $reopenedRuntimePath -Raw
+    $reopenedConditionChangeHandler = [regex]::Match(
+      $reopenedRuntimeSource,
+      '(?s)private function onConditionChanged\b.*?(?=\s+private function onValueChanged\b)'
+    ).Value
     $reopenedValueChangeHandler = [regex]::Match(
       $reopenedRuntimeSource,
       '(?s)private function onValueChanged\b.*?(?=\s+private function onCompassChanged\b)'
     ).Value
     $reopenedCompassChangeHandler = [regex]::Match(
       $reopenedRuntimeSource,
-      '(?s)private function onCompassChanged\b.*?(?=\s+private function applyValues\b)'
+      '(?s)private function onCompassChanged\b.*?(?=\s+private function mergeChanges\b)'
     ).Value
     $reopenedHudModeHandler = [regex]::Match(
       $reopenedRuntimeSource,
       '(?s)public function updateVanillaHudModeVisibility\b.*?(?=\s+private function onLoaded\b)'
+    ).Value
+    $reopenedFrameUpdateHandler = [regex]::Match(
+      $reopenedRuntimeSource,
+      '(?s)private function onFrameUpdate\b.*?(?=\s+private function applyPendingValues\b)'
+    ).Value
+    $reopenedContactRenderHandler = [regex]::Match(
+      $reopenedContactRadarSource,
+      '(?s)private function renderContact\b.*?(?=\s+private function selectContactStyle\b)'
     ).Value
     if ($reopenedLayoutParserSource -notmatch 'String\(param1\.@value\)\.length\s*==\s*0\s*&&\s*param1\.@source\.length\(\)\s*==\s*0\s*&&\s*param1\.@valueTemplate\.length\(\)\s*==\s*0' -or
         !$reopenedLayoutParserSource.Contains('Text value cannot be empty: ')) {
@@ -1042,17 +1054,34 @@ try {
         $reopenedRuntimeSource -notmatch 'removeEventListener\s*\(\s*CUIPlayerHudDataContext\.COMPASS_CHANGE\s*,\s*this\.onCompassChanged\s*\)' -or
         $reopenedRuntimeSource -notmatch 'binding\.isAffectedBy\s*\(\s*param1\s*\)' -or
         $reopenedRuntimeSource -notmatch 'adapter\.isAffectedBy\s*\(\s*param1\s*\)' -or
+        $reopenedConditionChangeHandler.Length -eq 0 -or
+        $reopenedConditionChangeHandler -notmatch 'mergeChanges\s*\(\s*pendingConditionNames\s*,\s*param1\.params\s*\)' -or
+        $reopenedConditionChangeHandler -notmatch 'scheduleFrameUpdate\s*\(\s*\)' -or
+        $reopenedConditionChangeHandler -match 'applyValues|applyContactRadars|applyConditions|applyVisibilityChanges' -or
         $reopenedValueChangeHandler.Length -eq 0 -or
-        $reopenedValueChangeHandler -notmatch 'applyValues\s*\(\s*param1\.params\s*\)' -or
-        $reopenedValueChangeHandler -match 'applyContactRadars|applyConditions' -or
+        $reopenedValueChangeHandler -notmatch 'mergeChanges\s*\(\s*pendingValueSources\s*,\s*param1\.params\s*\)' -or
+        $reopenedValueChangeHandler -notmatch 'scheduleFrameUpdate\s*\(\s*\)' -or
+        $reopenedValueChangeHandler -match 'applyValues|applyContactRadars|applyConditions|applyVisibilityChanges' -or
         $reopenedCompassChangeHandler.Length -eq 0 -or
-        $reopenedCompassChangeHandler -notmatch 'applyContactRadars\s*\(\s*\)' -or
-        $reopenedCompassChangeHandler -match 'applyValues|applyConditions' -or
+        $reopenedCompassChangeHandler -notmatch 'pendingCompassUpdate\s*=\s*true' -or
+        $reopenedCompassChangeHandler -notmatch 'scheduleFrameUpdate\s*\(\s*\)' -or
+        $reopenedCompassChangeHandler -match 'applyValues|applyContactRadars|applyConditions|applyVisibilityChanges' -or
         $reopenedHudModeHandler.Length -eq 0 -or
-        $reopenedHudModeHandler -notmatch 'adapter\.updateHudMode\s*\(\s*hudModeVisibility\s*\)' -or
-        $reopenedHudModeHandler -notmatch 'adapter\.apply\s*\(\s*conditionContext\s*\)' -or
+        $reopenedHudModeHandler -notmatch 'pendingHudModeUpdate\s*=\s*true' -or
+        $reopenedHudModeHandler -notmatch 'scheduleFrameUpdate\s*\(\s*\)' -or
+        $reopenedHudModeHandler -match 'adapter\.updateHudMode|adapter\.apply|applyValues|applyContactRadars|applyConditions|applyVisibilityChanges' -or
+        $reopenedFrameUpdateHandler.Length -eq 0 -or
+        $reopenedFrameUpdateHandler -notmatch 'applyPendingValues\s*\(\s*valueSources\s*\)' -or
+        $reopenedFrameUpdateHandler -notmatch 'applyPendingContactRadars\s*\(\s*\)' -or
+        $reopenedFrameUpdateHandler -notmatch 'applyPendingVisibility\s*\(\s*conditionNames\s*,\s*hudModeUpdate\s*\)' -or
+        $reopenedRuntimeSource -notmatch 'owner\.addEventListener\s*\(\s*Event\.ENTER_FRAME\s*,\s*this\.onFrameUpdate\s*\)' -or
+        [regex]::Matches($reopenedRuntimeSource,'owner\.removeEventListener\s*\(\s*Event\.ENTER_FRAME\s*,\s*this\.onFrameUpdate\s*\)').Count -lt 2 -or
+        $reopenedRuntimeSource -notmatch 'result\[name\]\s*=\s*true' -or
+        $reopenedRuntimeSource -notmatch 'function\s+clearPendingFrameUpdate' -or
+        $reopenedRuntimeSource -notmatch 'this\.clearPendingFrameUpdate\s*\(\s*\)' -or
+        $reopenedRuntimeSource -notmatch 'hudModeChanged\s*=\s*param2\s*&&\s*adapter\.updateHudMode\s*\(\s*hudModeVisibility\s*\)' -or
         $reopenedHudModeHandler -match 'applyValues|applyContactRadars|applyConditions') {
-      throw 'Generated runtime does not retain provider-local value, condition, compass, and HUD-mode routing boundaries.'
+      throw 'Generated runtime does not retain frame-coalesced, provider-local value, condition, compass, and HUD-mode routing boundaries.'
     }
     foreach ($meterRenderer in @('CUIContinuousBar','CUISegmentedBar','CUITriangleBar','CUIDotBar','CUIRadialMeter')) {
       $meterRendererPath = Join-Path $validationScriptsDirectory "scripts\venworks\cui\components\$meterRenderer.as"
@@ -1161,8 +1190,15 @@ try {
         $reopenedContactRadarSource -match 'MIT_MARKER_VEHICLE\s*:\s*uint\s*=\s*15' -or
         $reopenedContactRadarSource -match 'CUITextFieldHost|diagnosticField|"G:"|" TYPES:"' -or
         $reopenedContactRadarSource -match 'bIsNear' -or
-        $reopenedContactRadarSource -match 'fDistanceScale') {
-      throw 'Generated contact radar does not retain finite transform validation, fixed 300-unit distance placement, fixed scaling, and the Bethesda 10/13/14 ship-position-vehicle mapping, or still contains retired near/far, distance-scale, or diagnostic behavior.'
+        $reopenedContactRadarSource -match 'fDistanceScale' -or
+        $reopenedContactRadarSource -match 'graphics\.clear\s*\(' -or
+        $reopenedContactRadarSource -notmatch 'createContactShape\s*\(\s*enemyColor\s*,\s*false\s*\)' -or
+        [regex]::Matches($reopenedContactRadarSource,'createContactShape\s*\(\s*allyColor').Count -lt 2 -or
+        $reopenedContactRadarSource -notmatch 'createContactShape\s*\(\s*allyColor\s*,\s*true\s*\)' -or
+        $reopenedContactRenderHandler.Length -eq 0 -or
+        $reopenedContactRenderHandler -notmatch 'selectContactStyle\s*\(' -or
+        $reopenedContactRenderHandler -match '\.graphics\.|new\s+(Shape|Sprite)') {
+      throw 'Generated contact radar does not retain persistent marker geometry, finite transform validation, fixed 300-unit distance placement, fixed scaling, and the Bethesda 10/13/14 ship-position-vehicle mapping, or still contains retired near/far, distance-scale, live-redraw, or diagnostic behavior.'
     }
     if ($reopenedContactRadarSource -match 'BottomLeftGroup_mc|WatchIconsWidget|CompassMarkerWidget' -or
         $reopenedRuntimeSource -notmatch 'componentLayer\.name\s*=\s*"VenworksCUIComponentLayer"' -or

@@ -196,7 +196,7 @@ radar, and visibility application, while live events reach only dependent
 controls. The implementation adds no provider, authored class, persistence,
 native code, input, or Watch ownership.
 
-On 2026-08-16, `Tools/checkRepo.ps1` passed and the complete normal/large
+On 2026-08-16, `Tools/checkRepo.ps1`, `git diff --check`, and the complete normal/large
 Scaleform build passed import, reopen, 207-script, 39-authored-class,
 single-domain, unchanged-Watch, and provider-local routing validation. Both
 movies staged byte-identically across VWKS, CF, FC, and TA. Runtime kill testing
@@ -206,6 +206,45 @@ remains required before treating the source-side correction as confirmed.
 | --- | ---: | --- |
 | `hudmenu.gfx` | 416323 | `F54F97424CF34F63186D5B0044772084FD61A76D7CFA3DB59468B52D07DFBC95` |
 | `hudmenu_lrg.gfx` | 416506 | `346C682452FE11DC2A29A2F9CDD558CF2B97901438829F8A9575A29B5699AFF4` |
+
+Runtime confirmed that provider-local routing removed the general kill blackout
+for ordinary weapons but left one reproducible case. A stock Rattler did not
+black out; applying the same legendary set to a Rattler or AA-99 did. Replacing
+Corrosive with Staggering did not change the result, while replacing
+Bloodthirsty with Kismet removed it. Bloodthirsty also reproduced at full
+health, so an unchanged displayed health value does not prove that its kill
+transaction skipped HUD provider delivery.
+
+The accepted production hardening removes two remaining re-entrant rendering
+paths. Live value, condition, compass, and HUD-mode callbacks now merge only
+their domain-specific pending state and schedule one next-frame application.
+Value-source and condition-name sets are unioned; compass and HUD-mode work use
+the latest authoritative context state. The frame listener clears its scheduled
+state before applying the snapshot, so delivery caused during rendering forms a
+new batch for the following frame. Initial component construction remains a
+direct one-time evaluation, and teardown removes any pending listener.
+
+`CUIContactRadar` also retains all pooled marker geometry. Each of its 32 contact
+containers prebuilds one red enemy dot, one white companion dot, and one white
+ship/vehicle square. Live compass rendering selects a child style and changes
+only bounded visibility, position, alpha, and fixed scale; it no longer clears
+or draws vector graphics during an update. The 300-unit range, 10/13/14 mapping,
+finite-transform checks, player marker, Watch independence, and layout remain
+unchanged. Runtime testing with Bloodthirsty weapons is still required before
+this correction can be accepted as eliminating the remaining blackout.
+
+On 2026-08-16, `Tools/checkRepo.ps1` passed and the complete normal/large
+Scaleform build compiled, imported, reopened, and validated all 207 scripts and
+all 39 authored CUI classes in exactly one Venworks ABC linkage domain. Reopened
+runtime assertions confirmed next-frame coalescing, provider-domain isolation,
+frame-listener teardown, persistent contact styles, fixed marker scale, and the
+absence of live radar vector clearing or drawing. Pinned Watch scripts remained
+unchanged. Both movies staged byte-identically across VWKS, CF, FC, and TA.
+
+| Frame-coalesced retained-radar artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `hudmenu.gfx` | 418521 | `B4C9CDFB556E62CA645FF6846307FF6A7600D98686DA8D8E3EA4792BCBDF4C34` |
+| `hudmenu_lrg.gfx` | 418704 | `D8DF869D8939B0C8C4031A57D8432A0EF5FCADF85F0D41C32FE6F92BBE110FE3` |
 
 ## Kill-event blackout hardening and provider evidence
 

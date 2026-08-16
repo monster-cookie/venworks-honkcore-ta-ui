@@ -430,4 +430,15 @@ vanilla adapters re-evaluate only when their expressions consume one of those
 names, with HUD opacity retained as an explicit vanilla-adapter dependency.
 Bethesda HUD-mode changes reapply only vanilla adapters. Initial component
 construction remains a complete one-time evaluation so unchanged defaults are
-still rendered.
+still rendered. Live callbacks merge domain-specific pending work and apply it
+once on the next rendered frame; they do not synchronously mutate the display
+tree. Multiple value and condition notifications are unioned, while compass and
+HUD-mode delivery use the latest cached state. Teardown removes any scheduled
+frame listener.
+
+The radar's 32 pooled contact containers retain prebuilt red-dot, white-dot, and
+white-square children. Live compass updates only select the required child and
+assign validated position, bounded alpha, fixed scale, and visibility. No live
+radar path clears or reconstructs vector geometry. This hardening was introduced
+after runtime isolated the remaining kill blackout to the Bloodthirsty legendary
+effect across multiple weapon types; runtime confirmation remains required.
