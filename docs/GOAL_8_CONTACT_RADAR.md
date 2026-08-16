@@ -182,23 +182,32 @@ scale of `1.0`. Heading placement, near/far radial placement, bounded
 remain unchanged.
 
 The same recording showed no ship or vehicle square while the player approached
-and stood directly beside a parked ship. A compact radar-local line now reports
+and stood directly beside a parked ship. The first correction placed a compact
+line beside the radar, but runtime screenshot review showed that the narrow field
+clipped the type list and was not part of the radar presentation. The accepted
+follow-up removes diagnostic presentation from `CUIContactRadar` completely.
+
+The existing `CUIPlayerHudDataContext` compass subscription now formats
 `G:<count> TYPES:<unique comma-separated marker types>`, where `G` is the full
 `HudCompassData.aMarkers` array length. Null or absent data reports
-`G:0 TYPES:-`; null records do not add a type. Values are deduplicated, sorted
-numerically, and constrained to the radar width. The diagnostic adds no field
-dumping, input, callbacks, persistence, native code, SFSE component, or
+`G:0 TYPES:-`; null records do not add a type. Values are deduplicated and sorted
+numerically without data-side truncation. One temporary 800-by-78 design-unit
+panel at the top center binds that complete value into a centered 768-by-56 text
+field with opt-in multiline wrapping. Existing text fields remain single-line
+and non-wrapping by default. The diagnostic adds no field dumping, input,
+additional provider subscription, persistence, native code, SFSE component, or
 menu-owned provider.
 
 On 2026-08-15, `Tools/checkRepo.ps1` passed and the complete normal/large
 Scaleform build imported, reopened, and validated all 207 scripts and all 39
-authored CUI classes in the single Venworks ABC linkage domain. Both artifacts
-staged byte-identically across VWKS, CF, FC, and TA.
+authored CUI classes in the single Venworks ABC linkage domain. The movies and
+layout staged byte-identically across VWKS, CF, FC, and TA.
 
-| Blackout-correction artifact | Bytes | SHA-256 |
+| Top-center diagnostic artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 413102 | `04E38C398D4DFA86690A1466F92F69447E27B1C1E50D5FBB1FF32E7683D2911E` |
-| `hudmenu_lrg.gfx` | 413285 | `D9551F757EE0A1AE578747E5C600C8A7A02B5CDDE9B3CD8C736FE14DF0A00639` |
+| `hudmenu.gfx` | 412769 | `435E1C07DB163128B166CDF33A319609382DD67E034E4A268D704D883EE2B34D` |
+| `hudmenu_lrg.gfx` | 412952 | `A3A6F44EF2F53EB3C36DD8697C48121D954E6E4888BD587A21323D76D6B20A70` |
+| `VenworksCUI/layout.xml` | 7444 | `B26644F0719D7184C6E034A3E40A5D9425E6979B8D270B72F80BAB30BD08D490` |
 
 Runtime acceptance requires captures of the line in open terrain, beside the
 parked ship, beside a vehicle, and, when possible, before and after entering the

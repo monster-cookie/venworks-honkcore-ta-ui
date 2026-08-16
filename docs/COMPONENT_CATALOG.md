@@ -385,11 +385,15 @@ and vehicle delivery is not yet confirmed. Locations, mission markers, unknown
 types, aggressive/defensive/passive distinctions, and claimed physical range
 are not rendered or inferred.
 
-A temporary line inside the radar reports the complete general-marker count and
-unique numeric marker types as `G:<count> TYPES:<types>`. It is a bounded probe
-of persistent `HudCompassData.aMarkers`, not another provider or a claim that
-types 11 and 15 are available. It performs no recursive field dump and adds no
-input, callback, persistence, native, or SFSE behavior.
+A temporary 800-by-78 panel in the top-center helmet band reports the complete
+general-marker count and unique numeric marker types as
+`G:<count> TYPES:<types>`. Its centered 768-by-56 text field uses opt-in
+multiline wrapping; the complete value is not truncated by the data context.
+The initial narrow radar-adjacent field was removed completely after runtime
+review showed that it clipped the type list. The panel is a bounded probe of
+persistent `HudCompassData.aMarkers`, not another provider or a claim that types
+11 and 15 are available. It performs no recursive field dump and adds no input,
+callback, persistence, native, or SFSE behavior.
 
 The adjacent `faction-display` fragment owns the Venworks SVG crest and its
 panel separately from `contact-radar`. Each has an independent layout include,

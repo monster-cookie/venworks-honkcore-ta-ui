@@ -18,8 +18,8 @@ package venworks.cui.components
          label.height = componentHeight;
          label.selectable = false;
          label.mouseEnabled = false;
-         label.multiline = false;
-         label.wordWrap = false;
+         label.multiline = this.readBoolean(param1,"multiline",false);
+         label.wordWrap = this.readBoolean(param1,"wordWrap",false);
          var format:TextFormat = label.defaultTextFormat;
          format.size = this.readNumber(param1,"fontSize",18);
          format.color = this.readColor(param1,"color",16777215);

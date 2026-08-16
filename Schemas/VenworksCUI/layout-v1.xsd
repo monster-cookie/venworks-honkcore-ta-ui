@@ -194,6 +194,8 @@
     <xs:attribute name="fontSize" type="xs:positiveInteger" use="required" />
     <xs:attribute name="color" type="colorType" use="required" />
     <xs:attribute name="bold" type="strictBooleanType" default="false" />
+    <xs:attribute name="multiline" type="strictBooleanType" default="false" />
+    <xs:attribute name="wordWrap" type="strictBooleanType" default="false" />
     <xs:attribute name="align" use="required">
       <xs:simpleType><xs:restriction base="xs:string"><xs:enumeration value="left" /><xs:enumeration value="center" /><xs:enumeration value="right" /></xs:restriction></xs:simpleType>
     </xs:attribute>

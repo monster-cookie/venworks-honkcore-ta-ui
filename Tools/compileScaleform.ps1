@@ -917,6 +917,8 @@ try {
     $reopenedImagePath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIImage.as'
     $reopenedSymbolPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUISymbol.as'
     $reopenedContactRadarPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIContactRadar.as'
+    $reopenedTextPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIText.as'
+    $reopenedPlayerHudDataContextPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIPlayerHudDataContext.as'
     $reopenedValueBindingPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIValueBinding.as'
     $reopenedVanillaVisibilityPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIVanillaVisibilityAdapter.as'
     $reopenedRuntimePath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIRuntime.as'
@@ -930,6 +932,8 @@ try {
     $reopenedImageSource = Get-Content -LiteralPath $reopenedImagePath -Raw
     $reopenedSymbolSource = Get-Content -LiteralPath $reopenedSymbolPath -Raw
     $reopenedContactRadarSource = Get-Content -LiteralPath $reopenedContactRadarPath -Raw
+    $reopenedTextSource = Get-Content -LiteralPath $reopenedTextPath -Raw
+    $reopenedPlayerHudDataContextSource = Get-Content -LiteralPath $reopenedPlayerHudDataContextPath -Raw
     $reopenedValueBindingSource = Get-Content -LiteralPath $reopenedValueBindingPath -Raw
     $reopenedVanillaVisibilitySource = Get-Content -LiteralPath $reopenedVanillaVisibilityPath -Raw
     $reopenedRuntimeSource = Get-Content -LiteralPath $reopenedRuntimePath -Raw
@@ -1033,11 +1037,22 @@ try {
     }
     if ($reopenedContactRadarSource -notmatch 'param1\.scaleX\s*=\s*1' -or
         $reopenedContactRadarSource -notmatch 'param1\.scaleY\s*=\s*1' -or
-        $reopenedContactRadarSource -notmatch 'new\s+CUITextFieldHost\(\)' -or
-        !$reopenedContactRadarSource.Contains('"G:"') -or
-        !$reopenedContactRadarSource.Contains('" TYPES:"') -or
+        $reopenedContactRadarSource -match 'CUITextFieldHost|diagnosticField|"G:"|" TYPES:"' -or
         $reopenedContactRadarSource -match 'fDistanceScale') {
-      throw 'Generated contact radar does not retain fixed contact scaling and the compact persistent-compass diagnostic.'
+      throw 'Generated contact radar does not retain fixed contact scaling or still owns diagnostic presentation.'
+    }
+    if (!$reopenedPlayerHudDataContextSource.Contains('"diagnostic.compassmarkers"') -or
+        !$reopenedPlayerHudDataContextSource.Contains('"G:"') -or
+        !$reopenedPlayerHudDataContextSource.Contains('" TYPES:"') -or
+        $reopenedPlayerHudDataContextSource -notmatch 'types\.sort\s*\(\s*Array\.NUMERIC\s*\)' -or
+        $reopenedPlayerHudDataContextSource -notmatch 'param1\.aMarkers\s+as\s+Array') {
+      throw 'Generated player HUD data context does not retain the complete deterministic compass-marker diagnostic.'
+    }
+    if (!$reopenedTextSource.Contains('this.readBoolean(param1,"multiline",false)') -or
+        !$reopenedTextSource.Contains('this.readBoolean(param1,"wordWrap",false)') -or
+        !$reopenedLayoutParserSource.Contains('this.requireOptionalBoolean(param1,"multiline")') -or
+        !$reopenedLayoutParserSource.Contains('this.requireOptionalBoolean(param1,"wordWrap")')) {
+      throw 'Generated text component and layout parser do not retain opt-in multiline wrapping support.'
     }
     foreach ($diagnosticValue in @(
       'LAYOUT VALIDATION',
@@ -1170,9 +1185,36 @@ try {
   $helmetVehicleExitGroups = @($providerProbeLayout.venworksCUI.components.SelectNodes("group[@id='helmet.vehicle-exit']"))
   $helmetVehicleExitLabels = @($providerProbeLayout.venworksCUI.components.SelectNodes("group[@id='helmet.vehicle-exit']/text[@id='vehicle.exit.label']"))
   $helmetVehicleExitGlyphs = @($providerProbeLayout.venworksCUI.components.SelectNodes("group[@id='helmet.vehicle-exit']/symbol[@id='vehicle.exit.glyph']"))
+  $compassDiagnosticGroups = @($providerProbeLayout.venworksCUI.components.SelectNodes("group[@id='diagnostic.compass-markers']"))
+  $compassDiagnosticPanels = @($providerProbeLayout.venworksCUI.components.SelectNodes("group[@id='diagnostic.compass-markers']/panel[@id='diagnostic.compass-markers.panel']"))
+  $compassDiagnosticTexts = @($providerProbeLayout.venworksCUI.components.SelectNodes("group[@id='diagnostic.compass-markers']/text[@id='diagnostic.compass-markers.value']"))
+  $compassDiagnosticBindings = @($providerProbeLayout.SelectNodes("//text[@source='diagnostic.compassmarkers']"))
   $bottomLeftTargets = @($providerProbeLayout.venworksCUI.vanillaVisibility.target | Where-Object {
     [string]$_.id -eq 'bottomLeft'
   })
+  if ($compassDiagnosticGroups.Count -ne 1 -or
+      $compassDiagnosticPanels.Count -ne 1 -or
+      $compassDiagnosticTexts.Count -ne 1 -or
+      $compassDiagnosticBindings.Count -ne 1 -or
+      [string]$compassDiagnosticGroups[0].anchor -ne 'top-center' -or
+      [string]$compassDiagnosticGroups[0].visibleWhen -ne 'always' -or
+      [int]$compassDiagnosticGroups[0].x -ne 0 -or
+      [int]$compassDiagnosticGroups[0].y -ne 22 -or
+      [int]$compassDiagnosticGroups[0].width -ne 800 -or
+      [int]$compassDiagnosticGroups[0].height -ne 78 -or
+      [int]$compassDiagnosticPanels[0].width -ne 800 -or
+      [int]$compassDiagnosticPanels[0].height -ne 78 -or
+      [int]$compassDiagnosticTexts[0].x -ne 16 -or
+      [int]$compassDiagnosticTexts[0].y -ne 10 -or
+      [int]$compassDiagnosticTexts[0].width -ne 768 -or
+      [int]$compassDiagnosticTexts[0].height -ne 56 -or
+      [int]$compassDiagnosticTexts[0].fontSize -ne 18 -or
+      [string]$compassDiagnosticTexts[0].align -ne 'center' -or
+      [string]$compassDiagnosticTexts[0].multiline -ne 'true' -or
+      [string]$compassDiagnosticTexts[0].wordWrap -ne 'true' -or
+      [string]$compassDiagnosticTexts[0].value -ne 'G:0 TYPES:-') {
+    throw 'Goal 8 compass-marker diagnostic must be one wrapped 800x78 passive top-center panel with a complete context-backed value.'
+  }
   $environmentalProtectionStyles = @($providerProbeLayout.venworksCUI.definitions.meterStyle | Where-Object {
     [string]$_.id -eq 'environment.protection'
   })

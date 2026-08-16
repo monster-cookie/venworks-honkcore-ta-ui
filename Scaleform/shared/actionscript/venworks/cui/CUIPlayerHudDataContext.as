@@ -92,6 +92,7 @@ package venworks.cui
          this.setText("diagnostic.localenvironmentfields","LOCALENVIRONMENTDATA NOT RECEIVED");
          this.setText("diagnostic.armorresistance","EQUIPPED ARMOR RESISTANCE DATA NOT RECEIVED");
          this.setText("diagnostic.starmapprovider","STARMAP BODY PROVIDER NOT RECEIVED IN HUD");
+         this.setText("diagnostic.compassmarkers","G:0 TYPES:-");
          this.setText("diagnostic.activityoxygen","PLAYER O2 RESERVE: WAITING // DOWNWARD DRAIN: FALSE");
          this.setText("diagnostic.activityenvelope","O2 ACTIVITY ENVELOPE: 0%");
          this.setText("diagnostic.activityprotection","SUIT PROTECTION: WAITING // FULL-SOAK FLAG: FALSE // CRITICAL OVERRIDE: FALSE");
@@ -145,7 +146,8 @@ package venworks.cui
              source == "diagnostic.playeridentifiers" || source == "diagnostic.playertimeinventory" ||
             source == "diagnostic.effect0" || source == "diagnostic.effect1" ||
             source == "diagnostic.effect2" || source == "diagnostic.effect3" ||
-            source == "diagnostic.armorresistance" || source == "diagnostic.starmapprovider")
+            source == "diagnostic.armorresistance" || source == "diagnostic.starmapprovider" ||
+            source == "diagnostic.compassmarkers")
          {
             return "string";
          }
@@ -323,7 +325,43 @@ package venworks.cui
       private function onRadarCompassData(param1:FromClientDataEvent) : void
       {
          compassData = param1 == null ? null : param1.data;
+         this.updateCompassMarkerDiagnostic(compassData);
          this.notifyChanged();
+      }
+
+      private function updateCompassMarkerDiagnostic(param1:Object) : void
+      {
+         var markers:Array = param1 == null ? null : param1.aMarkers as Array;
+         var markerCount:int = markers == null ? 0 : markers.length;
+         var types:Array = [];
+         var seen:Object = {};
+         var index:int = 0;
+         var marker:Object = null;
+         var rawType:Object = null;
+         var typeValue:Number = NaN;
+         var typeKey:String = null;
+         while(markers != null && index < markers.length)
+         {
+            marker = markers[index];
+            rawType = marker == null ? null : marker.uiMarkerIconType;
+            if(rawType !== undefined && rawType !== null && String(rawType).length != 0)
+            {
+               typeValue = Number(rawType);
+               if(!isNaN(typeValue) && isFinite(typeValue))
+               {
+                  typeKey = typeValue.toString();
+                  if(seen[typeKey] !== true)
+                  {
+                     seen[typeKey] = true;
+                     types.push(typeValue);
+                  }
+               }
+            }
+            ++index;
+         }
+         types.sort(Array.NUMERIC);
+         this.setText("diagnostic.compassmarkers","G:" + markerCount.toString() +
+            " TYPES:" + (types.length == 0 ? "-" : types.join(",")));
       }
 
       private function onLocalEnvironmentFrequentData(param1:FromClientDataEvent) : void
