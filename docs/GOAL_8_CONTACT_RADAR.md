@@ -157,6 +157,23 @@ TA, and the retired Goal 8A diagnostic payload was removed from every variant.
 | `hudmenu_lrg.gfx` | 434938 | `523FF7466E118C0A04B060B9F0800C91773F73837243D3F8C52487D1FB233B37` |
 | `VenworksCUI/layout.xml` | 6427 | `BA609EE350472D48C428B1AAADAE5DE4C3AF86BA5E29CBD9A3DE61E27B6C70F7` |
 | `components/contact-radar.xml` | 2637 | `BFA1CC6A30B87C21A02BE186B4B558B6D0461F1327F22539B9B51FA4F3D03E61` |
+
+The next deployment passed composition but reported a stripped
+`ReferenceError #1065` under the former broad `LAYOUT PARSING` phase. Because
+that phase covered parser execution, asset-manager construction, and asset-load
+startup, it did not identify the failing operation. A bounded diagnostic update
+separates those phases, retains the component type and ID during validation,
+and requests a stack trace when the runtime provides one. This changes only
+failure reporting; contact selection and rendering remain unchanged.
+
+The diagnostic build passed `Tools/checkRepo.ps1` and the complete normal/large
+Scaleform import, reopen, and 207-script validation. Both movies staged
+byte-identically across VWKS, CF, FC, and TA.
+
+| Diagnostic artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `hudmenu.gfx` | 435523 | `4D2A691C2C56B6C08230C4B6619A1261CF24525487D824C19F67E86AD8CF5969` |
+| `hudmenu_lrg.gfx` | 435706 | `3D821D12CF35C76733CAD905CC74879649311A279E46B52809587AB166B238C2` |
 | `cui-component-abc-seed.xml` | 204698 | `D453E9D53D17919DB5BB873300EB8EC9A08285DBE061CA23938A17BB2A4EB0EE` |
 
 ## Rollback

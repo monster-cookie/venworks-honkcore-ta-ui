@@ -43,6 +43,7 @@ package venworks.cui
       private var contactRadars:Array;
       private var diagnosticPhase:String = "";
       private var diagnosticNode:XML;
+      private var diagnosticCheckpoint:String = "";
 
       public function CUIRuntime(param1:DisplayObjectContainer)
       {
@@ -96,17 +97,24 @@ package venworks.cui
          this.clearListeners();
          try
          {
-            this.setDiagnosticContext("LAYOUT PARSING",null);
+            this.setDiagnosticContext("LAYOUT VALIDATION",null,"PARSER INITIALIZATION");
             parser = new CUILayoutParser();
             parser.parse(config);
             layoutConfig = config;
+            this.setDiagnosticContext("ASSET MANAGER INITIALIZATION",null,"CONSTRUCTOR");
             assetManager = new CUIAssetManager();
             assetManager.addEventListener(Event.COMPLETE,this.onAssetsLoaded);
             assetManager.addEventListener(Event.CANCEL,this.onAssetFailed);
+            this.setDiagnosticContext("ASSET COLLECTION",null,"COLLECTION AND REQUEST START");
             assetManager.load(parser.components);
          }
          catch(param2:Error)
          {
+            if(diagnosticPhase == "LAYOUT VALIDATION" && parser != null)
+            {
+               diagnosticNode = parser.lastDiagnosticNode;
+               diagnosticCheckpoint = parser.lastDiagnosticCheckpoint;
+            }
             this.showRuntimeError(param2);
          }
       }
@@ -188,9 +196,14 @@ package venworks.cui
          var lines:Array = [];
          var component:String = null;
          var exceptionText:String = param1.toString();
+         var stackTrace:String = param1.getStackTrace();
          if(diagnosticPhase.length != 0)
          {
             lines.push("PHASE: " + diagnosticPhase);
+         }
+         if(diagnosticCheckpoint.length != 0)
+         {
+            lines.push("CHECKPOINT: " + diagnosticCheckpoint);
          }
          if(diagnosticNode != null)
          {
@@ -221,19 +234,25 @@ package venworks.cui
          {
             lines.push("ERROR ID: " + param1.errorID);
          }
+         if(stackTrace != null && stackTrace.length != 0)
+         {
+            lines.push("STACK: " + stackTrace);
+         }
          return lines.join("\n");
       }
 
-      private function setDiagnosticContext(param1:String, param2:XML) : void
+      private function setDiagnosticContext(param1:String, param2:XML, param3:String = "") : void
       {
          diagnosticPhase = param1;
          diagnosticNode = param2;
+         diagnosticCheckpoint = param3;
       }
 
       private function clearDiagnosticContext() : void
       {
          diagnosticPhase = "";
          diagnosticNode = null;
+         diagnosticCheckpoint = "";
       }
 
       private function clearListeners() : void

@@ -66,3 +66,10 @@ parser and runtime code, but the included `contact-radar.xml` fragment failed at
 composition. The build now requires `contactRadar` registration to survive the
 movie import/reopen cycle in all three gates. Future included-fragment component
 types must extend this validation contract at the same time they are added.
+
+Starfield's Scaleform runtime can reduce `ReferenceError #1065` to its numeric
+identifier without naming the unresolved variable or class. The runtime
+therefore distinguishes layout validation, asset-manager initialization, and
+asset collection, while the parser retains the component type and ID currently
+being validated. Reopened-movie validation requires these checkpoint strings
+and the optional stack-trace request to survive compilation.

@@ -9,6 +9,8 @@ package venworks.cui
       private var componentRoot:XML;
       private var vanillaVisibilityRoot:XML;
       private var conditionParser:CUIConditionParser;
+      private var diagnosticNode:XML;
+      private var diagnosticCheckpoint:String = "";
 
       public function CUILayoutParser()
       {
@@ -78,6 +80,16 @@ package venworks.cui
       public function get vanillaVisibility() : XML
       {
          return vanillaVisibilityRoot;
+      }
+
+      public function get lastDiagnosticNode() : XML
+      {
+         return diagnosticNode;
+      }
+
+      public function get lastDiagnosticCheckpoint() : String
+      {
+         return diagnosticCheckpoint;
       }
 
       public function getMeterStyle(param1:String) : XML
@@ -308,6 +320,8 @@ package venworks.cui
          }
          for each(child in param1.children())
          {
+            diagnosticNode = child;
+            diagnosticCheckpoint = "COMPONENT VALIDATION";
             this.validateComponent(child);
          }
       }

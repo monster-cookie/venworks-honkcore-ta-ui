@@ -1026,6 +1026,22 @@ try {
         $reopenedRuntimeSource -notmatch 'type\s*==\s*"contactRadar"') {
       throw 'Generated ActionScript does not register contactRadar across composition, parsing, and runtime construction.'
     }
+    foreach ($diagnosticValue in @(
+      'LAYOUT VALIDATION',
+      'PARSER INITIALIZATION',
+      'COMPONENT VALIDATION',
+      'ASSET MANAGER INITIALIZATION',
+      'ASSET COLLECTION',
+      'COLLECTION AND REQUEST START',
+      'lastDiagnosticNode',
+      'lastDiagnosticCheckpoint',
+      'getStackTrace'
+    )) {
+      if (!$reopenedLayoutParserSource.Contains($diagnosticValue) -and
+          !$reopenedRuntimeSource.Contains($diagnosticValue)) {
+        throw "Generated ActionScript is missing Goal 8 diagnostic checkpoint '$diagnosticValue'."
+      }
+    }
     if ($reopenedCompositionResolverSource -notmatch 'compositeResolver\.isComposite' -or
         $reopenedCompositeResolverSource -notmatch 'param1\s*==\s*"button"' -or
         $reopenedCompositeResolverSource -notmatch 'param1\s*==\s*"quickBar"' -or
