@@ -40,6 +40,7 @@ package venworks.cui
       private var visibilityBindings:Array;
       private var valueBindings:Array;
       private var vanillaAdapters:Array;
+      private var hudModeVisibility:Array;
       private var contactRadars:Array;
       private var diagnosticPhase:String = "";
       private var diagnosticNode:XML;
@@ -88,6 +89,30 @@ package venworks.cui
          catch(param1:Error)
          {
             this.showRuntimeError(param1);
+         }
+      }
+
+      public function updateVanillaHudModeVisibility(param1:Array) : void
+      {
+         var adapter:CUIVanillaVisibilityAdapter = null;
+         hudModeVisibility = param1 == null ? null : param1.concat();
+         if(vanillaAdapters == null || conditionContext == null)
+         {
+            return;
+         }
+         try
+         {
+            this.setDiagnosticContext("VANILLA HUD MODE VISIBILITY",null);
+            for each(adapter in vanillaAdapters)
+            {
+               adapter.updateHudMode(hudModeVisibility);
+            }
+            this.applyConditions();
+            this.clearDiagnosticContext();
+         }
+         catch(param2:Error)
+         {
+            this.showRuntimeError(param2);
          }
       }
 
@@ -395,15 +420,18 @@ package venworks.cui
       private function createVanillaAdapters(param1:XML) : void
       {
          var target:XML = null;
+         var adapter:CUIVanillaVisibilityAdapter = null;
          for each(target in param1.children())
          {
             this.setDiagnosticContext("VANILLA ADAPTER CREATION",target);
-            vanillaAdapters.push(new CUIVanillaVisibilityAdapter(
+            adapter = new CUIVanillaVisibilityAdapter(
                owner,
                target,
                conditionParser.compile(String(target.@visibleWhen)),
                layoutEngine
-            ));
+            );
+            adapter.updateHudMode(hudModeVisibility);
+            vanillaAdapters.push(adapter);
          }
       }
 

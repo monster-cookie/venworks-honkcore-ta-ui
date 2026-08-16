@@ -271,6 +271,49 @@ CF, FC, and TA; no CUI XML payload changed.
 Runtime acceptance requires repeated individual and rapid enemy kills without
 the black surface while fixed 300-unit ranging remains correct.
 
+Runtime subsequently rejected the transform-hardening artifact: the exact same
+kill-event black surface remained even though the reopened custom radar proved
+that every marker scale and coordinate assignment was finite and bounded. The
+observation that an enemy first appeared near the 200-unit radar circle did not
+provide a distance calibration because Bethesda's compass exposes no numeric
+world range; the fixed 300-provider-unit mapping therefore remains unchanged.
+
+A read-only comparison against HONKCORE 1.0.2 then disproved patching Bethesda's
+Watch as the compatibility-safe correction. HONKCORE's decompiled
+`WatchIconsWidget.as` is byte-identical to vanilla and retains the direct
+`fDistanceScale` presentation path. HONKCORE MAPR is instead an independent
+fixed-size `Shape` renderer driven by `fDistanceToPlayer`, while HONKCORE's
+`visible=never` wrapper sets the original Watch display object's `visible`
+property to `false`. Venworks had only assigned alpha zero, leaving the complete
+transparent Watch render tree active.
+
+The corrective visibility design keeps `WatchIconsWidget` and
+`CompassMarkerWidget` unchanged. Each allowlisted vanilla target combines its
+configured `visibleWhen` result with Bethesda's current `HudModeData` result and
+assigns the target's real `visible` property. The HUDMenu bootstrap reapplies
+that composed state after Bethesda updates its mode visibility. With the
+production `bottomLeft visibleWhen="never"`, the Watch is removed from rendering;
+changing it to `always` restores the original Watch under Bethesda mode control,
+including compatibility with faction-logo replacements. The separately authored
+contact radar remains on `VenworksCUIComponentLayer`, consumes the same provider
+independently, and does not reference or reparent any Watch class.
+
+On 2026-08-16, the complete corrective visibility build passed
+`Tools/checkRepo.ps1`, normal/large Scaleform import and reopening, all
+207-script and 39-authored-class checks, the single-domain rule, and
+`git diff --check`. Build assertions also proved that the reopened
+`WatchIconsWidget.as` and `CompassMarkerWidget.as` remained byte-identical to
+their pinned vanilla sources. The normal and large movies staged
+byte-identically across VWKS, CF, FC, and TA.
+
+| Corrective visibility artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `hudmenu.gfx` | 413880 | `EC8F139BC5C52AC1D9FEE31A3CC9413CA47CAB5F1877CA16AA70FBEB22390E71` |
+| `hudmenu_lrg.gfx` | 414063 | `D66B5FDFE189396B0F137E4631A59C6422754F4785219025F539A478751671C6` |
+
+Runtime acceptance still requires repeated kill testing with the stock Watch
+genuinely hidden and, where available, intentionally enabled.
+
 On 2026-08-15, `Tools/checkRepo.ps1` passed and the complete normal/large
 Scaleform build imported, reopened, and validated all 207 scripts and all 39
 authored CUI classes in the single Venworks ABC linkage domain. The movies and
@@ -301,7 +344,8 @@ unrelated position marker to produce a false contact. Enemy, ship, and vehicle
 contacts must move continuously against the 100/200/300-unit circles and
 disappear beyond 300 units. Enemy and companion dots, the fixed player marker,
 and fixed contact scale must remain unchanged. Absence of kill-event blackouts
-requires renewed runtime confirmation after complete transform hardening.
+requires renewed runtime confirmation with the stock Watch both genuinely hidden
+and, when available, intentionally enabled.
 
 ## Goal 8B runtime confirmation and visual refinement
 

@@ -694,8 +694,9 @@ try {
     }
     $reopenedHudMenuSource = Get-Content -LiteralPath $validationScriptMatches[0].FullName -Raw
     if ($reopenedHudMenuSource -notmatch 'CENTER_GROUP_POINT\.y\s*=\s*this\.CenterGroup_mc\.y;\s*if\s*\(this\.VenworksCUIRuntimeInstance\s*!=\s*null\)\s*\{\s*this\.VenworksCUIRuntimeInstance\.reapplyVanillaPlacements\(\);' -or
-        $reopenedHudMenuSource -notmatch 'GlobalFunc\.LockToSafeRect\(this\.BottomLeftGroup_mc,"BL",SafeX,SafeY,true\)') {
-      throw 'Generated HUDMenu does not reapply configured vanilla placement after Bethesda safe-rect locking.'
+        $reopenedHudMenuSource -notmatch 'GlobalFunc\.LockToSafeRect\(this\.BottomLeftGroup_mc,"BL",SafeX,SafeY,true\)' -or
+        $reopenedHudMenuSource -notmatch 'SocialCommandIcons_mc\.visible\s*=\s*param1\.data\.ModeVisibilityA\[HUDUtils\.SOCIAL_COMMAND_ICONS\]\.bVisible;\s*if\s*\(this\.VenworksCUIRuntimeInstance\s*!=\s*null\)\s*\{\s*this\.VenworksCUIRuntimeInstance\.updateVanillaHudModeVisibility\(param1\.data\.ModeVisibilityA\);') {
+      throw 'Generated HUDMenu does not reapply configured vanilla placement and visibility after Bethesda updates.'
     }
 
     $originalScripts = @(Get-ChildItem -LiteralPath $exportedScriptsDirectory -Recurse -File -Filter "*.as")
@@ -718,6 +719,17 @@ try {
           (Get-FileHash -LiteralPath $originalScript.FullName -Algorithm SHA256).Hash -ne
           (Get-FileHash -LiteralPath $reopenedScriptPath -Algorithm SHA256).Hash) {
         throw "Unexpected change to vanilla ActionScript class: $relativeOriginalPath"
+      }
+    }
+
+    foreach ($unchangedWatchClass in @('WatchIconsWidget.as','CompassMarkerWidget.as')) {
+      $originalWatchClassMatches = @(Get-ChildItem -LiteralPath $exportedScriptsDirectory -Recurse -File -Filter $unchangedWatchClass)
+      $reopenedWatchClassMatches = @(Get-ChildItem -LiteralPath $validationScriptsDirectory -Recurse -File -Filter $unchangedWatchClass)
+      if ($originalWatchClassMatches.Count -ne 1 -or
+          $reopenedWatchClassMatches.Count -ne 1 -or
+          (Get-FileHash -LiteralPath $originalWatchClassMatches[0].FullName -Algorithm SHA256).Hash -ne
+          (Get-FileHash -LiteralPath $reopenedWatchClassMatches[0].FullName -Algorithm SHA256).Hash) {
+        throw "Generated output unexpectedly changes Bethesda's $unchangedWatchClass."
       }
     }
 
@@ -915,6 +927,7 @@ try {
       'MIT_MARKER_SHIP_PARKED',
       'MIT_MARKER_POSITION',
       'MIT_MARKER_VEHICLE',
+      'updateVanillaHudModeVisibility',
       'HUDVehicleData'
     )) {
       if (!$validationSource.Contains($requiredValue)) {
@@ -984,8 +997,16 @@ try {
     }
     if ($reopenedVanillaVisibilitySource -notmatch 'targetName\s*==\s*"rightmeters"' -or
         $reopenedVanillaVisibilitySource -notmatch 'return\s+"RightMeters_mc"' -or
+        $reopenedVanillaVisibilitySource -notmatch 'function\s+updateHudMode' -or
+        $reopenedVanillaVisibilitySource -notmatch 'HUDUtils\.BOTTOM_LEFT_GROUP' -or
+        $reopenedVanillaVisibilitySource -notmatch 'HUDUtils\.RIGHT_METERS' -or
+        $reopenedVanillaVisibilitySource -notmatch 'effectiveVisible\s*=\s*Boolean\(gameVisibilities\[index\]\)\s*&&\s*conditionVisible' -or
+        $reopenedVanillaVisibilitySource -notmatch 'target\.visible\s*=\s*effectiveVisible' -or
+        $reopenedRuntimeSource -notmatch 'function\s+updateVanillaHudModeVisibility' -or
+        $reopenedRuntimeSource -notmatch 'hudModeVisibility\s*=\s*param1\s*==\s*null\s*\?\s*null\s*:\s*param1\.concat\(\)' -or
+        $reopenedRuntimeSource -notmatch 'adapter\.updateHudMode\(hudModeVisibility\)' -or
         $reopenedVanillaVisibilitySource -match 'PowerBarEmpty_mc|EquippedGrenadeIcon_mc|EquippedGrenadeCount_mc|JetpackMeterWrapper_mc|HUDVehicle_mc') {
-      throw 'Generated rightMeters visibility adapter does not remain a whole-group alpha-only presentation gate.'
+      throw 'Generated vanilla visibility adapter does not combine Bethesda HUD modes with configured whole-group rendering visibility.'
     }
     if ($reopenedVanillaVisibilitySource -notmatch 'function\s+reapplyPlacement' -or
         $reopenedVanillaVisibilitySource -notmatch 'layoutEngine\.positionVanilla\(DisplayObject\(targets\[index\]\),targetConfig\)' -or
@@ -1076,6 +1097,11 @@ try {
         $reopenedContactRadarSource -match 'bIsNear' -or
         $reopenedContactRadarSource -match 'fDistanceScale') {
       throw 'Generated contact radar does not retain finite transform validation, fixed 300-unit distance placement, fixed scaling, and the Bethesda 10/13/14 ship-position-vehicle mapping, or still contains retired near/far, distance-scale, or diagnostic behavior.'
+    }
+    if ($reopenedContactRadarSource -match 'BottomLeftGroup_mc|WatchIconsWidget|CompassMarkerWidget' -or
+        $reopenedRuntimeSource -notmatch 'componentLayer\.name\s*=\s*"VenworksCUIComponentLayer"' -or
+        $reopenedRuntimeSource -notmatch 'renderChildren\(parser\.components,componentLayer,parser\.components\)') {
+      throw 'Generated contact radar is not independent from Bethesda Watch ownership and rendering.'
     }
     if ($reopenedPlayerHudDataContextSource -match 'diagnostic\.compassmarkers|updateCompassMarkerDiagnostic|"G:"|" TYPES:"' -or
         !$reopenedPlayerHudDataContextSource.Contains('BSUIDataManager.Subscribe("HudCompassData",this.onRadarCompassData)') -or

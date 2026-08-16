@@ -408,3 +408,14 @@ so a theme or player configuration can hide the faction display while leaving
 the passive radar active. The crest identifies the configured theme, not the
 player's live faction membership. Branding text embedded in the owned SVG is
 the sole Venworks label; the layout must not add a duplicate text label.
+
+The contact radar is also independent from Bethesda's Watch. It remains on the
+owned `VenworksCUIComponentLayer`, uses its own fixed-size `Shape` pool, and only
+shares the read-only `HudCompassData` provider. Vanilla visibility targets use
+real display visibility composed from Bethesda `HudModeData` and the configured
+`visibleWhen` expression. Consequently `bottomLeft visibleWhen="never"` removes
+the Watch tree from rendering instead of leaving it active at alpha zero, while
+`visibleWhen="always"` preserves the original Bethesda Watch and compatible
+faction-logo modifications. Neither Watch state changes radar ownership or
+visibility, and the separate faction-display include can be disabled when a
+user places the Watch in that panel's location.

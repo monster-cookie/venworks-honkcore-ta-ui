@@ -19,5 +19,11 @@
             this.VenworksCUIRuntimeInstance.reapplyVanillaPlacements();
          }
 ]]></content></insertion>
+    <insertion position="after"><anchor><![CDATA[               SocialCommandIcons_mc.visible = param1.data.ModeVisibilityA[HUDUtils.SOCIAL_COMMAND_ICONS].bVisible;]]></anchor><content><![CDATA[
+               if(this.VenworksCUIRuntimeInstance != null)
+               {
+                  this.VenworksCUIRuntimeInstance.updateVanillaHudModeVisibility(param1.data.ModeVisibilityA);
+               }
+]]></content></insertion>
   </insertions>
 </actionScriptPatch>
