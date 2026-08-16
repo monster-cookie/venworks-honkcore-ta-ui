@@ -1,5 +1,46 @@
 # Build system
 
+## Persistent BGS reference cache
+
+`Tools/cacheBgsScaleform.ps1` maintains the curated vanilla reference set under
+the Git-ignored `Scaleform/.work/bgs-decompiled` directory. The checked-in
+`Scaleform/reference-cache.xml` manifest includes the normal/large on-foot HUD,
+Watch map-icon library, player HUD components, frequently consulted status,
+favorites, inventory, and galaxy-starmap consumers, the Ship HUD family, and
+the available ship/powers provider JSON fixtures. It does not decompile the
+complete Interface archive.
+
+Each movie cache entry contains stable `movie.xml`, `scripts`, and `cache.json`
+paths. Cache validity requires the same relative input name, source SHA-256,
+JPEXS JAR SHA-256, parseable SWF XML, and an exported-script directory. Provider
+fixtures are copied byte-identically and checked against their source hashes.
+Changing either a movie or JPEXS invalidates only the affected movie entry;
+`-ForceRefresh` deliberately regenerates the full manifest.
+
+Run the cache from the repository root with the same external Java, JPEXS, and
+extracted Interface paths used by the normal build:
+
+```powershell
+./Tools/cacheBgsScaleform.ps1 `
+  -JavaPath "C:\path\to\java.exe" `
+  -JpexsJarPath "C:\path\to\ffdec.jar" `
+  -VanillaInterfacePath "C:\path\to\extracted\interface"
+```
+
+`Tools/compileScaleform.ps1` requires its normal and large HUD inputs in this
+manifest and copies their cached vanilla XML into the build's GUID work
+directory. It still exports the patched timeline and reopened generated movie
+on every build because those exports enforce the patch-integrity, authored
+class, script-count, and single-domain contracts. Those validation directories
+remain temporary and are removed after a successful build unless `-KeepWork` is
+selected.
+
+Cache refreshes stage output below the resolved cache root and validate target
+paths before removing a stale, regenerable entry. Neither the cache nor its
+metadata records machine-specific absolute paths. Bethesda binaries,
+decompiled ActionScript, XML, and provider fixtures must remain ignored local
+references and must never be staged or committed.
+
 ## One-domain Scaleform rule
 
 All cooperating Venworks CUI classes must live in exactly one injected

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scaleformReferenceCache version="1">
+  <movies>
+    <movie group="on-foot-hud" inputFile="hudmenu.gfx" />
+    <movie group="on-foot-hud" inputFile="hudmenu_lrg.gfx" />
+    <movie group="on-foot-hud" inputFile="mapicons.gfx" />
+    <movie group="on-foot-hud" inputFile="playerhudcomponents.gfx" />
+    <movie group="on-foot-hud" inputFile="playerhudcomponents_lrg.gfx" />
+
+    <movie group="provider-consumers" inputFile="statusmenu.swf" />
+    <movie group="provider-consumers" inputFile="statusmenu_lrg.swf" />
+    <movie group="provider-consumers" inputFile="favoritesmenu.swf" />
+    <movie group="provider-consumers" inputFile="favoritesmenu_lrg.swf" />
+    <movie group="provider-consumers" inputFile="inventorymenu.swf" />
+    <movie group="provider-consumers" inputFile="inventorymenu_lrg.swf" />
+    <movie group="provider-consumers" inputFile="galaxystarmapmenu.swf" />
+    <movie group="provider-consumers" inputFile="galaxystarmapmenu_lrg.swf" />
+
+    <movie group="ship-hud" inputFile="spaceshiphudmenu.swf" />
+    <movie group="ship-hud" inputFile="spaceshiphudmenu_lrg.swf" />
+    <movie group="ship-hud" inputFile="shiphudshared.swf" />
+    <movie group="ship-hud" inputFile="shipreticle.swf" />
+    <movie group="ship-hud" inputFile="shipreticle_lrg.swf" />
+    <movie group="ship-hud" inputFile="shiphudquickcontainer.swf" />
+    <movie group="ship-hud" inputFile="shiphudquickcontainer_lrg.swf" />
+    <movie group="ship-hud" inputFile="gravjumpcomponent.swf" />
+    <movie group="ship-hud" inputFile="gravjumpcomponent_lrg.swf" />
+    <movie group="ship-hud" inputFile="gravjumpcomponentstarborn.swf" />
+    <movie group="ship-hud" inputFile="gravjumpcomponentstarborn_lrg.swf" />
+    <movie group="ship-hud" inputFile="powerallocationcomponent.swf" />
+    <movie group="ship-hud" inputFile="powerallocationcomponent_lrg.swf" />
+    <movie group="ship-hud" inputFile="shieldthrottlecomponent.swf" />
+    <movie group="ship-hud" inputFile="shieldthrottlecomponent_lrg.swf" />
+    <movie group="ship-hud" inputFile="hailcomponent.swf" />
+    <movie group="ship-hud" inputFile="hailcomponent_lrg.swf" />
+    <movie group="ship-hud" inputFile="targetpanel.swf" />
+    <movie group="ship-hud" inputFile="targetpanel_lrg.swf" />
+    <movie group="ship-hud" inputFile="jumpdatapanel.swf" />
+    <movie group="ship-hud" inputFile="jumpdatapanel_lrg.swf" />
+    <movie group="ship-hud" inputFile="spaceshippowergrid.swf" />
+  </movies>
+  <files>
+    <file group="provider-fixtures" inputFile="providers/shiphuddata.json" />
+    <file group="provider-fixtures" inputFile="providers/powersmenudata.json" />
+  </files>
+</scaleformReferenceCache>

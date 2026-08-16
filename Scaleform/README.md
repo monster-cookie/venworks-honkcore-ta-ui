@@ -4,11 +4,11 @@ This directory contains only Venworks-authored ActionScript, a minimal owned
 ABC seed, patch definitions, XML fixtures, build manifests, hashes, and
 validation records. It intentionally does not contain Bethesda GFX/SWF files,
 full JPEXS XML exports, decompiled Bethesda ActionScript, or extracted game
-assets.
+assets as tracked repository content.
 
 The developer scripts in `../Tools` operate on files extracted from a locally
-installed copy of Starfield. Temporary XML is written to `Scaleform/.work`,
-which is ignored by Git.
+installed copy of Starfield. Ignored developer references and temporary build
+output are written to `Scaleform/.work`.
 
 ## Requirements
 
@@ -16,6 +16,33 @@ which is ignored by Git.
 - JPEXS Free Flash Decompiler 26.2.1
 - Clean `hudmenu.gfx` and `hudmenu_lrg.gfx` files extracted from
   `Starfield - Interface.ba2`
+- The complete reference-cache command additionally requires every movie and
+  provider fixture listed in `reference-cache.xml` from the same vanilla
+  Interface extraction
+
+## BGS reference cache
+
+Populate the curated vanilla reference cache when investigating the on-foot
+HUD, Watch/Chronomark, recurring provider consumers, or Ship HUD:
+
+```powershell
+./Tools/cacheBgsScaleform.ps1 `
+  -JavaPath "C:\path\to\java.exe" `
+  -JpexsJarPath "C:\path\to\ffdec.jar" `
+  -VanillaInterfacePath "C:\path\to\extracted\interface"
+```
+
+The versioned `reference-cache.xml` manifest limits the cache to the approved
+movies and provider fixtures. Each movie retains stable `movie.xml`, `scripts`,
+and hash metadata below `Scaleform/.work/bgs-decompiled/movies`; provider JSON
+fixtures are mirrored below `Scaleform/.work/bgs-decompiled/files`. An entry is
+reused only when its source SHA-256, JPEXS JAR SHA-256, metadata, XML, and script
+directory remain valid. `-ForceRefresh` regenerates the curated entries.
+
+The complete cache is local, ignored, and regenerable. Do not copy its Bethesda
+content into tracked source or staging directories. The normal HUD build uses
+the cached vanilla HUD XML but continues to create temporary patched and
+reopened exports for its full validation cycle.
 
 ## Build
 
@@ -54,20 +81,20 @@ writes deterministic same-domain ActionScript. Normal Scaleform builds use the
 committed generated class and do not require Font Awesome. The Venworks logo is
 not part of this library; it remains a Venworks-owned loose SVG.
 
-The build injects the Venworks-only ABC seed, exports Bethesda ActionScript only
-into ignored temporary storage, verifies the authored `HUDMenu` patch anchors,
-and imports the patched document class plus the repository-authored CUI
-classes. It confirms that every other exported class remains textually
-identical and that the reopened output contains the required layout and
-production contracts. Full exported Bethesda classes are never repository
-source.
+The build injects the Venworks-only ABC seed, reads its vanilla XML from the
+ignored reference cache, exports patched and reopened ActionScript only into
+ignored temporary storage, verifies the authored `HUDMenu` patch anchors, and
+imports the patched document class plus the repository-authored CUI classes.
+It confirms that every other exported class remains textually identical and
+that the reopened output contains the required layout and production contracts.
+Full exported Bethesda classes are never repository source.
 
 Dynamic CUI text retains Starfield's exported `PromptMessageWidget` symbol and
 styles its timeline-created `textField` child. The build verifies that this
 vanilla field remains linked to the locale-specific `$MAIN_Font_Bold` outline
 font. The repository does not copy or bundle the vanilla symbol or font files.
 
-`decompileScaleform.ps1` is a lower-level helper for producing a temporary
+`decompileScaleform.ps1` remains a lower-level helper for producing a one-off
 JPEXS XML file during patch development. Its output must not be committed.
 
 Files under `shared/fixtures` are developer test inputs. The Goal 3 component

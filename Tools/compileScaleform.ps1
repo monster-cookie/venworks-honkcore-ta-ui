@@ -18,6 +18,8 @@ param(
 
   [string]$WorkDirectory = (Join-Path $PSScriptRoot "..\Scaleform\.work"),
 
+  [string]$ReferenceCacheManifestPath = (Join-Path $PSScriptRoot "..\Scaleform\reference-cache.xml"),
+
   [string[]]$ManifestPath = @(
     (Join-Path $PSScriptRoot "..\Scaleform\hudmenu\build.xml"),
     (Join-Path $PSScriptRoot "..\Scaleform\hudmenu_lrg\build.xml")
@@ -203,7 +205,13 @@ if ($resolvedOutputDirectories.Count -eq 0) {
 }
 $resolvedProjectOutputDirectory = $resolvedOutputDirectories[0]
 $resolvedWorkDirectory = [System.IO.Path]::GetFullPath($WorkDirectory)
-$decompileScript = Resolve-RequiredFile -Path (Join-Path $PSScriptRoot "decompileScaleform.ps1") -Description "Scaleform decompile helper"
+$referenceCacheHelperPath = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "sharedScaleformReferenceCache.ps1") `
+  -Description "Scaleform reference-cache helper"
+. $referenceCacheHelperPath
+$resolvedReferenceCacheManifestPath = Resolve-RequiredFile `
+  -Path $ReferenceCacheManifestPath `
+  -Description "Scaleform reference-cache manifest"
 $providerProbeLayoutSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\fixtures\chronomark-provider-probe.xml") `
   -Description "Goal 6 production HUD with Goal 7 equipment rail"
@@ -473,6 +481,12 @@ foreach ($outputPath in $resolvedOutputDirectories) {
   New-Item -ItemType Directory -Force -Path $outputPath | Out-Null
 }
 New-Item -ItemType Directory -Force -Path $resolvedWorkDirectory | Out-Null
+$referenceCacheContext = New-ScaleformReferenceCacheContext `
+  -JavaPath $script:ResolvedJavaPath `
+  -JpexsJarPath $script:ResolvedJpexsJarPath `
+  -VanillaInterfacePath $resolvedVanillaInterfacePath `
+  -WorkDirectory $resolvedWorkDirectory `
+  -ManifestPath $resolvedReferenceCacheManifestPath
 
 $buildWorkDirectory = Join-Path $resolvedWorkDirectory ([guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $buildWorkDirectory | Out-Null
@@ -524,11 +538,11 @@ try {
     $importScriptsDirectory = Join-Path $movieWorkDirectory "import-scripts"
     $validationScriptsDirectory = Join-Path $movieWorkDirectory "validation-scripts"
 
-    & $decompileScript `
-      -JavaPath $script:ResolvedJavaPath `
-      -JpexsJarPath $script:ResolvedJpexsJarPath `
-      -InputPath $inputPath `
-      -OutputXmlPath $decompiledXmlPath
+    $vanillaReference = Get-ScaleformReferenceMovie `
+      -Context $referenceCacheContext `
+      -InputFile ([string]$build.inputFile)
+    Copy-Item -LiteralPath $vanillaReference.MovieXmlPath -Destination $decompiledXmlPath
+    Write-Host -ForegroundColor Green "Copied cached vanilla XML: $decompiledXmlPath"
 
     [xml]$scaleform = Get-Content -LiteralPath $decompiledXmlPath -Raw
     [xml]$abcSeedPatch = Get-Content -LiteralPath $abcSeedPatchPath -Raw
