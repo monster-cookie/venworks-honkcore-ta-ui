@@ -96,25 +96,39 @@ package venworks.cui.components
 
       private function renderContact(param1:Shape, param2:Object, param3:Number, param4:Boolean, param5:Boolean) : Boolean
       {
+         param1.visible = false;
          if(param2.fDistanceToPlayer === undefined || param2.fDistanceToPlayer === null)
          {
             return false;
          }
          var distance:Number = Number(param2.fDistanceToPlayer);
-         if(isNaN(distance) || !isFinite(distance) || distance < 0 || distance > MAX_DISTANCE)
+         if(!this.isFiniteNumber(distance) || distance < 0 || distance > MAX_DISTANCE ||
+            param2.fHeading === undefined || param2.fHeading === null || !this.isFiniteNumber(param3))
          {
             return false;
          }
          var heading:Number = Number(param2.fHeading);
+         if(!this.isFiniteNumber(heading))
+         {
+            return false;
+         }
          var angle:Number = Math.PI - param3;
          var vectorX:Number = -Math.sin(angle);
          var vectorY:Number = Math.cos(angle);
          var rotatedX:Number = Math.cos(heading) * vectorX - Math.sin(heading) * vectorY;
          var rotatedY:Number = Math.sin(heading) * vectorX + Math.cos(heading) * vectorY;
          var radius:Number = Math.min(componentWidth,componentHeight) * 0.5 * (distance / MAX_DISTANCE);
+         var contactX:Number = componentWidth / 2 + rotatedX * radius;
+         var contactY:Number = componentHeight / 2 + rotatedY * radius;
+         if(!this.isFiniteNumber(vectorX) || !this.isFiniteNumber(vectorY) ||
+            !this.isFiniteNumber(rotatedX) || !this.isFiniteNumber(rotatedY) ||
+            !this.isFiniteNumber(radius) || !this.isFiniteNumber(contactX) || !this.isFiniteNumber(contactY))
+         {
+            return false;
+         }
          var markerAlpha:Number = param2.fDistanceAlpha === undefined || param2.fDistanceAlpha === null ? 1 : Number(param2.fDistanceAlpha);
          var size:Number = param5 ? 7 : 6;
-         if(isNaN(markerAlpha))
+         if(!this.isFiniteNumber(markerAlpha))
          {
             markerAlpha = 1;
          }
@@ -129,13 +143,18 @@ package venworks.cui.components
             param1.graphics.drawCircle(0,0,size / 2);
          }
          param1.graphics.endFill();
-         param1.x = componentWidth / 2 + rotatedX * radius;
-         param1.y = componentHeight / 2 + rotatedY * radius;
+         param1.x = contactX;
+         param1.y = contactY;
          param1.scaleX = 1;
          param1.scaleY = 1;
          param1.alpha = Math.max(0,Math.min(1,markerAlpha));
          param1.visible = true;
          return true;
+      }
+
+      private function isFiniteNumber(param1:Number) : Boolean
+      {
+         return !isNaN(param1) && isFinite(param1);
       }
    }
 }

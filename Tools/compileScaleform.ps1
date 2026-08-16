@@ -1052,9 +1052,18 @@ try {
     }
     if ($reopenedContactRadarSource -notmatch 'param1\.scaleX\s*=\s*1' -or
         $reopenedContactRadarSource -notmatch 'param1\.scaleY\s*=\s*1' -or
+        $reopenedContactRadarSource -notmatch 'param1\.visible\s*=\s*false' -or
         $reopenedContactRadarSource -notmatch 'MAX_DISTANCE\s*:\s*Number\s*=\s*300' -or
         $reopenedContactRadarSource -notmatch 'fDistanceToPlayer' -or
         $reopenedContactRadarSource -notmatch 'distance\s*/\s*MAX_DISTANCE' -or
+        $reopenedContactRadarSource -notmatch 'isFiniteNumber\s*\(\s*distance\s*\)' -or
+        $reopenedContactRadarSource -notmatch 'isFiniteNumber\s*\(\s*param3\s*\)' -or
+        $reopenedContactRadarSource -notmatch 'isFiniteNumber\s*\(\s*heading\s*\)' -or
+        $reopenedContactRadarSource -notmatch 'isFiniteNumber\s*\(\s*contactX\s*\)' -or
+        $reopenedContactRadarSource -notmatch 'isFiniteNumber\s*\(\s*contactY\s*\)' -or
+        $reopenedContactRadarSource -notmatch 'isFiniteNumber\s*\(\s*markerAlpha\s*\)' -or
+        $reopenedContactRadarSource -notmatch 'param1\.x\s*=\s*contactX' -or
+        $reopenedContactRadarSource -notmatch 'param1\.y\s*=\s*contactY' -or
         $reopenedContactRadarSource -notmatch 'MIT_MARKER_SHIP_PARKED\s*:\s*uint\s*=\s*10' -or
         $reopenedContactRadarSource -notmatch 'MIT_MARKER_POSITION\s*:\s*uint\s*=\s*13' -or
         $reopenedContactRadarSource -notmatch 'MIT_MARKER_VEHICLE\s*:\s*uint\s*=\s*14' -or
@@ -1066,7 +1075,7 @@ try {
         $reopenedContactRadarSource -match 'CUITextFieldHost|diagnosticField|"G:"|" TYPES:"' -or
         $reopenedContactRadarSource -match 'bIsNear' -or
         $reopenedContactRadarSource -match 'fDistanceScale') {
-      throw 'Generated contact radar does not retain fixed 300-unit distance placement, fixed scaling, and the Bethesda 10/13/14 ship-position-vehicle mapping, or still contains retired near/far, distance-scale, or diagnostic behavior.'
+      throw 'Generated contact radar does not retain finite transform validation, fixed 300-unit distance placement, fixed scaling, and the Bethesda 10/13/14 ship-position-vehicle mapping, or still contains retired near/far, distance-scale, or diagnostic behavior.'
     }
     if ($reopenedPlayerHudDataContextSource -match 'diagnostic\.compassmarkers|updateCompassMarkerDiagnostic|"G:"|" TYPES:"' -or
         !$reopenedPlayerHudDataContextSource.Contains('BSUIDataManager.Subscribe("HudCompassData",this.onRadarCompassData)') -or

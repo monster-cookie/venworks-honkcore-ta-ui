@@ -44,7 +44,7 @@ specific presentation and scanner-owned behavior belong to a later goal.
 | Relative elevation | Marker `uiRelativeMarkerHeightType` | Confirmed in HUDMenu vanilla code. |
 | Marker type and location state | `uiMarkerIconType`, `uMapMarkerType`, `uMapMarkerCategory`, `uLocationMarkerState` | Confirmed in HUDMenu vanilla code. |
 | Distance alpha | `fDistanceAlpha` | Confirmed as a presentation input and bounded to `[0,1]`; it is not used as physical range. |
-| Marker scale | `fDistanceScale` | Confirmed as a Bethesda presentation input but rejected for production use after an extreme kill-transition value expanded a marker across the HUD. Production scale is fixed at `1.0`. |
+| Marker scale | `fDistanceScale` | Confirmed as a Bethesda presentation input but rejected because unbounded transition values are unsafe for a pooled vector marker. Production scale is fixed at `1.0`; later runtime proved that fixed scale alone did not eliminate the blackout. |
 | Aggressive/defensive/passive disposition | Unknown marker field or array behavior | Unknown. |
 | Player ally identity | Unknown marker field or array behavior | Unknown. |
 | Ship and vehicle identity | `uiMarkerIconType` values 10, 13, and 14 | Type 10 parked-ship and type 13 parked-vehicle-position delivery are runtime-confirmed; formal type 14 vehicle delivery remains unobserved. |
@@ -164,7 +164,7 @@ TA, and the retired Goal 8A diagnostic payload was removed from every variant.
 | `VenworksCUI/layout.xml` | 6427 | `BA609EE350472D48C428B1AAADAE5DE4C3AF86BA5E29CBD9A3DE61E27B6C70F7` |
 | `components/contact-radar.xml` | 2637 | `BFA1CC6A30B87C21A02BE186B4B558B6D0461F1327F22539B9B51FA4F3D03E61` |
 
-## Kill-event blackout correction and provider evidence
+## Kill-event blackout hardening and provider evidence
 
 A user-supplied runtime recording confirmed that killing an enemy obscured
 gameplay with a black surface for approximately 1.5–2 seconds while other HUD
@@ -172,14 +172,29 @@ overlays remained active. The blackout cleared when the dying enemy marker
 finished transitioning out, ruling out loss of video output and an ordinary
 Starfield fade.
 
-`CUIContactRadar.renderContact()` applied Bethesda's `fDistanceScale` directly
-to the pooled vector marker. Its former guard rejected `NaN` and non-positive
-values but allowed infinity and extreme finite values. During the death/removal
-transition, an extreme scale could therefore expand the marker surface across
-the HUD, which Scaleform rendered as black. The accepted correction removes
-`fDistanceScale` from production rendering and assigns both marker axes a fixed
-scale of `1.0`. Heading placement, bounded `fDistanceAlpha`, contact color and
-shape, and the fixed purple player marker remain unchanged.
+`CUIContactRadar.renderContact()` initially applied Bethesda's `fDistanceScale`
+directly to the pooled vector marker. Its former guard rejected `NaN` and
+non-positive values but allowed infinity and extreme finite values, making scale
+one plausible path to an invalid Scaleform surface during enemy removal. The
+first correction removed `fDistanceScale` from production rendering and assigned
+both marker axes a fixed scale of `1.0`.
+
+Runtime of the later fixed-range build confirmed that proportional
+`fDistanceToPlayer` placement worked for enemies, the parked ship, and the
+parked vehicle, but the exact same 1.5–2-second kill-event blackout returned.
+Reopening the deployed movie confirmed that fixed scale and distance validation
+survived compilation, so fixed scale was insufficient rather than regressed.
+The remaining source-side failure path converted `fHeading` and root
+`fDirection`, calculated trigonometric coordinates, and assigned them directly
+to the pooled `Shape` without proving that the complete transform was finite.
+The runtime evidence does not identify which transition field becomes invalid.
+
+The accepted hardening hides the selected pooled marker before evaluation and
+requires finite distance, heading, direction, intermediate vectors, radius,
+final X/Y coordinates, and alpha before assigning display properties. Invalid
+death/removal records fail closed for that update. Fixed scale, contact color and
+shape, bounded alpha, the fixed purple player marker, and valid heading/range
+placement remain unchanged.
 
 The same recording showed no ship or vehicle square while the player approached
 and stood directly beside a parked ship. The first correction placed a compact
@@ -235,6 +250,27 @@ byte-identically across VWKS, CF, FC, and TA.
 | `hudmenu_lrg.gfx` | 412499 | `25639CF8A5C8BD100E03B2ACC029B88ABE7DF56B4B494742F1D640560CEFD4D8` |
 | `components/contact-radar.xml` | 2197 | `7348367E6DB247CBD4DF53876701DBC71CBC41BF5A8A7498130E8744922223E8` |
 
+Runtime accepted the fixed ranging and ring behavior from this build but
+rejected its kill-transition behavior because the blackout returned. These
+artifact hashes remain the fixed-range baseline rather than final blackout
+acceptance.
+
+On 2026-08-16, the complete transform-hardening build passed
+`Tools/checkRepo.ps1`, normal/large Scaleform import and reopening, all 207-script
+and 39-authored-class checks, the single-domain rule, and `git diff --check`.
+Reopened ActionScript retained finite validation for distance, heading, player
+direction, intermediate vectors, final X/Y coordinates, and alpha before display
+assignment. The normal and large movies staged byte-identically across VWKS,
+CF, FC, and TA; no CUI XML payload changed.
+
+| Transform-hardening artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `hudmenu.gfx` | 412630 | `E11CE98CDC5F324B99AE0F8C6F97A8066047EBB4E6BFBAD6A157211C5E332D43` |
+| `hudmenu_lrg.gfx` | 412813 | `28C4068CCC2BE5CAABB3388FB284282175B4BC08D1B77F2DFEFF5EEB616900E2` |
+
+Runtime acceptance requires repeated individual and rapid enemy kills without
+the black surface while fixed 300-unit ranging remains correct.
+
 On 2026-08-15, `Tools/checkRepo.ps1` passed and the complete normal/large
 Scaleform build imported, reopened, and validated all 207 scripts and all 39
 authored CUI classes in the single Venworks ABC linkage domain. The movies and
@@ -264,8 +300,8 @@ ships and the type-13 parked-vehicle position to render as white squares, and no
 unrelated position marker to produce a false contact. Enemy, ship, and vehicle
 contacts must move continuously against the 100/200/300-unit circles and
 disappear beyond 300 units. Enemy and companion dots, the fixed player marker,
-fixed contact scale, and the runtime-confirmed absence of kill-event blackouts
-must remain unchanged.
+and fixed contact scale must remain unchanged. Absence of kill-event blackouts
+requires renewed runtime confirmation after complete transform hardening.
 
 ## Goal 8B runtime confirmation and visual refinement
 

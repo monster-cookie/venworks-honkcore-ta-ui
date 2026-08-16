@@ -374,10 +374,14 @@ the marker's `fDistanceToPlayer`, fixed `1.0` marker scale, and bounded distance
 alpha. A fixed 300-provider-unit range maps contacts proportionally from the
 player center to subdued 100-, 200-, and 300-unit circles; invalid or over-range
 contacts fail closed. Bethesda's `bIsNear` is no longer used for placement, and
-`fDistanceScale` remains deliberately ignored because an extreme enemy-removal
-value expanded a marker across the HUD and produced a runtime black surface.
-The component owns a fixed pool of 32 display objects and creates no input
-handlers or persistent state.
+`fDistanceScale` remains deliberately ignored because unbounded transition
+values are unsafe for a pooled vector marker. Runtime later proved that fixed
+scale alone did not eliminate the kill-event black surface. The component
+therefore hides a selected pooled marker before evaluation and assigns display
+coordinates and alpha only after distance, heading, player direction,
+intermediate vectors, and final coordinates are finite. The component owns a
+fixed pool of 32 display objects and creates no input handlers or persistent
+state.
 
 The production semantic mapping is deliberately narrow: all
 `aEnemyMarkers` entries are red dots; general marker type 8 companions are white
