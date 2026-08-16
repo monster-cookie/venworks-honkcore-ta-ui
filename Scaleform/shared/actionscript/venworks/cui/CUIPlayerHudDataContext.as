@@ -15,8 +15,6 @@ package venworks.cui
       private static const MAX_DIAGNOSTIC_EFFECTS:int = 4;
       private static const MAX_HAZARD_EFFECTS:int = 32;
       private static const MAX_DIAGNOSTIC_INVENTORY_ITEMS:int = 256;
-      private static const MAX_RADAR_DIAGNOSTIC_MARKERS:int = 4;
-      private static const MAX_EQUIPMENT_DIAGNOSTIC_ITEMS:int = 8;
       private static const MAX_FAVORITE_SLOTS:int = 12;
       private static const DIGIPICK_FORM_ID:Number = 10;
       private static const PLAYER_SERIAL_ALPHABET:String = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -57,6 +55,7 @@ package venworks.cui
       private var buttonKeyHelper:ButtonKeyHelper;
       private var universalTimeDiagnostic:String = "UT: LOCAL ENV FREQUENT DATA NOT RECEIVED";
       private var digipickDiagnostic:String = "DIGIPICK: PLAYER INVENTORY DATA NOT RECEIVED";
+      private var compassData:Object;
 
       public function CUIPlayerHudDataContext()
       {
@@ -85,7 +84,6 @@ package venworks.cui
          BSUIDataManager.Subscribe("EnvironmentEffectsData",this.onEnvironmentEffectsData);
          BSUIDataManager.Subscribe("StarmapSystemBodyInfoProvider",this.onStarmapSystemBodyInfoData);
          BSUIDataManager.Subscribe("HudCompassData",this.onRadarCompassData);
-         BSUIDataManager.Subscribe("PlayerStatusData",this.onPlayerStatusData);
          this.setText("diagnostic.inventoryprovider","PLAYERINVENTORYDATA NOT RECEIVED");
          this.setText("diagnostic.powernameprovider","HUD POWER NAME FIELDS NOT RECEIVED");
          this.setText("diagnostic.environmentprovider","ENVIRONMENTEFFECTSDATA NOT RECEIVED");
@@ -94,11 +92,6 @@ package venworks.cui
          this.setText("diagnostic.localenvironmentfields","LOCALENVIRONMENTDATA NOT RECEIVED");
          this.setText("diagnostic.armorresistance","EQUIPPED ARMOR RESISTANCE DATA NOT RECEIVED");
          this.setText("diagnostic.starmapprovider","STARMAP BODY PROVIDER NOT RECEIVED IN HUD");
-         this.setText("diagnostic.radar.root","HUDCOMPASSDATA NOT RECEIVED");
-         this.setText("diagnostic.radar.counts","MARKER ARRAYS: WAITING");
-         this.setText("diagnostic.radar.status","PLAYERSTATUSDATA NOT RECEIVED IN HUD");
-         this.resetRadarDiagnosticMarkers();
-         this.resetEquipmentDiagnosticItems();
          this.setText("diagnostic.activityoxygen","PLAYER O2 RESERVE: WAITING // DOWNWARD DRAIN: FALSE");
          this.setText("diagnostic.activityenvelope","O2 ACTIVITY ENVELOPE: 0%");
          this.setText("diagnostic.activityprotection","SUIT PROTECTION: WAITING // FULL-SOAK FLAG: FALSE // CRITICAL OVERRIDE: FALSE");
@@ -152,11 +145,7 @@ package venworks.cui
              source == "diagnostic.playeridentifiers" || source == "diagnostic.playertimeinventory" ||
             source == "diagnostic.effect0" || source == "diagnostic.effect1" ||
             source == "diagnostic.effect2" || source == "diagnostic.effect3" ||
-            source == "diagnostic.armorresistance" || source == "diagnostic.starmapprovider" ||
-            source == "diagnostic.radar.root" || source == "diagnostic.radar.counts" ||
-            source == "diagnostic.radar.status" ||
-            /^diagnostic\.radar\.(general|mission|enemy)[0-3]$/.test(source) ||
-            /^diagnostic\.radar\.equipment[0-7]$/.test(source))
+            source == "diagnostic.armorresistance" || source == "diagnostic.starmapprovider")
          {
             return "string";
          }
@@ -194,6 +183,11 @@ package venworks.cui
             return "number";
          }
          return "unknown";
+      }
+
+      public function get currentCompassData() : Object
+      {
+         return compassData;
       }
 
       public function getValue(param1:String) : Object
@@ -328,38 +322,7 @@ package venworks.cui
 
       private function onRadarCompassData(param1:FromClientDataEvent) : void
       {
-         var data:Object = param1 == null ? null : param1.data;
-         var general:Array = data == null ? null : data.aMarkers as Array;
-         var mission:Array = data == null ? null : data.aMissionMarkers as Array;
-         var enemy:Array = data == null ? null : data.aEnemyMarkers as Array;
-         if(data == null)
-         {
-            this.setText("diagnostic.radar.root","HUDCOMPASSDATA RECEIVED — NULL PAYLOAD");
-            this.setText("diagnostic.radar.counts","MARKER ARRAYS: UNAVAILABLE");
-            this.resetRadarDiagnosticMarkers();
-            this.notifyChanged();
-            return;
-         }
-         this.setText("diagnostic.radar.root","ROOT fDirection=" +
-            this.formatDiagnosticValue(data.fDirection) + " | bIsHandscannerOpen=" +
-            this.formatDiagnosticValue(data.bIsHandscannerOpen) + " | FIELDS=" +
-            this.listFieldNames(data,24));
-         this.setText("diagnostic.radar.counts","ARRAYS general=" + this.formatArrayLength(general) +
-            " | mission=" + this.formatArrayLength(mission) + " | enemy=" +
-            this.formatArrayLength(enemy) + " | RANGE CANDIDATES: " +
-            this.listCandidateFields(data,["distance","range","radius"],8));
-         this.updateRadarDiagnosticMarkers("general",general);
-         this.updateRadarDiagnosticMarkers("mission",mission);
-         this.updateRadarDiagnosticMarkers("enemy",enemy);
-         this.notifyChanged();
-      }
-
-      private function onPlayerStatusData(param1:FromClientDataEvent) : void
-      {
-         var data:Object = param1 == null ? null : param1.data;
-         this.setText("diagnostic.radar.status",data == null ?
-            "PLAYERSTATUSDATA RECEIVED — NULL PAYLOAD" :
-            "PLAYERSTATUSDATA RECEIVED — ROOT FIELDS: " + this.listFieldNames(data,24));
+         compassData = param1 == null ? null : param1.data;
          this.notifyChanged();
       }
 
@@ -464,14 +427,12 @@ package venworks.cui
          var armorResistance:Array = [];
          var armorInfo:Object = null;
          var equippedWeaponCount:int = 0;
-         var equippedArmorCount:int = 0;
          var index:int = 0;
          this.clearValue("carry.current");
          this.clearValue("carry.maximum");
          this.clearValue("carry.percentage");
          this.clearValue("credits");
          this.setText("diagnostic.armorresistance","EQUIPPED ARMOR RESISTANCE FIELDS NOT PRESENT");
-         this.resetEquipmentDiagnosticItems();
          this.setFinite("carry.current",param1.data.fEncumbrance);
          this.setFinite("carry.maximum",param1.data.fMaxEncumbrance);
          this.setRatio("carry.percentage",param1.data.fEncumbrance,param1.data.fMaxEncumbrance);
@@ -507,13 +468,6 @@ package venworks.cui
                   " A=" + this.formatDiagnosticValue(armorInfo.fAirborneResist) +
                   " C=" + this.formatDiagnosticValue(armorInfo.fCorrosiveResist) +
                   " R=" + this.formatDiagnosticValue(armorInfo.fRadiationResist));
-            }
-            if(item != null && Boolean(item.bIsEquipped) && item.ArmorInfo != null &&
-               equippedArmorCount < MAX_EQUIPMENT_DIAGNOSTIC_ITEMS)
-            {
-               this.setText("diagnostic.radar.equipment" + equippedArmorCount.toString(),
-                  "EQUIP " + equippedArmorCount.toString() + " " + this.describeEquipmentItem(item));
-               ++equippedArmorCount;
             }
             ++index;
          }
@@ -1255,85 +1209,6 @@ package venworks.cui
             return fields.join(",") + ",...";
          }
          return fields.length == 0 ? "NO ENUMERABLE FIELDS" : fields.join(",");
-      }
-
-      private function resetRadarDiagnosticMarkers() : void
-      {
-         var groups:Array = ["general","mission","enemy"];
-         var group:String = null;
-         var groupIndex:int = 0;
-         var markerIndex:int = 0;
-         while(groupIndex < groups.length)
-         {
-            group = String(groups[groupIndex]);
-            markerIndex = 0;
-            while(markerIndex < MAX_RADAR_DIAGNOSTIC_MARKERS)
-            {
-               this.setText("diagnostic.radar." + group + markerIndex.toString(),
-                  group.toUpperCase() + " " + markerIndex.toString() + " UNUSED");
-               ++markerIndex;
-            }
-            ++groupIndex;
-         }
-      }
-
-      private function updateRadarDiagnosticMarkers(param1:String, param2:Array) : void
-      {
-         var index:int = 0;
-         while(index < MAX_RADAR_DIAGNOSTIC_MARKERS)
-         {
-            this.setText("diagnostic.radar." + param1 + index.toString(),
-               param1.toUpperCase() + " " + index.toString() + " " +
-               (param2 != null && index < param2.length ? this.describeRadarMarker(param2[index]) : "UNUSED"));
-            ++index;
-         }
-      }
-
-      private function describeRadarMarker(param1:Object) : String
-      {
-         if(param1 == null)
-         {
-            return "NULL";
-         }
-         return "handle=" + this.formatDiagnosticValue(param1.uiHandle) +
-            " | type=" + this.formatDiagnosticValue(param1.uiMarkerIconType) +
-            " | heading=" + this.formatDiagnosticValue(param1.fHeading) +
-            " | near=" + this.formatDiagnosticValue(param1.bIsNear) +
-            " | height=" + this.formatDiagnosticValue(param1.uiRelativeMarkerHeightType) +
-            " | scale=" + this.formatDiagnosticValue(param1.fDistanceScale) +
-            " | alpha=" + this.formatDiagnosticValue(param1.fDistanceAlpha) +
-            " | mapType=" + this.formatDiagnosticValue(param1.uMapMarkerType) +
-            " | mapCategory=" + this.formatDiagnosticValue(param1.uMapMarkerCategory) +
-            " | locationState=" + this.formatDiagnosticValue(param1.uLocationMarkerState) +
-            " | CANDIDATES: " + this.listCandidateFields(param1,
-               ["distance","hostile","aggress","combat","ally","friend","actor","creature","ship","vehicle"],12);
-      }
-
-      private function resetEquipmentDiagnosticItems() : void
-      {
-         var index:int = 0;
-         while(index < MAX_EQUIPMENT_DIAGNOSTIC_ITEMS)
-         {
-            this.setText("diagnostic.radar.equipment" + index.toString(),
-               "EQUIP " + index.toString() + " UNUSED");
-            ++index;
-         }
-      }
-
-      private function describeEquipmentItem(param1:Object) : String
-      {
-         return "name=" + this.formatDiagnosticValue(param1.sName) +
-            " | form=" + this.formatDiagnosticValue(param1.uFormID) +
-            " | editor=" + this.formatDiagnosticValue(param1.sEditorID) +
-            " | filter=" + this.formatDiagnosticValue(param1.iFilterFlag) +
-            " | armor=" + this.formatDiagnosticValue(param1.ArmorInfo) +
-            " | CANDIDATES: " + this.listCandidateFields(param1,
-               ["category","type","slot","equip","filter","suit","helmet","pack","starborn"],12);
-      }
-
-      private function formatArrayLength(param1:Array) : String
-      {
-         return param1 == null ? "UNAVAILABLE" : param1.length.toString();
       }
 
       private function listCandidateFields(param1:Object, param2:Array, param3:int) : String

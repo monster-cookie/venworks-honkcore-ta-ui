@@ -5,6 +5,7 @@ package venworks.cui
    import flash.events.Event;
    import venworks.cui.components.CUIComponent;
    import venworks.cui.components.CUIContinuousBar;
+   import venworks.cui.components.CUIContactRadar;
    import venworks.cui.components.CUIDotBar;
    import venworks.cui.components.CUIDivider;
    import venworks.cui.components.CUIGroup;
@@ -39,6 +40,7 @@ package venworks.cui
       private var visibilityBindings:Array;
       private var valueBindings:Array;
       private var vanillaAdapters:Array;
+      private var contactRadars:Array;
       private var diagnosticPhase:String = "";
       private var diagnosticNode:XML;
 
@@ -126,6 +128,7 @@ package venworks.cui
             visibilityBindings = [];
             valueBindings = [];
             vanillaAdapters = [];
+            contactRadars = [];
             conditionContext = new CUIConditionContext();
             conditionContext.addEventListener(Event.CHANGE,this.onConditionChanged);
             valueContext = new CUIPlayerHudDataContext();
@@ -136,6 +139,7 @@ package venworks.cui
             this.createVanillaAdapters(parser.vanillaVisibility);
             this.setDiagnosticContext("INITIAL LIVE VALUE EVALUATION",null);
             this.applyValues();
+            this.applyContactRadars();
             this.setDiagnosticContext("INITIAL VISIBILITY EVALUATION",null);
             this.applyConditions();
             this.clearDiagnosticContext();
@@ -294,6 +298,7 @@ package venworks.cui
       {
          var type:String = String(param1.name());
          var style:XML = null;
+         var radar:CUIContactRadar = null;
          if(type == "group")
          {
             return new CUIGroup(param1);
@@ -301,6 +306,12 @@ package venworks.cui
          if(type == "text")
          {
             return new CUIText(param1);
+         }
+         if(type == "contactRadar")
+         {
+            radar = new CUIContactRadar(param1);
+            contactRadars.push(radar);
+            return radar;
          }
          if(type == "panel")
          {
@@ -397,6 +408,7 @@ package venworks.cui
          {
             this.setDiagnosticContext("LIVE VALUE EVALUATION",null);
             this.applyValues();
+            this.applyContactRadars();
             this.clearDiagnosticContext();
          }
          catch(param2:Error)
@@ -411,6 +423,15 @@ package venworks.cui
          for each(binding in valueBindings)
          {
             binding.apply(valueContext);
+         }
+      }
+
+      private function applyContactRadars() : void
+      {
+         var radar:CUIContactRadar = null;
+         for each(radar in contactRadars)
+         {
+            radar.updateData(valueContext.currentCompassData);
          }
       }
 
@@ -454,6 +475,7 @@ package venworks.cui
          visibilityBindings = [];
          valueBindings = [];
          vanillaAdapters = [];
+         contactRadars = [];
       }
    }
 }

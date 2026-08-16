@@ -225,6 +225,13 @@
     <xs:attribute name="strokeWidth" type="xs:positiveInteger" use="required" />
   </xs:complexType>
 
+  <xs:complexType name="contactRadarType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="enemyColor" type="colorType" use="required" />
+    <xs:attribute name="allyColor" type="colorType" use="required" />
+    <xs:attribute name="playerColor" type="colorType" use="required" />
+  </xs:complexType>
+
   <xs:complexType name="meterType">
     <xs:attributeGroup ref="componentAttributes" />
     <xs:attribute name="style" type="idType" use="required" />
@@ -424,6 +431,7 @@
       <xs:element name="panel" type="panelType" />
       <xs:element name="shape" type="shapeType" />
       <xs:element name="divider" type="dividerType" />
+      <xs:element name="contactRadar" type="contactRadarType" />
       <xs:element name="meter" type="meterType" />
       <xs:element name="svg" type="assetType" />
       <xs:element name="path" type="pathType" />

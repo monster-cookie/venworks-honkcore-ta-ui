@@ -365,3 +365,18 @@ centered in the fixed lower helmet seal and remains visible only in a vehicle.
 Because no confirmed provider correlates the generic live explosive category
 to an exact favorite, grenade and mine favorite rows remain neutral; this
 limitation must be included in end-user documentation.
+
+## Goal 8 contact radar
+
+`contactRadar` is a bounded, passive HUDMenu component driven exclusively by
+`HudCompassData`. It places contacts with Bethesda's Watch heading transform,
+near/far state, distance scale, and distance alpha. The component owns a fixed
+pool of 32 display objects and creates no input handlers or persistent state.
+
+The production semantic mapping is deliberately narrow: all
+`aEnemyMarkers` entries are red dots; general marker type 8 companions are white
+dots; type 11 parked ships and type 15 vehicles are white squares; and the
+player is a fixed purple center square. Locations, mission markers, unknown
+types, aggressive/defensive/passive distinctions, and claimed physical range
+are not rendered or inferred. The adjacent Venworks SVG crest identifies the
+configured theme, not the player's live faction membership.

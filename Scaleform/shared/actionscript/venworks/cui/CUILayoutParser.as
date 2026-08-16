@@ -382,6 +382,14 @@ package venworks.cui
             this.requireUnitInterval(param1,"strokeOpacity");
             this.requirePositive(param1,"strokeWidth");
          }
+         else if(type == "contactRadar")
+         {
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","enemyColor","allyColor","playerColor"]);
+            this.requirePositiveBounds(param1);
+            this.requireColor(param1,"enemyColor");
+            this.requireColor(param1,"allyColor");
+            this.requireColor(param1,"playerColor");
+         }
          else if(type == "meter")
          {
             this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","style","value","max","source","maxSource"]);

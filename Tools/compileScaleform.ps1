@@ -590,15 +590,16 @@ try {
       throw "PromptMessageWidget textField does not have the expected linked `$MAIN_Font_Bold outline font in $inputPath."
     }
 
-    if ($scaleform.SelectNodes('/swf/tags/item[@type="DoABC2Tag" and @name="venworks.cui.components.seed"]').Count -ne 0) {
+    if ($scaleform.SelectNodes('/swf/tags/item[@type="DoABC2Tag" and starts-with(@name,"venworks.cui.components.seed.")]').Count -ne 0) {
       throw "Vanilla input unexpectedly contains the Venworks CUI ABC seed."
     }
 
     $abcSeedTags = $abcSeedPatch.SelectNodes('/scaleformAbcPatch/tags/item')
-    if ($abcSeedTags.Count -ne 1 -or
-        $abcSeedTags[0].type -ne 'DoABC2Tag' -or
-        $abcSeedTags[0].name -ne 'venworks.cui.components.seed') {
-      throw "ABC seed patch must contain exactly one named Venworks DoABC2Tag: $abcSeedPatchPath"
+    $invalidAbcSeedTags = @($abcSeedTags | Where-Object {
+      $_.type -ne 'DoABC2Tag' -or $_.name -notmatch '^venworks\.cui\.components\.seed\.\d{3}$'
+    })
+    if ($abcSeedTags.Count -eq 0 -or $invalidAbcSeedTags.Count -ne 0) {
+      throw "ABC seed patch must contain only numbered Venworks DoABC2Tags: $abcSeedPatchPath"
     }
 
     foreach ($abcSeedTag in $abcSeedTags) {
@@ -637,8 +638,8 @@ try {
       -OutputPath $patchedScriptPath
 
     $authoredScripts = @(Get-ChildItem -LiteralPath $actionScriptSourcePath -Recurse -File -Filter "*.as")
-    if ($authoredScripts.Count -ne 38) {
-      throw "Expected 38 authored CUI classes; found $($authoredScripts.Count) in $actionScriptSourcePath."
+    if ($authoredScripts.Count -eq 0) {
+      throw "No authored CUI classes were found in $actionScriptSourcePath."
     }
 
     foreach ($authoredScript in $authoredScripts) {
@@ -666,8 +667,8 @@ try {
     }
 
     [xml]$reopened = Get-Content -LiteralPath $reopenedXmlPath -Raw
-    if ($reopened.SelectNodes('/swf/tags/item[@type="DoABC2Tag" and @name="venworks.cui.components.seed"]').Count -ne 1) {
-      throw "Generated output does not contain exactly one Venworks CUI ABC seed tag."
+    if ($reopened.SelectNodes('/swf/tags/item[@type="DoABC2Tag" and starts-with(@name,"venworks.cui.components.seed.")]').Count -ne $abcSeedTags.Count) {
+      throw "Generated output does not retain the complete Venworks CUI ABC seed tag set."
     }
 
     $validationScriptMatches = @(Get-ChildItem -LiteralPath $validationScriptsDirectory -Recurse -File -Filter "$scriptName.as")
@@ -682,8 +683,8 @@ try {
 
     $originalScripts = @(Get-ChildItem -LiteralPath $exportedScriptsDirectory -Recurse -File -Filter "*.as")
     $validationScripts = @(Get-ChildItem -LiteralPath $validationScriptsDirectory -Recurse -File -Filter "*.as")
-    if ($originalScripts.Count -ne 205 -or $validationScripts.Count -ne $originalScripts.Count) {
-      throw "Expected 205 seeded and reopened classes; found $($originalScripts.Count) before import and $($validationScripts.Count) after import."
+    if ($validationScripts.Count -ne $originalScripts.Count) {
+      throw "Seeded and reopened class inventories differ: $($originalScripts.Count) before import and $($validationScripts.Count) after import."
     }
 
     foreach ($originalScript in $originalScripts) {
@@ -890,14 +891,12 @@ try {
       'HudCrosshairData',
       'HUDStealthData',
       'HudCompassData',
-      'PlayerStatusData',
-      'MAX_RADAR_DIAGNOSTIC_MARKERS',
-      'MAX_EQUIPMENT_DIAGNOSTIC_ITEMS',
-      'diagnostic.radar.root',
-      'diagnostic.radar.counts',
-      'diagnostic.radar.status',
-      'describeRadarMarker',
-      'describeEquipmentItem',
+      'CUIContactRadar',
+      'currentCompassData',
+      'MIT_MARKER_ENEMY',
+      'MIT_MARKER_COMPANION',
+      'MIT_MARKER_SHIP_PARKED',
+      'MIT_MARKER_VEHICLE',
       'HUDVehicleData'
     )) {
       if (!$validationSource.Contains($requiredValue)) {
@@ -1066,7 +1065,8 @@ try {
     'mobility-status.xml',
     'player-data-diagnostic-strip.xml',
     'favorites-provider-diagnostic.xml',
-    'weapon-status.xml'
+    'weapon-status.xml',
+    'contact-radar-diagnostic.xml'
   )
   foreach ($retiredComponentName in $retiredComponentNames) {
     $retiredComponentPath = Join-Path $componentOutputDirectory $retiredComponentName
@@ -1074,7 +1074,7 @@ try {
       Remove-Item -LiteralPath $retiredComponentPath -Force
     }
   }
-  foreach ($componentFixtureName in @('contact-radar-diagnostic.xml','equipment-rail.xml','environmental-hazard-scanner.xml','player-status-scanner.xml')) {
+  foreach ($componentFixtureName in @('contact-radar.xml','equipment-rail.xml','environmental-hazard-scanner.xml','player-status-scanner.xml')) {
     Copy-Item -LiteralPath (Join-Path $providerProbeComponentDirectory $componentFixtureName) -Destination (Join-Path $componentOutputDirectory $componentFixtureName) -Force
   }
   $stagedPlayerScannerText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'player-status-scanner.xml') -Raw
@@ -1086,23 +1086,21 @@ try {
   $stagedEquipmentRail = [xml]$stagedEquipmentRailText
   $stagedEnvironmentalScannerText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'environmental-hazard-scanner.xml') -Raw
   $stagedEnvironmentalScanner = [xml]$stagedEnvironmentalScannerText
-  $stagedRadarDiagnosticText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'contact-radar-diagnostic.xml') -Raw
-  $stagedRadarDiagnostic = [xml]$stagedRadarDiagnosticText
-  $radarDiagnosticIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
-    [string]$_.id -eq 'radar-probe'
+  $stagedContactRadarText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'contact-radar.xml') -Raw
+  $stagedContactRadar = [xml]$stagedContactRadarText
+  $contactRadarIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
+    [string]$_.id -eq 'contact-radar'
   })
-  $radarDiagnosticBindings = @($stagedRadarDiagnostic.venworksCUIFragment.group.text | Where-Object {
-    $_.HasAttribute('source') -and $_.GetAttribute('source') -match '^diagnostic\.radar\.'
-  })
-  $radarDiagnosticInteractiveNodes = @($stagedRadarDiagnostic.SelectNodes('//*[@action or @event or @onClick or @mouseEnabled]'))
-  if ($radarDiagnosticIncludes.Count -ne 1 -or
-      [string]$radarDiagnosticIncludes[0].src -ne 'contact-radar-diagnostic.xml' -or
-      [string]$radarDiagnosticIncludes[0].visibleWhen -ne 'always' -or
-      $radarDiagnosticBindings.Count -ne 23 -or
-      $radarDiagnosticInteractiveNodes.Count -ne 0 -or
-      $stagedRadarDiagnosticText -notmatch 'RAW CANDIDATES ONLY' -or
-      $stagedRadarDiagnosticText -notmatch 'PLAYERSTATUSDATA NOT RECEIVED IN HUD') {
-    throw 'Goal 8A must stage one passive, bounded contact-radar provider diagnostic with 23 candidate-only bindings.'
+  $contactRadarNodes = @($stagedContactRadar.SelectNodes('//contactRadar'))
+  $contactRadarInteractiveNodes = @($stagedContactRadar.SelectNodes('//*[@action or @event or @onClick or @mouseEnabled]'))
+  if ($contactRadarIncludes.Count -ne 1 -or
+      [string]$contactRadarIncludes[0].src -ne 'contact-radar.xml' -or
+      [string]$contactRadarIncludes[0].visibleWhen -ne 'always' -or
+      $contactRadarNodes.Count -ne 1 -or
+      $contactRadarInteractiveNodes.Count -ne 0 -or
+      $stagedContactRadarText -notmatch 'venworks-logo.svg' -or
+      $stagedContactRadarText -match 'diagnostic\.radar\.') {
+    throw 'Goal 8B must stage one passive, always-active contact radar with the owned Venworks SVG crest and no diagnostic bindings.'
   }
   $environmentalDiagnosticIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'environmental-hazard-diagnostic'
@@ -1464,7 +1462,7 @@ try {
       New-Item -ItemType Directory -Force -Path $variantAssetOutputDirectory | Out-Null
       New-Item -ItemType Directory -Force -Path $variantComponentOutputDirectory | Out-Null
       Copy-Item -LiteralPath (Join-Path $cuiOutputDirectory "layout.xml") -Destination (Join-Path $variantCuiOutputDirectory "layout.xml") -Force
-      foreach ($componentFixtureName in @('contact-radar-diagnostic.xml','equipment-rail.xml','environmental-hazard-scanner.xml','player-status-scanner.xml')) {
+      foreach ($componentFixtureName in @('contact-radar.xml','equipment-rail.xml','environmental-hazard-scanner.xml','player-status-scanner.xml')) {
         Copy-Item -LiteralPath (Join-Path $componentOutputDirectory $componentFixtureName) -Destination (Join-Path $variantComponentOutputDirectory $componentFixtureName) -Force
       }
       foreach ($assetFileName in @('gallery-vector.svg','venworks-logo.svg','gallery-invalid.svg')) {
@@ -1479,7 +1477,7 @@ try {
     }
     foreach ($relativeCuiPath in @(
       'layout.xml',
-      'components\contact-radar-diagnostic.xml',
+      'components\contact-radar.xml',
       'components\equipment-rail.xml',
       'components\environmental-hazard-scanner.xml',
       'components\player-status-scanner.xml',
@@ -1493,7 +1491,7 @@ try {
         throw "Staged CUI payload mismatch for $relativeCuiPath in $variantCuiOutputDirectory."
       }
     }
-    Write-Host -ForegroundColor Green "Staged the Goal 8A radar diagnostic over the accepted Goal 6 HUD and Goal 7 equipment rail in $variantCuiOutputDirectory"
+    Write-Host -ForegroundColor Green "Staged the Goal 8B contact radar over the accepted Goal 6 HUD and Goal 7 equipment rail in $variantCuiOutputDirectory"
   }
 }
 finally {

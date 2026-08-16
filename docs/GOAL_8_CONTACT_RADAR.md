@@ -1,7 +1,7 @@
 # Goal 8 upper-left contact radar
 
-**Status: Goal 8A diagnostic implementation.** Production rendering remains
-gated on runtime evidence. Goal 7 is complete and is not reopened by this work.
+**Status: Goal 8B production implementation awaiting runtime acceptance.** Goal
+7 is complete and is not reopened by this work.
 
 ## Product direction
 
@@ -98,6 +98,32 @@ The production crest is configuration identity, not a claim about the player's
 live faction membership. Suit-status text remains omitted regardless of the
 contact-radar outcome.
 
+## Runtime evidence and accepted production mapping
+
+The accepted Goal 8A recording contained four nearby actors the player
+identified as one aggressive enemy and three defensive enemies. All four were
+delivered identically in `aEnemyMarkers` with `uiMarkerIconType=5`, Bethesda's
+`MIT_MARKER_ENEMY`. No disposition field distinguished them. Production renders
+the complete enemy array red and does not invent blue defensive or green passive
+states.
+
+Records that remained at the empty outpost used type 7,
+`MIT_MARKER_LOCATIONS`; they are excluded rather than presented as actors.
+Bethesda's confirmed type 8 companion marker renders as a white dot, while type
+11 parked ship and type 15 vehicle markers render as white squares when present.
+The player is an authored purple center square. Mission markers and unknown
+general marker types fail closed. Opening the scanner did not change the feed,
+so the radar remains always active and scanner-independent.
+
+The payload exposed `bIsNear`, `fDistanceScale`, and `fDistanceAlpha` but no
+physical distance with a proven unit. Production follows Bethesda's Watch
+near/far radial presentation and makes no 300-unit claim.
+
+While the player wore a Starborn suit, the equipment candidate selected a
+weapon, jumpsuit, spacesuit, and grenade through the same broad `ArmorInfo`
+test. `PlayerStatusData` was not delivered in HUDMenu. Neither route proves
+combination-suit-safe readiness, so `SUIT SYSTEMS ONLINE` remains omitted.
+
 ## Build validation and diagnostic artifacts
 
 On 2026-08-15, `Tools/checkRepo.ps1` passed and the complete normal/large
@@ -113,12 +139,28 @@ layout, and diagnostic payloads across VWKS, CF, FC, and TA.
 | `VenworksCUI/layout.xml` | 6437 | `07092F40C575835EFB07C7497700CAC5F39071C74174E4913A97850728DE6BAF` |
 | `components/contact-radar-diagnostic.xml` | 8764 | `26A004F0075A7BAF969B771CE4C2E2BD3D5653C2C9E8B99606EE16C86F409F13` |
 
-These hashes identify the diagnostic build to commit before deployment. They
-are not production Goal 8B hashes and must be replaced after the temporary
-probe is removed.
+These hashes are retained as Goal 8A diagnostic provenance. Production Goal 8B
+hashes are recorded after the final build.
+
+## Goal 8B production artifacts
+
+On 2026-08-15, `Tools/checkRepo.ps1` passed and the final normal/large build
+compiled, imported, reopened, and validated 207 scripts in both movies. The
+inventory includes all 39 authored CUI classes, including both
+`CUIContactRadar` and the pre-existing `CUIProviderSymbol`. The production
+layout and component payloads staged byte-identically across VWKS, CF, FC, and
+TA, and the retired Goal 8A diagnostic payload was removed from every variant.
+
+| Artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `hudmenu.gfx` | 434755 | `A1B7217944DB51BF9BAC6CA4BB58A8C8E721D255D391BD7D31A3191EC6809824` |
+| `hudmenu_lrg.gfx` | 434938 | `523FF7466E118C0A04B060B9F0800C91773F73837243D3F8C52487D1FB233B37` |
+| `VenworksCUI/layout.xml` | 6427 | `BA609EE350472D48C428B1AAADAE5DE4C3AF86BA5E29CBD9A3DE61E27B6C70F7` |
+| `components/contact-radar.xml` | 2637 | `BFA1CC6A30B87C21A02BE186B4B558B6D0461F1327F22539B9B51FA4F3D03E61` |
+| `cui-component-abc-seed.xml` | 204698 | `D453E9D53D17919DB5BB873300EB8EC9A08285DBE061CA23938A17BB2A4EB0EE` |
 
 ## Rollback
 
-Remove the `radar-probe` layout include and diagnostic fragment, the bounded
-diagnostic subscriptions and sources, and the matching build/staging checks.
-No persistent data, schema migration, or native component requires recovery.
+Remove the `contact-radar` layout include and production fragment, unregister
+the `contactRadar` component, and remove its bounded compass adapter. No
+persistent data, schema migration, or native component requires recovery.
