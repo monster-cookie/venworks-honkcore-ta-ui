@@ -370,11 +370,14 @@ limitation must be included in end-user documentation.
 
 `contactRadar` is a bounded, passive HUDMenu component driven exclusively by
 `HudCompassData`. It places contacts with Bethesda's Watch heading transform,
-near/far state, fixed `1.0` marker scale, and bounded distance alpha. Bethesda's
-`fDistanceScale` is deliberately ignored because an extreme enemy-removal value
-expanded a marker across the HUD and produced a runtime black surface. The
-component owns a fixed pool of 32 display objects and creates no input handlers
-or persistent state.
+the marker's `fDistanceToPlayer`, fixed `1.0` marker scale, and bounded distance
+alpha. A fixed 300-provider-unit range maps contacts proportionally from the
+player center to subdued 100-, 200-, and 300-unit circles; invalid or over-range
+contacts fail closed. Bethesda's `bIsNear` is no longer used for placement, and
+`fDistanceScale` remains deliberately ignored because an extreme enemy-removal
+value expanded a marker across the HUD and produced a runtime black surface.
+The component owns a fixed pool of 32 display objects and creates no input
+handlers or persistent state.
 
 The production semantic mapping is deliberately narrow: all
 `aEnemyMarkers` entries are red dots; general marker type 8 companions are white
@@ -384,8 +387,9 @@ Bethesda's decompiled enum names type 13 `MIT_MARKER_POSITION`, but runtime
 showed that it appears when the player exits the vehicle and disappears while
 the player occupies it. Type 10 was delivered beside the parked ship. Formal
 type 14 delivery remains unobserved. Locations, mission markers, unknown types,
-aggressive/defensive/passive distinctions, and claimed physical range are not
-rendered or inferred.
+and aggressive/defensive/passive distinctions are not rendered or inferred.
+The 300-unit scale uses Bethesda's provider value and does not claim a real-world
+unit such as meters.
 
 The retired top-center probe reported the complete general-marker count and
 unique numeric marker types as `G:<count> TYPES:<types>`. It established the

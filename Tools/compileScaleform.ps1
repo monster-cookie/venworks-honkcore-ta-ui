@@ -1052,6 +1052,9 @@ try {
     }
     if ($reopenedContactRadarSource -notmatch 'param1\.scaleX\s*=\s*1' -or
         $reopenedContactRadarSource -notmatch 'param1\.scaleY\s*=\s*1' -or
+        $reopenedContactRadarSource -notmatch 'MAX_DISTANCE\s*:\s*Number\s*=\s*300' -or
+        $reopenedContactRadarSource -notmatch 'fDistanceToPlayer' -or
+        $reopenedContactRadarSource -notmatch 'distance\s*/\s*MAX_DISTANCE' -or
         $reopenedContactRadarSource -notmatch 'MIT_MARKER_SHIP_PARKED\s*:\s*uint\s*=\s*10' -or
         $reopenedContactRadarSource -notmatch 'MIT_MARKER_POSITION\s*:\s*uint\s*=\s*13' -or
         $reopenedContactRadarSource -notmatch 'MIT_MARKER_VEHICLE\s*:\s*uint\s*=\s*14' -or
@@ -1061,8 +1064,9 @@ try {
         $reopenedContactRadarSource -match 'MIT_MARKER_SHIP_PARKED\s*:\s*uint\s*=\s*11' -or
         $reopenedContactRadarSource -match 'MIT_MARKER_VEHICLE\s*:\s*uint\s*=\s*15' -or
         $reopenedContactRadarSource -match 'CUITextFieldHost|diagnosticField|"G:"|" TYPES:"' -or
+        $reopenedContactRadarSource -match 'bIsNear' -or
         $reopenedContactRadarSource -match 'fDistanceScale') {
-      throw 'Generated contact radar does not retain fixed scaling and the Bethesda 10/13/14 ship-position-vehicle mapping, or still owns diagnostic presentation.'
+      throw 'Generated contact radar does not retain fixed 300-unit distance placement, fixed scaling, and the Bethesda 10/13/14 ship-position-vehicle mapping, or still contains retired near/far, distance-scale, or diagnostic behavior.'
     }
     if ($reopenedPlayerHudDataContextSource -match 'diagnostic\.compassmarkers|updateCompassMarkerDiagnostic|"G:"|" TYPES:"' -or
         !$reopenedPlayerHudDataContextSource.Contains('BSUIDataManager.Subscribe("HudCompassData",this.onRadarCompassData)') -or
@@ -1168,6 +1172,10 @@ try {
     [string]$_.id -eq 'faction-display'
   })
   $contactRadarNodes = @($stagedContactRadar.SelectNodes('//contactRadar'))
+  $contactRadarRingNodes = @($stagedContactRadar.SelectNodes('//shape[starts-with(@id,"contact-radar.ring.")]'))
+  $contactRadarRing100Nodes = @($stagedContactRadar.SelectNodes('//shape[@id="contact-radar.ring.100"]'))
+  $contactRadarRing200Nodes = @($stagedContactRadar.SelectNodes('//shape[@id="contact-radar.ring.200"]'))
+  $contactRadarRing300Nodes = @($stagedContactRadar.SelectNodes('//shape[@id="contact-radar.ring.300"]'))
   $contactRadarInteractiveNodes = @($stagedContactRadar.SelectNodes('//*[@action or @event or @onClick or @mouseEnabled]'))
   $factionDisplaySvgNodes = @($stagedFactionDisplay.SelectNodes('//svg[@src="venworks-logo.svg"]'))
   $factionDisplayTextNodes = @($stagedFactionDisplay.SelectNodes('//text'))
@@ -1181,13 +1189,29 @@ try {
       [string]$factionDisplayIncludes[0].x -ne '-64' -or
       [string]$factionDisplayIncludes[0].y -ne '-36' -or
       $contactRadarNodes.Count -ne 1 -or
+      $contactRadarRingNodes.Count -ne 3 -or
+      $contactRadarRing100Nodes.Count -ne 1 -or
+      [string]$contactRadarRing100Nodes[0].x -ne '83.333' -or
+      [string]$contactRadarRing100Nodes[0].y -ne '82.333' -or
+      [string]$contactRadarRing100Nodes[0].width -ne '61.334' -or
+      [string]$contactRadarRing100Nodes[0].height -ne '61.334' -or
+      $contactRadarRing200Nodes.Count -ne 1 -or
+      [string]$contactRadarRing200Nodes[0].x -ne '52.667' -or
+      [string]$contactRadarRing200Nodes[0].y -ne '51.667' -or
+      [string]$contactRadarRing200Nodes[0].width -ne '122.666' -or
+      [string]$contactRadarRing200Nodes[0].height -ne '122.666' -or
+      $contactRadarRing300Nodes.Count -ne 1 -or
+      [string]$contactRadarRing300Nodes[0].x -ne '22' -or
+      [string]$contactRadarRing300Nodes[0].y -ne '21' -or
+      [string]$contactRadarRing300Nodes[0].width -ne '184' -or
+      [string]$contactRadarRing300Nodes[0].height -ne '184' -or
       $contactRadarInteractiveNodes.Count -ne 0 -or
       $stagedContactRadarText -match 'venworks-logo.svg' -or
       $stagedContactRadarText -match 'value="VENWORKS"' -or
       $factionDisplaySvgNodes.Count -ne 1 -or
       $factionDisplayTextNodes.Count -ne 0 -or
       $stagedContactRadarText -match 'diagnostic\.radar\.') {
-    throw 'Goal 8B must stage independent top-edge faction and passive contact-radar displays, with one owned SVG crest, no duplicate label, and no diagnostic bindings.'
+    throw 'Goal 8B must stage independent top-edge faction and passive contact-radar displays, exact 100/200/300-unit range circles, one owned SVG crest, no duplicate label, and no diagnostic bindings.'
   }
   $environmentalDiagnosticIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'environmental-hazard-diagnostic'

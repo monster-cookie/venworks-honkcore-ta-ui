@@ -21,10 +21,11 @@ The requested production vocabulary is:
 - purple square for the player; and
 - white square for the player's ship or occupied/nearby vehicle.
 
-A 300-unit radius is the target only if Bethesda exposes a meaningful distance
-field and unit in the persistent HUD. None of these disposition, ally,
-ship/vehicle, or range meanings may be inferred from appearance or array
-membership.
+The radar uses Bethesda's marker `fDistanceToPlayer` field with a fixed
+300-provider-unit radius. Contacts are positioned proportionally against range
+circles at 100, 200, and 300 units and fail closed beyond the outer circle. No
+real-world unit such as meters is claimed. Disposition, ally, and ship/vehicle
+meanings are not inferred from appearance or array membership.
 
 The radar remains present while aiming and while the scanner is open. Scanner-
 specific presentation and scanner-owned behavior belong to a later goal.
@@ -38,14 +39,15 @@ specific presentation and scanner-owned behavior belong to a later goal.
 | Mission contacts | `HudCompassData.aMissionMarkers` | Confirmed in HUDMenu vanilla code. |
 | Enemy contacts | `HudCompassData.aEnemyMarkers` | Confirmed in HUDMenu vanilla code. |
 | Contact heading | Marker `fHeading` | Confirmed in HUDMenu vanilla code. |
-| Near/far state | Marker `bIsNear` | Confirmed in HUDMenu vanilla code; physical threshold unknown. |
+| Physical/provider distance | Marker `fDistanceToPlayer` | Confirmed as the distance input used by HONKCORE MAPR for general, enemy, and mission records from persistent `HudCompassData`; production runtime acceptance remains required. |
+| Near/far state | Marker `bIsNear` | Confirmed in HUDMenu vanilla code but retired from production radar placement because it provides only two nearly identical radii. |
 | Relative elevation | Marker `uiRelativeMarkerHeightType` | Confirmed in HUDMenu vanilla code. |
 | Marker type and location state | `uiMarkerIconType`, `uMapMarkerType`, `uMapMarkerCategory`, `uLocationMarkerState` | Confirmed in HUDMenu vanilla code. |
-| Distance alpha | `fDistanceAlpha` | Confirmed as a presentation input; bounded to `[0,1]`. Physical distance and unit remain unknown. |
+| Distance alpha | `fDistanceAlpha` | Confirmed as a presentation input and bounded to `[0,1]`; it is not used as physical range. |
 | Marker scale | `fDistanceScale` | Confirmed as a Bethesda presentation input but rejected for production use after an extreme kill-transition value expanded a marker across the HUD. Production scale is fixed at `1.0`. |
 | Aggressive/defensive/passive disposition | Unknown marker field or array behavior | Unknown. |
 | Player ally identity | Unknown marker field or array behavior | Unknown. |
-| Ship and vehicle candidate identity | `uiMarkerIconType` values 11 and 15 | Recognized candidates, but delivery through persistent HUD `aMarkers` remains unconfirmed. |
+| Ship and vehicle identity | `uiMarkerIconType` values 10, 13, and 14 | Type 10 parked-ship and type 13 parked-vehicle-position delivery are runtime-confirmed; formal type 14 vehicle delivery remains unobserved. |
 | Terrain or local-map geometry | Surface Map/menu-owned providers | Confirmed elsewhere only; not assumed HUDMenu-safe. |
 | Equipped armor entries | `PlayerInventoryData.aItems[*]`, `bIsEquipped`, `ArmorInfo` | Confirmed in HUD runtime. |
 | Suit/helmet/backpack category | Candidate `iFilterFlag` and equipment fields | Confirmed in Bethesda inventory presentation elsewhere; HUD payload presence unknown. |
@@ -88,12 +90,11 @@ appears; production use would require lifecycle-safe updates.
 
 ## Production gate and limitations
 
-Goal 8B requires a separate exact-file plan after Goal 8A evidence is accepted.
-It will remove the complete diagnostic and may implement only distinctions
-proven lifetime-safe in HUDMenu. If physical distance is unavailable, the radar
-will use Bethesda's bounded marker visibility or a documented near/far rule
-instead of claiming a 300-unit radius. If disposition or actor relationship is
-unavailable, colors will be narrowed rather than guessed.
+Goal 8B removed the complete diagnostic and implements only distinctions proven
+lifetime-safe in HUDMenu. The initial near/far fallback was accepted before
+`fDistanceToPlayer` was identified in HONKCORE MAPR. The fixed-range correction
+uses that existing field without adding a provider. Disposition and actor
+relationship remain unavailable, so colors stay narrowed rather than guessed.
 
 The production crest is configuration identity, not a claim about the player's
 live faction membership. Suit-status text remains omitted regardless of the
@@ -111,18 +112,18 @@ states.
 Records that remained at the empty outpost used type 7,
 `MIT_MARKER_LOCATIONS`; they are excluded rather than presented as actors.
 Bethesda's confirmed type 8 companion marker renders as a white dot. Production
-recognizes type 11 as a parked-ship candidate and type 15 as a vehicle candidate;
-either would render as a white square if delivered. Runtime beside a parked ship
-showed no square, so these candidate mappings do not establish that persistent
-HUD `aMarkers` delivers nearby ships or vehicles. The player is an authored
+recognizes type 10 parked ships and type 13 parked-vehicle positions, both of
+which runtime later confirmed in persistent HUD `aMarkers`; formal type 14
+vehicles are also accepted but remain unobserved. The player is an authored
 purple center square. Mission markers and unknown general marker types fail
 closed. Opening the scanner did not change the feed, so the radar remains always
 active and scanner-independent.
 
-The payload exposed `bIsNear`, `fDistanceScale`, and `fDistanceAlpha` but no
-physical distance with a proven unit. Production follows Bethesda's Watch
-near/far radial presentation, bounds `fDistanceAlpha`, fixes marker scale at
-`1.0`, and makes no 300-unit claim.
+The initial probe conclusion recorded `bIsNear`, `fDistanceScale`, and
+`fDistanceAlpha` but did not identify a physical-distance field. Later read-only
+decompilation of HONKCORE MAPR showed that it reads `fDistanceToPlayer` from the
+same persistent `HudCompassData` marker arrays. That evidence supersedes the
+near/far fallback while leaving the provider and subscription unchanged.
 
 While the player wore a Starborn suit, the equipment candidate selected a
 weapon, jumpsuit, spacesuit, and grenade through the same broad `ArmorInfo`
@@ -177,9 +178,8 @@ values but allowed infinity and extreme finite values. During the death/removal
 transition, an extreme scale could therefore expand the marker surface across
 the HUD, which Scaleform rendered as black. The accepted correction removes
 `fDistanceScale` from production rendering and assigns both marker axes a fixed
-scale of `1.0`. Heading placement, near/far radial placement, bounded
-`fDistanceAlpha`, contact color and shape, and the fixed purple player marker
-remain unchanged.
+scale of `1.0`. Heading placement, bounded `fDistanceAlpha`, contact color and
+shape, and the fixed purple player marker remain unchanged.
 
 The same recording showed no ship or vehicle square while the player approached
 and stood directly beside a parked ship. The first correction placed a compact
@@ -207,6 +207,34 @@ probe removes the top-center group, its `diagnostic.compassmarkers` value, and
 the count/type formatting routine. The existing `HudCompassData` subscription
 and complete `currentCompassData` payload remain the radar's sole data path.
 
+Subsequent runtime testing found that enemies, the parked ship, and the parked
+vehicle stayed near the radar perimeter both at point-blank range and hundreds
+of units away. The source cause was the production `bIsNear` placement, which
+selected only `0.43` or `0.39` of the contact-area size and therefore represented
+bearing without useful range. The existing heading calculation is algebraically
+equivalent to HONKCORE's `fHeading - fDirection` calculation and remains valid.
+
+HONKCORE MAPR normalizes each general, enemy, and mission marker as
+`fDistanceToPlayer / currentRange`. The accepted Venworks refinement uses the
+same marker field without copying MAPR's adaptive zoom or edge pinning. Venworks
+instead fixes the range at 300 provider units, maps distance linearly from the
+player center to the outer circle, and hides missing, invalid, negative, or
+over-range contacts. The unchanged panel now has subdued circles at 100, 200,
+and 300 units; 50-unit rings and range labels are omitted to avoid clutter.
+
+On 2026-08-16, `Tools/checkRepo.ps1`, the complete normal/large Scaleform build,
+and `git diff --check` passed. Both movies imported and reopened all 207 scripts,
+retained all 39 authored classes in exactly one Venworks ABC linkage domain, and
+passed the fixed-range, fixed-scale, 10/13/14 mapping, diagnostic-removal, and
+100/200/300-unit staged-ring assertions. The movies and radar fragment staged
+byte-identically across VWKS, CF, FC, and TA.
+
+| Fixed-range production artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `hudmenu.gfx` | 412316 | `6D095FA99B4E81CFA672A6DD344ABC8A386150949DF87B3BBE908C9788ACB851` |
+| `hudmenu_lrg.gfx` | 412499 | `25639CF8A5C8BD100E03B2ACC029B88ABE7DF56B4B494742F1D640560CEFD4D8` |
+| `components/contact-radar.xml` | 2197 | `7348367E6DB247CBD4DF53876701DBC71CBC41BF5A8A7498130E8744922223E8` |
+
 On 2026-08-15, `Tools/checkRepo.ps1` passed and the complete normal/large
 Scaleform build imported, reopened, and validated all 207 scripts and all 39
 authored CUI classes in the single Venworks ABC linkage domain. The movies and
@@ -233,9 +261,11 @@ Movies and layouts staged byte-identically across VWKS, CF, FC, and TA.
 
 Final runtime acceptance requires the debug panel to be absent, type-10 parked
 ships and the type-13 parked-vehicle position to render as white squares, and no
-unrelated position marker to produce a false contact. Enemy and companion dots,
-the fixed player marker, fixed contact scale, and the runtime-confirmed absence
-of kill-event blackouts must remain unchanged.
+unrelated position marker to produce a false contact. Enemy, ship, and vehicle
+contacts must move continuously against the 100/200/300-unit circles and
+disappear beyond 300 units. Enemy and companion dots, the fixed player marker,
+fixed contact scale, and the runtime-confirmed absence of kill-event blackouts
+must remain unchanged.
 
 ## Goal 8B runtime confirmation and visual refinement
 

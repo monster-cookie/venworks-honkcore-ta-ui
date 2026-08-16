@@ -9,6 +9,7 @@ package venworks.cui.components
       private static const MIT_MARKER_SHIP_PARKED:uint = 10;
       private static const MIT_MARKER_POSITION:uint = 13;
       private static const MIT_MARKER_VEHICLE:uint = 14;
+      private static const MAX_DISTANCE:Number = 300;
       private static const MAX_CONTACTS:int = 32;
 
       private var contacts:Array;
@@ -81,25 +82,36 @@ package venworks.cui.components
                 type == MIT_MARKER_SHIP_PARKED || type == MIT_MARKER_POSITION ||
                 type == MIT_MARKER_VEHICLE))
             {
-               this.renderContact(Shape(contacts[param2]),marker,param3 == null ? 0 : Number(param3.fDirection),
+               if(this.renderContact(Shape(contacts[param2]),marker,param3 == null ? 0 : Number(param3.fDirection),
                   param4 == MIT_MARKER_ENEMY,type == MIT_MARKER_SHIP_PARKED ||
-                  type == MIT_MARKER_POSITION || type == MIT_MARKER_VEHICLE);
-               ++param2;
+                  type == MIT_MARKER_POSITION || type == MIT_MARKER_VEHICLE))
+               {
+                  ++param2;
+               }
             }
             ++sourceIndex;
          }
          return param2;
       }
 
-      private function renderContact(param1:Shape, param2:Object, param3:Number, param4:Boolean, param5:Boolean) : void
+      private function renderContact(param1:Shape, param2:Object, param3:Number, param4:Boolean, param5:Boolean) : Boolean
       {
+         if(param2.fDistanceToPlayer === undefined || param2.fDistanceToPlayer === null)
+         {
+            return false;
+         }
+         var distance:Number = Number(param2.fDistanceToPlayer);
+         if(isNaN(distance) || !isFinite(distance) || distance < 0 || distance > MAX_DISTANCE)
+         {
+            return false;
+         }
          var heading:Number = Number(param2.fHeading);
          var angle:Number = Math.PI - param3;
          var vectorX:Number = -Math.sin(angle);
          var vectorY:Number = Math.cos(angle);
          var rotatedX:Number = Math.cos(heading) * vectorX - Math.sin(heading) * vectorY;
          var rotatedY:Number = Math.sin(heading) * vectorX + Math.cos(heading) * vectorY;
-         var radius:Number = Math.min(componentWidth,componentHeight) * (Boolean(param2.bIsNear) ? 0.43 : 0.39);
+         var radius:Number = Math.min(componentWidth,componentHeight) * 0.5 * (distance / MAX_DISTANCE);
          var markerAlpha:Number = param2.fDistanceAlpha === undefined || param2.fDistanceAlpha === null ? 1 : Number(param2.fDistanceAlpha);
          var size:Number = param5 ? 7 : 6;
          if(isNaN(markerAlpha))
@@ -123,6 +135,7 @@ package venworks.cui.components
          param1.scaleY = 1;
          param1.alpha = Math.max(0,Math.min(1,markerAlpha));
          param1.visible = true;
+         return true;
       }
    }
 }
