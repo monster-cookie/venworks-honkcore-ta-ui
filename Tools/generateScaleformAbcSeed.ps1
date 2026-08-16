@@ -42,7 +42,7 @@ $resolvedPlayerGlobalPath = Resolve-RequiredFile -Path $PlayerGlobalPath -Descri
 $resolvedJavaPath = Resolve-RequiredFile -Path $JavaPath -Description 'Java executable'
 $resolvedJpexsJarPath = Resolve-RequiredFile -Path $JpexsJarPath -Description 'JPEXS JAR'
 $resolvedActionScriptSourcePath = Resolve-RequiredDirectory -Path $ActionScriptSourcePath -Description 'Authored ActionScript directory'
-$compcJarPath = Resolve-RequiredFile -Path (Join-Path $resolvedFlexSdkPath 'lib\compc.jar') -Description 'Apache Flex compc compiler'
+$mxmlcJarPath = Resolve-RequiredFile -Path (Join-Path $resolvedFlexSdkPath 'lib\mxmlc.jar') -Description 'Apache Flex mxmlc compiler'
 $flexConfigPath = Resolve-RequiredFile -Path (Join-Path $resolvedFlexSdkPath 'frameworks\flex-config.xml') -Description 'Apache Flex compiler configuration'
 
 $classes = @()
@@ -63,23 +63,22 @@ $classes = @($classes | Sort-Object QualifiedName -Unique)
 if ($classes.Count -eq 0) {
   throw 'No authored ActionScript classes were discovered.'
 }
-$sentinelClass = [pscustomobject]@{
-  Package = 'venworks.cui.seed'
-  Name = 'CUISeedTerminator'
-  QualifiedName = 'venworks.cui.seed.CUISeedTerminator'
+$duplicateClassNames = @($classes | Group-Object Name | Where-Object Count -gt 1)
+if ($duplicateClassNames.Count -gt 0) {
+  $duplicateNames = ($duplicateClassNames.Name | Sort-Object) -join ', '
+  throw "Single-domain seed imports require unique authored class names; duplicates: $duplicateNames"
 }
-$compileClasses = @($classes) + @($sentinelClass)
 
 $temporaryRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("venworks-cui-seed-" + [guid]::NewGuid().ToString('N'))
 $stubRoot = Join-Path $temporaryRoot 'stubs'
-$swcPath = Join-Path $temporaryRoot 'cui-seed.swc'
-$expandedSwcPath = Join-Path $temporaryRoot 'expanded'
-$seedSwfPath = Join-Path $expandedSwcPath 'library.swf'
+$rootSourceDirectory = Join-Path $temporaryRoot 'root'
+$seedRootPath = Join-Path $rootSourceDirectory 'CUISeedRoot.as'
+$seedSwfPath = Join-Path $temporaryRoot 'cui-seed.swf'
 $seedXmlPath = Join-Path $temporaryRoot 'seed.xml'
 
 try {
-  New-Item -ItemType Directory -Force -Path $stubRoot | Out-Null
-  foreach ($class in $compileClasses) {
+  New-Item -ItemType Directory -Force -Path $stubRoot, $rootSourceDirectory | Out-Null
+  foreach ($class in $classes) {
     $packageDirectory = Join-Path $stubRoot ($class.Package.Replace('.', [System.IO.Path]::DirectorySeparatorChar))
     New-Item -ItemType Directory -Force -Path $packageDirectory | Out-Null
     $stubPath = Join-Path $packageDirectory "$($class.Name).as"
@@ -87,14 +86,20 @@ try {
     [System.IO.File]::WriteAllText($stubPath, $stubText, [System.Text.UTF8Encoding]::new($false))
   }
 
+  $classImports = ($classes.QualifiedName | ForEach-Object { "   import $_;" }) -join "`r`n"
+  $classReferences = ($classes.Name | ForEach-Object { "         $_" }) -join ",`r`n"
+  $seedRootText = "package`r`n{`r`n   import flash.display.Sprite;`r`n$classImports`r`n`r`n   public final class CUISeedRoot extends Sprite`r`n   {`r`n      private static const CLASSES:Array = [`r`n$classReferences`r`n      ];`r`n`r`n      public function CUISeedRoot()`r`n      {`r`n         super();`r`n      }`r`n   }`r`n}`r`n"
+  [System.IO.File]::WriteAllText($seedRootPath, $seedRootText, [System.Text.UTF8Encoding]::new($false))
+
   $compilerArguments = @(
-    '-jar', $compcJarPath,
+    '-jar', $mxmlcJarPath,
     "-load-config=$flexConfigPath",
     '-compiler.source-path', $stubRoot,
     '-compiler.library-path=',
     '-compiler.external-library-path', $resolvedPlayerGlobalPath,
-    '-include-classes'
-  ) + @($compileClasses.QualifiedName) + @('-output', $swcPath)
+    '-output', $seedSwfPath,
+    $seedRootPath
+  )
   Push-Location (Join-Path $resolvedFlexSdkPath 'frameworks')
   try {
     & $resolvedJavaPath @compilerArguments
@@ -102,13 +107,8 @@ try {
   finally {
     Pop-Location
   }
-  if ($LASTEXITCODE -ne 0 -or !(Test-Path -LiteralPath $swcPath -PathType Leaf)) {
-    throw "Apache Flex compc failed with exit code $LASTEXITCODE."
-  }
-
-  Expand-Archive -LiteralPath $swcPath -DestinationPath $expandedSwcPath
-  if (!(Test-Path -LiteralPath $seedSwfPath -PathType Leaf)) {
-    throw 'The generated SWC does not contain library.swf.'
+  if ($LASTEXITCODE -ne 0 -or !(Test-Path -LiteralPath $seedSwfPath -PathType Leaf)) {
+    throw "Apache Flex mxmlc failed with exit code $LASTEXITCODE."
   }
   & $resolvedJavaPath -jar $resolvedJpexsJarPath -swf2xml $seedSwfPath $seedXmlPath
   if ($LASTEXITCODE -ne 0 -or !(Test-Path -LiteralPath $seedXmlPath -PathType Leaf)) {
@@ -117,18 +117,15 @@ try {
 
   $seedDocument = [xml](Get-Content -LiteralPath $seedXmlPath -Raw)
   $abcTags = @($seedDocument.SelectNodes('/swf/tags/item[@type="DoABC2Tag"]'))
-  if ($abcTags.Count -lt $compileClasses.Count) {
-    throw "Generated seed contains $($abcTags.Count) ABC tags for $($classes.Count) authored classes plus the terminator."
+  if ($abcTags.Count -ne 1) {
+    throw "Generated seed must contain exactly one Venworks ABC linkage domain; found $($abcTags.Count)."
   }
-  $sentinelAbcTags = @($abcTags | Where-Object {
-    $_.InnerText.Contains('venworks.cui.seed:CUISeedTerminator')
-  })
-  if ($sentinelAbcTags.Count -ne 1) {
-    throw "Generated seed must contain exactly one CUISeedTerminator ABC tag; found $($sentinelAbcTags.Count)."
+  foreach ($class in $classes) {
+    $abcClassName = "$($class.Package):$($class.Name)"
+    if (!$abcTags[0].InnerText.Contains($abcClassName)) {
+      throw "Generated single-domain seed is missing authored class $($class.QualifiedName)."
+    }
   }
-  $orderedAbcTags = @($abcTags | Where-Object {
-    !$_.InnerText.Contains('venworks.cui.seed:CUISeedTerminator')
-  }) + @($sentinelAbcTags[0])
   $outputDocument = [System.Xml.XmlDocument]::new()
   $declaration = $outputDocument.CreateXmlDeclaration('1.0', 'utf-8', $null)
   [void]$outputDocument.AppendChild($declaration)
@@ -138,15 +135,11 @@ try {
   [void]$outputDocument.AppendChild($root)
   $tags = $outputDocument.CreateElement('tags')
   [void]$root.AppendChild($tags)
-  $tagIndex = 0
-  foreach ($sourceAbcTag in $orderedAbcTags) {
-    $abcTag = $outputDocument.ImportNode($sourceAbcTag, $true)
-    $abcTag.SetAttribute('flags', '1')
-    $abcTag.SetAttribute('forceWriteAsLong', 'true')
-    $abcTag.SetAttribute('name', ('venworks.cui.components.seed.{0:D3}' -f $tagIndex))
-    [void]$tags.AppendChild($abcTag)
-    $tagIndex++
-  }
+  $abcTag = $outputDocument.ImportNode($abcTags[0], $true)
+  $abcTag.SetAttribute('flags', '1')
+  $abcTag.SetAttribute('forceWriteAsLong', 'true')
+  $abcTag.SetAttribute('name', 'venworks.cui.components.seed.000')
+  [void]$tags.AppendChild($abcTag)
 
   $settings = [System.Xml.XmlWriterSettings]::new()
   $settings.Indent = $true
@@ -158,7 +151,7 @@ try {
   finally {
     $writer.Dispose()
   }
-  Write-Host "Generated ABC seed for $($classes.Count) authored classes plus one terminal sentinel: $OutputPath"
+  Write-Host "Generated one ABC linkage domain for $($classes.Count) authored classes: $OutputPath"
 }
 finally {
   if (Test-Path -LiteralPath $temporaryRoot) {

@@ -598,16 +598,9 @@ try {
     $invalidAbcSeedTags = @($abcSeedTags | Where-Object {
       $_.type -ne 'DoABC2Tag' -or $_.name -notmatch '^venworks\.cui\.components\.seed\.\d{3}$'
     })
-    if ($abcSeedTags.Count -eq 0 -or $invalidAbcSeedTags.Count -ne 0) {
-      throw "ABC seed patch must contain only numbered Venworks DoABC2Tags: $abcSeedPatchPath"
-    }
-    $abcSeedTerminatorTags = @($abcSeedTags | Where-Object {
-      $_.InnerText.Contains('venworks.cui.seed:CUISeedTerminator')
-    })
-    if ($abcSeedTerminatorTags.Count -ne 1 -or
-        $abcSeedTags[$abcSeedTags.Count - 1].name -ne $abcSeedTerminatorTags[0].name -or
-        $abcSeedTags[$abcSeedTags.Count - 2].InnerText.Contains('venworks.cui.seed:CUISeedTerminator')) {
-      throw 'ABC seed must end with exactly one inert CUISeedTerminator tag after every class-bearing slot.'
+    if ($abcSeedTags.Count -ne 1 -or $invalidAbcSeedTags.Count -ne 0 -or
+        $abcSeedTags[0].name -ne 'venworks.cui.components.seed.000') {
+      throw "ABC seed patch must contain exactly one numbered Venworks DoABCTag linkage domain: $abcSeedPatchPath"
     }
 
     foreach ($abcSeedTag in $abcSeedTags) {
@@ -675,13 +668,10 @@ try {
     }
 
     [xml]$reopened = Get-Content -LiteralPath $reopenedXmlPath -Raw
-    if ($reopened.SelectNodes('/swf/tags/item[@type="DoABC2Tag" and starts-with(@name,"venworks.cui.components.seed.")]').Count -ne $abcSeedTags.Count) {
-      throw "Generated output does not retain the complete Venworks CUI ABC seed tag set."
-    }
     $reopenedSeedTags = @($reopened.SelectNodes('/swf/tags/item[@type="DoABC2Tag" and starts-with(@name,"venworks.cui.components.seed.")]'))
-    if (!$reopenedSeedTags[$reopenedSeedTags.Count - 1].InnerText.Contains('venworks.cui.seed:CUISeedTerminator') -or
-        $reopenedSeedTags[$reopenedSeedTags.Count - 2].InnerText.Contains('venworks.cui.seed:CUISeedTerminator')) {
-      throw 'Generated output does not retain CUISeedTerminator as the final seed slot.'
+    if ($reopenedSeedTags.Count -ne 1 -or
+        $reopenedSeedTags[0].name -ne 'venworks.cui.components.seed.000') {
+      throw 'Generated output does not retain exactly one Venworks CUI ABC linkage domain.'
     }
 
     $validationScriptMatches = @(Get-ChildItem -LiteralPath $validationScriptsDirectory -Recurse -File -Filter "$scriptName.as")

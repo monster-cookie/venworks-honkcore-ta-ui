@@ -195,7 +195,30 @@ the unique final seed tag. All four variants staged byte-identical artifacts.
 | `hudmenu.gfx` | 436030 | `0E41C1FA63CAEF9746D5C2C1EF4A12DD1E8D2D732919397B71C351D0CF1B15C5` |
 | `hudmenu_lrg.gfx` | 436213 | `6B69CFC9011A744AD10A80A567F8866F99B4B2BF134800A297FC252D778A7683` |
 | `cui-component-abc-seed.xml` | 209702 | `74B5D75F1E679DFA83A0C2C8EF0D52CCF1FF58A3E844B5B65DE27CDA23BEE057` |
-| `cui-component-abc-seed.xml` | 204698 | `D453E9D53D17919DB5BB873300EB8EC9A08285DBE061CA23938A17BB2A4EB0EE` |
+
+Deployment hashes matched the terminal-slot probe, but runtime produced the
+same `CUISymbol.isAllowlisted` `ReferenceError #1065`. The sentinel hypothesis
+is therefore disproven. The regression is the Goal 8 generator's replacement
+of the previously established single Venworks ABC domain with independent
+per-class ABC units. The accepted production correction restores exactly one
+Venworks seed ABC containing every dynamically discovered authored class. No
+vehicle-exit, symbol, radar, layout, or provider behavior changes are required.
+
+The corrected generator uses one synthetic root to make `mxmlc` compile all 39
+authored CUI classes into one seed `DoABC2Tag`. The complete normal/large build
+then passed import, reopen, single-domain, authored-class, and 207-script
+validation. All four variants received byte-identical movies. These artifacts
+supersede the terminal-slot probe:
+
+| Single-domain production artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `hudmenu.gfx` | 412164 | `CB87FE8BE725B5EA8038B0AC84EFFF8626C7E2630DE7B4DE0CE5610264BC9BF4` |
+| `hudmenu_lrg.gfx` | 412347 | `645601579D3AB9B15ADD69C38CB46EA7E5CF4A3A7AB51F18D5A5D235B554DA55` |
+| `cui-component-abc-seed.xml` | 108599 | `CC18451CD585EDEAEA097DF52027DA5A2503B98C659322A7F39EE0A0A06DD561` |
+
+Runtime confirmation remains required on the Starfield-capable system. The
+expected result is that layout validation passes the unchanged
+`#vehicle.exit.glyph` lookup and the contact radar reaches normal HUD startup.
 
 ## Rollback
 

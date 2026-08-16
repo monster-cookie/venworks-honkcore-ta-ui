@@ -1,5 +1,21 @@
 # Build system
 
+## One-domain Scaleform rule
+
+All cooperating Venworks CUI classes must live in exactly one injected
+`DoABC2Tag` linkage domain. Do not split Venworks classes across multiple ABC
+tags, even when JPEXS can reopen and decompile every class. Starfield's
+Scaleform runtime cannot reliably resolve classes or resources across those
+injected boundaries. Package names such as `venworks.cui.*` do not make
+separate ABC units one runtime domain.
+
+This is a mandatory architecture rule enforced by the build: the checked seed
+and each reopened normal/large HUD movie must contain exactly one
+`venworks.cui.components.seed.000` tag. Every dynamically discovered authored
+CUI class must be present inside that one ABC. This rule has regressed more than
+once; decompiled class presence, total script counts, padding records, and
+matching deployment hashes are not substitutes for the one-domain assertion.
+
 ## Scaleform ActionScript seed
 
 `Tools/compileScaleform.ps1` imports the authored CUI ActionScript into Bethesda's
@@ -29,11 +45,11 @@ Regenerate the seed whenever an authored `.as` class is added or removed:
 
 The generator inventories public classes beneath
 `Scaleform/shared/actionscript`, creates temporary empty stubs with the same
-qualified names, compiles them into a SWC with Apache Flex `compc`, exports the
-generated `DoABC2Tag` set through JPEXS, numbers the tags deterministically, and
-replaces the checked-in seed. Apache Flex emits independent ABC tags for its
-compiled library units; the normal build requires the complete numbered tag set
-to survive the import and reopen cycle.
+qualified names, and creates a synthetic root that references every discovered
+class. Apache Flex `mxmlc` compiles that root and all stubs into one SWF ABC.
+JPEXS exports that single `DoABC2Tag`, and the generator replaces the checked-in
+seed only after confirming that every authored class is present in the same
+ABC.
 Temporary compiler inputs are created under the operating-system temporary
 directory and removed in a `finally` block. Dependencies must remain outside the
 repository and `Scaleform/.work`; do not commit SDKs, JARs, SWCs, or machine paths.
@@ -74,19 +90,16 @@ asset collection, while the parser retains the component type and ID currently
 being validated. Reopened-movie validation requires these checkpoint strings
 and the optional stack-trace request to survive compilation.
 
-## Terminal seed-slot diagnostic
+## Goal 8 split-domain regression
 
 Goal 8 runtime diagnostics localized `ReferenceError #1065` to the first call
 to `CUISymbol.isAllowlisted`. The authored vehicle-exit symbol and `CUISymbol`
 implementation were unchanged, but Goal 8 seed regeneration replaced Goal 7's
-single lazy ABC with forty independent lazy ABC tags and placed `CUISymbol` in
-the terminal tag. To test whether the import/runtime path fails to register the
-terminal record, the generator appends one inert seed-only
-`venworks.cui.seed.CUISeedTerminator` class and orders its ABC tag last. The
-terminator is never referenced or instantiated by HUD code. Build validation
-requires it to be the sole final seed slot after movie reopening.
+single lazy ABC with forty independent lazy ABC tags. A controlled terminal
+sentinel moved `CUISymbol` away from the final record; the same error remained
+with matching deployed hashes. That disproved terminal-record loss and
+confirmed that padding cannot repair the violated one-domain architecture.
 
-This sentinel is a bounded diagnostic, not evidence of a Starfield, Scaleform,
-or AVM2 class-count limit. If moving `CUISymbol` away from the terminal slot does
-not clear the runtime error, replace the fragmented seed with a single ABC
-linkage domain rather than adding further padding records.
+The production correction restores one generated ABC containing the entire
+dynamic class inventory. Do not reintroduce `compc` library output, independent
+per-class ABC tags, sentinel slots, or cross-domain resource assumptions.
