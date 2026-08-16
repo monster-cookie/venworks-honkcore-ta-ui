@@ -378,5 +378,11 @@ The production semantic mapping is deliberately narrow: all
 dots; type 11 parked ships and type 15 vehicles are white squares; and the
 player is a fixed purple center square. Locations, mission markers, unknown
 types, aggressive/defensive/passive distinctions, and claimed physical range
-are not rendered or inferred. The adjacent Venworks SVG crest identifies the
-configured theme, not the player's live faction membership.
+are not rendered or inferred.
+
+The adjacent `faction-display` fragment owns the Venworks SVG crest and its
+panel separately from `contact-radar`. Each has an independent layout include,
+so a theme or player configuration can hide the faction display while leaving
+the passive radar active. The crest identifies the configured theme, not the
+player's live faction membership. Branding text embedded in the owned SVG is
+the sole Venworks label; the layout must not add a duplicate text label.

@@ -158,6 +158,37 @@ TA, and the retired Goal 8A diagnostic payload was removed from every variant.
 | `VenworksCUI/layout.xml` | 6427 | `BA609EE350472D48C428B1AAADAE5DE4C3AF86BA5E29CBD9A3DE61E27B6C70F7` |
 | `components/contact-radar.xml` | 2637 | `BFA1CC6A30B87C21A02BE186B4B558B6D0461F1327F22539B9B51FA4F3D03E61` |
 
+## Goal 8B runtime confirmation and visual refinement
+
+On 2026-08-15, the single-domain production artifacts loaded successfully in
+Starfield. The HUD, layout validation, and contact radar appeared operational,
+confirming that the split-domain seed was the runtime regression and that the
+one-domain correction resolved it.
+
+Runtime review also established that the owned SVG already contains the
+Venworks name, making the separate lower text label redundant. The accepted
+refinement removes that duplicate and separates the crest panel from the radar
+fragment. `faction-display` and `contact-radar` are now independent, always-on
+by default layout includes: users may hide the faction display without hiding
+the radar. Both move to the physical top edge; the faction panel extends to the
+physical left edge and enlarges the SVG, while the radar retains its established
+diameter and horizontal screen position. Provider semantics and radar behavior
+remain unchanged.
+
+The refinement build passed repository checks and the complete normal/large
+Scaleform import, reopen, 207-script, authored-class, and single-domain
+validation. Configuration payloads staged byte-identically across VWKS, CF,
+FC, and TA. The HUD movies remain byte-identical to the runtime-confirmed
+single-domain build because this refinement changes loose layout XML only.
+
+| Visual-refinement artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `hudmenu.gfx` | 412164 | `CB87FE8BE725B5EA8038B0AC84EFFF8626C7E2630DE7B4DE0CE5610264BC9BF4` |
+| `hudmenu_lrg.gfx` | 412347 | `645601579D3AB9B15ADD69C38CB46EA7E5CF4A3A7AB51F18D5A5D235B554DA55` |
+| `VenworksCUI/layout.xml` | 6583 | `87649033E716119601D6EBD1D9D9C50C048A84D347E6CC59D9472B580D2D915E` |
+| `components/contact-radar.xml` | 1898 | `3C4DBD797027CE2CE82BB839B2A88BFB6033EBF50C43686D015B9D42D0F447F5` |
+| `components/faction-display.xml` | 889 | `12976D9AD512E0F0761F0CD70325FF0A895C9B9186B48526E96129A5E052B8E4` |
+
 The next deployment passed composition but reported a stripped
 `ReferenceError #1065` under the former broad `LAYOUT PARSING` phase. Because
 that phase covered parser execution, asset-manager construction, and asset-load

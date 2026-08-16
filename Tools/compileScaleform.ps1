@@ -1098,7 +1098,7 @@ try {
       Remove-Item -LiteralPath $retiredComponentPath -Force
     }
   }
-  foreach ($componentFixtureName in @('contact-radar.xml','equipment-rail.xml','environmental-hazard-scanner.xml','player-status-scanner.xml')) {
+  foreach ($componentFixtureName in @('contact-radar.xml','faction-display.xml','equipment-rail.xml','environmental-hazard-scanner.xml','player-status-scanner.xml')) {
     Copy-Item -LiteralPath (Join-Path $providerProbeComponentDirectory $componentFixtureName) -Destination (Join-Path $componentOutputDirectory $componentFixtureName) -Force
   }
   $stagedPlayerScannerText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'player-status-scanner.xml') -Raw
@@ -1112,19 +1112,35 @@ try {
   $stagedEnvironmentalScanner = [xml]$stagedEnvironmentalScannerText
   $stagedContactRadarText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'contact-radar.xml') -Raw
   $stagedContactRadar = [xml]$stagedContactRadarText
+  $stagedFactionDisplayText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'faction-display.xml') -Raw
+  $stagedFactionDisplay = [xml]$stagedFactionDisplayText
   $contactRadarIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'contact-radar'
   })
+  $factionDisplayIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
+    [string]$_.id -eq 'faction-display'
+  })
   $contactRadarNodes = @($stagedContactRadar.SelectNodes('//contactRadar'))
   $contactRadarInteractiveNodes = @($stagedContactRadar.SelectNodes('//*[@action or @event or @onClick or @mouseEnabled]'))
+  $factionDisplaySvgNodes = @($stagedFactionDisplay.SelectNodes('//svg[@src="venworks-logo.svg"]'))
+  $factionDisplayTextNodes = @($stagedFactionDisplay.SelectNodes('//text'))
   if ($contactRadarIncludes.Count -ne 1 -or
       [string]$contactRadarIncludes[0].src -ne 'contact-radar.xml' -or
       [string]$contactRadarIncludes[0].visibleWhen -ne 'always' -or
+      [string]$contactRadarIncludes[0].y -ne '-36' -or
+      $factionDisplayIncludes.Count -ne 1 -or
+      [string]$factionDisplayIncludes[0].src -ne 'faction-display.xml' -or
+      [string]$factionDisplayIncludes[0].visibleWhen -ne 'always' -or
+      [string]$factionDisplayIncludes[0].x -ne '-64' -or
+      [string]$factionDisplayIncludes[0].y -ne '-36' -or
       $contactRadarNodes.Count -ne 1 -or
       $contactRadarInteractiveNodes.Count -ne 0 -or
-      $stagedContactRadarText -notmatch 'venworks-logo.svg' -or
+      $stagedContactRadarText -match 'venworks-logo.svg' -or
+      $stagedContactRadarText -match 'value="VENWORKS"' -or
+      $factionDisplaySvgNodes.Count -ne 1 -or
+      $factionDisplayTextNodes.Count -ne 0 -or
       $stagedContactRadarText -match 'diagnostic\.radar\.') {
-    throw 'Goal 8B must stage one passive, always-active contact radar with the owned Venworks SVG crest and no diagnostic bindings.'
+    throw 'Goal 8B must stage independent top-edge faction and passive contact-radar displays, with one owned SVG crest, no duplicate label, and no diagnostic bindings.'
   }
   $environmentalDiagnosticIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'environmental-hazard-diagnostic'
@@ -1486,7 +1502,7 @@ try {
       New-Item -ItemType Directory -Force -Path $variantAssetOutputDirectory | Out-Null
       New-Item -ItemType Directory -Force -Path $variantComponentOutputDirectory | Out-Null
       Copy-Item -LiteralPath (Join-Path $cuiOutputDirectory "layout.xml") -Destination (Join-Path $variantCuiOutputDirectory "layout.xml") -Force
-      foreach ($componentFixtureName in @('contact-radar.xml','equipment-rail.xml','environmental-hazard-scanner.xml','player-status-scanner.xml')) {
+      foreach ($componentFixtureName in @('contact-radar.xml','faction-display.xml','equipment-rail.xml','environmental-hazard-scanner.xml','player-status-scanner.xml')) {
         Copy-Item -LiteralPath (Join-Path $componentOutputDirectory $componentFixtureName) -Destination (Join-Path $variantComponentOutputDirectory $componentFixtureName) -Force
       }
       foreach ($assetFileName in @('gallery-vector.svg','venworks-logo.svg','gallery-invalid.svg')) {
@@ -1502,6 +1518,7 @@ try {
     foreach ($relativeCuiPath in @(
       'layout.xml',
       'components\contact-radar.xml',
+      'components\faction-display.xml',
       'components\equipment-rail.xml',
       'components\environmental-hazard-scanner.xml',
       'components\player-status-scanner.xml',
