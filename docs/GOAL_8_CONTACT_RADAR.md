@@ -174,6 +174,27 @@ byte-identically across VWKS, CF, FC, and TA.
 | --- | ---: | --- |
 | `hudmenu.gfx` | 435523 | `4D2A691C2C56B6C08230C4B6619A1261CF24525487D824C19F67E86AD8CF5969` |
 | `hudmenu_lrg.gfx` | 435706 | `3D821D12CF35C76733CAD905CC74879649311A279E46B52809587AB166B238C2` |
+
+The detailed panel localized `ReferenceError #1065` to validation of the
+unchanged `symbol #vehicle.exit.glyph`, where the parser first calls
+`CUISymbol.isAllowlisted`. Historical comparison showed that Goal 7 used one
+lazy seed ABC, while Goal 8 regeneration produced forty lazy ABC tags and put
+`CUISymbol` in the terminal tag. The accepted next probe appends one inert,
+seed-only terminator tag after `CUISymbol`. If the error clears or advances, the
+result confirms terminal-slot loss; if it remains at the same call, fragmented
+cross-ABC linkage remains the production root-cause candidate.
+
+The terminal-slot probe passed `Tools/checkRepo.ps1` and the complete
+normal/large Scaleform build. Both movies imported, reopened, and validated 208
+scripts: the prior 207-script inventory plus the inert terminator. Reopened
+movie structure confirms `CUISymbol` is penultimate and `CUISeedTerminator` is
+the unique final seed tag. All four variants staged byte-identical artifacts.
+
+| Terminal-slot probe artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `hudmenu.gfx` | 436030 | `0E41C1FA63CAEF9746D5C2C1EF4A12DD1E8D2D732919397B71C351D0CF1B15C5` |
+| `hudmenu_lrg.gfx` | 436213 | `6B69CFC9011A744AD10A80A567F8866F99B4B2BF134800A297FC252D778A7683` |
+| `cui-component-abc-seed.xml` | 209702 | `74B5D75F1E679DFA83A0C2C8EF0D52CCF1FF58A3E844B5B65DE27CDA23BEE057` |
 | `cui-component-abc-seed.xml` | 204698 | `D453E9D53D17919DB5BB873300EB8EC9A08285DBE061CA23938A17BB2A4EB0EE` |
 
 ## Rollback

@@ -15,7 +15,7 @@
             <item isNull="true" />
             <item>venworks.cui.components:CUIContactRadar</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui\\components;CUIContactRadar.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui\\components;CUIContactRadar.as</item>
             <item>venworks.cui.components:CUIContactRadar/CUIContactRadar</item>
             <item>venworks.cui.components</item>
             <item>CUIContactRadar</item>
@@ -140,7 +140,7 @@
             <item isNull="true" />
             <item>venworks.cui.components:CUIDotBar</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui\\components;CUIDotBar.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui\\components;CUIDotBar.as</item>
             <item>venworks.cui.components:CUIDotBar/CUIDotBar</item>
             <item>venworks.cui.components</item>
             <item>CUIDotBar</item>
@@ -265,7 +265,7 @@
             <item isNull="true" />
             <item>venworks.cui:CUIConditionContext</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui;CUIConditionContext.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui;CUIConditionContext.as</item>
             <item>venworks.cui:CUIConditionContext/CUIConditionContext</item>
             <item>venworks.cui</item>
             <item>CUIConditionContext</item>
@@ -390,7 +390,7 @@
             <item isNull="true" />
             <item>venworks.cui.components:CUIRadialMeter</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui\\components;CUIRadialMeter.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui\\components;CUIRadialMeter.as</item>
             <item>venworks.cui.components:CUIRadialMeter/CUIRadialMeter</item>
             <item>venworks.cui.components</item>
             <item>CUIRadialMeter</item>
@@ -515,7 +515,7 @@
             <item isNull="true" />
             <item>venworks.cui.components:CUIDivider</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui\\components;CUIDivider.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui\\components;CUIDivider.as</item>
             <item>venworks.cui.components:CUIDivider/CUIDivider</item>
             <item>venworks.cui.components</item>
             <item>CUIDivider</item>
@@ -640,7 +640,7 @@
             <item isNull="true" />
             <item>venworks.cui:CUICompositeResolver</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui;CUICompositeResolver.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui;CUICompositeResolver.as</item>
             <item>venworks.cui:CUICompositeResolver/CUICompositeResolver</item>
             <item>venworks.cui</item>
             <item>CUICompositeResolver</item>
@@ -765,7 +765,7 @@
             <item isNull="true" />
             <item>venworks.cui.components:CUIPanel</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui\\components;CUIPanel.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui\\components;CUIPanel.as</item>
             <item>venworks.cui.components:CUIPanel/CUIPanel</item>
             <item>venworks.cui.components</item>
             <item>CUIPanel</item>
@@ -890,7 +890,7 @@
             <item isNull="true" />
             <item>venworks.cui.components:CUIText</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui\\components;CUIText.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui\\components;CUIText.as</item>
             <item>venworks.cui.components:CUIText/CUIText</item>
             <item>venworks.cui.components</item>
             <item>CUIText</item>
@@ -1015,7 +1015,7 @@
             <item isNull="true" />
             <item>venworks.cui.components:CUITriangleBar</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui\\components;CUITriangleBar.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui\\components;CUITriangleBar.as</item>
             <item>venworks.cui.components:CUITriangleBar/CUITriangleBar</item>
             <item>venworks.cui.components</item>
             <item>CUITriangleBar</item>
@@ -1140,7 +1140,7 @@
             <item isNull="true" />
             <item>venworks.cui.components:CUIProviderSymbol</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui\\components;CUIProviderSymbol.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui\\components;CUIProviderSymbol.as</item>
             <item>venworks.cui.components:CUIProviderSymbol/CUIProviderSymbol</item>
             <item>venworks.cui.components</item>
             <item>CUIProviderSymbol</item>
@@ -1265,7 +1265,7 @@
             <item isNull="true" />
             <item>venworks.cui:CUIValueBinding</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui;CUIValueBinding.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui;CUIValueBinding.as</item>
             <item>venworks.cui:CUIValueBinding/CUIValueBinding</item>
             <item>venworks.cui</item>
             <item>CUIValueBinding</item>
@@ -1390,7 +1390,7 @@
             <item isNull="true" />
             <item>venworks.cui:CUISvgParser</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui;CUISvgParser.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui;CUISvgParser.as</item>
             <item>venworks.cui:CUISvgParser/CUISvgParser</item>
             <item>venworks.cui</item>
             <item>CUISvgParser</item>
@@ -1515,7 +1515,7 @@
             <item isNull="true" />
             <item>venworks.cui.components:CUIMask</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui\\components;CUIMask.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui\\components;CUIMask.as</item>
             <item>venworks.cui.components:CUIMask/CUIMask</item>
             <item>venworks.cui.components</item>
             <item>CUIMask</item>
@@ -1640,7 +1640,7 @@
             <item isNull="true" />
             <item>venworks.cui.components:CUIGroup</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui\\components;CUIGroup.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui\\components;CUIGroup.as</item>
             <item>venworks.cui.components:CUIGroup/CUIGroup</item>
             <item>venworks.cui.components</item>
             <item>CUIGroup</item>
@@ -1765,7 +1765,7 @@
             <item isNull="true" />
             <item>venworks.cui:CUIVanillaVisibilityAdapter</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui;CUIVanillaVisibilityAdapter.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui;CUIVanillaVisibilityAdapter.as</item>
             <item>venworks.cui:CUIVanillaVisibilityAdapter/CUIVanillaVisibilityAdapter</item>
             <item>venworks.cui</item>
             <item>CUIVanillaVisibilityAdapter</item>
@@ -1890,7 +1890,7 @@
             <item isNull="true" />
             <item>venworks.cui:CUIPlayerHudDataContext</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui;CUIPlayerHudDataContext.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui;CUIPlayerHudDataContext.as</item>
             <item>venworks.cui:CUIPlayerHudDataContext/CUIPlayerHudDataContext</item>
             <item>venworks.cui</item>
             <item>CUIPlayerHudDataContext</item>
@@ -2015,7 +2015,7 @@
             <item isNull="true" />
             <item>venworks.cui:CUISvgPathParser</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui;CUISvgPathParser.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui;CUISvgPathParser.as</item>
             <item>venworks.cui:CUISvgPathParser/CUISvgPathParser</item>
             <item>venworks.cui</item>
             <item>CUISvgPathParser</item>
@@ -2140,7 +2140,7 @@
             <item isNull="true" />
             <item>venworks.cui:CUILayoutEngine</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui;CUILayoutEngine.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui;CUILayoutEngine.as</item>
             <item>venworks.cui:CUILayoutEngine/CUILayoutEngine</item>
             <item>venworks.cui</item>
             <item>CUILayoutEngine</item>
@@ -2263,19 +2263,269 @@
           <constant_float4 />
           <constant_string>
             <item isNull="true" />
-            <item>_aead4517272d9a26c50e3116cc81b5f3d2c49a148310e3a442eda2d22a3296d6_flash_display_Sprite</item>
+            <item>venworks.cui.components:CUISvg</item>
             <item />
-            <item>_aead4517272d9a26c50e3116cc81b5f3d2c49a148310e3a442eda2d22a3296d6_flash_display_Sprite/_aead4517272d9a26c50e3116cc81b5f3d2c49a148310e3a442eda2d22a3296d6_flash_display_Sprite</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui\\components;CUISvg.as</item>
+            <item>venworks.cui.components:CUISvg/CUISvg</item>
+            <item>venworks.cui.components</item>
+            <item>CUISvg</item>
+            <item>Object</item>
+            <item>__go_to_ctor_definition_help</item>
+            <item>pos</item>
+            <item>88</item>
+            <item>__go_to_definition_help</item>
+            <item>52</item>
+          </constant_string>
+          <constant_namespace>
+            <item isNull="true" />
+            <item type="Namespace" kind="5" name_index="1" />
+            <item type="Namespace" kind="22" name_index="5" />
+            <item type="Namespace" kind="22" name_index="2" />
+            <item type="Namespace" kind="24" name_index="1" />
+          </constant_namespace>
+          <constant_namespace_set />
+          <constant_multiname>
+            <item isNull="true" />
+            <item type="Multiname" kind="7" name_index="6" namespace_index="2" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="7" namespace_index="3" namespace_set_index="0" qname_index="0" />
+          </constant_multiname>
+        </constants>
+        <method_info>
+          <item type="MethodInfo" flags="0" name_index="2" ret_type="0">
+            <param_types />
+            <optional />
+            <paramNames />
+          </item>
+          <item type="MethodInfo" flags="0" name_index="4" ret_type="0">
+            <param_types />
+            <optional />
+            <paramNames />
+          </item>
+          <item type="MethodInfo" flags="0" name_index="2" ret_type="0">
+            <param_types />
+            <optional />
+            <paramNames />
+          </item>
+        </method_info>
+        <metadata_info>
+          <item type="MetadataInfo" name_index="8">
+            <keys>
+              <item>9</item>
+            </keys>
+            <values>
+              <item>10</item>
+            </values>
+          </item>
+          <item type="MetadataInfo" name_index="11">
+            <keys>
+              <item>9</item>
+            </keys>
+            <values>
+              <item>12</item>
+            </values>
+          </item>
+        </metadata_info>
+        <instance_info>
+          <item type="InstanceInfo" flags="9" iinit_index="1" name_index="1" protectedNS="4" super_index="2">
+            <interfaces />
+            <instance_traits type="Traits">
+              <traits />
+            </instance_traits>
+          </item>
+        </instance_info>
+        <class_info>
+          <item type="ClassInfo" cinit_index="0">
+            <static_traits type="Traits">
+              <traits />
+            </static_traits>
+          </item>
+        </class_info>
+        <script_info>
+          <item type="ScriptInfo" init_index="2">
+            <traits type="Traits">
+              <traits>
+                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="10470" kindFlags="4" kindType="4" name_index="1" slot_id="1">
+                  <metadata>
+                    <item>0</item>
+                    <item>1</item>
+                  </metadata>
+                </item>
+              </traits>
+            </traits>
+          </item>
+        </script_info>
+        <bodies>
+          <item type="MethodBody" codeBytes="d03047" init_scope_depth="3" max_regs="1" max_scope_depth="4" max_stack="1" method_info="0">
+            <exceptions />
+            <traits type="Traits">
+              <traits />
+            </traits>
+          </item>
+          <item type="MethodBody" codeBytes="f103f005d030f006d04900f00747" init_scope_depth="4" max_regs="1" max_scope_depth="5" max_stack="1" method_info="1">
+            <exceptions />
+            <traits type="Traits">
+              <traits />
+            </traits>
+          </item>
+          <item type="MethodBody" codeBytes="d030f103f00365005d026602305d02660258001d6801f103f00147" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="2">
+            <exceptions />
+            <traits type="Traits">
+              <traits />
+            </traits>
+          </item>
+        </bodies>
+      </abc>
+    </item>
+    <item type="DoABC2Tag" flags="1" forceWriteAsLong="true" name="venworks.cui.components.seed.019">
+      <abc type="ABC">
+        <version type="ABCVersion" major="46" minor="16" />
+        <constants type="AVM2ConstantPool">
+          <constant_int />
+          <constant_uint />
+          <constant_double />
+          <constant_decimal />
+          <constant_float />
+          <constant_float4 />
+          <constant_string>
+            <item isNull="true" />
+            <item>venworks.cui:CUIIconLibrary</item>
+            <item />
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui;CUIIconLibrary.as</item>
+            <item>venworks.cui:CUIIconLibrary/CUIIconLibrary</item>
+            <item>venworks.cui</item>
+            <item>CUIIconLibrary</item>
+            <item>Object</item>
+            <item>__go_to_ctor_definition_help</item>
+            <item>pos</item>
+            <item>85</item>
+            <item>__go_to_definition_help</item>
+            <item>41</item>
+          </constant_string>
+          <constant_namespace>
+            <item isNull="true" />
+            <item type="Namespace" kind="5" name_index="1" />
+            <item type="Namespace" kind="22" name_index="5" />
+            <item type="Namespace" kind="22" name_index="2" />
+            <item type="Namespace" kind="24" name_index="1" />
+          </constant_namespace>
+          <constant_namespace_set />
+          <constant_multiname>
+            <item isNull="true" />
+            <item type="Multiname" kind="7" name_index="6" namespace_index="2" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="7" namespace_index="3" namespace_set_index="0" qname_index="0" />
+          </constant_multiname>
+        </constants>
+        <method_info>
+          <item type="MethodInfo" flags="0" name_index="2" ret_type="0">
+            <param_types />
+            <optional />
+            <paramNames />
+          </item>
+          <item type="MethodInfo" flags="0" name_index="4" ret_type="0">
+            <param_types />
+            <optional />
+            <paramNames />
+          </item>
+          <item type="MethodInfo" flags="0" name_index="2" ret_type="0">
+            <param_types />
+            <optional />
+            <paramNames />
+          </item>
+        </method_info>
+        <metadata_info>
+          <item type="MetadataInfo" name_index="8">
+            <keys>
+              <item>9</item>
+            </keys>
+            <values>
+              <item>10</item>
+            </values>
+          </item>
+          <item type="MetadataInfo" name_index="11">
+            <keys>
+              <item>9</item>
+            </keys>
+            <values>
+              <item>12</item>
+            </values>
+          </item>
+        </metadata_info>
+        <instance_info>
+          <item type="InstanceInfo" flags="9" iinit_index="1" name_index="1" protectedNS="4" super_index="2">
+            <interfaces />
+            <instance_traits type="Traits">
+              <traits />
+            </instance_traits>
+          </item>
+        </instance_info>
+        <class_info>
+          <item type="ClassInfo" cinit_index="0">
+            <static_traits type="Traits">
+              <traits />
+            </static_traits>
+          </item>
+        </class_info>
+        <script_info>
+          <item type="ScriptInfo" init_index="2">
+            <traits type="Traits">
+              <traits>
+                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="10936" kindFlags="4" kindType="4" name_index="1" slot_id="1">
+                  <metadata>
+                    <item>0</item>
+                    <item>1</item>
+                  </metadata>
+                </item>
+              </traits>
+            </traits>
+          </item>
+        </script_info>
+        <bodies>
+          <item type="MethodBody" codeBytes="d03047" init_scope_depth="3" max_regs="1" max_scope_depth="4" max_stack="1" method_info="0">
+            <exceptions />
+            <traits type="Traits">
+              <traits />
+            </traits>
+          </item>
+          <item type="MethodBody" codeBytes="f103f005d030f006d04900f00747" init_scope_depth="4" max_regs="1" max_scope_depth="5" max_stack="1" method_info="1">
+            <exceptions />
+            <traits type="Traits">
+              <traits />
+            </traits>
+          </item>
+          <item type="MethodBody" codeBytes="d030f103f00365005d026602305d02660258001d6801f103f00147" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="2">
+            <exceptions />
+            <traits type="Traits">
+              <traits />
+            </traits>
+          </item>
+        </bodies>
+      </abc>
+    </item>
+    <item type="DoABC2Tag" flags="1" forceWriteAsLong="true" name="venworks.cui.components.seed.020">
+      <abc type="ABC">
+        <version type="ABCVersion" major="46" minor="16" />
+        <constants type="AVM2ConstantPool">
+          <constant_int />
+          <constant_uint />
+          <constant_double />
+          <constant_decimal />
+          <constant_float />
+          <constant_float4 />
+          <constant_string>
+            <item isNull="true" />
+            <item>_8856b2cc6bbdd078f40fa3c7efc18fb75f9b895d49f79a09ea98553b97fe2c70_flash_display_Sprite</item>
+            <item />
+            <item>_8856b2cc6bbdd078f40fa3c7efc18fb75f9b895d49f79a09ea98553b97fe2c70_flash_display_Sprite/_8856b2cc6bbdd078f40fa3c7efc18fb75f9b895d49f79a09ea98553b97fe2c70_flash_display_Sprite</item>
             <item>Security</item>
             <item>flash.system</item>
             <item>allowDomain</item>
             <item>apply</item>
             <item>http://adobe.com/AS3/2006/builtin</item>
-            <item>_aead4517272d9a26c50e3116cc81b5f3d2c49a148310e3a442eda2d22a3296d6_flash_display_Sprite/allowDomainInRSL</item>
+            <item>_8856b2cc6bbdd078f40fa3c7efc18fb75f9b895d49f79a09ea98553b97fe2c70_flash_display_Sprite/allowDomainInRSL</item>
             <item>void</item>
             <item>domains</item>
             <item>allowInsecureDomain</item>
-            <item>_aead4517272d9a26c50e3116cc81b5f3d2c49a148310e3a442eda2d22a3296d6_flash_display_Sprite/allowInsecureDomainInRSL</item>
+            <item>_8856b2cc6bbdd078f40fa3c7efc18fb75f9b895d49f79a09ea98553b97fe2c70_flash_display_Sprite/allowInsecureDomainInRSL</item>
             <item>allowDomainInRSL</item>
             <item>__go_to_definition_help</item>
             <item>pos</item>
@@ -2394,12 +2644,12 @@
             <interfaces />
             <instance_traits type="Traits">
               <traits>
-                <item type="TraitMethodGetterSetter" bytes="064100020100" deleted="false" disp_id="0" fileOffset="10601" kindFlags="4" kindType="1" method_info="2" name_index="6">
+                <item type="TraitMethodGetterSetter" bytes="064100020100" deleted="false" disp_id="0" fileOffset="12050" kindFlags="4" kindType="1" method_info="2" name_index="6">
                   <metadata>
                     <item>0</item>
                   </metadata>
                 </item>
-                <item type="TraitMethodGetterSetter" bytes="074100030101" deleted="false" disp_id="0" fileOffset="10607" kindFlags="4" kindType="1" method_info="3" name_index="7">
+                <item type="TraitMethodGetterSetter" bytes="074100030101" deleted="false" disp_id="0" fileOffset="12056" kindFlags="4" kindType="1" method_info="3" name_index="7">
                   <metadata>
                     <item>1</item>
                   </metadata>
@@ -2419,7 +2669,7 @@
           <item type="ScriptInfo" init_index="4">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="0844010003020304" class_info="0" deleted="false" fileOffset="10618" kindFlags="4" kindType="4" name_index="8" slot_id="1">
+                <item type="TraitClass" bytes="0844010003020304" class_info="0" deleted="false" fileOffset="12067" kindFlags="4" kindType="4" name_index="8" slot_id="1">
                   <metadata>
                     <item>2</item>
                     <item>3</item>
@@ -2464,256 +2714,6 @@
         </bodies>
       </abc>
     </item>
-    <item type="DoABC2Tag" flags="1" forceWriteAsLong="true" name="venworks.cui.components.seed.019">
-      <abc type="ABC">
-        <version type="ABCVersion" major="46" minor="16" />
-        <constants type="AVM2ConstantPool">
-          <constant_int />
-          <constant_uint />
-          <constant_double />
-          <constant_decimal />
-          <constant_float />
-          <constant_float4 />
-          <constant_string>
-            <item isNull="true" />
-            <item>venworks.cui.components:CUISvg</item>
-            <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui\\components;CUISvg.as</item>
-            <item>venworks.cui.components:CUISvg/CUISvg</item>
-            <item>venworks.cui.components</item>
-            <item>CUISvg</item>
-            <item>Object</item>
-            <item>__go_to_ctor_definition_help</item>
-            <item>pos</item>
-            <item>88</item>
-            <item>__go_to_definition_help</item>
-            <item>52</item>
-          </constant_string>
-          <constant_namespace>
-            <item isNull="true" />
-            <item type="Namespace" kind="5" name_index="1" />
-            <item type="Namespace" kind="22" name_index="5" />
-            <item type="Namespace" kind="22" name_index="2" />
-            <item type="Namespace" kind="24" name_index="1" />
-          </constant_namespace>
-          <constant_namespace_set />
-          <constant_multiname>
-            <item isNull="true" />
-            <item type="Multiname" kind="7" name_index="6" namespace_index="2" namespace_set_index="0" qname_index="0" />
-            <item type="Multiname" kind="7" name_index="7" namespace_index="3" namespace_set_index="0" qname_index="0" />
-          </constant_multiname>
-        </constants>
-        <method_info>
-          <item type="MethodInfo" flags="0" name_index="2" ret_type="0">
-            <param_types />
-            <optional />
-            <paramNames />
-          </item>
-          <item type="MethodInfo" flags="0" name_index="4" ret_type="0">
-            <param_types />
-            <optional />
-            <paramNames />
-          </item>
-          <item type="MethodInfo" flags="0" name_index="2" ret_type="0">
-            <param_types />
-            <optional />
-            <paramNames />
-          </item>
-        </method_info>
-        <metadata_info>
-          <item type="MetadataInfo" name_index="8">
-            <keys>
-              <item>9</item>
-            </keys>
-            <values>
-              <item>10</item>
-            </values>
-          </item>
-          <item type="MetadataInfo" name_index="11">
-            <keys>
-              <item>9</item>
-            </keys>
-            <values>
-              <item>12</item>
-            </values>
-          </item>
-        </metadata_info>
-        <instance_info>
-          <item type="InstanceInfo" flags="9" iinit_index="1" name_index="1" protectedNS="4" super_index="2">
-            <interfaces />
-            <instance_traits type="Traits">
-              <traits />
-            </instance_traits>
-          </item>
-        </instance_info>
-        <class_info>
-          <item type="ClassInfo" cinit_index="0">
-            <static_traits type="Traits">
-              <traits />
-            </static_traits>
-          </item>
-        </class_info>
-        <script_info>
-          <item type="ScriptInfo" init_index="2">
-            <traits type="Traits">
-              <traits>
-                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="11152" kindFlags="4" kindType="4" name_index="1" slot_id="1">
-                  <metadata>
-                    <item>0</item>
-                    <item>1</item>
-                  </metadata>
-                </item>
-              </traits>
-            </traits>
-          </item>
-        </script_info>
-        <bodies>
-          <item type="MethodBody" codeBytes="d03047" init_scope_depth="3" max_regs="1" max_scope_depth="4" max_stack="1" method_info="0">
-            <exceptions />
-            <traits type="Traits">
-              <traits />
-            </traits>
-          </item>
-          <item type="MethodBody" codeBytes="f103f005d030f006d04900f00747" init_scope_depth="4" max_regs="1" max_scope_depth="5" max_stack="1" method_info="1">
-            <exceptions />
-            <traits type="Traits">
-              <traits />
-            </traits>
-          </item>
-          <item type="MethodBody" codeBytes="d030f103f00365005d026602305d02660258001d6801f103f00147" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="2">
-            <exceptions />
-            <traits type="Traits">
-              <traits />
-            </traits>
-          </item>
-        </bodies>
-      </abc>
-    </item>
-    <item type="DoABC2Tag" flags="1" forceWriteAsLong="true" name="venworks.cui.components.seed.020">
-      <abc type="ABC">
-        <version type="ABCVersion" major="46" minor="16" />
-        <constants type="AVM2ConstantPool">
-          <constant_int />
-          <constant_uint />
-          <constant_double />
-          <constant_decimal />
-          <constant_float />
-          <constant_float4 />
-          <constant_string>
-            <item isNull="true" />
-            <item>venworks.cui:CUIIconLibrary</item>
-            <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui;CUIIconLibrary.as</item>
-            <item>venworks.cui:CUIIconLibrary/CUIIconLibrary</item>
-            <item>venworks.cui</item>
-            <item>CUIIconLibrary</item>
-            <item>Object</item>
-            <item>__go_to_ctor_definition_help</item>
-            <item>pos</item>
-            <item>85</item>
-            <item>__go_to_definition_help</item>
-            <item>41</item>
-          </constant_string>
-          <constant_namespace>
-            <item isNull="true" />
-            <item type="Namespace" kind="5" name_index="1" />
-            <item type="Namespace" kind="22" name_index="5" />
-            <item type="Namespace" kind="22" name_index="2" />
-            <item type="Namespace" kind="24" name_index="1" />
-          </constant_namespace>
-          <constant_namespace_set />
-          <constant_multiname>
-            <item isNull="true" />
-            <item type="Multiname" kind="7" name_index="6" namespace_index="2" namespace_set_index="0" qname_index="0" />
-            <item type="Multiname" kind="7" name_index="7" namespace_index="3" namespace_set_index="0" qname_index="0" />
-          </constant_multiname>
-        </constants>
-        <method_info>
-          <item type="MethodInfo" flags="0" name_index="2" ret_type="0">
-            <param_types />
-            <optional />
-            <paramNames />
-          </item>
-          <item type="MethodInfo" flags="0" name_index="4" ret_type="0">
-            <param_types />
-            <optional />
-            <paramNames />
-          </item>
-          <item type="MethodInfo" flags="0" name_index="2" ret_type="0">
-            <param_types />
-            <optional />
-            <paramNames />
-          </item>
-        </method_info>
-        <metadata_info>
-          <item type="MetadataInfo" name_index="8">
-            <keys>
-              <item>9</item>
-            </keys>
-            <values>
-              <item>10</item>
-            </values>
-          </item>
-          <item type="MetadataInfo" name_index="11">
-            <keys>
-              <item>9</item>
-            </keys>
-            <values>
-              <item>12</item>
-            </values>
-          </item>
-        </metadata_info>
-        <instance_info>
-          <item type="InstanceInfo" flags="9" iinit_index="1" name_index="1" protectedNS="4" super_index="2">
-            <interfaces />
-            <instance_traits type="Traits">
-              <traits />
-            </instance_traits>
-          </item>
-        </instance_info>
-        <class_info>
-          <item type="ClassInfo" cinit_index="0">
-            <static_traits type="Traits">
-              <traits />
-            </static_traits>
-          </item>
-        </class_info>
-        <script_info>
-          <item type="ScriptInfo" init_index="2">
-            <traits type="Traits">
-              <traits>
-                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="11618" kindFlags="4" kindType="4" name_index="1" slot_id="1">
-                  <metadata>
-                    <item>0</item>
-                    <item>1</item>
-                  </metadata>
-                </item>
-              </traits>
-            </traits>
-          </item>
-        </script_info>
-        <bodies>
-          <item type="MethodBody" codeBytes="d03047" init_scope_depth="3" max_regs="1" max_scope_depth="4" max_stack="1" method_info="0">
-            <exceptions />
-            <traits type="Traits">
-              <traits />
-            </traits>
-          </item>
-          <item type="MethodBody" codeBytes="f103f005d030f006d04900f00747" init_scope_depth="4" max_regs="1" max_scope_depth="5" max_stack="1" method_info="1">
-            <exceptions />
-            <traits type="Traits">
-              <traits />
-            </traits>
-          </item>
-          <item type="MethodBody" codeBytes="d030f103f00365005d026602305d02660258001d6801f103f00147" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="2">
-            <exceptions />
-            <traits type="Traits">
-              <traits />
-            </traits>
-          </item>
-        </bodies>
-      </abc>
-    </item>
     <item type="DoABC2Tag" flags="1" forceWriteAsLong="true" name="venworks.cui.components.seed.021">
       <abc type="ABC">
         <version type="ABCVersion" major="46" minor="16" />
@@ -2728,7 +2728,7 @@
             <item isNull="true" />
             <item>venworks.cui.components:CUIContinuousBar</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui\\components;CUIContinuousBar.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui\\components;CUIContinuousBar.as</item>
             <item>venworks.cui.components:CUIContinuousBar/CUIContinuousBar</item>
             <item>venworks.cui.components</item>
             <item>CUIContinuousBar</item>
@@ -2807,7 +2807,7 @@
           <item type="ScriptInfo" init_index="2">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="12152" kindFlags="4" kindType="4" name_index="1" slot_id="1">
+                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="12662" kindFlags="4" kindType="4" name_index="1" slot_id="1">
                   <metadata>
                     <item>0</item>
                     <item>1</item>
@@ -2853,7 +2853,7 @@
             <item isNull="true" />
             <item>venworks.cui:CUIConditionParser</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui;CUIConditionParser.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui;CUIConditionParser.as</item>
             <item>venworks.cui:CUIConditionParser/CUIConditionParser</item>
             <item>venworks.cui</item>
             <item>CUIConditionParser</item>
@@ -2932,7 +2932,7 @@
           <item type="ScriptInfo" init_index="2">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="12642" kindFlags="4" kindType="4" name_index="1" slot_id="1">
+                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="13152" kindFlags="4" kindType="4" name_index="1" slot_id="1">
                   <metadata>
                     <item>0</item>
                     <item>1</item>
@@ -2978,7 +2978,7 @@
             <item isNull="true" />
             <item>venworks.cui.components:CUIIcon</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui\\components;CUIIcon.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui\\components;CUIIcon.as</item>
             <item>venworks.cui.components:CUIIcon/CUIIcon</item>
             <item>venworks.cui.components</item>
             <item>CUIIcon</item>
@@ -3057,7 +3057,7 @@
           <item type="ScriptInfo" init_index="2">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="13121" kindFlags="4" kindType="4" name_index="1" slot_id="1">
+                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="13631" kindFlags="4" kindType="4" name_index="1" slot_id="1">
                   <metadata>
                     <item>0</item>
                     <item>1</item>
@@ -3103,7 +3103,7 @@
             <item isNull="true" />
             <item>venworks.cui:CUILayoutParser</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui;CUILayoutParser.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui;CUILayoutParser.as</item>
             <item>venworks.cui:CUILayoutParser/CUILayoutParser</item>
             <item>venworks.cui</item>
             <item>CUILayoutParser</item>
@@ -3182,7 +3182,7 @@
           <item type="ScriptInfo" init_index="2">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="13593" kindFlags="4" kindType="4" name_index="1" slot_id="1">
+                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="14103" kindFlags="4" kindType="4" name_index="1" slot_id="1">
                   <metadata>
                     <item>0</item>
                     <item>1</item>
@@ -3228,7 +3228,7 @@
             <item isNull="true" />
             <item>venworks.cui:CUIVisibilityBinding</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui;CUIVisibilityBinding.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui;CUIVisibilityBinding.as</item>
             <item>venworks.cui:CUIVisibilityBinding/CUIVisibilityBinding</item>
             <item>venworks.cui</item>
             <item>CUIVisibilityBinding</item>
@@ -3307,7 +3307,7 @@
           <item type="ScriptInfo" init_index="2">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="14095" kindFlags="4" kindType="4" name_index="1" slot_id="1">
+                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="14605" kindFlags="4" kindType="4" name_index="1" slot_id="1">
                   <metadata>
                     <item>0</item>
                     <item>1</item>
@@ -3353,7 +3353,7 @@
             <item isNull="true" />
             <item>venworks.cui:CUITextFieldHost</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui;CUITextFieldHost.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui;CUITextFieldHost.as</item>
             <item>venworks.cui:CUITextFieldHost/CUITextFieldHost</item>
             <item>venworks.cui</item>
             <item>CUITextFieldHost</item>
@@ -3432,7 +3432,7 @@
           <item type="ScriptInfo" init_index="2">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="14573" kindFlags="4" kindType="4" name_index="1" slot_id="1">
+                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="15083" kindFlags="4" kindType="4" name_index="1" slot_id="1">
                   <metadata>
                     <item>0</item>
                     <item>1</item>
@@ -3478,7 +3478,7 @@
             <item isNull="true" />
             <item>venworks.cui.components:CUIShape</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui\\components;CUIShape.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui\\components;CUIShape.as</item>
             <item>venworks.cui.components:CUIShape/CUIShape</item>
             <item>venworks.cui.components</item>
             <item>CUIShape</item>
@@ -3557,7 +3557,7 @@
           <item type="ScriptInfo" init_index="2">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="15058" kindFlags="4" kindType="4" name_index="1" slot_id="1">
+                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="15568" kindFlags="4" kindType="4" name_index="1" slot_id="1">
                   <metadata>
                     <item>0</item>
                     <item>1</item>
@@ -3603,7 +3603,7 @@
             <item isNull="true" />
             <item>venworks.cui:CUIRuntime</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui;CUIRuntime.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui;CUIRuntime.as</item>
             <item>venworks.cui:CUIRuntime/CUIRuntime</item>
             <item>venworks.cui</item>
             <item>CUIRuntime</item>
@@ -3682,7 +3682,7 @@
           <item type="ScriptInfo" init_index="2">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="15500" kindFlags="4" kindType="4" name_index="1" slot_id="1">
+                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="16010" kindFlags="4" kindType="4" name_index="1" slot_id="1">
                   <metadata>
                     <item>0</item>
                     <item>1</item>
@@ -3728,7 +3728,7 @@
             <item isNull="true" />
             <item>venworks.cui.components:CUISvgPath</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui\\components;CUISvgPath.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui\\components;CUISvgPath.as</item>
             <item>venworks.cui.components:CUISvgPath/CUISvgPath</item>
             <item>venworks.cui.components</item>
             <item>CUISvgPath</item>
@@ -3807,7 +3807,7 @@
           <item type="ScriptInfo" init_index="2">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="15998" kindFlags="4" kindType="4" name_index="1" slot_id="1">
+                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="16508" kindFlags="4" kindType="4" name_index="1" slot_id="1">
                   <metadata>
                     <item>0</item>
                     <item>1</item>
@@ -3853,7 +3853,7 @@
             <item isNull="true" />
             <item>venworks.cui.components:CUIImage</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui\\components;CUIImage.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui\\components;CUIImage.as</item>
             <item>venworks.cui.components:CUIImage/CUIImage</item>
             <item>venworks.cui.components</item>
             <item>CUIImage</item>
@@ -3932,7 +3932,7 @@
           <item type="ScriptInfo" init_index="2">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="16483" kindFlags="4" kindType="4" name_index="1" slot_id="1">
+                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="16993" kindFlags="4" kindType="4" name_index="1" slot_id="1">
                   <metadata>
                     <item>0</item>
                     <item>1</item>
@@ -3978,7 +3978,7 @@
             <item isNull="true" />
             <item>venworks.cui:CUILayoutImportLoader</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui;CUILayoutImportLoader.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui;CUILayoutImportLoader.as</item>
             <item>venworks.cui:CUILayoutImportLoader/CUILayoutImportLoader</item>
             <item>venworks.cui</item>
             <item>CUILayoutImportLoader</item>
@@ -3988,131 +3988,6 @@
             <item>92</item>
             <item>__go_to_definition_help</item>
             <item>41</item>
-          </constant_string>
-          <constant_namespace>
-            <item isNull="true" />
-            <item type="Namespace" kind="5" name_index="1" />
-            <item type="Namespace" kind="22" name_index="5" />
-            <item type="Namespace" kind="22" name_index="2" />
-            <item type="Namespace" kind="24" name_index="1" />
-          </constant_namespace>
-          <constant_namespace_set />
-          <constant_multiname>
-            <item isNull="true" />
-            <item type="Multiname" kind="7" name_index="6" namespace_index="2" namespace_set_index="0" qname_index="0" />
-            <item type="Multiname" kind="7" name_index="7" namespace_index="3" namespace_set_index="0" qname_index="0" />
-          </constant_multiname>
-        </constants>
-        <method_info>
-          <item type="MethodInfo" flags="0" name_index="2" ret_type="0">
-            <param_types />
-            <optional />
-            <paramNames />
-          </item>
-          <item type="MethodInfo" flags="0" name_index="4" ret_type="0">
-            <param_types />
-            <optional />
-            <paramNames />
-          </item>
-          <item type="MethodInfo" flags="0" name_index="2" ret_type="0">
-            <param_types />
-            <optional />
-            <paramNames />
-          </item>
-        </method_info>
-        <metadata_info>
-          <item type="MetadataInfo" name_index="8">
-            <keys>
-              <item>9</item>
-            </keys>
-            <values>
-              <item>10</item>
-            </values>
-          </item>
-          <item type="MetadataInfo" name_index="11">
-            <keys>
-              <item>9</item>
-            </keys>
-            <values>
-              <item>12</item>
-            </values>
-          </item>
-        </metadata_info>
-        <instance_info>
-          <item type="InstanceInfo" flags="9" iinit_index="1" name_index="1" protectedNS="4" super_index="2">
-            <interfaces />
-            <instance_traits type="Traits">
-              <traits />
-            </instance_traits>
-          </item>
-        </instance_info>
-        <class_info>
-          <item type="ClassInfo" cinit_index="0">
-            <static_traits type="Traits">
-              <traits />
-            </static_traits>
-          </item>
-        </class_info>
-        <script_info>
-          <item type="ScriptInfo" init_index="2">
-            <traits type="Traits">
-              <traits>
-                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="16992" kindFlags="4" kindType="4" name_index="1" slot_id="1">
-                  <metadata>
-                    <item>0</item>
-                    <item>1</item>
-                  </metadata>
-                </item>
-              </traits>
-            </traits>
-          </item>
-        </script_info>
-        <bodies>
-          <item type="MethodBody" codeBytes="d03047" init_scope_depth="3" max_regs="1" max_scope_depth="4" max_stack="1" method_info="0">
-            <exceptions />
-            <traits type="Traits">
-              <traits />
-            </traits>
-          </item>
-          <item type="MethodBody" codeBytes="f103f005d030f006d04900f00747" init_scope_depth="4" max_regs="1" max_scope_depth="5" max_stack="1" method_info="1">
-            <exceptions />
-            <traits type="Traits">
-              <traits />
-            </traits>
-          </item>
-          <item type="MethodBody" codeBytes="d030f103f00365005d026602305d02660258001d6801f103f00147" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="2">
-            <exceptions />
-            <traits type="Traits">
-              <traits />
-            </traits>
-          </item>
-        </bodies>
-      </abc>
-    </item>
-    <item type="DoABC2Tag" flags="1" forceWriteAsLong="true" name="venworks.cui.components.seed.032">
-      <abc type="ABC">
-        <version type="ABCVersion" major="46" minor="16" />
-        <constants type="AVM2ConstantPool">
-          <constant_int />
-          <constant_uint />
-          <constant_double />
-          <constant_decimal />
-          <constant_float />
-          <constant_float4 />
-          <constant_string>
-            <item isNull="true" />
-            <item>venworks.cui.components:CUIComponent</item>
-            <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui\\components;CUIComponent.as</item>
-            <item>venworks.cui.components:CUIComponent/CUIComponent</item>
-            <item>venworks.cui.components</item>
-            <item>CUIComponent</item>
-            <item>Object</item>
-            <item>__go_to_ctor_definition_help</item>
-            <item>pos</item>
-            <item>94</item>
-            <item>__go_to_definition_help</item>
-            <item>52</item>
           </constant_string>
           <constant_namespace>
             <item isNull="true" />
@@ -4214,6 +4089,131 @@
         </bodies>
       </abc>
     </item>
+    <item type="DoABC2Tag" flags="1" forceWriteAsLong="true" name="venworks.cui.components.seed.032">
+      <abc type="ABC">
+        <version type="ABCVersion" major="46" minor="16" />
+        <constants type="AVM2ConstantPool">
+          <constant_int />
+          <constant_uint />
+          <constant_double />
+          <constant_decimal />
+          <constant_float />
+          <constant_float4 />
+          <constant_string>
+            <item isNull="true" />
+            <item>venworks.cui.components:CUIComponent</item>
+            <item />
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui\\components;CUIComponent.as</item>
+            <item>venworks.cui.components:CUIComponent/CUIComponent</item>
+            <item>venworks.cui.components</item>
+            <item>CUIComponent</item>
+            <item>Object</item>
+            <item>__go_to_ctor_definition_help</item>
+            <item>pos</item>
+            <item>94</item>
+            <item>__go_to_definition_help</item>
+            <item>52</item>
+          </constant_string>
+          <constant_namespace>
+            <item isNull="true" />
+            <item type="Namespace" kind="5" name_index="1" />
+            <item type="Namespace" kind="22" name_index="5" />
+            <item type="Namespace" kind="22" name_index="2" />
+            <item type="Namespace" kind="24" name_index="1" />
+          </constant_namespace>
+          <constant_namespace_set />
+          <constant_multiname>
+            <item isNull="true" />
+            <item type="Multiname" kind="7" name_index="6" namespace_index="2" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="7" namespace_index="3" namespace_set_index="0" qname_index="0" />
+          </constant_multiname>
+        </constants>
+        <method_info>
+          <item type="MethodInfo" flags="0" name_index="2" ret_type="0">
+            <param_types />
+            <optional />
+            <paramNames />
+          </item>
+          <item type="MethodInfo" flags="0" name_index="4" ret_type="0">
+            <param_types />
+            <optional />
+            <paramNames />
+          </item>
+          <item type="MethodInfo" flags="0" name_index="2" ret_type="0">
+            <param_types />
+            <optional />
+            <paramNames />
+          </item>
+        </method_info>
+        <metadata_info>
+          <item type="MetadataInfo" name_index="8">
+            <keys>
+              <item>9</item>
+            </keys>
+            <values>
+              <item>10</item>
+            </values>
+          </item>
+          <item type="MetadataInfo" name_index="11">
+            <keys>
+              <item>9</item>
+            </keys>
+            <values>
+              <item>12</item>
+            </values>
+          </item>
+        </metadata_info>
+        <instance_info>
+          <item type="InstanceInfo" flags="9" iinit_index="1" name_index="1" protectedNS="4" super_index="2">
+            <interfaces />
+            <instance_traits type="Traits">
+              <traits />
+            </instance_traits>
+          </item>
+        </instance_info>
+        <class_info>
+          <item type="ClassInfo" cinit_index="0">
+            <static_traits type="Traits">
+              <traits />
+            </static_traits>
+          </item>
+        </class_info>
+        <script_info>
+          <item type="ScriptInfo" init_index="2">
+            <traits type="Traits">
+              <traits>
+                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="18012" kindFlags="4" kindType="4" name_index="1" slot_id="1">
+                  <metadata>
+                    <item>0</item>
+                    <item>1</item>
+                  </metadata>
+                </item>
+              </traits>
+            </traits>
+          </item>
+        </script_info>
+        <bodies>
+          <item type="MethodBody" codeBytes="d03047" init_scope_depth="3" max_regs="1" max_scope_depth="4" max_stack="1" method_info="0">
+            <exceptions />
+            <traits type="Traits">
+              <traits />
+            </traits>
+          </item>
+          <item type="MethodBody" codeBytes="f103f005d030f006d04900f00747" init_scope_depth="4" max_regs="1" max_scope_depth="5" max_stack="1" method_info="1">
+            <exceptions />
+            <traits type="Traits">
+              <traits />
+            </traits>
+          </item>
+          <item type="MethodBody" codeBytes="d030f103f00365005d026602305d02660258001d6801f103f00147" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="2">
+            <exceptions />
+            <traits type="Traits">
+              <traits />
+            </traits>
+          </item>
+        </bodies>
+      </abc>
+    </item>
     <item type="DoABC2Tag" flags="1" forceWriteAsLong="true" name="venworks.cui.components.seed.033">
       <abc type="ABC">
         <version type="ABCVersion" major="46" minor="16" />
@@ -4228,7 +4228,7 @@
             <item isNull="true" />
             <item>venworks.cui:CUIAssetManager</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui;CUIAssetManager.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui;CUIAssetManager.as</item>
             <item>venworks.cui:CUIAssetManager/CUIAssetManager</item>
             <item>venworks.cui</item>
             <item>CUIAssetManager</item>
@@ -4307,7 +4307,7 @@
           <item type="ScriptInfo" init_index="2">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="17974" kindFlags="4" kindType="4" name_index="1" slot_id="1">
+                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="18484" kindFlags="4" kindType="4" name_index="1" slot_id="1">
                   <metadata>
                     <item>0</item>
                     <item>1</item>
@@ -4353,7 +4353,7 @@
             <item isNull="true" />
             <item>venworks.cui:CUIDiagnosticsPanel</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui;CUIDiagnosticsPanel.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui;CUIDiagnosticsPanel.as</item>
             <item>venworks.cui:CUIDiagnosticsPanel/CUIDiagnosticsPanel</item>
             <item>venworks.cui</item>
             <item>CUIDiagnosticsPanel</item>
@@ -4432,7 +4432,7 @@
           <item type="ScriptInfo" init_index="2">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="18470" kindFlags="4" kindType="4" name_index="1" slot_id="1">
+                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="18980" kindFlags="4" kindType="4" name_index="1" slot_id="1">
                   <metadata>
                     <item>0</item>
                     <item>1</item>
@@ -4478,7 +4478,7 @@
             <item isNull="true" />
             <item>venworks.cui:CUICompositionResolver</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui;CUICompositionResolver.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui;CUICompositionResolver.as</item>
             <item>venworks.cui:CUICompositionResolver/CUICompositionResolver</item>
             <item>venworks.cui</item>
             <item>CUICompositionResolver</item>
@@ -4557,7 +4557,7 @@
           <item type="ScriptInfo" init_index="2">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="18985" kindFlags="4" kindType="4" name_index="1" slot_id="1">
+                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="19495" kindFlags="4" kindType="4" name_index="1" slot_id="1">
                   <metadata>
                     <item>0</item>
                     <item>1</item>
@@ -4603,7 +4603,7 @@
             <item isNull="true" />
             <item>venworks.cui.components:CUIMeter</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui\\components;CUIMeter.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui\\components;CUIMeter.as</item>
             <item>venworks.cui.components:CUIMeter/CUIMeter</item>
             <item>venworks.cui.components</item>
             <item>CUIMeter</item>
@@ -4682,7 +4682,7 @@
           <item type="ScriptInfo" init_index="2">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="19470" kindFlags="4" kindType="4" name_index="1" slot_id="1">
+                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="19980" kindFlags="4" kindType="4" name_index="1" slot_id="1">
                   <metadata>
                     <item>0</item>
                     <item>1</item>
@@ -4728,7 +4728,7 @@
             <item isNull="true" />
             <item>venworks.cui.components:CUISegmentedBar</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui\\components;CUISegmentedBar.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui\\components;CUISegmentedBar.as</item>
             <item>venworks.cui.components:CUISegmentedBar/CUISegmentedBar</item>
             <item>venworks.cui.components</item>
             <item>CUISegmentedBar</item>
@@ -4807,7 +4807,7 @@
           <item type="ScriptInfo" init_index="2">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="19998" kindFlags="4" kindType="4" name_index="1" slot_id="1">
+                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="20508" kindFlags="4" kindType="4" name_index="1" slot_id="1">
                   <metadata>
                     <item>0</item>
                     <item>1</item>
@@ -4853,7 +4853,7 @@
             <item isNull="true" />
             <item>venworks.cui:CUIConditionExpression</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui;CUIConditionExpression.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui;CUIConditionExpression.as</item>
             <item>venworks.cui:CUIConditionExpression/CUIConditionExpression</item>
             <item>venworks.cui</item>
             <item>CUIConditionExpression</item>
@@ -4932,7 +4932,7 @@
           <item type="ScriptInfo" init_index="2">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="20513" kindFlags="4" kindType="4" name_index="1" slot_id="1">
+                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="21023" kindFlags="4" kindType="4" name_index="1" slot_id="1">
                   <metadata>
                     <item>0</item>
                     <item>1</item>
@@ -4978,7 +4978,7 @@
             <item isNull="true" />
             <item>venworks.cui.components:CUISymbol</item>
             <item />
-            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-1155897b25b245a2b39c98347b1a9ce3\\stubs;venworks\\cui\\components;CUISymbol.as</item>
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui\\components;CUISymbol.as</item>
             <item>venworks.cui.components:CUISymbol/CUISymbol</item>
             <item>venworks.cui.components</item>
             <item>CUISymbol</item>
@@ -5057,7 +5057,132 @@
           <item type="ScriptInfo" init_index="2">
             <traits type="Traits">
               <traits>
-                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="21004" kindFlags="4" kindType="4" name_index="1" slot_id="1">
+                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="21514" kindFlags="4" kindType="4" name_index="1" slot_id="1">
+                  <metadata>
+                    <item>0</item>
+                    <item>1</item>
+                  </metadata>
+                </item>
+              </traits>
+            </traits>
+          </item>
+        </script_info>
+        <bodies>
+          <item type="MethodBody" codeBytes="d03047" init_scope_depth="3" max_regs="1" max_scope_depth="4" max_stack="1" method_info="0">
+            <exceptions />
+            <traits type="Traits">
+              <traits />
+            </traits>
+          </item>
+          <item type="MethodBody" codeBytes="f103f005d030f006d04900f00747" init_scope_depth="4" max_regs="1" max_scope_depth="5" max_stack="1" method_info="1">
+            <exceptions />
+            <traits type="Traits">
+              <traits />
+            </traits>
+          </item>
+          <item type="MethodBody" codeBytes="d030f103f00365005d026602305d02660258001d6801f103f00147" init_scope_depth="1" max_regs="1" max_scope_depth="3" max_stack="2" method_info="2">
+            <exceptions />
+            <traits type="Traits">
+              <traits />
+            </traits>
+          </item>
+        </bodies>
+      </abc>
+    </item>
+    <item type="DoABC2Tag" flags="1" forceWriteAsLong="true" name="venworks.cui.components.seed.040">
+      <abc type="ABC">
+        <version type="ABCVersion" major="46" minor="16" />
+        <constants type="AVM2ConstantPool">
+          <constant_int />
+          <constant_uint />
+          <constant_double />
+          <constant_decimal />
+          <constant_float />
+          <constant_float4 />
+          <constant_string>
+            <item isNull="true" />
+            <item>venworks.cui.seed:CUISeedTerminator</item>
+            <item />
+            <item>C:\\Users\\monst\\AppData\\Local\\Temp\\venworks-cui-seed-0f7ccbb842744cf7b029a622e824b7bc\\stubs;venworks\\cui\\seed;CUISeedTerminator.as</item>
+            <item>venworks.cui.seed:CUISeedTerminator/CUISeedTerminator</item>
+            <item>venworks.cui.seed</item>
+            <item>CUISeedTerminator</item>
+            <item>Object</item>
+            <item>__go_to_ctor_definition_help</item>
+            <item>pos</item>
+            <item>93</item>
+            <item>__go_to_definition_help</item>
+            <item>46</item>
+          </constant_string>
+          <constant_namespace>
+            <item isNull="true" />
+            <item type="Namespace" kind="5" name_index="1" />
+            <item type="Namespace" kind="22" name_index="5" />
+            <item type="Namespace" kind="22" name_index="2" />
+            <item type="Namespace" kind="24" name_index="1" />
+          </constant_namespace>
+          <constant_namespace_set />
+          <constant_multiname>
+            <item isNull="true" />
+            <item type="Multiname" kind="7" name_index="6" namespace_index="2" namespace_set_index="0" qname_index="0" />
+            <item type="Multiname" kind="7" name_index="7" namespace_index="3" namespace_set_index="0" qname_index="0" />
+          </constant_multiname>
+        </constants>
+        <method_info>
+          <item type="MethodInfo" flags="0" name_index="2" ret_type="0">
+            <param_types />
+            <optional />
+            <paramNames />
+          </item>
+          <item type="MethodInfo" flags="0" name_index="4" ret_type="0">
+            <param_types />
+            <optional />
+            <paramNames />
+          </item>
+          <item type="MethodInfo" flags="0" name_index="2" ret_type="0">
+            <param_types />
+            <optional />
+            <paramNames />
+          </item>
+        </method_info>
+        <metadata_info>
+          <item type="MetadataInfo" name_index="8">
+            <keys>
+              <item>9</item>
+            </keys>
+            <values>
+              <item>10</item>
+            </values>
+          </item>
+          <item type="MetadataInfo" name_index="11">
+            <keys>
+              <item>9</item>
+            </keys>
+            <values>
+              <item>12</item>
+            </values>
+          </item>
+        </metadata_info>
+        <instance_info>
+          <item type="InstanceInfo" flags="9" iinit_index="1" name_index="1" protectedNS="4" super_index="2">
+            <interfaces />
+            <instance_traits type="Traits">
+              <traits />
+            </instance_traits>
+          </item>
+        </instance_info>
+        <class_info>
+          <item type="ClassInfo" cinit_index="0">
+            <static_traits type="Traits">
+              <traits />
+            </static_traits>
+          </item>
+        </class_info>
+        <script_info>
+          <item type="ScriptInfo" init_index="2">
+            <traits type="Traits">
+              <traits>
+                <item type="TraitClass" bytes="01440100020001" class_info="0" deleted="false" fileOffset="9997" kindFlags="4" kindType="4" name_index="1" slot_id="1">
                   <metadata>
                     <item>0</item>
                     <item>1</item>

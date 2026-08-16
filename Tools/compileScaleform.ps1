@@ -601,6 +601,14 @@ try {
     if ($abcSeedTags.Count -eq 0 -or $invalidAbcSeedTags.Count -ne 0) {
       throw "ABC seed patch must contain only numbered Venworks DoABC2Tags: $abcSeedPatchPath"
     }
+    $abcSeedTerminatorTags = @($abcSeedTags | Where-Object {
+      $_.InnerText.Contains('venworks.cui.seed:CUISeedTerminator')
+    })
+    if ($abcSeedTerminatorTags.Count -ne 1 -or
+        $abcSeedTags[$abcSeedTags.Count - 1].name -ne $abcSeedTerminatorTags[0].name -or
+        $abcSeedTags[$abcSeedTags.Count - 2].InnerText.Contains('venworks.cui.seed:CUISeedTerminator')) {
+      throw 'ABC seed must end with exactly one inert CUISeedTerminator tag after every class-bearing slot.'
+    }
 
     foreach ($abcSeedTag in $abcSeedTags) {
       $importedTag = $scaleform.ImportNode($abcSeedTag, $true)
@@ -669,6 +677,11 @@ try {
     [xml]$reopened = Get-Content -LiteralPath $reopenedXmlPath -Raw
     if ($reopened.SelectNodes('/swf/tags/item[@type="DoABC2Tag" and starts-with(@name,"venworks.cui.components.seed.")]').Count -ne $abcSeedTags.Count) {
       throw "Generated output does not retain the complete Venworks CUI ABC seed tag set."
+    }
+    $reopenedSeedTags = @($reopened.SelectNodes('/swf/tags/item[@type="DoABC2Tag" and starts-with(@name,"venworks.cui.components.seed.")]'))
+    if (!$reopenedSeedTags[$reopenedSeedTags.Count - 1].InnerText.Contains('venworks.cui.seed:CUISeedTerminator') -or
+        $reopenedSeedTags[$reopenedSeedTags.Count - 2].InnerText.Contains('venworks.cui.seed:CUISeedTerminator')) {
+      throw 'Generated output does not retain CUISeedTerminator as the final seed slot.'
     }
 
     $validationScriptMatches = @(Get-ChildItem -LiteralPath $validationScriptsDirectory -Recurse -File -Filter "$scriptName.as")

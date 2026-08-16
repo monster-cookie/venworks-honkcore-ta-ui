@@ -73,3 +73,20 @@ therefore distinguishes layout validation, asset-manager initialization, and
 asset collection, while the parser retains the component type and ID currently
 being validated. Reopened-movie validation requires these checkpoint strings
 and the optional stack-trace request to survive compilation.
+
+## Terminal seed-slot diagnostic
+
+Goal 8 runtime diagnostics localized `ReferenceError #1065` to the first call
+to `CUISymbol.isAllowlisted`. The authored vehicle-exit symbol and `CUISymbol`
+implementation were unchanged, but Goal 8 seed regeneration replaced Goal 7's
+single lazy ABC with forty independent lazy ABC tags and placed `CUISymbol` in
+the terminal tag. To test whether the import/runtime path fails to register the
+terminal record, the generator appends one inert seed-only
+`venworks.cui.seed.CUISeedTerminator` class and orders its ABC tag last. The
+terminator is never referenced or instantiated by HUD code. Build validation
+requires it to be the sole final seed slot after movie reopening.
+
+This sentinel is a bounded diagnostic, not evidence of a Starfield, Scaleform,
+or AVM2 class-count limit. If moving `CUISymbol` away from the terminal slot does
+not clear the runtime error, replace the fragmented seed with a single ABC
+linkage domain rather than adding further padding records.

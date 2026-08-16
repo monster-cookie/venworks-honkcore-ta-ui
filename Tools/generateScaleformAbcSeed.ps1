@@ -63,6 +63,12 @@ $classes = @($classes | Sort-Object QualifiedName -Unique)
 if ($classes.Count -eq 0) {
   throw 'No authored ActionScript classes were discovered.'
 }
+$sentinelClass = [pscustomobject]@{
+  Package = 'venworks.cui.seed'
+  Name = 'CUISeedTerminator'
+  QualifiedName = 'venworks.cui.seed.CUISeedTerminator'
+}
+$compileClasses = @($classes) + @($sentinelClass)
 
 $temporaryRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("venworks-cui-seed-" + [guid]::NewGuid().ToString('N'))
 $stubRoot = Join-Path $temporaryRoot 'stubs'
@@ -73,7 +79,7 @@ $seedXmlPath = Join-Path $temporaryRoot 'seed.xml'
 
 try {
   New-Item -ItemType Directory -Force -Path $stubRoot | Out-Null
-  foreach ($class in $classes) {
+  foreach ($class in $compileClasses) {
     $packageDirectory = Join-Path $stubRoot ($class.Package.Replace('.', [System.IO.Path]::DirectorySeparatorChar))
     New-Item -ItemType Directory -Force -Path $packageDirectory | Out-Null
     $stubPath = Join-Path $packageDirectory "$($class.Name).as"
@@ -88,7 +94,7 @@ try {
     '-compiler.library-path=',
     '-compiler.external-library-path', $resolvedPlayerGlobalPath,
     '-include-classes'
-  ) + @($classes.QualifiedName) + @('-output', $swcPath)
+  ) + @($compileClasses.QualifiedName) + @('-output', $swcPath)
   Push-Location (Join-Path $resolvedFlexSdkPath 'frameworks')
   try {
     & $resolvedJavaPath @compilerArguments
@@ -111,9 +117,18 @@ try {
 
   $seedDocument = [xml](Get-Content -LiteralPath $seedXmlPath -Raw)
   $abcTags = @($seedDocument.SelectNodes('/swf/tags/item[@type="DoABC2Tag"]'))
-  if ($abcTags.Count -lt $classes.Count) {
-    throw "Generated seed contains $($abcTags.Count) ABC tags for $($classes.Count) authored classes."
+  if ($abcTags.Count -lt $compileClasses.Count) {
+    throw "Generated seed contains $($abcTags.Count) ABC tags for $($classes.Count) authored classes plus the terminator."
   }
+  $sentinelAbcTags = @($abcTags | Where-Object {
+    $_.InnerText.Contains('venworks.cui.seed:CUISeedTerminator')
+  })
+  if ($sentinelAbcTags.Count -ne 1) {
+    throw "Generated seed must contain exactly one CUISeedTerminator ABC tag; found $($sentinelAbcTags.Count)."
+  }
+  $orderedAbcTags = @($abcTags | Where-Object {
+    !$_.InnerText.Contains('venworks.cui.seed:CUISeedTerminator')
+  }) + @($sentinelAbcTags[0])
   $outputDocument = [System.Xml.XmlDocument]::new()
   $declaration = $outputDocument.CreateXmlDeclaration('1.0', 'utf-8', $null)
   [void]$outputDocument.AppendChild($declaration)
@@ -124,7 +139,7 @@ try {
   $tags = $outputDocument.CreateElement('tags')
   [void]$root.AppendChild($tags)
   $tagIndex = 0
-  foreach ($sourceAbcTag in $abcTags) {
+  foreach ($sourceAbcTag in $orderedAbcTags) {
     $abcTag = $outputDocument.ImportNode($sourceAbcTag, $true)
     $abcTag.SetAttribute('flags', '1')
     $abcTag.SetAttribute('forceWriteAsLong', 'true')
@@ -143,7 +158,7 @@ try {
   finally {
     $writer.Dispose()
   }
-  Write-Host "Generated ABC seed for $($classes.Count) authored classes: $OutputPath"
+  Write-Host "Generated ABC seed for $($classes.Count) authored classes plus one terminal sentinel: $OutputPath"
 }
 finally {
   if (Test-Path -LiteralPath $temporaryRoot) {
