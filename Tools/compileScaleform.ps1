@@ -946,8 +946,11 @@ try {
     $reopenedSymbolPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUISymbol.as'
     $reopenedContactRadarPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIContactRadar.as'
     $reopenedTextPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIText.as'
+    $reopenedConditionContextPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIConditionContext.as'
+    $reopenedConditionExpressionPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIConditionExpression.as'
     $reopenedPlayerHudDataContextPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIPlayerHudDataContext.as'
     $reopenedValueBindingPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIValueBinding.as'
+    $reopenedVisibilityBindingPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIVisibilityBinding.as'
     $reopenedVanillaVisibilityPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIVanillaVisibilityAdapter.as'
     $reopenedRuntimePath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIRuntime.as'
     $reopenedAssetManagerSource = Get-Content -LiteralPath $reopenedAssetManagerPath -Raw
@@ -961,10 +964,25 @@ try {
     $reopenedSymbolSource = Get-Content -LiteralPath $reopenedSymbolPath -Raw
     $reopenedContactRadarSource = Get-Content -LiteralPath $reopenedContactRadarPath -Raw
     $reopenedTextSource = Get-Content -LiteralPath $reopenedTextPath -Raw
+    $reopenedConditionContextSource = Get-Content -LiteralPath $reopenedConditionContextPath -Raw
+    $reopenedConditionExpressionSource = Get-Content -LiteralPath $reopenedConditionExpressionPath -Raw
     $reopenedPlayerHudDataContextSource = Get-Content -LiteralPath $reopenedPlayerHudDataContextPath -Raw
     $reopenedValueBindingSource = Get-Content -LiteralPath $reopenedValueBindingPath -Raw
+    $reopenedVisibilityBindingSource = Get-Content -LiteralPath $reopenedVisibilityBindingPath -Raw
     $reopenedVanillaVisibilitySource = Get-Content -LiteralPath $reopenedVanillaVisibilityPath -Raw
     $reopenedRuntimeSource = Get-Content -LiteralPath $reopenedRuntimePath -Raw
+    $reopenedValueChangeHandler = [regex]::Match(
+      $reopenedRuntimeSource,
+      '(?s)private function onValueChanged\b.*?(?=\s+private function onCompassChanged\b)'
+    ).Value
+    $reopenedCompassChangeHandler = [regex]::Match(
+      $reopenedRuntimeSource,
+      '(?s)private function onCompassChanged\b.*?(?=\s+private function applyValues\b)'
+    ).Value
+    $reopenedHudModeHandler = [regex]::Match(
+      $reopenedRuntimeSource,
+      '(?s)public function updateVanillaHudModeVisibility\b.*?(?=\s+private function onLoaded\b)'
+    ).Value
     if ($reopenedLayoutParserSource -notmatch 'String\(param1\.@value\)\.length\s*==\s*0\s*&&\s*param1\.@source\.length\(\)\s*==\s*0\s*&&\s*param1\.@valueTemplate\.length\(\)\s*==\s*0' -or
         !$reopenedLayoutParserSource.Contains('Text value cannot be empty: ')) {
       throw 'Generated layout parser does not allow empty dynamic text fallbacks while rejecting empty static text.'
@@ -987,6 +1005,54 @@ try {
     if ($reopenedValueBindingSource -notmatch 'CUIMeter\(target\)\.setValue' -or
         $reopenedValueBindingSource -match 'meterMask|ValueMask|flash\.geom\.Matrix') {
       throw 'Generated value binding does not use direct meter redraws or retains the retired external meter mask.'
+    }
+    if ($reopenedPlayerHudDataContextSource -notmatch 'VALUE_CHANGE\s*:\s*String\s*=\s*"cuiValueChange"' -or
+        $reopenedPlayerHudDataContextSource -notmatch 'COMPASS_CHANGE\s*:\s*String\s*=\s*"cuiCompassChange"' -or
+        $reopenedPlayerHudDataContextSource -notmatch 'dispatchEvent\s*\(\s*new CustomEvent\s*\(\s*VALUE_CHANGE\s*,\s*sources\s*\)\s*\)' -or
+        $reopenedPlayerHudDataContextSource -notmatch 'dispatchEvent\s*\(\s*new Event\s*\(\s*COMPASS_CHANGE\s*\)\s*\)' -or
+        $reopenedPlayerHudDataContextSource -notmatch 'valueMatches\s*\(\s*source\s*,\s*value\s*\)' -or
+        $reopenedPlayerHudDataContextSource -notmatch 'changedSources\[param1\]\s*===\s*true' -or
+        $reopenedPlayerHudDataContextSource -match 'dispatchEvent\s*\(\s*new Event\s*\(\s*Event\.CHANGE') {
+      throw 'Generated player HUD data context does not retain changed-source value events and dedicated compass delivery.'
+    }
+    if ($reopenedConditionContextSource -notmatch 'CONDITION_CHANGE\s*:\s*String\s*=\s*"cuiConditionChange"' -or
+        $reopenedConditionContextSource -notmatch 'dispatchEvent\s*\(\s*new CustomEvent\s*\(\s*CONDITION_CHANGE\s*,\s*conditions\s*\)\s*\)' -or
+        $reopenedConditionContextSource -notmatch 'current\.value\s*===\s*param2' -or
+        $reopenedConditionContextSource -notmatch 'changedConditions\[name\]\s*!==\s*true' -or
+        $reopenedConditionContextSource -match 'dispatchEvent\s*\(\s*new Event\s*\(\s*Event\.CHANGE') {
+      throw 'Generated condition context does not retain changed-condition events and no-op suppression.'
+    }
+    if ($reopenedValueBindingSource -notmatch 'function\s+isAffectedBy' -or
+        $reopenedValueBindingSource -notmatch 'param1\[source\]\s*===\s*true' -or
+        $reopenedValueBindingSource -notmatch 'param1\[maxSource\]\s*===\s*true' -or
+        $reopenedValueBindingSource -notmatch 'for each\s*\(\s*variable\s+in\s+templateVariables\s*\)' -or
+        $reopenedConditionExpressionSource -notmatch 'function\s+isAffectedBy' -or
+        $reopenedConditionExpressionSource -notmatch 'function\s+nodeIsAffected' -or
+        $reopenedConditionExpressionSource -notmatch 'CUIConditionContext\.normalizeName' -or
+        $reopenedVisibilityBindingSource -notmatch 'expression\.isAffectedBy\s*\(\s*param1\s*\)' -or
+        $reopenedVanillaVisibilitySource -notmatch 'param1\["hudopacitypercentage"\]\s*===\s*true' -or
+        $reopenedVanillaVisibilitySource -notmatch 'expression\.isAffectedBy\s*\(\s*param1\s*\)') {
+      throw 'Generated bindings do not retain source-specific value and visibility dependency matching.'
+    }
+    if ($reopenedRuntimeSource -notmatch 'addEventListener\s*\(\s*CUIConditionContext\.CONDITION_CHANGE\s*,\s*this\.onConditionChanged\s*\)' -or
+        $reopenedRuntimeSource -notmatch 'addEventListener\s*\(\s*CUIPlayerHudDataContext\.VALUE_CHANGE\s*,\s*this\.onValueChanged\s*\)' -or
+        $reopenedRuntimeSource -notmatch 'addEventListener\s*\(\s*CUIPlayerHudDataContext\.COMPASS_CHANGE\s*,\s*this\.onCompassChanged\s*\)' -or
+        $reopenedRuntimeSource -notmatch 'removeEventListener\s*\(\s*CUIConditionContext\.CONDITION_CHANGE\s*,\s*this\.onConditionChanged\s*\)' -or
+        $reopenedRuntimeSource -notmatch 'removeEventListener\s*\(\s*CUIPlayerHudDataContext\.VALUE_CHANGE\s*,\s*this\.onValueChanged\s*\)' -or
+        $reopenedRuntimeSource -notmatch 'removeEventListener\s*\(\s*CUIPlayerHudDataContext\.COMPASS_CHANGE\s*,\s*this\.onCompassChanged\s*\)' -or
+        $reopenedRuntimeSource -notmatch 'binding\.isAffectedBy\s*\(\s*param1\s*\)' -or
+        $reopenedRuntimeSource -notmatch 'adapter\.isAffectedBy\s*\(\s*param1\s*\)' -or
+        $reopenedValueChangeHandler.Length -eq 0 -or
+        $reopenedValueChangeHandler -notmatch 'applyValues\s*\(\s*param1\.params\s*\)' -or
+        $reopenedValueChangeHandler -match 'applyContactRadars|applyConditions' -or
+        $reopenedCompassChangeHandler.Length -eq 0 -or
+        $reopenedCompassChangeHandler -notmatch 'applyContactRadars\s*\(\s*\)' -or
+        $reopenedCompassChangeHandler -match 'applyValues|applyConditions' -or
+        $reopenedHudModeHandler.Length -eq 0 -or
+        $reopenedHudModeHandler -notmatch 'adapter\.updateHudMode\s*\(\s*hudModeVisibility\s*\)' -or
+        $reopenedHudModeHandler -notmatch 'adapter\.apply\s*\(\s*conditionContext\s*\)' -or
+        $reopenedHudModeHandler -match 'applyValues|applyContactRadars|applyConditions') {
+      throw 'Generated runtime does not retain provider-local value, condition, compass, and HUD-mode routing boundaries.'
     }
     foreach ($meterRenderer in @('CUIContinuousBar','CUISegmentedBar','CUITriangleBar','CUIDotBar','CUIRadialMeter')) {
       $meterRendererPath = Join-Path $validationScriptsDirectory "scripts\venworks\cui\components\$meterRenderer.as"

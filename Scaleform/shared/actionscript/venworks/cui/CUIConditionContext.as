@@ -2,14 +2,18 @@ package venworks.cui
 {
    import Shared.AS3.Data.BSUIDataManager;
    import Shared.AS3.Data.FromClientDataEvent;
-   import flash.events.Event;
+   import Shared.AS3.Events.CustomEvent;
    import flash.events.EventDispatcher;
 
    public final class CUIConditionContext extends EventDispatcher
    {
+      public static const CONDITION_CHANGE:String = "cuiConditionChange";
+
       private static const FAVORITE_SLOT_COUNT:int = 12;
 
       private var values:Object;
+      private var changedConditions:Object;
+      private var changedConditionCount:int = 0;
       private var favoriteNames:Array;
       private var favoritePowers:Array;
       private var favoriteWeapons:Array;
@@ -20,6 +24,7 @@ package venworks.cui
       {
          super();
          values = {};
+         changedConditions = {};
          favoriteNames = [];
          favoritePowers = [];
          favoriteWeapons = [];
@@ -34,6 +39,7 @@ package venworks.cui
          BSUIDataManager.Subscribe("FavoritesData",this.onFavoritesData);
          BSUIDataManager.Subscribe("HudJetpackData",this.onJetpackData);
          BSUIDataManager.Subscribe("PlayerInventoryData",this.onPlayerInventoryData);
+         this.resetChangedConditions();
       }
 
       public static function normalizeName(param1:String) : String
@@ -298,12 +304,36 @@ package venworks.cui
 
       private function setValue(param1:String, param2:Object) : void
       {
-         values[param1] = { known:true, value:param2 };
+         var name:String = normalizeName(param1);
+         var current:Object = values[name];
+         if(current != null && Boolean(current.known) && current.value === param2)
+         {
+            return;
+         }
+         values[name] = { known:true, value:param2 };
+         if(changedConditions[name] !== true)
+         {
+            changedConditions[name] = true;
+            ++changedConditionCount;
+         }
       }
 
       private function notifyChanged() : void
       {
-         dispatchEvent(new Event(Event.CHANGE));
+         var conditions:Object = null;
+         if(changedConditionCount == 0)
+         {
+            return;
+         }
+         conditions = changedConditions;
+         this.resetChangedConditions();
+         dispatchEvent(new CustomEvent(CONDITION_CHANGE,conditions));
+      }
+
+      private function resetChangedConditions() : void
+      {
+         changedConditions = {};
+         changedConditionCount = 0;
       }
    }
 }

@@ -177,6 +177,31 @@ package venworks.cui
          }
       }
 
+      public function isAffectedBy(param1:Object) : Boolean
+      {
+         var variable:Object = null;
+         if(param1 == null)
+         {
+            return true;
+         }
+         if(source.length != 0 && param1[source] === true)
+         {
+            return true;
+         }
+         if(maxSource.length != 0 && param1[maxSource] === true)
+         {
+            return true;
+         }
+         for each(variable in templateVariables)
+         {
+            if(param1[String(variable.source)] === true)
+            {
+               return true;
+            }
+         }
+         return false;
+      }
+
       private function applyTextTemplate(param1:CUIPlayerHudDataContext) : String
       {
          var output:String = valueTemplate;

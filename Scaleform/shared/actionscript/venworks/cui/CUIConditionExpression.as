@@ -19,6 +19,28 @@ package venworks.cui
          return this.evaluateNode(root,param1);
       }
 
+      public function isAffectedBy(param1:Object) : Boolean
+      {
+         return param1 == null || this.nodeIsAffected(root,param1);
+      }
+
+      private function nodeIsAffected(param1:Object, param2:Object) : Boolean
+      {
+         if(param1.op == "boolean" || param1.op == "comparison")
+         {
+            return param2[CUIConditionContext.normalizeName(String(param1.name))] === true;
+         }
+         if(param1.op == "not")
+         {
+            return this.nodeIsAffected(param1.child,param2);
+         }
+         if(param1.op == "and" || param1.op == "or")
+         {
+            return this.nodeIsAffected(param1.left,param2) || this.nodeIsAffected(param1.right,param2);
+         }
+         return false;
+      }
+
       private function evaluateNode(param1:Object, param2:CUIConditionContext) : int
       {
          var left:int = UNKNOWN;

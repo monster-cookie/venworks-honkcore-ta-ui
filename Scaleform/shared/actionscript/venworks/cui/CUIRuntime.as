@@ -1,5 +1,6 @@
 package venworks.cui
 {
+   import Shared.AS3.Events.CustomEvent;
    import flash.display.DisplayObjectContainer;
    import flash.display.Sprite;
    import flash.events.Event;
@@ -105,9 +106,11 @@ package venworks.cui
             this.setDiagnosticContext("VANILLA HUD MODE VISIBILITY",null);
             for each(adapter in vanillaAdapters)
             {
-               adapter.updateHudMode(hudModeVisibility);
+               if(adapter.updateHudMode(hudModeVisibility))
+               {
+                  adapter.apply(conditionContext);
+               }
             }
-            this.applyConditions();
             this.clearDiagnosticContext();
          }
          catch(param2:Error)
@@ -163,9 +166,10 @@ package venworks.cui
             vanillaAdapters = [];
             contactRadars = [];
             conditionContext = new CUIConditionContext();
-            conditionContext.addEventListener(Event.CHANGE,this.onConditionChanged);
+            conditionContext.addEventListener(CUIConditionContext.CONDITION_CHANGE,this.onConditionChanged);
             valueContext = new CUIPlayerHudDataContext();
-            valueContext.addEventListener(Event.CHANGE,this.onValueChanged);
+            valueContext.addEventListener(CUIPlayerHudDataContext.VALUE_CHANGE,this.onValueChanged);
+            valueContext.addEventListener(CUIPlayerHudDataContext.COMPASS_CHANGE,this.onCompassChanged);
             layoutEngine = new CUILayoutEngine(componentLayer,layoutConfig);
             this.renderChildren(parser.components,componentLayer,parser.components);
             this.setDiagnosticContext("VANILLA ADAPTER INITIALIZATION",null);
@@ -435,12 +439,12 @@ package venworks.cui
          }
       }
 
-      private function onConditionChanged(param1:Event) : void
+      private function onConditionChanged(param1:CustomEvent) : void
       {
          try
          {
             this.setDiagnosticContext("LIVE VISIBILITY EVALUATION",null);
-            this.applyConditions();
+            this.applyConditions(param1.params);
             this.clearDiagnosticContext();
          }
          catch(param2:Error)
@@ -449,12 +453,25 @@ package venworks.cui
          }
       }
 
-      private function onValueChanged(param1:Event) : void
+      private function onValueChanged(param1:CustomEvent) : void
       {
          try
          {
             this.setDiagnosticContext("LIVE VALUE EVALUATION",null);
-            this.applyValues();
+            this.applyValues(param1.params);
+            this.clearDiagnosticContext();
+         }
+         catch(param2:Error)
+         {
+            this.showRuntimeError(param2);
+         }
+      }
+
+      private function onCompassChanged(param1:Event) : void
+      {
+         try
+         {
+            this.setDiagnosticContext("LIVE CONTACT RADAR EVALUATION",null);
             this.applyContactRadars();
             this.clearDiagnosticContext();
          }
@@ -464,12 +481,15 @@ package venworks.cui
          }
       }
 
-      private function applyValues() : void
+      private function applyValues(param1:Object = null) : void
       {
          var binding:CUIValueBinding = null;
          for each(binding in valueBindings)
          {
-            binding.apply(valueContext);
+            if(binding.isAffectedBy(param1))
+            {
+               binding.apply(valueContext);
+            }
          }
       }
 
@@ -482,17 +502,23 @@ package venworks.cui
          }
       }
 
-      private function applyConditions() : void
+      private function applyConditions(param1:Object = null) : void
       {
          var binding:CUIVisibilityBinding = null;
          var adapter:CUIVanillaVisibilityAdapter = null;
          for each(binding in visibilityBindings)
          {
-            binding.apply(conditionContext);
+            if(binding.isAffectedBy(param1))
+            {
+               binding.apply(conditionContext);
+            }
          }
          for each(adapter in vanillaAdapters)
          {
-            adapter.apply(conditionContext);
+            if(adapter.isAffectedBy(param1))
+            {
+               adapter.apply(conditionContext);
+            }
          }
       }
 
@@ -501,11 +527,12 @@ package venworks.cui
          var adapter:CUIVanillaVisibilityAdapter = null;
          if(conditionContext != null)
          {
-            conditionContext.removeEventListener(Event.CHANGE,this.onConditionChanged);
+            conditionContext.removeEventListener(CUIConditionContext.CONDITION_CHANGE,this.onConditionChanged);
          }
          if(valueContext != null)
          {
-            valueContext.removeEventListener(Event.CHANGE,this.onValueChanged);
+            valueContext.removeEventListener(CUIPlayerHudDataContext.VALUE_CHANGE,this.onValueChanged);
+            valueContext.removeEventListener(CUIPlayerHudDataContext.COMPASS_CHANGE,this.onCompassChanged);
             valueContext.dispose();
          }
          if(vanillaAdapters != null)

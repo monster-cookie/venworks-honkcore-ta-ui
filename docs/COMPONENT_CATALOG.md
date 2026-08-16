@@ -419,3 +419,15 @@ the Watch tree from rendering instead of leaving it active at alpha zero, while
 faction-logo modifications. Neither Watch state changes radar ownership or
 visibility, and the separate faction-display include can be disabled when a
 user places the Watch in that panel's location.
+
+Live CUI delivery is dependency-aware. `HudCompassData` dispatches a dedicated
+radar event, so weapon, XP, inventory, environment, and other value-provider
+updates cannot redraw `contactRadar`. Value events carry only normalized sources
+whose effective values changed, and each binding matches its primary source,
+optional meter maximum, and template variables before applying. Condition
+events use the same changed-name contract; owned visibility bindings and
+vanilla adapters re-evaluate only when their expressions consume one of those
+names, with HUD opacity retained as an explicit vanilla-adapter dependency.
+Bethesda HUD-mode changes reapply only vanilla adapters. Initial component
+construction remains a complete one-time evaluation so unchanged defaults are
+still rendered.

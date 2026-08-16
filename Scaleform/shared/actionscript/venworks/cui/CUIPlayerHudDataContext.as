@@ -2,6 +2,7 @@ package venworks.cui
 {
    import Shared.AS3.Data.BSUIDataManager;
    import Shared.AS3.Data.FromClientDataEvent;
+   import Shared.AS3.Events.CustomEvent;
    import Shared.Components.ButtonControls.Utils.ButtonKeyHelper;
    import flash.events.Event;
    import flash.events.EventDispatcher;
@@ -10,6 +11,9 @@ package venworks.cui
 
    public final class CUIPlayerHudDataContext extends EventDispatcher
    {
+      public static const VALUE_CHANGE:String = "cuiValueChange";
+      public static const COMPASS_CHANGE:String = "cuiCompassChange";
+
       private static const MAX_DIAGNOSTIC_FIELDS:int = 12;
       private static const MAX_PLAYER_DIAGNOSTIC_FIELDS:int = 32;
       private static const MAX_DIAGNOSTIC_EFFECTS:int = 4;
@@ -36,6 +40,8 @@ package venworks.cui
       ];
 
       private var values:Object;
+      private var changedSources:Object;
+      private var changedSourceCount:int = 0;
       private var exposureTimer:Timer;
       private var exposureActive:Array;
       private var exposureCurrent:Array;
@@ -61,6 +67,7 @@ package venworks.cui
       {
          super();
          values = {};
+         changedSources = {};
          exposureActive = [false,false,false,false];
          exposureCurrent = [0,0,0,0];
          exposureTarget = [0,0,0,0];
@@ -112,6 +119,7 @@ package venworks.cui
          this.setText("environment.hazard.thermalshortstatus","WAITING");
          this.setText("environment.hazard.corrosiveshortstatus","WAITING");
          this.setText("environment.hazard.radiationshortstatus","WAITING");
+         this.resetChangedSources();
       }
 
       public static function normalizeSource(param1:String) : String
@@ -323,7 +331,7 @@ package venworks.cui
       private function onRadarCompassData(param1:FromClientDataEvent) : void
       {
          compassData = param1 == null ? null : param1.data;
-         this.notifyChanged();
+         dispatchEvent(new Event(COMPASS_CHANGE));
       }
 
       private function onLocalEnvironmentFrequentData(param1:FromClientDataEvent) : void
@@ -677,32 +685,59 @@ package venworks.cui
 
       private function setText(param1:String, param2:Object) : void
       {
+         var source:String = null;
+         var value:String = null;
          if(param2 !== undefined && param2 !== null)
          {
-            values[normalizeSource(param1)] = { known:true, value:String(param2) };
+            source = normalizeSource(param1);
+            value = String(param2);
+            if(!this.valueMatches(source,value))
+            {
+               values[source] = { known:true, value:value };
+               this.markChanged(source);
+            }
          }
       }
 
       private function setBoolean(param1:String, param2:Object) : void
       {
+         var source:String = null;
+         var value:Boolean = false;
          if(param2 !== undefined && param2 !== null)
          {
-            values[normalizeSource(param1)] = { known:true, value:Boolean(param2) };
+            source = normalizeSource(param1);
+            value = Boolean(param2);
+            if(!this.valueMatches(source,value))
+            {
+               values[source] = { known:true, value:value };
+               this.markChanged(source);
+            }
          }
       }
 
       private function setFinite(param1:String, param2:Object) : void
       {
+         var source:String = null;
          var value:Number = Number(param2);
          if(!isNaN(value) && isFinite(value))
          {
-            values[normalizeSource(param1)] = { known:true, value:value };
+            source = normalizeSource(param1);
+            if(!this.valueMatches(source,value))
+            {
+               values[source] = { known:true, value:value };
+               this.markChanged(source);
+            }
          }
       }
 
       private function clearValue(param1:String) : void
       {
-         delete values[normalizeSource(param1)];
+         var source:String = normalizeSource(param1);
+         if(values[source] != null)
+         {
+            delete values[source];
+            this.markChanged(source);
+         }
       }
 
       private function setRatio(param1:String, param2:Object, param3:Object) : void
@@ -717,7 +752,36 @@ package venworks.cui
 
       private function notifyChanged() : void
       {
-         dispatchEvent(new Event(Event.CHANGE));
+         var sources:Object = null;
+         if(changedSourceCount == 0)
+         {
+            return;
+         }
+         sources = changedSources;
+         this.resetChangedSources();
+         dispatchEvent(new CustomEvent(VALUE_CHANGE,sources));
+      }
+
+      private function valueMatches(param1:String, param2:Object) : Boolean
+      {
+         var current:Object = values[param1];
+         return current != null && Boolean(current.known) && current.value === param2;
+      }
+
+      private function markChanged(param1:String) : void
+      {
+         if(changedSources[param1] === true)
+         {
+            return;
+         }
+         changedSources[param1] = true;
+         ++changedSourceCount;
+      }
+
+      private function resetChangedSources() : void
+      {
+         changedSources = {};
+         changedSourceCount = 0;
       }
 
       public function dispose() : void

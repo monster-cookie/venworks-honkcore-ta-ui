@@ -20,5 +20,10 @@ package venworks.cui
       {
          target.visible = configuredVisible && expression.evaluate(param1) == CUIConditionExpression.TRUE_VALUE;
       }
+
+      public function isAffectedBy(param1:Object) : Boolean
+      {
+         return expression.isAffectedBy(param1);
+      }
    }
 }

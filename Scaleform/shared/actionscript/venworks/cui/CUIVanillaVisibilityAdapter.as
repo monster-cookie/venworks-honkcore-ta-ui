@@ -77,24 +77,37 @@ package venworks.cui
          }
       }
 
-      public function updateHudMode(param1:Array) : void
+      public function isAffectedBy(param1:Object) : Boolean
+      {
+         return param1 == null || param1["hudopacitypercentage"] === true || expression.isAffectedBy(param1);
+      }
+
+      public function updateHudMode(param1:Array) : Boolean
       {
          var mode:Object = null;
          var index:int = 0;
+         var nextVisible:Boolean = false;
+         var changed:Boolean = false;
          if(hudModeIndex < 0 || param1 == null || hudModeIndex >= param1.length)
          {
-            return;
+            return false;
          }
          mode = param1[hudModeIndex];
          if(mode == null)
          {
-            return;
+            return false;
          }
+         nextVisible = Boolean(mode.bVisible);
          while(index < gameVisibilities.length)
          {
-            gameVisibilities[index] = Boolean(mode.bVisible);
+            if(Boolean(gameVisibilities[index]) != nextVisible)
+            {
+               gameVisibilities[index] = nextVisible;
+               changed = true;
+            }
             index++;
          }
+         return changed;
       }
 
       public function reapplyPlacement() : void

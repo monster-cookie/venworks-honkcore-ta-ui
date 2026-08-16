@@ -164,6 +164,49 @@ TA, and the retired Goal 8A diagnostic payload was removed from every variant.
 | `VenworksCUI/layout.xml` | 6427 | `BA609EE350472D48C428B1AAADAE5DE4C3AF86BA5E29CBD9A3DE61E27B6C70F7` |
 | `components/contact-radar.xml` | 2637 | `BFA1CC6A30B87C21A02BE186B4B558B6D0461F1327F22539B9B51FA4F3D03E61` |
 
+## Provider-local event correction
+
+Runtime testing after the independent-Watch correction showed that weapon and
+grenade kills could still black the complete Starfield movie while an external
+performance overlay remained visible. Console `kill` and `kah` did not trigger
+the failure. The blackout also survived disabling damage numbers, disabling
+floating markers, and using `tm`; the latter hides menu rendering but does not
+stop subscribed ActionScript. Multiple weapons and a grenade reproduced the
+same behavior, while vanilla and HONKCORE did not.
+
+Source inspection found a Venworks-specific fan-out. Every provider handled by
+`CUIPlayerHudDataContext` dispatched the same generic `Event.CHANGE`, and
+`CUIRuntime.onValueChanged()` responded by applying every value binding and
+redrawing every contact radar. A player-credited combat kill can publish weapon,
+XP, player, and related provider updates together, causing repeated
+`Shape.graphics` clearing and reconstruction even when `HudCompassData` did not
+change. HONKCORE's MAPR instead updates directly from its compass subscription.
+This provider fan-out is therefore the leading source-side cause of the
+kill-event render-surface failure; the corrective build still requires runtime
+confirmation before the blackout can be declared eliminated.
+
+The correction gives compass delivery a radar-only event and carries normalized
+changed-source lookups in Bethesda's existing `Shared.AS3.Events.CustomEvent`
+for value and condition updates. Setters suppress unchanged values. Value
+bindings match their primary, maximum, and text-template sources; visibility
+bindings match the names used by their compiled expressions; vanilla adapters
+also depend on HUD opacity. Bethesda HUD-mode updates reapply only the vanilla
+adapters they own. Initial construction still performs one complete value,
+radar, and visibility application, while live events reach only dependent
+controls. The implementation adds no provider, authored class, persistence,
+native code, input, or Watch ownership.
+
+On 2026-08-16, `Tools/checkRepo.ps1` passed and the complete normal/large
+Scaleform build passed import, reopen, 207-script, 39-authored-class,
+single-domain, unchanged-Watch, and provider-local routing validation. Both
+movies staged byte-identically across VWKS, CF, FC, and TA. Runtime kill testing
+remains required before treating the source-side correction as confirmed.
+
+| Provider-local routing artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `hudmenu.gfx` | 416323 | `F54F97424CF34F63186D5B0044772084FD61A76D7CFA3DB59468B52D07DFBC95` |
+| `hudmenu_lrg.gfx` | 416506 | `346C682452FE11DC2A29A2F9CDD558CF2B97901438829F8A9575A29B5699AFF4` |
+
 ## Kill-event blackout hardening and provider evidence
 
 A user-supplied runtime recording confirmed that killing an enemy obscured
