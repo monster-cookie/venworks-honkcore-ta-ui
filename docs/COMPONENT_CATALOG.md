@@ -370,15 +370,26 @@ limitation must be included in end-user documentation.
 
 `contactRadar` is a bounded, passive HUDMenu component driven exclusively by
 `HudCompassData`. It places contacts with Bethesda's Watch heading transform,
-near/far state, distance scale, and distance alpha. The component owns a fixed
-pool of 32 display objects and creates no input handlers or persistent state.
+near/far state, fixed `1.0` marker scale, and bounded distance alpha. Bethesda's
+`fDistanceScale` is deliberately ignored because an extreme enemy-removal value
+expanded a marker across the HUD and produced a runtime black surface. The
+component owns a fixed pool of 32 display objects and creates no input handlers
+or persistent state.
 
 The production semantic mapping is deliberately narrow: all
 `aEnemyMarkers` entries are red dots; general marker type 8 companions are white
-dots; type 11 parked ships and type 15 vehicles are white squares; and the
-player is a fixed purple center square. Locations, mission markers, unknown
+dots; candidate type 11 parked ships and candidate type 15 vehicles would be
+white squares if persistent `aMarkers` delivers them; and the player is a fixed
+purple center square. Runtime beside a parked ship produced no square, so ship
+and vehicle delivery is not yet confirmed. Locations, mission markers, unknown
 types, aggressive/defensive/passive distinctions, and claimed physical range
 are not rendered or inferred.
+
+A temporary line inside the radar reports the complete general-marker count and
+unique numeric marker types as `G:<count> TYPES:<types>`. It is a bounded probe
+of persistent `HudCompassData.aMarkers`, not another provider or a claim that
+types 11 and 15 are available. It performs no recursive field dump and adds no
+input, callback, persistence, native, or SFSE behavior.
 
 The adjacent `faction-display` fragment owns the Venworks SVG crest and its
 panel separately from `contact-radar`. Each has an independent layout include,

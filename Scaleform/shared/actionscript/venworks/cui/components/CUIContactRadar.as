@@ -1,6 +1,9 @@
 package venworks.cui.components
 {
    import flash.display.Shape;
+   import flash.text.TextField;
+   import flash.text.TextFormat;
+   import venworks.cui.CUITextFieldHost;
 
    public final class CUIContactRadar extends CUIComponent
    {
@@ -12,6 +15,7 @@ package venworks.cui.components
 
       private var contacts:Array;
       private var playerMarker:Shape;
+      private var diagnosticField:TextField;
       private var enemyColor:uint;
       private var allyColor:uint;
       private var playerColor:uint;
@@ -25,6 +29,8 @@ package venworks.cui.components
          contacts = [];
          this.createContacts();
          this.createPlayerMarker();
+         this.createDiagnostic();
+         this.updateDiagnostic(null);
       }
 
       public function updateData(param1:Object) : void
@@ -32,6 +38,7 @@ package venworks.cui.components
          var index:int = 0;
          var general:Array = param1 == null ? null : param1.aMarkers as Array;
          var enemies:Array = param1 == null ? null : param1.aEnemyMarkers as Array;
+         this.updateDiagnostic(general);
          index = this.renderArray(enemies,index,param1,MIT_MARKER_ENEMY);
          index = this.renderArray(general,index,param1,0);
          while(index < contacts.length)
@@ -66,6 +73,69 @@ package venworks.cui.components
          addChild(playerMarker);
       }
 
+      private function createDiagnostic() : void
+      {
+         var host:CUITextFieldHost = new CUITextFieldHost();
+         var format:TextFormat = host.field.defaultTextFormat;
+         host.x = 0;
+         host.y = componentHeight - 18;
+         host.mouseEnabled = false;
+         host.mouseChildren = false;
+         diagnosticField = host.field;
+         diagnosticField.width = componentWidth;
+         diagnosticField.height = 18;
+         diagnosticField.multiline = false;
+         diagnosticField.wordWrap = false;
+         format.size = 10;
+         format.color = allyColor;
+         format.bold = true;
+         format.align = "center";
+         diagnosticField.defaultTextFormat = format;
+         addChild(host);
+      }
+
+      private function updateDiagnostic(param1:Array) : void
+      {
+         var markerCount:int = param1 == null ? 0 : param1.length;
+         var types:Array = [];
+         var seen:Object = {};
+         var index:int = 0;
+         var marker:Object = null;
+         var rawType:Object = null;
+         var typeValue:Number = NaN;
+         var typeKey:String = null;
+         var typeText:String = null;
+         while(param1 != null && index < param1.length)
+         {
+            marker = param1[index];
+            rawType = marker == null ? null : marker.uiMarkerIconType;
+            if(rawType !== undefined && rawType !== null && String(rawType).length != 0)
+            {
+               typeValue = Number(rawType);
+               typeKey = typeValue.toString();
+               if(!isNaN(typeValue) && isFinite(typeValue) && seen[typeKey] !== true)
+               {
+                  seen[typeKey] = true;
+                  types.push(typeValue);
+               }
+            }
+            ++index;
+         }
+         types.sort(Array.NUMERIC);
+         typeText = types.length == 0 ? "-" : types.join(",");
+         diagnosticField.text = "G:" + markerCount.toString() + " TYPES:" + typeText;
+         while(diagnosticField.textWidth > diagnosticField.width && types.length > 0)
+         {
+            types.pop();
+            typeText = types.length == 0 ? "..." : types.join(",") + ",...";
+            diagnosticField.text = "G:" + markerCount.toString() + " TYPES:" + typeText;
+         }
+         if(diagnosticField.textWidth > diagnosticField.width)
+         {
+            diagnosticField.text = "G:" + markerCount.toString() + " TYPES:...";
+         }
+      }
+
       private function renderArray(param1:Array, param2:int, param3:Object, param4:uint) : int
       {
          var sourceIndex:int = 0;
@@ -97,13 +167,8 @@ package venworks.cui.components
          var rotatedX:Number = Math.cos(heading) * vectorX - Math.sin(heading) * vectorY;
          var rotatedY:Number = Math.sin(heading) * vectorX + Math.cos(heading) * vectorY;
          var radius:Number = Math.min(componentWidth,componentHeight) * (Boolean(param2.bIsNear) ? 0.43 : 0.39);
-         var scale:Number = param2.fDistanceScale === undefined || param2.fDistanceScale === null ? 1 : Number(param2.fDistanceScale);
          var markerAlpha:Number = param2.fDistanceAlpha === undefined || param2.fDistanceAlpha === null ? 1 : Number(param2.fDistanceAlpha);
          var size:Number = param5 ? 7 : 6;
-         if(isNaN(scale) || scale <= 0)
-         {
-            scale = 1;
-         }
          if(isNaN(markerAlpha))
          {
             markerAlpha = 1;
@@ -121,8 +186,8 @@ package venworks.cui.components
          param1.graphics.endFill();
          param1.x = componentWidth / 2 + rotatedX * radius;
          param1.y = componentHeight / 2 + rotatedY * radius;
-         param1.scaleX = scale;
-         param1.scaleY = scale;
+         param1.scaleX = 1;
+         param1.scaleY = 1;
          param1.alpha = Math.max(0,Math.min(1,markerAlpha));
          param1.visible = true;
       }

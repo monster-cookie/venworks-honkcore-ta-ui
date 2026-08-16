@@ -916,6 +916,7 @@ try {
     $reopenedIconPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIIcon.as'
     $reopenedImagePath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIImage.as'
     $reopenedSymbolPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUISymbol.as'
+    $reopenedContactRadarPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIContactRadar.as'
     $reopenedValueBindingPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIValueBinding.as'
     $reopenedVanillaVisibilityPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIVanillaVisibilityAdapter.as'
     $reopenedRuntimePath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIRuntime.as'
@@ -928,6 +929,7 @@ try {
     $reopenedIconSource = Get-Content -LiteralPath $reopenedIconPath -Raw
     $reopenedImageSource = Get-Content -LiteralPath $reopenedImagePath -Raw
     $reopenedSymbolSource = Get-Content -LiteralPath $reopenedSymbolPath -Raw
+    $reopenedContactRadarSource = Get-Content -LiteralPath $reopenedContactRadarPath -Raw
     $reopenedValueBindingSource = Get-Content -LiteralPath $reopenedValueBindingPath -Raw
     $reopenedVanillaVisibilitySource = Get-Content -LiteralPath $reopenedVanillaVisibilityPath -Raw
     $reopenedRuntimeSource = Get-Content -LiteralPath $reopenedRuntimePath -Raw
@@ -1028,6 +1030,14 @@ try {
         $reopenedLayoutParserSource -notmatch 'type\s*==\s*"contactRadar"' -or
         $reopenedRuntimeSource -notmatch 'type\s*==\s*"contactRadar"') {
       throw 'Generated ActionScript does not register contactRadar across composition, parsing, and runtime construction.'
+    }
+    if ($reopenedContactRadarSource -notmatch 'param1\.scaleX\s*=\s*1' -or
+        $reopenedContactRadarSource -notmatch 'param1\.scaleY\s*=\s*1' -or
+        $reopenedContactRadarSource -notmatch 'new\s+CUITextFieldHost\(\)' -or
+        !$reopenedContactRadarSource.Contains('"G:"') -or
+        !$reopenedContactRadarSource.Contains('" TYPES:"') -or
+        $reopenedContactRadarSource -match 'fDistanceScale') {
+      throw 'Generated contact radar does not retain fixed contact scaling and the compact persistent-compass diagnostic.'
     }
     foreach ($diagnosticValue in @(
       'LAYOUT VALIDATION',

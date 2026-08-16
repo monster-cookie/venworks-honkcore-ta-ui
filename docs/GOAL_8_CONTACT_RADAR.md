@@ -41,10 +41,11 @@ specific presentation and scanner-owned behavior belong to a later goal.
 | Near/far state | Marker `bIsNear` | Confirmed in HUDMenu vanilla code; physical threshold unknown. |
 | Relative elevation | Marker `uiRelativeMarkerHeightType` | Confirmed in HUDMenu vanilla code. |
 | Marker type and location state | `uiMarkerIconType`, `uMapMarkerType`, `uMapMarkerCategory`, `uLocationMarkerState` | Confirmed in HUDMenu vanilla code. |
-| Display distance effects | `fDistanceScale`, `fDistanceAlpha` | Confirmed as presentation inputs; physical distance and unit unknown. |
+| Distance alpha | `fDistanceAlpha` | Confirmed as a presentation input; bounded to `[0,1]`. Physical distance and unit remain unknown. |
+| Marker scale | `fDistanceScale` | Confirmed as a Bethesda presentation input but rejected for production use after an extreme kill-transition value expanded a marker across the HUD. Production scale is fixed at `1.0`. |
 | Aggressive/defensive/passive disposition | Unknown marker field or array behavior | Unknown. |
 | Player ally identity | Unknown marker field or array behavior | Unknown. |
-| Ship and vehicle identity | Unknown marker field or marker type | Unknown. |
+| Ship and vehicle candidate identity | `uiMarkerIconType` values 11 and 15 | Recognized candidates, but delivery through persistent HUD `aMarkers` remains unconfirmed. |
 | Terrain or local-map geometry | Surface Map/menu-owned providers | Confirmed elsewhere only; not assumed HUDMenu-safe. |
 | Equipped armor entries | `PlayerInventoryData.aItems[*]`, `bIsEquipped`, `ArmorInfo` | Confirmed in HUD runtime. |
 | Suit/helmet/backpack category | Candidate `iFilterFlag` and equipment fields | Confirmed in Bethesda inventory presentation elsewhere; HUD payload presence unknown. |
@@ -109,15 +110,19 @@ states.
 
 Records that remained at the empty outpost used type 7,
 `MIT_MARKER_LOCATIONS`; they are excluded rather than presented as actors.
-Bethesda's confirmed type 8 companion marker renders as a white dot, while type
-11 parked ship and type 15 vehicle markers render as white squares when present.
-The player is an authored purple center square. Mission markers and unknown
-general marker types fail closed. Opening the scanner did not change the feed,
-so the radar remains always active and scanner-independent.
+Bethesda's confirmed type 8 companion marker renders as a white dot. Production
+recognizes type 11 as a parked-ship candidate and type 15 as a vehicle candidate;
+either would render as a white square if delivered. Runtime beside a parked ship
+showed no square, so these candidate mappings do not establish that persistent
+HUD `aMarkers` delivers nearby ships or vehicles. The player is an authored
+purple center square. Mission markers and unknown general marker types fail
+closed. Opening the scanner did not change the feed, so the radar remains always
+active and scanner-independent.
 
 The payload exposed `bIsNear`, `fDistanceScale`, and `fDistanceAlpha` but no
 physical distance with a proven unit. Production follows Bethesda's Watch
-near/far radial presentation and makes no 300-unit claim.
+near/far radial presentation, bounds `fDistanceAlpha`, fixes marker scale at
+`1.0`, and makes no 300-unit claim.
 
 While the player wore a Starborn suit, the equipment candidate selected a
 weapon, jumpsuit, spacesuit, and grenade through the same broad `ArmorInfo`
@@ -157,6 +162,48 @@ TA, and the retired Goal 8A diagnostic payload was removed from every variant.
 | `hudmenu_lrg.gfx` | 434938 | `523FF7466E118C0A04B060B9F0800C91773F73837243D3F8C52487D1FB233B37` |
 | `VenworksCUI/layout.xml` | 6427 | `BA609EE350472D48C428B1AAADAE5DE4C3AF86BA5E29CBD9A3DE61E27B6C70F7` |
 | `components/contact-radar.xml` | 2637 | `BFA1CC6A30B87C21A02BE186B4B558B6D0461F1327F22539B9B51FA4F3D03E61` |
+
+## Kill-event blackout correction and compact provider diagnostic
+
+A user-supplied runtime recording confirmed that killing an enemy obscured
+gameplay with a black surface for approximately 1.5–2 seconds while other HUD
+overlays remained active. The blackout cleared when the dying enemy marker
+finished transitioning out, ruling out loss of video output and an ordinary
+Starfield fade.
+
+`CUIContactRadar.renderContact()` applied Bethesda's `fDistanceScale` directly
+to the pooled vector marker. Its former guard rejected `NaN` and non-positive
+values but allowed infinity and extreme finite values. During the death/removal
+transition, an extreme scale could therefore expand the marker surface across
+the HUD, which Scaleform rendered as black. The accepted correction removes
+`fDistanceScale` from production rendering and assigns both marker axes a fixed
+scale of `1.0`. Heading placement, near/far radial placement, bounded
+`fDistanceAlpha`, contact color and shape, and the fixed purple player marker
+remain unchanged.
+
+The same recording showed no ship or vehicle square while the player approached
+and stood directly beside a parked ship. A compact radar-local line now reports
+`G:<count> TYPES:<unique comma-separated marker types>`, where `G` is the full
+`HudCompassData.aMarkers` array length. Null or absent data reports
+`G:0 TYPES:-`; null records do not add a type. Values are deduplicated, sorted
+numerically, and constrained to the radar width. The diagnostic adds no field
+dumping, input, callbacks, persistence, native code, SFSE component, or
+menu-owned provider.
+
+On 2026-08-15, `Tools/checkRepo.ps1` passed and the complete normal/large
+Scaleform build imported, reopened, and validated all 207 scripts and all 39
+authored CUI classes in the single Venworks ABC linkage domain. Both artifacts
+staged byte-identically across VWKS, CF, FC, and TA.
+
+| Blackout-correction artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `hudmenu.gfx` | 413102 | `04E38C398D4DFA86690A1466F92F69447E27B1C1E50D5FBB1FF32E7683D2911E` |
+| `hudmenu_lrg.gfx` | 413285 | `D9551F757EE0A1AE578747E5C600C8A7A02B5CDDE9B3CD8C736FE14DF0A00639` |
+
+Runtime acceptance requires captures of the line in open terrain, beside the
+parked ship, beside a vehicle, and, when possible, before and after entering the
+vehicle. Types 11 and 15 remain candidate mappings until those captures prove
+that persistent HUD `aMarkers` actually delivers them.
 
 ## Goal 8B runtime confirmation and visual refinement
 
