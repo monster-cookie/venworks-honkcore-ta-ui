@@ -22,10 +22,10 @@ The requested production vocabulary is:
 - white square for the player's ship or occupied/nearby vehicle.
 
 The radar uses Bethesda's marker `fDistanceToPlayer` field with a fixed
-300-provider-unit radius. Contacts are positioned proportionally against range
-circles at 100, 200, and 300 units and fail closed beyond the outer circle. No
-real-world unit such as meters is claimed. Disposition, ally, and ship/vehicle
-meanings are not inferred from appearance or array membership.
+200-provider-unit radius. Contacts are positioned proportionally against range
+circles at 50, 100, 150, and 200 units and fail closed beyond the outer circle.
+No real-world unit such as meters is claimed. Disposition, ally, and
+ship/vehicle meanings are not inferred from appearance or array membership.
 
 The radar remains present while aiming and while the scanner is open. Scanner-
 specific presentation and scanner-owned behavior belong to a later goal.
@@ -282,6 +282,39 @@ byte-identically across VWKS, CF, FC, and TA.
 | `hudmenu.gfx` | 416925 | `7E6C2A5D63607DD5B2E601079C4A0E408933602A2D9C5BC4EDD11157394ABEAA` |
 | `hudmenu_lrg.gfx` | 417108 | `FFF8D3F659ED717DB62BF2C9AA2EFD5B9E54A7B928E5E99138269C5035DF1789` |
 | `VenworksCUI/layout.xml` | 6415 | `29DE59E9A16670C9A92B981BD7937C3D92913261796C53E1F400B918F247D47A` |
+
+Runtime rejected the Player Data hypothesis. General movement, aiming, weapon
+switching, scanner use, pause response, and stock-Rattler kills had no new lag
+or hang, but Bloodthirsty kills still produced the black surface at both full
+and reduced health. Returning to the Bloodthirsty Rattler continued to
+reproduce it. The Player Data scanner and its segmented health meter are
+therefore restored without modification; the remaining blackout investigation
+must move outside that rendering path. Responsive direct provider routing
+remains accepted.
+
+The same runtime session accepted proportional radar movement but showed that
+enemy records were not delivered until approximately 150 provider units, based
+on comparison with a vehicle at that distance. This appears to be provider-side
+culling rather than a radar filter. The accepted calibration reduces the radar
+maximum to 200 provider units and uses circles at 50, 100, 150, and 200 units.
+It does not claim to change Bethesda's delivery threshold or assign a real-world
+unit to the provider value.
+
+On 2026-08-16, `Tools/checkRepo.ps1` passed and the complete normal/large
+Scaleform build imported, reopened, and validated all 207 scripts and all 39
+authored CUI classes in exactly one Venworks ABC linkage domain. Reopened
+assertions confirmed direct provider routing, absence of the rejected frame
+queue, fixed 200-unit placement, fixed marker scale, the 10/13/14 mapping,
+exact 50/100/150/200 rings, absence of a 300-unit ring, and restoration of the
+Player Data include. Movies, layouts, and radar fragments staged byte-identically
+across VWKS, CF, FC, and TA.
+
+| 200-unit calibration artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `hudmenu.gfx` | 416925 | `0495A774042240E76B2AB93081DB5E6952BF66E56617C8781E10059019D1B108` |
+| `hudmenu_lrg.gfx` | 417108 | `A1837FDF2E0D601970963502D738FED930DD2AB1922417A12370C12CA3394A97` |
+| `VenworksCUI/layout.xml` | 6583 | `87649033E716119601D6EBD1D9D9C50C048A84D347E6CC59D9472B580D2D915E` |
+| `components/contact-radar.xml` | 2433 | `49D6317ED00747D6F2074BB7658E5D4F9BC7A17D723650432299267230059F1D` |
 
 ## Kill-event blackout hardening and provider evidence
 

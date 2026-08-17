@@ -371,11 +371,11 @@ limitation must be included in end-user documentation.
 `contactRadar` is a bounded, passive HUDMenu component driven exclusively by
 `HudCompassData`. It places contacts with Bethesda's Watch heading transform,
 the marker's `fDistanceToPlayer`, fixed `1.0` marker scale, and bounded distance
-alpha. A fixed 300-provider-unit range maps contacts proportionally from the
-player center to subdued 100-, 200-, and 300-unit circles; invalid or over-range
-contacts fail closed. Bethesda's `bIsNear` is no longer used for placement, and
-`fDistanceScale` remains deliberately ignored because unbounded transition
-values are unsafe for a pooled vector marker. Runtime later proved that fixed
+alpha. A fixed 200-provider-unit range maps contacts proportionally from the
+player center to subdued 50-, 100-, 150-, and 200-unit circles; invalid or
+over-range contacts fail closed. Bethesda's `bIsNear` is no longer used for
+placement, and `fDistanceScale` remains deliberately ignored because unbounded
+transition values are unsafe for a pooled vector marker. Runtime later proved that fixed
 scale alone did not eliminate the kill-event black surface. The component
 therefore hides a selected pooled marker before evaluation and assigns display
 coordinates and alpha only after distance, heading, player direction,
@@ -392,7 +392,7 @@ showed that it appears when the player exits the vehicle and disappears while
 the player occupies it. Type 10 was delivered beside the parked ship. Formal
 type 14 delivery remains unobserved. Locations, mission markers, unknown types,
 and aggressive/defensive/passive distinctions are not rendered or inferred.
-The 300-unit scale uses Bethesda's provider value and does not claim a real-world
+The 200-unit scale uses Bethesda's provider value and does not claim a real-world
 unit such as meters.
 
 The retired top-center probe reported the complete general-marker count and
@@ -432,7 +432,7 @@ Bethesda HUD-mode changes reapply only vanilla adapters. Initial component
 construction remains a complete one-time evaluation so unchanged defaults are
 still rendered. Live callbacks apply their affected domain directly; the
 rejected next-frame queue caused lag, stalls, and delayed pause response during
-Bloodthirsty testing and is absent from the current diagnostic artifact.
+Bloodthirsty testing and is absent from the current production baseline.
 
 The radar's 32 pooled contact containers retain prebuilt red-dot, white-dot, and
 white-square children. Live compass updates only select the required child and
@@ -442,10 +442,9 @@ after runtime isolated the remaining kill blackout to the Bloodthirsty legendary
 effect across multiple weapon types. Persistent radar geometry did not eliminate
 that blackout and is retained only as bounded rendering hygiene.
 
-The Player Data scanner component remains implemented and staged, but the
-current diagnostic layout intentionally does not instantiate it. This isolates
-its `HUDPlayerFrequentData` health consumers from the Bloodthirsty kill path. It
-is a temporary A/B artifact, not the accepted production layout; the faction
-display, radar, environmental scanner, equipment rail, and helmet frame remain
-instantiated. The normal and large diagnostic movies passed the complete
-single-domain, 39-authored-class, and 207-reopened-script build on 2026-08-16.
+The Player Data scanner is instantiated in the accepted layout. A controlled
+A/B temporarily removed it without removing the Bloodthirsty kill blackout at
+either full or reduced health, disproving its text and segmented health meter as
+the triggering rendering path. The faction display, radar, Player Data,
+environmental scanner, equipment rail, and helmet frame remain independently
+instantiated.

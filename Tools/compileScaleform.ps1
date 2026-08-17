@@ -1152,7 +1152,7 @@ try {
     if ($reopenedContactRadarSource -notmatch 'param1\.scaleX\s*=\s*1' -or
         $reopenedContactRadarSource -notmatch 'param1\.scaleY\s*=\s*1' -or
         $reopenedContactRadarSource -notmatch 'param1\.visible\s*=\s*false' -or
-        $reopenedContactRadarSource -notmatch 'MAX_DISTANCE\s*:\s*Number\s*=\s*300' -or
+        $reopenedContactRadarSource -notmatch 'MAX_DISTANCE\s*:\s*Number\s*=\s*200' -or
         $reopenedContactRadarSource -notmatch 'fDistanceToPlayer' -or
         $reopenedContactRadarSource -notmatch 'distance\s*/\s*MAX_DISTANCE' -or
         $reopenedContactRadarSource -notmatch 'isFiniteNumber\s*\(\s*distance\s*\)' -or
@@ -1181,7 +1181,7 @@ try {
         $reopenedContactRenderHandler.Length -eq 0 -or
         $reopenedContactRenderHandler -notmatch 'selectContactStyle\s*\(' -or
         $reopenedContactRenderHandler -match '\.graphics\.|new\s+(Shape|Sprite)') {
-      throw 'Generated contact radar does not retain persistent marker geometry, finite transform validation, fixed 300-unit distance placement, fixed scaling, and the Bethesda 10/13/14 ship-position-vehicle mapping, or still contains retired near/far, distance-scale, live-redraw, or diagnostic behavior.'
+      throw 'Generated contact radar does not retain persistent marker geometry, finite transform validation, fixed 200-unit distance placement, fixed scaling, and the Bethesda 10/13/14 ship-position-vehicle mapping, or still contains retired near/far, distance-scale, live-redraw, or diagnostic behavior.'
     }
     if ($reopenedContactRadarSource -match 'BottomLeftGroup_mc|WatchIconsWidget|CompassMarkerWidget' -or
         $reopenedRuntimeSource -notmatch 'componentLayer\.name\s*=\s*"VenworksCUIComponentLayer"' -or
@@ -1293,7 +1293,9 @@ try {
   })
   $contactRadarNodes = @($stagedContactRadar.SelectNodes('//contactRadar'))
   $contactRadarRingNodes = @($stagedContactRadar.SelectNodes('//shape[starts-with(@id,"contact-radar.ring.")]'))
+  $contactRadarRing50Nodes = @($stagedContactRadar.SelectNodes('//shape[@id="contact-radar.ring.50"]'))
   $contactRadarRing100Nodes = @($stagedContactRadar.SelectNodes('//shape[@id="contact-radar.ring.100"]'))
+  $contactRadarRing150Nodes = @($stagedContactRadar.SelectNodes('//shape[@id="contact-radar.ring.150"]'))
   $contactRadarRing200Nodes = @($stagedContactRadar.SelectNodes('//shape[@id="contact-radar.ring.200"]'))
   $contactRadarRing300Nodes = @($stagedContactRadar.SelectNodes('//shape[@id="contact-radar.ring.300"]'))
   $contactRadarInteractiveNodes = @($stagedContactRadar.SelectNodes('//*[@action or @event or @onClick or @mouseEnabled]'))
@@ -1309,29 +1311,35 @@ try {
       [string]$factionDisplayIncludes[0].x -ne '-64' -or
       [string]$factionDisplayIncludes[0].y -ne '-36' -or
       $contactRadarNodes.Count -ne 1 -or
-      $contactRadarRingNodes.Count -ne 3 -or
+      $contactRadarRingNodes.Count -ne 4 -or
+      $contactRadarRing50Nodes.Count -ne 1 -or
+      [string]$contactRadarRing50Nodes[0].x -ne '91' -or
+      [string]$contactRadarRing50Nodes[0].y -ne '90' -or
+      [string]$contactRadarRing50Nodes[0].width -ne '46' -or
+      [string]$contactRadarRing50Nodes[0].height -ne '46' -or
       $contactRadarRing100Nodes.Count -ne 1 -or
-      [string]$contactRadarRing100Nodes[0].x -ne '83.333' -or
-      [string]$contactRadarRing100Nodes[0].y -ne '82.333' -or
-      [string]$contactRadarRing100Nodes[0].width -ne '61.334' -or
-      [string]$contactRadarRing100Nodes[0].height -ne '61.334' -or
+      [string]$contactRadarRing100Nodes[0].x -ne '68' -or
+      [string]$contactRadarRing100Nodes[0].y -ne '67' -or
+      [string]$contactRadarRing100Nodes[0].width -ne '92' -or
+      [string]$contactRadarRing100Nodes[0].height -ne '92' -or
+      $contactRadarRing150Nodes.Count -ne 1 -or
+      [string]$contactRadarRing150Nodes[0].x -ne '45' -or
+      [string]$contactRadarRing150Nodes[0].y -ne '44' -or
+      [string]$contactRadarRing150Nodes[0].width -ne '138' -or
+      [string]$contactRadarRing150Nodes[0].height -ne '138' -or
       $contactRadarRing200Nodes.Count -ne 1 -or
-      [string]$contactRadarRing200Nodes[0].x -ne '52.667' -or
-      [string]$contactRadarRing200Nodes[0].y -ne '51.667' -or
-      [string]$contactRadarRing200Nodes[0].width -ne '122.666' -or
-      [string]$contactRadarRing200Nodes[0].height -ne '122.666' -or
-      $contactRadarRing300Nodes.Count -ne 1 -or
-      [string]$contactRadarRing300Nodes[0].x -ne '22' -or
-      [string]$contactRadarRing300Nodes[0].y -ne '21' -or
-      [string]$contactRadarRing300Nodes[0].width -ne '184' -or
-      [string]$contactRadarRing300Nodes[0].height -ne '184' -or
+      [string]$contactRadarRing200Nodes[0].x -ne '22' -or
+      [string]$contactRadarRing200Nodes[0].y -ne '21' -or
+      [string]$contactRadarRing200Nodes[0].width -ne '184' -or
+      [string]$contactRadarRing200Nodes[0].height -ne '184' -or
+      $contactRadarRing300Nodes.Count -ne 0 -or
       $contactRadarInteractiveNodes.Count -ne 0 -or
       $stagedContactRadarText -match 'venworks-logo.svg' -or
       $stagedContactRadarText -match 'value="VENWORKS"' -or
       $factionDisplaySvgNodes.Count -ne 1 -or
       $factionDisplayTextNodes.Count -ne 0 -or
       $stagedContactRadarText -match 'diagnostic\.radar\.') {
-    throw 'Goal 8B must stage independent top-edge faction and passive contact-radar displays, exact 100/200/300-unit range circles, one owned SVG crest, no duplicate label, and no diagnostic bindings.'
+    throw 'Goal 8B must stage independent top-edge faction and passive contact-radar displays, exact 50/100/150/200-unit range circles, one owned SVG crest, no duplicate label, and no diagnostic bindings.'
   }
   $environmentalDiagnosticIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'environmental-hazard-diagnostic'
@@ -1559,7 +1567,12 @@ try {
       [string]$environmentalScannerIncludes[0].visibleWhen -ne 'always' -or
       [int]$environmentalScannerIncludes[0].x -ne 39 -or
       [int]$environmentalScannerIncludes[0].y -ne 11 -or
-      $playerScannerIncludes.Count -ne 0 -or
+      $playerScannerIncludes.Count -ne 1 -or
+      [string]$playerScannerIncludes[0].src -ne 'player-status-scanner.xml' -or
+      [string]$playerScannerIncludes[0].anchor -ne 'bottom-left' -or
+      [string]$playerScannerIncludes[0].visibleWhen -ne 'always' -or
+      [int]$playerScannerIncludes[0].x -ne -39 -or
+      [int]$playerScannerIncludes[0].y -ne 11 -or
       $helmetLowerFrameFillPaths.Count -ne 1 -or
       [string]$helmetLowerFrameFillPaths[0].anchor -ne 'bottom-left' -or
       [int]$helmetLowerFrameFillPaths[0].x -ne -64 -or
@@ -1685,7 +1698,7 @@ try {
       $stagedEnvironmentalScannerText -notmatch 'id="corrosive\.exposure" x="198" y="190" width="44" height="34"' -or
       $stagedEnvironmentalScannerText -notmatch 'id="radiation\.exposure" x="282" y="190" width="44" height="34"' -or
       $stagedEnvironmentalScannerText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE|THREAT INDEX|VACUUM)') {
-    throw 'The Player Data isolation artifact must stage but not instantiate the content-only player scanner while retaining the unified helmet architecture, environmental scanner, vertical elemental channels, reserved threat recess, and passive upper-right equipment rail with no retired diagnostics or invented data.'
+    throw 'The accepted HUD must stage the unified helmet architecture, content-only player and environmental scanners, vertical elemental channels, reserved threat recess, and passive upper-right equipment rail with no retired diagnostics or invented data.'
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
@@ -1728,7 +1741,7 @@ try {
         throw "Staged CUI payload mismatch for $relativeCuiPath in $variantCuiOutputDirectory."
       }
     }
-    Write-Host -ForegroundColor Green "Staged the Goal 8 Player Data isolation artifact with retained radar and equipment rail in $variantCuiOutputDirectory"
+    Write-Host -ForegroundColor Green "Staged the Goal 8 200-unit radar calibration with restored Player Data and retained equipment rail in $variantCuiOutputDirectory"
   }
 }
 finally {

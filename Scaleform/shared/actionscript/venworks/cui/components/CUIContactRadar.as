@@ -10,7 +10,7 @@ package venworks.cui.components
       private static const MIT_MARKER_SHIP_PARKED:uint = 10;
       private static const MIT_MARKER_POSITION:uint = 13;
       private static const MIT_MARKER_VEHICLE:uint = 14;
-      private static const MAX_DISTANCE:Number = 300;
+      private static const MAX_DISTANCE:Number = 200;
       private static const MAX_CONTACTS:int = 32;
       private static const STYLE_ENEMY:int = 0;
       private static const STYLE_ALLY:int = 1;
