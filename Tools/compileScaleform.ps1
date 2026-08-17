@@ -318,6 +318,19 @@ if ($playerHudDataContextText -notmatch 'Subscribe\("PersonalEffectsData",this\.
     $playerHudDataContextText -notmatch 'TRANSIENT EVENTS=') {
   throw 'Goal 9A.2 must retain bounded, passive PersonalEffectsData and PersonalAlertsData diagnostics with direct known-field probes.'
 }
+if ($playerHudDataContextText -notmatch 'Subscribe\("PlayerStatusData",this\.onPlayerStatusData\)' -or
+    $playerHudDataContextText -notmatch 'MAX_PLAYER_STATUS_DIAGNOSTIC_GROUPS:int\s*=\s*12' -or
+    $playerHudDataContextText -notmatch 'MAX_PLAYER_STATUS_DIAGNOSTIC_EFFECTS:int\s*=\s*24' -or
+    $playerHudDataContextText -notmatch 'data\.aEffectGroups as Array' -or
+    $playerHudDataContextText -notmatch 'group\.aEffects as Array' -or
+    $playerHudDataContextText -notmatch '\+\+this\.playerStatusUpdateCount' -or
+    $playerHudDataContextText -notmatch 'describePlayerStatusEffectGroup\(group\)' -or
+    $playerHudDataContextText -notmatch 'describePlayerStatusEffect\(effects\[nestedIndex\]\)' -or
+    $playerHudDataContextText -notmatch '\["sName","sEffectIcon","bHasAfflictions","bHasBuffs","bHasDebuffs","bShowTimer",\s+"fTimeRemaining","bIsPositiveEffect","aEffects"\]' -or
+    $playerHudDataContextText -notmatch '\["sName","sDescription","bHideName","bIsBuff","bPermanent","fTimeRemaining"\]' -or
+    $playerHudDataContextText -notmatch 'PLAYERSTATUSDATA RECEIVED \| UPDATES=') {
+  throw 'Goal 9A.3 must directly traverse bounded PlayerStatusData effect groups and nested effects while exposing delivery lifecycle updates.'
+}
 foreach ($meterStyle in @($providerProbeLayout.venworksCUI.definitions.meterStyle)) {
   $renderer = [string]$meterStyle.renderer
   $rejectedAttributes = switch ($renderer) {
@@ -1293,6 +1306,9 @@ try {
     [string]$_.id -eq 'personal-effects-diagnostic'
   })
   $personalEffectsDiagnosticGroups = @($stagedPersonalEffectsDiagnostic.SelectNodes('//group[@id="root"]'))
+  $playerStatusGroupBindings = @($stagedPersonalEffectsDiagnostic.SelectNodes('//text[starts-with(@source,"diagnostic.playerStatusGroup")]'))
+  $playerStatusEffectBindings = @($stagedPersonalEffectsDiagnostic.SelectNodes('//text[starts-with(@source,"diagnostic.playerStatusEffect")]'))
+  $playerStatusRootBindings = @($stagedPersonalEffectsDiagnostic.SelectNodes('//text[@source="diagnostic.playerStatusRoot"]'))
   $personalEffectBindings = @($stagedPersonalEffectsDiagnostic.SelectNodes('//text[starts-with(@source,"diagnostic.personalEffect") and @source!="diagnostic.personalEffectsRoot"]'))
   $personalAlertBindings = @($stagedPersonalEffectsDiagnostic.SelectNodes('//text[starts-with(@source,"diagnostic.personalAlert") and @source!="diagnostic.personalAlertsRoot"]'))
   $personalEffectsRootBindings = @($stagedPersonalEffectsDiagnostic.SelectNodes('//text[@source="diagnostic.personalEffectsRoot"]'))
@@ -1308,19 +1324,25 @@ try {
       [int]$personalEffectsDiagnosticIncludes[0].z -ne 110 -or
       $personalEffectsDiagnosticGroups.Count -ne 1 -or
       [int]$personalEffectsDiagnosticGroups[0].width -ne 1320 -or
-      [int]$personalEffectsDiagnosticGroups[0].height -ne 566 -or
+      [int]$personalEffectsDiagnosticGroups[0].height -ne 978 -or
+      $playerStatusGroupBindings.Count -ne 12 -or
+      $playerStatusEffectBindings.Count -ne 24 -or
+      $playerStatusRootBindings.Count -ne 1 -or
       $personalEffectBindings.Count -ne 16 -or
       $personalAlertBindings.Count -ne 8 -or
       $personalEffectsRootBindings.Count -ne 1 -or
       $personalAlertsRootBindings.Count -ne 1 -or
       $personalEffectsNonWrappedBindings.Count -ne 0 -or
       $personalEffectsInteractiveNodes.Count -ne 0 -or
-      $stagedPersonalEffectsDiagnosticText -notmatch 'GOAL 9A\.2 PERSONAL EFFECT FIELD DIAGNOSTIC' -or
-      $stagedPersonalEffectsDiagnosticText -notmatch 'PERSISTENT RECORDS AND TRANSIENT EVENTS ARE SEPARATE' -or
+      $stagedPersonalEffectsDiagnosticText -notmatch 'GOAL 9A\.3 PLAYER STATUS LIFECYCLE DIAGNOSTIC' -or
+      $stagedPersonalEffectsDiagnosticText -notmatch 'PERSISTENT RECORDS AND TRANSIENT EVENTS REMAIN SEPARATE' -or
+      $stagedPersonalEffectsDiagnosticText -notmatch 'value="PLAYERSTATUSDATA NOT RECEIVED \| UPDATES=0"' -or
+      $stagedPersonalEffectsDiagnosticText -notmatch 'value="GROUP 0 UNUSED"' -or
+      $stagedPersonalEffectsDiagnosticText -notmatch 'value="EFFECT 0 UNUSED"' -or
       $stagedPersonalEffectsDiagnosticText -notmatch 'value="PERSISTENT 0 UNUSED"' -or
       $stagedPersonalEffectsDiagnosticText -notmatch 'value="TRANSIENT 0 UNUSED"' -or
       $stagedPersonalEffectsDiagnosticText -match 'HudCompassData|diagnostic\.radar|EnvironmentEffectsData') {
-    throw 'Goal 9A.2 must stage one bounded, wrapped, passive personal-effects-only diagnostic that distinguishes persistent records from transient events without re-probing established compass or environment providers.'
+    throw 'Goal 9A.3 must stage one bounded, wrapped, passive three-provider lifecycle diagnostic without re-probing established compass or environment providers.'
   }
   $stagedPlayerScannerText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'player-status-scanner.xml') -Raw
   $stagedPlayerScanner = [xml]$stagedPlayerScannerText
@@ -1792,7 +1814,7 @@ try {
         throw "Staged CUI payload mismatch for $relativeCuiPath in $variantCuiOutputDirectory."
       }
     }
-    Write-Host -ForegroundColor Green "Staged the Goal 9A personal-effects diagnostic with the accepted Goal 8 radar and production helmet HUD in $variantCuiOutputDirectory"
+    Write-Host -ForegroundColor Green "Staged the Goal 9A.3 PlayerStatusData lifecycle diagnostic with the accepted Goal 8 radar and production helmet HUD in $variantCuiOutputDirectory"
   }
 }
 finally {

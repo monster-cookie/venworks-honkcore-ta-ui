@@ -1,7 +1,7 @@
 # Goal 9 helmet compass, threat score, and active effects
 
-**Status: Goal 9A.2 direct-field personal-effects diagnostic build-validated
-and awaiting runtime classification.** The compass and environmental
+**Status: Goal 9A.3 PlayerStatusData lifecycle diagnostic build-validated and
+awaiting runtime lifecycle classification.** The compass and environmental
 providers are not being re-probed: Goal 8 already established the complete
 `HudCompassData` contract used by the contact radar and former Watch, while
 Goal 6 established the live environmental-effect feed.
@@ -71,36 +71,50 @@ payload is handled as a transition animation. It cannot be treated as the
 current active-effect set unless runtime evidence establishes a safe lifecycle
 relationship with `PersonalEffectsData`.
 
-Goal 9A therefore adds a passive diagnostic for only these two providers.
+Goal 9A.2 therefore added a passive diagnostic for only these two providers.
 
 ## Initial runtime evidence and provider boundary
 
 On 2026-08-16, the Status Menu showed one negative effect, `Dislocated Limb`,
 and four positive effects: the ordinary `Fed` and `Hydrated` sustenance states,
 an Alien Kebabs food effect, and an Alien Energy Drink effect. During the same
-state, the Goal 9A HUD diagnostic reported three `aPersonalEffects` records and
-one `aPersonalAlerts` record. Each persistent record exposed only `fHeading=0`
-through ActionScript enumeration. The single alert exposed
-`bIsPositive=true`; it therefore was not a count or representation of the
-active negative effect.
+state, the Goal 9A.2 HUD diagnostic reported three `aPersonalEffects` records:
+`SUSTENANCE_DRINK_POSITIVE_1`, `SUSTENANCE_FOOD_POSITIVE_1`, and
+`PERSONALEFFECT_NERVOUSSYSTEM`. `PersonalAlertsData` reported one transient
+`PERSONALEFFECT_NERVOUSSYSTEM` event. This identifies the persistent records as
+Hydrated, Fed, and Dislocated Limb respectively; it also proves that the alert
+was a transition for the affliction rather than authoritative active state.
 
-The three persistent records align numerically with two sustenance states plus
-one affliction, but that mapping remains an inference until direct
-`sEffectIcon` reads and controlled expiration/removal tests identify each
-record. The timed food and drink bonuses may be absent from the HUD provider.
+Alien Kebabs and Alien Energy Drink were absent from both HUD provider arrays
+despite being present and timed in the Status Menu. `PersonalEffectsData` is
+therefore useful for identifying the two sustenance states and an affliction,
+but it is not a complete source for active consumable effects.
 
-Bethesda's Status Menu obtains its complete presentation from the separate
-`PlayerStatusData.aEffectGroups[*].aEffects` model. That model supplies names,
-descriptions, buff/debuff polarity, permanence, and remaining time. Goal 8's
-runtime probe established that `PlayerStatusData` was not delivered in
-HUDMenu, so the Status Menu list cannot be treated as a live HUD source. If the
-refined diagnostic confirms that consumable bonuses are absent, the complete
-active-effects requirement will need a native provider bridge; a HUD-only
-implementation would knowingly omit effects.
+Bethesda's Status Menu obtains its complete presentation from
+`PlayerStatusData.aEffectGroups[*].aEffects`. The vanilla menu reads group
+`sName`, icon, polarity summary, timer, and nested-effect array fields. Its
+effect-group renderer reads `sName`, `sEffectIcon`, `bHasBuffs`, `bHasDebuffs`,
+`bShowTimer`, `fTimeRemaining`, and `bIsPositiveEffect`. Its nested effect
+renderer reads `sName`, `sDescription`, `bHideName`, `bIsBuff`, `bPermanent`,
+and `fTimeRemaining`. This is the model that renders both the localized group
+title and the prognosis/weakness or timed-modifier rows visible in Status.
+
+Goal 8's early HUD probe did not receive `PlayerStatusData`, but that test only
+reported provider receipt and root field names. Goal 9A.3 repeats the
+subscription after the later provider work, directly traverses the known
+nested fields, and counts deliveries so a menu-triggered snapshot can be
+distinguished from a continuously live HUD feed. The provider remains
+diagnostic-only until runtime evidence passes that lifecycle gate.
 
 ## Diagnostic behavior
 
-The temporary top-center diagnostic presents:
+The expanded temporary top-center diagnostic presents:
+
+- `PlayerStatusData` receipt and an incrementing update count;
+- the root `aEffectGroups` count and root field names;
+- up to 12 groups with direct reads of the exact vanilla group fields;
+- up to 24 flattened nested effects, each retaining its owning group index and
+  directly reading the exact vanilla effect fields;
 
 - `PersonalEffectsData` receipt, root field names, and
   `aPersonalEffects` persistent-record count;
@@ -118,17 +132,27 @@ Diagnostic scalar values replace line-breaking whitespace and truncate after
 48 characters. Arrays are represented by their lengths and nested objects by
 type rather than recursively serialized. Core direct fields display
 `UNDEFINED` when they are not exposed. The layout wraps every live binding,
-contains no input or callback attributes, and explicitly distinguishes
-persistent records from transient events without assigning gameplay meaning.
+contains no input or callback attributes, and keeps Status presentation,
+persistent HUD records, and transient HUD events visibly separate without
+assigning unproven gameplay meaning.
 
-The diagnostic does not cache alerts as active state, modify Bethesda's Watch
-classes, add native code, persist data, or subscribe to compass or environment
-providers beyond their existing production adapters.
+The diagnostic does not cache alerts or Status snapshots as active state,
+modify Bethesda's Watch classes, add native code, persist data, or subscribe to
+compass or environment providers beyond their existing production adapters.
 
 ## Runtime matrix
 
-Capture readable screenshots, or transcribe the complete visible records, for
-each available case:
+First perform the lifecycle test in this exact order:
+
+1. load a save and capture the diagnostic without opening Status;
+2. open Status Effects, return to gameplay, and capture the diagnostic again;
+3. remain in gameplay and determine whether the update count advances and
+   remaining-time fields change without reopening Status; and
+4. consume a new aid item, where practical, and determine whether a new group
+   arrives without reopening Status.
+
+Then capture readable screenshots, or transcribe the complete visible records,
+for each available case:
 
 1. no personal effects active;
 2. one affliction or injury;
@@ -142,14 +166,17 @@ each available case:
 10. an effect being cured or removed early; and
 11. loading a save with effects already active.
 
-For each case, compare `PersonalEffectsData` and `PersonalAlertsData` before,
-during, and after the transition. Absence of a field in one sample is not proof
-that the concept is globally unavailable.
+For each case, compare all three providers before, during, and after the
+transition. Absence of a field in one sample is not proof that the concept is
+globally unavailable.
 
 ## Production gate
 
 Goal 9B may proceed after runtime evidence answers:
 
+- whether `PlayerStatusData` is delivered before Status is opened;
+- whether it continues updating after Status closes and while gameplay changes;
+- whether its group and nested fields match the localized Status presentation;
 - which persistent record fields, if any, provide localized names or stable
   identifiers;
 - whether positive and negative effects can be classified without maintaining
@@ -160,18 +187,20 @@ Goal 9B may proceed after runtime evidence answers:
 - whether alert text can safely enrich a matching persistent effect without
   making transition events authoritative active state.
 
-Any unproven field remains unavailable in production. The threat score will not
-assign the 35% debuff contribution until negative active effects can be counted
-truthfully.
+If `PlayerStatusData` appears only after opening Status or remains a frozen
+snapshot, it is rejected as production active state. Any other unproven field
+remains unavailable in production. The threat score will not assign the 35%
+debuff contribution until negative active effects can be counted truthfully.
 
 ## Validation
 
 Source validation requires `Tools/checkRepo.ps1`, the complete normal/large
 Scaleform build, and `git diff --check`. The Scaleform build must import and
 reopen both HUD movies, retain the bounded provider subscriptions and diagnostic
-formatters, schema-validate the component fragment, verify exactly 16 effect
-and eight alert bindings, reject interactive diagnostic content, and stage
-byte-identical CUI payloads across VWKS, CF, FC, and TA.
+formatters, schema-validate the component fragment, verify exactly 12 Status
+group, 24 nested Status effect, 16 persistent effect, and eight transient alert
+bindings, reject interactive diagnostic content, and stage byte-identical CUI
+payloads across VWKS, CF, FC, and TA.
 
 Runtime acceptance remains separate from build validation.
 
@@ -191,9 +220,25 @@ and TA.
 | `VenworksCUI/layout.xml` | 6760 | `543BC7E4B285F047742A128C84971E8B3ABC7333117924B90191A675D0BE9D09` |
 | `components/personal-effects-diagnostic.xml` | 10270 | `49EE7E2F6D3E3741BCCBC7478C46769BD5A85D90C3BAE6E01F3569EDFB80073C` |
 
+On 2026-08-16, `Tools/checkRepo.ps1`, the complete normal/large Scaleform build,
+and `git diff --check` passed for Goal 9A.3. Both movies imported and reopened
+all 207 scripts, retained all three bounded provider subscriptions, required
+direct traversal of `aEffectGroups` and nested `aEffects`, and passed the
+diagnostic schema, 12-group, 24-Status-effect, 16-persistent-effect,
+eight-transient-alert, wrapping, noninteractive, lifecycle-label, and provider-
+isolation assertions. The movies, layout, and diagnostic fragment staged byte-
+identically across VWKS, CF, FC, and TA.
+
+| Goal 9A.3 artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `hudmenu.gfx` | 422194 | `D2EB62D1FCF537BA1F6369BBB90C12AAF000C7D434E1F13DF67F8A67C35D97D7` |
+| `hudmenu_lrg.gfx` | 422377 | `B798772556AAA68ECD63DFC447958E2F084817011D3BDA40D486B91E783ABD79` |
+| `VenworksCUI/layout.xml` | 6854 | `F02E07278513C54A8068D9FC3589741B8AACC09866730DDB6F9C69C2DEC88DDB` |
+| `components/personal-effects-diagnostic.xml` | 23353 | `85F98733FC4F90271DD73338F54B847609410CB39415BB81400746EB45A38BA4` |
+
 ## Rollback
 
-Remove the two temporary provider subscriptions and diagnostic values from
+Remove the three temporary provider subscriptions and diagnostic values from
 `CUIPlayerHudDataContext`, remove the diagnostic include and component fragment,
 and remove the matching build/staging assertions. Goal 8 compass behavior and
 Goal 6 environmental behavior remain unchanged.
