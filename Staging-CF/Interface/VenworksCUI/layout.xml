@@ -62,6 +62,8 @@
              x="-39" y="11" anchor="bottom-left" visible="true" visibleWhen="always" z="100" />
     <include id="equipment-rail" src="equipment-rail.xml"
              x="64" y="36" anchor="top-right" visible="true" visibleWhen="always" z="102" />
+    <include id="personal-effects-diagnostic" src="personal-effects-diagnostic.xml"
+             x="0" y="80" anchor="top-center" visible="true" visibleWhen="always" z="110" />
   </includes>
   <components>
     <path id="helmet.lower-frame.fill" x="-64" y="36" width="1920" height="293" opacity="1" visible="true"

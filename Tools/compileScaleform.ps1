@@ -304,6 +304,16 @@ if ($playerHudDataContextText -notmatch 'refreshFavoriteSlotText\(\)' -or
     $conditionContextText -notmatch 'effectiveWeapon = Boolean\(favoriteWeapons\[index\]\) \|\| weaponMatch') {
   throw 'Goal 7 must classify and highlight an ammo-less melee favorite only when its normalized name exactly matches the live weapon name.'
 }
+if ($playerHudDataContextText -notmatch 'Subscribe\("PersonalEffectsData",this\.onPersonalEffectsData\)' -or
+    $playerHudDataContextText -notmatch 'Subscribe\("PersonalAlertsData",this\.onPersonalAlertsData\)' -or
+    $playerHudDataContextText -notmatch 'MAX_PERSONAL_DIAGNOSTIC_EFFECTS:int\s*=\s*16' -or
+    $playerHudDataContextText -notmatch 'MAX_PERSONAL_DIAGNOSTIC_ALERTS:int\s*=\s*8' -or
+    $playerHudDataContextText -notmatch 'data\.aPersonalEffects as Array' -or
+    $playerHudDataContextText -notmatch 'data\.aPersonalAlerts as Array' -or
+    $playerHudDataContextText -notmatch 'describeObject\(effects\[index\],MAX_DIAGNOSTIC_FIELDS\)' -or
+    $playerHudDataContextText -notmatch 'describeObject\(alerts\[index\],MAX_DIAGNOSTIC_FIELDS\)') {
+  throw 'Goal 9A must retain bounded, passive PersonalEffectsData and PersonalAlertsData diagnostics.'
+}
 foreach ($meterStyle in @($providerProbeLayout.venworksCUI.definitions.meterStyle)) {
   $renderer = [string]$meterStyle.renderer
   $rejectedAttributes = switch ($renderer) {
@@ -324,6 +334,7 @@ foreach ($meterStyle in @($providerProbeLayout.venworksCUI.definitions.meterStyl
 foreach ($componentFixtureName in @(
   'equipment-rail.xml',
   'environmental-hazard-scanner.xml',
+  'personal-effects-diagnostic.xml',
   'player-status-scanner.xml'
 )) {
   $componentFixturePath = Resolve-RequiredFile `
@@ -1269,8 +1280,39 @@ try {
       Remove-Item -LiteralPath $retiredComponentPath -Force
     }
   }
-  foreach ($componentFixtureName in @('contact-radar.xml','faction-display.xml','equipment-rail.xml','environmental-hazard-scanner.xml','player-status-scanner.xml')) {
+  foreach ($componentFixtureName in @('contact-radar.xml','faction-display.xml','equipment-rail.xml','environmental-hazard-scanner.xml','personal-effects-diagnostic.xml','player-status-scanner.xml')) {
     Copy-Item -LiteralPath (Join-Path $providerProbeComponentDirectory $componentFixtureName) -Destination (Join-Path $componentOutputDirectory $componentFixtureName) -Force
+  }
+  $stagedPersonalEffectsDiagnosticText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'personal-effects-diagnostic.xml') -Raw
+  $stagedPersonalEffectsDiagnostic = [xml]$stagedPersonalEffectsDiagnosticText
+  $personalEffectsDiagnosticIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
+    [string]$_.id -eq 'personal-effects-diagnostic'
+  })
+  $personalEffectsDiagnosticGroups = @($stagedPersonalEffectsDiagnostic.SelectNodes('//group[@id="root"]'))
+  $personalEffectBindings = @($stagedPersonalEffectsDiagnostic.SelectNodes('//text[starts-with(@source,"diagnostic.personalEffect") and @source!="diagnostic.personalEffectsRoot"]'))
+  $personalAlertBindings = @($stagedPersonalEffectsDiagnostic.SelectNodes('//text[starts-with(@source,"diagnostic.personalAlert") and @source!="diagnostic.personalAlertsRoot"]'))
+  $personalEffectsRootBindings = @($stagedPersonalEffectsDiagnostic.SelectNodes('//text[@source="diagnostic.personalEffectsRoot"]'))
+  $personalAlertsRootBindings = @($stagedPersonalEffectsDiagnostic.SelectNodes('//text[@source="diagnostic.personalAlertsRoot"]'))
+  $personalEffectsNonWrappedBindings = @($stagedPersonalEffectsDiagnostic.SelectNodes('//text[@source and (@multiline!="true" or @wordWrap!="true")]'))
+  $personalEffectsInteractiveNodes = @($stagedPersonalEffectsDiagnostic.SelectNodes('//*[@action or @event or @onClick or @mouseEnabled]'))
+  if ($personalEffectsDiagnosticIncludes.Count -ne 1 -or
+      [string]$personalEffectsDiagnosticIncludes[0].src -ne 'personal-effects-diagnostic.xml' -or
+      [string]$personalEffectsDiagnosticIncludes[0].anchor -ne 'top-center' -or
+      [string]$personalEffectsDiagnosticIncludes[0].visibleWhen -ne 'always' -or
+      [int]$personalEffectsDiagnosticIncludes[0].x -ne 0 -or
+      [int]$personalEffectsDiagnosticIncludes[0].y -ne 80 -or
+      [int]$personalEffectsDiagnosticIncludes[0].z -ne 110 -or
+      $personalEffectsDiagnosticGroups.Count -ne 1 -or
+      [int]$personalEffectsDiagnosticGroups[0].width -ne 1320 -or
+      [int]$personalEffectsDiagnosticGroups[0].height -ne 566 -or
+      $personalEffectBindings.Count -ne 16 -or
+      $personalAlertBindings.Count -ne 8 -or
+      $personalEffectsRootBindings.Count -ne 1 -or
+      $personalAlertsRootBindings.Count -ne 1 -or
+      $personalEffectsNonWrappedBindings.Count -ne 0 -or
+      $personalEffectsInteractiveNodes.Count -ne 0 -or
+      $stagedPersonalEffectsDiagnosticText -match 'HudCompassData|diagnostic\.radar|EnvironmentEffectsData') {
+    throw 'Goal 9A must stage one bounded, wrapped, passive personal-effects-only diagnostic without re-probing established compass or environment providers.'
   }
   $stagedPlayerScannerText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'player-status-scanner.xml') -Raw
   $stagedPlayerScanner = [xml]$stagedPlayerScannerText
@@ -1711,7 +1753,7 @@ try {
       New-Item -ItemType Directory -Force -Path $variantAssetOutputDirectory | Out-Null
       New-Item -ItemType Directory -Force -Path $variantComponentOutputDirectory | Out-Null
       Copy-Item -LiteralPath (Join-Path $cuiOutputDirectory "layout.xml") -Destination (Join-Path $variantCuiOutputDirectory "layout.xml") -Force
-      foreach ($componentFixtureName in @('contact-radar.xml','faction-display.xml','equipment-rail.xml','environmental-hazard-scanner.xml','player-status-scanner.xml')) {
+      foreach ($componentFixtureName in @('contact-radar.xml','faction-display.xml','equipment-rail.xml','environmental-hazard-scanner.xml','personal-effects-diagnostic.xml','player-status-scanner.xml')) {
         Copy-Item -LiteralPath (Join-Path $componentOutputDirectory $componentFixtureName) -Destination (Join-Path $variantComponentOutputDirectory $componentFixtureName) -Force
       }
       foreach ($assetFileName in @('gallery-vector.svg','venworks-logo.svg','gallery-invalid.svg')) {
@@ -1730,6 +1772,7 @@ try {
       'components\faction-display.xml',
       'components\equipment-rail.xml',
       'components\environmental-hazard-scanner.xml',
+      'components\personal-effects-diagnostic.xml',
       'components\player-status-scanner.xml',
       'Assets\gallery-vector.svg',
       'Assets\venworks-logo.svg',
@@ -1741,7 +1784,7 @@ try {
         throw "Staged CUI payload mismatch for $relativeCuiPath in $variantCuiOutputDirectory."
       }
     }
-    Write-Host -ForegroundColor Green "Staged the Goal 8 200-unit radar calibration with restored Player Data and retained equipment rail in $variantCuiOutputDirectory"
+    Write-Host -ForegroundColor Green "Staged the Goal 9A personal-effects diagnostic with the accepted Goal 8 radar and production helmet HUD in $variantCuiOutputDirectory"
   }
 }
 finally {

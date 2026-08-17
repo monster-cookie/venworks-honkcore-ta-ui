@@ -17,6 +17,8 @@ package venworks.cui
       private static const MAX_DIAGNOSTIC_FIELDS:int = 12;
       private static const MAX_PLAYER_DIAGNOSTIC_FIELDS:int = 32;
       private static const MAX_DIAGNOSTIC_EFFECTS:int = 4;
+      private static const MAX_PERSONAL_DIAGNOSTIC_EFFECTS:int = 16;
+      private static const MAX_PERSONAL_DIAGNOSTIC_ALERTS:int = 8;
       private static const MAX_HAZARD_EFFECTS:int = 32;
       private static const MAX_DIAGNOSTIC_INVENTORY_ITEMS:int = 256;
       private static const MAX_FAVORITE_SLOTS:int = 12;
@@ -89,6 +91,8 @@ package venworks.cui
          BSUIDataManager.Subscribe("FavoritesData",this.onFavoritesData);
          BSUIDataManager.Subscribe("ControlMapData",this.onControlMapData);
          BSUIDataManager.Subscribe("EnvironmentEffectsData",this.onEnvironmentEffectsData);
+         BSUIDataManager.Subscribe("PersonalEffectsData",this.onPersonalEffectsData);
+         BSUIDataManager.Subscribe("PersonalAlertsData",this.onPersonalAlertsData);
          BSUIDataManager.Subscribe("StarmapSystemBodyInfoProvider",this.onStarmapSystemBodyInfoData);
          BSUIDataManager.Subscribe("HudCompassData",this.onRadarCompassData);
          this.setText("diagnostic.inventoryprovider","PLAYERINVENTORYDATA NOT RECEIVED");
@@ -106,6 +110,10 @@ package venworks.cui
          this.setText("diagnostic.playerfields","PLAYERDATA NOT RECEIVED");
          this.setText("diagnostic.playertargets","PLAYER TARGETS: WAITING");
          this.setText("diagnostic.playeridentifiers","DETERMINISTIC SERIAL: WAITING FOR PLAYERDATA");
+         this.setText("diagnostic.personaleffectsroot","PERSONALEFFECTSDATA NOT RECEIVED");
+         this.setText("diagnostic.personalalertsroot","PERSONALALERTSDATA NOT RECEIVED");
+         this.resetPersonalEffectDiagnostics();
+         this.resetPersonalAlertDiagnostics();
          this.resetFavoriteHotkeys();
          this.resetFavoriteSlots();
          this.updatePlayerTimeInventoryDiagnostic();
@@ -150,7 +158,10 @@ package venworks.cui
             source == "diagnostic.activityprotection" ||
             source == "diagnostic.activityloads" ||
             source == "diagnostic.playerfields" || source == "diagnostic.playertargets" ||
-             source == "diagnostic.playeridentifiers" || source == "diagnostic.playertimeinventory" ||
+            source == "diagnostic.playeridentifiers" || source == "diagnostic.playertimeinventory" ||
+            source == "diagnostic.personaleffectsroot" || source == "diagnostic.personalalertsroot" ||
+            /^diagnostic\.personaleffect(0[0-9]|1[0-5])$/.test(source) ||
+            /^diagnostic\.personalalert0[0-7]$/.test(source) ||
             source == "diagnostic.effect0" || source == "diagnostic.effect1" ||
             source == "diagnostic.effect2" || source == "diagnostic.effect3" ||
             source == "diagnostic.armorresistance" || source == "diagnostic.starmapprovider")
@@ -325,6 +336,54 @@ package venworks.cui
       {
          this.setText("diagnostic.starmapprovider","STARMAP BODY PROVIDER RECEIVED IN HUD: " +
             this.listCandidateFields(param1.data,["body","gravity","temp","atmosphere","magnetosphere","water"],8));
+         this.notifyChanged();
+      }
+
+      private function onPersonalEffectsData(param1:FromClientDataEvent) : void
+      {
+         var data:Object = param1 == null ? null : param1.data;
+         var effects:Array = data == null ? null : data.aPersonalEffects as Array;
+         var index:int = 0;
+         this.resetPersonalEffectDiagnostics();
+         if(data == null)
+         {
+            this.setText("diagnostic.personaleffectsroot","PERSONALEFFECTSDATA RECEIVED — NULL PAYLOAD");
+            this.notifyChanged();
+            return;
+         }
+         this.setText("diagnostic.personaleffectsroot","PERSONALEFFECTSDATA RECEIVED | EFFECTS=" +
+            this.formatDiagnosticArrayLength(effects) + " | ROOT FIELDS=" +
+            this.listFieldNames(data,MAX_PLAYER_DIAGNOSTIC_FIELDS));
+         while(effects != null && index < effects.length && index < MAX_PERSONAL_DIAGNOSTIC_EFFECTS)
+         {
+            this.setText("diagnostic.personaleffect" + this.formatDiagnosticIndex(index),
+               "EFFECT " + index.toString() + " | " + this.describeObject(effects[index],MAX_DIAGNOSTIC_FIELDS));
+            ++index;
+         }
+         this.notifyChanged();
+      }
+
+      private function onPersonalAlertsData(param1:FromClientDataEvent) : void
+      {
+         var data:Object = param1 == null ? null : param1.data;
+         var alerts:Array = data == null ? null : data.aPersonalAlerts as Array;
+         var index:int = 0;
+         this.resetPersonalAlertDiagnostics();
+         if(data == null)
+         {
+            this.setText("diagnostic.personalalertsroot","PERSONALALERTSDATA RECEIVED — NULL PAYLOAD");
+            this.notifyChanged();
+            return;
+         }
+         this.setText("diagnostic.personalalertsroot","PERSONALALERTSDATA RECEIVED | ALERTS=" +
+            this.formatDiagnosticArrayLength(alerts) + " | ROOT FIELDS=" +
+            this.listFieldNames(data,MAX_PLAYER_DIAGNOSTIC_FIELDS));
+         while(alerts != null && index < alerts.length && index < MAX_PERSONAL_DIAGNOSTIC_ALERTS)
+         {
+            this.setText("diagnostic.personalalert" + this.formatDiagnosticIndex(index),
+               "ALERT " + index.toString() + " | " + this.describeObject(alerts[index],MAX_DIAGNOSTIC_FIELDS));
+            ++index;
+         }
          this.notifyChanged();
       }
 
@@ -820,6 +879,28 @@ package venworks.cui
          }
       }
 
+      private function resetPersonalEffectDiagnostics() : void
+      {
+         var index:int = 0;
+         while(index < MAX_PERSONAL_DIAGNOSTIC_EFFECTS)
+         {
+            this.setText("diagnostic.personaleffect" + this.formatDiagnosticIndex(index),
+               "EFFECT " + index.toString() + " UNUSED");
+            ++index;
+         }
+      }
+
+      private function resetPersonalAlertDiagnostics() : void
+      {
+         var index:int = 0;
+         while(index < MAX_PERSONAL_DIAGNOSTIC_ALERTS)
+         {
+            this.setText("diagnostic.personalalert" + this.formatDiagnosticIndex(index),
+               "ALERT " + index.toString() + " UNUSED");
+            ++index;
+         }
+      }
+
       private function updateExposureActivity(param1:Array) : void
       {
          var wasCritical:Boolean = this.environmentalCritical;
@@ -1252,6 +1333,16 @@ package venworks.cui
       private function formatNormalized(param1:Number) : String
       {
          return Math.round(Math.max(0,Math.min(1,param1)) * 100).toString() + "%";
+      }
+
+      private function formatDiagnosticArrayLength(param1:Array) : String
+      {
+         return param1 == null ? "UNAVAILABLE" : param1.length.toString();
+      }
+
+      private function formatDiagnosticIndex(param1:int) : String
+      {
+         return (param1 < 10 ? "0" : "") + param1.toString();
       }
 
       private function listFieldNames(param1:Object, param2:int) : String
