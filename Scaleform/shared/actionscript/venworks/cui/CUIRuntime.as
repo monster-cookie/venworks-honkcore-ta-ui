@@ -6,6 +6,7 @@ package venworks.cui
    import flash.events.Event;
    import venworks.cui.components.CUIComponent;
    import venworks.cui.components.CUIContinuousBar;
+   import venworks.cui.components.CUICompassTape;
    import venworks.cui.components.CUIContactRadar;
    import venworks.cui.components.CUIDotBar;
    import venworks.cui.components.CUIDivider;
@@ -19,10 +20,12 @@ package venworks.cui
    import venworks.cui.components.CUIRadialMeter;
    import venworks.cui.components.CUISegmentedBar;
    import venworks.cui.components.CUIShape;
+   import venworks.cui.components.CUIStatusEffectBar;
    import venworks.cui.components.CUISvg;
    import venworks.cui.components.CUISvgPath;
    import venworks.cui.components.CUISymbol;
    import venworks.cui.components.CUIText;
+   import venworks.cui.components.CUIThreatAlert;
    import venworks.cui.components.CUITriangleBar;
 
    public final class CUIRuntime
@@ -43,6 +46,9 @@ package venworks.cui
       private var vanillaAdapters:Array;
       private var hudModeVisibility:Array;
       private var contactRadars:Array;
+      private var compassTapes:Array;
+      private var threatAlerts:Array;
+      private var statusEffectBars:Array;
       private var diagnosticPhase:String = "";
       private var diagnosticNode:XML;
       private var diagnosticCheckpoint:String = "";
@@ -165,11 +171,15 @@ package venworks.cui
             valueBindings = [];
             vanillaAdapters = [];
             contactRadars = [];
+            compassTapes = [];
+            threatAlerts = [];
+            statusEffectBars = [];
             conditionContext = new CUIConditionContext();
             conditionContext.addEventListener(CUIConditionContext.CONDITION_CHANGE,this.onConditionChanged);
             valueContext = new CUIPlayerHudDataContext();
             valueContext.addEventListener(CUIPlayerHudDataContext.VALUE_CHANGE,this.onValueChanged);
             valueContext.addEventListener(CUIPlayerHudDataContext.COMPASS_CHANGE,this.onCompassChanged);
+            valueContext.addEventListener(CUIPlayerHudDataContext.TACTICAL_AWARENESS_CHANGE,this.onTacticalAwarenessChanged);
             layoutEngine = new CUILayoutEngine(componentLayer,layoutConfig);
             this.renderChildren(parser.components,componentLayer,parser.components);
             this.setDiagnosticContext("VANILLA ADAPTER INITIALIZATION",null);
@@ -177,6 +187,7 @@ package venworks.cui
             this.setDiagnosticContext("INITIAL LIVE VALUE EVALUATION",null);
             this.applyValues();
             this.applyContactRadars();
+            this.applyTacticalAwareness();
             this.setDiagnosticContext("INITIAL VISIBILITY EVALUATION",null);
             this.applyConditions();
             this.clearDiagnosticContext();
@@ -361,6 +372,24 @@ package venworks.cui
             contactRadars.push(radar);
             return radar;
          }
+         if(type == "compassTape")
+         {
+            var compassTape:CUICompassTape = new CUICompassTape(param1);
+            compassTapes.push(compassTape);
+            return compassTape;
+         }
+         if(type == "threatAlert")
+         {
+            var threatAlert:CUIThreatAlert = new CUIThreatAlert(param1);
+            threatAlerts.push(threatAlert);
+            return threatAlert;
+         }
+         if(type == "statusEffectBar")
+         {
+            var statusEffectBar:CUIStatusEffectBar = new CUIStatusEffectBar(param1);
+            statusEffectBars.push(statusEffectBar);
+            return statusEffectBar;
+         }
          if(type == "panel")
          {
             return new CUIPanel(param1);
@@ -481,6 +510,20 @@ package venworks.cui
          }
       }
 
+      private function onTacticalAwarenessChanged(param1:Event) : void
+      {
+         try
+         {
+            this.setDiagnosticContext("LIVE TACTICAL AWARENESS EVALUATION",null);
+            this.applyTacticalAwareness();
+            this.clearDiagnosticContext();
+         }
+         catch(param2:Error)
+         {
+            this.showRuntimeError(param2);
+         }
+      }
+
       private function applyValues(param1:Object = null) : void
       {
          var binding:CUIValueBinding = null;
@@ -499,6 +542,26 @@ package venworks.cui
          for each(radar in contactRadars)
          {
             radar.updateData(valueContext.currentCompassData);
+         }
+      }
+
+      private function applyTacticalAwareness() : void
+      {
+         var compassTape:CUICompassTape = null;
+         var threatAlert:CUIThreatAlert = null;
+         var statusEffectBar:CUIStatusEffectBar = null;
+         var data:Object = valueContext.currentTacticalAwarenessData;
+         for each(compassTape in compassTapes)
+         {
+            compassTape.updateData(data);
+         }
+         for each(threatAlert in threatAlerts)
+         {
+            threatAlert.updateData(data);
+         }
+         for each(statusEffectBar in statusEffectBars)
+         {
+            statusEffectBar.updateData(data);
          }
       }
 
@@ -533,6 +596,7 @@ package venworks.cui
          {
             valueContext.removeEventListener(CUIPlayerHudDataContext.VALUE_CHANGE,this.onValueChanged);
             valueContext.removeEventListener(CUIPlayerHudDataContext.COMPASS_CHANGE,this.onCompassChanged);
+            valueContext.removeEventListener(CUIPlayerHudDataContext.TACTICAL_AWARENESS_CHANGE,this.onTacticalAwarenessChanged);
             valueContext.dispose();
          }
          if(vanillaAdapters != null)
@@ -550,6 +614,9 @@ package venworks.cui
          valueBindings = [];
          vanillaAdapters = [];
          contactRadars = [];
+         compassTapes = [];
+         threatAlerts = [];
+         statusEffectBars = [];
       }
    }
 }

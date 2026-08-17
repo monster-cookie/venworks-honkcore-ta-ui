@@ -56,7 +56,8 @@ package venworks.cui
             }
             return;
          }
-         if(type == "text" || type == "panel" || type == "shape" || type == "divider" || type == "contactRadar" || type == "meter" ||
+         if(type == "text" || type == "panel" || type == "shape" || type == "divider" || type == "contactRadar" ||
+            type == "compassTape" || type == "threatAlert" || type == "statusEffectBar" || type == "meter" ||
             type == "svg" || type == "path" || type == "icon" || type == "providerSymbol" || type == "symbol")
          {
             if(param1.children().length() != 0)

@@ -234,6 +234,33 @@
     <xs:attribute name="playerColor" type="colorType" use="required" />
   </xs:complexType>
 
+  <xs:complexType name="compassTapeType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="fieldOfView" type="xs:decimal" use="required" />
+    <xs:attribute name="tickColor" type="colorType" use="required" />
+    <xs:attribute name="headingColor" type="colorType" use="required" />
+    <xs:attribute name="centerColor" type="colorType" use="required" />
+    <xs:attribute name="fallbackColor" type="colorType" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="threatAlertType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="backgroundColor" type="colorType" use="required" />
+    <xs:attribute name="clearColor" type="colorType" use="required" />
+    <xs:attribute name="cautionColor" type="colorType" use="required" />
+    <xs:attribute name="dangerColor" type="colorType" use="required" />
+    <xs:attribute name="criticalColor" type="colorType" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="statusEffectBarType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="maxItems" type="xs:positiveInteger" use="required" />
+    <xs:attribute name="debuffColor" type="colorType" use="required" />
+    <xs:attribute name="sustenanceColor" type="colorType" use="required" />
+    <xs:attribute name="neutralColor" type="colorType" use="required" />
+    <xs:attribute name="backgroundColor" type="colorType" use="required" />
+  </xs:complexType>
+
   <xs:complexType name="meterType">
     <xs:attributeGroup ref="componentAttributes" />
     <xs:attribute name="style" type="idType" use="required" />
@@ -434,6 +461,9 @@
       <xs:element name="shape" type="shapeType" />
       <xs:element name="divider" type="dividerType" />
       <xs:element name="contactRadar" type="contactRadarType" />
+      <xs:element name="compassTape" type="compassTapeType" />
+      <xs:element name="threatAlert" type="threatAlertType" />
+      <xs:element name="statusEffectBar" type="statusEffectBarType" />
       <xs:element name="meter" type="meterType" />
       <xs:element name="svg" type="assetType" />
       <xs:element name="path" type="pathType" />

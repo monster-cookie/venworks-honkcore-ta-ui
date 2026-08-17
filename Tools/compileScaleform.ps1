@@ -221,6 +221,9 @@ $providerProbeComponentDirectory = Resolve-RequiredDirectory `
 $playerHudDataContextSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\actionscript\venworks\cui\CUIPlayerHudDataContext.as") `
   -Description "Goal 6 player HUD data adapter"
+$tacticalAwarenessModelSource = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\actionscript\venworks\cui\CUITacticalAwarenessModel.as") `
+  -Description "Goal 9 tactical-awareness model"
 $conditionContextSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\actionscript\venworks\cui\CUIConditionContext.as") `
   -Description "Goal 7 condition context"
@@ -262,6 +265,7 @@ foreach ($positiveFixtureName in @(
 
 $providerProbeLayout = [xml](Get-Content -LiteralPath $providerProbeLayoutSource -Raw)
 $playerHudDataContextText = Get-Content -LiteralPath $playerHudDataContextSource -Raw
+$tacticalAwarenessModelText = Get-Content -LiteralPath $tacticalAwarenessModelSource -Raw
 $conditionContextText = Get-Content -LiteralPath $conditionContextSource -Raw
 $playerSerialDerivation = [regex]::Match(
   $playerHudDataContextText,
@@ -305,31 +309,19 @@ if ($playerHudDataContextText -notmatch 'refreshFavoriteSlotText\(\)' -or
   throw 'Goal 7 must classify and highlight an ammo-less melee favorite only when its normalized name exactly matches the live weapon name.'
 }
 if ($playerHudDataContextText -notmatch 'Subscribe\("PersonalEffectsData",this\.onPersonalEffectsData\)' -or
-    $playerHudDataContextText -notmatch 'Subscribe\("PersonalAlertsData",this\.onPersonalAlertsData\)' -or
-    $playerHudDataContextText -notmatch 'MAX_PERSONAL_DIAGNOSTIC_EFFECTS:int\s*=\s*16' -or
-    $playerHudDataContextText -notmatch 'MAX_PERSONAL_DIAGNOSTIC_ALERTS:int\s*=\s*8' -or
-    $playerHudDataContextText -notmatch 'data\.aPersonalEffects as Array' -or
-    $playerHudDataContextText -notmatch 'data\.aPersonalAlerts as Array' -or
-    $playerHudDataContextText -notmatch 'describePersonalEffect\(effects\[index\]\)' -or
-    $playerHudDataContextText -notmatch 'describePersonalAlert\(alerts\[index\]\)' -or
-    $playerHudDataContextText -notmatch '\["sEffectIcon","fHeading"\]' -or
-    $playerHudDataContextText -notmatch '\["sEffectIcon","sAlertText","sAlertSubText","bIsPositive"\]' -or
-    $playerHudDataContextText -notmatch 'PERSISTENT RECORDS=' -or
-    $playerHudDataContextText -notmatch 'TRANSIENT EVENTS=') {
-  throw 'Goal 9A.2 must retain bounded, passive PersonalEffectsData and PersonalAlertsData diagnostics with direct known-field probes.'
-}
-if ($playerHudDataContextText -notmatch 'Subscribe\("PlayerStatusData",this\.onPlayerStatusData\)' -or
-    $playerHudDataContextText -notmatch 'MAX_PLAYER_STATUS_DIAGNOSTIC_GROUPS:int\s*=\s*12' -or
-    $playerHudDataContextText -notmatch 'MAX_PLAYER_STATUS_DIAGNOSTIC_EFFECTS:int\s*=\s*24' -or
-    $playerHudDataContextText -notmatch 'data\.aEffectGroups as Array' -or
-    $playerHudDataContextText -notmatch 'group\.aEffects as Array' -or
-    $playerHudDataContextText -notmatch '\+\+this\.playerStatusUpdateCount' -or
-    $playerHudDataContextText -notmatch 'describePlayerStatusEffectGroup\(group\)' -or
-    $playerHudDataContextText -notmatch 'describePlayerStatusEffect\(effects\[nestedIndex\]\)' -or
-    $playerHudDataContextText -notmatch '\["sName","sEffectIcon","bHasAfflictions","bHasBuffs","bHasDebuffs","bShowTimer",\s+"fTimeRemaining","bIsPositiveEffect","aEffects"\]' -or
-    $playerHudDataContextText -notmatch '\["sName","sDescription","bHideName","bIsBuff","bPermanent","fTimeRemaining"\]' -or
-    $playerHudDataContextText -notmatch 'PLAYERSTATUSDATA RECEIVED \| UPDATES=') {
-  throw 'Goal 9A.3 must directly traverse bounded PlayerStatusData effect groups and nested effects while exposing delivery lifecycle updates.'
+    $playerHudDataContextText -match 'Subscribe\("PersonalAlertsData"|Subscribe\("PlayerStatusData"' -or
+    $playerHudDataContextText -notmatch 'TACTICAL_AWARENESS_CHANGE:String\s*=\s*"cuiTacticalAwarenessChange"' -or
+    $playerHudDataContextText -notmatch 'tacticalAwareness\.updatePersonalEffects\(data\)' -or
+    $playerHudDataContextText -notmatch 'tacticalAwareness\.updateEnvironment\(' -or
+    $playerHudDataContextText -notmatch 'tacticalAwareness\.updateCompass\(compassData\)' -or
+    $tacticalAwarenessModelText -notmatch 'HOSTILE_MAX:Number\s*=\s*35' -or
+    $tacticalAwarenessModelText -notmatch 'PHYSICAL_HAZARD_MAX:Number\s*=\s*15' -or
+    $tacticalAwarenessModelText -notmatch 'DEBUFF_MAX:Number\s*=\s*35' -or
+    $tacticalAwarenessModelText -notmatch 'ENVIRONMENT_MAX:Number\s*=\s*15' -or
+    $tacticalAwarenessModelText -notmatch 'AWARENESS_DISTANCE:Number\s*=\s*300' -or
+    $tacticalAwarenessModelText -notmatch 'SUSTENANCE_' -or
+    $tacticalAwarenessModelText -notmatch 'PERSONALEFFECT_') {
+  throw 'Goal 9 must use live compass, environment, and persistent personal-effect data with the approved 35/15/35/15 threat model and no menu-scoped or transient status subscriptions.'
 }
 foreach ($meterStyle in @($providerProbeLayout.venworksCUI.definitions.meterStyle)) {
   $renderer = [string]$meterStyle.renderer
@@ -351,7 +343,7 @@ foreach ($meterStyle in @($providerProbeLayout.venworksCUI.definitions.meterStyl
 foreach ($componentFixtureName in @(
   'equipment-rail.xml',
   'environmental-hazard-scanner.xml',
-  'personal-effects-diagnostic.xml',
+  'helmet-awareness.xml',
   'player-status-scanner.xml'
 )) {
   $componentFixturePath = Resolve-RequiredFile `
@@ -949,7 +941,13 @@ try {
       'HUDStealthData',
       'HudCompassData',
       'CUIContactRadar',
+      'CUITacticalAwarenessModel',
+      'CUICompassTape',
+      'CUIThreatAlert',
+      'CUIStatusEffectBar',
+      'TACTICAL_AWARENESS_CHANGE',
       'currentCompassData',
+      'currentTacticalAwarenessData',
       'MIT_MARKER_ENEMY',
       'MIT_MARKER_COMPANION',
       'MIT_MARKER_SHIP_PARKED',
@@ -973,6 +971,10 @@ try {
     $reopenedImagePath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIImage.as'
     $reopenedSymbolPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUISymbol.as'
     $reopenedContactRadarPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIContactRadar.as'
+    $reopenedCompassTapePath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUICompassTape.as'
+    $reopenedThreatAlertPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIThreatAlert.as'
+    $reopenedStatusEffectBarPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIStatusEffectBar.as'
+    $reopenedTacticalAwarenessModelPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUITacticalAwarenessModel.as'
     $reopenedTextPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIText.as'
     $reopenedConditionContextPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIConditionContext.as'
     $reopenedConditionExpressionPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIConditionExpression.as'
@@ -991,6 +993,10 @@ try {
     $reopenedImageSource = Get-Content -LiteralPath $reopenedImagePath -Raw
     $reopenedSymbolSource = Get-Content -LiteralPath $reopenedSymbolPath -Raw
     $reopenedContactRadarSource = Get-Content -LiteralPath $reopenedContactRadarPath -Raw
+    $reopenedCompassTapeSource = Get-Content -LiteralPath $reopenedCompassTapePath -Raw
+    $reopenedThreatAlertSource = Get-Content -LiteralPath $reopenedThreatAlertPath -Raw
+    $reopenedStatusEffectBarSource = Get-Content -LiteralPath $reopenedStatusEffectBarPath -Raw
+    $reopenedTacticalAwarenessModelSource = Get-Content -LiteralPath $reopenedTacticalAwarenessModelPath -Raw
     $reopenedTextSource = Get-Content -LiteralPath $reopenedTextPath -Raw
     $reopenedConditionContextSource = Get-Content -LiteralPath $reopenedConditionContextPath -Raw
     $reopenedConditionExpressionSource = Get-Content -LiteralPath $reopenedConditionExpressionPath -Raw
@@ -1009,7 +1015,11 @@ try {
     ).Value
     $reopenedCompassChangeHandler = [regex]::Match(
       $reopenedRuntimeSource,
-      '(?s)private function onCompassChanged\b.*?(?=\s+private function applyValues\b)'
+      '(?s)private function onCompassChanged\b.*?(?=\s+private function onTacticalAwarenessChanged\b)'
+    ).Value
+    $reopenedTacticalAwarenessChangeHandler = [regex]::Match(
+      $reopenedRuntimeSource,
+      '(?s)private function onTacticalAwarenessChanged\b.*?(?=\s+private function applyValues\b)'
     ).Value
     $reopenedHudModeHandler = [regex]::Match(
       $reopenedRuntimeSource,
@@ -1044,12 +1054,14 @@ try {
     }
     if ($reopenedPlayerHudDataContextSource -notmatch 'VALUE_CHANGE\s*:\s*String\s*=\s*"cuiValueChange"' -or
         $reopenedPlayerHudDataContextSource -notmatch 'COMPASS_CHANGE\s*:\s*String\s*=\s*"cuiCompassChange"' -or
+        $reopenedPlayerHudDataContextSource -notmatch 'TACTICAL_AWARENESS_CHANGE\s*:\s*String\s*=\s*"cuiTacticalAwarenessChange"' -or
         $reopenedPlayerHudDataContextSource -notmatch 'dispatchEvent\s*\(\s*new CustomEvent\s*\(\s*VALUE_CHANGE\s*,\s*sources\s*\)\s*\)' -or
         $reopenedPlayerHudDataContextSource -notmatch 'dispatchEvent\s*\(\s*new Event\s*\(\s*COMPASS_CHANGE\s*\)\s*\)' -or
+        $reopenedPlayerHudDataContextSource -notmatch 'dispatchEvent\s*\(\s*new Event\s*\(\s*TACTICAL_AWARENESS_CHANGE\s*\)\s*\)' -or
         $reopenedPlayerHudDataContextSource -notmatch 'valueMatches\s*\(\s*source\s*,\s*value\s*\)' -or
         $reopenedPlayerHudDataContextSource -notmatch 'changedSources\[param1\]\s*===\s*true' -or
         $reopenedPlayerHudDataContextSource -match 'dispatchEvent\s*\(\s*new Event\s*\(\s*Event\.CHANGE') {
-      throw 'Generated player HUD data context does not retain changed-source value events and dedicated compass delivery.'
+      throw 'Generated player HUD data context does not retain changed-source value events and dedicated compass/tactical delivery.'
     }
     if ($reopenedConditionContextSource -notmatch 'CONDITION_CHANGE\s*:\s*String\s*=\s*"cuiConditionChange"' -or
         $reopenedConditionContextSource -notmatch 'dispatchEvent\s*\(\s*new CustomEvent\s*\(\s*CONDITION_CHANGE\s*,\s*conditions\s*\)\s*\)' -or
@@ -1073,9 +1085,11 @@ try {
     if ($reopenedRuntimeSource -notmatch 'addEventListener\s*\(\s*CUIConditionContext\.CONDITION_CHANGE\s*,\s*this\.onConditionChanged\s*\)' -or
         $reopenedRuntimeSource -notmatch 'addEventListener\s*\(\s*CUIPlayerHudDataContext\.VALUE_CHANGE\s*,\s*this\.onValueChanged\s*\)' -or
         $reopenedRuntimeSource -notmatch 'addEventListener\s*\(\s*CUIPlayerHudDataContext\.COMPASS_CHANGE\s*,\s*this\.onCompassChanged\s*\)' -or
+        $reopenedRuntimeSource -notmatch 'addEventListener\s*\(\s*CUIPlayerHudDataContext\.TACTICAL_AWARENESS_CHANGE\s*,\s*this\.onTacticalAwarenessChanged\s*\)' -or
         $reopenedRuntimeSource -notmatch 'removeEventListener\s*\(\s*CUIConditionContext\.CONDITION_CHANGE\s*,\s*this\.onConditionChanged\s*\)' -or
         $reopenedRuntimeSource -notmatch 'removeEventListener\s*\(\s*CUIPlayerHudDataContext\.VALUE_CHANGE\s*,\s*this\.onValueChanged\s*\)' -or
         $reopenedRuntimeSource -notmatch 'removeEventListener\s*\(\s*CUIPlayerHudDataContext\.COMPASS_CHANGE\s*,\s*this\.onCompassChanged\s*\)' -or
+        $reopenedRuntimeSource -notmatch 'removeEventListener\s*\(\s*CUIPlayerHudDataContext\.TACTICAL_AWARENESS_CHANGE\s*,\s*this\.onTacticalAwarenessChanged\s*\)' -or
         $reopenedRuntimeSource -notmatch 'binding\.isAffectedBy\s*\(\s*param1\s*\)' -or
         $reopenedRuntimeSource -notmatch 'adapter\.isAffectedBy\s*\(\s*param1\s*\)' -or
         $reopenedConditionChangeHandler.Length -eq 0 -or
@@ -1087,12 +1101,15 @@ try {
         $reopenedCompassChangeHandler.Length -eq 0 -or
         $reopenedCompassChangeHandler -notmatch 'applyContactRadars\s*\(\s*\)' -or
         $reopenedCompassChangeHandler -match 'applyValues|applyConditions' -or
+        $reopenedTacticalAwarenessChangeHandler.Length -eq 0 -or
+        $reopenedTacticalAwarenessChangeHandler -notmatch 'applyTacticalAwareness\s*\(\s*\)' -or
+        $reopenedTacticalAwarenessChangeHandler -match 'applyValues|applyConditions|applyContactRadars' -or
         $reopenedHudModeHandler.Length -eq 0 -or
         $reopenedHudModeHandler -notmatch 'adapter\.updateHudMode\s*\(\s*hudModeVisibility\s*\)' -or
         $reopenedHudModeHandler -notmatch 'adapter\.apply\s*\(\s*conditionContext\s*\)' -or
         $reopenedHudModeHandler -match 'applyValues|applyContactRadars|applyConditions' -or
         $reopenedRuntimeSource -match 'Event\.ENTER_FRAME|pendingValueSources|pendingConditionNames|pendingCompassUpdate|pendingHudModeUpdate|frameUpdateScheduled|scheduleFrameUpdate|onFrameUpdate|applyPending') {
-      throw 'Generated runtime does not retain direct provider-local value, condition, compass, and HUD-mode routing boundaries, or still contains the rejected frame queue.'
+      throw 'Generated runtime does not retain direct provider-local value, condition, compass, tactical-awareness, and HUD-mode routing boundaries, or still contains the rejected frame queue.'
     }
     foreach ($meterRenderer in @('CUIContinuousBar','CUISegmentedBar','CUITriangleBar','CUIDotBar','CUIRadialMeter')) {
       $meterRendererPath = Join-Path $validationScriptsDirectory "scripts\venworks\cui\components\$meterRenderer.as"
@@ -1176,6 +1193,37 @@ try {
         $reopenedLayoutParserSource -notmatch 'type\s*==\s*"contactRadar"' -or
         $reopenedRuntimeSource -notmatch 'type\s*==\s*"contactRadar"') {
       throw 'Generated ActionScript does not register contactRadar across composition, parsing, and runtime construction.'
+    }
+    foreach ($tacticalComponentType in @('compassTape','threatAlert','statusEffectBar')) {
+      if ($reopenedCompositionResolverSource -notmatch "type\s*==\s*`"$tacticalComponentType`"" -or
+          $reopenedLayoutParserSource -notmatch "type\s*==\s*`"$tacticalComponentType`"" -or
+          $reopenedRuntimeSource -notmatch "type\s*==\s*`"$tacticalComponentType`"") {
+        throw "Generated ActionScript does not register $tacticalComponentType across composition, parsing, and runtime construction."
+      }
+    }
+    if ($reopenedTacticalAwarenessModelSource -notmatch 'AWARENESS_DISTANCE\s*:\s*Number\s*=\s*300' -or
+        $reopenedTacticalAwarenessModelSource -notmatch 'HOSTILE_MAX\s*:\s*Number\s*=\s*35' -or
+        $reopenedTacticalAwarenessModelSource -notmatch 'PHYSICAL_HAZARD_MAX\s*:\s*Number\s*=\s*15' -or
+        $reopenedTacticalAwarenessModelSource -notmatch 'DEBUFF_MAX\s*:\s*Number\s*=\s*35' -or
+        $reopenedTacticalAwarenessModelSource -notmatch 'ENVIRONMENT_MAX\s*:\s*Number\s*=\s*15' -or
+        $reopenedTacticalAwarenessModelSource -notmatch 'param1\.indexOf\("PERSONALEFFECT_"\)\s*==\s*0' -or
+        $reopenedTacticalAwarenessModelSource -notmatch 'param1\.indexOf\("SUSTENANCE_"\)\s*==\s*0' -or
+        $reopenedTacticalAwarenessModelSource -notmatch 'SUSTENANCE_FOOD_POSITIVE_1' -or
+        $reopenedTacticalAwarenessModelSource -notmatch 'SUSTENANCE_DRINK_POSITIVE_1') {
+      throw 'Generated Goal 9 model does not retain the approved bounded live-data classification and 35/15/35/15 threat weights.'
+    }
+    if ($reopenedCompassTapeSource -notmatch 'getDefinitionByName\("CompassMarkerWidget"\)' -or
+        $reopenedCompassTapeSource -notmatch 'MAX_MARKERS\s*:\s*int\s*=\s*48' -or
+        $reopenedCompassTapeSource -notmatch 'MapMarkerUtils\.GetMajorFrameFromMitMarkerType' -or
+        $reopenedCompassTapeSource -notmatch 'HEADING_LABELS\s*:\s*Array\s*=\s*\["N","NE","E","SE","S","SW","W","NW"\]' -or
+        $reopenedStatusEffectBarSource -notmatch 'getDefinitionByName\("PersonalEffectsWidget"\)' -or
+        $reopenedStatusEffectBarSource -notmatch 'HARD_MAX_ITEMS\s*:\s*int\s*=\s*COLUMN_COUNT\s*\*\s*ROW_COUNT' -or
+        $reopenedThreatAlertSource -notmatch '"THREAT "\s*\+\s*int\(score\)\.toString\(\)\s*\+\s*"%') {
+      throw 'Generated Goal 9 renderers do not retain the Watch icon reuse, eight-way heading tape, two-row bounded status display, and percentage threat presentation.'
+    }
+    if ($reopenedPlayerHudDataContextSource -match 'Subscribe\("PersonalAlertsData"|Subscribe\("PlayerStatusData"' -or
+        $reopenedPlayerHudDataContextSource -notmatch 'Subscribe\("PersonalEffectsData",this\.onPersonalEffectsData\)') {
+      throw 'Generated Goal 9 HUD context still uses menu-scoped/transient status providers or lost the persistent PersonalEffectsData subscription.'
     }
     if ($reopenedContactRadarSource -notmatch 'param1\.scaleX\s*=\s*1' -or
         $reopenedContactRadarSource -notmatch 'param1\.scaleY\s*=\s*1' -or
@@ -1289,7 +1337,8 @@ try {
     'player-data-diagnostic-strip.xml',
     'favorites-provider-diagnostic.xml',
     'weapon-status.xml',
-    'contact-radar-diagnostic.xml'
+    'contact-radar-diagnostic.xml',
+    'personal-effects-diagnostic.xml'
   )
   foreach ($retiredComponentName in $retiredComponentNames) {
     $retiredComponentPath = Join-Path $componentOutputDirectory $retiredComponentName
@@ -1297,52 +1346,39 @@ try {
       Remove-Item -LiteralPath $retiredComponentPath -Force
     }
   }
-  foreach ($componentFixtureName in @('contact-radar.xml','faction-display.xml','equipment-rail.xml','environmental-hazard-scanner.xml','personal-effects-diagnostic.xml','player-status-scanner.xml')) {
+  foreach ($componentFixtureName in @('contact-radar.xml','faction-display.xml','equipment-rail.xml','environmental-hazard-scanner.xml','helmet-awareness.xml','player-status-scanner.xml')) {
     Copy-Item -LiteralPath (Join-Path $providerProbeComponentDirectory $componentFixtureName) -Destination (Join-Path $componentOutputDirectory $componentFixtureName) -Force
   }
-  $stagedPersonalEffectsDiagnosticText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'personal-effects-diagnostic.xml') -Raw
-  $stagedPersonalEffectsDiagnostic = [xml]$stagedPersonalEffectsDiagnosticText
-  $personalEffectsDiagnosticIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
-    [string]$_.id -eq 'personal-effects-diagnostic'
+  $stagedHelmetAwarenessText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'helmet-awareness.xml') -Raw
+  $stagedHelmetAwareness = [xml]$stagedHelmetAwarenessText
+  $helmetAwarenessIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
+    [string]$_.id -eq 'helmet-awareness'
   })
-  $personalEffectsDiagnosticGroups = @($stagedPersonalEffectsDiagnostic.SelectNodes('//group[@id="root"]'))
-  $playerStatusGroupBindings = @($stagedPersonalEffectsDiagnostic.SelectNodes('//text[starts-with(@source,"diagnostic.playerStatusGroup")]'))
-  $playerStatusEffectBindings = @($stagedPersonalEffectsDiagnostic.SelectNodes('//text[starts-with(@source,"diagnostic.playerStatusEffect")]'))
-  $playerStatusRootBindings = @($stagedPersonalEffectsDiagnostic.SelectNodes('//text[@source="diagnostic.playerStatusRoot"]'))
-  $personalEffectBindings = @($stagedPersonalEffectsDiagnostic.SelectNodes('//text[starts-with(@source,"diagnostic.personalEffect") and @source!="diagnostic.personalEffectsRoot"]'))
-  $personalAlertBindings = @($stagedPersonalEffectsDiagnostic.SelectNodes('//text[starts-with(@source,"diagnostic.personalAlert") and @source!="diagnostic.personalAlertsRoot"]'))
-  $personalEffectsRootBindings = @($stagedPersonalEffectsDiagnostic.SelectNodes('//text[@source="diagnostic.personalEffectsRoot"]'))
-  $personalAlertsRootBindings = @($stagedPersonalEffectsDiagnostic.SelectNodes('//text[@source="diagnostic.personalAlertsRoot"]'))
-  $personalEffectsNonWrappedBindings = @($stagedPersonalEffectsDiagnostic.SelectNodes('//text[@source and (@multiline!="true" or @wordWrap!="true")]'))
-  $personalEffectsInteractiveNodes = @($stagedPersonalEffectsDiagnostic.SelectNodes('//*[@action or @event or @onClick or @mouseEnabled]'))
-  if ($personalEffectsDiagnosticIncludes.Count -ne 1 -or
-      [string]$personalEffectsDiagnosticIncludes[0].src -ne 'personal-effects-diagnostic.xml' -or
-      [string]$personalEffectsDiagnosticIncludes[0].anchor -ne 'top-center' -or
-      [string]$personalEffectsDiagnosticIncludes[0].visibleWhen -ne 'always' -or
-      [int]$personalEffectsDiagnosticIncludes[0].x -ne 0 -or
-      [int]$personalEffectsDiagnosticIncludes[0].y -ne 80 -or
-      [int]$personalEffectsDiagnosticIncludes[0].z -ne 110 -or
-      $personalEffectsDiagnosticGroups.Count -ne 1 -or
-      [int]$personalEffectsDiagnosticGroups[0].width -ne 1320 -or
-      [int]$personalEffectsDiagnosticGroups[0].height -ne 978 -or
-      $playerStatusGroupBindings.Count -ne 12 -or
-      $playerStatusEffectBindings.Count -ne 24 -or
-      $playerStatusRootBindings.Count -ne 1 -or
-      $personalEffectBindings.Count -ne 16 -or
-      $personalAlertBindings.Count -ne 8 -or
-      $personalEffectsRootBindings.Count -ne 1 -or
-      $personalAlertsRootBindings.Count -ne 1 -or
-      $personalEffectsNonWrappedBindings.Count -ne 0 -or
-      $personalEffectsInteractiveNodes.Count -ne 0 -or
-      $stagedPersonalEffectsDiagnosticText -notmatch 'GOAL 9A\.3 PLAYER STATUS LIFECYCLE DIAGNOSTIC' -or
-      $stagedPersonalEffectsDiagnosticText -notmatch 'PERSISTENT RECORDS AND TRANSIENT EVENTS REMAIN SEPARATE' -or
-      $stagedPersonalEffectsDiagnosticText -notmatch 'value="PLAYERSTATUSDATA NOT RECEIVED \| UPDATES=0"' -or
-      $stagedPersonalEffectsDiagnosticText -notmatch 'value="GROUP 0 UNUSED"' -or
-      $stagedPersonalEffectsDiagnosticText -notmatch 'value="EFFECT 0 UNUSED"' -or
-      $stagedPersonalEffectsDiagnosticText -notmatch 'value="PERSISTENT 0 UNUSED"' -or
-      $stagedPersonalEffectsDiagnosticText -notmatch 'value="TRANSIENT 0 UNUSED"' -or
-      $stagedPersonalEffectsDiagnosticText -match 'HudCompassData|diagnostic\.radar|EnvironmentEffectsData') {
-    throw 'Goal 9A.3 must stage one bounded, wrapped, passive three-provider lifecycle diagnostic without re-probing established compass or environment providers.'
+  $helmetCompassNodes = @($stagedHelmetAwareness.SelectNodes('//compassTape'))
+  $helmetThreatNodes = @($stagedHelmetAwareness.SelectNodes('//threatAlert'))
+  $helmetStatusNodes = @($stagedHelmetAwareness.SelectNodes('//statusEffectBar'))
+  $helmetAwarenessInteractiveNodes = @($stagedHelmetAwareness.SelectNodes('//*[@action or @event or @onClick or @mouseEnabled]'))
+  if ($helmetAwarenessIncludes.Count -ne 1 -or
+      [string]$helmetAwarenessIncludes[0].src -ne 'helmet-awareness.xml' -or
+      [string]$helmetAwarenessIncludes[0].anchor -ne 'top-center' -or
+      [string]$helmetAwarenessIncludes[0].visibleWhen -ne 'always' -or
+      [int]$helmetAwarenessIncludes[0].x -ne 0 -or
+      [int]$helmetAwarenessIncludes[0].y -ne 22 -or
+      [int]$helmetAwarenessIncludes[0].z -ne 110 -or
+      $helmetCompassNodes.Count -ne 1 -or
+      [int]$helmetCompassNodes[0].width -ne 320 -or
+      [int]$helmetCompassNodes[0].height -ne 48 -or
+      [int]$helmetCompassNodes[0].fieldOfView -ne 120 -or
+      $helmetThreatNodes.Count -ne 1 -or
+      [int]$helmetThreatNodes[0].width -ne 320 -or
+      [int]$helmetThreatNodes[0].height -ne 24 -or
+      $helmetStatusNodes.Count -ne 1 -or
+      [int]$helmetStatusNodes[0].width -ne 720 -or
+      [int]$helmetStatusNodes[0].height -ne 56 -or
+      [int]$helmetStatusNodes[0].maxItems -ne 16 -or
+      $helmetAwarenessInteractiveNodes.Count -ne 0 -or
+      $stagedHelmetAwarenessText -match 'diagnostic\.|PlayerStatusData|PersonalAlertsData') {
+    throw 'Goal 9 must stage one passive top-center compass tape, percentage threat alert, and bounded two-row persistent status display with no diagnostic or menu-scoped bindings.'
   }
   $stagedPlayerScannerText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'player-status-scanner.xml') -Raw
   $stagedPlayerScanner = [xml]$stagedPlayerScannerText
@@ -1783,7 +1819,7 @@ try {
       New-Item -ItemType Directory -Force -Path $variantAssetOutputDirectory | Out-Null
       New-Item -ItemType Directory -Force -Path $variantComponentOutputDirectory | Out-Null
       Copy-Item -LiteralPath (Join-Path $cuiOutputDirectory "layout.xml") -Destination (Join-Path $variantCuiOutputDirectory "layout.xml") -Force
-      foreach ($componentFixtureName in @('contact-radar.xml','faction-display.xml','equipment-rail.xml','environmental-hazard-scanner.xml','personal-effects-diagnostic.xml','player-status-scanner.xml')) {
+      foreach ($componentFixtureName in @('contact-radar.xml','faction-display.xml','equipment-rail.xml','environmental-hazard-scanner.xml','helmet-awareness.xml','player-status-scanner.xml')) {
         Copy-Item -LiteralPath (Join-Path $componentOutputDirectory $componentFixtureName) -Destination (Join-Path $variantComponentOutputDirectory $componentFixtureName) -Force
       }
       foreach ($assetFileName in @('gallery-vector.svg','venworks-logo.svg','gallery-invalid.svg')) {
@@ -1802,7 +1838,7 @@ try {
       'components\faction-display.xml',
       'components\equipment-rail.xml',
       'components\environmental-hazard-scanner.xml',
-      'components\personal-effects-diagnostic.xml',
+      'components\helmet-awareness.xml',
       'components\player-status-scanner.xml',
       'Assets\gallery-vector.svg',
       'Assets\venworks-logo.svg',
@@ -1814,7 +1850,7 @@ try {
         throw "Staged CUI payload mismatch for $relativeCuiPath in $variantCuiOutputDirectory."
       }
     }
-    Write-Host -ForegroundColor Green "Staged the Goal 9A.3 PlayerStatusData lifecycle diagnostic with the accepted Goal 8 radar and production helmet HUD in $variantCuiOutputDirectory"
+    Write-Host -ForegroundColor Green "Staged the Goal 9 compass, threat alert, and persistent status display with the accepted Goal 8 radar and production helmet HUD in $variantCuiOutputDirectory"
   }
 }
 finally {

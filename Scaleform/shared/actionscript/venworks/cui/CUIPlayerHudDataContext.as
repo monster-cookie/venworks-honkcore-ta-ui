@@ -13,14 +13,11 @@ package venworks.cui
    {
       public static const VALUE_CHANGE:String = "cuiValueChange";
       public static const COMPASS_CHANGE:String = "cuiCompassChange";
+      public static const TACTICAL_AWARENESS_CHANGE:String = "cuiTacticalAwarenessChange";
 
       private static const MAX_DIAGNOSTIC_FIELDS:int = 12;
       private static const MAX_PLAYER_DIAGNOSTIC_FIELDS:int = 32;
       private static const MAX_DIAGNOSTIC_EFFECTS:int = 4;
-      private static const MAX_PERSONAL_DIAGNOSTIC_EFFECTS:int = 16;
-      private static const MAX_PERSONAL_DIAGNOSTIC_ALERTS:int = 8;
-      private static const MAX_PLAYER_STATUS_DIAGNOSTIC_GROUPS:int = 12;
-      private static const MAX_PLAYER_STATUS_DIAGNOSTIC_EFFECTS:int = 24;
       private static const MAX_HAZARD_EFFECTS:int = 32;
       private static const MAX_DIAGNOSTIC_INVENTORY_ITEMS:int = 256;
       private static const MAX_FAVORITE_SLOTS:int = 12;
@@ -66,7 +63,7 @@ package venworks.cui
       private var universalTimeDiagnostic:String = "UT: LOCAL ENV FREQUENT DATA NOT RECEIVED";
       private var digipickDiagnostic:String = "DIGIPICK: PLAYER INVENTORY DATA NOT RECEIVED";
       private var compassData:Object;
-      private var playerStatusUpdateCount:int = 0;
+      private var tacticalAwareness:CUITacticalAwarenessModel;
 
       public function CUIPlayerHudDataContext()
       {
@@ -80,6 +77,7 @@ package venworks.cui
          exposureRandom = [0,0,0,0];
          favoriteNames = [];
          favoriteDetails = [];
+         tacticalAwareness = new CUITacticalAwarenessModel();
          buttonKeyHelper = new ButtonKeyHelper();
          exposureTimer = new Timer(EXPOSURE_UPDATE_MS);
          exposureTimer.addEventListener(TimerEvent.TIMER,this.onExposureTimer);
@@ -95,8 +93,6 @@ package venworks.cui
          BSUIDataManager.Subscribe("ControlMapData",this.onControlMapData);
          BSUIDataManager.Subscribe("EnvironmentEffectsData",this.onEnvironmentEffectsData);
          BSUIDataManager.Subscribe("PersonalEffectsData",this.onPersonalEffectsData);
-         BSUIDataManager.Subscribe("PersonalAlertsData",this.onPersonalAlertsData);
-         BSUIDataManager.Subscribe("PlayerStatusData",this.onPlayerStatusData);
          BSUIDataManager.Subscribe("StarmapSystemBodyInfoProvider",this.onStarmapSystemBodyInfoData);
          BSUIDataManager.Subscribe("HudCompassData",this.onRadarCompassData);
          this.setText("diagnostic.inventoryprovider","PLAYERINVENTORYDATA NOT RECEIVED");
@@ -114,13 +110,6 @@ package venworks.cui
          this.setText("diagnostic.playerfields","PLAYERDATA NOT RECEIVED");
          this.setText("diagnostic.playertargets","PLAYER TARGETS: WAITING");
          this.setText("diagnostic.playeridentifiers","DETERMINISTIC SERIAL: WAITING FOR PLAYERDATA");
-         this.setText("diagnostic.personaleffectsroot","PERSONALEFFECTSDATA NOT RECEIVED");
-         this.setText("diagnostic.personalalertsroot","PERSONALALERTSDATA NOT RECEIVED");
-         this.setText("diagnostic.playerstatusroot","PLAYERSTATUSDATA NOT RECEIVED | UPDATES=0");
-         this.resetPersonalEffectDiagnostics();
-         this.resetPersonalAlertDiagnostics();
-         this.resetPlayerStatusGroupDiagnostics();
-         this.resetPlayerStatusEffectDiagnostics();
          this.resetFavoriteHotkeys();
          this.resetFavoriteSlots();
          this.updatePlayerTimeInventoryDiagnostic();
@@ -166,12 +155,6 @@ package venworks.cui
             source == "diagnostic.activityloads" ||
             source == "diagnostic.playerfields" || source == "diagnostic.playertargets" ||
             source == "diagnostic.playeridentifiers" || source == "diagnostic.playertimeinventory" ||
-            source == "diagnostic.personaleffectsroot" || source == "diagnostic.personalalertsroot" ||
-            source == "diagnostic.playerstatusroot" ||
-            /^diagnostic\.personaleffect(0[0-9]|1[0-5])$/.test(source) ||
-            /^diagnostic\.personalalert0[0-7]$/.test(source) ||
-            /^diagnostic\.playerstatusgroup(0[0-9]|1[0-1])$/.test(source) ||
-            /^diagnostic\.playerstatuseffect(0[0-9]|1[0-9]|2[0-3])$/.test(source) ||
             source == "diagnostic.effect0" || source == "diagnostic.effect1" ||
             source == "diagnostic.effect2" || source == "diagnostic.effect3" ||
             source == "diagnostic.armorresistance" || source == "diagnostic.starmapprovider")
@@ -217,6 +200,11 @@ package venworks.cui
       public function get currentCompassData() : Object
       {
          return compassData;
+      }
+
+      public function get currentTacticalAwarenessData() : Object
+      {
+         return tacticalAwareness.snapshot;
       }
 
       public function getValue(param1:String) : Object
@@ -339,6 +327,8 @@ package venworks.cui
             }
          }
          this.updateExposureActivity(activeEffects);
+         tacticalAwareness.updateEnvironment(param1.data,exposureActive,exposureCurrent,environmentalCritical);
+         dispatchEvent(new Event(TACTICAL_AWARENESS_CHANGE));
          this.notifyChanged();
       }
 
@@ -352,100 +342,16 @@ package venworks.cui
       private function onPersonalEffectsData(param1:FromClientDataEvent) : void
       {
          var data:Object = param1 == null ? null : param1.data;
-         var effects:Array = data == null ? null : data.aPersonalEffects as Array;
-         var index:int = 0;
-         this.resetPersonalEffectDiagnostics();
-         if(data == null)
-         {
-            this.setText("diagnostic.personaleffectsroot","PERSONALEFFECTSDATA RECEIVED — NULL PAYLOAD");
-            this.notifyChanged();
-            return;
-         }
-         this.setText("diagnostic.personaleffectsroot","PERSONALEFFECTSDATA RECEIVED | PERSISTENT RECORDS=" +
-            this.formatDiagnosticArrayLength(effects) + " | ROOT FIELDS=" +
-            this.listFieldNames(data,MAX_PLAYER_DIAGNOSTIC_FIELDS));
-         while(effects != null && index < effects.length && index < MAX_PERSONAL_DIAGNOSTIC_EFFECTS)
-         {
-            this.setText("diagnostic.personaleffect" + this.formatDiagnosticIndex(index),
-               "PERSISTENT " + index.toString() + " | " + this.describePersonalEffect(effects[index]));
-            ++index;
-         }
-         this.notifyChanged();
-      }
-
-      private function onPersonalAlertsData(param1:FromClientDataEvent) : void
-      {
-         var data:Object = param1 == null ? null : param1.data;
-         var alerts:Array = data == null ? null : data.aPersonalAlerts as Array;
-         var index:int = 0;
-         this.resetPersonalAlertDiagnostics();
-         if(data == null)
-         {
-            this.setText("diagnostic.personalalertsroot","PERSONALALERTSDATA RECEIVED — NULL PAYLOAD");
-            this.notifyChanged();
-            return;
-         }
-         this.setText("diagnostic.personalalertsroot","PERSONALALERTSDATA RECEIVED | TRANSIENT EVENTS=" +
-            this.formatDiagnosticArrayLength(alerts) + " | ROOT FIELDS=" +
-            this.listFieldNames(data,MAX_PLAYER_DIAGNOSTIC_FIELDS));
-         while(alerts != null && index < alerts.length && index < MAX_PERSONAL_DIAGNOSTIC_ALERTS)
-         {
-            this.setText("diagnostic.personalalert" + this.formatDiagnosticIndex(index),
-               "TRANSIENT " + index.toString() + " | " + this.describePersonalAlert(alerts[index]));
-            ++index;
-         }
-         this.notifyChanged();
-      }
-
-      private function onPlayerStatusData(param1:FromClientDataEvent) : void
-      {
-         var data:Object = param1 == null ? null : param1.data;
-         var groups:Array = data == null ? null : data.aEffectGroups as Array;
-         var group:Object = null;
-         var effects:Array = null;
-         var groupIndex:int = 0;
-         var effectIndex:int = 0;
-         var nestedIndex:int = 0;
-         ++this.playerStatusUpdateCount;
-         this.resetPlayerStatusGroupDiagnostics();
-         this.resetPlayerStatusEffectDiagnostics();
-         if(data == null)
-         {
-            this.setText("diagnostic.playerstatusroot","PLAYERSTATUSDATA RECEIVED | UPDATES=" +
-               this.playerStatusUpdateCount.toString() + " | NULL PAYLOAD");
-            this.notifyChanged();
-            return;
-         }
-         this.setText("diagnostic.playerstatusroot","PLAYERSTATUSDATA RECEIVED | UPDATES=" +
-            this.playerStatusUpdateCount.toString() + " | GROUPS=" +
-            this.formatDiagnosticArrayLength(groups) + " | ROOT FIELDS=" +
-            this.listFieldNames(data,MAX_PLAYER_DIAGNOSTIC_FIELDS));
-         while(groups != null && groupIndex < groups.length &&
-            groupIndex < MAX_PLAYER_STATUS_DIAGNOSTIC_GROUPS)
-         {
-            group = groups[groupIndex];
-            effects = group == null ? null : group.aEffects as Array;
-            this.setText("diagnostic.playerstatusgroup" + this.formatDiagnosticIndex(groupIndex),
-               "GROUP " + groupIndex.toString() + " | " + this.describePlayerStatusEffectGroup(group));
-            nestedIndex = 0;
-            while(effects != null && nestedIndex < effects.length &&
-               effectIndex < MAX_PLAYER_STATUS_DIAGNOSTIC_EFFECTS)
-            {
-               this.setText("diagnostic.playerstatuseffect" + this.formatDiagnosticIndex(effectIndex),
-                  "EFFECT " + effectIndex.toString() + " | GROUP=" + groupIndex.toString() + " | " +
-                  this.describePlayerStatusEffect(effects[nestedIndex]));
-               ++nestedIndex;
-               ++effectIndex;
-            }
-            ++groupIndex;
-         }
-         this.notifyChanged();
+         tacticalAwareness.updatePersonalEffects(data);
+         dispatchEvent(new Event(TACTICAL_AWARENESS_CHANGE));
       }
 
       private function onRadarCompassData(param1:FromClientDataEvent) : void
       {
          compassData = param1 == null ? null : param1.data;
+         tacticalAwareness.updateCompass(compassData);
          dispatchEvent(new Event(COMPASS_CHANGE));
+         dispatchEvent(new Event(TACTICAL_AWARENESS_CHANGE));
       }
 
       private function onLocalEnvironmentFrequentData(param1:FromClientDataEvent) : void
@@ -934,50 +840,6 @@ package venworks.cui
          }
       }
 
-      private function resetPersonalEffectDiagnostics() : void
-      {
-         var index:int = 0;
-         while(index < MAX_PERSONAL_DIAGNOSTIC_EFFECTS)
-         {
-            this.setText("diagnostic.personaleffect" + this.formatDiagnosticIndex(index),
-               "PERSISTENT " + index.toString() + " UNUSED");
-            ++index;
-         }
-      }
-
-      private function resetPersonalAlertDiagnostics() : void
-      {
-         var index:int = 0;
-         while(index < MAX_PERSONAL_DIAGNOSTIC_ALERTS)
-         {
-            this.setText("diagnostic.personalalert" + this.formatDiagnosticIndex(index),
-               "TRANSIENT " + index.toString() + " UNUSED");
-            ++index;
-         }
-      }
-
-      private function resetPlayerStatusGroupDiagnostics() : void
-      {
-         var index:int = 0;
-         while(index < MAX_PLAYER_STATUS_DIAGNOSTIC_GROUPS)
-         {
-            this.setText("diagnostic.playerstatusgroup" + this.formatDiagnosticIndex(index),
-               "GROUP " + index.toString() + " UNUSED");
-            ++index;
-         }
-      }
-
-      private function resetPlayerStatusEffectDiagnostics() : void
-      {
-         var index:int = 0;
-         while(index < MAX_PLAYER_STATUS_DIAGNOSTIC_EFFECTS)
-         {
-            this.setText("diagnostic.playerstatuseffect" + this.formatDiagnosticIndex(index),
-               "EFFECT " + index.toString() + " UNUSED");
-            ++index;
-         }
-      }
-
       private function updateExposureActivity(param1:Array) : void
       {
          var wasCritical:Boolean = this.environmentalCritical;
@@ -1091,6 +953,8 @@ package venworks.cui
          this.updateExposureTimerState();
          if(changed)
          {
+            tacticalAwareness.updateEnvironmentalPressure(exposureActive,exposureCurrent,environmentalCritical);
+            dispatchEvent(new Event(TACTICAL_AWARENESS_CHANGE));
             this.notifyChanged();
          }
       }
@@ -1412,16 +1276,6 @@ package venworks.cui
          return Math.round(Math.max(0,Math.min(1,param1)) * 100).toString() + "%";
       }
 
-      private function formatDiagnosticArrayLength(param1:Array) : String
-      {
-         return param1 == null ? "UNAVAILABLE" : param1.length.toString();
-      }
-
-      private function formatDiagnosticIndex(param1:int) : String
-      {
-         return (param1 < 10 ? "0" : "") + param1.toString();
-      }
-
       private function listFieldNames(param1:Object, param2:int) : String
       {
          var fields:Array = [];
@@ -1504,116 +1358,6 @@ package venworks.cui
             output.push("...");
          }
          return output.length == 0 ? "NO ENUMERABLE FIELDS" : output.join(" | ");
-      }
-
-      private function describePersonalEffect(param1:Object) : String
-      {
-         return this.describeObjectWithKnownFields(param1,
-            ["sEffectIcon","fHeading"],
-            ["bIsPositive","bIsPositiveEffect","bIsBuff","sName","sDescription","fTimeRemaining",
-               "bPermanent","uiHandle"],
-            MAX_DIAGNOSTIC_FIELDS);
-      }
-
-      private function describePersonalAlert(param1:Object) : String
-      {
-         return this.describeObjectWithKnownFields(param1,
-            ["sEffectIcon","sAlertText","sAlertSubText","bIsPositive"],
-            ["bIsPositiveEffect","bIsBuff","sName","sDescription","fTimeRemaining","bPermanent",
-               "uiHandle","fHeading"],
-            MAX_DIAGNOSTIC_FIELDS);
-      }
-
-      private function describePlayerStatusEffectGroup(param1:Object) : String
-      {
-         return this.describeObjectWithKnownFields(param1,
-            ["sName","sEffectIcon","bHasAfflictions","bHasBuffs","bHasDebuffs","bShowTimer",
-               "fTimeRemaining","bIsPositiveEffect","aEffects"],
-            ["uiHandle","uSeverity","iSeverity"],
-            MAX_DIAGNOSTIC_FIELDS);
-      }
-
-      private function describePlayerStatusEffect(param1:Object) : String
-      {
-         return this.describeObjectWithKnownFields(param1,
-            ["sName","sDescription","bHideName","bIsBuff","bPermanent","fTimeRemaining"],
-            ["sEffectIcon","bIsPositiveEffect","uiHandle","uSeverity","iSeverity"],
-            MAX_DIAGNOSTIC_FIELDS);
-      }
-
-      private function describeObjectWithKnownFields(param1:Object, param2:Array, param3:Array,
-         param4:int) : String
-      {
-         var fields:Array = [];
-         var output:Array = [];
-         var seen:Object = {};
-         var field:String = null;
-         var index:int = 0;
-         var omitted:Boolean = false;
-         if(param1 == null)
-         {
-            return "NULL";
-         }
-         while(index < param2.length)
-         {
-            field = String(param2[index]);
-            if(output.length < param4)
-            {
-               output.push(field + "=" + this.formatDiagnosticValue(param1[field]));
-            }
-            else
-            {
-               omitted = true;
-            }
-            seen[field] = true;
-            ++index;
-         }
-         index = 0;
-         while(index < param3.length)
-         {
-            field = String(param3[index]);
-            if(!seen[field] && param1[field] !== undefined)
-            {
-               if(output.length < param4)
-               {
-                  output.push(field + "=" + this.formatDiagnosticValue(param1[field]));
-               }
-               else
-               {
-                  omitted = true;
-               }
-               seen[field] = true;
-            }
-            ++index;
-         }
-         for(field in param1)
-         {
-            fields.push(field);
-         }
-         fields.sort(Array.CASEINSENSITIVE);
-         index = 0;
-         while(index < fields.length)
-         {
-            field = String(fields[index]);
-            if(!seen[field])
-            {
-               if(output.length < param4)
-               {
-                  output.push(field + "=" + this.formatDiagnosticValue(param1[field]));
-               }
-               else
-               {
-                  omitted = true;
-               }
-               seen[field] = true;
-            }
-            ++index;
-         }
-         if(omitted)
-         {
-            output.push("...");
-         }
-         return output.join(" | ");
       }
 
       private function formatDiagnosticValue(param1:Object) : String

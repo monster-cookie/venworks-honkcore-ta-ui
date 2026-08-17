@@ -406,6 +406,44 @@ package venworks.cui
             this.requireColor(param1,"allyColor");
             this.requireColor(param1,"playerColor");
          }
+         else if(type == "compassTape")
+         {
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","fieldOfView","tickColor","headingColor","centerColor","fallbackColor"]);
+            this.requirePositiveBounds(param1);
+            this.requireFinite(param1,"fieldOfView");
+            if(Number(param1.@fieldOfView) < 30 || Number(param1.@fieldOfView) > 180)
+            {
+               throw new Error("INVALID|Compass fieldOfView must be between 30 and 180 degrees: " + String(param1.@id));
+            }
+            this.requireColor(param1,"tickColor");
+            this.requireColor(param1,"headingColor");
+            this.requireColor(param1,"centerColor");
+            this.requireColor(param1,"fallbackColor");
+         }
+         else if(type == "threatAlert")
+         {
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","backgroundColor","clearColor","cautionColor","dangerColor","criticalColor"]);
+            this.requirePositiveBounds(param1);
+            this.requireColor(param1,"backgroundColor");
+            this.requireColor(param1,"clearColor");
+            this.requireColor(param1,"cautionColor");
+            this.requireColor(param1,"dangerColor");
+            this.requireColor(param1,"criticalColor");
+         }
+         else if(type == "statusEffectBar")
+         {
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","maxItems","debuffColor","sustenanceColor","neutralColor","backgroundColor"]);
+            this.requirePositiveBounds(param1);
+            this.requirePositiveInteger(param1,"maxItems");
+            if(int(param1.@maxItems) > 16)
+            {
+               throw new Error("INVALID|Status effect maxItems cannot exceed 16: " + String(param1.@id));
+            }
+            this.requireColor(param1,"debuffColor");
+            this.requireColor(param1,"sustenanceColor");
+            this.requireColor(param1,"neutralColor");
+            this.requireColor(param1,"backgroundColor");
+         }
          else if(type == "meter")
          {
             this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","style","value","max","source","maxSource"]);

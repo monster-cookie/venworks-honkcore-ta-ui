@@ -1,22 +1,87 @@
-# Goal 9 helmet compass, threat score, and active effects
+# Goal 9 helmet compass, threat alert, and active effects
 
-**Status: Goal 9A.3 PlayerStatusData lifecycle diagnostic build-validated and
-awaiting runtime lifecycle classification.** The compass and environmental
-providers are not being re-probed: Goal 8 already established the complete
-`HudCompassData` contract used by the contact radar and former Watch, while
-Goal 6 established the live environmental-effect feed.
+**Status: Production implementation build-validated on 2026-08-17; in-engine
+runtime and visual acceptance remains pending.**
 
-## Product direction
+Goal 9 fills the upper helmet cutout with three compact, live HUD surfaces:
 
-Goal 9 will fill the upper helmet cutout with a horizontal rotating compass
-tape. The player's current heading remains centered while cardinal and
-intercardinal labels, minor ticks, and live markers move across the bounded
-tape. The final surface must retain the marker coverage of Bethesda's former
-Watch ring, including general, mission, enemy, companion, location, ship,
-vehicle, and environmental markers supported by the established providers.
+1. a horizontal rotating compass tape;
+2. a numeric threat alert; and
+3. a wrapped two-line personal-effects bar.
 
-Immediately below the compass, a color-coded `0–100%` threat score will combine
-four independently bounded inputs. The initial weighting direction is:
+The implementation uses only providers available to `HUDMenu`. It adds no
+native plugin, SFSE dependency, mock telemetry, persistence, or third-party
+dependency.
+
+## Final live-provider contract
+
+Goal 8 established the production `HudCompassData` contract. Goal 9 consumes:
+
+- `fDirection` for the player's current heading;
+- `aMarkers` for the Watch-compatible general marker set;
+- `aEnemyMarkers` for engine-filtered acquired hostiles;
+- marker heading, distance, alpha, handle, icon type, relative height,
+  location, and subcategory fields; and
+- `EnvironmentEffectsData.aEnvironmentEffects` for environmental compass
+  markers and active environmental pressure.
+
+Goal 9 also consumes `PersonalEffectsData.aPersonalEffects` as the live,
+persistent personal-effect set. Runtime probing established these relevant
+icon identifiers:
+
+- `SUSTENANCE_DRINK_POSITIVE_1` for Hydrated;
+- `SUSTENANCE_FOOD_POSITIVE_1` for Fed; and
+- `PERSONALEFFECT_*` for active afflictions, including the Dislocated Limb
+  record exposed as `PERSONALEFFECT_NERVOUSSYSTEM`.
+
+The Status Menu's richer `PlayerStatusData` is unavailable to `HUDMenu`. Its
+update count remained zero both before and after opening Status Effects.
+`PersonalAlertsData` is also unsuitable as active state because it contains
+only transient presentation events. Both subscriptions were removed from the
+production implementation.
+
+Consequently, the HUD can truthfully show the persistent effect icons and safe
+generic labels, but it cannot reproduce the Status Menu's localized affliction
+title, prognosis, modifier rows, or remaining time. Timed food, drink, and
+pharmaceutical bonuses that do not enter `PersonalEffectsData` are likewise
+not available without native support.
+
+## Layout
+
+The production fragment is
+`Scaleform/shared/fixtures/components/helmet-awareness.xml`. It is included at
+the top center of the tactical HUD at `x=0`, `y=22`, and `z=110`.
+
+| Surface | Bounds within fragment | Purpose |
+| --- | --- | --- |
+| Compass tape | `320 x 48`, centered | Heading tape and live Watch markers |
+| Threat alert | `320 x 24`, below compass | Numeric score, state label, and accent bar |
+| Status effects | `720 x 56`, below threat | At most two visual rows of active effects |
+
+The former Goal 9 diagnostic fragment is removed from source and all four
+staging roots.
+
+## Compass behavior
+
+The compass presents a bounded 120-degree horizontal view centered on the
+player's current heading. The heading strip contains:
+
+- cardinal and intercardinal labels `N`, `NE`, `E`, `SE`, `S`, `SW`, `W`, and
+  `NW` every 45 degrees;
+- major ticks every 15 degrees;
+- minor ticks every 5 degrees; and
+- a fixed center reference while the tape and markers rotate beneath it.
+
+The marker layer accepts up to 48 live markers. It reuses Bethesda's
+`CompassMarkerWidget` and `MapMarkerUtils` dynamically, including marker icon,
+location, elevation, and subcategory state. General compass markers are merged
+with environmental-effect markers and deduplicated by handle. A simple vector
+fallback remains available if a Bethesda marker widget cannot be constructed.
+
+## Threat alert
+
+The alert is a bounded `0-100%` score. Four independent components contribute
+the following maximum weights:
 
 | Input | Maximum contribution |
 | --- | ---: |
@@ -25,220 +90,173 @@ four independently bounded inputs. The initial weighting direction is:
 | Active personal debuffs | 35% |
 | Active environmental hazards | 15% |
 
-Personal debuffs receive the same maximum contribution as hostiles because
-Starfield afflictions can become lethal. Counts, proximity, and severity may
-affect an input only where the owning live provider proves those meanings.
-Unavailable severity must fall back to a bounded count contribution rather
-than an inferred value.
+### Nearby-marker pressure
 
-One large two-line wrapped active-effects region will sit beneath the threat
-score. It is not divided into two fixed rows because the number of simultaneous
-debuffs may exceed one line. Proven negative effects will receive visual and
-ordering priority; proven positive effects will remain distinguishable without
-displacing more urgent negative effects.
+Hostiles come from `aEnemyMarkers`. Physical hazards are general compass
+markers whose engine icon type is `12`. Only finite markers within 300 game
+distance units contribute.
 
-## Accepted inputs from earlier goals
+For either marker category:
 
-Goal 8 already confirmed the following `HudCompassData` inputs in HUDMenu:
+```text
+pressure = clamp(
+    0.60 * min(activeCount / countAtMaximum, 1)
+  + 0.40 * (1 - nearestDistance / 300),
+  0,
+  1)
+```
 
-- `fDirection` for player heading;
-- `aMarkers` for general markers;
-- `aMissionMarkers` for mission markers;
-- `aEnemyMarkers` for engine-filtered acquired hostiles;
-- marker `fHeading`, `fDistanceToPlayer`, `fDistanceAlpha`, `uiHandle`,
-  `uiMarkerIconType`, `uiRelativeMarkerHeightType`, and applicable
-  map/location state fields.
+Hostile pressure reaches its count maximum at five contacts. Physical-hazard
+pressure reaches its count maximum at three contacts.
 
-The final compass will reuse the hardened finite-value and lifecycle boundaries
-from Goal 8. Goal 9A does not display or inspect those fields again.
+### Debuff pressure
 
-Goal 6 already confirmed `EnvironmentEffectsData.aEnvironmentEffects`, the four
-environmental categories, protection state, and the modeled per-category
-exposure values. Goal 9A does not add an environment diagnostic.
+Persistent records whose icon begins with `PERSONALEFFECT_` are treated as
+active debuffs. The count curve deliberately gives afflictions more urgency:
 
-## Goal 9A unresolved provider contract
+| Active debuffs | Debuff pressure |
+| ---: | ---: |
+| 0 | 0% |
+| 1 | 50% |
+| 2 | 75% |
+| 3 or more | 100% |
 
-Bethesda's HUD subscribes to `PersonalEffectsData` and passes
-`aPersonalEffects` to `PersonalEffectsWidget`. The vanilla widget consumes only
-each record's `sEffectIcon`, shows at most five distinct non-blacklisted icons,
-and deliberately excludes the known sustenance icon IDs. That behavior proves
-a persistent HUD effect array but does not prove names, positive/negative
-polarity, severity, duration, stacks, or a stable effect identifier.
+Known sustenance records contribute zero threat. Unknown persistent records
+remain visible in the effects bar but are not assigned an invented polarity or
+threat value.
 
-Bethesda's HUD also subscribes to `PersonalAlertsData`. Each alert consumed by
-the vanilla HUD has `sEffectIcon`, `sAlertText`, and `sAlertSubText`, but the
-payload is handled as a transition animation. It cannot be treated as the
-current active-effect set unless runtime evidence establishes a safe lifecycle
-relationship with `PersonalEffectsData`.
+### Environmental pressure
 
-Goal 9A.2 therefore added a passive diagnostic for only these two providers.
+Environmental pressure uses the live modeled exposure values established in
+Goal 6. The score combines the number of active environmental categories with
+the highest normalized exposure. A critical exposure state forces full
+environmental pressure. Clear categories contribute nothing.
 
-## Initial runtime evidence and provider boundary
+### Presentation states
 
-On 2026-08-16, the Status Menu showed one negative effect, `Dislocated Limb`,
-and four positive effects: the ordinary `Fed` and `Hydrated` sustenance states,
-an Alien Kebabs food effect, and an Alien Energy Drink effect. During the same
-state, the Goal 9A.2 HUD diagnostic reported three `aPersonalEffects` records:
-`SUSTENANCE_DRINK_POSITIVE_1`, `SUSTENANCE_FOOD_POSITIVE_1`, and
-`PERSONALEFFECT_NERVOUSSYSTEM`. `PersonalAlertsData` reported one transient
-`PERSONALEFFECT_NERVOUSSYSTEM` event. This identifies the persistent records as
-Hydrated, Fed, and Dislocated Limb respectively; it also proves that the alert
-was a transition for the affliction rather than authoritative active state.
+The computed score is rounded to a whole percentage and displayed as
+`THREAT N%` with one of four state labels:
 
-Alien Kebabs and Alien Energy Drink were absent from both HUD provider arrays
-despite being present and timed in the Status Menu. `PersonalEffectsData` is
-therefore useful for identifying the two sustenance states and an affliction,
-but it is not a complete source for active consumable effects.
+| Score | State |
+| ---: | --- |
+| `0-24%` | `CLEAR` |
+| `25-49%` | `CAUTION` |
+| `50-74%` | `DANGER` |
+| `75-100%` | `CRITICAL` |
 
-Bethesda's Status Menu obtains its complete presentation from
-`PlayerStatusData.aEffectGroups[*].aEffects`. The vanilla menu reads group
-`sName`, icon, polarity summary, timer, and nested-effect array fields. Its
-effect-group renderer reads `sName`, `sEffectIcon`, `bHasBuffs`, `bHasDebuffs`,
-`bShowTimer`, `fTimeRemaining`, and `bIsPositiveEffect`. Its nested effect
-renderer reads `sName`, `sDescription`, `bHideName`, `bIsBuff`, `bPermanent`,
-and `fTimeRemaining`. This is the model that renders both the localized group
-title and the prognosis/weakness or timed-modifier rows visible in Status.
+The alert includes a thin color-coded fill track. Each input is clamped before
+weighting so malformed or unusually large provider values cannot push the
+total outside `0-100%`.
 
-Goal 8's early HUD probe did not receive `PlayerStatusData`, but that test only
-reported provider receipt and root field names. Goal 9A.3 repeats the
-subscription after the later provider work, directly traverses the known
-nested fields, and counts deliveries so a menu-triggered snapshot can be
-distinguished from a continuously live HUD feed. The provider remains
-diagnostic-only until runtime evidence passes that lifecycle gate.
+## Active-effects bar
 
-## Diagnostic behavior
+The status region uses one shared wrapped surface rather than dedicated buff
+and debuff rows. It shows up to 16 entries in an eight-column by two-row grid.
+When more than 16 records are active, the sixteenth slot becomes an overflow
+indicator for the undisplayed count.
 
-The expanded temporary top-center diagnostic presents:
+Ordering is:
 
-- `PlayerStatusData` receipt and an incrementing update count;
-- the root `aEffectGroups` count and root field names;
-- up to 12 groups with direct reads of the exact vanilla group fields;
-- up to 24 flattened nested effects, each retaining its owning group index and
-  directly reading the exact vanilla effect fields;
+1. proven `PERSONALEFFECT_*` debuffs;
+2. unclassified persistent records; and
+3. `SUSTENANCE_*` records.
 
-- `PersonalEffectsData` receipt, root field names, and
-  `aPersonalEffects` persistent-record count;
-- up to 16 persistent records with direct `sEffectIcon` and `fHeading` reads,
-  defined polarity/name/lifecycle candidates, and remaining enumerable fields,
-  bounded to at most 12 field/value pairs per record;
-- `PersonalAlertsData` receipt, root field names, and transient
-  `aPersonalAlerts` count;
-- up to eight transient records with direct `sEffectIcon`, `sAlertText`,
-  `sAlertSubText`, and `bIsPositive` reads, defined lifecycle candidates, and
-  remaining enumerable fields, bounded to at most 12 field/value pairs per
-  record.
+The renderer reuses Bethesda's personal-effect icon art where available but
+does not inherit the vanilla widget's sustenance blacklist. Thus Fed and
+Hydrated remain visible even though they contribute zero threat. Safe display
+labels are derived only from proven identifiers:
 
-Diagnostic scalar values replace line-breaking whitespace and truncate after
-48 characters. Arrays are represented by their lengths and nested objects by
-type rather than recursively serialized. Core direct fields display
-`UNDEFINED` when they are not exposed. The layout wraps every live binding,
-contains no input or callback attributes, and keeps Status presentation,
-persistent HUD records, and transient HUD events visibly separate without
-assigning unproven gameplay meaning.
+- the exact positive stage-one sustenance records display `FED` and
+  `HYDRATED`;
+- other food or drink sustenance stages use a bounded food/drink label with
+  their exposed sign and stage;
+- personal effects display `AFFLICTION`; and
+- unknown records display `EFFECT`.
 
-The diagnostic does not cache alerts or Status snapshots as active state,
-modify Bethesda's Watch classes, add native code, persist data, or subscribe to
-compass or environment providers beyond their existing production adapters.
+The bar intentionally does not invent localized names, remaining times,
+severity, stacks, or persistence semantics that the live HUD provider does not
+expose.
 
-## Runtime matrix
+## Implementation map
 
-First perform the lifecycle test in this exact order:
+| Responsibility | Source |
+| --- | --- |
+| Provider normalization and threat model | `Scaleform/shared/actionscript/venworks/cui/CUITacticalAwarenessModel.as` |
+| Compass tape renderer | `Scaleform/shared/actionscript/venworks/cui/components/CUICompassTape.as` |
+| Threat renderer | `Scaleform/shared/actionscript/venworks/cui/components/CUIThreatAlert.as` |
+| Status renderer | `Scaleform/shared/actionscript/venworks/cui/components/CUIStatusEffectBar.as` |
+| Live provider adapter | `Scaleform/shared/actionscript/venworks/cui/CUIPlayerHudDataContext.as` |
+| Runtime registration and updates | `Scaleform/shared/actionscript/venworks/cui/CUIRuntime.as` |
+| Component registration | `CUICompositionResolver.as`, `CUILayoutParser.as`, and `Schemas/VenworksCUI/layout-v1.xsd` |
+| Production layout | `Scaleform/shared/fixtures/components/helmet-awareness.xml` |
+| Build and staging assertions | `Tools/compileScaleform.ps1` |
 
-1. load a save and capture the diagnostic without opening Status;
-2. open Status Effects, return to gameplay, and capture the diagnostic again;
-3. remain in gameplay and determine whether the update count advances and
-   remaining-time fields change without reopening Status; and
-4. consume a new aid item, where practical, and determine whether a new group
-   arrives without reopening Status.
+## Build validation
 
-Then capture readable screenshots, or transcribe the complete visible records,
-for each available case:
+The complete normal and large Scaleform build passed on 2026-08-17 using the
+repository-pinned vanilla HUD inputs. Both output movies:
 
-1. no personal effects active;
-2. one affliction or injury;
-3. several simultaneous afflictions or injuries;
-4. food and drink positive effects;
-5. food and drink negative effects, where supported by the current game mode;
-6. pharmaceutical effects;
-7. a Starborn power or other timed positive effect;
-8. simultaneous positive and negative effects;
-9. an effect expiring naturally;
-10. an effect being cured or removed early; and
-11. loading a save with effects already active.
+- imported and reopened all 210 scripts;
+- contained all 43 authored Venworks classes in one application domain;
+- passed the production Goal 9 source and renderer assertions;
+- schema-validated the new fragment and root layout;
+- rejected the removed diagnostic subscriptions and fragment;
+- staged the same CUI payload across VWKS, CF, FC, and TA; and
+- reopened successfully after final patching.
 
-For each case, compare all three providers before, during, and after the
-transition. Absence of a field in one sample is not proof that the concept is
-globally unavailable.
-
-## Production gate
-
-Goal 9B may proceed after runtime evidence answers:
-
-- whether `PlayerStatusData` is delivered before Status is opened;
-- whether it continues updating after Status closes and while gameplay changes;
-- whether its group and nested fields match the localized Status presentation;
-- which persistent record fields, if any, provide localized names or stable
-  identifiers;
-- whether positive and negative effects can be classified without maintaining
-  a handcrafted game-data list;
-- whether severity, duration, or stack count is present and stable;
-- whether sustenance and other positive effects are present in the persistent
-  array despite Bethesda's display blacklist; and
-- whether alert text can safely enrich a matching persistent effect without
-  making transition events authoritative active state.
-
-If `PlayerStatusData` appears only after opening Status or remains a frozen
-snapshot, it is rejected as production active state. Any other unproven field
-remains unavailable in production. The threat score will not assign the 35%
-debuff contribution until negative active effects can be counted truthfully.
-
-## Validation
-
-Source validation requires `Tools/checkRepo.ps1`, the complete normal/large
-Scaleform build, and `git diff --check`. The Scaleform build must import and
-reopen both HUD movies, retain the bounded provider subscriptions and diagnostic
-formatters, schema-validate the component fragment, verify exactly 12 Status
-group, 24 nested Status effect, 16 persistent effect, and eight transient alert
-bindings, reject interactive diagnostic content, and stage byte-identical CUI
-payloads across VWKS, CF, FC, and TA.
-
-Runtime acceptance remains separate from build validation.
-
-On 2026-08-16, `Tools/checkRepo.ps1`, the complete normal/large Scaleform build,
-and `git diff --check` passed for Goal 9A.2. Both movies imported and reopened
-all 207 scripts, retained the bounded personal-effect and personal-alert
-subscriptions, required direct reads of the known effect and alert fields, and
-passed the diagnostic schema, binding-count, wrapping, noninteractive,
-persistent/transient-label, and personal-effects-only assertions. The movies,
-layout, and diagnostic fragment staged byte-identically across VWKS, CF, FC,
-and TA.
-
-| Goal 9A.2 artifact | Bytes | SHA-256 |
+| Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 420152 | `241FFB860D61BBD858A03114B75BDE783DC092F650B5DC42C8E3AF6EC9D3AF45` |
-| `hudmenu_lrg.gfx` | 420335 | `06718CC46FD0D668FF1CBAB09BEDAAC49FE779FAACE405B820523798B762F6C3` |
-| `VenworksCUI/layout.xml` | 6760 | `543BC7E4B285F047742A128C84971E8B3ABC7333117924B90191A675D0BE9D09` |
-| `components/personal-effects-diagnostic.xml` | 10270 | `49EE7E2F6D3E3741BCCBC7478C46769BD5A85D90C3BAE6E01F3569EDFB80073C` |
+| `hudmenu.gfx` | 438840 | `5CE0D0A6130E8F63730B297951C9E379891769A85D0C6402B5BD117F7D395A0C` |
+| `hudmenu_lrg.gfx` | 439023 | `786EB3BAF6DCB5A2507277AEFE395318CC7709756D30FF98611649285146D6D1` |
 
-On 2026-08-16, `Tools/checkRepo.ps1`, the complete normal/large Scaleform build,
-and `git diff --check` passed for Goal 9A.3. Both movies imported and reopened
-all 207 scripts, retained all three bounded provider subscriptions, required
-direct traversal of `aEffectGroups` and nested `aEffects`, and passed the
-diagnostic schema, 12-group, 24-Status-effect, 16-persistent-effect,
-eight-transient-alert, wrapping, noninteractive, lifecycle-label, and provider-
-isolation assertions. The movies, layout, and diagnostic fragment staged byte-
-identically across VWKS, CF, FC, and TA.
+The authored ABC seed was regenerated with the retained JPEXS seed generator
+and passed the build's import, single-domain, class-count, and reopen checks.
 
-| Goal 9A.3 artifact | Bytes | SHA-256 |
-| --- | ---: | --- |
-| `hudmenu.gfx` | 422194 | `D2EB62D1FCF537BA1F6369BBB90C12AAF000C7D434E1F13DF67F8A67C35D97D7` |
-| `hudmenu_lrg.gfx` | 422377 | `B798772556AAA68ECD63DFC447958E2F084817011D3BDA40D486B91E783ABD79` |
-| `VenworksCUI/layout.xml` | 6854 | `F02E07278513C54A8068D9FC3589741B8AACC09866730DDB6F9C69C2DEC88DDB` |
-| `components/personal-effects-diagnostic.xml` | 23353 | `85F98733FC4F90271DD73338F54B847609410CB39415BB81400746EB45A38BA4` |
+## In-engine acceptance checklist
+
+Build validation cannot prove Bethesda runtime provider behavior or final
+helmet fit. Test both normal and large HUD variants in gameplay:
+
+1. Rotate through 360 degrees and confirm the current heading remains centered,
+   labels wrap across north, and ticks move smoothly.
+2. Confirm quest, location, NPC, enemy, ship, vehicle, and environmental
+   markers appear when their corresponding Watch markers would appear.
+3. Approach and leave enemies; verify the hostile portion raises and clears
+   the score without stale contacts.
+4. Approach a physical hazard marker and verify its contribution remains
+   bounded independently from hostiles.
+5. Enter and leave each available environmental hazard; confirm active
+   exposure raises the score and clear conditions remove it.
+6. With Dislocated Limb active, confirm `AFFLICTION` appears before sustenance
+   entries and materially raises threat.
+7. Confirm `FED` and `HYDRATED` appear in the status bar but do not raise the
+   score.
+8. Add enough persistent effects to wrap into the second row and verify the
+   HUD remains inside the 720 by 56 region.
+9. Compare normal and large HUD placement at the supported resolutions and
+   check for clipping against the helmet cutout.
+10. Save/load or change cells with live effects and contacts; verify no stale
+    marker or status entries survive provider updates.
+
+If a case cannot be constructed without waiting for Survival-mode recovery,
+record that case as not exercised rather than treating it as passed.
+
+## Known limitations
+
+- The Status Menu's localized title, detailed modifier text, prognosis, and
+  remaining time are not exposed to `HUDMenu` through the tested providers.
+- Timed consumable bonuses absent from `PersonalEffectsData` cannot appear in
+  this bar without native integration.
+- `PERSONALEFFECT_NERVOUSSYSTEM` is Bethesda's exposed icon identifier for the
+  tested Dislocated Limb state; the HUD deliberately presents the generic
+  `AFFLICTION` label instead of treating that identifier as player-facing text.
+- Marker type `12` is the established physical-hazard classification used by
+  this first production pass and should be revisited only if runtime evidence
+  proves additional hazard types.
 
 ## Rollback
 
-Remove the three temporary provider subscriptions and diagnostic values from
-`CUIPlayerHudDataContext`, remove the diagnostic include and component fragment,
-and remove the matching build/staging assertions. Goal 8 compass behavior and
-Goal 6 environmental behavior remain unchanged.
+Remove the `helmet-awareness.xml` include, the three Goal 9 leaf renderers, the
+tactical-awareness model and data-context event, and their parser, schema,
+runtime, build, seed, and staging registrations. Goal 8 compass provider work
+and Goal 6 environmental modeling remain independently intact.

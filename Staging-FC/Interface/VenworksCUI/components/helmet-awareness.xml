@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUIFragment schemaVersion="1" runtimeVersion="1">
+  <group id="root" x="0" y="0" width="720" height="132" opacity="1" visible="true"
+         rotation="0" scaleX="1" scaleY="1" z="0">
+    <compassTape id="helmet.compass" x="200" y="0" width="320" height="48" opacity="1" visible="true"
+                 rotation="0" scaleX="1" scaleY="1" z="3" fieldOfView="120"
+                 tickColor="#62DDF2" headingColor="#F2F7F9" centerColor="#FFB51B" fallbackColor="#F2F7F9" />
+    <threatAlert id="helmet.threat" x="200" y="50" width="320" height="24" opacity="1" visible="true"
+                 rotation="0" scaleX="1" scaleY="1" z="2" backgroundColor="#020B10"
+                 clearColor="#62DDF2" cautionColor="#E6B840" dangerColor="#FF9A3D" criticalColor="#FF5A5A" />
+    <statusEffectBar id="helmet.status-effects" x="0" y="76" width="720" height="56" opacity="1" visible="true"
+                     rotation="0" scaleX="1" scaleY="1" z="1" maxItems="16"
+                     debuffColor="#FF5A5A" sustenanceColor="#62DDF2" neutralColor="#F2F7F9"
+                     backgroundColor="#020B10" />
+  </group>
+</venworksCUIFragment>
