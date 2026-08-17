@@ -1354,6 +1354,7 @@ try {
   $helmetAwarenessIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'helmet-awareness'
   })
+  $helmetAwarenessRoot = $stagedHelmetAwareness.venworksCUIFragment.group
   $helmetCompassNodes = @($stagedHelmetAwareness.SelectNodes('//compassTape'))
   $helmetThreatNodes = @($stagedHelmetAwareness.SelectNodes('//threatAlert'))
   $helmetStatusNodes = @($stagedHelmetAwareness.SelectNodes('//statusEffectBar'))
@@ -1365,20 +1366,28 @@ try {
       [int]$helmetAwarenessIncludes[0].x -ne 0 -or
       [int]$helmetAwarenessIncludes[0].y -ne 22 -or
       [int]$helmetAwarenessIncludes[0].z -ne 110 -or
+      [int]$helmetAwarenessRoot.width -ne 826 -or
+      [int]$helmetAwarenessRoot.height -ne 132 -or
       $helmetCompassNodes.Count -ne 1 -or
-      [int]$helmetCompassNodes[0].width -ne 320 -or
+      [int]$helmetCompassNodes[0].x -ne 0 -or
+      [int]$helmetCompassNodes[0].y -ne -58 -or
+      [int]$helmetCompassNodes[0].width -ne 826 -or
       [int]$helmetCompassNodes[0].height -ne 48 -or
       [int]$helmetCompassNodes[0].fieldOfView -ne 120 -or
       $helmetThreatNodes.Count -ne 1 -or
+      [int]$helmetThreatNodes[0].x -ne 253 -or
+      [int]$helmetThreatNodes[0].y -ne 12 -or
       [int]$helmetThreatNodes[0].width -ne 320 -or
       [int]$helmetThreatNodes[0].height -ne 24 -or
       $helmetStatusNodes.Count -ne 1 -or
+      [int]$helmetStatusNodes[0].x -ne 53 -or
+      [int]$helmetStatusNodes[0].y -ne 76 -or
       [int]$helmetStatusNodes[0].width -ne 720 -or
       [int]$helmetStatusNodes[0].height -ne 56 -or
       [int]$helmetStatusNodes[0].maxItems -ne 16 -or
       $helmetAwarenessInteractiveNodes.Count -ne 0 -or
       $stagedHelmetAwarenessText -match 'diagnostic\.|PlayerStatusData|PersonalAlertsData') {
-    throw 'Goal 9 must stage one passive top-center compass tape, percentage threat alert, and bounded two-row persistent status display with no diagnostic or menu-scoped bindings.'
+    throw 'Goal 9 must stage the full-width top-edge compass, recessed percentage threat alert, and unchanged bounded two-row persistent status display with no diagnostic or menu-scoped bindings.'
   }
   $stagedPlayerScannerText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'player-status-scanner.xml') -Raw
   $stagedPlayerScanner = [xml]$stagedPlayerScannerText

@@ -1,7 +1,8 @@
 # Goal 9 helmet compass, threat alert, and active effects
 
-**Status: Production implementation build-validated on 2026-08-17; in-engine
-runtime and visual acceptance remains pending.**
+**Status: Corrected top-edge layout source-validated on 2026-08-17; complete
+normal/large Scaleform rebuild and in-engine runtime/visual acceptance remain
+pending.**
 
 Goal 9 fills the upper helmet cutout with three compact, live HUD surfaces:
 
@@ -50,13 +51,20 @@ not available without native support.
 
 The production fragment is
 `Scaleform/shared/fixtures/components/helmet-awareness.xml`. It is included at
-the top center of the tactical HUD at `x=0`, `y=22`, and `z=110`.
+the top center of the tactical HUD at `x=0`, `y=22`, and `z=110`. Its
+`826 x 132` root preserves the established threat and status positions while
+allowing the compass to reach the physical top edge.
 
-| Surface | Bounds within fragment | Purpose |
+| Surface | Bounds within fragment | Screen result at `1920 x 1080` | Purpose |
 | --- | --- | --- |
-| Compass tape | `320 x 48`, centered | Heading tape and live Watch markers |
-| Threat alert | `320 x 24`, below compass | Numeric score, state label, and accent bar |
-| Status effects | `720 x 56`, below threat | At most two visual rows of active effects |
+| Compass tape | `x=0`, `y=-58`, `826 x 48` | `x=547..1373`, `y=0..48` | Heading tape and live Watch markers |
+| Threat alert | `x=253`, `y=12`, `320 x 24` | Centered inside the existing `320 x 48` threat recess | Numeric score, state label, and accent bar |
+| Status effects | `x=53`, `y=76`, `720 x 56` | Existing `x=600`, `y=134` placement retained | At most two visual rows of active effects |
+
+The compass left boundary is 100 logical pixels beyond the contact radar's
+right edge (`64 + 155 + 228 = 447`), and the right boundary mirrors it around
+the 1920-wide design center. Normal and large HUD variants stage the same
+logical layout and rely on the engine's UI scaling at higher resolutions.
 
 The former Goal 9 diagnostic fragment is removed from source and all four
 staging roots.
@@ -191,9 +199,10 @@ expose.
 | Production layout | `Scaleform/shared/fixtures/components/helmet-awareness.xml` |
 | Build and staging assertions | `Tools/compileScaleform.ps1` |
 
-## Build validation
+## Prior build validation
 
-The complete normal and large Scaleform build passed on 2026-08-17 using the
+The Goal 9 implementation immediately preceding the top-edge layout correction
+completed the normal and large Scaleform build on 2026-08-17 using the
 repository-pinned vanilla HUD inputs. Both output movies:
 
 - imported and reopened all 210 scripts;
@@ -211,6 +220,15 @@ repository-pinned vanilla HUD inputs. Both output movies:
 
 The authored ABC seed was regenerated with the retained JPEXS seed generator
 and passed the build's import, single-domain, class-count, and reopen checks.
+These artifact hashes describe the preceding layout and do not validate the
+corrected compass and threat placement.
+
+The corrected fragment passes the layout XSD and direct coordinate invariants:
+the radar ends at logical `x=447`, the compass spans `x=547..1373` at `y=0`,
+the threat alert is centered in the existing recess, and the status bar retains
+its `x=600`, `y=134`, `720 x 56` screen bounds. `Tools/checkRepo.ps1` also
+passes. A complete rebuild remains pending because the current workspace does
+not contain Java, JPEXS, Flex, or extracted vanilla interface inputs.
 
 ## In-engine acceptance checklist
 
