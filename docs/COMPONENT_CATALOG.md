@@ -430,15 +430,22 @@ vanilla adapters re-evaluate only when their expressions consume one of those
 names, with HUD opacity retained as an explicit vanilla-adapter dependency.
 Bethesda HUD-mode changes reapply only vanilla adapters. Initial component
 construction remains a complete one-time evaluation so unchanged defaults are
-still rendered. Live callbacks merge domain-specific pending work and apply it
-once on the next rendered frame; they do not synchronously mutate the display
-tree. Multiple value and condition notifications are unioned, while compass and
-HUD-mode delivery use the latest cached state. Teardown removes any scheduled
-frame listener.
+still rendered. Live callbacks apply their affected domain directly; the
+rejected next-frame queue caused lag, stalls, and delayed pause response during
+Bloodthirsty testing and is absent from the current diagnostic artifact.
 
 The radar's 32 pooled contact containers retain prebuilt red-dot, white-dot, and
 white-square children. Live compass updates only select the required child and
 assign validated position, bounded alpha, fixed scale, and visibility. No live
 radar path clears or reconstructs vector geometry. This hardening was introduced
 after runtime isolated the remaining kill blackout to the Bloodthirsty legendary
-effect across multiple weapon types; runtime confirmation remains required.
+effect across multiple weapon types. Persistent radar geometry did not eliminate
+that blackout and is retained only as bounded rendering hygiene.
+
+The Player Data scanner component remains implemented and staged, but the
+current diagnostic layout intentionally does not instantiate it. This isolates
+its `HUDPlayerFrequentData` health consumers from the Bloodthirsty kill path. It
+is a temporary A/B artifact, not the accepted production layout; the faction
+display, radar, environmental scanner, equipment rail, and helmet frame remain
+instantiated. The normal and large diagnostic movies passed the complete
+single-domain, 39-authored-class, and 207-reopened-script build on 2026-08-16.

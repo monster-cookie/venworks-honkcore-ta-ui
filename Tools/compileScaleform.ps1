@@ -981,15 +981,11 @@ try {
     ).Value
     $reopenedCompassChangeHandler = [regex]::Match(
       $reopenedRuntimeSource,
-      '(?s)private function onCompassChanged\b.*?(?=\s+private function mergeChanges\b)'
+      '(?s)private function onCompassChanged\b.*?(?=\s+private function applyValues\b)'
     ).Value
     $reopenedHudModeHandler = [regex]::Match(
       $reopenedRuntimeSource,
       '(?s)public function updateVanillaHudModeVisibility\b.*?(?=\s+private function onLoaded\b)'
-    ).Value
-    $reopenedFrameUpdateHandler = [regex]::Match(
-      $reopenedRuntimeSource,
-      '(?s)private function onFrameUpdate\b.*?(?=\s+private function applyPendingValues\b)'
     ).Value
     $reopenedContactRenderHandler = [regex]::Match(
       $reopenedContactRadarSource,
@@ -1055,33 +1051,20 @@ try {
         $reopenedRuntimeSource -notmatch 'binding\.isAffectedBy\s*\(\s*param1\s*\)' -or
         $reopenedRuntimeSource -notmatch 'adapter\.isAffectedBy\s*\(\s*param1\s*\)' -or
         $reopenedConditionChangeHandler.Length -eq 0 -or
-        $reopenedConditionChangeHandler -notmatch 'mergeChanges\s*\(\s*pendingConditionNames\s*,\s*param1\.params\s*\)' -or
-        $reopenedConditionChangeHandler -notmatch 'scheduleFrameUpdate\s*\(\s*\)' -or
-        $reopenedConditionChangeHandler -match 'applyValues|applyContactRadars|applyConditions|applyVisibilityChanges' -or
+        $reopenedConditionChangeHandler -notmatch 'applyConditions\s*\(\s*param1\.params\s*\)' -or
+        $reopenedConditionChangeHandler -match 'applyValues|applyContactRadars' -or
         $reopenedValueChangeHandler.Length -eq 0 -or
-        $reopenedValueChangeHandler -notmatch 'mergeChanges\s*\(\s*pendingValueSources\s*,\s*param1\.params\s*\)' -or
-        $reopenedValueChangeHandler -notmatch 'scheduleFrameUpdate\s*\(\s*\)' -or
-        $reopenedValueChangeHandler -match 'applyValues|applyContactRadars|applyConditions|applyVisibilityChanges' -or
+        $reopenedValueChangeHandler -notmatch 'applyValues\s*\(\s*param1\.params\s*\)' -or
+        $reopenedValueChangeHandler -match 'applyContactRadars|applyConditions' -or
         $reopenedCompassChangeHandler.Length -eq 0 -or
-        $reopenedCompassChangeHandler -notmatch 'pendingCompassUpdate\s*=\s*true' -or
-        $reopenedCompassChangeHandler -notmatch 'scheduleFrameUpdate\s*\(\s*\)' -or
-        $reopenedCompassChangeHandler -match 'applyValues|applyContactRadars|applyConditions|applyVisibilityChanges' -or
+        $reopenedCompassChangeHandler -notmatch 'applyContactRadars\s*\(\s*\)' -or
+        $reopenedCompassChangeHandler -match 'applyValues|applyConditions' -or
         $reopenedHudModeHandler.Length -eq 0 -or
-        $reopenedHudModeHandler -notmatch 'pendingHudModeUpdate\s*=\s*true' -or
-        $reopenedHudModeHandler -notmatch 'scheduleFrameUpdate\s*\(\s*\)' -or
-        $reopenedHudModeHandler -match 'adapter\.updateHudMode|adapter\.apply|applyValues|applyContactRadars|applyConditions|applyVisibilityChanges' -or
-        $reopenedFrameUpdateHandler.Length -eq 0 -or
-        $reopenedFrameUpdateHandler -notmatch 'applyPendingValues\s*\(\s*valueSources\s*\)' -or
-        $reopenedFrameUpdateHandler -notmatch 'applyPendingContactRadars\s*\(\s*\)' -or
-        $reopenedFrameUpdateHandler -notmatch 'applyPendingVisibility\s*\(\s*conditionNames\s*,\s*hudModeUpdate\s*\)' -or
-        $reopenedRuntimeSource -notmatch 'owner\.addEventListener\s*\(\s*Event\.ENTER_FRAME\s*,\s*this\.onFrameUpdate\s*\)' -or
-        [regex]::Matches($reopenedRuntimeSource,'owner\.removeEventListener\s*\(\s*Event\.ENTER_FRAME\s*,\s*this\.onFrameUpdate\s*\)').Count -lt 2 -or
-        $reopenedRuntimeSource -notmatch 'result\[name\]\s*=\s*true' -or
-        $reopenedRuntimeSource -notmatch 'function\s+clearPendingFrameUpdate' -or
-        $reopenedRuntimeSource -notmatch 'this\.clearPendingFrameUpdate\s*\(\s*\)' -or
-        $reopenedRuntimeSource -notmatch 'hudModeChanged\s*=\s*param2\s*&&\s*adapter\.updateHudMode\s*\(\s*hudModeVisibility\s*\)' -or
-        $reopenedHudModeHandler -match 'applyValues|applyContactRadars|applyConditions') {
-      throw 'Generated runtime does not retain frame-coalesced, provider-local value, condition, compass, and HUD-mode routing boundaries.'
+        $reopenedHudModeHandler -notmatch 'adapter\.updateHudMode\s*\(\s*hudModeVisibility\s*\)' -or
+        $reopenedHudModeHandler -notmatch 'adapter\.apply\s*\(\s*conditionContext\s*\)' -or
+        $reopenedHudModeHandler -match 'applyValues|applyContactRadars|applyConditions' -or
+        $reopenedRuntimeSource -match 'Event\.ENTER_FRAME|pendingValueSources|pendingConditionNames|pendingCompassUpdate|pendingHudModeUpdate|frameUpdateScheduled|scheduleFrameUpdate|onFrameUpdate|applyPending') {
+      throw 'Generated runtime does not retain direct provider-local value, condition, compass, and HUD-mode routing boundaries, or still contains the rejected frame queue.'
     }
     foreach ($meterRenderer in @('CUIContinuousBar','CUISegmentedBar','CUITriangleBar','CUIDotBar','CUIRadialMeter')) {
       $meterRendererPath = Join-Path $validationScriptsDirectory "scripts\venworks\cui\components\$meterRenderer.as"
@@ -1576,12 +1559,7 @@ try {
       [string]$environmentalScannerIncludes[0].visibleWhen -ne 'always' -or
       [int]$environmentalScannerIncludes[0].x -ne 39 -or
       [int]$environmentalScannerIncludes[0].y -ne 11 -or
-      $playerScannerIncludes.Count -ne 1 -or
-      [string]$playerScannerIncludes[0].src -ne 'player-status-scanner.xml' -or
-      [string]$playerScannerIncludes[0].anchor -ne 'bottom-left' -or
-      [string]$playerScannerIncludes[0].visibleWhen -ne 'always' -or
-      [int]$playerScannerIncludes[0].x -ne -39 -or
-      [int]$playerScannerIncludes[0].y -ne 11 -or
+      $playerScannerIncludes.Count -ne 0 -or
       $helmetLowerFrameFillPaths.Count -ne 1 -or
       [string]$helmetLowerFrameFillPaths[0].anchor -ne 'bottom-left' -or
       [int]$helmetLowerFrameFillPaths[0].x -ne -64 -or
@@ -1707,7 +1685,7 @@ try {
       $stagedEnvironmentalScannerText -notmatch 'id="corrosive\.exposure" x="198" y="190" width="44" height="34"' -or
       $stagedEnvironmentalScannerText -notmatch 'id="radiation\.exposure" x="282" y="190" width="44" height="34"' -or
       $stagedEnvironmentalScannerText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE|THREAT INDEX|VACUUM)') {
-    throw 'Goal 6 and Goal 7 must stage the unified helmet architecture, content-only player and environmental scanners, vertical elemental channels, reserved threat recess, and passive upper-right equipment rail with no retired diagnostics or invented data.'
+    throw 'The Player Data isolation artifact must stage but not instantiate the content-only player scanner while retaining the unified helmet architecture, environmental scanner, vertical elemental channels, reserved threat recess, and passive upper-right equipment rail with no retired diagnostics or invented data.'
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
@@ -1750,7 +1728,7 @@ try {
         throw "Staged CUI payload mismatch for $relativeCuiPath in $variantCuiOutputDirectory."
       }
     }
-    Write-Host -ForegroundColor Green "Staged the Goal 8B contact radar over the accepted Goal 6 HUD and Goal 7 equipment rail in $variantCuiOutputDirectory"
+    Write-Host -ForegroundColor Green "Staged the Goal 8 Player Data isolation artifact with retained radar and equipment rail in $variantCuiOutputDirectory"
   }
 }
 finally {

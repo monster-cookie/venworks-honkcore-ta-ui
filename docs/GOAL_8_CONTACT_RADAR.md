@@ -246,6 +246,43 @@ unchanged. Both movies staged byte-identically across VWKS, CF, FC, and TA.
 | `hudmenu.gfx` | 418521 | `B4C9CDFB556E62CA645FF6846307FF6A7600D98686DA8D8E3EA4792BCBDF4C34` |
 | `hudmenu_lrg.gfx` | 418704 | `D8DF869D8939B0C8C4031A57D8432A0EF5FCADF85F0D41C32FE6F92BBE110FE3` |
 
+Runtime rejected the frame-coalesced artifacts. The supplied 6.57-second
+`weirdness.mp4` recording contains a detected black interval from 1.833 to 3.200
+seconds, followed by stalled gameplay and delayed pause-menu response. This is
+worse than the provider-local baseline and rejects the `ENTER_FRAME` queue as a
+production design. Direct changed-source, changed-condition, compass, and
+HUD-mode routing is restored from the responsive `c84e6c9` implementation.
+
+The same deployment also disproved the radar as the remaining blackout source:
+the black interval survived after all radar marker geometry became persistent
+and live radar drawing was removed. Those retained markers remain because they
+do not participate in the next isolation step.
+
+Bloodthirsty delivers through `HUDPlayerFrequentData`, where
+`player.healthPercentage` feeds exactly the Player Data health text and health
+meter. Every production meter style uses `CUISegmentedBar`, which still clears
+and reconstructs vector rectangles during accepted value changes. The next
+controlled A/B therefore leaves `player-status-scanner.xml` staged but removes
+its layout include, preventing construction and binding while retaining every
+other HUD component. If the blackout disappears, the scanner is confirmed and
+the next production change will restore it with retained segmented-meter
+geometry. If the blackout remains, the scanner hypothesis is rejected and the
+meter renderer will not be rewritten on that basis.
+
+On 2026-08-16, `Tools/checkRepo.ps1` passed and the complete normal/large
+Scaleform build imported, reopened, and validated all 207 scripts and all 39
+authored CUI classes in exactly one Venworks ABC linkage domain. Reopened
+assertions confirmed responsive direct routing, absence of the rejected
+`ENTER_FRAME` queue, retained radar geometry, fixed marker scale, and omission
+of the Player Data scanner include. Movies and the temporary layout staged
+byte-identically across VWKS, CF, FC, and TA.
+
+| Player Data isolation artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `hudmenu.gfx` | 416925 | `7E6C2A5D63607DD5B2E601079C4A0E408933602A2D9C5BC4EDD11157394ABEAA` |
+| `hudmenu_lrg.gfx` | 417108 | `FFF8D3F659ED717DB62BF2C9AA2EFD5B9E54A7B928E5E99138269C5035DF1789` |
+| `VenworksCUI/layout.xml` | 6415 | `29DE59E9A16670C9A92B981BD7937C3D92913261796C53E1F400B918F247D47A` |
+
 ## Kill-event blackout hardening and provider evidence
 
 A user-supplied runtime recording confirmed that killing an enemy obscured

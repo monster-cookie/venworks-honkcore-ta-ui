@@ -58,8 +58,6 @@
              x="155" y="-36" anchor="top-left" visible="true" visibleWhen="always" z="104" />
     <include id="environmental-hazard-scanner" src="environmental-hazard-scanner.xml"
              x="39" y="11" anchor="bottom-right" visible="true" visibleWhen="always" z="90" />
-    <include id="player-status-scanner" src="player-status-scanner.xml"
-             x="-39" y="11" anchor="bottom-left" visible="true" visibleWhen="always" z="100" />
     <include id="equipment-rail" src="equipment-rail.xml"
              x="64" y="36" anchor="top-right" visible="true" visibleWhen="always" z="102" />
   </includes>
