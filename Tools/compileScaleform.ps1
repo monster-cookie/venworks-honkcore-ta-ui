@@ -310,9 +310,13 @@ if ($playerHudDataContextText -notmatch 'Subscribe\("PersonalEffectsData",this\.
     $playerHudDataContextText -notmatch 'MAX_PERSONAL_DIAGNOSTIC_ALERTS:int\s*=\s*8' -or
     $playerHudDataContextText -notmatch 'data\.aPersonalEffects as Array' -or
     $playerHudDataContextText -notmatch 'data\.aPersonalAlerts as Array' -or
-    $playerHudDataContextText -notmatch 'describeObject\(effects\[index\],MAX_DIAGNOSTIC_FIELDS\)' -or
-    $playerHudDataContextText -notmatch 'describeObject\(alerts\[index\],MAX_DIAGNOSTIC_FIELDS\)') {
-  throw 'Goal 9A must retain bounded, passive PersonalEffectsData and PersonalAlertsData diagnostics.'
+    $playerHudDataContextText -notmatch 'describePersonalEffect\(effects\[index\]\)' -or
+    $playerHudDataContextText -notmatch 'describePersonalAlert\(alerts\[index\]\)' -or
+    $playerHudDataContextText -notmatch '\["sEffectIcon","fHeading"\]' -or
+    $playerHudDataContextText -notmatch '\["sEffectIcon","sAlertText","sAlertSubText","bIsPositive"\]' -or
+    $playerHudDataContextText -notmatch 'PERSISTENT RECORDS=' -or
+    $playerHudDataContextText -notmatch 'TRANSIENT EVENTS=') {
+  throw 'Goal 9A.2 must retain bounded, passive PersonalEffectsData and PersonalAlertsData diagnostics with direct known-field probes.'
 }
 foreach ($meterStyle in @($providerProbeLayout.venworksCUI.definitions.meterStyle)) {
   $renderer = [string]$meterStyle.renderer
@@ -1311,8 +1315,12 @@ try {
       $personalAlertsRootBindings.Count -ne 1 -or
       $personalEffectsNonWrappedBindings.Count -ne 0 -or
       $personalEffectsInteractiveNodes.Count -ne 0 -or
+      $stagedPersonalEffectsDiagnosticText -notmatch 'GOAL 9A\.2 PERSONAL EFFECT FIELD DIAGNOSTIC' -or
+      $stagedPersonalEffectsDiagnosticText -notmatch 'PERSISTENT RECORDS AND TRANSIENT EVENTS ARE SEPARATE' -or
+      $stagedPersonalEffectsDiagnosticText -notmatch 'value="PERSISTENT 0 UNUSED"' -or
+      $stagedPersonalEffectsDiagnosticText -notmatch 'value="TRANSIENT 0 UNUSED"' -or
       $stagedPersonalEffectsDiagnosticText -match 'HudCompassData|diagnostic\.radar|EnvironmentEffectsData') {
-    throw 'Goal 9A must stage one bounded, wrapped, passive personal-effects-only diagnostic without re-probing established compass or environment providers.'
+    throw 'Goal 9A.2 must stage one bounded, wrapped, passive personal-effects-only diagnostic that distinguishes persistent records from transient events without re-probing established compass or environment providers.'
   }
   $stagedPlayerScannerText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'player-status-scanner.xml') -Raw
   $stagedPlayerScanner = [xml]$stagedPlayerScannerText

@@ -351,13 +351,13 @@ package venworks.cui
             this.notifyChanged();
             return;
          }
-         this.setText("diagnostic.personaleffectsroot","PERSONALEFFECTSDATA RECEIVED | EFFECTS=" +
+         this.setText("diagnostic.personaleffectsroot","PERSONALEFFECTSDATA RECEIVED | PERSISTENT RECORDS=" +
             this.formatDiagnosticArrayLength(effects) + " | ROOT FIELDS=" +
             this.listFieldNames(data,MAX_PLAYER_DIAGNOSTIC_FIELDS));
          while(effects != null && index < effects.length && index < MAX_PERSONAL_DIAGNOSTIC_EFFECTS)
          {
             this.setText("diagnostic.personaleffect" + this.formatDiagnosticIndex(index),
-               "EFFECT " + index.toString() + " | " + this.describeObject(effects[index],MAX_DIAGNOSTIC_FIELDS));
+               "PERSISTENT " + index.toString() + " | " + this.describePersonalEffect(effects[index]));
             ++index;
          }
          this.notifyChanged();
@@ -375,13 +375,13 @@ package venworks.cui
             this.notifyChanged();
             return;
          }
-         this.setText("diagnostic.personalalertsroot","PERSONALALERTSDATA RECEIVED | ALERTS=" +
+         this.setText("diagnostic.personalalertsroot","PERSONALALERTSDATA RECEIVED | TRANSIENT EVENTS=" +
             this.formatDiagnosticArrayLength(alerts) + " | ROOT FIELDS=" +
             this.listFieldNames(data,MAX_PLAYER_DIAGNOSTIC_FIELDS));
          while(alerts != null && index < alerts.length && index < MAX_PERSONAL_DIAGNOSTIC_ALERTS)
          {
             this.setText("diagnostic.personalalert" + this.formatDiagnosticIndex(index),
-               "ALERT " + index.toString() + " | " + this.describeObject(alerts[index],MAX_DIAGNOSTIC_FIELDS));
+               "TRANSIENT " + index.toString() + " | " + this.describePersonalAlert(alerts[index]));
             ++index;
          }
          this.notifyChanged();
@@ -885,7 +885,7 @@ package venworks.cui
          while(index < MAX_PERSONAL_DIAGNOSTIC_EFFECTS)
          {
             this.setText("diagnostic.personaleffect" + this.formatDiagnosticIndex(index),
-               "EFFECT " + index.toString() + " UNUSED");
+               "PERSISTENT " + index.toString() + " UNUSED");
             ++index;
          }
       }
@@ -896,7 +896,7 @@ package venworks.cui
          while(index < MAX_PERSONAL_DIAGNOSTIC_ALERTS)
          {
             this.setText("diagnostic.personalalert" + this.formatDiagnosticIndex(index),
-               "ALERT " + index.toString() + " UNUSED");
+               "TRANSIENT " + index.toString() + " UNUSED");
             ++index;
          }
       }
@@ -1427,6 +1427,99 @@ package venworks.cui
             output.push("...");
          }
          return output.length == 0 ? "NO ENUMERABLE FIELDS" : output.join(" | ");
+      }
+
+      private function describePersonalEffect(param1:Object) : String
+      {
+         return this.describeObjectWithKnownFields(param1,
+            ["sEffectIcon","fHeading"],
+            ["bIsPositive","bIsPositiveEffect","bIsBuff","sName","sDescription","fTimeRemaining",
+               "bPermanent","uiHandle"],
+            MAX_DIAGNOSTIC_FIELDS);
+      }
+
+      private function describePersonalAlert(param1:Object) : String
+      {
+         return this.describeObjectWithKnownFields(param1,
+            ["sEffectIcon","sAlertText","sAlertSubText","bIsPositive"],
+            ["bIsPositiveEffect","bIsBuff","sName","sDescription","fTimeRemaining","bPermanent",
+               "uiHandle","fHeading"],
+            MAX_DIAGNOSTIC_FIELDS);
+      }
+
+      private function describeObjectWithKnownFields(param1:Object, param2:Array, param3:Array,
+         param4:int) : String
+      {
+         var fields:Array = [];
+         var output:Array = [];
+         var seen:Object = {};
+         var field:String = null;
+         var index:int = 0;
+         var omitted:Boolean = false;
+         if(param1 == null)
+         {
+            return "NULL";
+         }
+         while(index < param2.length)
+         {
+            field = String(param2[index]);
+            if(output.length < param4)
+            {
+               output.push(field + "=" + this.formatDiagnosticValue(param1[field]));
+            }
+            else
+            {
+               omitted = true;
+            }
+            seen[field] = true;
+            ++index;
+         }
+         index = 0;
+         while(index < param3.length)
+         {
+            field = String(param3[index]);
+            if(!seen[field] && param1[field] !== undefined)
+            {
+               if(output.length < param4)
+               {
+                  output.push(field + "=" + this.formatDiagnosticValue(param1[field]));
+               }
+               else
+               {
+                  omitted = true;
+               }
+               seen[field] = true;
+            }
+            ++index;
+         }
+         for(field in param1)
+         {
+            fields.push(field);
+         }
+         fields.sort(Array.CASEINSENSITIVE);
+         index = 0;
+         while(index < fields.length)
+         {
+            field = String(fields[index]);
+            if(!seen[field])
+            {
+               if(output.length < param4)
+               {
+                  output.push(field + "=" + this.formatDiagnosticValue(param1[field]));
+               }
+               else
+               {
+                  omitted = true;
+               }
+               seen[field] = true;
+            }
+            ++index;
+         }
+         if(omitted)
+         {
+            output.push("...");
+         }
+         return output.join(" | ");
       }
 
       private function formatDiagnosticValue(param1:Object) : String

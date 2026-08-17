@@ -1,10 +1,10 @@
 # Goal 9 helmet compass, threat score, and active effects
 
-**Status: Goal 9A personal-effects provider diagnostic build-validated and
-awaiting runtime classification.** The compass and environmental providers are not being
-re-probed: Goal 8 already established the complete `HudCompassData` contract
-used by the contact radar and former Watch, while Goal 6 established the live
-environmental-effect feed.
+**Status: Goal 9A.2 direct-field personal-effects diagnostic build-validated
+and awaiting runtime classification.** The compass and environmental
+providers are not being re-probed: Goal 8 already established the complete
+`HudCompassData` contract used by the contact radar and former Watch, while
+Goal 6 established the live environmental-effect feed.
 
 ## Product direction
 
@@ -73,22 +73,53 @@ relationship with `PersonalEffectsData`.
 
 Goal 9A therefore adds a passive diagnostic for only these two providers.
 
+## Initial runtime evidence and provider boundary
+
+On 2026-08-16, the Status Menu showed one negative effect, `Dislocated Limb`,
+and four positive effects: the ordinary `Fed` and `Hydrated` sustenance states,
+an Alien Kebabs food effect, and an Alien Energy Drink effect. During the same
+state, the Goal 9A HUD diagnostic reported three `aPersonalEffects` records and
+one `aPersonalAlerts` record. Each persistent record exposed only `fHeading=0`
+through ActionScript enumeration. The single alert exposed
+`bIsPositive=true`; it therefore was not a count or representation of the
+active negative effect.
+
+The three persistent records align numerically with two sustenance states plus
+one affliction, but that mapping remains an inference until direct
+`sEffectIcon` reads and controlled expiration/removal tests identify each
+record. The timed food and drink bonuses may be absent from the HUD provider.
+
+Bethesda's Status Menu obtains its complete presentation from the separate
+`PlayerStatusData.aEffectGroups[*].aEffects` model. That model supplies names,
+descriptions, buff/debuff polarity, permanence, and remaining time. Goal 8's
+runtime probe established that `PlayerStatusData` was not delivered in
+HUDMenu, so the Status Menu list cannot be treated as a live HUD source. If the
+refined diagnostic confirms that consumable bonuses are absent, the complete
+active-effects requirement will need a native provider bridge; a HUD-only
+implementation would knowingly omit effects.
+
 ## Diagnostic behavior
 
 The temporary top-center diagnostic presents:
 
 - `PersonalEffectsData` receipt, root field names, and
-  `aPersonalEffects` count;
-- up to 16 active-effect records with at most 12 sorted field/value pairs per
-  record;
-- `PersonalAlertsData` receipt, root field names, and `aPersonalAlerts` count;
-- up to eight alert records with at most 12 sorted field/value pairs per
+  `aPersonalEffects` persistent-record count;
+- up to 16 persistent records with direct `sEffectIcon` and `fHeading` reads,
+  defined polarity/name/lifecycle candidates, and remaining enumerable fields,
+  bounded to at most 12 field/value pairs per record;
+- `PersonalAlertsData` receipt, root field names, and transient
+  `aPersonalAlerts` count;
+- up to eight transient records with direct `sEffectIcon`, `sAlertText`,
+  `sAlertSubText`, and `bIsPositive` reads, defined lifecycle candidates, and
+  remaining enumerable fields, bounded to at most 12 field/value pairs per
   record.
 
 Diagnostic scalar values replace line-breaking whitespace and truncate after
 48 characters. Arrays are represented by their lengths and nested objects by
-type rather than recursively serialized. The layout wraps every live binding,
-contains no input or callback attributes, and labels all meanings as unproven.
+type rather than recursively serialized. Core direct fields display
+`UNDEFINED` when they are not exposed. The layout wraps every live binding,
+contains no input or callback attributes, and explicitly distinguishes
+persistent records from transient events without assigning gameplay meaning.
 
 The diagnostic does not cache alerts as active state, modify Bethesda's Watch
 classes, add native code, persist data, or subscribe to compass or environment
@@ -145,18 +176,20 @@ byte-identical CUI payloads across VWKS, CF, FC, and TA.
 Runtime acceptance remains separate from build validation.
 
 On 2026-08-16, `Tools/checkRepo.ps1`, the complete normal/large Scaleform build,
-and `git diff --check` passed. Both movies imported and reopened all 207 scripts,
-retained the bounded personal-effect and personal-alert subscriptions, and
-passed the diagnostic schema, binding-count, wrapping, noninteractive, and
-personal-effects-only assertions. The movies, layout, and diagnostic fragment
-staged byte-identically across VWKS, CF, FC, and TA.
+and `git diff --check` passed for Goal 9A.2. Both movies imported and reopened
+all 207 scripts, retained the bounded personal-effect and personal-alert
+subscriptions, required direct reads of the known effect and alert fields, and
+passed the diagnostic schema, binding-count, wrapping, noninteractive,
+persistent/transient-label, and personal-effects-only assertions. The movies,
+layout, and diagnostic fragment staged byte-identically across VWKS, CF, FC,
+and TA.
 
-| Goal 9A artifact | Bytes | SHA-256 |
+| Goal 9A.2 artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 419058 | `7FA4AC42ADCBE1E5C79B7F5B549F842DD155A75825FCE5005A3EE43A5B5322CD` |
-| `hudmenu_lrg.gfx` | 419241 | `5458C451E0EC046839F7B8EDB8038A719F8C718E6D1CD289071B940FF4F8869A` |
+| `hudmenu.gfx` | 420152 | `241FFB860D61BBD858A03114B75BDE783DC092F650B5DC42C8E3AF6EC9D3AF45` |
+| `hudmenu_lrg.gfx` | 420335 | `06718CC46FD0D668FF1CBAB09BEDAAC49FE779FAACE405B820523798B762F6C3` |
 | `VenworksCUI/layout.xml` | 6760 | `543BC7E4B285F047742A128C84971E8B3ABC7333117924B90191A675D0BE9D09` |
-| `components/personal-effects-diagnostic.xml` | 10181 | `2D62B6DCD78C005D0CAF4E4CD0545BDCA833C39474B340BC654B1562120C44AA` |
+| `components/personal-effects-diagnostic.xml` | 10270 | `49EE7E2F6D3E3741BCCBC7478C46769BD5A85D90C3BAE6E01F3569EDFB80073C` |
 
 ## Rollback
 
