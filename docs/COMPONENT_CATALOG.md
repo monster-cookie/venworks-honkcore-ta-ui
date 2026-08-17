@@ -395,6 +395,30 @@ and aggressive/defensive/passive distinctions are not rendered or inferred.
 The 200-unit scale uses Bethesda's provider value and does not claim a real-world
 unit such as meters.
 
+Runtime establishes `aEnemyMarkers` as an engine-filtered acquired-hostile
+channel, not an inventory of nearby life forms. Neutral creatures and harmless
+critters are absent. Potentially hostile creatures generally enter only after
+Bethesda's detection or hostility gate accepts them; once acquired, contacts
+remain correctly ranged while the player retreats and production rendering
+hides them beyond 200 provider units. The component's range therefore governs
+placement and acquired-contact retention, not AI detection or initial discovery.
+Attacking a neutral creature is expected to make it eligible after hostility
+changes, but that transition remains unconfirmed.
+
+Runtime Game Setting probes found `fPerceptionCompassBase = 10000`,
+`fPerceptionCompassMult = 3`, and tested player `Perception = 7`. A base of `10`
+restricted presentation to point-blank range, while larger values did not expose
+unaware actors earlier and `10000` versus `20000` did not change acquired-hostile
+retention. Production therefore preserves the game's defaults and adds no GMST,
+native provider, SFSE component, or synthetic position source. The unrelated
+AVIF `MapMarkerMaxCompassDistanceMult` governs ordinary map-marker behavior and
+is not an enemy-channel input.
+
+Future player documentation must call the component a
+**200-provider-unit acquired-threat radar**, state that it is not a life-form
+detector, and explain that its circles range only contacts delivered by
+HUDMenu's persistent compass data.
+
 The retired top-center probe reported the complete general-marker count and
 unique numeric marker types as `G:<count> TYPES:<types>`. It established the
 10/13 runtime mapping without adding another provider, recursive field dumping,

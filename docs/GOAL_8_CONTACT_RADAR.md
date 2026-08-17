@@ -27,6 +27,15 @@ circles at 50, 100, 150, and 200 units and fail closed beyond the outer circle.
 No real-world unit such as meters is claimed. Disposition, ally, and
 ship/vehicle meanings are not inferred from appearance or array membership.
 
+Production runtime evidence narrows the enemy presentation to a
+**200-provider-unit acquired-threat radar**. It is not a life-form detector:
+neutral creatures and harmless critters are not delivered, and potentially
+hostile creatures generally do not appear until Bethesda's engine classifies
+them as detected or hostile. Once acquired, hostile contacts use their delivered
+distance normally and remain visible while retreating until they cross the
+radar's 200-unit boundary. The radar does not discover actors, manufacture
+positions, or infer hostility from an actor's appearance.
+
 The radar remains present while aiming and while the scanner is open. Scanner-
 specific presentation and scanner-owned behavior belong to a later goal.
 
@@ -37,7 +46,7 @@ specific presentation and scanner-owned behavior belong to a later goal.
 | Player heading | `HudCompassData.fDirection` | Confirmed in HUDMenu vanilla code. |
 | General contacts | `HudCompassData.aMarkers` | Confirmed in HUDMenu vanilla code. |
 | Mission contacts | `HudCompassData.aMissionMarkers` | Confirmed in HUDMenu vanilla code. |
-| Enemy contacts | `HudCompassData.aEnemyMarkers` | Confirmed in HUDMenu vanilla code. |
+| Enemy contacts | `HudCompassData.aEnemyMarkers` | Confirmed in HUDMenu vanilla code and runtime as an engine-filtered acquired-hostile channel; neutral creatures and harmless critters were not delivered. |
 | Contact heading | Marker `fHeading` | Confirmed in HUDMenu vanilla code. |
 | Physical/provider distance | Marker `fDistanceToPlayer` | Confirmed as the distance input used by HONKCORE MAPR for general, enemy, and mission records from persistent `HudCompassData`; production runtime acceptance remains required. |
 | Near/far state | Marker `bIsNear` | Confirmed in HUDMenu vanilla code but retired from production radar placement because it provides only two nearly identical radii. |
@@ -292,12 +301,13 @@ therefore restored without modification; the remaining blackout investigation
 must move outside that rendering path. Responsive direct provider routing
 remains accepted.
 
-The same runtime session accepted proportional radar movement but showed that
-enemy records were not delivered until approximately 150 provider units, based
-on comparison with a vehicle at that distance. This appears to be provider-side
-culling rather than a radar filter. The accepted calibration reduces the radar
+The same runtime session accepted proportional radar movement and produced a
+preliminary estimate that enemy records were not delivered until approximately
+150 provider units, based on comparison with a vehicle at that distance. Later
+controlled acquisition and retreat tests, recorded below, supersede the simple
+provider-culling interpretation. The accepted calibration reduces the radar
 maximum to 200 provider units and uses circles at 50, 100, 150, and 200 units.
-It does not claim to change Bethesda's delivery threshold or assign a real-world
+It does not claim to change Bethesda's acquisition rules or assign a real-world
 unit to the provider value.
 
 On 2026-08-16, `Tools/checkRepo.ps1` passed and the complete normal/large
@@ -315,6 +325,41 @@ across VWKS, CF, FC, and TA.
 | `hudmenu_lrg.gfx` | 417108 | `A1837FDF2E0D601970963502D738FED930DD2AB1922417A12370C12CA3394A97` |
 | `VenworksCUI/layout.xml` | 6583 | `87649033E716119601D6EBD1D9D9C50C048A84D347E6CC59D9472B580D2D915E` |
 | `components/contact-radar.xml` | 2433 | `49D6317ED00747D6F2074BB7658E5D4F9BC7A17D723650432299267230059F1D` |
+
+### Enemy acquisition, retention, and Game Setting evidence
+
+Controlled runtime testing established that initial enemy acquisition and radar
+ranging are separate behaviors. Potentially hostile creatures first entered
+`HudCompassData.aEnemyMarkers` when they detected or engaged the player, near
+the 100-unit circle in the tested encounters. Once acquired, their red contacts
+moved proportionally toward the player marker and remained delivered while the
+player retreated; production rendering then hid them only after
+`fDistanceToPlayer` crossed the radar's fixed 200-provider-unit boundary.
+Neutral creatures and harmless critters did not appear. Attacking a neutral
+creature is expected to make it eligible after its hostility state changes, but
+that specific neutral-to-hostile transition has not been runtime-confirmed.
+
+The live defaults were `fPerceptionCompassBase = 10000` and
+`fPerceptionCompassMult = 3`, with the tested player reporting `Perception = 7`.
+Changing the base to `10` delayed enemy presentation until effectively
+point-blank range, proving that the setting can restrict compass eligibility.
+Increasing it to `14000` or `200000` did not reveal unaware actors earlier, and
+`10000` and `20000` produced the same retention behavior after hostility was
+established. The setting therefore does not replace Bethesda's upstream
+detection/hostility gate, and no non-default Game Setting override is justified
+for the production radar.
+
+The only additional result from the console's compass-name search was the AVIF
+`MapMarkerMaxCompassDistanceMult`. That value belongs to ordinary map-marker
+behavior used for locations, quests, and related map/radiant presentation; it is
+not evidence of another `aEnemyMarkers` range control and must not be changed for
+the contact radar. No other compass-named candidate was exposed by that search.
+
+Eventual player-facing minimap/compass documentation must describe this surface
+as a **200-provider-unit acquired-threat radar**, not a 200-unit life-form
+detector. It must explain that neutral actors are absent, initial appearance is
+controlled by Bethesda's detection/hostility classification, and the range
+circles position only records that HUDMenu actually receives.
 
 ## Kill-event blackout hardening and provider evidence
 
