@@ -1,8 +1,7 @@
 # Goal 9 helmet compass, threat alert, and active effects
 
-**Status: Corrected top-edge layout source-validated on 2026-08-17; complete
-normal/large Scaleform rebuild and in-engine runtime/visual acceptance remain
-pending.**
+**Status: Corrected top-edge layout and normal/large Scaleform build validated
+on 2026-08-17; in-engine runtime and visual acceptance remain pending.**
 
 Goal 9 fills the upper helmet cutout with three compact, live HUD surfaces:
 
@@ -199,11 +198,11 @@ expose.
 | Production layout | `Scaleform/shared/fixtures/components/helmet-awareness.xml` |
 | Build and staging assertions | `Tools/compileScaleform.ps1` |
 
-## Prior build validation
+## Build validation
 
-The Goal 9 implementation immediately preceding the top-edge layout correction
-completed the normal and large Scaleform build on 2026-08-17 using the
-repository-pinned vanilla HUD inputs. Both output movies:
+The corrected Goal 9 implementation completed the normal and large Scaleform
+build on 2026-08-17 using the repository-pinned vanilla HUD inputs. Both output
+movies:
 
 - imported and reopened all 210 scripts;
 - contained all 43 authored Venworks classes in one application domain;
@@ -220,15 +219,14 @@ repository-pinned vanilla HUD inputs. Both output movies:
 
 The authored ABC seed was regenerated with the retained JPEXS seed generator
 and passed the build's import, single-domain, class-count, and reopen checks.
-These artifact hashes describe the preceding layout and do not validate the
-corrected compass and threat placement.
 
 The corrected fragment passes the layout XSD and direct coordinate invariants:
 the radar ends at logical `x=447`, the compass spans `x=547..1373` at `y=0`,
 the threat alert is centered in the existing recess, and the status bar retains
 its `x=600`, `y=134`, `720 x 56` screen bounds. `Tools/checkRepo.ps1` also
-passes. A complete rebuild remains pending because the current workspace does
-not contain Java, JPEXS, Flex, or extracted vanilla interface inputs.
+passes. The complete build staged byte-identical `hudmenu.gfx`,
+`hudmenu_lrg.gfx`, `layout.xml`, assets, and component fragments across the
+VWKS, CF, FC, and TA module templates.
 
 ## In-engine acceptance checklist
 
