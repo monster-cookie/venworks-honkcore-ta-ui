@@ -207,14 +207,6 @@ package venworks.cui
          return tacticalAwareness.snapshot;
       }
 
-      public function updateCombatState(param1:Boolean) : void
-      {
-         if(tacticalAwareness.updateCombatState(param1))
-         {
-            dispatchEvent(new Event(TACTICAL_AWARENESS_CHANGE));
-         }
-      }
-
       public function getValue(param1:String) : Object
       {
          var source:String = normalizeSource(param1);
@@ -376,6 +368,10 @@ package venworks.cui
 
       private function onPlayerData(param1:FromClientDataEvent) : void
       {
+         if(tacticalAwareness.updateCombatState(Boolean(param1.data.bIsInCombat)))
+         {
+            dispatchEvent(new Event(TACTICAL_AWARENESS_CHANGE));
+         }
          this.setFinite("player.level",param1.data.uLevel);
          this.setFinite("player.levelxp",param1.data.fLevelXP);
          this.setFinite("player.nextlevelxp",param1.data.fNextLevelXP);

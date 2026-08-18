@@ -26,9 +26,12 @@ Goal 8 established the production `HudCompassData` contract. Goal 9 consumes:
 - `EnvironmentEffectsData.aEnvironmentEffects` for environmental compass
   markers and active environmental pressure.
 
-The existing condition context also consumes `HUDStealthData.bIsInCombat`.
-Goal 9 reuses that single proven subscription for combat escalation rather
-than introducing a second provider owner.
+The existing player HUD data context consumes `PlayerData`, whose HUD-lifetime
+payload was previously runtime-proven to include `bIsInCombat`. Goal 9 reads
+that field directly in the existing `PlayerData` callback for combat
+escalation. `CUIConditionContext` retains its separate `HUDStealthData`
+subscription for configurable visibility conditions, but that path does not
+drive the threat model.
 
 Goal 9 also consumes `PersonalEffectsData.aPersonalEffects` as the live,
 persistent personal-effect set. Runtime probing established these relevant
@@ -114,7 +117,7 @@ contribute the following maximum weights:
 
 The final score applies these rules in order:
 
-1. `HUDStealthData.bIsInCombat == true` forces `100% CRITICAL`, regardless of
+1. `PlayerData.bIsInCombat == true` forces `100% CRITICAL`, regardless of
    distance, so ranged combat is represented.
 2. Otherwise, the nearest valid acquired enemy below 25 units forces
    `100% CRITICAL`.
@@ -243,8 +246,8 @@ movies:
 - imported and reopened all 210 scripts;
 - contained all 43 authored Venworks classes in one application domain;
 - passed the production Goal 9 source and renderer assertions;
-- retained the single `HUDStealthData` owner and startup/change combat-state
-  synchronization after reopen;
+- retained direct `PlayerData.bIsInCombat` threat-model updates and kept
+  `HUDStealthData` limited to the condition context after reopen;
 - retained the strict 25/50-unit proximity thresholds, 90-percent floor, and
   100-percent combat/critical override after reopen;
 - retained a fixed-width, non-auto-sized, centered threat field after reopen;
@@ -255,8 +258,8 @@ movies:
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 440141 | `7BD4A238117C1336ABE71731DB0A3D4BC39C8721B41C37C0975674A1519B551C` |
-| `hudmenu_lrg.gfx` | 440324 | `F6D87B6600C9380CF9914EC6184C46AE6B479B3A32B9E3E623941FAC8EB5BE92` |
+| `hudmenu.gfx` | 439834 | `EECCD61EE7C7A658E3B38344AC65B631BF3960825999C39FB4CAAA24216A22BD` |
+| `hudmenu_lrg.gfx` | 440017 | `3068F825CAA1CDD7017DCA258933CB722991524D6444AC6DB841493B636A87E0` |
 
 The authored ABC seed was regenerated with the retained JPEXS seed generator
 and passed the build's import, single-domain, class-count, and reopen checks.
@@ -277,8 +280,12 @@ in its final top-edge position, the threat text is centered in the recessed
 panel, the status icons retain their accepted placement, and equipment slots
 13-15 have matching bounds. That evidence exposed the former 34-percent score
 during active close combat and directly motivated the final escalation rules
-above. The new combat/proximity behavior itself still requires runtime
-exercise.
+above. Runtime testing subsequently confirmed that the distance path raises
+the threat score to 90 percent below 50 units, but the indirect
+`HUDStealthData` combat bridge did not raise it to 100 percent. The corrected
+implementation therefore consumes the previously proven
+`PlayerData.bIsInCombat` field directly; that combat path still requires
+runtime exercise.
 
 ## In-engine acceptance checklist
 
@@ -289,8 +296,9 @@ helmet fit. Test both normal and large HUD variants in gameplay:
    labels wrap across north, and ticks move smoothly.
 2. Confirm quest, location, NPC, enemy, ship, vehicle, and environmental
    markers appear when their corresponding Watch markers would appear.
-3. Enter ranged combat beyond 100 units and confirm `bIsInCombat` raises the
-   score to `100% CRITICAL`, then verify leaving combat releases the override.
+3. Enter ranged combat beyond 100 units and confirm
+   `PlayerData.bIsInCombat` raises the score to `100% CRITICAL`, then verify
+   leaving combat immediately releases the override with no cooldown.
 4. Outside combat, cross from exactly 50 to below 50 units from an acquired
    enemy and confirm the score gains a 90-percent floor only below 50.
 5. Outside combat, cross from exactly 25 to below 25 units and confirm the
@@ -331,7 +339,8 @@ record that case as not exercised rather than treating it as passed.
   proves additional hazard types.
 - Bethesda's `bIsInCombat` is broader than a direct damage event, so the
   intended 100-percent override remains active for as long as the engine
-  reports combat, including ranged or temporarily obstructed engagements.
+  reports combat, including ranged or temporarily obstructed engagements. The
+  threat model adds no cooldown after `PlayerData.bIsInCombat` becomes false.
 
 ## Rollback
 

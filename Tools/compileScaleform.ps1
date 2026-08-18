@@ -227,6 +227,9 @@ $tacticalAwarenessModelSource = Resolve-RequiredFile `
 $conditionContextSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\actionscript\venworks\cui\CUIConditionContext.as") `
   -Description "Goal 7 condition context"
+$runtimeSource = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\actionscript\venworks\cui\CUIRuntime.as") `
+  -Description "CUI runtime"
 $gallerySvgSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\gallery-vector.svg") `
   -Description "Owned SVG gallery asset"
@@ -267,6 +270,7 @@ $providerProbeLayout = [xml](Get-Content -LiteralPath $providerProbeLayoutSource
 $playerHudDataContextText = Get-Content -LiteralPath $playerHudDataContextSource -Raw
 $tacticalAwarenessModelText = Get-Content -LiteralPath $tacticalAwarenessModelSource -Raw
 $conditionContextText = Get-Content -LiteralPath $conditionContextSource -Raw
+$runtimeText = Get-Content -LiteralPath $runtimeSource -Raw
 $playerSerialDerivation = [regex]::Match(
   $playerHudDataContextText,
   '(?s)private function derivePlayerSerial\(param1:String\).*?private function formatPlayerSerial')
@@ -315,9 +319,11 @@ if ($playerHudDataContextText -notmatch 'Subscribe\("PersonalEffectsData",this\.
     $playerHudDataContextText -notmatch 'tacticalAwareness\.updatePersonalEffects\(data\)' -or
     $playerHudDataContextText -notmatch 'tacticalAwareness\.updateEnvironment\(' -or
     $playerHudDataContextText -notmatch 'tacticalAwareness\.updateCompass\(compassData\)' -or
-    $playerHudDataContextText -notmatch 'tacticalAwareness\.updateCombatState\(param1\)' -or
+    $playerHudDataContextText -notmatch 'Subscribe\("PlayerData",this\.onPlayerData\)' -or
+    $playerHudDataContextText -notmatch 'tacticalAwareness\.updateCombatState\(Boolean\(param1\.data\.bIsInCombat\)\)' -or
     $conditionContextText -notmatch 'Subscribe\("HUDStealthData",this\.onStealthData\)' -or
     $conditionContextText -notmatch 'Boolean\(param1\.data\.bIsInCombat\)' -or
+    $runtimeText -match 'syncTacticalCombatState|conditionContext\.getValue\("incombat"\)|valueContext\.updateCombatState' -or
     $tacticalAwarenessModelText -notmatch 'HOSTILE_MAX:Number\s*=\s*35' -or
     $tacticalAwarenessModelText -notmatch 'PHYSICAL_HAZARD_MAX:Number\s*=\s*15' -or
     $tacticalAwarenessModelText -notmatch 'DEBUFF_MAX:Number\s*=\s*35' -or
@@ -331,7 +337,7 @@ if ($playerHudDataContextText -notmatch 'Subscribe\("PersonalEffectsData",this\.
     $tacticalAwarenessModelText -notmatch 'score\s*=\s*Math\.max\(score,SEVERE_HOSTILE_SCORE\)' -or
     $tacticalAwarenessModelText -notmatch 'SUSTENANCE_' -or
     $tacticalAwarenessModelText -notmatch 'PERSONALEFFECT_') {
-  throw 'Goal 9 must use live combat, compass, environment, and persistent personal-effect data with the approved combat/proximity overrides, 35/15/35/15 fallback threat model, one HUDStealthData owner, and no menu-scoped or transient status subscriptions.'
+  throw 'Goal 9 must use PlayerData.bIsInCombat directly for combat escalation, preserve the HUDStealthData condition owner, use live compass, environment, and persistent personal-effect data with the approved combat/proximity overrides and 35/15/35/15 fallback threat model, and avoid menu-scoped or transient status subscriptions.'
 }
 foreach ($meterStyle in @($providerProbeLayout.venworksCUI.definitions.meterStyle)) {
   $renderer = [string]$meterStyle.renderer
@@ -1228,14 +1234,13 @@ try {
         $reopenedTacticalAwarenessModelSource -notmatch 'inCombat\s*\|\|\s*nearestHostileDistance\s*<\s*CRITICAL_HOSTILE_DISTANCE' -or
         $reopenedTacticalAwarenessModelSource -notmatch 'nearestHostileDistance\s*<\s*SEVERE_HOSTILE_DISTANCE' -or
         $reopenedTacticalAwarenessModelSource -notmatch 'score\s*=\s*Math\.max\(score,SEVERE_HOSTILE_SCORE\)' -or
-        $reopenedPlayerHudDataContextSource -notmatch 'tacticalAwareness\.updateCombatState\(param1\)' -or
+        $reopenedPlayerHudDataContextSource -notmatch 'Subscribe\("PlayerData",this\.onPlayerData\)' -or
+        $reopenedPlayerHudDataContextSource -notmatch 'tacticalAwareness\.updateCombatState\(Boolean\(param1\.data\.bIsInCombat\)\)' -or
         $reopenedPlayerHudDataContextSource -match 'Subscribe\("HUDStealthData"' -or
         $reopenedConditionContextSource -notmatch 'Subscribe\("HUDStealthData",this\.onStealthData\)' -or
         $reopenedConditionContextSource -notmatch 'Boolean\(param1\.data\.bIsInCombat\)' -or
-        $reopenedRuntimeSource -notmatch 'conditionContext\.getValue\("incombat"\)' -or
-        $reopenedRuntimeSource -notmatch 'valueContext\.updateCombatState\(Boolean\(combatValue\.value\)\)' -or
-        $reopenedRuntimeSource -notmatch 'param1\.params\["incombat"\]\s*===\s*true') {
-      throw 'Generated Goal 9 combat escalation must retain the single proven HUDStealthData owner, startup/change synchronization, strict 25/50-unit proximity boundaries, 90-percent floor, and 100-percent combat/critical override.'
+        $reopenedRuntimeSource -match 'syncTacticalCombatState|conditionContext\.getValue\("incombat"\)|valueContext\.updateCombatState') {
+      throw 'Generated Goal 9 combat escalation must use PlayerData.bIsInCombat directly, keep HUDStealthData limited to the condition context, and retain the strict 25/50-unit proximity boundaries, 90-percent floor, and 100-percent combat/critical override.'
     }
     if ($reopenedCompassTapeSource -notmatch 'getDefinitionByName\("CompassMarkerWidget"\)' -or
         $reopenedCompassTapeSource -notmatch 'MAX_MARKERS\s*:\s*int\s*=\s*48' -or

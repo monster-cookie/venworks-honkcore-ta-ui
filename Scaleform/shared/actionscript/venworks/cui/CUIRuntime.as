@@ -184,7 +184,6 @@ package venworks.cui
             this.renderChildren(parser.components,componentLayer,parser.components);
             this.setDiagnosticContext("VANILLA ADAPTER INITIALIZATION",null);
             this.createVanillaAdapters(parser.vanillaVisibility);
-            this.syncTacticalCombatState();
             this.setDiagnosticContext("INITIAL LIVE VALUE EVALUATION",null);
             this.applyValues();
             this.applyContactRadars();
@@ -473,10 +472,6 @@ package venworks.cui
       {
          try
          {
-            if(param1.params == null || param1.params["incombat"] === true)
-            {
-               this.syncTacticalCombatState();
-            }
             this.setDiagnosticContext("LIVE VISIBILITY EVALUATION",null);
             this.applyConditions(param1.params);
             this.clearDiagnosticContext();
@@ -567,15 +562,6 @@ package venworks.cui
          for each(statusEffectBar in statusEffectBars)
          {
             statusEffectBar.updateData(data);
-         }
-      }
-
-      private function syncTacticalCombatState() : void
-      {
-         var combatValue:Object = conditionContext.getValue("incombat");
-         if(combatValue != null && Boolean(combatValue.known))
-         {
-            valueContext.updateCombatState(Boolean(combatValue.value));
          }
       }
 
