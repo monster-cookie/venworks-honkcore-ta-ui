@@ -224,6 +224,14 @@ Bloodthirsty with Kismet removed it. Bloodthirsty also reproduced at full
 health, so an unchanged displayed health value does not prove that its kill
 transaction skipped HUD provider delivery.
 
+The resulting product boundary is permanent: CUI will not replace, suppress,
+restyle, or independently render Bethesda's enemy health bars or enemy
+legendary/state indicators. HONKCORE demonstrated that customizing those
+surfaces can break legendary enemy hit bars, so the vanilla UI remains their
+sole lifecycle owner. Contact-radar presentation may consume the approved
+compass contact data, but it must not take ownership of enemy health or
+legendary-state presentation.
+
 The accepted production hardening removes two remaining re-entrant rendering
 paths. Live value, condition, compass, and HUD-mode callbacks now merge only
 their domain-specific pending state and schedule one next-frame application.

@@ -94,7 +94,7 @@ or an external whole-component mask.
 
 | Renderer | Status | Primary uses |
 |---|---|---|
-| Continuous bar | Implemented | Health, oxygen, boost, enemy health, ship hull/shields, and other linear values; supports four fill directions. |
+| Continuous bar | Implemented | Health, oxygen, boost, ship hull/shields, and other approved linear values; supports four fill directions. |
 | Stacked triangles | Implemented | Uniform or alternating-orientation segments, four fill directions, and optional partial final-segment fill. |
 | Segmented rectangles | Implemented | Discrete or visually stepped meters with whole or partial final segments. |
 | Dots/circles | Implemented | Compact counters and alternate meter styling with whole or partial final dots. |
@@ -104,7 +104,7 @@ or an external whole-component mask.
 | Bipolar/center-origin bar | Future | Signed values or opposing states where the neutral point is centered. |
 
 The reusable meter family is expected to cover at least these visible surfaces:
-player health, oxygen, CO2, boost, enemy health, stealth/detection, experience or
+player health, oxygen, CO2, boost, stealth/detection, experience or
 progress, ship hull, ship shields, ship boost, individual weapon groups, and
 power-allocation levels. Each surface still requires an independently verified
 vanilla owner and provider contract.
@@ -160,11 +160,18 @@ grenade/mine highlighting is unsupported rather than heuristically inferred.
 - boost/jetpack;
 - weapon, ammunition, explosives, and inventory/readout state;
 - compass, quest markers, and location information;
-- enemy health and legendary/state indicators;
+- enemy health and legendary/state indicators remain exclusively vanilla-owned
+  and are not CUI coverage targets;
 - stealth/detection, hit indicators, and reticles;
 - scanner overlays and interaction prompts;
 - notifications, warnings, mission updates, and status effects;
 - quick-access or ability buttons where supported by vanilla providers.
+
+The generic meter primitives do not authorize replacing Bethesda's enemy health
+or legendary/state presentation. HONKCORE demonstrated that customizing those
+surfaces can break legendary enemy hit bars, so the complete vanilla owner and
+its lifecycle remain untouched. This exclusion does not apply to the player
+threat meter, player status effects, ordinary hit indicators, or reticles.
 
 ## Ship UI coverage targets
 

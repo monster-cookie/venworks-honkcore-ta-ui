@@ -218,10 +218,17 @@ Implement in bounded batches:
 1. vanilla component visibility and positioning;
 2. health, oxygen/CO2, boost, inventory, weapon, ammo, and explosives;
 3. warnings and state transitions;
-4. scanner, enemy, hit, sneak, crosshair, quest, and quick-access surfaces;
+4. scanner, hit, sneak, crosshair, quest, and quick-access surfaces;
 5. compass, permitted minimap/radar behavior, panels, and notifications;
 6. bounded effects and animations;
 7. status effects only to the level proven available in an always-loaded HUD.
+
+Enemy health bars and enemy legendary/state indicators are deliberately outside
+the configurable surface. Bethesda's vanilla UI remains their sole owner because
+the HONKCORE replacement demonstrated that customization can break legendary
+enemy hit bars. This decision does not exclude the player threat meter, player
+status effects, ordinary hit indicators, crosshair/reticle behavior, or scanner
+presentation.
 
 Each component requires a schema representation, vanilla provider contract,
 default layout, future palette hooks, static checks, and Starfield lifecycle

@@ -151,7 +151,8 @@ The following targets are deliberately unavailable:
 
 - `HUDVehicle` and the exit-vehicle button as direct targets;
 - `centerGroup` and the target crosshair;
-- the enemy-health holder and enemy-health internals;
+- the enemy-health holder and enemy-health internals as intentionally
+  unavailable targets;
 - hit, kill, and damage indicators; and
 - rollover and quick-container controls.
 
@@ -161,8 +162,10 @@ bounds it to the keyboard/controller glyph region;
 the complete duplicate vehicle timeline is not attached or subscribed. The
 child is noninteractive presentation only and retains Bethesda's
 platform/control-map presentation, while the hidden original remains the sole
-input owner. The crosshair requires an isolated crash test. Enemy health requires a legendary
-enemy regression test. Hit indicators require animation-lifecycle testing,
+input owner. The crosshair requires an isolated crash test. Enemy health and
+legendary/state presentation remain exclusively vanilla-owned because replacing
+them can break legendary enemy hit bars. They are not candidates for a later
+allowlist expansion. Hit indicators require animation-lifecycle testing,
 and rollover widgets require input testing, before any later allowlist change.
 
 ## Fixtures
