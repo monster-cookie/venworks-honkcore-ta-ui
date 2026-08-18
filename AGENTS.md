@@ -2,6 +2,14 @@
 
 These rules apply throughout the repository.
 
+## Repository-specific context
+
+- Before asking task-specific clarifying questions, defining a goal, planning, using external project-management systems, or editing files, check for `AGENT-REPO-CONTEXT.md` in the repository root.
+- When present, read `AGENT-REPO-CONTEXT.md` completely and treat it as required repository-specific instructions, subordinate to this file and all higher-priority instructions.
+- Do not assume repository-specific rules, project identifiers, external systems, paths, or conventions from another repository.
+- If the repository-specific context declares an external source of truth, retrieve the relevant current information before planning or implementation.
+- If required repository context or its declared external source of truth cannot be read or verified, stop and ask the user how to proceed.
+
 ## Questions, goals, and approval
 
 - Before planning or editing files, ask the user clarifying questions to confirm the goal, scope, constraints, and definition of done.
