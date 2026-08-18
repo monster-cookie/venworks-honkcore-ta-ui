@@ -1,10 +1,6 @@
 # Venworks CUI Component Catalog
 
-> **Technical authority:** This catalog owns implemented component contracts,
-> bindings, and safety rules. Product coverage, design intent, UI-state
-> behavior, and acceptance are maintained in the Codecks `Documentation` deck.
-
-Date: 2026-08-06
+Date: 2026-08-17
 
 ## Purpose and evidence boundary
 
@@ -23,7 +19,9 @@ inspected and tested.
 
 ## Status vocabulary
 
-- **Implemented:** available in the current runtime and schema.
+- **Complete:** implemented and accepted for the documented component scope.
+- **Implemented:** available in the current runtime and schema, with remaining
+  documented acceptance work.
 - **Next:** expected in the next component-library or layout goal.
 - **Future:** required before the corresponding UI surface can ship.
 - **Research:** visible requirement identified; exact vanilla owner or provider
@@ -84,7 +82,7 @@ surface.
 | Error panel | Implemented | Show actionable load/schema errors in the upper center/right region and remain hidden after a valid load. |
 | Repeater/list | Implemented | Lay out a bounded fixed collection vertically, horizontally, or in a grid with spacing and item limits. |
 | State container | Implemented | Select one fixed configuration state without allowing arbitrary expressions or method calls. |
-| Mask/clip | Implemented; acceptance pending | Bound one or more children to rectangle, ellipse, or approved path geometry, including nested masks. |
+| Mask/clip | Complete | Bound one or more children to rectangle, ellipse, or approved path geometry, including nested masks. |
 
 ## Meter and bar family
 
@@ -98,12 +96,12 @@ or an external whole-component mask.
 
 | Renderer | Status | Primary uses |
 |---|---|---|
-| Continuous bar | Implemented | Health, oxygen, boost, ship hull/shields, and other approved linear values; supports four fill directions. |
-| Stacked triangles | Implemented | Uniform or alternating-orientation segments, four fill directions, and optional partial final-segment fill. |
-| Segmented rectangles | Implemented | Discrete or visually stepped meters with whole or partial final segments. |
-| Dots/circles | Implemented | Compact counters and alternate meter styling with whole or partial final dots. |
+| Continuous bar | Complete | Health, oxygen, boost, enemy health, ship hull/shields, and other linear values; supports four fill directions. |
+| Stacked triangles | Complete | Uniform or alternating-orientation segments, four fill directions, and optional partial final-segment fill. |
+| Segmented rectangles | Complete | Discrete or visually stepped meters with whole or partial final segments. |
+| Dots/circles | Complete | Compact counters and alternate meter styling with whole or partial final dots. |
 | Chevrons/notches | Future | Directional or technical segmented meters. |
-| Radial/circular arc | Implemented | Bounded continuous clockwise/counterclockwise arcs for oxygen/CO2, cooldown, progress, and compact gauges. |
+| Radial/circular arc | Complete | Bounded continuous clockwise/counterclockwise arcs for oxygen/CO2, cooldown, progress, and compact gauges. |
 | Image-masked meter | Future | Theme-authored fills bounded by an approved image or vector mask. |
 | Bipolar/center-origin bar | Future | Signed values or opposing states where the neutral point is centered. |
 
@@ -117,13 +115,13 @@ vanilla owner and provider contract.
 
 | Component | Status | Required behavior |
 |---|---|---|
-| Bethesda embedded symbol | Implemented; acceptance pending | Reference a semantic name from a movie-aware hardcoded allowlist of symbols embedded in the owning vanilla movie; mappings are `environment-alert`, `quest-door-marker`, `boost-fill`, and noninteractive `vehicle-exit-prompt`. The vehicle mapping extracts Bethesda's initialized `GetUpButton_mc` hold-button child and bounds its presentation to the union of the keyboard and controller glyph children, so the full HUD timeline and the hold-button label area are never fitted into the CUI box. The production layout composes that live mapped glyph with Bethesda's localized `$EXIT HOLD` label in an `inVehicle`-conditioned group centered in the lower helmet seal. |
-| Built-in icon | Implemented; acceptance pending | Reference one of 21 generated semantic icons compiled directly into each HUD movie; supports tint, fit, and alignment without a runtime asset handle. |
+| Bethesda embedded symbol | Complete | Reference a semantic name from a movie-aware hardcoded allowlist of symbols embedded in the owning vanilla movie; mappings are `environment-alert`, `quest-door-marker`, `boost-fill`, and noninteractive `vehicle-exit-prompt`. The vehicle mapping extracts Bethesda's initialized `GetUpButton_mc` hold-button child and bounds its presentation to the union of the keyboard and controller glyph children, so the full HUD timeline and the hold-button label area are never fitted into the CUI box. The production layout composes that live mapped glyph with Bethesda's localized `$EXIT HOLD` label in an `inVehicle`-conditioned group centered in the lower helmet seal. |
+| Built-in icon | Complete | Reference one of 21 generated semantic icons compiled directly into each HUD movie; supports tint, fit, and alignment without a runtime asset handle. |
 | Supplemental symbol library | Retired | Starfield raised Error #1034 across the child-domain SWF compatibility attempts; external SWF libraries are no longer loaded. |
-| SVG path | Implemented; acceptance pending | Render a bounded authored path with fill, stroke, transform, and view box; arc commands are rejected. |
-| SVG asset | Implemented; in-game loading confirmed | Load and validate a restricted local SVG through the fixed `Interface/VenworksCUI/Assets` root; no network URLs, scripts, text, or external references. |
+| SVG path | Complete | Render a bounded authored path with fill, stroke, transform, and view box; arc commands are rejected. |
+| SVG asset | Complete | Load and validate a restricted local SVG through the fixed `Interface/VenworksCUI/Assets` root; no network URLs, scripts, text, or external references. |
 | Direct raster/DDS image | Unsupported | PNG, JPEG, and DDS probes were found at their loose paths but rejected by Starfield Scaleform; use loose SVG or a built-in icon. |
-| Curated Font Awesome icon | Implemented; acceptance pending | Generate only the approved 21-icon subset into committed ActionScript; Font Awesome source SVGs remain developer inputs and are not committed. |
+| Curated Font Awesome icon | Complete | Generate only the approved 21-icon subset into committed ActionScript; Font Awesome source SVGs remain developer inputs and are not committed. |
 
 The icon generator receives the local Font Awesome Pro root through an explicit
 parameter. Its machine-specific path is never recorded. It converts source arcs
@@ -137,15 +135,16 @@ gamer-facing configuration surface.
 
 | Composite | Status | Composition and behavior |
 |---|---|---|
-| Button | Future | Panel/shape, icon, label, key hint, enabled state, selected state, and cooldown/quantity overlay. |
+| Button | Complete | Panel/shape, icon, label, key hint, enabled state, selected state, and cooldown/quantity overlay. |
+| Quick bar | Complete | Compose up to 16 independently visible buttons through the bounded Goal 4G composite contract. |
 | Tactical equipment rail | Complete | Fifteen passive contacts: twelve remapping-aware FavoritesData readouts wrapped around independently live weapon, explosive, and power contacts in the center of the ribbon. Contacts do not own input or present themselves as buttons. Runtime visual and behavior acceptance completed on 2026-08-15. |
-| Compass | Research | Line/divider, heading label, direction ticks, markers, and optional background; marker data must remain owned by the vanilla compass provider. |
-| Minimap/radar | Research | Bounded panel, player marker, contacts/POIs, sweep/cone, grid, scale label, and clip mask. Feasibility depends on vanilla data exposed to the owning movie. |
-| Information panel | Future | Panel, title, key/value text, dividers, optional scroll/overflow indicator, and status accents. |
+| Compass | Implemented | Line/divider, heading label, direction ticks, markers, and optional background; normal-view acceptance is complete and large-HUD acceptance remains pending. |
+| Minimap/radar | Implemented | Bounded acquired-threat radar, player marker, verified contact types, range rings, and clip behavior; final startup and live-transition acceptance remains pending. |
+| Information panel | Complete | Panel, title, key/value text, dividers, optional scroll/overflow indicator, and status accents. |
 | Notification/toast | Future | Panel, icon, primary/secondary text, priority, duration, and bounded entrance/exit effects. |
-| Warning panel | Future | Severity color, icon, title, detail, and visibility/state rules. |
+| Warning panel | Complete | Severity color, icon, title, detail, and visibility/state rules. |
 | Item/ammo readout | Future | Weapon/item icon, amount, reserve amount, state color, and optional meter. |
-| Status-effect row | Research | Bounded list of icons, labels, timers/stacks, and severity states using only available vanilla data. |
+| Status-effect row | Implemented | Bounded active-effects presentation using verified HUD data; large-HUD acceptance remains pending. |
 | Reticle/crosshair | Vanilla-owned; not configurable | Bethesda retains the complete visual and lifecycle owner; proven crosshair data remains condition input only. |
 
 The Goal 7 equipment rail is intentionally passive. Favorites Menu remains the
@@ -216,7 +215,7 @@ group, text, panel, rectangle/ellipse shape, divider, the shared meter contract,
 continuous bar, and stacked-triangle bar. The fixed gallery uses static values;
 it does not replace health or bind to live game data.
 
-## Goal 4 implemented subset and next gate
+## Goal 4 completed component-library gates
 
 Goal 4A adds nine-point root and nested anchoring plus root safe-area insets.
 Goal 4B adds primitive-only templates, instances, fixed repeaters, static state
@@ -241,6 +240,11 @@ Bethesda semantic symbols. Loose SVGs are confined to
 movies and create no runtime file handles. Supplemental SWF and direct
 DDS/raster loading are retired after failed in-game probes. Unsupported or
 missing content fails the entire CUI layer with an actionable diagnostic.
+
+Goal 4F completes the 21-icon allowlist and deterministic same-domain icon
+generation. Goal 4G completes the bounded button, quick-bar, information-panel,
+and warning composites. Their positive and negative in-game gallery checks are
+accepted.
 
 ## Goal 5 live-value probe
 

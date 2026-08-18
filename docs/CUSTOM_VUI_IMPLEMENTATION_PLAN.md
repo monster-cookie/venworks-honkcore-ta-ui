@@ -79,7 +79,27 @@ them.
   produced movie loads and preserves the required vanilla contracts.
 - Pause after every goal for review and an optional user commit.
 
+## Current master-feature status
+
+These statuses summarize the documented implementation and runtime evidence.
+They do not treat planned work as complete.
+
+| Master feature | Status | Remaining documented work |
+|---|---|---|
+| Clean-room CUI runtime and component framework | Complete | None for the current component-foundation scope. |
+| Chronomark replacement | Complete | None for the accepted Goal 5 scope. |
+| Environmental scanner and Player Data HUD | In progress | Complete final visual acceptance of the unified frame and vertical-channel layout. |
+| Tactical equipment rail | Complete | None for the accepted Goal 7 equipment-rail scope. |
+| Contact radar and faction display | In progress | Confirm corrected single-domain startup and complete live ranging, contact, and kill-transition acceptance. |
+| Helmet compass, threat alert, and active effects | In progress | Validate combat/proximity threat escalation and accept the large HUD variant. |
+| Remaining player HUD surfaces | Planned | Inventory, implement, and validate the remaining approved player HUD surfaces. |
+| Ship UI configurability | Planned | Map owner movies and provider contracts, then implement and validate the approved ship surfaces. |
+| Palette system and four theme migrations | Planned | Define the palette schema, ship examples, migrate the four themes, and validate them in Starfield. |
+| Packaging and release integration | In progress | Integrate the final layouts, palettes, assets, notices, validation, workflow, and release archives. |
+
 ## Goal 0: Repository and toolchain discovery
+
+**Current status:** Complete.
 
 Inventory the repository, vanilla Interface archive, HUD/ship movies, data
 providers, available tools, configuration-loading options, existing theme
@@ -90,6 +110,8 @@ Done when `GOAL_0_DISCOVERY.md` and `CLEAN_ROOM.md` record the evidence,
 unknowns, proposed layout, and blocking decisions.
 
 ## Goal 1: Prove the runtime editing toolchain
+
+**Current status:** Complete.
 
 Select an approved SWF/GFX inspection and editing workflow. Work from vanilla
 Starfield artifacts extracted from `Starfield - Interface.ba2`. Produce the
@@ -107,6 +129,8 @@ vanilla-derived binary, or selecting an exporter/editor.
 
 ## Goal 2: Prove external XML configuration loading
 
+**Current status:** Complete.
+
 Add the smallest XML loader to the approved test movie. Load an adjacent XML
 file through Starfield's file opener and render one configured value.
 
@@ -117,6 +141,8 @@ data-only path. Do not implement TOML parsing in ActionScript without a new
 approved plan.
 
 ## Goal 3: Establish the reusable component library
+
+**Current status:** Complete.
 
 Define the full component catalog before converting individual HUD surfaces.
 Implement the first strict layout subset and prove reusable primitives with a
@@ -134,6 +160,8 @@ resources, method calls, and executable extensions are prohibited. No live HUD
 provider is connected during this goal.
 
 ## Goal 4: Complete composition, conditions, and asset primitives
+
+**Current status:** Complete for the accepted component-foundation scope.
 
 Extend the versioned layout schema and runtime through bounded review gates:
 
@@ -197,6 +225,8 @@ remain deferred until the UI work is complete.
 
 ## Goal 5: Implement the first configurable player HUD surface
 
+**Current status:** Complete.
+
 The approved first surface is the bottom-left Chronomark replacement. Goal 5
 starts with a provider probe in approximately the final layout: it hides the
 complete vanilla bottom-left group through the lifecycle-safe adapter, renders
@@ -218,6 +248,11 @@ Validate reload, save load, first/third person, scanner, death/reload, ladder,
 workbench, and ship transitions before expanding the runtime.
 
 ## Goal 6: Reimplement approved player HUD configurability
+
+**Current status:** In progress. The environmental scanner, Player Data HUD,
+tactical equipment rail, contact radar, faction display, helmet compass,
+threat alert, and active-effects implementation work is present. The master
+status table records the remaining runtime and large-HUD acceptance work.
 
 Implement in bounded batches:
 
@@ -250,6 +285,8 @@ tests.
 
 ## Goal 7: Implement approved ship UI configurability
 
+**Current status:** Planned.
+
 Inventory and modify the actual vanilla owner movies in stages:
 
 1. cockpit HUD presentation;
@@ -264,6 +301,8 @@ keyboard/mouse navigation, warning priority, critical information, and menu
 lifecycle.
 
 ## Goal 8: Define palettes and migrate the four existing variants
+
+**Current status:** Planned.
 
 After the approved player and ship component work is stable, define the strict
 palette schema and reference it from the core layout. Palette configuration
@@ -280,6 +319,10 @@ Exclude SPECTR and TACR during migration. Every migrated behavior is either
 validated against Starfield or explicitly marked unavailable/unknown.
 
 ## Goal 9: Packaging and release integration
+
+**Current status:** In progress. The current loose CUI payload is synchronized
+byte-identically across all four staging variants; final palette and release
+packaging remains pending.
 
 Add the required runtime artifacts directly to the four themed staging
 variants. `Staging-VWKS` remains the initial runtime-tested layout project;
