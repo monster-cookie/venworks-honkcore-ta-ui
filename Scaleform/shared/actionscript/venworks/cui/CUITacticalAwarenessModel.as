@@ -5,6 +5,16 @@ package venworks.cui
       private static const MAX_COMPASS_MARKERS:int = 48;
       private static const MAX_THREAT_MARKERS:int = 64;
       private static const MAX_STATUS_EFFECTS:int = 64;
+      private static const MAX_SCANNER_TARGETS:int = 64;
+      private static const SCANNER_CODENAME_ALPHABET:String = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      private static const SCANNER_CODENAME_LENGTH:int = 6;
+      private static const SCANNER_CODENAME_SEED_A:uint = 0x811C9DC5;
+      private static const SCANNER_CODENAME_SEED_B:uint = 0x9E3779B9;
+      private static const MIT_MARKER_ENEMY:uint = 5;
+      private static const MIT_MARKER_COMPANION:uint = 8;
+      private static const MIT_MARKER_PARKED_SHIP:uint = 10;
+      private static const MIT_MARKER_POSITION:uint = 13;
+      private static const MIT_MARKER_VEHICLE:uint = 14;
       private static const AWARENESS_DISTANCE:Number = 300;
       private static const CRITICAL_HOSTILE_DISTANCE:Number = 25;
       private static const SEVERE_HOSTILE_DISTANCE:Number = 50;
@@ -77,6 +87,7 @@ package venworks.cui
       private function createSnapshot() : Object
       {
          var markers:Array = this.collectCompassMarkers();
+         var scannerTargets:Array = this.collectScannerTargets();
          var statuses:Array = this.collectStatusEffects();
          var enemyMarkers:Array = compassData == null ? null : compassData.aEnemyMarkers as Array;
          var hostilePressure:Number = this.calculateNearbyPressure(
@@ -115,6 +126,7 @@ package venworks.cui
          return {
             direction:direction,
             markers:markers,
+            scannerTargets:scannerTargets,
             statuses:statuses,
             threatScore:Math.round(score),
             hostileContribution:hostileScore,
@@ -122,6 +134,117 @@ package venworks.cui
             debuffContribution:debuffScore,
             environmentContribution:environmentScore
          };
+      }
+
+      private function collectScannerTargets() : Array
+      {
+         var result:Array = [];
+         var byHandle:Object = {};
+         if(compassData == null)
+         {
+            return result;
+         }
+         this.appendScannerTargets(result,byHandle,compassData.aEnemyMarkers as Array);
+         this.appendScannerTargets(result,byHandle,compassData.aMissionMarkers as Array);
+         this.appendScannerTargets(result,byHandle,compassData.aMarkers as Array);
+         return result;
+      }
+
+      private function appendScannerTargets(param1:Array, param2:Object, param3:Array) : void
+      {
+         var source:Object = null;
+         var handle:Number = NaN;
+         var markerType:Number = NaN;
+         var heading:Number = NaN;
+         var distance:Number = NaN;
+         var key:String = null;
+         var index:int = 0;
+         while(param3 != null && index < param3.length && param1.length < MAX_SCANNER_TARGETS)
+         {
+            source = param3[index];
+            handle = source == null ? NaN : Number(source.uiHandle);
+            markerType = source == null ? NaN : Number(source.uiMarkerIconType);
+            heading = source == null ? NaN : Number(source.fHeading);
+            distance = source == null ? NaN : Number(source.fDistanceToPlayer);
+            key = String(handle);
+            if(source != null && this.isFiniteNumber(handle) && handle != 0 && param2[key] !== true &&
+               this.isFiniteNumber(markerType) && markerType == uint(markerType) &&
+               this.isScannerMarkerType(uint(markerType)) && this.isFiniteNumber(heading) && heading >= 0 &&
+               this.isFiniteNumber(distance) && distance >= 0)
+            {
+               param2[key] = true;
+               param1.push({
+                  handle:handle,
+                  markerType:uint(markerType),
+                  heading:heading,
+                  distance:distance,
+                  codename:this.createScannerCodename(uint(markerType),handle)
+               });
+            }
+            ++index;
+         }
+      }
+
+      private function isScannerMarkerType(param1:uint) : Boolean
+      {
+         return param1 == MIT_MARKER_ENEMY || param1 == MIT_MARKER_COMPANION ||
+            param1 == MIT_MARKER_PARKED_SHIP || param1 == MIT_MARKER_POSITION ||
+            param1 == MIT_MARKER_VEHICLE;
+      }
+
+      private function createScannerCodename(param1:uint, param2:Number) : String
+      {
+         var source:String = param1.toString() + ":" + param2.toString();
+         var serial:String = "";
+         var stateA:uint = SCANNER_CODENAME_SEED_A;
+         var stateB:uint = SCANNER_CODENAME_SEED_B;
+         var characterCode:uint = 0;
+         var index:int = 0;
+         while(index < source.length)
+         {
+            characterCode = uint(source.charCodeAt(index));
+            stateA = uint(((stateA << 5) - stateA) + characterCode + uint(index));
+            stateA ^= stateA >>> 16;
+            stateB = uint(((stateB << 7) - stateB) ^
+               (characterCode + uint(index * 131)));
+            stateB ^= stateB >>> 13;
+            ++index;
+         }
+         index = 0;
+         while(index < SCANNER_CODENAME_LENGTH)
+         {
+            stateA ^= stateA << 13;
+            stateA ^= stateA >>> 17;
+            stateA ^= stateA << 5;
+            stateB = uint(stateB + 0x6D2B79F5 + uint(index));
+            stateB ^= stateB >>> 15;
+            stateB ^= stateB << 7;
+            serial += SCANNER_CODENAME_ALPHABET.charAt(
+               int(uint(stateA ^ stateB) % SCANNER_CODENAME_ALPHABET.length));
+            ++index;
+         }
+         return this.scannerCodenamePrefix(param1) + "-" + serial;
+      }
+
+      private function scannerCodenamePrefix(param1:uint) : String
+      {
+         if(param1 == MIT_MARKER_ENEMY)
+         {
+            return "HST";
+         }
+         if(param1 == MIT_MARKER_COMPANION)
+         {
+            return "ALLY";
+         }
+         if(param1 == MIT_MARKER_PARKED_SHIP)
+         {
+            return "SHIP";
+         }
+         if(param1 == MIT_MARKER_VEHICLE)
+         {
+            return "VEH";
+         }
+         return "POS";
       }
 
       private function collectCompassMarkers() : Array

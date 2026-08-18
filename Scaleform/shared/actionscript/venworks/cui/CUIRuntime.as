@@ -19,6 +19,7 @@ package venworks.cui
    import venworks.cui.components.CUIProviderSymbol;
    import venworks.cui.components.CUIRadialMeter;
    import venworks.cui.components.CUISegmentedBar;
+   import venworks.cui.components.CUIScannerOverlay;
    import venworks.cui.components.CUIShape;
    import venworks.cui.components.CUIStatusEffectBar;
    import venworks.cui.components.CUISvg;
@@ -47,6 +48,7 @@ package venworks.cui
       private var hudModeVisibility:Array;
       private var contactRadars:Array;
       private var compassTapes:Array;
+      private var scannerOverlays:Array;
       private var threatAlerts:Array;
       private var statusEffectBars:Array;
       private var diagnosticPhase:String = "";
@@ -172,6 +174,7 @@ package venworks.cui
             vanillaAdapters = [];
             contactRadars = [];
             compassTapes = [];
+            scannerOverlays = [];
             threatAlerts = [];
             statusEffectBars = [];
             conditionContext = new CUIConditionContext();
@@ -378,6 +381,12 @@ package venworks.cui
             compassTapes.push(compassTape);
             return compassTape;
          }
+         if(type == "scannerOverlay")
+         {
+            var scannerOverlay:CUIScannerOverlay = new CUIScannerOverlay(param1);
+            scannerOverlays.push(scannerOverlay);
+            return scannerOverlay;
+         }
          if(type == "threatAlert")
          {
             var threatAlert:CUIThreatAlert = new CUIThreatAlert(param1);
@@ -548,12 +557,17 @@ package venworks.cui
       private function applyTacticalAwareness() : void
       {
          var compassTape:CUICompassTape = null;
+         var scannerOverlay:CUIScannerOverlay = null;
          var threatAlert:CUIThreatAlert = null;
          var statusEffectBar:CUIStatusEffectBar = null;
          var data:Object = valueContext.currentTacticalAwarenessData;
          for each(compassTape in compassTapes)
          {
             compassTape.updateData(data);
+         }
+         for each(scannerOverlay in scannerOverlays)
+         {
+            scannerOverlay.updateData(data);
          }
          for each(threatAlert in threatAlerts)
          {
@@ -615,6 +629,7 @@ package venworks.cui
          vanillaAdapters = [];
          contactRadars = [];
          compassTapes = [];
+         scannerOverlays = [];
          threatAlerts = [];
          statusEffectBars = [];
       }

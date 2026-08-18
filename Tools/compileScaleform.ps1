@@ -360,7 +360,8 @@ foreach ($componentFixtureName in @(
   'equipment-rail.xml',
   'environmental-hazard-scanner.xml',
   'helmet-awareness.xml',
-  'player-status-scanner.xml'
+  'player-status-scanner.xml',
+  'scanner-overlay.xml'
 )) {
   $componentFixturePath = Resolve-RequiredFile `
     -Path (Join-Path $providerProbeComponentDirectory $componentFixtureName) `
@@ -457,6 +458,7 @@ foreach ($structurallyInvalidCompositeFixtureName in @(
   'layout-invalid-button-state.xml',
   'layout-invalid-composite-child.xml',
   'layout-invalid-quick-bar-overflow.xml',
+  'layout-invalid-scanner-overlay.xml',
   'layout-invalid-warning-severity.xml'
 )) {
   $structurallyInvalidCompositeFixture = Resolve-RequiredFile `
@@ -959,6 +961,7 @@ try {
       'CUIContactRadar',
       'CUITacticalAwarenessModel',
       'CUICompassTape',
+      'CUIScannerOverlay',
       'CUIThreatAlert',
       'CUIStatusEffectBar',
       'TACTICAL_AWARENESS_CHANGE',
@@ -988,6 +991,7 @@ try {
     $reopenedSymbolPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUISymbol.as'
     $reopenedContactRadarPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIContactRadar.as'
     $reopenedCompassTapePath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUICompassTape.as'
+    $reopenedScannerOverlayPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIScannerOverlay.as'
     $reopenedThreatAlertPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIThreatAlert.as'
     $reopenedStatusEffectBarPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\components\CUIStatusEffectBar.as'
     $reopenedTacticalAwarenessModelPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUITacticalAwarenessModel.as'
@@ -1010,6 +1014,7 @@ try {
     $reopenedSymbolSource = Get-Content -LiteralPath $reopenedSymbolPath -Raw
     $reopenedContactRadarSource = Get-Content -LiteralPath $reopenedContactRadarPath -Raw
     $reopenedCompassTapeSource = Get-Content -LiteralPath $reopenedCompassTapePath -Raw
+    $reopenedScannerOverlaySource = Get-Content -LiteralPath $reopenedScannerOverlayPath -Raw
     $reopenedThreatAlertSource = Get-Content -LiteralPath $reopenedThreatAlertPath -Raw
     $reopenedStatusEffectBarSource = Get-Content -LiteralPath $reopenedStatusEffectBarPath -Raw
     $reopenedTacticalAwarenessModelSource = Get-Content -LiteralPath $reopenedTacticalAwarenessModelPath -Raw
@@ -1210,7 +1215,7 @@ try {
         $reopenedRuntimeSource -notmatch 'type\s*==\s*"contactRadar"') {
       throw 'Generated ActionScript does not register contactRadar across composition, parsing, and runtime construction.'
     }
-    foreach ($tacticalComponentType in @('compassTape','threatAlert','statusEffectBar')) {
+    foreach ($tacticalComponentType in @('compassTape','scannerOverlay','threatAlert','statusEffectBar')) {
       if ($reopenedCompositionResolverSource -notmatch "type\s*==\s*`"$tacticalComponentType`"" -or
           $reopenedLayoutParserSource -notmatch "type\s*==\s*`"$tacticalComponentType`"" -or
           $reopenedRuntimeSource -notmatch "type\s*==\s*`"$tacticalComponentType`"") {
@@ -1227,6 +1232,26 @@ try {
         $reopenedTacticalAwarenessModelSource -notmatch 'SUSTENANCE_FOOD_POSITIVE_1' -or
         $reopenedTacticalAwarenessModelSource -notmatch 'SUSTENANCE_DRINK_POSITIVE_1') {
       throw 'Generated Goal 9 model does not retain the approved bounded live-data classification and 35/15/35/15 threat weights.'
+    }
+    if ($reopenedTacticalAwarenessModelSource -notmatch '"?scannerTargets"?\s*:\s*scannerTargets' -or
+        $reopenedTacticalAwarenessModelSource -notmatch 'aEnemyMarkers\s+as\s+Array' -or
+        $reopenedTacticalAwarenessModelSource -notmatch 'aMissionMarkers\s+as\s+Array' -or
+        $reopenedTacticalAwarenessModelSource -notmatch 'aMarkers\s+as\s+Array' -or
+        $reopenedTacticalAwarenessModelSource -notmatch 'distance\s*>=\s*0' -or
+        $reopenedTacticalAwarenessModelSource -notmatch 'heading\s*>=\s*0' -or
+        $reopenedTacticalAwarenessModelSource -notmatch 'handle\s*!=\s*0' -or
+        $reopenedTacticalAwarenessModelSource -notmatch 'SCANNER_CODENAME_LENGTH\s*:\s*int\s*=\s*6' -or
+        $reopenedScannerOverlaySource -notmatch 'GRID_COLUMNS\s*:\s*int\s*=\s*5' -or
+        $reopenedScannerOverlaySource -notmatch 'GRID_ROWS\s*:\s*int\s*=\s*5' -or
+        $reopenedScannerOverlaySource -notmatch 'HARD_MAX_TARGETS\s*:\s*int\s*=\s*5' -or
+        $reopenedScannerOverlaySource -notmatch 'new Timer\s*\(\s*flickerIntervalMs\s*\)' -or
+        $reopenedScannerOverlaySource -notmatch 'Event\.ADDED_TO_STAGE' -or
+        $reopenedScannerOverlaySource -notmatch 'Event\.REMOVED_FROM_STAGE' -or
+        $reopenedScannerOverlaySource -notmatch 'mouseEnabled\s*=\s*false' -or
+        $reopenedScannerOverlaySource -notmatch 'mouseChildren\s*=\s*false' -or
+        $reopenedScannerOverlaySource -match 'Event\.ENTER_FRAME' -or
+        $reopenedScannerOverlaySource -notmatch 'NO VALID CONTACTS') {
+      throw 'Generated scanner overlay does not retain the bounded five-by-five grid, validated forward contacts, deterministic codenames, and stage-scoped timer lifecycle.'
     }
     if ($reopenedTacticalAwarenessModelSource -notmatch 'CRITICAL_HOSTILE_DISTANCE\s*:\s*Number\s*=\s*25' -or
         $reopenedTacticalAwarenessModelSource -notmatch 'SEVERE_HOSTILE_DISTANCE\s*:\s*Number\s*=\s*50' -or
@@ -1381,7 +1406,7 @@ try {
       Remove-Item -LiteralPath $retiredComponentPath -Force
     }
   }
-  foreach ($componentFixtureName in @('contact-radar.xml','faction-display.xml','equipment-rail.xml','environmental-hazard-scanner.xml','helmet-awareness.xml','player-status-scanner.xml')) {
+  foreach ($componentFixtureName in @('contact-radar.xml','faction-display.xml','equipment-rail.xml','environmental-hazard-scanner.xml','helmet-awareness.xml','player-status-scanner.xml','scanner-overlay.xml')) {
     Copy-Item -LiteralPath (Join-Path $providerProbeComponentDirectory $componentFixtureName) -Destination (Join-Path $componentOutputDirectory $componentFixtureName) -Force
   }
   $stagedHelmetAwarenessText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'helmet-awareness.xml') -Raw
@@ -1423,6 +1448,29 @@ try {
       $helmetAwarenessInteractiveNodes.Count -ne 0 -or
       $stagedHelmetAwarenessText -match 'diagnostic\.|PlayerStatusData|PersonalAlertsData') {
     throw 'Goal 9 must stage the full-width top-edge compass, recessed percentage threat alert, and unchanged bounded two-row persistent status display with no diagnostic or menu-scoped bindings.'
+  }
+  $stagedScannerOverlayText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'scanner-overlay.xml') -Raw
+  $stagedScannerOverlay = [xml]$stagedScannerOverlayText
+  $scannerOverlayIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
+    [string]$_.id -eq 'scanner-overlay'
+  })
+  $scannerOverlayNodes = @($stagedScannerOverlay.SelectNodes('//scannerOverlay'))
+  $scannerOverlayInteractiveNodes = @($stagedScannerOverlay.SelectNodes('//*[@action or @event or @onClick or @mouseEnabled]'))
+  if ($scannerOverlayIncludes.Count -ne 1 -or
+      [string]$scannerOverlayIncludes[0].src -ne 'scanner-overlay.xml' -or
+      [string]$scannerOverlayIncludes[0].anchor -ne 'center' -or
+      [string]$scannerOverlayIncludes[0].visibleWhen -ne 'inScanner' -or
+      [int]$scannerOverlayIncludes[0].x -ne 0 -or
+      [int]$scannerOverlayIncludes[0].y -ne 0 -or
+      $scannerOverlayNodes.Count -ne 1 -or
+      [int]$scannerOverlayNodes[0].width -ne 900 -or
+      [int]$scannerOverlayNodes[0].height -ne 520 -or
+      [int]$scannerOverlayNodes[0].fieldOfView -ne 90 -or
+      [int]$scannerOverlayNodes[0].maxTargets -ne 5 -or
+      [int]$scannerOverlayNodes[0].flickerIntervalMs -ne 140 -or
+      $scannerOverlayInteractiveNodes.Count -ne 0 -or
+      $stagedScannerOverlayText -match 'diagnostic\.|HudCompassData|aEnemyMarkers|aMissionMarkers|aMarkers') {
+    throw 'Goal 10 must stage one centered scanner-only overlay with a 90-degree forward field, five validated contact rows, bounded flicker, and no diagnostic, provider, or interactive bindings.'
   }
   $stagedPlayerScannerText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'player-status-scanner.xml') -Raw
   $stagedPlayerScanner = [xml]$stagedPlayerScannerText
@@ -1892,7 +1940,7 @@ try {
       New-Item -ItemType Directory -Force -Path $variantAssetOutputDirectory | Out-Null
       New-Item -ItemType Directory -Force -Path $variantComponentOutputDirectory | Out-Null
       Copy-Item -LiteralPath (Join-Path $cuiOutputDirectory "layout.xml") -Destination (Join-Path $variantCuiOutputDirectory "layout.xml") -Force
-      foreach ($componentFixtureName in @('contact-radar.xml','faction-display.xml','equipment-rail.xml','environmental-hazard-scanner.xml','helmet-awareness.xml','player-status-scanner.xml')) {
+      foreach ($componentFixtureName in @('contact-radar.xml','faction-display.xml','equipment-rail.xml','environmental-hazard-scanner.xml','helmet-awareness.xml','player-status-scanner.xml','scanner-overlay.xml')) {
         Copy-Item -LiteralPath (Join-Path $componentOutputDirectory $componentFixtureName) -Destination (Join-Path $variantComponentOutputDirectory $componentFixtureName) -Force
       }
       foreach ($assetFileName in @('gallery-vector.svg','venworks-logo.svg','gallery-invalid.svg')) {
@@ -1913,6 +1961,7 @@ try {
       'components\environmental-hazard-scanner.xml',
       'components\helmet-awareness.xml',
       'components\player-status-scanner.xml',
+      'components\scanner-overlay.xml',
       'Assets\gallery-vector.svg',
       'Assets\venworks-logo.svg',
       'Assets\gallery-invalid.svg'
@@ -1923,7 +1972,7 @@ try {
         throw "Staged CUI payload mismatch for $relativeCuiPath in $variantCuiOutputDirectory."
       }
     }
-    Write-Host -ForegroundColor Green "Staged the Goal 9 compass, threat alert, and persistent status display with the accepted Goal 8 radar and production helmet HUD in $variantCuiOutputDirectory"
+    Write-Host -ForegroundColor Green "Staged the Goal 10 scanner overlay with the accepted Goal 9 awareness surfaces and production helmet HUD in $variantCuiOutputDirectory"
   }
 }
 finally {

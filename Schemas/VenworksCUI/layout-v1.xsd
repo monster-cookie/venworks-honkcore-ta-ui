@@ -68,6 +68,26 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="scannerFieldOfViewType">
+    <xs:restriction base="xs:decimal">
+      <xs:minInclusive value="30" />
+      <xs:maxInclusive value="180" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="scannerTargetCountType">
+    <xs:restriction base="xs:positiveInteger">
+      <xs:maxInclusive value="5" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="scannerFlickerIntervalType">
+    <xs:restriction base="xs:positiveInteger">
+      <xs:minInclusive value="50" />
+      <xs:maxInclusive value="2000" />
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:simpleType name="anchorType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="top-left" />
@@ -241,6 +261,18 @@
     <xs:attribute name="headingColor" type="colorType" use="required" />
     <xs:attribute name="centerColor" type="colorType" use="required" />
     <xs:attribute name="fallbackColor" type="colorType" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="scannerOverlayType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="fieldOfView" type="scannerFieldOfViewType" use="required" />
+    <xs:attribute name="maxTargets" type="scannerTargetCountType" use="required" />
+    <xs:attribute name="flickerIntervalMs" type="scannerFlickerIntervalType" use="required" />
+    <xs:attribute name="scanningColor" type="colorType" use="required" />
+    <xs:attribute name="gridColor" type="colorType" use="required" />
+    <xs:attribute name="contactColor" type="colorType" use="required" />
+    <xs:attribute name="hostileColor" type="colorType" use="required" />
+    <xs:attribute name="backgroundColor" type="colorType" use="required" />
   </xs:complexType>
 
   <xs:complexType name="threatAlertType">
@@ -462,6 +494,7 @@
       <xs:element name="divider" type="dividerType" />
       <xs:element name="contactRadar" type="contactRadarType" />
       <xs:element name="compassTape" type="compassTapeType" />
+      <xs:element name="scannerOverlay" type="scannerOverlayType" />
       <xs:element name="threatAlert" type="threatAlertType" />
       <xs:element name="statusEffectBar" type="statusEffectBarType" />
       <xs:element name="meter" type="meterType" />

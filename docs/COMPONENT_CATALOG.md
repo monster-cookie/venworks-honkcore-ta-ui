@@ -145,6 +145,7 @@ gamer-facing configuration surface.
 | Warning panel | Complete | Severity color, icon, title, detail, and visibility/state rules. |
 | Item/ammo readout | Future | Weapon/item icon, amount, reserve amount, state color, and optional meter. |
 | Status-effect row | Implemented | Bounded active-effects presentation using verified HUD data; large-HUD acceptance remains pending. |
+| Scanner overlay | Implemented | Scanner-only heading banner, flickering 5-by-5 hash grid, and up to five validated forward contacts. It preserves Bethesda's reticle/crosshair and uses deterministic type/handle codenames instead of names or random data. |
 | Reticle/crosshair | Vanilla-owned; not configurable | Bethesda retains the complete visual and lifecycle owner; proven crosshair data remains condition input only. |
 
 The Goal 7 equipment rail is intentionally passive. Favorites Menu remains the
@@ -496,3 +497,33 @@ either full or reduced health, disproving its text and segmented health meter as
 the triggering rendering path. The faction display, radar, Player Data,
 environmental scanner, equipment rail, and helmet frame remain independently
 instantiated.
+
+## Goal 10 scanner overlay
+
+`scannerOverlay` is a passive, scanner-only HUDMenu component driven by the
+existing tactical-awareness event. Its layout include uses
+`visibleWhen="inScanner"`, whose value is the already established
+`HudCompassData.bIsHandscannerOpen` condition. It neither hides nor replaces
+Bethesda's scanner reticle, crosshair, interaction prompts, or scanner command
+surfaces.
+
+The tactical snapshot projects scanner candidates from `aEnemyMarkers`,
+`aMissionMarkers`, and `aMarkers`. Candidates must have a nonzero finite handle,
+finite nonnegative heading, finite nonnegative `fDistanceToPlayer`, and one of
+the accepted marker types: enemy, companion, parked ship, parked-vehicle
+position, or vehicle. Handles are deduplicated, names are not consumed, and each
+candidate receives a deterministic display-only codename derived from marker
+type and handle.
+
+The component filters that validated set to its configured forward field of
+view, orders contacts by nearest distance with stable handle/type tie breakers,
+and renders at most five rows. Direction is shown relative to the player's
+heading. Distance is deliberately unitless because the provider value has not
+been proven to represent meters or another real-world unit. An empty result is
+shown as `NO VALID CONTACTS`; random or placeholder contacts are prohibited.
+
+The centered production fragment configures a 90-degree field, five contact
+rows, a 140-millisecond bounded flicker interval, and semantic colors for the
+scanner heading, grid, general contacts, hostile contacts, and backing panels.
+The grid owns a stage-scoped `Timer` and no frame listener, input handler,
+persistence, native code, SFSE behavior, or third-party dependency.

@@ -40,7 +40,7 @@ The `Documentation` deck contains:
 
 - `BUILDSYSTEM.md` is the build, Scaleform-domain, and staging contract.
 - `COMPONENT_CATALOG.md` is the technical component and binding catalog.
-- `GOAL_0_DISCOVERY.md` through `GOAL_9_HELMET_COMPASS_THREAT.md` preserve
+- `GOAL_0_DISCOVERY.md` through `GOAL_10_SCANNER_OVERLAY.md` preserve
   discovery, provider evidence, implementation contracts, validation results,
   incidents, limitations, and rollback information.
 - `reference/` contains clean-room behavioral and visual reference material;

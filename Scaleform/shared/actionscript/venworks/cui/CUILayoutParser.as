@@ -420,6 +420,31 @@ package venworks.cui
             this.requireColor(param1,"centerColor");
             this.requireColor(param1,"fallbackColor");
          }
+         else if(type == "scannerOverlay")
+         {
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","fieldOfView","maxTargets","flickerIntervalMs","scanningColor","gridColor","contactColor","hostileColor","backgroundColor"]);
+            this.requirePositiveBounds(param1);
+            this.requireFinite(param1,"fieldOfView");
+            if(Number(param1.@fieldOfView) < 30 || Number(param1.@fieldOfView) > 180)
+            {
+               throw new Error("INVALID|Scanner fieldOfView must be between 30 and 180 degrees: " + String(param1.@id));
+            }
+            this.requirePositiveInteger(param1,"maxTargets");
+            if(int(param1.@maxTargets) > 5)
+            {
+               throw new Error("INVALID|Scanner maxTargets cannot exceed 5: " + String(param1.@id));
+            }
+            this.requirePositiveInteger(param1,"flickerIntervalMs");
+            if(int(param1.@flickerIntervalMs) < 50 || int(param1.@flickerIntervalMs) > 2000)
+            {
+               throw new Error("INVALID|Scanner flickerIntervalMs must be between 50 and 2000: " + String(param1.@id));
+            }
+            this.requireColor(param1,"scanningColor");
+            this.requireColor(param1,"gridColor");
+            this.requireColor(param1,"contactColor");
+            this.requireColor(param1,"hostileColor");
+            this.requireColor(param1,"backgroundColor");
+         }
          else if(type == "threatAlert")
          {
             this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","backgroundColor","clearColor","cautionColor","dangerColor","criticalColor"]);
