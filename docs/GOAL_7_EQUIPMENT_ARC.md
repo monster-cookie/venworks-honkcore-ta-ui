@@ -1,5 +1,10 @@
 # Goal 7 equipment rail
 
+> **Historical implementation evidence:** Current product intent, scope,
+> delivery state, and acceptance are maintained in the Codecks `Documentation`
+> and `Features` decks. The equipment-contact contracts and runtime evidence
+> below remain authoritative until deliberately superseded.
+
 **Status: Normal-view alignment follow-up visually accepted on 2026-08-17.**
 The production equipment rail was previously accepted in the available
 keyboard/mouse test environment on 2026-08-15. The large HUD variant retains

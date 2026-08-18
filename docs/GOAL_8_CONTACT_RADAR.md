@@ -1,5 +1,10 @@
 # Goal 8 upper-left contact radar
 
+> **Historical implementation evidence:** Current product intent, scope,
+> delivery state, and acceptance are maintained in the Codecks `Documentation`
+> and `Features` decks. The radar provider contracts, incidents, and runtime
+> evidence below remain authoritative until deliberately superseded.
+
 **Status: Goal 8B production implementation awaiting runtime acceptance.** Goal
 7 is complete and is not reopened by this work.
 

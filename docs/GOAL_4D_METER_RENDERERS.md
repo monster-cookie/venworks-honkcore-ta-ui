@@ -1,5 +1,10 @@
 # Goal 4D Meter Renderers
 
+> **Historical implementation evidence:** Current product intent, scope,
+> delivery state, and acceptance are maintained in the Codecks `Documentation`
+> and `Features` decks. The renderer contracts and validation evidence below
+> remain authoritative until deliberately superseded.
+
 ## Scope
 
 Goal 4D completes the fixed-data meter renderer library used by later player

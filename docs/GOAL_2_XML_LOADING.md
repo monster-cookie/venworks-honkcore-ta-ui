@@ -1,5 +1,10 @@
 # Goal 2 External XML Loading Report
 
+> **Historical implementation evidence:** Current product intent, scope,
+> delivery state, and acceptance are maintained in the Codecks `Documentation`
+> and `Features` decks. The XML-loading contract and validation evidence below
+> remain authoritative until deliberately superseded.
+
 Date: 2026-08-06
 
 ## Outcome

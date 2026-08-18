@@ -1,5 +1,10 @@
 # Goal 6 environmental hazard scanner
 
+> **Historical implementation evidence:** Current product intent, scope,
+> delivery state, and acceptance are maintained in the Codecks `Documentation`
+> and `Features` decks. The provider contracts, hazard model, and runtime
+> evidence below remain authoritative until deliberately superseded.
+
 **Status: The environmental hazard scanner, Planet Data presentation, Player
 Data presentation, deterministic display serial, and shared O2/CO2 behavior
 are runtime accepted. The root layout now owns a unified upper and lower helmet

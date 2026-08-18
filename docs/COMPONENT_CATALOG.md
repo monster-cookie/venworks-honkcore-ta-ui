@@ -1,5 +1,9 @@
 # Venworks CUI Component Catalog
 
+> **Technical authority:** This catalog owns implemented component contracts,
+> bindings, and safety rules. Product coverage, design intent, UI-state
+> behavior, and acceptance are maintained in the Codecks `Documentation` deck.
+
 Date: 2026-08-06
 
 ## Purpose and evidence boundary

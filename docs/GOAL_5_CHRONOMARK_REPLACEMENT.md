@@ -1,5 +1,10 @@
 # Goal 5 Chronomark replacement
 
+> **Historical implementation evidence:** Current product intent, scope,
+> delivery state, and acceptance are maintained in the Codecks `Documentation`
+> and `Features` decks. The provider contracts, implementation map, and runtime
+> evidence below remain authoritative until deliberately superseded.
+
 **Status: Complete.** Runtime acceptance is complete for the available
 keyboard/mouse test environment. Controller glyph presentation remains a
 non-blocking verification limitation because no controller was available; the

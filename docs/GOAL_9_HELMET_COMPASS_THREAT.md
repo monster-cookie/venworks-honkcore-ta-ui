@@ -1,5 +1,10 @@
 # Goal 9 helmet compass, threat alert, and active effects
 
+> **Historical implementation evidence:** Current product intent, scope,
+> delivery state, and acceptance are maintained in the Codecks `Documentation`
+> and `Features` decks. The compass, threat, effect, and provider contracts
+> below remain authoritative until deliberately superseded.
+
 **Status: Normal-view layout visually accepted on 2026-08-17; final
 combat/proximity threat escalation built and staged, with runtime behavior and
 large-variant visual acceptance pending.**

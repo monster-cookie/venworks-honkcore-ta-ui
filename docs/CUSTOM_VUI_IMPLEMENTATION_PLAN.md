@@ -1,5 +1,11 @@
 # Venworks Customizable UI Implementation Plan
 
+> **Archived planning baseline:** This document preserves the original phased
+> implementation roadmap. Current product intent, scope, UI behavior, design
+> decisions, and acceptance criteria are maintained in the Codecks
+> `Documentation` deck. Repository Goal reports remain authoritative for their
+> technical contracts and runtime evidence, not current delivery priority.
+
 ## Purpose
 
 Build a clean-room, configuration-driven Starfield UI replacement based only on

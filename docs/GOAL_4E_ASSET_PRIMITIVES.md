@@ -1,5 +1,10 @@
 # Goal 4E Asset and Vector Primitives
 
+> **Historical implementation evidence:** Current product intent, scope,
+> delivery state, and acceptance are maintained in the Codecks `Documentation`
+> and `Features` decks. The asset contracts and validation evidence below
+> remain authoritative until deliberately superseded.
+
 ## Scope
 
 Goal 4E provides restricted loose SVG assets, authored SVG path geometry,

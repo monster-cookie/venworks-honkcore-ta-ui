@@ -1,5 +1,10 @@
 # Goal 4C Conditions and Vanilla Visibility Adapters
 
+> **Historical implementation evidence:** Current product intent, scope,
+> delivery state, and acceptance are maintained in the Codecks `Documentation`
+> and `Features` decks. The condition and visibility-adapter contracts below
+> remain authoritative until deliberately superseded.
+
 ## Scope
 
 Goal 4C adds a bounded, configuration-only visibility expression language to
