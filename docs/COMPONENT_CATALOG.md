@@ -104,7 +104,7 @@ or an external whole-component mask.
 | Bipolar/center-origin bar | Future | Signed values or opposing states where the neutral point is centered. |
 
 The reusable meter family is expected to cover at least these visible surfaces:
-player health, oxygen, CO2, boost, stealth/detection, experience or
+player health, oxygen, CO2, boost, experience or
 progress, ship hull, ship shields, ship boost, individual weapon groups, and
 power-allocation levels. Each surface still requires an independently verified
 vanilla owner and provider contract.
@@ -142,7 +142,7 @@ gamer-facing configuration surface.
 | Warning panel | Future | Severity color, icon, title, detail, and visibility/state rules. |
 | Item/ammo readout | Future | Weapon/item icon, amount, reserve amount, state color, and optional meter. |
 | Status-effect row | Research | Bounded list of icons, labels, timers/stacks, and severity states using only available vanilla data. |
-| Reticle/crosshair | Research | Vector/symbol parts, spread/state transitions, hit feedback, and weapon-specific visibility. |
+| Reticle/crosshair | Vanilla-owned; not configurable | Bethesda retains the complete visual and lifecycle owner; proven crosshair data remains condition input only. |
 
 The Goal 7 equipment rail is intentionally passive. Favorites Menu remains the
 only owner of favorite assignment and input. Contacts 1-12 preserve the latest
@@ -162,7 +162,8 @@ grenade/mine highlighting is unsupported rather than heuristically inferred.
 - compass, quest markers, and location information;
 - enemy health and legendary/state indicators remain exclusively vanilla-owned
   and are not CUI coverage targets;
-- stealth/detection, hit indicators, and reticles;
+- stealth/detection, hit indicators, and reticles remain exclusively
+  vanilla-owned and are not CUI coverage targets;
 - scanner overlays and interaction prompts;
 - notifications, warnings, mission updates, and status effects;
 - quick-access or ability buttons where supported by vanilla providers.
@@ -170,8 +171,16 @@ grenade/mine highlighting is unsupported rather than heuristically inferred.
 The generic meter primitives do not authorize replacing Bethesda's enemy health
 or legendary/state presentation. HONKCORE demonstrated that customizing those
 surfaces can break legendary enemy hit bars, so the complete vanilla owner and
-its lifecycle remain untouched. This exclusion does not apply to the player
-threat meter, player status effects, ordinary hit indicators, or reticles.
+its lifecycle remain untouched.
+
+Stealth/detection presentation, hit/kill/damage indicators, weapon reticles,
+and crosshairs also remain exclusively vanilla-owned. Changing these
+engine-controlled surfaces can cause lifecycle problems; although crosshair
+switching may be technically safe, the vanilla presentation is adequate and a
+custom replacement provides no meaningful benefit. Proven crosshair, sneaking,
+and combat fields remain available as read-only condition inputs for the player
+threat meter and approved layout choreography. The player threat meter and
+player status effects remain approved custom surfaces.
 
 ## Ship UI coverage targets
 

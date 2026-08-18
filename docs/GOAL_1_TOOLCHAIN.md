@@ -117,8 +117,8 @@ mod. Test both normal and large UI selection where possible.
 2. Confirm the HUD loads without a missing-menu, freeze, or input failure.
 3. Load any save; no boost pack or gameplay action is required.
 4. Confirm `VENWORKS CUI TEST` remains visible in yellow at bottom-center.
-5. Confirm health, oxygen/CO2, weapon/ammunition, crosshair, compass, enemy
-   health, scanner, and notifications still update.
+5. Confirm health, oxygen/CO2, weapon/ammunition, the vanilla crosshair,
+   compass, vanilla enemy health, scanner, and notifications still update.
 6. Test first person, third person, scanner open/close, save load, death/reload,
    ladder use, workbench entry/exit, and ship entry/exit.
 7. Report which UI size variant was active and any log or visual anomaly.

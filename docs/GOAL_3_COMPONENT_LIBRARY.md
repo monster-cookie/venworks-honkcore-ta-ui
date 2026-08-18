@@ -129,8 +129,9 @@ restart Starfield between configuration cases.
 6. For the missing case, disable deployment or rename `layout.xml` only after
    Vortex deployment is complete, then restart and expect `CUI LAYOUT MISSING`.
 7. Restore the staged gallery and confirm a clean valid load again.
-8. Exercise health, oxygen/CO2, weapon/ammunition, compass, crosshair,
-   notifications, scanner, first/third person, save load, and ship transitions.
+8. Exercise health, oxygen/CO2, weapon/ammunition, compass, the vanilla
+   crosshair, notifications, scanner, first/third person, save load, and ship
+   transitions.
 9. Test both the normal and large UI selection where possible.
 
 ## Acceptance rule
