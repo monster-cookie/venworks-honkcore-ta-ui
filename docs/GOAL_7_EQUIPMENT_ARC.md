@@ -1,9 +1,10 @@
 # Goal 7 equipment rail
 
-**Status: Alignment follow-up built and staged on 2026-08-17; runtime visual
-confirmation of the follow-up remains pending.** The production equipment rail
-was previously accepted in the available keyboard/mouse test environment on
-2026-08-15. The temporary full-screen FavoritesData diagnostic and the retired
+**Status: Normal-view alignment follow-up visually accepted on 2026-08-17.**
+The production equipment rail was previously accepted in the available
+keyboard/mouse test environment on 2026-08-15. The large HUD variant retains
+the same build-validated logical geometry but has not been separately accepted
+in engine. The temporary full-screen FavoritesData diagnostic and the retired
 standalone weapon panel are not present in the production layout or staging
 payloads. Bethesda's control-map path structurally retains
 controller/remapping presentation, but a controller was not separately
@@ -189,9 +190,10 @@ byte-identical equipment templates across VWKS, CF, FC, and TA:
 
 On 2026-08-15, the user deployed the exact artifact set recorded above and
 accepted the final runtime presentation as functional. The supplied final
-runtime evidence confirms the following closeout results. The later
-2026-08-17 live-contact alignment follow-up still requires visual confirmation
-in game:
+runtime evidence confirms the following closeout results. A supplied
+2026-08-17 normal-view screenshot additionally confirms that the later
+live-contact alignment follow-up gives contacts 13-15 matching left and right
+edges and identical panel sizes:
 
 1. the full-screen diagnostic is absent from the production HUD;
 2. the tightly fitted transparent ribbon lands on the physical right edge,

@@ -6,6 +6,9 @@ package venworks.cui
       private static const MAX_THREAT_MARKERS:int = 64;
       private static const MAX_STATUS_EFFECTS:int = 64;
       private static const AWARENESS_DISTANCE:Number = 300;
+      private static const CRITICAL_HOSTILE_DISTANCE:Number = 25;
+      private static const SEVERE_HOSTILE_DISTANCE:Number = 50;
+      private static const SEVERE_HOSTILE_SCORE:Number = 90;
       private static const MIT_MARKER_HAZARD:uint = 12;
       private static const HOSTILE_MAX:Number = 35;
       private static const PHYSICAL_HAZARD_MAX:Number = 15;
@@ -18,6 +21,7 @@ package venworks.cui
       private var exposureActive:Array;
       private var exposureLevels:Array;
       private var environmentCritical:Boolean;
+      private var inCombat:Boolean;
       private var snapshotValue:Object;
 
       public function CUITacticalAwarenessModel()
@@ -59,15 +63,28 @@ package venworks.cui
          snapshotValue = this.createSnapshot();
       }
 
+      public function updateCombatState(param1:Boolean) : Boolean
+      {
+         if(inCombat == param1)
+         {
+            return false;
+         }
+         inCombat = param1;
+         snapshotValue = this.createSnapshot();
+         return true;
+      }
+
       private function createSnapshot() : Object
       {
          var markers:Array = this.collectCompassMarkers();
          var statuses:Array = this.collectStatusEffects();
+         var enemyMarkers:Array = compassData == null ? null : compassData.aEnemyMarkers as Array;
          var hostilePressure:Number = this.calculateNearbyPressure(
-            compassData == null ? null : compassData.aEnemyMarkers as Array,
+            enemyMarkers,
             5,
             0
          );
+         var nearestHostileDistance:Number = this.findNearestHostileDistance(enemyMarkers);
          var physicalHazardPressure:Number = this.calculateNearbyPressure(
             compassData == null ? null : compassData.aMarkers as Array,
             3,
@@ -82,6 +99,14 @@ package venworks.cui
          var environmentScore:Number = environmentPressure * ENVIRONMENT_MAX;
          var score:Number = Math.max(0,Math.min(100,
             hostileScore + physicalHazardScore + debuffScore + environmentScore));
+         if(inCombat || nearestHostileDistance < CRITICAL_HOSTILE_DISTANCE)
+         {
+            score = 100;
+         }
+         else if(nearestHostileDistance < SEVERE_HOSTILE_DISTANCE)
+         {
+            score = Math.max(score,SEVERE_HOSTILE_SCORE);
+         }
          var direction:Number = compassData == null ? 0 : Number(compassData.fDirection);
          if(!this.isFiniteNumber(direction))
          {
@@ -280,6 +305,29 @@ package venworks.cui
          }
          return Math.max(0,Math.min(1,
             0.6 * Math.min(count / param2,1) + 0.4 * (1 - nearest / AWARENESS_DISTANCE)));
+      }
+
+      private function findNearestHostileDistance(param1:Array) : Number
+      {
+         var marker:Object = null;
+         var handle:Number = NaN;
+         var distance:Number = NaN;
+         var nearest:Number = SEVERE_HOSTILE_DISTANCE;
+         var index:int = 0;
+         var limit:int = param1 == null ? 0 : Math.min(param1.length,MAX_THREAT_MARKERS);
+         while(index < limit)
+         {
+            marker = param1[index];
+            handle = marker == null ? 0 : Number(marker.uiHandle);
+            distance = marker == null ? NaN : Number(marker.fDistanceToPlayer);
+            if(marker != null && this.isFiniteNumber(handle) && handle != 0 &&
+               this.isFiniteNumber(distance) && distance >= 0 && distance < nearest)
+            {
+               nearest = distance;
+            }
+            ++index;
+         }
+         return nearest;
       }
 
       private function calculateEnvironmentPressure() : Number

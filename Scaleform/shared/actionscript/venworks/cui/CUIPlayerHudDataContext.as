@@ -207,6 +207,14 @@ package venworks.cui
          return tacticalAwareness.snapshot;
       }
 
+      public function updateCombatState(param1:Boolean) : void
+      {
+         if(tacticalAwareness.updateCombatState(param1))
+         {
+            dispatchEvent(new Event(TACTICAL_AWARENESS_CHANGE));
+         }
+      }
+
       public function getValue(param1:String) : Object
       {
          var source:String = normalizeSource(param1);

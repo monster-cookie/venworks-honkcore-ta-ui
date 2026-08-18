@@ -1,8 +1,8 @@
 # Goal 9 helmet compass, threat alert, and active effects
 
-**Status: Corrected top-edge layout and fixed threat centering built and staged
-on 2026-08-17; in-engine visual acceptance of the latest correction remains
-pending.**
+**Status: Normal-view layout visually accepted on 2026-08-17; final
+combat/proximity threat escalation built and staged, with runtime behavior and
+large-variant visual acceptance pending.**
 
 Goal 9 fills the upper helmet cutout with three compact, live HUD surfaces:
 
@@ -25,6 +25,10 @@ Goal 8 established the production `HudCompassData` contract. Goal 9 consumes:
   location, and subcategory fields; and
 - `EnvironmentEffectsData.aEnvironmentEffects` for environmental compass
   markers and active environmental pressure.
+
+The existing condition context also consumes `HUDStealthData.bIsInCombat`.
+Goal 9 reuses that single proven subscription for combat escalation rather
+than introducing a second provider owner.
 
 Goal 9 also consumes `PersonalEffectsData.aPersonalEffects` as the live,
 persistent personal-effect set. Runtime probing established these relevant
@@ -95,8 +99,9 @@ only hostile and physical-hazard pressure, not compass marker presentation.
 
 ## Threat alert
 
-The alert is a bounded `0-100%` score. Four independent components contribute
-the following maximum weights:
+The alert is a bounded `0-100%` score. Combat and immediate hostile proximity
+take precedence. When neither override applies, four independent components
+contribute the following maximum weights:
 
 | Input | Maximum contribution |
 | --- | ---: |
@@ -104,6 +109,23 @@ the following maximum weights:
 | Nearby physical hazards | 15% |
 | Active personal debuffs | 35% |
 | Active environmental hazards | 15% |
+
+### Combat and immediate-proximity escalation
+
+The final score applies these rules in order:
+
+1. `HUDStealthData.bIsInCombat == true` forces `100% CRITICAL`, regardless of
+   distance, so ranged combat is represented.
+2. Otherwise, the nearest valid acquired enemy below 25 units forces
+   `100% CRITICAL`.
+3. Otherwise, the nearest valid acquired enemy below 50 units floors the
+   weighted score at `90% CRITICAL` without lowering a score already above 90.
+4. Otherwise, the normal weighted calculation is used.
+
+The boundaries are strict: exactly 25 units enters the 90-percent tier and
+exactly 50 units uses the weighted calculation. Proximity considers at most 64
+`aEnemyMarkers` entries and rejects null markers, zero/invalid handles,
+non-finite distances, and negative distances.
 
 ### Nearby-marker pressure
 
@@ -221,6 +243,10 @@ movies:
 - imported and reopened all 210 scripts;
 - contained all 43 authored Venworks classes in one application domain;
 - passed the production Goal 9 source and renderer assertions;
+- retained the single `HUDStealthData` owner and startup/change combat-state
+  synchronization after reopen;
+- retained the strict 25/50-unit proximity thresholds, 90-percent floor, and
+  100-percent combat/critical override after reopen;
 - retained a fixed-width, non-auto-sized, centered threat field after reopen;
 - schema-validated the new fragment and root layout;
 - rejected the removed diagnostic subscriptions and fragment;
@@ -229,8 +255,8 @@ movies:
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 438999 | `025D392E58FAC703BC238545F6D2CCC5506CE74F31A77BB71698225B18709BC5` |
-| `hudmenu_lrg.gfx` | 439182 | `2D410257F284CE5AF72C5D3F9D8257F8B326620341889B3635FC80073C56A75B` |
+| `hudmenu.gfx` | 440141 | `7BD4A238117C1336ABE71731DB0A3D4BC39C8721B41C37C0975674A1519B551C` |
+| `hudmenu_lrg.gfx` | 440324 | `F6D87B6600C9380CF9914EC6184C46AE6B479B3A32B9E3E623941FAC8EB5BE92` |
 
 The authored ABC seed was regenerated with the retained JPEXS seed generator
 and passed the build's import, single-domain, class-count, and reopen checks.
@@ -244,6 +270,16 @@ staged byte-identical `hudmenu.gfx`,
 `hudmenu_lrg.gfx`, `layout.xml`, assets, and component fragments across the
 VWKS, CF, FC, and TA module templates.
 
+## Normal-view runtime acceptance
+
+The supplied 2026-08-17 normal-view evidence confirms that the compass works
+in its final top-edge position, the threat text is centered in the recessed
+panel, the status icons retain their accepted placement, and equipment slots
+13-15 have matching bounds. That evidence exposed the former 34-percent score
+during active close combat and directly motivated the final escalation rules
+above. The new combat/proximity behavior itself still requires runtime
+exercise.
+
 ## In-engine acceptance checklist
 
 Build validation cannot prove Bethesda runtime provider behavior or final
@@ -253,25 +289,29 @@ helmet fit. Test both normal and large HUD variants in gameplay:
    labels wrap across north, and ticks move smoothly.
 2. Confirm quest, location, NPC, enemy, ship, vehicle, and environmental
    markers appear when their corresponding Watch markers would appear.
-3. Confirm the threat score and state remain horizontally centered for
-   `CLEAR`, `CAUTION`, `DANGER`, and `CRITICAL`.
-4. Confirm compass markers supplied beyond 200 units remain eligible while the
+3. Enter ranged combat beyond 100 units and confirm `bIsInCombat` raises the
+   score to `100% CRITICAL`, then verify leaving combat releases the override.
+4. Outside combat, cross from exactly 50 to below 50 units from an acquired
+   enemy and confirm the score gains a 90-percent floor only below 50.
+5. Outside combat, cross from exactly 25 to below 25 units and confirm the
+   score changes from the 90-percent tier to `100% CRITICAL` only below 25.
+6. Confirm compass markers supplied beyond 200 units remain eligible while the
    contact radar continues to reject contacts beyond its 200-unit range.
-5. Approach and leave enemies; verify the hostile portion raises and clears
+7. Approach and leave enemies; verify the hostile portion raises and clears
    the score without stale contacts.
-6. Approach a physical hazard marker and verify its contribution remains
+8. Approach a physical hazard marker and verify its contribution remains
    bounded independently from hostiles.
-7. Enter and leave each available environmental hazard; confirm active
+9. Enter and leave each available environmental hazard; confirm active
    exposure raises the score and clear conditions remove it.
-8. With Dislocated Limb active, confirm `AFFLICTION` appears before sustenance
+10. With Dislocated Limb active, confirm `AFFLICTION` appears before sustenance
    entries and materially raises threat.
-9. Confirm `FED` and `HYDRATED` appear in the status bar but do not raise the
+11. Confirm `FED` and `HYDRATED` appear in the status bar but do not raise the
    score.
-10. Add enough persistent effects to wrap into the second row and verify the
+12. Add enough persistent effects to wrap into the second row and verify the
    HUD remains inside the 720 by 56 region.
-11. Compare normal and large HUD placement at the supported resolutions and
+13. Compare normal and large HUD placement at the supported resolutions and
    check for clipping against the helmet cutout.
-12. Save/load or change cells with live effects and contacts; verify no stale
+14. Save/load or change cells with live effects and contacts; verify no stale
     marker or status entries survive provider updates.
 
 If a case cannot be constructed without waiting for Survival-mode recovery,
@@ -289,6 +329,9 @@ record that case as not exercised rather than treating it as passed.
 - Marker type `12` is the established physical-hazard classification used by
   this first production pass and should be revisited only if runtime evidence
   proves additional hazard types.
+- Bethesda's `bIsInCombat` is broader than a direct damage event, so the
+  intended 100-percent override remains active for as long as the engine
+  reports combat, including ranged or temporarily obstructed engagements.
 
 ## Rollback
 
