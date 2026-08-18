@@ -1,13 +1,13 @@
 # Goal 7 equipment rail
 
-**Status: Complete.** The production equipment rail is implemented, built, and
-staged in all four variants. Runtime visual and behavior acceptance completed
-on 2026-08-15 in the available keyboard/mouse test environment. The temporary
-full-screen FavoritesData diagnostic and the retired standalone weapon panel
-are not present in the production layout or staging payloads. Bethesda's
-control-map path structurally retains controller/remapping presentation, but a
-controller was not separately exercised and is a non-blocking verification
-limitation.
+**Status: Alignment follow-up built and staged on 2026-08-17; runtime visual
+confirmation of the follow-up remains pending.** The production equipment rail
+was previously accepted in the available keyboard/mouse test environment on
+2026-08-15. The temporary full-screen FavoritesData diagnostic and the retired
+standalone weapon panel are not present in the production layout or staging
+payloads. Bethesda's control-map path structurally retains
+controller/remapping presentation, but a controller was not separately
+exercised and is a non-blocking verification limitation.
 
 ## Product direction
 
@@ -44,6 +44,12 @@ and item name on the first line, then authoritative ammunition or stack count
 on the second line. The live contacts use strong gold outlines and deliberately
 have no fake `13`, `14`, or `15` key labels because they describe independently
 equipped state rather than favorite inputs.
+
+The 2026-08-17 alignment follow-up gives contacts 13, 14, and 15 identical
+`290 x 62` panels at `x=410`. They are stacked contiguously at `y=252`,
+`y=314`, and `y=376`, preserving the established live-contact block height and
+every downstream favorite position. The throwable and power contents are
+re-centered within the corrected panels.
 
 The contacts are status displays, not buttons. They do not handle input,
 replace Favorites Menu ownership, or imply that the player can activate a
@@ -169,11 +175,23 @@ byte-identical payload hashes across VWKS, CF, FC, and TA staging.
 | `components/player-status-scanner.xml` | 8643 | `031D4BD34954325A6ADE5A19293EFA831A36C420FF14115F133C82138659876D` |
 | `components/environmental-hazard-scanner.xml` | 9411 | `B13E5559452491AB62F0F05990F2553BAFA91BA589E3D103BAC31FF260B10526` |
 
+### 2026-08-17 live-contact alignment follow-up
+
+The complete normal/large Scaleform build accepted the exact aligned panel
+geometry and unchanged downstream favorite coordinates. It then staged
+byte-identical equipment templates across VWKS, CF, FC, and TA:
+
+| Artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `components/equipment-rail.xml` | 29221 | `A862E924E1137E86943F19DA8DE3453BA1BB737477BBFA3C7ADB519DAF510CDB` |
+
 ## Runtime acceptance
 
 On 2026-08-15, the user deployed the exact artifact set recorded above and
 accepted the final runtime presentation as functional. The supplied final
-runtime evidence confirms the following closeout results:
+runtime evidence confirms the following closeout results. The later
+2026-08-17 live-contact alignment follow-up still requires visual confirmation
+in game:
 
 1. the full-screen diagnostic is absent from the production HUD;
 2. the tightly fitted transparent ribbon lands on the physical right edge,

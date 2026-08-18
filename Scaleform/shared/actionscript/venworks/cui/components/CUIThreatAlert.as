@@ -2,6 +2,7 @@ package venworks.cui.components
 {
    import flash.display.Shape;
    import flash.text.TextField;
+   import flash.text.TextFieldAutoSize;
    import flash.text.TextFormat;
    import venworks.cui.CUITextFieldHost;
 
@@ -34,7 +35,6 @@ package venworks.cui.components
          var score:Number = param1 == null ? 0 : Number(param1.threatScore);
          var color:uint = clearColor;
          var state:String = "CLEAR";
-         var format:TextFormat = null;
          if(isNaN(score) || !isFinite(score))
          {
             score = 0;
@@ -60,10 +60,7 @@ package venworks.cui.components
          accent.graphics.drawRect(0,componentHeight - 3,componentWidth * score / 100,3);
          accent.graphics.endFill();
          label.text = "THREAT " + int(score).toString() + "%  " + state;
-         format = label.defaultTextFormat;
-         format.color = color;
-         label.defaultTextFormat = format;
-         label.setTextFormat(format);
+         this.formatLabel(color);
       }
 
       private function createDisplay() : void
@@ -78,17 +75,27 @@ package venworks.cui.components
          addChild(accent);
          labelHost = new CUITextFieldHost();
          label = labelHost.field;
-         label.width = componentWidth;
-         label.height = componentHeight - 2;
          label.selectable = false;
          label.mouseEnabled = false;
+         this.formatLabel(clearColor);
+         addChild(labelHost);
+      }
+
+      private function formatLabel(param1:uint) : void
+      {
+         var format:TextFormat = null;
+         label.autoSize = TextFieldAutoSize.NONE;
+         label.width = componentWidth;
+         label.height = componentHeight - 2;
+         label.multiline = false;
+         label.wordWrap = false;
          format = label.defaultTextFormat;
          format.size = 10;
-         format.color = clearColor;
+         format.color = param1;
          format.bold = true;
          format.align = "center";
          label.defaultTextFormat = format;
-         addChild(labelHost);
+         label.setTextFormat(format);
       }
    }
 }

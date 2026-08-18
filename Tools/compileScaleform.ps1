@@ -1218,8 +1218,13 @@ try {
         $reopenedCompassTapeSource -notmatch 'HEADING_LABELS\s*:\s*Array\s*=\s*\["N","NE","E","SE","S","SW","W","NW"\]' -or
         $reopenedStatusEffectBarSource -notmatch 'getDefinitionByName\("PersonalEffectsWidget"\)' -or
         $reopenedStatusEffectBarSource -notmatch 'HARD_MAX_ITEMS\s*:\s*int\s*=\s*COLUMN_COUNT\s*\*\s*ROW_COUNT' -or
-        $reopenedThreatAlertSource -notmatch '"THREAT "\s*\+\s*int\(score\)\.toString\(\)\s*\+\s*"%') {
-      throw 'Generated Goal 9 renderers do not retain the Watch icon reuse, eight-way heading tape, two-row bounded status display, and percentage threat presentation.'
+        $reopenedThreatAlertSource -notmatch '"THREAT "\s*\+\s*int\(score\)\.toString\(\)\s*\+\s*"%' -or
+        $reopenedThreatAlertSource -notmatch 'label\.autoSize\s*=\s*TextFieldAutoSize\.NONE' -or
+        $reopenedThreatAlertSource -notmatch 'label\.width\s*=\s*componentWidth' -or
+        $reopenedThreatAlertSource -notmatch 'label\.height\s*=\s*componentHeight\s*-\s*2' -or
+        $reopenedThreatAlertSource -notmatch 'format\.align\s*=\s*"center"' -or
+        $reopenedThreatAlertSource -notmatch 'this\.formatLabel\(color\)') {
+      throw 'Generated Goal 9 renderers do not retain the Watch icon reuse, eight-way heading tape, two-row bounded status display, fixed centered threat field, and percentage threat presentation.'
     }
     if ($reopenedPlayerHudDataContextSource -match 'Subscribe\("PersonalAlertsData"|Subscribe\("PlayerStatusData"' -or
         $reopenedPlayerHudDataContextSource -notmatch 'Subscribe\("PersonalEffectsData",this\.onPersonalEffectsData\)') {
@@ -1541,6 +1546,31 @@ try {
     [double]$_.strokeOpacity -lt 0.8 -or
     [double]$_.strokeWidth -lt 2
   })
+  $expectedLiveContactGeometry = @(
+    [pscustomobject]@{ ContactId = '13'; PanelY = 252; IconX = 420; IconY = 266; NameX = 462; NameY = 256 },
+    [pscustomobject]@{ ContactId = '14'; PanelY = 314; IconX = 427; IconY = 333; NameX = 461; NameY = 326 },
+    [pscustomobject]@{ ContactId = '15'; PanelY = 376; IconX = 427; IconY = 395; NameX = 461; NameY = 388 }
+  )
+  $liveContactGeometryFailures = @($expectedLiveContactGeometry | ForEach-Object {
+    $geometry = $_
+    $panelNode = $stagedEquipmentRailGroup.SelectSingleNode("panel[@id='contact.$($geometry.ContactId).panel']")
+    $iconNode = $stagedEquipmentRailGroup.SelectSingleNode("*[@id='contact.$($geometry.ContactId).icon']")
+    $nameNode = $stagedEquipmentRailGroup.SelectSingleNode("text[@id='contact.$($geometry.ContactId).name']")
+    if ($null -eq $panelNode -or
+        $null -eq $iconNode -or
+        $null -eq $nameNode -or
+        [int]$panelNode.x -ne 410 -or
+        [int]$panelNode.y -ne $geometry.PanelY -or
+        [int]$panelNode.width -ne 290 -or
+        [int]$panelNode.height -ne 62 -or
+        [int]$iconNode.x -ne $geometry.IconX -or
+        [int]$iconNode.y -ne $geometry.IconY -or
+        [int]$nameNode.x -ne $geometry.NameX -or
+        [int]$nameNode.y -ne $geometry.NameY) {
+      $geometry.ContactId
+    }
+  })
+  $liveThrowableCount = $stagedEquipmentRailGroup.SelectSingleNode("text[@id='contact.14.count']")
   $equipmentOutOfBoundsNodes = @($stagedEquipmentRailGroup.ChildNodes | Where-Object {
     $_.HasAttribute('id') -and
     $_.GetAttribute('id') -match '^(contact\.|vehicle\.)' -and
@@ -1648,6 +1678,10 @@ try {
       $retiredEquipmentRibbonPaths.Count -ne 0 -or
       $liveContactPanels.Count -ne 3 -or
       $liveContactOutlineFailures.Count -ne 0 -or
+      $liveContactGeometryFailures.Count -ne 0 -or
+      $null -eq $liveThrowableCount -or
+      [int]$liveThrowableCount.x -ne 637 -or
+      [int]$liveThrowableCount.y -ne 326 -or
       $equipmentOutOfBoundsNodes.Count -ne 0 -or
       $favoriteTwoLineFailures.Count -ne 0 -or
       $favoriteGeometryFailures.Count -ne 0 -or
@@ -1671,7 +1705,7 @@ try {
       $stagedEquipmentRailText -match 'uStartingSelection|diagnostic\.' -or
       $stagedEquipmentRailText -match 'value="(ITEM|POWER|COUNT\s*)"' -or
       $stagedEquipmentRailText -match 'id="rail\.panel"|id="contact\.14\.(none|grenade|mine)"') {
-    throw 'Goal 7 must stage one compact transparent passive ribbon at the physical right edge, use a bottom-only return aligned to Planet Data, contain the live contacts over its middle fill, remain ordered 1-5, weapon, throwable, power, 6-12 with mirrored uniformly stepped 20-unit two-line remapping-aware favorites, magenta chevron active markers, gold live-contact outlines, compact authoritative counts, and contain no vehicle prompt, cyan guide, opaque rail panel, diagnostic, or input behavior.'
+    throw 'Goal 7 must stage one compact transparent passive ribbon at the physical right edge, use a bottom-only return aligned to Planet Data, contain three identically sized and aligned live-contact panels over its middle fill, remain ordered 1-5, weapon, throwable, power, 6-12 with mirrored uniformly stepped 20-unit two-line remapping-aware favorites, magenta chevron active markers, gold live-contact outlines, compact authoritative counts, and contain no vehicle prompt, cyan guide, opaque rail panel, diagnostic, or input behavior.'
   }
   $expectedHelmetLowerFrameFillPath = 'M 0 0 L 33 32 L 157 32 Q 169 32 169 44 L 169 52 Q 169 62 181 62 L 219 62 Q 231 62 231 52 L 231 44 Q 231 32 243 32 L 377 32 Q 385 32 385 40 L 385 237 C 399 237 407 243 417 253 Q 425 261 439 261 L 1481 261 Q 1495 261 1503 253 C 1513 243 1521 237 1535 237 L 1535 40 Q 1535 32 1543 32 L 1643 32 Q 1655 32 1655 44 L 1655 52 Q 1655 62 1667 62 L 1771 62 Q 1783 62 1783 52 L 1783 44 Q 1783 32 1795 32 L 1887 32 L 1920 0 L 1920 293 L 0 293 Z'
   $expectedHelmetUpperFrameFillPath = 'M 0 0 L 1920 0 L 1920 70 Q 1680 76 1450 92 L 1260 106 Q 1228 108 1204 118 Q 1190 126 1170 126 L 750 126 Q 730 126 716 118 Q 692 108 660 106 L 470 92 Q 240 76 0 70 Z'

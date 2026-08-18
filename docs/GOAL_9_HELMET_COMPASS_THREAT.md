@@ -1,7 +1,8 @@
 # Goal 9 helmet compass, threat alert, and active effects
 
-**Status: Corrected top-edge layout and normal/large Scaleform build validated
-on 2026-08-17; in-engine runtime and visual acceptance remain pending.**
+**Status: Corrected top-edge layout and fixed threat centering built and staged
+on 2026-08-17; in-engine visual acceptance of the latest correction remains
+pending.**
 
 Goal 9 fills the upper helmet cutout with three compact, live HUD surfaces:
 
@@ -85,6 +86,13 @@ location, elevation, and subcategory state. General compass markers are merged
 with environmental-effect markers and deduplicated by handle. A simple vector
 fallback remains available if a Bethesda marker widget cannot be constructed.
 
+The compass renderer does not apply a marker-distance cutoff. The contact
+radar's 200-unit maximum is isolated to `CUIContactRadar`; a compass marker
+supplied by Bethesda remains eligible regardless of distance, subject to the
+48-marker limit, engine-provided visibility/alpha, and the current 120-degree
+heading window. The threat model's separate 300-unit awareness radius affects
+only hostile and physical-hazard pressure, not compass marker presentation.
+
 ## Threat alert
 
 The alert is a bounded `0-100%` score. Four independent components contribute
@@ -155,6 +163,12 @@ The alert includes a thin color-coded fill track. Each input is clamped before
 weighting so malformed or unusually large provider values cannot push the
 total outside `0-100%`.
 
+The hosted threat text field disables automatic sizing, retains the full
+component width, and reapplies centered formatting after every score update.
+This keeps every state string centered within the existing recessed panel
+rather than allowing Bethesda's hosted field defaults to shrink it toward the
+left edge.
+
 ## Active-effects bar
 
 The status region uses one shared wrapped surface rather than dedicated buff
@@ -207,6 +221,7 @@ movies:
 - imported and reopened all 210 scripts;
 - contained all 43 authored Venworks classes in one application domain;
 - passed the production Goal 9 source and renderer assertions;
+- retained a fixed-width, non-auto-sized, centered threat field after reopen;
 - schema-validated the new fragment and root layout;
 - rejected the removed diagnostic subscriptions and fragment;
 - staged the same CUI payload across VWKS, CF, FC, and TA; and
@@ -214,17 +229,18 @@ movies:
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `hudmenu.gfx` | 438840 | `5CE0D0A6130E8F63730B297951C9E379891769A85D0C6402B5BD117F7D395A0C` |
-| `hudmenu_lrg.gfx` | 439023 | `786EB3BAF6DCB5A2507277AEFE395318CC7709756D30FF98611649285146D6D1` |
+| `hudmenu.gfx` | 438999 | `025D392E58FAC703BC238545F6D2CCC5506CE74F31A77BB71698225B18709BC5` |
+| `hudmenu_lrg.gfx` | 439182 | `2D410257F284CE5AF72C5D3F9D8257F8B326620341889B3635FC80073C56A75B` |
 
 The authored ABC seed was regenerated with the retained JPEXS seed generator
 and passed the build's import, single-domain, class-count, and reopen checks.
 
 The corrected fragment passes the layout XSD and direct coordinate invariants:
 the radar ends at logical `x=447`, the compass spans `x=547..1373` at `y=0`,
-the threat alert is centered in the existing recess, and the status bar retains
-its `x=600`, `y=134`, `720 x 56` screen bounds. `Tools/checkRepo.ps1` also
-passes. The complete build staged byte-identical `hudmenu.gfx`,
+the threat component is centered in the existing recess, its text field keeps
+the complete 320-unit width with centered formatting, and the status bar
+retains its `x=600`, `y=134`, `720 x 56` screen bounds. The complete build
+staged byte-identical `hudmenu.gfx`,
 `hudmenu_lrg.gfx`, `layout.xml`, assets, and component fragments across the
 VWKS, CF, FC, and TA module templates.
 
@@ -237,21 +253,25 @@ helmet fit. Test both normal and large HUD variants in gameplay:
    labels wrap across north, and ticks move smoothly.
 2. Confirm quest, location, NPC, enemy, ship, vehicle, and environmental
    markers appear when their corresponding Watch markers would appear.
-3. Approach and leave enemies; verify the hostile portion raises and clears
+3. Confirm the threat score and state remain horizontally centered for
+   `CLEAR`, `CAUTION`, `DANGER`, and `CRITICAL`.
+4. Confirm compass markers supplied beyond 200 units remain eligible while the
+   contact radar continues to reject contacts beyond its 200-unit range.
+5. Approach and leave enemies; verify the hostile portion raises and clears
    the score without stale contacts.
-4. Approach a physical hazard marker and verify its contribution remains
+6. Approach a physical hazard marker and verify its contribution remains
    bounded independently from hostiles.
-5. Enter and leave each available environmental hazard; confirm active
+7. Enter and leave each available environmental hazard; confirm active
    exposure raises the score and clear conditions remove it.
-6. With Dislocated Limb active, confirm `AFFLICTION` appears before sustenance
+8. With Dislocated Limb active, confirm `AFFLICTION` appears before sustenance
    entries and materially raises threat.
-7. Confirm `FED` and `HYDRATED` appear in the status bar but do not raise the
+9. Confirm `FED` and `HYDRATED` appear in the status bar but do not raise the
    score.
-8. Add enough persistent effects to wrap into the second row and verify the
+10. Add enough persistent effects to wrap into the second row and verify the
    HUD remains inside the 720 by 56 region.
-9. Compare normal and large HUD placement at the supported resolutions and
+11. Compare normal and large HUD placement at the supported resolutions and
    check for clipping against the helmet cutout.
-10. Save/load or change cells with live effects and contacts; verify no stale
+12. Save/load or change cells with live effects and contacts; verify no stale
     marker or status entries survive provider updates.
 
 If a case cannot be constructed without waiting for Survival-mode recovery,
