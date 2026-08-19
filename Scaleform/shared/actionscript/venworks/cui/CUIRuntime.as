@@ -190,6 +190,7 @@ package venworks.cui
             this.setDiagnosticContext("INITIAL LIVE VALUE EVALUATION",null);
             this.applyValues();
             this.applyContactRadars();
+            this.suppressVanillaTrackedQuestText();
             this.applyTacticalAwareness();
             this.setDiagnosticContext("INITIAL VISIBILITY EVALUATION",null);
             this.applyConditions();
@@ -511,6 +512,7 @@ package venworks.cui
          {
             this.setDiagnosticContext("LIVE CONTACT RADAR EVALUATION",null);
             this.applyContactRadars();
+            this.suppressVanillaTrackedQuestText();
             this.clearDiagnosticContext();
          }
          catch(param2:Error)
@@ -551,6 +553,37 @@ package venworks.cui
          for each(radar in contactRadars)
          {
             radar.updateData(valueContext.currentCompassData);
+         }
+      }
+
+      private function suppressVanillaTrackedQuestText() : void
+      {
+         var questMarkerRoot:DisplayObjectContainer = owner.getChildByName("FloatingQuestMarkerBase") as DisplayObjectContainer;
+         var compassData:Object = valueContext == null ? null : valueContext.currentCompassData;
+         var missionMarkers:Array = compassData == null ? null : compassData.aMissionMarkers as Array;
+         var marker:Object = null;
+         var markerClip:Object = null;
+         var markerIndex:int = 0;
+         var markerClipIndex:int = 0;
+         if(questMarkerRoot == null || missionMarkers == null)
+         {
+            return;
+         }
+         while(markerIndex < missionMarkers.length && markerClipIndex < questMarkerRoot.numChildren)
+         {
+            marker = missionMarkers[markerIndex];
+            if(marker != null && Boolean(marker.bFloatingMarkerVisible))
+            {
+               markerClip = questMarkerRoot.getChildAt(markerClipIndex);
+               if(marker.bShouldShowText === true && marker.strText !== undefined && marker.strText !== null &&
+                  String(marker.strText).replace(/\s/g,"").length > 0 &&
+                  markerClip != null && markerClip["Text_mc"] != null)
+               {
+                  markerClip["Text_mc"].visible = false;
+               }
+               ++markerClipIndex;
+            }
+            ++markerIndex;
          }
       }
 

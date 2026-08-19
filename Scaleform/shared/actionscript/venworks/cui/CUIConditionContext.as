@@ -29,6 +29,7 @@ package venworks.cui
          favoritePowers = [];
          favoriteWeapons = [];
          this.resetFavoriteConditions();
+         this.setValue("hastrackedobjective",false);
          BSUIDataManager.Subscribe("HudCrosshairData",this.onCrosshairData);
          BSUIDataManager.Subscribe("HUDStealthData",this.onStealthData);
          BSUIDataManager.Subscribe("HudCompassData",this.onCompassData);
@@ -58,7 +59,7 @@ package venworks.cui
             name == "incombat" || name == "inscanner" || name == "issneaking" ||
             name == "weaponaiming" || name == "weaponhasammo" || name == "weaponhasexplosive" ||
             name == "weaponexplosiveismine" || name == "boostactive" || name == "invehicle" ||
-            name == "digipicksavailable" || name == "hudvisible")
+            name == "digipicksavailable" || name == "hastrackedobjective" || name == "hudvisible")
          {
             return "boolean";
          }
@@ -114,7 +115,9 @@ package venworks.cui
 
       private function onCompassData(param1:FromClientDataEvent) : void
       {
-         this.setValue("inscanner",Boolean(param1.data.bIsHandscannerOpen));
+         var data:Object = param1 == null ? null : param1.data;
+         this.setValue("inscanner",data != null && Boolean(data.bIsHandscannerOpen));
+         this.setValue("hastrackedobjective",CUIPlayerHudDataContext.resolveTrackedObjective(data).length > 0);
          this.notifyChanged();
       }
 

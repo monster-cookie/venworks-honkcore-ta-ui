@@ -123,6 +123,7 @@ package venworks.cui
          this.setText("environment.hazard.thermalshortstatus","WAITING");
          this.setText("environment.hazard.corrosiveshortstatus","WAITING");
          this.setText("environment.hazard.radiationshortstatus","WAITING");
+         this.setText("quest.objective","");
          this.resetChangedSources();
       }
 
@@ -140,6 +141,7 @@ package venworks.cui
          }
          if(source == "location.name" || source == "player.serial" ||
             source == "power.key" || source == "power.name" ||
+            source == "quest.objective" ||
             source == "weapon.name" || source == "weapon.icon" || source == "weapon.ammotype" ||
             source == "weapon.explosivelabel" ||
             source == "diagnostic.inventoryprovider" || source == "diagnostic.powernameprovider" ||
@@ -195,6 +197,41 @@ package venworks.cui
             return "number";
          }
          return "unknown";
+      }
+
+      public static function resolveTrackedObjective(param1:Object) : String
+      {
+         var markers:Array = param1 == null ? null : param1.aMissionMarkers as Array;
+         var marker:Object = null;
+         var text:String = "";
+         var fallback:String = "";
+         var index:int = 0;
+         if(markers == null)
+         {
+            return "";
+         }
+         while(index < markers.length)
+         {
+            marker = markers[index];
+            if(marker != null && Boolean(marker.bFloatingMarkerVisible) &&
+               marker.strText !== undefined && marker.strText !== null)
+            {
+               text = String(marker.strText).replace(/^\s+|\s+$/g,"");
+               if(text.length != 0)
+               {
+                  if(marker.bShouldShowText === true)
+                  {
+                     return text;
+                  }
+                  if(fallback.length == 0)
+                  {
+                     fallback = text;
+                  }
+               }
+            }
+            ++index;
+         }
+         return fallback;
       }
 
       public function get currentCompassData() : Object
@@ -349,9 +386,11 @@ package venworks.cui
       private function onRadarCompassData(param1:FromClientDataEvent) : void
       {
          compassData = param1 == null ? null : param1.data;
+         this.setText("quest.objective",resolveTrackedObjective(compassData));
          tacticalAwareness.updateCompass(compassData);
          dispatchEvent(new Event(COMPASS_CHANGE));
          dispatchEvent(new Event(TACTICAL_AWARENESS_CHANGE));
+         this.notifyChanged();
       }
 
       private function onLocalEnvironmentFrequentData(param1:FromClientDataEvent) : void

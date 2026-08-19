@@ -469,6 +469,31 @@ faction-logo modifications. Neither Watch state changes radar ownership or
 visibility, and the separate faction-display include can be disabled when a
 user places the Watch in that panel's location.
 
+## Card 142 persistent quest tracker
+
+The `quest-tracker` fragment is a noninteractive 447-by-90 panel immediately
+below the combined upper-left faction and contact-radar block. Its multiline,
+word-wrapped text binds to `quest.objective`. The include uses
+`hasTrackedObjective AND hudVisible`, so it follows HUD opacity and is absent
+when no active tracked-objective text exists. It has no scanner, aiming, combat,
+or view-mode condition and therefore remains part of normal, aiming, and
+scanner HUD compositions.
+
+Both the value and condition are derived from the existing read-only
+`HudCompassData.aMissionMarkers` array. Resolution considers only markers whose
+`bFloatingMarkerVisible` flag is true, prefers the non-empty `strText` entry
+whose `bShouldShowText` flag matches vanilla's selected objective, and otherwise
+uses the first non-empty visible-marker text. The fallback keeps the tracked
+objective available when Bethesda clears its text-display flag outside scanner
+mode without inventing a new provider or mutating provider data.
+
+Vanilla `FloatingQuestMarkerBase` remains active. After each compass update the
+runtime mirrors Bethesda's visible-marker clip ordering and hides only the
+`Text_mc` for a marker with non-empty tracked-objective text and
+`bShouldShowText`. Quest icons, offscreen arrows, and numeric distance text stay
+under Bethesda ownership; the production layout does not hide the whole
+`floatingQuestMarkers` target.
+
 Live CUI delivery is dependency-aware. `HudCompassData` dispatches a dedicated
 radar event, so weapon, XP, inventory, environment, and other value-provider
 updates cannot redraw `contactRadar`. Value events carry only normalized sources

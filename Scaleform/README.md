@@ -62,10 +62,15 @@ assets; the default first destination is `Staging-VWKS/Interface`. The script
 refuses to build from unrecognized vanilla inputs or publish outputs whose
 hashes differ from the validation records.
 
-The first output also receives the root-placed production fragments under
-`VenworksCUI/components`. Deploy `layout.xml` and that directory together.
+The first output is the primary staging source for `layout.xml`, loose assets,
+and root-placed production fragments under `VenworksCUI/components`. The build
+then mirrors and hash-verifies that complete CUI payload across every remaining
+default output. Deploy `layout.xml` and the component directory together.
 Component imports are relative filenames resolved only inside this fixed
-directory; nested imports and path traversal are unsupported.
+directory; nested imports and path traversal are unsupported. The production
+payload includes `quest-tracker.xml`, whose upper-left panel binds the existing
+`HudCompassData` tracked-objective text and remains independent of scanner and
+aiming state while hiding itself when the objective is empty.
 
 Regenerate the curated built-in icon definitions when their approved Font
 Awesome source subset changes:

@@ -361,6 +361,7 @@ foreach ($componentFixtureName in @(
   'environmental-hazard-scanner.xml',
   'helmet-awareness.xml',
   'player-status-scanner.xml',
+  'quest-tracker.xml',
   'scanner-overlay.xml'
 )) {
   $componentFixturePath = Resolve-RequiredFile `
@@ -1132,6 +1133,22 @@ try {
         $reopenedRuntimeSource -match 'Event\.ENTER_FRAME|pendingValueSources|pendingConditionNames|pendingCompassUpdate|pendingHudModeUpdate|frameUpdateScheduled|scheduleFrameUpdate|onFrameUpdate|applyPending') {
       throw 'Generated runtime does not retain direct provider-local value, condition, compass, tactical-awareness, and HUD-mode routing boundaries, or still contains the rejected frame queue.'
     }
+    if ($reopenedPlayerHudDataContextSource -notmatch 'source\s*==\s*"quest\.objective"' -or
+        $reopenedPlayerHudDataContextSource -notmatch 'function\s+resolveTrackedObjective' -or
+        $reopenedPlayerHudDataContextSource -notmatch 'aMissionMarkers' -or
+        $reopenedPlayerHudDataContextSource -notmatch 'bFloatingMarkerVisible' -or
+        $reopenedPlayerHudDataContextSource -notmatch 'bShouldShowText' -or
+        $reopenedPlayerHudDataContextSource -notmatch 'strText' -or
+        $reopenedConditionContextSource -notmatch 'name\s*==\s*"hastrackedobjective"' -or
+        $reopenedConditionContextSource -notmatch 'CUIPlayerHudDataContext\.resolveTrackedObjective' -or
+        $reopenedRuntimeSource -notmatch 'function\s+suppressVanillaTrackedQuestText' -or
+        $reopenedRuntimeSource -notmatch 'getChildByName\s*\(\s*"FloatingQuestMarkerBase"\s*\)' -or
+        $reopenedRuntimeSource -notmatch 'Text_mc.*visible\s*=\s*false' -or
+        $reopenedCompassChangeHandler -notmatch 'suppressVanillaTrackedQuestText\s*\(' -or
+        $reopenedRuntimeSource -match 'questMarkerRoot\.visible\s*=\s*false' -or
+        $reopenedRuntimeSource -match 'markerClip\.visible\s*=\s*false') {
+      throw 'Card 142 must retain a persistent tracked-objective value and condition while suppressing only vanilla quest-marker text after compass updates.'
+    }
     foreach ($meterRenderer in @('CUIContinuousBar','CUISegmentedBar','CUITriangleBar','CUIDotBar','CUIRadialMeter')) {
       $meterRendererPath = Join-Path $validationScriptsDirectory "scripts\venworks\cui\components\$meterRenderer.as"
       $meterRendererSource = Get-Content -LiteralPath $meterRendererPath -Raw
@@ -1416,7 +1433,7 @@ try {
       Remove-Item -LiteralPath $retiredComponentPath -Force
     }
   }
-  foreach ($componentFixtureName in @('contact-radar.xml','faction-display.xml','equipment-rail.xml','environmental-hazard-scanner.xml','helmet-awareness.xml','player-status-scanner.xml','scanner-overlay.xml')) {
+  foreach ($componentFixtureName in @('contact-radar.xml','faction-display.xml','equipment-rail.xml','environmental-hazard-scanner.xml','helmet-awareness.xml','player-status-scanner.xml','quest-tracker.xml','scanner-overlay.xml')) {
     Copy-Item -LiteralPath (Join-Path $providerProbeComponentDirectory $componentFixtureName) -Destination (Join-Path $componentOutputDirectory $componentFixtureName) -Force
   }
   $stagedHelmetAwarenessText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'helmet-awareness.xml') -Raw
@@ -1495,6 +1512,8 @@ try {
   $stagedContactRadar = [xml]$stagedContactRadarText
   $stagedFactionDisplayText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'faction-display.xml') -Raw
   $stagedFactionDisplay = [xml]$stagedFactionDisplayText
+  $stagedQuestTrackerText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'quest-tracker.xml') -Raw
+  $stagedQuestTracker = [xml]$stagedQuestTrackerText
   $contactRadarIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'contact-radar'
   })
@@ -1550,6 +1569,34 @@ try {
       $factionDisplayTextNodes.Count -ne 0 -or
       $stagedContactRadarText -match 'diagnostic\.radar\.') {
     throw 'Goal 8B must stage independent top-edge faction and passive contact-radar displays, exact 50/100/150/200-unit range circles, one owned SVG crest, no duplicate label, and no diagnostic bindings.'
+  }
+  $questTrackerIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
+    [string]$_.id -eq 'quest-tracker'
+  })
+  $questTrackerGroups = @($stagedQuestTracker.SelectNodes('//group[@id="quest-tracker.cluster"]'))
+  $questTrackerTexts = @($stagedQuestTracker.SelectNodes('//text[@id="quest-tracker.objective"]'))
+  $questTrackerInteractiveNodes = @($stagedQuestTracker.SelectNodes('//*[@action or @event or @onClick or @mouseEnabled]'))
+  $floatingQuestMarkerTargets = @($providerProbeLayout.venworksCUI.vanillaVisibility.target | Where-Object {
+    [string]$_.id -eq 'floatingQuestMarkers'
+  })
+  if ($questTrackerIncludes.Count -ne 1 -or
+      [string]$questTrackerIncludes[0].src -ne 'quest-tracker.xml' -or
+      [string]$questTrackerIncludes[0].x -ne '-64' -or
+      [string]$questTrackerIncludes[0].y -ne '198' -or
+      [string]$questTrackerIncludes[0].anchor -ne 'top-left' -or
+      [string]$questTrackerIncludes[0].visibleWhen -ne 'hasTrackedObjective AND hudVisible' -or
+      $questTrackerGroups.Count -ne 1 -or
+      [string]$questTrackerGroups[0].width -ne '447' -or
+      [string]$questTrackerGroups[0].height -ne '90' -or
+      $questTrackerTexts.Count -ne 1 -or
+      [string]$questTrackerTexts[0].source -ne 'quest.objective' -or
+      [string]$questTrackerTexts[0].value -ne '' -or
+      [string]$questTrackerTexts[0].multiline -ne 'true' -or
+      [string]$questTrackerTexts[0].wordWrap -ne 'true' -or
+      $questTrackerInteractiveNodes.Count -ne 0 -or
+      $floatingQuestMarkerTargets.Count -ne 0 -or
+      $stagedQuestTrackerText -match 'HudCompassData|aMissionMarkers|bShouldShowText|inScanner|weaponAiming') {
+    throw 'Card 142 must stage one noninteractive 447x90 tracked-objective panel below the upper-left HUD cluster, independent of scanner and aiming state, without hiding vanilla quest-marker icons.'
   }
   $environmentalDiagnosticIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'environmental-hazard-diagnostic'
@@ -1950,7 +1997,7 @@ try {
       New-Item -ItemType Directory -Force -Path $variantAssetOutputDirectory | Out-Null
       New-Item -ItemType Directory -Force -Path $variantComponentOutputDirectory | Out-Null
       Copy-Item -LiteralPath (Join-Path $cuiOutputDirectory "layout.xml") -Destination (Join-Path $variantCuiOutputDirectory "layout.xml") -Force
-      foreach ($componentFixtureName in @('contact-radar.xml','faction-display.xml','equipment-rail.xml','environmental-hazard-scanner.xml','helmet-awareness.xml','player-status-scanner.xml','scanner-overlay.xml')) {
+      foreach ($componentFixtureName in @('contact-radar.xml','faction-display.xml','equipment-rail.xml','environmental-hazard-scanner.xml','helmet-awareness.xml','player-status-scanner.xml','quest-tracker.xml','scanner-overlay.xml')) {
         Copy-Item -LiteralPath (Join-Path $componentOutputDirectory $componentFixtureName) -Destination (Join-Path $variantComponentOutputDirectory $componentFixtureName) -Force
       }
       foreach ($assetFileName in @('gallery-vector.svg','venworks-logo.svg','gallery-invalid.svg')) {
@@ -1971,6 +2018,7 @@ try {
       'components\environmental-hazard-scanner.xml',
       'components\helmet-awareness.xml',
       'components\player-status-scanner.xml',
+      'components\quest-tracker.xml',
       'components\scanner-overlay.xml',
       'Assets\gallery-vector.svg',
       'Assets\venworks-logo.svg',
@@ -1982,7 +2030,7 @@ try {
         throw "Staged CUI payload mismatch for $relativeCuiPath in $variantCuiOutputDirectory."
       }
     }
-    Write-Host -ForegroundColor Green "Staged the Goal 10 scanner overlay with the accepted Goal 9 awareness surfaces and production helmet HUD in $variantCuiOutputDirectory"
+    Write-Host -ForegroundColor Green "Staged the persistent quest tracker, Goal 10 scanner overlay, accepted Goal 9 awareness surfaces, and production helmet HUD in $variantCuiOutputDirectory"
   }
 }
 finally {
