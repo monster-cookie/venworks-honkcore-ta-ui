@@ -10,6 +10,7 @@ package venworks.cui
       public static const CONDITION_CHANGE:String = "cuiConditionChange";
 
       private static const FAVORITE_SLOT_COUNT:int = 12;
+      private static const CRITICAL_HEALTH_PERCENTAGE:Number = 35;
 
       private var values:Object;
       private var changedConditions:Object;
@@ -28,6 +29,7 @@ package venworks.cui
          favoriteNames = [];
          favoritePowers = [];
          favoriteWeapons = [];
+         this.setValue("criticalhealth",false);
          this.resetFavoriteConditions();
          BSUIDataManager.Subscribe("HudCrosshairData",this.onCrosshairData);
          BSUIDataManager.Subscribe("HUDStealthData",this.onStealthData);
@@ -58,7 +60,7 @@ package venworks.cui
             name == "incombat" || name == "inscanner" || name == "issneaking" ||
             name == "weaponaiming" || name == "weaponhasammo" || name == "weaponhasexplosive" ||
             name == "weaponexplosiveismine" || name == "boostactive" || name == "invehicle" ||
-            name == "digipicksavailable" || name == "hudvisible")
+            name == "digipicksavailable" || name == "hudvisible" || name == "criticalhealth")
          {
             return "boolean";
          }
@@ -85,6 +87,20 @@ package venworks.cui
             return { known:true, value:false };
          }
          return values[name];
+      }
+
+      public function updateCriticalHealth(param1:Object) : void
+      {
+         var percentage:Number = NaN;
+         var critical:Boolean = false;
+         if(param1 != null && Boolean(param1.known))
+         {
+            percentage = Number(param1.value);
+            critical = !isNaN(percentage) && isFinite(percentage) &&
+               percentage < CRITICAL_HEALTH_PERCENTAGE;
+         }
+         this.setValue("criticalhealth",critical);
+         this.notifyChanged();
       }
 
       public function get hudOpacity() : Number
