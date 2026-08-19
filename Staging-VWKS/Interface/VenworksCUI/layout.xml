@@ -85,6 +85,19 @@
           data="M 16 0 L 304 0 Q 320 0 320 16 L 320 32 Q 320 48 304 48 L 16 48 Q 0 48 0 32 L 0 16 Q 0 0 16 0 Z"
           viewBoxX="0" viewBoxY="0" viewBoxWidth="320" viewBoxHeight="48"
           fillColor="#020B10" fillOpacity="0.72" strokeColor="#62DDF2" strokeOpacity="0" strokeWidth="0" />
+    <group id="player.critical-health" x="0" y="166" width="320" height="70" opacity="1" visible="true"
+           visibleWhen="criticalHealth" anchor="top-center" rotation="0" scaleX="1" scaleY="1" z="120">
+      <panel id="player.critical-health.panel" x="0" y="0" width="320" height="70" opacity="1" visible="true"
+             rotation="0" scaleX="1" scaleY="1" z="0"
+             fillColor="#310609" fillOpacity="0.94" strokeColor="#FF5A5A" strokeOpacity="1" strokeWidth="2" />
+      <text id="player.critical-health.title" x="12" y="7" width="296" height="24" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="1" value="CRITICAL HEALTH"
+            font="$MAIN_Font_Bold" fontSize="12" color="#FF5A5A" bold="false" align="center" />
+      <text id="player.critical-health.value" x="12" y="32" width="296" height="28" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="1"
+            valueTemplate="HEALTH {player.health:integer}/{player.maxHealth:integer}" value="HEALTH --/--"
+            font="$MAIN_Font_Bold" fontSize="15" color="#F2F7F9" bold="false" align="center" />
+    </group>
     <group id="helmet.vehicle-exit" x="0" y="36" width="184" height="36" opacity="1" visible="true"
            visibleWhen="inVehicle" anchor="bottom-center" rotation="0" scaleX="1" scaleY="1" z="103">
       <text id="vehicle.exit.label" x="0" y="4" width="138" height="28" opacity="1" visible="true"
