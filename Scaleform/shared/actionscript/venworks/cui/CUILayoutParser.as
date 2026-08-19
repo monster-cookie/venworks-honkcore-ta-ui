@@ -151,6 +151,8 @@ package venworks.cui
          var normalized:String = null;
          var targets:Object = {};
          var count:int = 0;
+         var hasAbsolutePlacement:Boolean = false;
+         var hasRelativePlacement:Boolean = false;
          this.requireAttributes(param1,[]);
          for each(target in param1.children())
          {
@@ -163,7 +165,7 @@ package venworks.cui
             {
                throw new Error("INVALID|vanillaVisibility exceeds the 16-target limit.");
             }
-            this.requireAttributes(target,["id","visibleWhen","x","y","anchor"]);
+            this.requireAttributes(target,["id","visibleWhen","x","y","anchor","offsetX","offsetY"]);
             id = this.requireId(target);
             normalized = CUIVanillaVisibilityAdapter.normalizeTarget(id);
             if(targets[normalized] != null)
@@ -176,7 +178,13 @@ package venworks.cui
             }
             targets[normalized] = true;
             this.requireCondition(target,"visibleWhen");
-            if(target.@x.length() + target.@y.length() + target.@anchor.length() != 0)
+            hasAbsolutePlacement = target.@x.length() + target.@y.length() + target.@anchor.length() != 0;
+            hasRelativePlacement = target.@offsetX.length() + target.@offsetY.length() != 0;
+            if(hasAbsolutePlacement && hasRelativePlacement)
+            {
+               throw new Error("INVALID|Vanilla target placement cannot mix x, y, and anchor with offsetX and offsetY: " + id);
+            }
+            if(hasAbsolutePlacement)
             {
                if(target.@x.length() != 1 || target.@y.length() != 1 || target.@anchor.length() != 1)
                {
@@ -185,6 +193,15 @@ package venworks.cui
                this.requireFinite(target,"x");
                this.requireFinite(target,"y");
                this.requireOptionalAnchor(target);
+            }
+            if(hasRelativePlacement)
+            {
+               if(target.@offsetX.length() != 1 || target.@offsetY.length() != 1)
+               {
+                  throw new Error("INVALID|Vanilla target relative placement requires offsetX and offsetY together: " + id);
+               }
+               this.requireFinite(target,"offsetX");
+               this.requireFinite(target,"offsetY");
             }
             vanillaVisibilityRoot.appendChild(target.copy());
          }

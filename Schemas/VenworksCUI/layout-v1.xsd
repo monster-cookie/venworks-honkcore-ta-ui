@@ -592,6 +592,8 @@
     <xs:attribute name="x" type="xs:decimal" />
     <xs:attribute name="y" type="xs:decimal" />
     <xs:attribute name="anchor" type="anchorType" />
+    <xs:attribute name="offsetX" type="xs:decimal" />
+    <xs:attribute name="offsetY" type="xs:decimal" />
   </xs:complexType>
 
   <xs:complexType name="includeType">

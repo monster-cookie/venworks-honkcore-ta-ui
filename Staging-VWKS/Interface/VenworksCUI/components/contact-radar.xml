@@ -2,7 +2,7 @@
 <venworksCUIFragment schemaVersion="1" runtimeVersion="1">
   <group id="contact-radar.cluster" x="0" y="0" width="228" height="226" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0">
     <path id="contact-radar.panel" x="0" y="0" width="228" height="226" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0"
-          data="M 0 0 L 210 0 L 228 18 L 228 208 L 210 226 L 0 226 Z"
+          data="M 0 0 L 210 0 Q 228 0 228 18 L 228 208 Q 228 226 210 226 L 0 226 Z"
           viewBoxX="0" viewBoxY="0" viewBoxWidth="228" viewBoxHeight="226"
           fillColor="#03141D" fillOpacity="0.70" strokeColor="#62DDF2" strokeOpacity="0.70" strokeWidth="2" />
     <shape id="contact-radar.ring.200" x="22" y="21" width="184" height="184" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1"

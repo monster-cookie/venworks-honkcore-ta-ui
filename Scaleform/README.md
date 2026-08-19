@@ -68,14 +68,17 @@ then mirrors and hash-verifies that complete CUI payload across every remaining
 default output. Deploy `layout.xml` and the component directory together.
 Component imports are relative filenames resolved only inside this fixed
 directory; nested imports and path traversal are unsupported. The production
-payload includes `quest-tracker.xml`, whose upper-left panel binds the existing
-`HudCompassData` tracked-objective text and remains independent of scanner and
-aiming state while leaving its text field blank when the objective is empty.
+payload includes `quest-tracker.xml`, whose upper-left panel joins directly
+beneath the faction and contact-radar panels, binds the existing `HudCompassData`
+tracked-objective text, and remains independent of scanner and aiming state
+while leaving its text field blank when the objective is empty.
 The objective resolver is independent of floating-marker visibility. Vanilla
 quest markers finish processing before a one-shot pre-render pass sets only the
 selected objective `Text_mc.visible` to `false`; icons, arrows, and distance
-labels remain under Bethesda ownership. Scanner survey-window placement is
-outside the quest tracker's component contract.
+labels remain under Bethesda ownership. In scanner mode, the Bethesda-owned
+bottom-left survey group is made visible and shifted 266 design units below its
+original position so it clears the joined objective cluster; outside scanner
+mode the whole group is set to `visible = false`.
 
 Regenerate the curated built-in icon definitions when their approved Font
 Awesome source subset changes:
@@ -167,7 +170,9 @@ An allowlisted `vanillaVisibility` target may also provide `x`, `y`, and
 `anchor` together. That bounded placement uses the same visible-rectangle and
 safe-area convention while moving the existing Bethesda-owned display object;
 it does not clone the object, expose a display path, or override the object's
-provider-driven `visible` state.
+provider-driven `visible` state. Alternatively, `offsetX` and `offsetY` may be
+provided together to move the target relative to its original Bethesda-authored
+position. Relative offsets cannot be mixed with `x`, `y`, and `anchor`.
 
 Templates are declared in `definitions` and contain exactly one primitive-only
 root group. `instance`, `repeater`, and `state` elements expand those templates

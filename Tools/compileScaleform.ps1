@@ -1177,7 +1177,9 @@ try {
       throw 'Generated vanilla visibility adapter does not combine Bethesda HUD modes with configured whole-group rendering visibility.'
     }
     if ($reopenedVanillaVisibilitySource -notmatch 'function\s+reapplyPlacement' -or
-        $reopenedVanillaVisibilitySource -notmatch 'layoutEngine\.positionVanilla\(DisplayObject\(targets\[index\]\),targetConfig\)' -or
+        $reopenedVanillaVisibilitySource -notmatch 'layoutEngine\.positionVanilla\(target,targetConfig\)' -or
+        $reopenedVanillaVisibilitySource -notmatch 'target\.x\s*=\s*Number\(initialXs\[index\]\)\s*\+\s*Number\(targetConfig\.@offsetX\)' -or
+        $reopenedVanillaVisibilitySource -notmatch 'target\.y\s*=\s*Number\(initialYs\[index\]\)\s*\+\s*Number\(targetConfig\.@offsetY\)' -or
         $reopenedRuntimeSource -notmatch 'function\s+reapplyVanillaPlacements' -or
         $reopenedRuntimeSource -notmatch 'adapter\.reapplyPlacement\(\)' -or
         $reopenedRuntimeSource -notmatch 'VANILLA SAFE-RECT PLACEMENT' -or
@@ -1185,8 +1187,10 @@ try {
         $reopenedLayoutEngineSource -notmatch 'function\s+positionVanilla' -or
         $reopenedLayoutEngineSource -notmatch 'param1\.getBounds\(parent\)' -or
         $reopenedLayoutEngineSource -notmatch 'createRootSafeRect\(rootConfig,parent\)' -or
-        $reopenedLayoutParserSource -notmatch 'Vanilla target placement requires x, y, and anchor together') {
-      throw 'Generated vanilla visibility adapter does not retain bounded safe-area placement for allowlisted whole targets.'
+        $reopenedLayoutParserSource -notmatch 'Vanilla target placement requires x, y, and anchor together' -or
+        $reopenedLayoutParserSource -notmatch 'Vanilla target relative placement requires offsetX and offsetY together' -or
+        $reopenedLayoutParserSource -notmatch 'Vanilla target placement cannot mix x, y, and anchor with offsetX and offsetY') {
+      throw 'Generated vanilla visibility adapter does not retain bounded absolute or original-position-relative placement for allowlisted whole targets.'
     }
     if ($reopenedSymbolSource -notmatch '"vehicle-exit-prompt"' -or
         $reopenedSymbolSource -notmatch '"classes":\["HUDVehicle"\]' -or
@@ -1534,7 +1538,9 @@ try {
   $contactRadarRing150Nodes = @($stagedContactRadar.SelectNodes('//shape[@id="contact-radar.ring.150"]'))
   $contactRadarRing200Nodes = @($stagedContactRadar.SelectNodes('//shape[@id="contact-radar.ring.200"]'))
   $contactRadarRing300Nodes = @($stagedContactRadar.SelectNodes('//shape[@id="contact-radar.ring.300"]'))
+  $contactRadarPanelPaths = @($stagedContactRadar.SelectNodes('//path[@id="contact-radar.panel"]'))
   $contactRadarInteractiveNodes = @($stagedContactRadar.SelectNodes('//*[@action or @event or @onClick or @mouseEnabled]'))
+  $factionDisplayPanelPaths = @($stagedFactionDisplay.SelectNodes('//path[@id="faction-display.panel"]'))
   $factionDisplaySvgNodes = @($stagedFactionDisplay.SelectNodes('//svg[@src="venworks-logo.svg"]'))
   $factionDisplayTextNodes = @($stagedFactionDisplay.SelectNodes('//text'))
   if ($contactRadarIncludes.Count -ne 1 -or
@@ -1569,9 +1575,13 @@ try {
       [string]$contactRadarRing200Nodes[0].width -ne '184' -or
       [string]$contactRadarRing200Nodes[0].height -ne '184' -or
       $contactRadarRing300Nodes.Count -ne 0 -or
+      $contactRadarPanelPaths.Count -ne 1 -or
+      [string]$contactRadarPanelPaths[0].data -ne 'M 0 0 L 210 0 Q 228 0 228 18 L 228 208 Q 228 226 210 226 L 0 226 Z' -or
       $contactRadarInteractiveNodes.Count -ne 0 -or
       $stagedContactRadarText -match 'venworks-logo.svg' -or
       $stagedContactRadarText -match 'value="VENWORKS"' -or
+      $factionDisplayPanelPaths.Count -ne 1 -or
+      [string]$factionDisplayPanelPaths[0].data -ne 'M 0 0 L 220 0 L 220 226 L 18 226 Q 0 226 0 208 Z' -or
       $factionDisplaySvgNodes.Count -ne 1 -or
       $factionDisplayTextNodes.Count -ne 0 -or
       $stagedContactRadarText -match 'diagnostic\.radar\.') {
@@ -1581,6 +1591,7 @@ try {
     [string]$_.id -eq 'quest-tracker'
   })
   $questTrackerGroups = @($stagedQuestTracker.SelectNodes('//group[@id="quest-tracker.cluster"]'))
+  $questTrackerPanelPaths = @($stagedQuestTracker.SelectNodes('//path[@id="quest-tracker.panel"]'))
   $questTrackerTexts = @($stagedQuestTracker.SelectNodes('//text[@id="quest-tracker.objective"]'))
   $questTrackerInteractiveNodes = @($stagedQuestTracker.SelectNodes('//*[@action or @event or @onClick or @mouseEnabled]'))
   $floatingQuestMarkerTargets = @($providerProbeLayout.venworksCUI.vanillaVisibility.target | Where-Object {
@@ -1589,12 +1600,14 @@ try {
   if ($questTrackerIncludes.Count -ne 1 -or
       [string]$questTrackerIncludes[0].src -ne 'quest-tracker.xml' -or
       [string]$questTrackerIncludes[0].x -ne '-64' -or
-      [string]$questTrackerIncludes[0].y -ne '198' -or
+      [string]$questTrackerIncludes[0].y -ne '190' -or
       [string]$questTrackerIncludes[0].anchor -ne 'top-left' -or
       [string]$questTrackerIncludes[0].visibleWhen -ne 'always' -or
       $questTrackerGroups.Count -ne 1 -or
       [string]$questTrackerGroups[0].width -ne '447' -or
       [string]$questTrackerGroups[0].height -ne '90' -or
+      $questTrackerPanelPaths.Count -ne 1 -or
+      [string]$questTrackerPanelPaths[0].data -ne 'M 0 0 L 447 0 L 447 72 Q 447 90 429 90 L 0 90 Z' -or
       $questTrackerTexts.Count -ne 1 -or
       [string]$questTrackerTexts[0].source -ne 'quest.objective' -or
       [string]$questTrackerTexts[0].value -ne '' -or
@@ -1603,7 +1616,7 @@ try {
       $questTrackerInteractiveNodes.Count -ne 0 -or
       $floatingQuestMarkerTargets.Count -ne 0 -or
       $stagedQuestTrackerText -match 'HudCompassData|aMissionMarkers|bShouldShowText|inScanner|weaponAiming') {
-    throw 'Card 142 must stage one always-present noninteractive 447x90 tracked-objective panel below the upper-left HUD cluster, independent of scanner and aiming state, without hiding vanilla quest-marker icons.'
+    throw 'Card 142 must stage one always-present noninteractive 447x90 tracked-objective panel joined to the rounded upper-left HUD cluster, independent of scanner and aiming state, without hiding vanilla quest-marker icons.'
   }
   $environmentalDiagnosticIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'environmental-hazard-diagnostic'
@@ -1917,7 +1930,9 @@ try {
       $helmetVehicleExitGlyphs.Count -ne 1 -or
       [string]$helmetVehicleExitGlyphs[0].name -ne 'vehicle-exit-prompt' -or
       $bottomLeftTargets.Count -ne 1 -or
-      [string]$bottomLeftTargets[0].visibleWhen -ne 'never' -or
+      [string]$bottomLeftTargets[0].visibleWhen -ne 'inScanner' -or
+      [string]$bottomLeftTargets[0].offsetX -ne '0' -or
+      [string]$bottomLeftTargets[0].offsetY -ne '266' -or
       $bottomLeftTargets[0].HasAttribute('anchor') -or
       $bottomLeftTargets[0].HasAttribute('x') -or
       $bottomLeftTargets[0].HasAttribute('y') -or

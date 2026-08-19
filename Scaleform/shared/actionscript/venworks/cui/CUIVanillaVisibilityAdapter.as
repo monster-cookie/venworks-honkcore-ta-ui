@@ -113,13 +113,23 @@ package venworks.cui
       public function reapplyPlacement() : void
       {
          var index:int = 0;
-         if(layoutEngine == null || targetConfig == null)
+         var target:DisplayObject = null;
+         if(targetConfig == null)
          {
             return;
          }
          while(index < targets.length)
          {
-            layoutEngine.positionVanilla(DisplayObject(targets[index]),targetConfig);
+            target = DisplayObject(targets[index]);
+            if(targetConfig.@offsetX.length() == 1 && targetConfig.@offsetY.length() == 1)
+            {
+               target.x = Number(initialXs[index]) + Number(targetConfig.@offsetX);
+               target.y = Number(initialYs[index]) + Number(targetConfig.@offsetY);
+            }
+            else if(layoutEngine != null)
+            {
+               layoutEngine.positionVanilla(target,targetConfig);
+            }
             index++;
          }
       }

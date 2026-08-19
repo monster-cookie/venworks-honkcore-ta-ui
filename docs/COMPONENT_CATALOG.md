@@ -64,7 +64,7 @@ diagnostic.
 | Repeater/list layout | Implemented | Lay out up to 64 declared items vertically, horizontally, or in a grid; hidden items collapse. |
 | Bounded state selection | Implemented | Select one of up to 16 declared templates without expressions or arbitrary method calls. |
 | Data-only conditions | Implemented | Evaluate bounded, case-insensitive visibility expressions against verified vanilla state with fail-hidden unknown initialization. |
-| Vanilla visibility adapter | Implemented | Apply alpha presentation gates and optional bounded safe-area placement only to explicitly mapped whole default UI pieces while preserving vanilla visibility, providers, and lifecycle behavior. |
+| Vanilla visibility adapter | Implemented | Compose real display visibility and optional bounded absolute or original-position-relative placement only for explicitly mapped whole default UI pieces while preserving vanilla providers and lifecycle behavior. |
 
 Goal 4A keeps a fixed 1920-by-1080 design coordinate system and relies on
 Starfield's `Extensions.visibleRect` for viewport boundaries. It does not
@@ -462,23 +462,31 @@ The contact radar is also independent from Bethesda's Watch. It remains on the
 owned `VenworksCUIComponentLayer`, uses its own fixed-size `Shape` pool, and only
 shares the read-only `HudCompassData` provider. Vanilla visibility targets use
 real display visibility composed from Bethesda `HudModeData` and the configured
-`visibleWhen` expression. Consequently `bottomLeft visibleWhen="never"` removes
-the Watch tree from rendering instead of leaving it active at alpha zero, while
-`visibleWhen="always"` preserves the original Bethesda Watch and compatible
-faction-logo modifications. Neither Watch state changes radar ownership or
-visibility, and the separate faction-display include can be disabled when a
-user places the Watch in that panel's location.
+`visibleWhen` expression. Consequently a false expression removes the target
+tree from rendering instead of leaving it active at alpha zero. A target may use
+paired `offsetX` and `offsetY` values to retain its original Bethesda-authored
+position plus a design-space offset; relative offsets cannot be mixed with the
+absolute `x`, `y`, and `anchor` placement contract. Neither Watch state changes
+radar ownership or visibility, and the separate faction-display include can be
+disabled independently.
 
 ## Card 142 persistent quest tracker
 
 The `quest-tracker` fragment is an independent noninteractive 447-by-90 panel
-immediately below the upper-left faction panel. Its multiline, word-wrapped
-text binds to `quest.objective`. The include uses `always`, so the panel remains
+joined directly below the upper-left faction and contact-radar panels. The three
+panels preserve their matching 18-design-unit corner locations with rounded
+quadratic returns instead of straight bevels. Its multiline, word-wrapped text
+binds to `quest.objective`. The include uses `always`, so the panel remains
 present with a blank text field when no active tracked-objective text exists.
 It has no scanner, aiming, combat, or view-mode condition and therefore remains
-part of normal, aiming, and scanner HUD compositions. Its temporary overlap
-with the scanner-only survey window is outside Card 142 and belongs to the
-planned survey-window placement work.
+part of normal, aiming, and scanner HUD compositions.
+
+The Bethesda-owned `bottomLeft` survey group remains independent of the quest
+component. It is configured with `visibleWhen="inScanner"`, `offsetX="0"`, and
+`offsetY="266"`, placing its survey window about 125 design units above Player
+Data while retaining Bethesda's original transform, provider processing, and
+timeline animation. Outside scanner mode the whole group is set to
+`visible = false`; alpha is not used as the hiding contract.
 
 The value is derived from the existing read-only
 `HudCompassData.aMissionMarkers` array. Resolution prefers the non-empty

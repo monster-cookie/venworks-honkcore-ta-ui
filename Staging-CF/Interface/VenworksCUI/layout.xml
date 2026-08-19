@@ -48,7 +48,7 @@
                 direction="right" partialSegments="true" />
   </definitions>
   <vanillaVisibility>
-    <target id="bottomLeft" visibleWhen="never" />
+    <target id="bottomLeft" visibleWhen="inScanner" offsetX="0" offsetY="266" />
     <target id="rightMeters" visibleWhen="never" />
   </vanillaVisibility>
   <includes>
@@ -57,7 +57,7 @@
     <include id="contact-radar" src="contact-radar.xml"
              x="155" y="-36" anchor="top-left" visible="true" visibleWhen="always" z="104" />
     <include id="quest-tracker" src="quest-tracker.xml"
-             x="-64" y="198" anchor="top-left" visible="true" visibleWhen="always" z="102" />
+             x="-64" y="190" anchor="top-left" visible="true" visibleWhen="always" z="102" />
     <include id="environmental-hazard-scanner" src="environmental-hazard-scanner.xml"
              x="39" y="11" anchor="bottom-right" visible="true" visibleWhen="always" z="90" />
     <include id="player-status-scanner" src="player-status-scanner.xml"
