@@ -192,6 +192,7 @@ package venworks.cui
             this.createVanillaAdapters(parser.vanillaVisibility);
             this.setDiagnosticContext("INITIAL LIVE VALUE EVALUATION",null);
             this.applyValues();
+            this.syncCriticalHealthCondition();
             this.applyContactRadars();
             this.scheduleVanillaTrackedQuestTextSuppression();
             this.applyTacticalAwareness();
@@ -501,6 +502,7 @@ package venworks.cui
          {
             this.setDiagnosticContext("LIVE VALUE EVALUATION",null);
             this.applyValues(param1.params);
+            this.syncCriticalHealthCondition(param1.params);
             this.clearDiagnosticContext();
          }
          catch(param2:Error)
@@ -548,6 +550,16 @@ package venworks.cui
                binding.apply(valueContext);
             }
          }
+      }
+
+      private function syncCriticalHealthCondition(param1:Object = null) : void
+      {
+         var source:String = CUIPlayerHudDataContext.normalizeSource("player.healthPercentage");
+         if(param1 != null && param1[source] !== true)
+         {
+            return;
+         }
+         conditionContext.updateCriticalHealth(valueContext.getValue(source));
       }
 
       private function applyContactRadars() : void
