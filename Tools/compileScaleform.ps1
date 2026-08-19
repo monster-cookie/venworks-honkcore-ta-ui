@@ -1237,10 +1237,14 @@ try {
         $reopenedTacticalAwarenessModelSource -notmatch 'aEnemyMarkers\s+as\s+Array' -or
         $reopenedTacticalAwarenessModelSource -notmatch 'aMissionMarkers\s+as\s+Array' -or
         $reopenedTacticalAwarenessModelSource -notmatch 'aMarkers\s+as\s+Array' -or
+        $reopenedTacticalAwarenessModelSource -notmatch 'SCANNER_MAX_DISTANCE\s*:\s*Number\s*=\s*1000' -or
         $reopenedTacticalAwarenessModelSource -notmatch 'distance\s*>=\s*0' -or
+        $reopenedTacticalAwarenessModelSource -notmatch 'distance\s*<=\s*SCANNER_MAX_DISTANCE' -or
         $reopenedTacticalAwarenessModelSource -notmatch 'heading\s*>=\s*0' -or
         $reopenedTacticalAwarenessModelSource -notmatch 'handle\s*!=\s*0' -or
         $reopenedTacticalAwarenessModelSource -notmatch 'SCANNER_CODENAME_LENGTH\s*:\s*int\s*=\s*6' -or
+        $reopenedTacticalAwarenessModelSource -notmatch 'return\s+"POI"' -or
+        $reopenedTacticalAwarenessModelSource -match 'isScannerMarkerType' -or
         $reopenedScannerOverlaySource -notmatch 'GRID_COLUMNS\s*:\s*int\s*=\s*5' -or
         $reopenedScannerOverlaySource -notmatch 'GRID_ROWS\s*:\s*int\s*=\s*5' -or
         $reopenedScannerOverlaySource -notmatch 'PULSE_RING_THRESHOLDS\s*:\s*Array\s*=\s*\[\s*1\s*,\s*2\s*,\s*4\s*,\s*5\s*,\s*8\s*\]' -or
@@ -1257,7 +1261,7 @@ try {
         $reopenedScannerOverlaySource -notmatch 'mouseChildren\s*=\s*false' -or
         $reopenedScannerOverlaySource -match 'Event\.ENTER_FRAME' -or
         $reopenedScannerOverlaySource -notmatch 'NO VALID CONTACTS') {
-      throw 'Generated scanner overlay does not retain the bounded five-by-five radial square-to-dot pulse, validated forward contacts, deterministic codenames, and stage-scoped timer lifecycle.'
+      throw 'Generated scanner overlay does not retain the bounded 1000-distance all-marker contact contract, five-by-five radial square-to-dot pulse, deterministic codenames, and stage-scoped timer lifecycle.'
     }
     if ($reopenedTacticalAwarenessModelSource -notmatch 'CRITICAL_HOSTILE_DISTANCE\s*:\s*Number\s*=\s*25' -or
         $reopenedTacticalAwarenessModelSource -notmatch 'SEVERE_HOSTILE_DISTANCE\s*:\s*Number\s*=\s*50' -or

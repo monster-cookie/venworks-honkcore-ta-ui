@@ -52,14 +52,15 @@ Candidates are read, in precedence order, from:
 A record is eligible only when all of the following are true:
 
 - `uiHandle` is finite and nonzero;
-- `uiMarkerIconType` is finite and is enemy (`5`), companion (`8`), parked ship
-  (`10`), parked-vehicle position (`13`), or vehicle (`14`);
+- `uiMarkerIconType` is a finite nonnegative integer representable as `uint`;
 - `fHeading` is finite and nonnegative; and
-- `fDistanceToPlayer` is finite and nonnegative.
+- `fDistanceToPlayer` is finite and between 0 and 1000 inclusive.
 
 Duplicate nonzero handles are removed across all three arrays. At most 64
 validated candidates are projected into the snapshot, bounding provider work
-independently of the presentation limit.
+independently of the presentation limit. Every structurally valid marker type
+is eligible; the prior enemy/companion/ship/position/vehicle allowlist no longer
+excludes mission, location, and other general points of interest.
 
 ## Contact presentation
 
@@ -71,7 +72,8 @@ production value is 5.
 
 Each row shows:
 
-- a deterministic type/handle codename, such as a hostile `HST-*` identifier;
+- a deterministic type/handle codename: `HST-*`, `ALLY-*`, `SHIP-*`, `VEH-*`,
+  or `POS-*` for the established types, and `POI-*` for every other type;
 - `L`, `C`, or `R` relative direction with a bounded degree offset; and
 - rounded `fDistanceToPlayer` with no unit suffix.
 
@@ -143,8 +145,8 @@ Build validation completed on 2026-08-18:
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `hudmenu.gfx` | `26379C2EDD1992C866764AA36573E4F5972E18A1504D947D7E8B08D271E94535` |
-| `hudmenu_lrg.gfx` | `DD864E0D13D90560EDEB66DAB7AB67AEB4C794D6D176288FBF35A1B93B1D8D35` |
+| `hudmenu.gfx` | `D18C275D35A0F11FC3EC9E52871BE8D62A09D0B731BFCDE4376358C10E5F091E` |
+| `hudmenu_lrg.gfx` | `1D5AE565058461F94F90F8D1C5F8E2C82810CC6E0878B020E593050C05AFF56D` |
 
 The remaining validation is the in-engine acceptance matrix below.
 
@@ -168,7 +170,8 @@ In-engine acceptance:
 3. Confirm all 24 noncentral markers begin as hollow squares, convert to filled
    dots in five outward-moving radial bands, hold briefly, reset cleanly, and
    remain visible without a dark or full-screen frame.
-4. Confirm every listed contact corresponds to a valid forward provider record,
+4. Confirm every listed contact corresponds to a valid forward provider record
+   no farther than 1000, mission/location POIs use stable `POI-*` identifiers,
    nearest-first ordering is stable, and empty scans show `NO VALID CONTACTS`.
 5. Confirm Bethesda's reticle, interaction prompts, highlights, and scanner
    command bar remain usable and unobscured.
@@ -178,10 +181,11 @@ In-engine acceptance:
 ## Risks and rollback
 
 The main remaining risk is provider semantics: mission or general marker
-delivery can vary by game state, and formal vehicle type `14` has not been
-observed in prior runtime testing. The implementation fails closed on malformed
-records, shows only the established type allowlist, and never fabricates a
-contact.
+delivery can vary by game state, and Bethesda commonly stops supplying enemy
+markers beyond its much shorter acquisition range. Broad POI eligibility can
+also fill the five nearest rows before a more distant enemy. The implementation
+fails closed on malformed records, enforces the 1000-distance bound, and never
+fabricates a contact.
 
 The overlay's fixed logical bounds may require layout tuning after normal and
 large HUD screenshots. Such tuning must preserve the centered reticle opening

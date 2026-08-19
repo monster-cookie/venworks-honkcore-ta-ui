@@ -6,6 +6,7 @@ package venworks.cui
       private static const MAX_THREAT_MARKERS:int = 64;
       private static const MAX_STATUS_EFFECTS:int = 64;
       private static const MAX_SCANNER_TARGETS:int = 64;
+      private static const SCANNER_MAX_DISTANCE:Number = 1000;
       private static const SCANNER_CODENAME_ALPHABET:String = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
       private static const SCANNER_CODENAME_LENGTH:int = 6;
       private static const SCANNER_CODENAME_SEED_A:uint = 0x811C9DC5;
@@ -169,8 +170,8 @@ package venworks.cui
             key = String(handle);
             if(source != null && this.isFiniteNumber(handle) && handle != 0 && param2[key] !== true &&
                this.isFiniteNumber(markerType) && markerType == uint(markerType) &&
-               this.isScannerMarkerType(uint(markerType)) && this.isFiniteNumber(heading) && heading >= 0 &&
-               this.isFiniteNumber(distance) && distance >= 0)
+               this.isFiniteNumber(heading) && heading >= 0 && this.isFiniteNumber(distance) &&
+               distance >= 0 && distance <= SCANNER_MAX_DISTANCE)
             {
                param2[key] = true;
                param1.push({
@@ -183,13 +184,6 @@ package venworks.cui
             }
             ++index;
          }
-      }
-
-      private function isScannerMarkerType(param1:uint) : Boolean
-      {
-         return param1 == MIT_MARKER_ENEMY || param1 == MIT_MARKER_COMPANION ||
-            param1 == MIT_MARKER_PARKED_SHIP || param1 == MIT_MARKER_POSITION ||
-            param1 == MIT_MARKER_VEHICLE;
       }
 
       private function createScannerCodename(param1:uint, param2:Number) : String
@@ -244,7 +238,11 @@ package venworks.cui
          {
             return "VEH";
          }
-         return "POS";
+         if(param1 == MIT_MARKER_POSITION)
+         {
+            return "POS";
+         }
+         return "POI";
       }
 
       private function collectCompassMarkers() : Array

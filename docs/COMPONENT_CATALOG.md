@@ -509,11 +509,12 @@ surfaces.
 
 The tactical snapshot projects scanner candidates from `aEnemyMarkers`,
 `aMissionMarkers`, and `aMarkers`. Candidates must have a nonzero finite handle,
-finite nonnegative heading, finite nonnegative `fDistanceToPlayer`, and one of
-the accepted marker types: enemy, companion, parked ship, parked-vehicle
-position, or vehicle. Handles are deduplicated, names are not consumed, and each
+finite nonnegative heading, a finite `fDistanceToPlayer` from 0 through 1000,
+and a finite nonnegative integer marker type. All structurally valid marker
+types are eligible. Handles are deduplicated, names are not consumed, and each
 candidate receives a deterministic display-only codename derived from marker
-type and handle.
+type and handle. Established enemy, companion, ship, vehicle, and position types
+retain their specialized prefixes; every other type uses `POI-*`.
 
 The component filters that validated set to its configured forward field of
 view, orders contacts by nearest distance with stable handle/type tie breakers,
