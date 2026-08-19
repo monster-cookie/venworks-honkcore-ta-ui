@@ -213,8 +213,7 @@ package venworks.cui
          while(index < markers.length)
          {
             marker = markers[index];
-            if(marker != null && Boolean(marker.bFloatingMarkerVisible) &&
-               marker.strText !== undefined && marker.strText !== null)
+            if(marker != null && marker.strText !== undefined && marker.strText !== null)
             {
                text = String(marker.strText).replace(/^\s+|\s+$/g,"");
                if(text.length != 0)

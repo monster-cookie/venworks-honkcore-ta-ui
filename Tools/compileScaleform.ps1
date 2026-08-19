@@ -1136,18 +1136,25 @@ try {
     if ($reopenedPlayerHudDataContextSource -notmatch 'source\s*==\s*"quest\.objective"' -or
         $reopenedPlayerHudDataContextSource -notmatch 'function\s+resolveTrackedObjective' -or
         $reopenedPlayerHudDataContextSource -notmatch 'aMissionMarkers' -or
-        $reopenedPlayerHudDataContextSource -notmatch 'bFloatingMarkerVisible' -or
         $reopenedPlayerHudDataContextSource -notmatch 'bShouldShowText' -or
         $reopenedPlayerHudDataContextSource -notmatch 'strText' -or
-        $reopenedConditionContextSource -notmatch 'name\s*==\s*"hastrackedobjective"' -or
-        $reopenedConditionContextSource -notmatch 'CUIPlayerHudDataContext\.resolveTrackedObjective' -or
+        $reopenedPlayerHudDataContextSource -match 'bFloatingMarkerVisible' -or
+        $reopenedConditionContextSource -match 'hastrackedobjective|CUIPlayerHudDataContext\.resolveTrackedObjective' -or
         $reopenedRuntimeSource -notmatch 'function\s+suppressVanillaTrackedQuestText' -or
+        $reopenedRuntimeSource -notmatch 'function\s+scheduleVanillaTrackedQuestTextSuppression' -or
+        $reopenedRuntimeSource -notmatch 'function\s+onQuestTextSuppressionRender' -or
+        $reopenedRuntimeSource -notmatch 'function\s+cancelVanillaTrackedQuestTextSuppression' -or
+        $reopenedRuntimeSource -notmatch 'addEventListener\s*\(\s*Event\.RENDER\s*,\s*this\.onQuestTextSuppressionRender\s*\)' -or
+        $reopenedRuntimeSource -notmatch 'removeEventListener\s*\(\s*Event\.RENDER\s*,\s*this\.onQuestTextSuppressionRender\s*\)' -or
+        $reopenedRuntimeSource -notmatch 'questTextSuppressionStage\.invalidate\s*\(\s*\)' -or
         $reopenedRuntimeSource -notmatch 'getChildByName\s*\(\s*"FloatingQuestMarkerBase"\s*\)' -or
         $reopenedRuntimeSource -notmatch 'Text_mc.*visible\s*=\s*false' -or
-        $reopenedCompassChangeHandler -notmatch 'suppressVanillaTrackedQuestText\s*\(' -or
+        $reopenedRuntimeSource -match 'Text_mc.*alpha\s*=' -or
+        $reopenedCompassChangeHandler -notmatch 'scheduleVanillaTrackedQuestTextSuppression\s*\(' -or
+        $reopenedCompassChangeHandler -match 'suppressVanillaTrackedQuestText\s*\(' -or
         $reopenedRuntimeSource -match 'questMarkerRoot\.visible\s*=\s*false' -or
         $reopenedRuntimeSource -match 'markerClip\.visible\s*=\s*false') {
-      throw 'Card 142 must retain a persistent tracked-objective value and condition while suppressing only vanilla quest-marker text after compass updates.'
+      throw 'Card 142 must retain a floating-visibility-independent tracked-objective value and suppress only vanilla quest-marker text during a one-shot post-provider render pass.'
     }
     foreach ($meterRenderer in @('CUIContinuousBar','CUISegmentedBar','CUITriangleBar','CUIDotBar','CUIRadialMeter')) {
       $meterRendererPath = Join-Path $validationScriptsDirectory "scripts\venworks\cui\components\$meterRenderer.as"
@@ -1584,7 +1591,7 @@ try {
       [string]$questTrackerIncludes[0].x -ne '-64' -or
       [string]$questTrackerIncludes[0].y -ne '198' -or
       [string]$questTrackerIncludes[0].anchor -ne 'top-left' -or
-      [string]$questTrackerIncludes[0].visibleWhen -ne 'hasTrackedObjective AND hudVisible' -or
+      [string]$questTrackerIncludes[0].visibleWhen -ne 'always' -or
       $questTrackerGroups.Count -ne 1 -or
       [string]$questTrackerGroups[0].width -ne '447' -or
       [string]$questTrackerGroups[0].height -ne '90' -or
@@ -1596,7 +1603,7 @@ try {
       $questTrackerInteractiveNodes.Count -ne 0 -or
       $floatingQuestMarkerTargets.Count -ne 0 -or
       $stagedQuestTrackerText -match 'HudCompassData|aMissionMarkers|bShouldShowText|inScanner|weaponAiming') {
-    throw 'Card 142 must stage one noninteractive 447x90 tracked-objective panel below the upper-left HUD cluster, independent of scanner and aiming state, without hiding vanilla quest-marker icons.'
+    throw 'Card 142 must stage one always-present noninteractive 447x90 tracked-objective panel below the upper-left HUD cluster, independent of scanner and aiming state, without hiding vanilla quest-marker icons.'
   }
   $environmentalDiagnosticIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'environmental-hazard-diagnostic'

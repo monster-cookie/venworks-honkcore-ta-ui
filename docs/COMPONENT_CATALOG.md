@@ -471,28 +471,30 @@ user places the Watch in that panel's location.
 
 ## Card 142 persistent quest tracker
 
-The `quest-tracker` fragment is a noninteractive 447-by-90 panel immediately
-below the combined upper-left faction and contact-radar block. Its multiline,
-word-wrapped text binds to `quest.objective`. The include uses
-`hasTrackedObjective AND hudVisible`, so it follows HUD opacity and is absent
-when no active tracked-objective text exists. It has no scanner, aiming, combat,
-or view-mode condition and therefore remains part of normal, aiming, and
-scanner HUD compositions.
+The `quest-tracker` fragment is an independent noninteractive 447-by-90 panel
+immediately below the upper-left faction panel. Its multiline, word-wrapped
+text binds to `quest.objective`. The include uses `always`, so the panel remains
+present with a blank text field when no active tracked-objective text exists.
+It has no scanner, aiming, combat, or view-mode condition and therefore remains
+part of normal, aiming, and scanner HUD compositions. Its temporary overlap
+with the scanner-only survey window is outside Card 142 and belongs to the
+planned survey-window placement work.
 
-Both the value and condition are derived from the existing read-only
-`HudCompassData.aMissionMarkers` array. Resolution considers only markers whose
-`bFloatingMarkerVisible` flag is true, prefers the non-empty `strText` entry
-whose `bShouldShowText` flag matches vanilla's selected objective, and otherwise
-uses the first non-empty visible-marker text. The fallback keeps the tracked
-objective available when Bethesda clears its text-display flag outside scanner
-mode without inventing a new provider or mutating provider data.
+The value is derived from the existing read-only
+`HudCompassData.aMissionMarkers` array. Resolution prefers the non-empty
+`strText` entry whose `bShouldShowText` flag matches vanilla's selected
+objective and otherwise uses the first non-empty mission-marker text. It does
+not depend on `bFloatingMarkerVisible`, keeping the tracked objective available
+when Bethesda suppresses the floating marker outside scanner mode without
+inventing a new provider or mutating provider data.
 
-Vanilla `FloatingQuestMarkerBase` remains active. After each compass update the
-runtime mirrors Bethesda's visible-marker clip ordering and hides only the
-`Text_mc` for a marker with non-empty tracked-objective text and
-`bShouldShowText`. Quest icons, offscreen arrows, and numeric distance text stay
-under Bethesda ownership; the production layout does not hide the whole
-`floatingQuestMarkers` target.
+Vanilla `FloatingQuestMarkerBase` remains active and completes its provider
+processing before suppression. After each compass update the runtime schedules
+a one-shot `Event.RENDER` pass, mirrors Bethesda's visible-marker clip ordering,
+and sets `visible = false` only on the `Text_mc` for a marker with non-empty
+tracked-objective text and `bShouldShowText`. Quest icons, offscreen arrows, and
+numeric distance text stay under Bethesda ownership; the production layout
+does not hide the whole `floatingQuestMarkers` target or use alpha suppression.
 
 Live CUI delivery is dependency-aware. `HudCompassData` dispatches a dedicated
 radar event, so weapon, XP, inventory, environment, and other value-provider

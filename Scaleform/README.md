@@ -70,7 +70,12 @@ Component imports are relative filenames resolved only inside this fixed
 directory; nested imports and path traversal are unsupported. The production
 payload includes `quest-tracker.xml`, whose upper-left panel binds the existing
 `HudCompassData` tracked-objective text and remains independent of scanner and
-aiming state while hiding itself when the objective is empty.
+aiming state while leaving its text field blank when the objective is empty.
+The objective resolver is independent of floating-marker visibility. Vanilla
+quest markers finish processing before a one-shot pre-render pass sets only the
+selected objective `Text_mc.visible` to `false`; icons, arrows, and distance
+labels remain under Bethesda ownership. Scanner survey-window placement is
+outside the quest tracker's component contract.
 
 Regenerate the curated built-in icon definitions when their approved Font
 Awesome source subset changes:
