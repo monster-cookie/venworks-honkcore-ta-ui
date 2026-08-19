@@ -12,7 +12,7 @@ Goal 10 implements Codecks card `$13z`, **Implement scanner in the new
 customizable HUD**. The scanner state adds three passive surfaces:
 
 1. a top `SCANNING` banner with the player's current heading;
-2. a flickering 5-by-5 hash grid around the screen center; and
+2. a repeating 5-by-5 square-to-dot radial pulse around the screen center; and
 3. a right-side list of up to five validated contacts in front of the player.
 
 The component adds no native plugin, SFSE dependency, persistence, input
@@ -28,9 +28,9 @@ The production include is visible only while `inScanner` is true. That existing
 condition is derived from `HudCompassData.bIsHandscannerOpen`. Entering scanner
 mode therefore reveals one Venworks overlay; leaving scanner mode hides it and
 restores the normal HUD without retaining a duplicate panel or mutated normal
-state. Its flicker uses a bounded `Timer` that starts when the component enters
-the stage and stops and resets when it leaves the stage. No `ENTER_FRAME`
-listener is used.
+state. Its radial pulse uses a bounded `Timer` that starts when the component
+enters the stage and stops and resets when it leaves the stage. No
+`ENTER_FRAME` listener is used.
 
 In-engine acceptance must confirm that this composition does not overlap or
 obscure Bethesda's scanner-owned controls in first person, third person, normal
@@ -96,22 +96,24 @@ contains exactly one `scannerOverlay` component with:
 | --- | ---: | --- |
 | `fieldOfView` | `90` | 30 through 180 degrees |
 | `maxTargets` | `5` | 1 through 5 rows |
-| `flickerIntervalMs` | `140` | 50 through 2000 milliseconds |
+| `flickerIntervalMs` | `140` | 50 through 2000 milliseconds per pulse step; legacy attribute name retained for compatibility |
 | `scanningColor` | `#62DDF2` | Heading and scanner state |
 | `gridColor` | `#FFB51B` | 5-by-5 center grid |
 | `contactColor` | `#F2F7F9` | Non-hostile contacts |
 | `hostileColor` | `#FF5A5A` | Enemy contacts |
 | `backgroundColor` | `#020B10` | Bounded panel backing |
 
-The center grid deliberately leaves its middle hash empty so Bethesda's
-reticle remains visually owned and unobscured.
+The grid begins as 24 hollow squares. Five distance-bounded rings convert those
+squares to filled dots from the center outward, hold the completed dot pattern
+for one interval, and then reset to squares. The middle marker remains empty so
+Bethesda's reticle remains visually owned and unobscured.
 
 ## Implementation map
 
 - `CUITacticalAwarenessModel.as` validates, deduplicates, bounds, and codenames
   scanner candidates.
-- `CUIScannerOverlay.as` renders heading, grid, contacts, and timer-driven
-  flicker.
+- `CUIScannerOverlay.as` renders heading, contacts, and the timer-driven radial
+  square-to-dot pulse.
 - `CUIRuntime.as`, `CUILayoutParser.as`, and `CUICompositionResolver.as`
   register and route the component.
 - `layout-v1.xsd` defines its bounded configuration contract.
@@ -132,7 +134,8 @@ Build validation completed on 2026-08-18:
 - the regenerated seed retained one numbered ABC linkage domain containing
   every authored class, including `CUIScannerOverlay`;
 - the normal and large HUD movies compiled, reopened, and passed the scanner
-  registration, data-safety, timer-lifecycle, schema, and artifact assertions;
+  registration, data-safety, pulse/timer-lifecycle, schema, and artifact
+  assertions;
   and
 - the layout, scanner fragment, other production fragments, and both HUD movies
   staged successfully for VWKS, CF, FC, and TA with byte-identical loose CUI
@@ -140,8 +143,8 @@ Build validation completed on 2026-08-18:
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `hudmenu.gfx` | `CFD823ED456B41B216285835B138CB2076BDAAD4B743349FCC9745275631D928` |
-| `hudmenu_lrg.gfx` | `6A7B9577FDA08CAA33F0EECA75E098F225FA059BF6CEBBADB27B5B26B356F728` |
+| `hudmenu.gfx` | `26379C2EDD1992C866764AA36573E4F5972E18A1504D947D7E8B08D271E94535` |
+| `hudmenu_lrg.gfx` | `DD864E0D13D90560EDEB66DAB7AB67AEB4C794D6D176288FBF35A1B93B1D8D35` |
 
 The remaining validation is the in-engine acceptance matrix below.
 
@@ -162,8 +165,9 @@ In-engine acceptance:
    and the normal HUD restores exactly.
 2. Confirm the heading tracks the player's facing direction through north and
    the `359 -> 0` wrap.
-3. Confirm all 24 noncentral hashes remain visible and flicker without a dark or
-   full-screen frame.
+3. Confirm all 24 noncentral markers begin as hollow squares, convert to filled
+   dots in five outward-moving radial bands, hold briefly, reset cleanly, and
+   remain visible without a dark or full-screen frame.
 4. Confirm every listed contact corresponds to a valid forward provider record,
    nearest-first ordering is stable, and empty scans show `NO VALID CONTACTS`.
 5. Confirm Bethesda's reticle, interaction prompts, highlights, and scanner

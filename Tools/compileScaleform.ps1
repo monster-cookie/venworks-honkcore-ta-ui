@@ -1243,15 +1243,21 @@ try {
         $reopenedTacticalAwarenessModelSource -notmatch 'SCANNER_CODENAME_LENGTH\s*:\s*int\s*=\s*6' -or
         $reopenedScannerOverlaySource -notmatch 'GRID_COLUMNS\s*:\s*int\s*=\s*5' -or
         $reopenedScannerOverlaySource -notmatch 'GRID_ROWS\s*:\s*int\s*=\s*5' -or
+        $reopenedScannerOverlaySource -notmatch 'PULSE_RING_THRESHOLDS\s*:\s*Array\s*=\s*\[\s*1\s*,\s*2\s*,\s*4\s*,\s*5\s*,\s*8\s*\]' -or
+        $reopenedScannerOverlaySource -notmatch 'PULSE_HOLD_STEPS\s*:\s*int\s*=\s*1' -or
         $reopenedScannerOverlaySource -notmatch 'HARD_MAX_TARGETS\s*:\s*int\s*=\s*5' -or
-        $reopenedScannerOverlaySource -notmatch 'new Timer\s*\(\s*flickerIntervalMs\s*\)' -or
+        $reopenedScannerOverlaySource -notmatch 'new Timer\s*\(\s*pulseIntervalMs\s*\)' -or
+        $reopenedScannerOverlaySource -notmatch 'private\s+function\s+isPulseReached' -or
+        $reopenedScannerOverlaySource -notmatch 'private\s+function\s+drawSquare' -or
+        $reopenedScannerOverlaySource -notmatch 'private\s+function\s+drawDot' -or
+        $reopenedScannerOverlaySource -notmatch 'pulseStep\s*>=\s*PULSE_RING_THRESHOLDS\.length\s*\+\s*PULSE_HOLD_STEPS' -or
         $reopenedScannerOverlaySource -notmatch 'Event\.ADDED_TO_STAGE' -or
         $reopenedScannerOverlaySource -notmatch 'Event\.REMOVED_FROM_STAGE' -or
         $reopenedScannerOverlaySource -notmatch 'mouseEnabled\s*=\s*false' -or
         $reopenedScannerOverlaySource -notmatch 'mouseChildren\s*=\s*false' -or
         $reopenedScannerOverlaySource -match 'Event\.ENTER_FRAME' -or
         $reopenedScannerOverlaySource -notmatch 'NO VALID CONTACTS') {
-      throw 'Generated scanner overlay does not retain the bounded five-by-five grid, validated forward contacts, deterministic codenames, and stage-scoped timer lifecycle.'
+      throw 'Generated scanner overlay does not retain the bounded five-by-five radial square-to-dot pulse, validated forward contacts, deterministic codenames, and stage-scoped timer lifecycle.'
     }
     if ($reopenedTacticalAwarenessModelSource -notmatch 'CRITICAL_HOSTILE_DISTANCE\s*:\s*Number\s*=\s*25' -or
         $reopenedTacticalAwarenessModelSource -notmatch 'SEVERE_HOSTILE_DISTANCE\s*:\s*Number\s*=\s*50' -or
@@ -1470,7 +1476,7 @@ try {
       [int]$scannerOverlayNodes[0].flickerIntervalMs -ne 140 -or
       $scannerOverlayInteractiveNodes.Count -ne 0 -or
       $stagedScannerOverlayText -match 'diagnostic\.|HudCompassData|aEnemyMarkers|aMissionMarkers|aMarkers') {
-    throw 'Goal 10 must stage one centered scanner-only overlay with a 90-degree forward field, five validated contact rows, bounded flicker, and no diagnostic, provider, or interactive bindings.'
+    throw 'Goal 10 must stage one centered scanner-only overlay with a 90-degree forward field, five validated contact rows, a bounded pulse interval, and no diagnostic, provider, or interactive bindings.'
   }
   $stagedPlayerScannerText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'player-status-scanner.xml') -Raw
   $stagedPlayerScanner = [xml]$stagedPlayerScannerText

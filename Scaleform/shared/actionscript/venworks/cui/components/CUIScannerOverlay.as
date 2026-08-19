@@ -12,13 +12,15 @@ package venworks.cui.components
    {
       private static const GRID_COLUMNS:int = 5;
       private static const GRID_ROWS:int = 5;
+      private static const PULSE_RING_THRESHOLDS:Array = [1,2,4,5,8];
+      private static const PULSE_HOLD_STEPS:int = 1;
       private static const HARD_MAX_TARGETS:int = 5;
       private static const RAD_TO_DEG:Number = 180 / Math.PI;
       private static const HEADING_LABELS:Array = ["N","NE","E","SE","S","SW","W","NW"];
 
       private var fieldOfView:Number;
       private var maximumTargets:int;
-      private var flickerIntervalMs:int;
+      private var pulseIntervalMs:int;
       private var scanningColor:uint;
       private var gridColor:uint;
       private var contactColor:uint;
@@ -27,8 +29,8 @@ package venworks.cui.components
       private var gridShape:Shape;
       private var headingField:TextField;
       private var contactFields:Array;
-      private var flickerTimer:Timer;
-      private var flickerBright:Boolean;
+      private var pulseTimer:Timer;
+      private var pulseStep:int;
 
       public function CUIScannerOverlay(param1:XML)
       {
@@ -38,7 +40,7 @@ package venworks.cui.components
          fieldOfView = Math.max(30,Math.min(180,this.readNumber(param1,"fieldOfView",90)));
          maximumTargets = Math.max(1,Math.min(HARD_MAX_TARGETS,
             int(this.readNumber(param1,"maxTargets",HARD_MAX_TARGETS))));
-         flickerIntervalMs = Math.max(50,Math.min(2000,
+         pulseIntervalMs = Math.max(50,Math.min(2000,
             int(this.readNumber(param1,"flickerIntervalMs",140))));
          scanningColor = this.readColor(param1,"scanningColor",0x62DDF2);
          gridColor = this.readColor(param1,"gridColor",0xFFB51B);
@@ -47,8 +49,8 @@ package venworks.cui.components
          backgroundColor = this.readColor(param1,"backgroundColor",0x020B10);
          contactFields = [];
          this.createOverlay();
-         flickerTimer = new Timer(flickerIntervalMs);
-         flickerTimer.addEventListener(TimerEvent.TIMER,this.onFlickerTimer);
+         pulseTimer = new Timer(pulseIntervalMs);
+         pulseTimer.addEventListener(TimerEvent.TIMER,this.onPulseTimer);
          addEventListener(Event.ADDED_TO_STAGE,this.onAddedToStage);
          addEventListener(Event.REMOVED_FROM_STAGE,this.onRemovedFromStage);
          this.updateData(null);
@@ -85,7 +87,7 @@ package venworks.cui.components
 
          gridShape = new Shape();
          this.drawGrid();
-         gridShape.alpha = 0.72;
+         gridShape.alpha = 1;
          addChild(gridShape);
          this.createContactFields();
       }
@@ -130,31 +132,67 @@ package venworks.cui.components
          var centerX:Number = componentWidth / 2;
          var centerY:Number = componentHeight / 2;
          var spacing:Number = Math.min(54,Math.max(30,componentHeight / 9));
-         var tickSize:Number = 5;
+         var centerColumn:int = int(GRID_COLUMNS / 2);
+         var centerRow:int = int(GRID_ROWS / 2);
          var column:int = 0;
          var row:int = 0;
+         var columnOffset:int = 0;
+         var rowOffset:int = 0;
+         var distanceSquared:int = 0;
          var xPosition:Number = 0;
          var yPosition:Number = 0;
          gridShape.graphics.clear();
-         gridShape.graphics.lineStyle(1,gridColor,0.92);
          while(row < GRID_ROWS)
          {
             column = 0;
             while(column < GRID_COLUMNS)
             {
-               if(column != int(GRID_COLUMNS / 2) || row != int(GRID_ROWS / 2))
+               if(column != centerColumn || row != centerRow)
                {
-                  xPosition = centerX + (column - int(GRID_COLUMNS / 2)) * spacing;
-                  yPosition = centerY + (row - int(GRID_ROWS / 2)) * spacing;
-                  gridShape.graphics.moveTo(xPosition - tickSize,yPosition);
-                  gridShape.graphics.lineTo(xPosition + tickSize,yPosition);
-                  gridShape.graphics.moveTo(xPosition,yPosition - tickSize);
-                  gridShape.graphics.lineTo(xPosition,yPosition + tickSize);
+                  columnOffset = column - centerColumn;
+                  rowOffset = row - centerRow;
+                  distanceSquared = columnOffset * columnOffset + rowOffset * rowOffset;
+                  xPosition = centerX + columnOffset * spacing;
+                  yPosition = centerY + rowOffset * spacing;
+                  if(this.isPulseReached(distanceSquared))
+                  {
+                     this.drawDot(xPosition,yPosition);
+                  }
+                  else
+                  {
+                     this.drawSquare(xPosition,yPosition);
+                  }
                }
                ++column;
             }
             ++row;
          }
+      }
+
+      private function isPulseReached(param1:int) : Boolean
+      {
+         var ringIndex:int = 0;
+         if(pulseStep <= 0)
+         {
+            return false;
+         }
+         ringIndex = Math.min(pulseStep,PULSE_RING_THRESHOLDS.length) - 1;
+         return param1 <= int(PULSE_RING_THRESHOLDS[ringIndex]);
+      }
+
+      private function drawSquare(param1:Number, param2:Number) : void
+      {
+         var halfSize:Number = 4;
+         gridShape.graphics.lineStyle(2,gridColor,1);
+         gridShape.graphics.drawRect(param1 - halfSize,param2 - halfSize,halfSize * 2,halfSize * 2);
+      }
+
+      private function drawDot(param1:Number, param2:Number) : void
+      {
+         gridShape.graphics.lineStyle(0,gridColor,0);
+         gridShape.graphics.beginFill(gridColor,1);
+         gridShape.graphics.drawCircle(param1,param2,3.5);
+         gridShape.graphics.endFill();
       }
 
       private function updateHeading(param1:Number) : void
@@ -301,21 +339,30 @@ package venworks.cui.components
 
       private function onAddedToStage(param1:Event) : void
       {
-         flickerTimer.start();
+         pulseStep = 0;
+         this.drawGrid();
+         pulseTimer.start();
       }
 
       private function onRemovedFromStage(param1:Event) : void
       {
-         flickerTimer.stop();
-         flickerTimer.reset();
-         flickerBright = false;
-         gridShape.alpha = 0.72;
+         pulseTimer.stop();
+         pulseTimer.reset();
+         pulseStep = 0;
+         this.drawGrid();
       }
 
-      private function onFlickerTimer(param1:TimerEvent) : void
+      private function onPulseTimer(param1:TimerEvent) : void
       {
-         flickerBright = !flickerBright;
-         gridShape.alpha = flickerBright ? 0.94 : 0.58;
+         if(pulseStep >= PULSE_RING_THRESHOLDS.length + PULSE_HOLD_STEPS)
+         {
+            pulseStep = 0;
+         }
+         else
+         {
+            ++pulseStep;
+         }
+         this.drawGrid();
       }
    }
 }

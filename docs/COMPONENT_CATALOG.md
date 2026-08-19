@@ -145,7 +145,7 @@ gamer-facing configuration surface.
 | Warning panel | Complete | Severity color, icon, title, detail, and visibility/state rules. |
 | Item/ammo readout | Future | Weapon/item icon, amount, reserve amount, state color, and optional meter. |
 | Status-effect row | Implemented | Bounded active-effects presentation using verified HUD data; large-HUD acceptance remains pending. |
-| Scanner overlay | Implemented | Scanner-only heading banner, flickering 5-by-5 hash grid, and up to five validated forward contacts. It preserves Bethesda's reticle/crosshair and uses deterministic type/handle codenames instead of names or random data. |
+| Scanner overlay | Implemented | Scanner-only heading banner, 5-by-5 square-to-dot radial pulse, and up to five validated forward contacts. It preserves Bethesda's reticle/crosshair and uses deterministic type/handle codenames instead of names or random data. |
 | Reticle/crosshair | Vanilla-owned; not configurable | Bethesda retains the complete visual and lifecycle owner; proven crosshair data remains condition input only. |
 
 The Goal 7 equipment rail is intentionally passive. Favorites Menu remains the
@@ -523,7 +523,9 @@ been proven to represent meters or another real-world unit. An empty result is
 shown as `NO VALID CONTACTS`; random or placeholder contacts are prohibited.
 
 The centered production fragment configures a 90-degree field, five contact
-rows, a 140-millisecond bounded flicker interval, and semantic colors for the
+rows, a 140-millisecond bounded pulse-step interval, and semantic colors for the
 scanner heading, grid, general contacts, hostile contacts, and backing panels.
-The grid owns a stage-scoped `Timer` and no frame listener, input handler,
-persistence, native code, SFSE behavior, or third-party dependency.
+Its 24 noncentral markers begin as hollow squares, convert to filled dots in
+five radial bands from the center outward, hold briefly, and reset. The grid
+owns a stage-scoped `Timer` and no frame listener, input handler, persistence,
+native code, SFSE behavior, or third-party dependency.
