@@ -140,18 +140,11 @@ side and bottom screen margins so both scanners appear integrated into the
 helmet edge without moving their accepted content geometry. The vehicle-only
 exit label and Bethesda hold glyph are centered in the fixed lower helmet seal
 instead of extending the tactical ribbon behind Planet Data.
-Malformed fixtures are
-intentionally not well-formed XML, while other negative fixtures may be
-schema-valid and rejected by runtime semantic checks. See
-`../docs/GOAL_3_COMPONENT_LIBRARY.md`,
-`../docs/GOAL_4A_RESPONSIVE_LAYOUT.md`,
-`../docs/GOAL_4B_COMPOSITION.md`,
-`../docs/GOAL_4C_CONDITIONS.md`,
-`../docs/GOAL_4D_METER_RENDERERS.md`,
-`../docs/GOAL_4E_ASSET_PRIMITIVES.md`, and
-`../docs/GOAL_5_CHRONOMARK_REPLACEMENT.md`, and
-`../docs/GOAL_7_EQUIPMENT_ARC.md`, and
-`../docs/COMPONENT_CATALOG.md`.
+Malformed fixtures are intentionally not well-formed XML, while other negative
+fixtures may be schema-valid and rejected by runtime semantic checks. See the
+technical component and binding contracts in
+`../docs/COMPONENT_CATALOG.md`. Feature design, implementation history, and
+acceptance criteria are maintained in the Venworks Codecks workspace.
 
 An optional component `anchor` uses one of `top-left`, `top-center`,
 `top-right`, `center-left`, `center`, `center-right`, `bottom-left`,
@@ -172,8 +165,8 @@ before ordinary component validation and rendering. The runtime permits only
 text, meter-value, and visibility overrides; it does not evaluate scripts,
 expressions, interpolation, or arbitrary live bindings in Goal 4B.
 
-Goal 4C adds the bounded `visibleWhen` language described in
-`../docs/GOAL_4C_CONDITIONS.md`. Identifiers and keywords are case-insensitive,
+Goal 4C adds the bounded `visibleWhen` language cataloged in
+`../docs/COMPONENT_CATALOG.md`. Identifiers and keywords are case-insensitive,
 underscores are ignored, and provider values remain unknown/hidden until their
 first confirmed vanilla update. An optional `vanillaVisibility` section accepts
 only the hardcoded target allowlist; configuration cannot provide display paths
@@ -184,7 +177,8 @@ Goal 4D extends the shared meter-style contract with `segments`, `dots`, and
 directions. Segmented renderers optionally preserve a partially filled final
 segment, and triangle styles may select `uniform` or `alternating` orientation.
 Radial styles use a bounded start angle, sweep angle, direction, and stroke
-thickness. See `../docs/GOAL_4D_METER_RENDERERS.md` for the exact XML contract.
+thickness. See `../docs/COMPONENT_CATALOG.md` for the technical component
+contract.
 
 Goal 4E adds `svg`, `path`, `mask`, `icon`, and `symbol` primitives. Loose SVG
 files resolve below `Interface/VenworksCUI/Assets` and preload atomically before
@@ -195,8 +189,8 @@ static vector subset, authored paths reject arc commands, masks use
 rectangle/ellipse/path geometry, and symbols resolve only through a movie-aware
 Bethesda allowlist. Font Awesome arcs are converted to cubic paths by the
 developer generator. Direct raster, DDS, and supplemental SWF loading are
-unsupported after failed in-game probes. See
-`../docs/GOAL_4E_ASSET_PRIMITIVES.md` for the full contract and test fixtures.
+unsupported after failed in-game probes. See `../docs/COMPONENT_CATALOG.md` for
+the technical component contract.
 
 Goal 4G adds gamer-facing `button`, `quickBar`, `informationPanel`, and
 `warning` composite elements. The composition resolver lowers them to existing
@@ -222,5 +216,5 @@ configuration.
 
 The current allowlist covers `location.name`, the environmental scanner values,
 the production player serial/level/XP/time/health/O2/CO2/Digipick values,
-power/boost values, weapon values, and carry/credits values.
-See `../docs/GOAL_5_CHRONOMARK_REPLACEMENT.md` for the exact list.
+power/boost values, weapon values, and carry/credits values. See
+`../docs/COMPONENT_CATALOG.md` for the technical binding catalog.
