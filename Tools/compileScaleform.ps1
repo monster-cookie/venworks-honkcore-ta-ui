@@ -339,6 +339,31 @@ if ($playerHudDataContextText -notmatch 'Subscribe\("PersonalEffectsData",this\.
     $tacticalAwarenessModelText -notmatch 'PERSONALEFFECT_') {
   throw 'Goal 9 must use PlayerData.bIsInCombat directly for combat escalation, preserve the HUDStealthData condition owner, use live compass, environment, and persistent personal-effect data with the approved combat/proximity overrides and 35/15/35/15 fallback threat model, and avoid menu-scoped or transient status subscriptions.'
 }
+$criticalHealthGroups = @($providerProbeLayout.venworksCUI.components.SelectNodes("group[@id='player.critical-health']"))
+$criticalHealthPanels = @($providerProbeLayout.venworksCUI.components.SelectNodes("group[@id='player.critical-health']/panel[@id='player.critical-health.panel']"))
+$criticalHealthTitles = @($providerProbeLayout.venworksCUI.components.SelectNodes("group[@id='player.critical-health']/text[@id='player.critical-health.title']"))
+$criticalHealthValues = @($providerProbeLayout.venworksCUI.components.SelectNodes("group[@id='player.critical-health']/text[@id='player.critical-health.value']"))
+if ($conditionContextText -notmatch 'CRITICAL_HEALTH_PERCENTAGE:Number\s*=\s*35' -or
+    $conditionContextText -notmatch 'name == "criticalhealth"' -or
+    $conditionContextText -notmatch 'percentage < CRITICAL_HEALTH_PERCENTAGE' -or
+    $conditionContextText -notmatch 'function updateCriticalHealth\(param1:Object\)' -or
+    $conditionContextText -match 'Subscribe\("PlayerFrequentData"' -or
+    $runtimeText -notmatch 'syncCriticalHealthCondition\(\)' -or
+    $runtimeText -notmatch 'syncCriticalHealthCondition\(param1\.params\)' -or
+    $runtimeText -notmatch 'valueContext\.getValue\(source\)' -or
+    $criticalHealthGroups.Count -ne 1 -or
+    [string]$criticalHealthGroups[0].visibleWhen -ne 'criticalHealth' -or
+    [string]$criticalHealthGroups[0].anchor -ne 'top-center' -or
+    $criticalHealthPanels.Count -ne 1 -or
+    [string]$criticalHealthPanels[0].fillColor -ne '#310609' -or
+    [string]$criticalHealthPanels[0].strokeColor -ne '#FF5A5A' -or
+    $criticalHealthTitles.Count -ne 1 -or
+    [string]$criticalHealthTitles[0].value -ne 'CRITICAL HEALTH' -or
+    $criticalHealthValues.Count -ne 1 -or
+    [string]$criticalHealthValues[0].valueTemplate -ne 'HEALTH {player.health:integer}/{player.maxHealth:integer}' -or
+    $providerProbeLayout.OuterXml -match '(?i)vignette') {
+  throw 'Card 14C must bridge the existing player health percentage into one lifecycle-safe criticalHealth condition, show one red current/max-health box only below 35 percent, add no duplicate health provider subscription, and retain the archived vignette exclusion.'
+}
 foreach ($meterStyle in @($providerProbeLayout.venworksCUI.definitions.meterStyle)) {
   $renderer = [string]$meterStyle.renderer
   $rejectedAttributes = switch ($renderer) {
@@ -1091,6 +1116,16 @@ try {
         $reopenedConditionContextSource -notmatch 'changedConditions\[name\]\s*!==\s*true' -or
         $reopenedConditionContextSource -match 'dispatchEvent\s*\(\s*new Event\s*\(\s*Event\.CHANGE') {
       throw 'Generated condition context does not retain changed-condition events and no-op suppression.'
+    }
+    if ($reopenedConditionContextSource -notmatch 'CRITICAL_HEALTH_PERCENTAGE\s*:\s*Number\s*=\s*35' -or
+        $reopenedConditionContextSource -notmatch 'name\s*==\s*"criticalhealth"' -or
+        $reopenedConditionContextSource -notmatch 'percentage\s*<\s*CRITICAL_HEALTH_PERCENTAGE' -or
+        $reopenedConditionContextSource -notmatch 'function\s+updateCriticalHealth' -or
+        $reopenedConditionContextSource -match 'Subscribe\("PlayerFrequentData"' -or
+        $reopenedRuntimeSource -notmatch 'syncCriticalHealthCondition\s*\(\s*\)' -or
+        $reopenedRuntimeSource -notmatch 'syncCriticalHealthCondition\s*\(\s*param1\.params\s*\)' -or
+        $reopenedRuntimeSource -notmatch 'valueContext\.getValue\s*\(\s*source\s*\)') {
+      throw 'Generated critical-health logic does not retain the exact 35-percent boundary, existing-provider bridge, initial/live evaluation, or duplicate-subscription exclusion.'
     }
     if ($reopenedValueBindingSource -notmatch 'function\s+isAffectedBy' -or
         $reopenedValueBindingSource -notmatch 'param1\[source\]\s*===\s*true' -or
