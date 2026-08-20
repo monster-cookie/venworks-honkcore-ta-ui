@@ -1,13 +1,13 @@
 # Repository-specific agent context
 
 These instructions apply only to the Venworks HONKCORE Trackers Alliance
-Themer repository.
+Theme repository.
 
 ## Codecks project identity
 
 All product, design, planning, and implementation work for this repository
 belongs to the Codecks project with UUID
-`2edaa50c-9ab2-11f1-b0ff-bb838df74e0f`.
+`2edaa50c-9ab2-11f1-b0ff-bb838df74e0f` and named `Venworks - Customizable UI`.
 
 The project is currently named `Venworks - Customizeable UI`. Treat the UUID
 as the stable identity because the display name may be corrected or renamed.
