@@ -102,6 +102,18 @@ It confirms that every other exported class remains textually identical and
 that the reopened output contains the required layout and production contracts.
 Full exported Bethesda classes are never repository source.
 
+Root layouts may select one optional, version-1 palette by filename with the
+`palette` attribute. The runtime loads that file only from
+`Interface/VenworksCUI/palettes`, validates its bounded semantic color,
+typography, opacity, stroke, and asset roles, and resolves all `@palette.*`
+references after component imports are composed but before ordinary layout
+validation. Fragments may consume those references but cannot select or import
+a palette themselves. Existing layouts containing only literal values remain
+valid. Palette selection occurs when the HUD starts; live theme switching is
+not part of the runtime contract. A later theme migration that selects a
+palette must deploy that palette under the fixed palette directory in all four
+staging variants.
+
 Dynamic CUI text retains Starfield's exported `PromptMessageWidget` symbol and
 styles its timeline-created `textField` child. The build verifies that this
 vanilla field remains linked to the locale-specific `$MAIN_Font_Bold` outline
@@ -129,7 +141,10 @@ embedded symbols. The Goal 4G composite gallery exercises
 exercises all four warning severities and button states, a bounded quick bar
 with an independently hidden button, and an information panel with metadata,
 divider, and meter content. Goal 4G's positive and negative in-game checks are
-accepted. The staged `layout.xml` is the Goal 6 production HUD: it hides the
+accepted. The palette contract fixtures exercise schema versioning, duplicate
+roles, bounded values, safe palette selection, unknown references, category
+compatibility, and every supported semantic reference family without changing
+the staged production theme. The staged `layout.xml` is the Goal 6 production HUD: it hides the
 diagnostic vanilla bottom-left Chronomark and right-meter group, places the
 split-tab Player Data scanner at lower-left and the split-tab Planet
 Data/environmental scanner at lower-right, and places the passive Goal 7

@@ -230,6 +230,12 @@ $conditionContextSource = Resolve-RequiredFile `
 $runtimeSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\actionscript\venworks\cui\CUIRuntime.as") `
   -Description "CUI runtime"
+$paletteLoaderSource = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\actionscript\venworks\cui\CUIPaletteLoader.as") `
+  -Description "CUI palette loader"
+$paletteResolverSource = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\actionscript\venworks\cui\CUIPaletteResolver.as") `
+  -Description "CUI palette resolver"
 $gallerySvgSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\gallery-vector.svg") `
   -Description "Owned SVG gallery asset"
@@ -242,6 +248,9 @@ $invalidSvgSource = Resolve-RequiredFile `
 $layoutSchemaPath = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Schemas\VenworksCUI\layout-v1.xsd") `
   -Description "Venworks CUI layout schema"
+$paletteSchemaPath = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "..\Schemas\VenworksCUI\palette-v1.xsd") `
+  -Description "Venworks CUI palette schema"
 $fixtureDirectory = Resolve-RequiredDirectory `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\fixtures") `
   -Description "Scaleform fixture directory"
@@ -255,6 +264,7 @@ foreach ($positiveFixtureName in @(
   'meter-renderer-gallery.xml',
   'asset-primitives-gallery.xml',
   'composite-foundations-gallery.xml',
+  'layout-palette-gallery.xml',
   'chronomark-provider-probe.xml'
 )) {
   $positiveFixturePath = Resolve-RequiredFile `
@@ -266,11 +276,88 @@ foreach ($positiveFixtureName in @(
   }
 }
 
+$validPaletteFixturePath = Resolve-RequiredFile `
+  -Path (Join-Path $fixtureDirectory 'palette-contract-valid.xml') `
+  -Description "Valid palette contract fixture"
+$validPaletteErrors = @(Get-XmlSchemaErrors -XmlPath $validPaletteFixturePath -SchemaPath $paletteSchemaPath)
+if ($validPaletteErrors.Count -ne 0) {
+  throw "Valid palette contract fixture failed schema validation: $($validPaletteErrors -join '; ')"
+}
+[xml]$validPaletteFixture = Get-Content -LiteralPath $validPaletteFixturePath -Raw
+foreach ($requiredPaletteRole in @(
+  'foreground.primary', 'foreground.muted', 'accent.primary', 'accent.secondary',
+  'panel.background', 'panel.border', 'state.normal', 'state.selected', 'state.disabled',
+  'state.clear', 'state.caution', 'state.danger', 'state.critical', 'meter.health',
+  'meter.oxygen', 'meter.carbondioxide', 'meter.boost', 'marker.player', 'marker.ally',
+  'marker.hostile', 'marker.objective'
+)) {
+  if (@($validPaletteFixture.SelectNodes("/venworksCUIPalette/colors/color[@role='$requiredPaletteRole']")).Count -ne 1) {
+    throw "Valid palette contract fixture is missing required color role '$requiredPaletteRole'."
+  }
+}
+foreach ($invalidPaletteFixtureName in @(
+  'palette-unsupported.xml',
+  'palette-duplicate-role.xml',
+  'palette-invalid-value.xml'
+)) {
+  $invalidPaletteFixturePath = Resolve-RequiredFile `
+    -Path (Join-Path $fixtureDirectory $invalidPaletteFixtureName) `
+    -Description "Invalid palette contract fixture"
+  $invalidPaletteErrors = @(Get-XmlSchemaErrors -XmlPath $invalidPaletteFixturePath -SchemaPath $paletteSchemaPath)
+  if ($invalidPaletteErrors.Count -eq 0) {
+    throw "Invalid palette contract fixture $invalidPaletteFixtureName unexpectedly passed schema validation."
+  }
+}
+foreach ($semanticPaletteFixtureName in @(
+  'layout-unknown-palette-role.xml',
+  'layout-incompatible-palette-role.xml'
+)) {
+  $semanticPaletteFixturePath = Resolve-RequiredFile `
+    -Path (Join-Path $fixtureDirectory $semanticPaletteFixtureName) `
+    -Description "Semantically invalid palette-reference fixture"
+  $semanticPaletteErrors = @(Get-XmlSchemaErrors -XmlPath $semanticPaletteFixturePath -SchemaPath $layoutSchemaPath)
+  if ($semanticPaletteErrors.Count -ne 0) {
+    throw "Palette-reference fixture $semanticPaletteFixtureName should pass structural schema validation: $($semanticPaletteErrors -join '; ')"
+  }
+}
+$unsafePalettePathFixture = Resolve-RequiredFile `
+  -Path (Join-Path $fixtureDirectory 'layout-unsafe-palette-path.xml') `
+  -Description "Unsafe palette-path fixture"
+$unsafePalettePathErrors = @(Get-XmlSchemaErrors -XmlPath $unsafePalettePathFixture -SchemaPath $layoutSchemaPath)
+if ($unsafePalettePathErrors.Count -eq 0) {
+  throw 'Unsafe palette-path fixture unexpectedly passed schema validation.'
+}
+
 $providerProbeLayout = [xml](Get-Content -LiteralPath $providerProbeLayoutSource -Raw)
 $playerHudDataContextText = Get-Content -LiteralPath $playerHudDataContextSource -Raw
 $tacticalAwarenessModelText = Get-Content -LiteralPath $tacticalAwarenessModelSource -Raw
 $conditionContextText = Get-Content -LiteralPath $conditionContextSource -Raw
 $runtimeText = Get-Content -LiteralPath $runtimeSource -Raw
+$paletteLoaderText = Get-Content -LiteralPath $paletteLoaderSource -Raw
+$paletteResolverText = Get-Content -LiteralPath $paletteResolverSource -Raw
+if ($paletteLoaderText -notmatch 'PALETTE_ROOT:String\s*=\s*"VenworksCUI/palettes/"' -or
+    $paletteLoaderText -notmatch 'MAX_PALETTE_BYTES:int\s*=\s*65536' -or
+    $paletteLoaderText -notmatch 'Palette paths must name one XML file under VenworksCUI/palettes' -or
+    $paletteLoaderText -notmatch 'CUI PALETTE (MISSING|MALFORMED|UNSUPPORTED|INVALID|SECURITY ERROR)' -or
+    $paletteLoaderText -match 'https?://') {
+  throw 'CUI palette loading must remain bounded to one safe XML file under VenworksCUI/palettes with actionable failure categories.'
+}
+if ($paletteResolverText -notmatch '@palette\.colors\.' -or
+    $paletteResolverText -notmatch '@palette\.typography\.' -or
+    $paletteResolverText -notmatch '@palette\.opacities\.' -or
+    $paletteResolverText -notmatch '@palette\.strokes\.' -or
+    $paletteResolverText -notmatch '@palette\.assets\.' -or
+    $paletteResolverText -notmatch 'CUIIconLibrary\.isAllowlisted' -or
+    $paletteResolverText -notmatch 'CUISymbol\.isAllowlisted' -or
+    $paletteResolverText -match 'ExternalInterface|SharedObject|getDefinitionByName|URLLoader') {
+  throw 'CUI palette resolution must cover every approved semantic category and remain data-only with allowlisted packaged assets.'
+}
+if ($runtimeText -notmatch 'new CUIPaletteLoader\(\)' -or
+    $runtimeText -notmatch 'paletteLoader\.load\(config\)' -or
+    $runtimeText -notmatch 'var config:XML = paletteLoader\.layout' -or
+    $runtimeText -notmatch 'parser\.parse\(config\)') {
+  throw 'CUI runtime must centrally resolve the selected palette after import composition and before layout parsing.'
+}
 $playerSerialDerivation = [regex]::Match(
   $playerHudDataContextText,
   '(?s)private function derivePlayerSerial\(param1:String\).*?private function formatPlayerSerial')
@@ -855,7 +942,20 @@ try {
       'uExplosiveCount',
       'CUIAssetManager',
       'CUILayoutImportLoader',
+      'CUIPaletteLoader',
+      'CUIPaletteResolver',
       'VenworksCUI/components/',
+      'VenworksCUI/palettes/',
+      '@palette.colors.',
+      '@palette.typography.',
+      '@palette.opacities.',
+      '@palette.strokes.',
+      '@palette.assets.',
+      'CUI PALETTE MISSING',
+      'CUI PALETTE MALFORMED',
+      'CUI PALETTE UNSUPPORTED',
+      'CUI PALETTE INVALID',
+      'CUI PALETTE SECURITY ERROR',
       'The layout exceeds the 16-include limit',
       'Include paths must name one XML file',
       'cannot contain imports',

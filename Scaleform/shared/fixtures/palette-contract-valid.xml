@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUIPalette schemaVersion="1">
+  <colors>
+    <color role="foreground.primary" value="#F7FCFF" />
+    <color role="foreground.muted" value="#9CB7C5" />
+    <color role="accent.primary" value="#35E6E6" />
+    <color role="accent.secondary" value="#FFB51B" />
+    <color role="panel.background" value="#071923" />
+    <color role="panel.border" value="#35E6E6" />
+    <color role="state.normal" value="#F7FCFF" />
+    <color role="state.selected" value="#35E6E6" />
+    <color role="state.disabled" value="#526B78" />
+    <color role="state.clear" value="#64E572" />
+    <color role="state.caution" value="#FFD800" />
+    <color role="state.danger" value="#FF7B21" />
+    <color role="state.critical" value="#FF3C54" />
+    <color role="meter.health" value="#D34A5B" />
+    <color role="meter.oxygen" value="#35E6E6" />
+    <color role="meter.carbondioxide" value="#FFB51B" />
+    <color role="meter.boost" value="#A66BFF" />
+    <color role="marker.player" value="#F7FCFF" />
+    <color role="marker.ally" value="#64E572" />
+    <color role="marker.hostile" value="#FF3C54" />
+    <color role="marker.objective" value="#35E6E6" />
+  </colors>
+  <typography>
+    <style role="body" font="$MAIN_Font_Bold" fontSize="16" bold="false" color="foreground.primary" />
+    <style role="label" font="$MAIN_Font_Bold" fontSize="14" bold="false" color="foreground.muted" />
+    <style role="heading" font="$MAIN_Font_Bold" fontSize="22" bold="true" color="foreground.primary" />
+  </typography>
+  <opacities>
+    <opacity role="opaque" value="1" />
+    <opacity role="panel" value="0.94" />
+    <opacity role="muted" value="0.7" />
+  </opacities>
+  <strokes>
+    <stroke role="panel" color="panel.border" opacity="muted" width="2" />
+  </strokes>
+  <assets>
+    <asset role="faction.logo" kind="svg" value="venworks-logo.svg" />
+    <asset role="marker.icon" kind="icon" value="objective" />
+    <asset role="environment.symbol" kind="symbol" value="environment-alert" />
+  </assets>
+</venworksCUIPalette>

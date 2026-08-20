@@ -6,30 +6,62 @@
     </xs:restriction>
   </xs:simpleType>
 
-  <xs:simpleType name="colorType">
+  <xs:simpleType name="paletteReferenceType">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="17" />
+      <xs:maxLength value="128" />
+      <xs:pattern value="@palette[.](colors|typography|opacities|strokes|assets)[.][A-Za-z][A-Za-z0-9-]*([.][A-Za-z][A-Za-z0-9-]*)*" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="literalColorType">
     <xs:restriction base="xs:string">
       <xs:pattern value="#[0-9A-Fa-f]{6}" />
     </xs:restriction>
   </xs:simpleType>
 
-  <xs:simpleType name="symbolKeyType">
+  <xs:simpleType name="colorType">
+    <xs:union memberTypes="literalColorType paletteReferenceType" />
+  </xs:simpleType>
+
+  <xs:simpleType name="literalSymbolKeyType">
     <xs:restriction base="xs:string">
       <xs:pattern value="[a-z][a-z0-9-]{0,63}" />
     </xs:restriction>
   </xs:simpleType>
 
-  <xs:simpleType name="opacityType">
+  <xs:simpleType name="symbolKeyType">
+    <xs:union memberTypes="literalSymbolKeyType paletteReferenceType" />
+  </xs:simpleType>
+
+  <xs:simpleType name="literalOpacityType">
     <xs:restriction base="xs:decimal">
       <xs:minInclusive value="0" />
       <xs:maxInclusive value="1" />
     </xs:restriction>
   </xs:simpleType>
 
-  <xs:simpleType name="strictBooleanType">
+  <xs:simpleType name="opacityType">
+    <xs:union memberTypes="literalOpacityType paletteReferenceType" />
+  </xs:simpleType>
+
+  <xs:simpleType name="literalStrictBooleanType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="true" />
       <xs:enumeration value="false" />
     </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="strictBooleanType">
+    <xs:union memberTypes="literalStrictBooleanType paletteReferenceType" />
+  </xs:simpleType>
+
+  <xs:simpleType name="positiveIntegerType">
+    <xs:union memberTypes="xs:positiveInteger paletteReferenceType" />
+  </xs:simpleType>
+
+  <xs:simpleType name="nonNegativeIntegerType">
+    <xs:union memberTypes="xs:nonNegativeInteger paletteReferenceType" />
   </xs:simpleType>
 
   <xs:simpleType name="meterDirectionType">
@@ -102,12 +134,16 @@
     </xs:restriction>
   </xs:simpleType>
 
-  <xs:simpleType name="assetPathType">
+  <xs:simpleType name="literalAssetPathType">
     <xs:restriction base="xs:string">
       <xs:minLength value="5" />
       <xs:maxLength value="128" />
       <xs:pattern value="[A-Za-z0-9][A-Za-z0-9._/-]*" />
     </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="assetPathType">
+    <xs:union memberTypes="literalAssetPathType paletteReferenceType" />
   </xs:simpleType>
 
   <xs:simpleType name="assetFitType">
@@ -211,7 +247,7 @@
     <xs:attribute name="format" type="valueFormatType" default="raw" />
     <xs:attribute name="valueTemplate" type="valueTemplateType" />
     <xs:attribute name="font" type="xs:string" use="required" />
-    <xs:attribute name="fontSize" type="xs:positiveInteger" use="required" />
+    <xs:attribute name="fontSize" type="positiveIntegerType" use="required" />
     <xs:attribute name="color" type="colorType" use="required" />
     <xs:attribute name="bold" type="strictBooleanType" default="false" />
     <xs:attribute name="multiline" type="strictBooleanType" default="false" />
@@ -227,7 +263,7 @@
     <xs:attribute name="fillOpacity" type="opacityType" use="required" />
     <xs:attribute name="strokeColor" type="colorType" use="required" />
     <xs:attribute name="strokeOpacity" type="opacityType" use="required" />
-    <xs:attribute name="strokeWidth" type="xs:nonNegativeInteger" use="required" />
+    <xs:attribute name="strokeWidth" type="nonNegativeIntegerType" use="required" />
   </xs:complexType>
 
   <xs:complexType name="shapeType">
@@ -237,14 +273,14 @@
     <xs:attribute name="fillOpacity" type="opacityType" use="required" />
     <xs:attribute name="strokeColor" type="colorType" use="required" />
     <xs:attribute name="strokeOpacity" type="opacityType" use="required" />
-    <xs:attribute name="strokeWidth" type="xs:nonNegativeInteger" use="required" />
+    <xs:attribute name="strokeWidth" type="nonNegativeIntegerType" use="required" />
   </xs:complexType>
 
   <xs:complexType name="dividerType">
     <xs:attributeGroup ref="componentAttributes" />
     <xs:attribute name="color" type="colorType" use="required" />
     <xs:attribute name="strokeOpacity" type="opacityType" use="required" />
-    <xs:attribute name="strokeWidth" type="xs:positiveInteger" use="required" />
+    <xs:attribute name="strokeWidth" type="positiveIntegerType" use="required" />
   </xs:complexType>
 
   <xs:complexType name="contactRadarType">
@@ -321,7 +357,7 @@
     <xs:attribute name="fillOpacity" type="opacityType" use="required" />
     <xs:attribute name="strokeColor" type="colorType" use="required" />
     <xs:attribute name="strokeOpacity" type="opacityType" use="required" />
-    <xs:attribute name="strokeWidth" type="xs:nonNegativeInteger" use="required" />
+    <xs:attribute name="strokeWidth" type="nonNegativeIntegerType" use="required" />
   </xs:complexType>
 
   <xs:complexType name="symbolType">
@@ -623,6 +659,7 @@
       <xs:attribute name="safeTop" type="xs:nonNegativeInteger" use="required" />
       <xs:attribute name="safeRight" type="xs:nonNegativeInteger" use="required" />
       <xs:attribute name="safeBottom" type="xs:nonNegativeInteger" use="required" />
+      <xs:attribute name="palette" use="optional"><xs:simpleType><xs:restriction base="xs:string"><xs:pattern value="[A-Za-z0-9][A-Za-z0-9._-]{0,59}\.xml" /></xs:restriction></xs:simpleType></xs:attribute>
     </xs:complexType>
     <xs:key name="definitionIds"><xs:selector xpath="definitions/meterStyle | definitions/template" /><xs:field xpath="@id" /></xs:key>
     <xs:key name="meterStyleIds"><xs:selector xpath="definitions/meterStyle" /><xs:field xpath="@id" /></xs:key>
