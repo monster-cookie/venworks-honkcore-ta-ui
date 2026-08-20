@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080"
+             safeLeft="64" safeTop="36" safeRight="64" safeBottom="36" palette="contract-valid.xml">
+  <definitions>
+    <meterStyle id="palette.composite.meter" renderer="triangles" direction="right" partialSegments="true"
+                trianglePattern="alternating" fillColor="@palette.colors.meter.oxygen"
+                emptyColor="@palette.colors.panel.background" fillOpacity="@palette.opacities.opaque"
+                emptyOpacity="@palette.opacities.muted" segmentCount="12" gap="3" />
+  </definitions>
+  <components>
+    <warning id="palette.notice.info" x="100" y="12" width="340" height="100" z="100" anchor="top-left"
+             severity="info" icon="@palette.assets.marker.icon" title="SYSTEMS NOMINAL" message="PALETTE COMPOSITES ONLINE" />
+    <warning id="palette.notice.warning" x="460" y="12" width="340" height="100" z="100" anchor="top-left"
+             severity="warning" icon="oxygen" title="O2 RESERVE LOW" message="CHECK LIFE SUPPORT" />
+    <warning id="palette.notice.danger" x="820" y="12" width="340" height="100" z="100" anchor="top-left"
+             severity="danger" icon="poison" title="TOXIN EXPOSURE" message="SEEK CLEAN ATMOSPHERE" />
+    <warning id="palette.notice.critical" x="1180" y="12" width="340" height="100" z="100" anchor="top-left"
+             severity="critical" icon="warning" title="HULL BREACH" message="EVACUATE IMMEDIATELY" />
+
+    <button id="palette.button.normal" x="340" y="138" width="240" height="56" z="100" anchor="top-left"
+            label="NAVIGATION" icon="@palette.assets.marker.icon" key="1" state="normal" />
+    <button id="palette.button.selected" x="600" y="138" width="240" height="56" z="100" anchor="top-left"
+            label="SCANNER" icon="scanner" key="2" state="selected" />
+    <button id="palette.button.disabled" x="860" y="138" width="240" height="56" z="100" anchor="top-left"
+            label="VEHICLE" icon="vehicle" key="3" state="disabled" />
+    <button id="palette.button.warning" x="1120" y="138" width="240" height="56" z="100" anchor="top-left"
+            label="HAZARD" icon="burning" key="4" state="warning" />
+
+    <quickBar id="palette.quickbar" x="0" y="230" width="280" height="270" z="100" anchor="top-left"
+              buttonHeight="54" gap="8">
+      <button id="scanner" label="SCANNER" icon="@palette.assets.marker.icon" key="1" state="normal" />
+      <button id="weapon" label="WEAPON" icon="weapon" key="2" state="selected" />
+      <button id="hazard" label="HAZARD" icon="warning" key="3" state="warning" />
+      <button id="disabled" label="LOCKED" icon="shield" key="4" state="disabled" />
+    </quickBar>
+
+    <informationPanel id="palette.information" x="0" y="230" width="410" height="350" z="100" anchor="top-right"
+                      title="CASSIOPEIA I" icon="@palette.assets.marker.icon" body="SURVEY AND ENVIRONMENTAL SUMMARY">
+      <row id="atmosphere" label="ATMOSPHERE" value="O2 21%" icon="@palette.assets.marker.icon" />
+      <row id="gravity" label="GRAVITY" value="1.04G" />
+      <divider id="details" />
+      <meter id="survey" label="SURVEY PROGRESS" style="palette.composite.meter" value="63" max="100"
+             icon="@palette.assets.marker.icon" />
+    </informationPanel>
+  </components>
+</venworksCUI>

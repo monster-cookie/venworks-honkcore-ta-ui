@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080"
+             safeLeft="64" safeTop="36" safeRight="64" safeBottom="36" palette="contract-valid.xml">
+  <definitions>
+    <meterStyle id="unknown.composite.palette.role" renderer="continuous" direction="right"
+                fillColor="#35E6E6" emptyColor="#000000" fillOpacity="1" emptyOpacity="0.5" />
+  </definitions>
+  <components>
+    <button id="unknown.palette.button" x="0" y="0" width="240" height="56" z="1" anchor="top-left"
+            label="UNKNOWN ROLE" icon="@palette.assets.does-not-exist" key="1" state="normal" />
+  </components>
+</venworksCUI>

@@ -10,11 +10,11 @@ package venworks.cui
       private var resolvedComponentCount:int;
       private var compositeResolver:CUICompositeResolver;
 
-      public function CUICompositionResolver(param1:Object)
+      public function CUICompositionResolver(param1:Object, param2:Boolean = false)
       {
          super();
          templates = param1;
-         compositeResolver = new CUICompositeResolver();
+         compositeResolver = new CUICompositeResolver(param2);
       }
 
       public function resolve(param1:XML) : XML

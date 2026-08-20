@@ -17,6 +17,26 @@ package venworks.cui
          super();
       }
 
+      public function prepareForPalette(param1:XML) : XML
+      {
+         var result:XML = param1.copy();
+         var compositionTemplates:Object = null;
+         var resolvedComponents:XML = null;
+         this.requireName(param1,"venworksCUI");
+         if(param1.descendants("include").length() != 0 || param1.descendants("includes").length() != 0)
+         {
+            throw new Error("INVALID|Layout imports must be resolved before palette preparation.");
+         }
+         if(param1.definitions.length() != 1 || param1.components.length() != 1)
+         {
+            throw new Error("INVALID|Exactly one definitions and one components element are required before palette preparation.");
+         }
+         compositionTemplates = this.indexCompositionTemplates(param1.definitions[0]);
+         resolvedComponents = new CUICompositionResolver(compositionTemplates,param1.@palette.length() == 1).resolve(param1.components[0]);
+         result.components[0] = resolvedComponents;
+         return result;
+      }
+
       public function parse(param1:XML) : void
       {
          meterStyles = {};
@@ -160,6 +180,41 @@ package venworks.cui
          {
             this.parseTemplate(definition,String(definition.@id));
          }
+      }
+
+      private function indexCompositionTemplates(param1:XML) : Object
+      {
+         var result:Object = {};
+         var ids:Object = {};
+         var definition:XML = null;
+         var id:String = null;
+         var type:String = null;
+         var templateCount:int = 0;
+         this.requireAttributes(param1,[]);
+         for each(definition in param1.children())
+         {
+            type = String(definition.name());
+            if(type != "meterStyle" && type != "template")
+            {
+               throw new Error("INVALID|Unknown definition: " + type);
+            }
+            id = this.requireId(definition);
+            if(ids[id] != null)
+            {
+               throw new Error("INVALID|Duplicate definition id: " + id);
+            }
+            ids[id] = true;
+            if(type == "template")
+            {
+               ++templateCount;
+               if(templateCount > 64)
+               {
+                  throw new Error("INVALID|The layout exceeds the 64-template limit.");
+               }
+               result[id] = definition;
+            }
+         }
+         return result;
       }
 
       private function parseVanillaVisibility(param1:XML) : void

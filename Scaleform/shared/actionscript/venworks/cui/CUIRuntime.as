@@ -135,10 +135,20 @@ package venworks.cui
       {
          var config:XML = loader.layout;
          this.clearListeners();
-         paletteLoader = new CUIPaletteLoader();
-         paletteLoader.addEventListener(Event.COMPLETE,this.onPaletteLoaded);
-         paletteLoader.addEventListener(Event.CANCEL,this.onPaletteFailed);
-         paletteLoader.load(config);
+         try
+         {
+            this.setDiagnosticContext("PRE-PALETTE COMPOSITION",null,"COMPOSITE LOWERING");
+            parser = new CUILayoutParser();
+            config = parser.prepareForPalette(config);
+            paletteLoader = new CUIPaletteLoader();
+            paletteLoader.addEventListener(Event.COMPLETE,this.onPaletteLoaded);
+            paletteLoader.addEventListener(Event.CANCEL,this.onPaletteFailed);
+            paletteLoader.load(config);
+         }
+         catch(param2:Error)
+         {
+            this.showRuntimeError(param2);
+         }
       }
 
       private function onPaletteLoaded(param1:Event) : void
@@ -148,7 +158,6 @@ package venworks.cui
          try
          {
             this.setDiagnosticContext("PALETTE-RESOLVED LAYOUT VALIDATION",null,"PARSER INITIALIZATION");
-            parser = new CUILayoutParser();
             parser.parse(config);
             layoutConfig = config;
             this.setDiagnosticContext("ASSET MANAGER INITIALIZATION",null,"CONSTRUCTOR");

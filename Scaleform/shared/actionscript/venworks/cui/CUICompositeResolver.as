@@ -6,9 +6,12 @@ package venworks.cui
       private static const MAX_INFORMATION_ROWS:int = 12;
       private static const MAX_INFORMATION_ITEMS:int = 20;
 
-      public function CUICompositeResolver()
+      private var usePalette:Boolean;
+
+      public function CUICompositeResolver(param1:Boolean = false)
       {
          super();
+         usePalette = param1;
       }
 
       public function isComposite(param1:String) : Boolean
@@ -66,32 +69,36 @@ package venworks.cui
          width = int(param1.@width);
          height = int(param1.@height);
 
-         panelFill = "#0B202B";
-         panelStroke = "#35E6E6";
-         foreground = "#F7FCFF";
-         accent = "#35E6E6";
+         panelFill = this.paletteColor("panel.background","#0B202B");
+         panelStroke = this.paletteStroke("panel","color","#35E6E6");
+         foreground = this.paletteColor("state.normal","#F7FCFF");
+         accent = this.paletteColor("accent.primary","#35E6E6");
          if(state == "selected")
          {
-            panelFill = "#123C47";
-            foreground = "#35E6E6";
+            panelFill = this.paletteColor("panel.background","#123C47");
+            panelStroke = this.paletteColor("state.selected","#35E6E6");
+            foreground = this.paletteColor("state.selected","#35E6E6");
+            accent = this.paletteColor("state.selected","#35E6E6");
          }
          else if(state == "disabled")
          {
-            panelFill = "#111820";
-            panelStroke = "#63727A";
-            foreground = "#87959C";
-            accent = "#87959C";
+            panelFill = this.paletteColor("panel.background","#111820");
+            panelStroke = this.paletteColor("state.disabled","#63727A");
+            foreground = this.paletteColor("state.disabled","#87959C");
+            accent = this.paletteColor("state.disabled","#87959C");
          }
          else if(state == "warning")
          {
-            panelFill = "#3A2714";
-            panelStroke = "#FFB51B";
-            foreground = "#FFCB45";
-            accent = "#FFB51B";
+            panelFill = this.paletteColor("panel.background","#3A2714");
+            panelStroke = this.paletteColor("state.caution","#FFB51B");
+            foreground = this.paletteColor("state.caution","#FFCB45");
+            accent = this.paletteColor("state.caution","#FFB51B");
          }
 
          result = this.createRoot(param1);
-         result.appendChild(this.makePanel(this.childId(id,"background"),0,0,width,height,0,panelFill,"0.92",panelStroke,"1",2));
+         result.appendChild(this.makePanel(this.childId(id,"background"),0,0,width,height,0,panelFill,
+            this.paletteOpacity("panel","0.92"),panelStroke,this.paletteStroke("panel","opacity","1"),
+            this.paletteStroke("panel","width","2")));
          if(iconName.length > 0)
          {
             result.appendChild(this.makeIcon(this.childId(id,"icon"),14,int((height - 26) / 2),26,26,1,iconName,accent));
@@ -101,14 +108,18 @@ package venworks.cui
          if(key.length > 0)
          {
             labelWidth -= 48;
-            result.appendChild(this.makePanel(this.childId(id,"keyBackground"),width - 46,int((height - 30) / 2),32,30,1,"#07141B","0.85",panelStroke,"0.7",1));
-            result.appendChild(this.makeText(this.childId(id,"key"),width - 44,int((height - 20) / 2),28,20,2,key,12,foreground,"true","center"));
+            result.appendChild(this.makePanel(this.childId(id,"keyBackground"),width - 46,int((height - 30) / 2),32,30,1,
+               this.paletteColor("panel.background","#07141B"),this.paletteOpacity("muted","0.85"),panelStroke,
+               this.paletteOpacity("muted","0.7"),this.paletteStroke("panel","width","1")));
+            result.appendChild(this.makeText(this.childId(id,"key"),width - 44,int((height - 20) / 2),28,20,2,key,
+               "label",12,foreground,"true","center"));
          }
          if(labelWidth <= 0)
          {
             throw new Error("INVALID|Button " + id + " is too narrow for its configured content.");
          }
-         result.appendChild(this.makeText(this.childId(id,"label"),labelX,int((height - 22) / 2),labelWidth,22,2,label,14,foreground,"true","left"));
+         result.appendChild(this.makeText(this.childId(id,"label"),labelX,int((height - 22) / 2),labelWidth,22,2,label,
+            "label",14,foreground,"true","left"));
          return result;
       }
 
@@ -178,7 +189,7 @@ package venworks.cui
             synthetic.@y = y;
             synthetic.@width = width;
             synthetic.@height = buttonHeight;
-            synthetic.@opacity = 1;
+            synthetic.@opacity = this.paletteOpacity("opaque","1");
             synthetic.@visible = "true";
             synthetic.@rotation = 0;
             synthetic.@scaleX = 1;
@@ -230,17 +241,25 @@ package venworks.cui
          width = int(param1.@width);
          height = int(param1.@height);
          result = this.createRoot(param1);
-         result.appendChild(this.makePanel(this.childId(id,"background"),0,0,width,height,0,"#091C27","0.92","#35E6E6","1",2));
+         result.appendChild(this.makePanel(this.childId(id,"background"),0,0,width,height,0,
+            this.paletteColor("panel.background","#091C27"),this.paletteOpacity("panel","0.92"),
+            this.paletteStroke("panel","color","#35E6E6"),this.paletteStroke("panel","opacity","1"),
+            this.paletteStroke("panel","width","2")));
          if(titleIcon.length > 0)
          {
-            result.appendChild(this.makeIcon(this.childId(id,"titleIcon"),16,14,28,28,2,titleIcon,"#35E6E6"));
+            result.appendChild(this.makeIcon(this.childId(id,"titleIcon"),16,14,28,28,2,titleIcon,
+               this.paletteColor("accent.primary","#35E6E6")));
             titleX = 52;
          }
-         result.appendChild(this.makeText(this.childId(id,"title"),titleX,14,width - titleX - 16,28,2,title,18,"#F7FCFF","true","left"));
-         result.appendChild(this.makeDivider(this.childId(id,"headerDivider"),16,50,width - 32,1,1,"#35E6E6","0.9",1));
+         result.appendChild(this.makeText(this.childId(id,"title"),titleX,14,width - titleX - 16,28,2,title,
+            "heading",18,this.paletteTypography("heading","color","#F7FCFF"),"true","left"));
+         result.appendChild(this.makeDivider(this.childId(id,"headerDivider"),16,50,width - 32,1,1,
+            this.paletteColor("accent.primary","#35E6E6"),this.paletteOpacity("panel","0.9"),
+            this.paletteStroke("panel","width","1")));
          if(body.length > 0)
          {
-            result.appendChild(this.makeText(this.childId(id,"body"),16,contentY,width - 32,42,1,body,13,"#C8DCE4","false","left"));
+            result.appendChild(this.makeText(this.childId(id,"body"),16,contentY,width - 32,42,1,body,
+               "body",13,this.paletteTypography("body","color","#C8DCE4"),"false","left"));
             contentY += 50;
          }
 
@@ -350,11 +369,15 @@ package venworks.cui
          labelX = 0;
          if(iconName.length > 0)
          {
-            result.appendChild(this.makeIcon(this.childId(String(result.@id),"icon"),0,5,20,20,1,iconName,"#35E6E6"));
+            result.appendChild(this.makeIcon(this.childId(String(result.@id),"icon"),0,5,20,20,1,iconName,
+               this.paletteColor("accent.primary","#35E6E6")));
             labelX = 28;
          }
-         result.appendChild(this.makeText(this.childId(String(result.@id),"label"),labelX,4,int((param4 - 32) * 0.52) - labelX,22,1,String(param2.@label),13,"#C8DCE4","false","left"));
-         result.appendChild(this.makeText(this.childId(String(result.@id),"value"),int((param4 - 32) * 0.52),4,int((param4 - 32) * 0.48),22,1,String(param2.@value),13,"#F7FCFF","true","right"));
+         result.appendChild(this.makeText(this.childId(String(result.@id),"label"),labelX,4,int((param4 - 32) * 0.52) - labelX,22,1,
+            String(param2.@label),"label",13,this.paletteTypography("label","color","#C8DCE4"),"false","left"));
+         result.appendChild(this.makeText(this.childId(String(result.@id),"value"),int((param4 - 32) * 0.52),4,
+            int((param4 - 32) * 0.48),22,1,String(param2.@value),"body",13,
+            this.paletteTypography("body","color","#F7FCFF"),"true","right"));
          return result;
       }
 
@@ -373,12 +396,14 @@ package venworks.cui
          labelX = 0;
          if(iconName.length > 0)
          {
-            result.appendChild(this.makeIcon(this.childId(String(result.@id),"icon"),0,0,20,20,1,iconName,"#35E6E6"));
+            result.appendChild(this.makeIcon(this.childId(String(result.@id),"icon"),0,0,20,20,1,iconName,
+               this.paletteColor("accent.primary","#35E6E6")));
             labelX = 28;
          }
          if(label.length > 0)
          {
-            result.appendChild(this.makeText(this.childId(String(result.@id),"label"),labelX,0,param4 - 32 - labelX,20,1,label,12,"#C8DCE4","true","left"));
+            result.appendChild(this.makeText(this.childId(String(result.@id),"label"),labelX,0,param4 - 32 - labelX,20,1,label,
+               "label",12,this.paletteTypography("label","color","#C8DCE4"),"true","left"));
          }
          result.appendChild(this.makeMeter(this.childId(String(result.@id),"meter"),0,25,param4 - 32,16,1,String(param2.@style),String(param2.@value),String(param2.@max)));
          return result;
@@ -390,7 +415,9 @@ package venworks.cui
          this.validateInformationChild(param2,"divider");
          this.setBase(result,this.childId(param1,String(param2.@id)),16,param3,param4 - 32,14,1);
          this.copyChildVisibility(param2,result);
-         result.appendChild(this.makeDivider(this.childId(String(result.@id),"line"),0,6,param4 - 32,1,1,"#35E6E6","0.55",1));
+         result.appendChild(this.makeDivider(this.childId(String(result.@id),"line"),0,6,param4 - 32,1,1,
+            this.paletteColor("accent.primary","#35E6E6"),this.paletteOpacity("muted","0.55"),
+            this.paletteStroke("panel","width","1")));
          return result;
       }
 
@@ -425,33 +452,37 @@ package venworks.cui
          message = this.requireText(param1,"message");
          width = int(param1.@width);
          height = int(param1.@height);
-         fillColor = "#08242C";
-         strokeColor = "#35E6E6";
-         accentColor = "#35E6E6";
+         fillColor = this.paletteColor("panel.background","#08242C");
+         strokeColor = this.paletteColor("accent.primary","#35E6E6");
+         accentColor = this.paletteColor("accent.primary","#35E6E6");
          if(severity == "warning")
          {
-            fillColor = "#332412";
-            strokeColor = "#FFB51B";
-            accentColor = "#FFCB45";
+            fillColor = this.paletteColor("panel.background","#332412");
+            strokeColor = this.paletteColor("state.caution","#FFB51B");
+            accentColor = this.paletteColor("state.caution","#FFCB45");
          }
          else if(severity == "danger")
          {
-            fillColor = "#351B16";
-            strokeColor = "#FF6B4A";
-            accentColor = "#FF8A70";
+            fillColor = this.paletteColor("panel.background","#351B16");
+            strokeColor = this.paletteColor("state.danger","#FF6B4A");
+            accentColor = this.paletteColor("state.danger","#FF8A70");
          }
          else if(severity == "critical")
          {
-            fillColor = "#350F12";
-            strokeColor = "#FF4545";
-            accentColor = "#FF6868";
+            fillColor = this.paletteColor("panel.background","#350F12");
+            strokeColor = this.paletteColor("state.critical","#FF4545");
+            accentColor = this.paletteColor("state.critical","#FF6868");
          }
 
          result = this.createRoot(param1);
-         result.appendChild(this.makePanel(this.childId(id,"background"),0,0,width,height,0,fillColor,"0.94",strokeColor,"1",2));
+         result.appendChild(this.makePanel(this.childId(id,"background"),0,0,width,height,0,fillColor,
+            this.paletteOpacity("panel","0.94"),strokeColor,this.paletteStroke("panel","opacity","1"),
+            this.paletteStroke("panel","width","2")));
          result.appendChild(this.makeIcon(this.childId(id,"icon"),18,int((height - 40) / 2),40,40,1,iconName,accentColor));
-         result.appendChild(this.makeText(this.childId(id,"title"),72,16,width - 90,25,2,title,17,accentColor,"true","left"));
-         result.appendChild(this.makeText(this.childId(id,"message"),72,46,width - 90,height - 58,2,message,13,"#F7FCFF","false","left"));
+         result.appendChild(this.makeText(this.childId(id,"title"),72,16,width - 90,25,2,title,
+            "heading",17,accentColor,"true","left"));
+         result.appendChild(this.makeText(this.childId(id,"message"),72,46,width - 90,height - 58,2,message,
+            "body",13,this.paletteTypography("body","color","#F7FCFF"),"false","left"));
          return result;
       }
 
@@ -459,7 +490,7 @@ package venworks.cui
       {
          var result:XML = <group />;
          this.setBase(result,String(param1.@id),Number(param1.@x),Number(param1.@y),int(param1.@width),int(param1.@height),int(param1.@z));
-         result.@opacity = param1.@opacity.length() == 1 ? String(param1.@opacity) : "1";
+         result.@opacity = param1.@opacity.length() == 1 ? String(param1.@opacity) : this.paletteOpacity("opaque","1");
          result.@visible = param1.@visible.length() == 1 ? String(param1.@visible).toLowerCase() : "true";
          result.@rotation = param1.@rotation.length() == 1 ? String(param1.@rotation) : "0";
          result.@scaleX = param1.@scaleX.length() == 1 ? String(param1.@scaleX) : "1";
@@ -476,7 +507,7 @@ package venworks.cui
          param1.@y = param4;
          param1.@width = param5;
          param1.@height = param6;
-         param1.@opacity = 1;
+         param1.@opacity = this.paletteOpacity("opaque","1");
          param1.@visible = "true";
          param1.@rotation = 0;
          param1.@scaleX = 1;
@@ -484,7 +515,7 @@ package venworks.cui
          param1.@z = param7;
       }
 
-      private function makePanel(param1:String, param2:int, param3:int, param4:int, param5:int, param6:int, param7:String, param8:String, param9:String, param10:String, param11:int) : XML
+      private function makePanel(param1:String, param2:int, param3:int, param4:int, param5:int, param6:int, param7:String, param8:String, param9:String, param10:String, param11:String) : XML
       {
          var result:XML = <panel />;
          this.setBase(result,param1,param2,param3,param4,param5,param6);
@@ -496,16 +527,16 @@ package venworks.cui
          return result;
       }
 
-      private function makeText(param1:String, param2:int, param3:int, param4:int, param5:int, param6:int, param7:String, param8:int, param9:String, param10:String, param11:String) : XML
+      private function makeText(param1:String, param2:int, param3:int, param4:int, param5:int, param6:int, param7:String, param8:String, param9:int, param10:String, param11:String, param12:String) : XML
       {
          var result:XML = <text />;
          this.setBase(result,param1,param2,param3,param4,param5,param6);
          result.@value = param7;
-         result.@font = "$MAIN_Font_Bold";
-         result.@fontSize = param8;
-         result.@color = param9;
-         result.@bold = param10;
-         result.@align = param11;
+         result.@font = this.paletteTypography(param8,"font","$MAIN_Font_Bold");
+         result.@fontSize = this.paletteTypography(param8,"fontSize",String(param9));
+         result.@color = param10;
+         result.@bold = this.paletteTypography(param8,"bold",param11);
+         result.@align = param12;
          return result;
       }
 
@@ -521,7 +552,7 @@ package venworks.cui
          return result;
       }
 
-      private function makeDivider(param1:String, param2:int, param3:int, param4:int, param5:int, param6:int, param7:String, param8:String, param9:int) : XML
+      private function makeDivider(param1:String, param2:int, param3:int, param4:int, param5:int, param6:int, param7:String, param8:String, param9:String) : XML
       {
          var result:XML = <divider />;
          this.setBase(result,param1,param2,param3,param4,param5,param6);
@@ -539,6 +570,26 @@ package venworks.cui
          result.@value = param8;
          result.@max = param9;
          return result;
+      }
+
+      private function paletteColor(param1:String, param2:String) : String
+      {
+         return usePalette ? "@palette.colors." + param1 : param2;
+      }
+
+      private function paletteOpacity(param1:String, param2:String) : String
+      {
+         return usePalette ? "@palette.opacities." + param1 : param2;
+      }
+
+      private function paletteStroke(param1:String, param2:String, param3:String) : String
+      {
+         return usePalette ? "@palette.strokes." + param1 + "." + param2 : param3;
+      }
+
+      private function paletteTypography(param1:String, param2:String, param3:String) : String
+      {
+         return usePalette ? "@palette.typography." + param1 + "." + param2 : param3;
       }
 
       private function commonAttributes() : Array
@@ -642,11 +693,21 @@ package venworks.cui
       private function optionalIcon(param1:XML, param2:String) : String
       {
          var value:String = "";
+         var role:String = null;
          if(param1.attribute(param2).length() == 0)
          {
             return value;
          }
-         value = String(param1.attribute(param2)).toLowerCase();
+         value = String(param1.attribute(param2));
+         if(usePalette && value.indexOf("@palette.assets.") == 0)
+         {
+            role = value.substring(16);
+            if(/^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)*$/.test(role) && role.length <= 64)
+            {
+               return value;
+            }
+         }
+         value = value.toLowerCase();
          if(!/^[a-z][a-z0-9-]{0,63}$/.test(value))
          {
             throw new Error("INVALID|Invalid icon key on " + String(param1.name()) + ": " + value);

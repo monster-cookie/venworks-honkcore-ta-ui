@@ -236,6 +236,15 @@ $paletteLoaderSource = Resolve-RequiredFile `
 $paletteResolverSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\actionscript\venworks\cui\CUIPaletteResolver.as") `
   -Description "CUI palette resolver"
+$layoutParserSource = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\actionscript\venworks\cui\CUILayoutParser.as") `
+  -Description "CUI layout parser"
+$compositionResolverSource = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\actionscript\venworks\cui\CUICompositionResolver.as") `
+  -Description "CUI composition resolver"
+$compositeResolverSource = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\actionscript\venworks\cui\CUICompositeResolver.as") `
+  -Description "CUI composite resolver"
 $gallerySvgSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\gallery-vector.svg") `
   -Description "Owned SVG gallery asset"
@@ -265,6 +274,7 @@ foreach ($positiveFixtureName in @(
   'asset-primitives-gallery.xml',
   'composite-foundations-gallery.xml',
   'layout-palette-gallery.xml',
+  'layout-palette-composites.xml',
   'chronomark-provider-probe.xml'
 )) {
   $positiveFixturePath = Resolve-RequiredFile `
@@ -310,7 +320,8 @@ foreach ($invalidPaletteFixtureName in @(
 }
 foreach ($semanticPaletteFixtureName in @(
   'layout-unknown-palette-role.xml',
-  'layout-incompatible-palette-role.xml'
+  'layout-incompatible-palette-role.xml',
+  'layout-unknown-composite-palette-role.xml'
 )) {
   $semanticPaletteFixturePath = Resolve-RequiredFile `
     -Path (Join-Path $fixtureDirectory $semanticPaletteFixtureName) `
@@ -327,6 +338,18 @@ $unsafePalettePathErrors = @(Get-XmlSchemaErrors -XmlPath $unsafePalettePathFixt
 if ($unsafePalettePathErrors.Count -eq 0) {
   throw 'Unsafe palette-path fixture unexpectedly passed schema validation.'
 }
+$paletteCompositeFixturePath = Resolve-RequiredFile `
+  -Path (Join-Path $fixtureDirectory 'layout-palette-composites.xml') `
+  -Description "Palette composite contract fixture"
+[xml]$paletteCompositeFixture = Get-Content -LiteralPath $paletteCompositeFixturePath -Raw
+if ([string]$paletteCompositeFixture.venworksCUI.palette -ne 'contract-valid.xml' -or
+    @($paletteCompositeFixture.venworksCUI.components.button).Count -ne 4 -or
+    @($paletteCompositeFixture.venworksCUI.components.quickBar).Count -ne 1 -or
+    @($paletteCompositeFixture.venworksCUI.components.informationPanel).Count -ne 1 -or
+    @($paletteCompositeFixture.venworksCUI.components.warning).Count -ne 4 -or
+    @($paletteCompositeFixture.SelectNodes("//@icon[starts-with(., '@palette.assets.')]")).Count -lt 5) {
+  throw 'Palette composite fixture must cover every composite family, button state, warning severity, and palette-backed icon position.'
+}
 
 $providerProbeLayout = [xml](Get-Content -LiteralPath $providerProbeLayoutSource -Raw)
 $playerHudDataContextText = Get-Content -LiteralPath $playerHudDataContextSource -Raw
@@ -335,6 +358,9 @@ $conditionContextText = Get-Content -LiteralPath $conditionContextSource -Raw
 $runtimeText = Get-Content -LiteralPath $runtimeSource -Raw
 $paletteLoaderText = Get-Content -LiteralPath $paletteLoaderSource -Raw
 $paletteResolverText = Get-Content -LiteralPath $paletteResolverSource -Raw
+$layoutParserText = Get-Content -LiteralPath $layoutParserSource -Raw
+$compositionResolverText = Get-Content -LiteralPath $compositionResolverSource -Raw
+$compositeResolverText = Get-Content -LiteralPath $compositeResolverSource -Raw
 if ($paletteLoaderText -notmatch 'PALETTE_ROOT:String\s*=\s*"VenworksCUI/palettes/"' -or
     $paletteLoaderText -notmatch 'MAX_PALETTE_BYTES:int\s*=\s*65536' -or
     $paletteLoaderText -notmatch 'Palette paths must name one XML file under VenworksCUI/palettes' -or
@@ -357,6 +383,19 @@ if ($runtimeText -notmatch 'new CUIPaletteLoader\(\)' -or
     $runtimeText -notmatch 'var config:XML = paletteLoader\.layout' -or
     $runtimeText -notmatch 'parser\.parse\(config\)') {
   throw 'CUI runtime must centrally resolve the selected palette after import composition and before layout parsing.'
+}
+$palettePreparationIndex = $runtimeText.IndexOf('config = parser.prepareForPalette(config)')
+$paletteLoadIndex = $runtimeText.IndexOf('paletteLoader.load(config)')
+if ($palettePreparationIndex -lt 0 -or $paletteLoadIndex -lt 0 -or $palettePreparationIndex -ge $paletteLoadIndex -or
+    $layoutParserText -notmatch 'new CUICompositionResolver\(compositionTemplates,param1\.@palette\.length\(\) == 1\)' -or
+    $layoutParserText -notmatch 'result\.components\[0\] = resolvedComponents' -or
+    $compositionResolverText -notmatch 'new CUICompositeResolver\(param2\)' -or
+    $compositeResolverText -notmatch 'value\.indexOf\("@palette\.assets\."\) == 0' -or
+    $compositeResolverText -notmatch '"@palette\.colors\." \+ param1' -or
+    $compositeResolverText -notmatch '"@palette\.typography\." \+ param1 \+ "\." \+ param2' -or
+    $compositeResolverText -notmatch '"@palette\.opacities\." \+ param1' -or
+    $compositeResolverText -notmatch '"@palette\.strokes\." \+ param1 \+ "\." \+ param2') {
+  throw 'CUI composite lowering must run before palette loading and emit compatible primitive semantic references for every palette category.'
 }
 $playerSerialDerivation = [regex]::Match(
   $playerHudDataContextText,
@@ -1372,6 +1411,20 @@ try {
     }
     if ($reopenedCompositionResolverSource -notmatch 'type\s*==\s*"icon"') {
       throw 'Generated CUICompositionResolver does not accept icon leaf components.'
+    }
+    $reopenedPalettePreparationIndex = $reopenedRuntimeSource.IndexOf('config = parser.prepareForPalette(config)')
+    $reopenedPaletteLoadIndex = $reopenedRuntimeSource.IndexOf('paletteLoader.load(config)')
+    if ($reopenedPalettePreparationIndex -lt 0 -or $reopenedPaletteLoadIndex -lt 0 -or
+        $reopenedPalettePreparationIndex -ge $reopenedPaletteLoadIndex -or
+        $reopenedLayoutParserSource -notmatch 'function\s+prepareForPalette' -or
+        $reopenedLayoutParserSource -notmatch 'new CUICompositionResolver\s*\(\s*compositionTemplates\s*,\s*param1\.@palette\.length\(\)\s*==\s*1\s*\)' -or
+        $reopenedCompositionResolverSource -notmatch 'new CUICompositeResolver\s*\(\s*param2\s*\)' -or
+        $reopenedCompositeResolverSource -notmatch '@palette\.assets\.' -or
+        $reopenedCompositeResolverSource -notmatch '@palette\.colors\.' -or
+        $reopenedCompositeResolverSource -notmatch '@palette\.typography\.' -or
+        $reopenedCompositeResolverSource -notmatch '@palette\.opacities\.' -or
+        $reopenedCompositeResolverSource -notmatch '@palette\.strokes\.') {
+      throw 'Generated ActionScript does not retain pre-palette composite lowering and semantic composite palette references.'
     }
     if ($reopenedCompositionResolverSource -notmatch 'type\s*==\s*"contactRadar"' -or
         $reopenedLayoutParserSource -notmatch 'type\s*==\s*"contactRadar"' -or

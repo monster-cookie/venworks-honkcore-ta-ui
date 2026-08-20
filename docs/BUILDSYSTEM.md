@@ -51,14 +51,18 @@ resolution remains the semantic gate for role existence, field/category
 compatibility, required roles, and asset allowlists.
 
 The normal build validates the positive palette contract and palette-layout
-gallery, requires unsupported versions, duplicate roles, invalid values, and
 unsafe paths to fail structurally, and keeps unknown-role and incompatible-role
-fixtures structurally valid for the runtime semantic gate. It also verifies that
-the authored loader remains fixed to `VenworksCUI/palettes`, retains its size
-and path bounds, and that the resolver and runtime integration survive the
-normal/large movie import and reopen cycle. The production layout remains
-literal-only until a separately approved theme migration selects and stages a
-palette.
+fixtures structurally valid for the runtime semantic gate. The runtime lowers
+bounded composites, templates, repeaters, and states on a copy of the fully
+imported layout before palette resolution, then performs ordinary parser
+validation on the resolved primitive tree. The palette-composite fixture covers
+buttons, quick bars, information panels, warnings, palette-backed composite
+icons, every button state, and every warning severity. The build also verifies
+that the authored loader remains fixed to `VenworksCUI/palettes`, retains its
+size and path bounds, and that the ordering and semantic composite output
+survive the normal/large movie import and reopen cycle. The production layout
+remains literal-only until a separately approved theme migration selects and
+stages a palette.
 
 ## One-domain Scaleform rule
 
