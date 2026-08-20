@@ -25,6 +25,7 @@ package venworks.cui
          componentIds = {};
          conditionParser = new CUIConditionParser();
          vanillaVisibilityRoot = <vanillaVisibility />;
+         this.rejectUnresolvedPaletteReferences(param1);
          this.requireName(param1,"venworksCUI");
          if(param1.descendants("include").length() != 0 || param1.descendants("includes").length() != 0)
          {
@@ -99,6 +100,23 @@ package venworks.cui
             throw new Error("INVALID|Unknown meter style reference: " + param1);
          }
          return meterStyles[param1] as XML;
+      }
+
+      private function rejectUnresolvedPaletteReferences(param1:XML) : void
+      {
+         var attribute:XML = null;
+         var child:XML = null;
+         for each(attribute in param1.attributes())
+         {
+            if(String(attribute).indexOf("@palette.") >= 0)
+            {
+               throw new Error("INVALID|Unresolved palette reference on " + String(param1.name()) + ".@" + String(attribute.name()) + ".");
+            }
+         }
+         for each(child in param1.children())
+         {
+            this.rejectUnresolvedPaletteReferences(child);
+         }
       }
 
       private function parseDefinitions(param1:XML) : void

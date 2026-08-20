@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUIPalette schemaVersion="1">
+  <colors>
+    <color role="foreground.primary" value="#FFFFFF" />
+    <color role="foreground.primary" value="#000000" />
+  </colors>
+  <typography><style role="body" font="$MAIN_Font_Bold" fontSize="16" bold="false" color="foreground.primary" /></typography>
+  <opacities><opacity role="opaque" value="1" /></opacities>
+  <strokes><stroke role="panel" color="foreground.primary" opacity="opaque" width="1" /></strokes>
+  <assets><asset role="faction.logo" kind="svg" value="venworks-logo.svg" /></assets>
+</venworksCUIPalette>

@@ -41,6 +41,25 @@ metadata records machine-specific absolute paths. Bethesda binaries,
 decompiled ActionScript, XML, and provider fixtures must remain ignored local
 references and must never be staged or committed.
 
+## Palette contract validation
+
+`Schemas/VenworksCUI/palette-v1.xsd` is the structural contract for palette
+files. `Schemas/VenworksCUI/layout-v1.xsd` permits a root layout to select one
+safe palette filename and permits the bounded `@palette.*` token form in
+attributes whose literal types would otherwise reject a reference. Runtime
+resolution remains the semantic gate for role existence, field/category
+compatibility, required roles, and asset allowlists.
+
+The normal build validates the positive palette contract and palette-layout
+gallery, requires unsupported versions, duplicate roles, invalid values, and
+unsafe paths to fail structurally, and keeps unknown-role and incompatible-role
+fixtures structurally valid for the runtime semantic gate. It also verifies that
+the authored loader remains fixed to `VenworksCUI/palettes`, retains its size
+and path bounds, and that the resolver and runtime integration survive the
+normal/large movie import and reopen cycle. The production layout remains
+literal-only until a separately approved theme migration selects and stages a
+palette.
+
 ## One-domain Scaleform rule
 
 All cooperating Venworks CUI classes must live in exactly one injected

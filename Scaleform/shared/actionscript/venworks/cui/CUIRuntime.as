@@ -36,6 +36,7 @@ package venworks.cui
       private var componentLayer:Sprite;
       private var diagnostics:CUIDiagnosticsPanel;
       private var loader:CUILayoutImportLoader;
+      private var paletteLoader:CUIPaletteLoader;
       private var layoutConfig:XML;
       private var assetManager:CUIAssetManager;
       private var parser:CUILayoutParser;
@@ -134,9 +135,19 @@ package venworks.cui
       {
          var config:XML = loader.layout;
          this.clearListeners();
+         paletteLoader = new CUIPaletteLoader();
+         paletteLoader.addEventListener(Event.COMPLETE,this.onPaletteLoaded);
+         paletteLoader.addEventListener(Event.CANCEL,this.onPaletteFailed);
+         paletteLoader.load(config);
+      }
+
+      private function onPaletteLoaded(param1:Event) : void
+      {
+         var config:XML = paletteLoader.layout;
+         this.clearPaletteListeners();
          try
          {
-            this.setDiagnosticContext("LAYOUT VALIDATION",null,"PARSER INITIALIZATION");
+            this.setDiagnosticContext("PALETTE-RESOLVED LAYOUT VALIDATION",null,"PARSER INITIALIZATION");
             parser = new CUILayoutParser();
             parser.parse(config);
             layoutConfig = config;
@@ -149,13 +160,20 @@ package venworks.cui
          }
          catch(param2:Error)
          {
-            if(diagnosticPhase == "LAYOUT VALIDATION" && parser != null)
+            if(diagnosticPhase == "PALETTE-RESOLVED LAYOUT VALIDATION" && parser != null)
             {
                diagnosticNode = parser.lastDiagnosticNode;
                diagnosticCheckpoint = parser.lastDiagnosticCheckpoint;
             }
             this.showRuntimeError(param2);
          }
+      }
+
+      private function onPaletteFailed(param1:Event) : void
+      {
+         this.clearPaletteListeners();
+         this.clearComponentLayer();
+         diagnostics.showError(paletteLoader.errorTitle,paletteLoader.errorMessage);
       }
 
       private function onLoadFailed(param1:Event) : void
@@ -220,6 +238,15 @@ package venworks.cui
          {
             assetManager.removeEventListener(Event.COMPLETE,this.onAssetsLoaded);
             assetManager.removeEventListener(Event.CANCEL,this.onAssetFailed);
+         }
+      }
+
+      private function clearPaletteListeners() : void
+      {
+         if(paletteLoader != null)
+         {
+            paletteLoader.removeEventListener(Event.COMPLETE,this.onPaletteLoaded);
+            paletteLoader.removeEventListener(Event.CANCEL,this.onPaletteFailed);
          }
       }
 

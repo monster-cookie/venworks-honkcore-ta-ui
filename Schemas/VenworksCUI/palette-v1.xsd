@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <xs:simpleType name="roleType">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="1" />
+      <xs:maxLength value="64" />
+      <xs:pattern value="[a-z][a-z0-9-]*([.][a-z][a-z0-9-]*)*" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="colorType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="#[0-9A-Fa-f]{6}" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="fontType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="$MAIN_Font" />
+      <xs:enumeration value="$MAIN_Font_Bold" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="fontSizeType">
+    <xs:restriction base="xs:positiveInteger">
+      <xs:maxInclusive value="128" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="strictBooleanType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="true" />
+      <xs:enumeration value="false" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="opacityType">
+    <xs:restriction base="xs:decimal">
+      <xs:minInclusive value="0" />
+      <xs:maxInclusive value="1" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="strokeWidthType">
+    <xs:restriction base="xs:nonNegativeInteger">
+      <xs:maxInclusive value="64" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="assetKindType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="svg" />
+      <xs:enumeration value="icon" />
+      <xs:enumeration value="symbol" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="svgAssetValueType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[A-Za-z0-9][A-Za-z0-9._-]{0,59}[.]svg" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="namedAssetValueType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[a-z][a-z0-9-]{0,63}" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="assetValueType">
+    <xs:union memberTypes="svgAssetValueType namedAssetValueType" />
+  </xs:simpleType>
+
+  <xs:complexType name="colorEntryType">
+    <xs:attribute name="role" type="roleType" use="required" />
+    <xs:attribute name="value" type="colorType" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="typographyEntryType">
+    <xs:attribute name="role" type="roleType" use="required" />
+    <xs:attribute name="font" type="fontType" use="required" />
+    <xs:attribute name="fontSize" type="fontSizeType" use="required" />
+    <xs:attribute name="bold" type="strictBooleanType" use="required" />
+    <xs:attribute name="color" type="roleType" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="opacityEntryType">
+    <xs:attribute name="role" type="roleType" use="required" />
+    <xs:attribute name="value" type="opacityType" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="strokeEntryType">
+    <xs:attribute name="role" type="roleType" use="required" />
+    <xs:attribute name="color" type="roleType" use="required" />
+    <xs:attribute name="opacity" type="roleType" use="required" />
+    <xs:attribute name="width" type="strokeWidthType" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="assetEntryType">
+    <xs:attribute name="role" type="roleType" use="required" />
+    <xs:attribute name="kind" type="assetKindType" use="required" />
+    <xs:attribute name="value" type="assetValueType" use="required" />
+  </xs:complexType>
+
+  <xs:element name="venworksCUIPalette">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="colors"><xs:complexType><xs:sequence><xs:element name="color" type="colorEntryType" minOccurs="1" maxOccurs="64" /></xs:sequence></xs:complexType></xs:element>
+        <xs:element name="typography"><xs:complexType><xs:sequence><xs:element name="style" type="typographyEntryType" minOccurs="1" maxOccurs="16" /></xs:sequence></xs:complexType></xs:element>
+        <xs:element name="opacities"><xs:complexType><xs:sequence><xs:element name="opacity" type="opacityEntryType" minOccurs="1" maxOccurs="32" /></xs:sequence></xs:complexType></xs:element>
+        <xs:element name="strokes"><xs:complexType><xs:sequence><xs:element name="stroke" type="strokeEntryType" minOccurs="1" maxOccurs="32" /></xs:sequence></xs:complexType></xs:element>
+        <xs:element name="assets"><xs:complexType><xs:sequence><xs:element name="asset" type="assetEntryType" minOccurs="1" maxOccurs="32" /></xs:sequence></xs:complexType></xs:element>
+      </xs:sequence>
+      <xs:attribute name="schemaVersion" fixed="1" use="required" />
+    </xs:complexType>
+    <xs:unique name="colorRoles"><xs:selector xpath="colors/color" /><xs:field xpath="@role" /></xs:unique>
+    <xs:unique name="typographyRoles"><xs:selector xpath="typography/style" /><xs:field xpath="@role" /></xs:unique>
+    <xs:unique name="opacityRoles"><xs:selector xpath="opacities/opacity" /><xs:field xpath="@role" /></xs:unique>
+    <xs:unique name="strokeRoles"><xs:selector xpath="strokes/stroke" /><xs:field xpath="@role" /></xs:unique>
+    <xs:unique name="assetRoles"><xs:selector xpath="assets/asset" /><xs:field xpath="@role" /></xs:unique>
+  </xs:element>
+</xs:schema>
