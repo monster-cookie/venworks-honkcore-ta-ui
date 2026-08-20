@@ -124,6 +124,106 @@ function Assert-CuiIdentifier {
   }
 }
 
+function Assert-PlayerHudDataContextLifecycle {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Source,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Context
+  )
+
+  $providerSubscriptions = @(
+    @{ Provider = 'LocalEnvironmentData'; Handler = 'onLocalEnvironmentData' },
+    @{ Provider = 'LocalEnvData_Frequent'; Handler = 'onLocalEnvironmentFrequentData' },
+    @{ Provider = 'PlayerData'; Handler = 'onPlayerData' },
+    @{ Provider = 'PlayerFrequentData'; Handler = 'onPlayerFrequentData' },
+    @{ Provider = 'PlayerInventoryData'; Handler = 'onPlayerInventoryData' },
+    @{ Provider = 'WeaponData'; Handler = 'onWeaponData' },
+    @{ Provider = 'HudJetpackData'; Handler = 'onJetpackData' },
+    @{ Provider = 'HUDStarbornPowersData'; Handler = 'onStarbornPowersData' },
+    @{ Provider = 'FavoritesData'; Handler = 'onFavoritesData' },
+    @{ Provider = 'ControlMapData'; Handler = 'onControlMapData' },
+    @{ Provider = 'EnvironmentEffectsData'; Handler = 'onEnvironmentEffectsData' },
+    @{ Provider = 'PersonalEffectsData'; Handler = 'onPersonalEffectsData' },
+    @{ Provider = 'StarmapSystemBodyInfoProvider'; Handler = 'onStarmapSystemBodyInfoData' },
+    @{ Provider = 'HudCompassData'; Handler = 'onRadarCompassData' }
+  )
+
+  if ($Source -notmatch 'private\s+var\s+providerSubscriptions\s*:\s*Array' -or
+      $Source -notmatch 'private\s+var\s+disposed\s*:\s*Boolean\s*=\s*false' -or
+      [regex]::Matches($Source, 'BSUIDataManager\.Subscribe\s*\(').Count -ne $providerSubscriptions.Count -or
+      [regex]::Matches($Source, 'providerSubscriptions\.push\s*\(').Count -ne $providerSubscriptions.Count) {
+    throw "$Context does not retain the exact 14-provider lifecycle registry."
+  }
+
+  foreach ($providerSubscription in $providerSubscriptions) {
+    $provider = [regex]::Escape([string]$providerSubscription.Provider)
+    $handler = [regex]::Escape([string]$providerSubscription.Handler)
+    $registrationPattern = 'providerSubscriptions\.push\s*\(\s*\{\s*"?provider"?\s*:\s*"' +
+      $provider + '"\s*,\s*"?callback"?\s*:\s*this\.' + $handler + '\s*\}\s*\)'
+    $subscriptionPattern = 'BSUIDataManager\.Subscribe\s*\(\s*"' + $provider +
+      '"\s*,\s*this\.' + $handler + '\s*\)'
+    $registrationMatch = [regex]::Match($Source, $registrationPattern)
+    $subscriptionMatch = [regex]::Match($Source, $subscriptionPattern)
+    if (!$registrationMatch.Success -or !$subscriptionMatch.Success -or
+        $registrationMatch.Index -ge $subscriptionMatch.Index) {
+      throw "$Context does not record $($providerSubscription.Provider) before subscribing its exact callback."
+    }
+
+    $handlerPattern = '(?s)private\s+function\s+' + $handler +
+      '\s*\([^)]*\)\s*:\s*void\s*\{.*?(?=\r?\n\s+(?:private|public)\s+function)'
+    $handlerMatch = [regex]::Match($Source, $handlerPattern)
+    if (!$handlerMatch.Success -or
+        $handlerMatch.Value -notmatch 'if\s*\(\s*this\.disposed\s*\)\s*\{\s*return\s*;\s*\}') {
+      throw "$Context does not guard $($providerSubscription.Handler) after disposal."
+    }
+  }
+
+  $subscriptionFailure = [regex]::Match(
+    $Source,
+    '(?s)try\s*\{.*?BSUIDataManager\.Subscribe\s*\(\s*"HudCompassData".*?\}\s*catch\s*\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*:\s*Error\s*\)\s*\{\s*this\.dispose\s*\(\s*\)\s*;\s*throw\s+\1\s*;\s*\}'
+  )
+  if (!$subscriptionFailure.Success) {
+    throw "$Context does not dispose partial provider registration before rethrowing the original subscription failure."
+  }
+
+  $disposeMethod = [regex]::Match(
+    $Source,
+    '(?s)public\s+function\s+dispose\s*\(\s*\)\s*:\s*void\s*\{.*?(?=\r?\n\s+private\s+function\s+resetEnvironmentalHazards)'
+  )
+  $disposedIndex = $disposeMethod.Value.IndexOf('this.disposed = true')
+  $unsubscribeIndex = $disposeMethod.Value.IndexOf('BSUIDataManager.Unsubscribe')
+  if (!$disposeMethod.Success -or
+      $disposeMethod.Value -notmatch 'if\s*\(\s*this\.disposed\s*\)\s*\{\s*return\s*;\s*\}' -or
+      $disposeMethod.Value -notmatch 'providerSubscriptions\.pop\s*\(\s*\)' -or
+      $disposeMethod.Value -notmatch 'BSUIDataManager\.Unsubscribe\s*\(\s*String\s*\(\s*subscription\.provider\s*\)\s*,\s*subscription\.callback\s+as\s+Function\s*\)' -or
+      $disposedIndex -lt 0 -or $unsubscribeIndex -le $disposedIndex) {
+    throw "$Context disposal is not idempotent, reverse-order, and disposed-before-unsubscribe."
+  }
+
+  foreach ($timerMethodName in @('onExposureTimer','updateExposureTimerState')) {
+    $timerMethod = [regex]::Match(
+      $Source,
+      ('(?s)private\s+function\s+' + $timerMethodName +
+        '\s*\([^)]*\)\s*:\s*void\s*\{.*?(?=\r?\n\s+(?:private|public)\s+function)')
+    )
+    if (!$timerMethod.Success -or $timerMethod.Value -notmatch 'if\s*\(\s*this\.disposed\s*\)') {
+      throw "$Context does not prevent $timerMethodName from running after disposal."
+    }
+  }
+
+  $timerStateMethod = [regex]::Match(
+    $Source,
+    '(?s)private\s+function\s+updateExposureTimerState\s*\([^)]*\)\s*:\s*void\s*\{.*?(?=\r?\n\s+(?:private|public)\s+function)'
+  )
+  $timerDisposedIndex = $timerStateMethod.Value.IndexOf('this.disposed')
+  $timerStartIndex = $timerStateMethod.Value.IndexOf('this.exposureTimer.start')
+  if ($timerDisposedIndex -lt 0 -or $timerStartIndex -le $timerDisposedIndex) {
+    throw "$Context can restart the exposure timer after disposal."
+  }
+}
+
 function Invoke-Jpexs {
   param(
     [Parameter(Mandatory = $true)]
@@ -464,7 +564,21 @@ if ($runtimeText -notmatch 'new CUIPaletteLoader\(\)' -or
 }
 $palettePreparationIndex = $runtimeText.IndexOf('config = parser.prepareForPalette(config)')
 $paletteLoadIndex = $runtimeText.IndexOf('paletteLoader.load(config)')
+$valueContextInitializationIndex = $runtimeText.IndexOf('valueContext = new CUIPlayerHudDataContext()')
+$assetLoadedHandlerIndex = $runtimeText.IndexOf('private function onAssetsLoaded')
+$valueContextListenerIndex = $runtimeText.IndexOf('valueContext.addEventListener(CUIPlayerHudDataContext.VALUE_CHANGE,this.onValueChanged)')
+$valueDefaultsIndex = $playerHudDataContextText.IndexOf('this.resetEnvironmentalHazards();')
+$valueChangeResetIndex = $playerHudDataContextText.IndexOf('this.resetChangedSources();')
+$firstValueSubscriptionIndex = $playerHudDataContextText.IndexOf('BSUIDataManager.Subscribe("LocalEnvironmentData",this.onLocalEnvironmentData)')
+Assert-PlayerHudDataContextLifecycle `
+  -Source $playerHudDataContextText `
+  -Context 'Authored CUIPlayerHudDataContext'
 if ($palettePreparationIndex -lt 0 -or $paletteLoadIndex -lt 0 -or $palettePreparationIndex -ge $paletteLoadIndex -or
+    $valueContextInitializationIndex -lt 0 -or $valueContextInitializationIndex -ge $paletteLoadIndex -or
+    ([regex]::Matches($runtimeText, 'valueContext = new CUIPlayerHudDataContext\(\)').Count -ne 1) -or
+    $assetLoadedHandlerIndex -lt 0 -or $valueContextListenerIndex -le $assetLoadedHandlerIndex -or
+    $valueDefaultsIndex -lt 0 -or $valueChangeResetIndex -le $valueDefaultsIndex -or
+    $firstValueSubscriptionIndex -le $valueChangeResetIndex -or
     $layoutParserText -notmatch 'new CUICompositionResolver\(compositionTemplates,param1\.@palette\.length\(\) == 1\)' -or
     $layoutParserText -notmatch 'result\.components\[0\] = resolvedComponents' -or
     $compositionResolverText -notmatch 'new CUICompositeResolver\(param2\)' -or
@@ -473,7 +587,7 @@ if ($palettePreparationIndex -lt 0 -or $paletteLoadIndex -lt 0 -or $palettePrepa
     $compositeResolverText -notmatch '"@palette\.typography\." \+ param1 \+ "\." \+ param2' -or
     $compositeResolverText -notmatch '"@palette\.opacities\." \+ param1' -or
     $compositeResolverText -notmatch '"@palette\.strokes\." \+ param1 \+ "\." \+ param2') {
-  throw 'CUI composite lowering must run before palette loading and emit compatible primitive semantic references for every palette category.'
+  throw 'CUI composite lowering and live-value subscription must start before palette loading, retain listeners until asset initialization, preserve provider snapshots over defaults, and emit compatible primitive semantic references for every palette category.'
 }
 $playerSerialDerivation = [regex]::Match(
   $playerHudDataContextText,
@@ -1492,8 +1606,22 @@ try {
     }
     $reopenedPalettePreparationIndex = $reopenedRuntimeSource.IndexOf('config = parser.prepareForPalette(config)')
     $reopenedPaletteLoadIndex = $reopenedRuntimeSource.IndexOf('paletteLoader.load(config)')
+    $reopenedValueContextInitializationIndex = $reopenedRuntimeSource.IndexOf('valueContext = new CUIPlayerHudDataContext()')
+    $reopenedAssetLoadedHandlerIndex = $reopenedRuntimeSource.IndexOf('private function onAssetsLoaded')
+    $reopenedValueContextListenerIndex = $reopenedRuntimeSource.IndexOf('valueContext.addEventListener(CUIPlayerHudDataContext.VALUE_CHANGE,this.onValueChanged)')
+    $reopenedValueDefaultsIndex = $reopenedPlayerHudDataContextSource.IndexOf('this.resetEnvironmentalHazards();')
+    $reopenedValueChangeResetIndex = $reopenedPlayerHudDataContextSource.IndexOf('this.resetChangedSources();')
+    $reopenedFirstValueSubscriptionIndex = $reopenedPlayerHudDataContextSource.IndexOf('BSUIDataManager.Subscribe("LocalEnvironmentData",this.onLocalEnvironmentData)')
+    Assert-PlayerHudDataContextLifecycle `
+      -Source $reopenedPlayerHudDataContextSource `
+      -Context 'Generated CUIPlayerHudDataContext'
     if ($reopenedPalettePreparationIndex -lt 0 -or $reopenedPaletteLoadIndex -lt 0 -or
         $reopenedPalettePreparationIndex -ge $reopenedPaletteLoadIndex -or
+        $reopenedValueContextInitializationIndex -lt 0 -or $reopenedValueContextInitializationIndex -ge $reopenedPaletteLoadIndex -or
+        ([regex]::Matches($reopenedRuntimeSource, 'valueContext = new CUIPlayerHudDataContext\(\)').Count -ne 1) -or
+        $reopenedAssetLoadedHandlerIndex -lt 0 -or $reopenedValueContextListenerIndex -le $reopenedAssetLoadedHandlerIndex -or
+        $reopenedValueDefaultsIndex -lt 0 -or $reopenedValueChangeResetIndex -le $reopenedValueDefaultsIndex -or
+        $reopenedFirstValueSubscriptionIndex -le $reopenedValueChangeResetIndex -or
         $reopenedLayoutParserSource -notmatch 'function\s+prepareForPalette' -or
         $reopenedLayoutParserSource -notmatch 'new CUICompositionResolver\s*\(\s*compositionTemplates\s*,\s*param1\.@palette\.length\(\)\s*==\s*1\s*\)' -or
         $reopenedCompositionResolverSource -notmatch 'new CUICompositeResolver\s*\(\s*param2\s*\)' -or
@@ -1502,7 +1630,7 @@ try {
         $reopenedCompositeResolverSource -notmatch '@palette\.typography\.' -or
         $reopenedCompositeResolverSource -notmatch '@palette\.opacities\.' -or
         $reopenedCompositeResolverSource -notmatch '@palette\.strokes\.') {
-      throw 'Generated ActionScript does not retain pre-palette composite lowering and semantic composite palette references.'
+      throw 'Generated ActionScript does not retain pre-palette composite lowering, early live-value subscription with snapshot-safe defaults, or semantic composite palette references.'
     }
     if ($reopenedCompositionResolverSource -notmatch 'type\s*==\s*"contactRadar"' -or
         $reopenedLayoutParserSource -notmatch 'type\s*==\s*"contactRadar"' -or

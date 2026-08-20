@@ -64,6 +64,8 @@ package venworks.cui
       private var digipickDiagnostic:String = "DIGIPICK: PLAYER INVENTORY DATA NOT RECEIVED";
       private var compassData:Object;
       private var tacticalAwareness:CUITacticalAwarenessModel;
+      private var providerSubscriptions:Array;
+      private var disposed:Boolean = false;
 
       public function CUIPlayerHudDataContext()
       {
@@ -79,22 +81,9 @@ package venworks.cui
          favoriteDetails = [];
          tacticalAwareness = new CUITacticalAwarenessModel();
          buttonKeyHelper = new ButtonKeyHelper();
+         providerSubscriptions = [];
          exposureTimer = new Timer(EXPOSURE_UPDATE_MS);
          exposureTimer.addEventListener(TimerEvent.TIMER,this.onExposureTimer);
-         BSUIDataManager.Subscribe("LocalEnvironmentData",this.onLocalEnvironmentData);
-         BSUIDataManager.Subscribe("LocalEnvData_Frequent",this.onLocalEnvironmentFrequentData);
-         BSUIDataManager.Subscribe("PlayerData",this.onPlayerData);
-         BSUIDataManager.Subscribe("PlayerFrequentData",this.onPlayerFrequentData);
-         BSUIDataManager.Subscribe("PlayerInventoryData",this.onPlayerInventoryData);
-         BSUIDataManager.Subscribe("WeaponData",this.onWeaponData);
-         BSUIDataManager.Subscribe("HudJetpackData",this.onJetpackData);
-         BSUIDataManager.Subscribe("HUDStarbornPowersData",this.onStarbornPowersData);
-         BSUIDataManager.Subscribe("FavoritesData",this.onFavoritesData);
-         BSUIDataManager.Subscribe("ControlMapData",this.onControlMapData);
-         BSUIDataManager.Subscribe("EnvironmentEffectsData",this.onEnvironmentEffectsData);
-         BSUIDataManager.Subscribe("PersonalEffectsData",this.onPersonalEffectsData);
-         BSUIDataManager.Subscribe("StarmapSystemBodyInfoProvider",this.onStarmapSystemBodyInfoData);
-         BSUIDataManager.Subscribe("HudCompassData",this.onRadarCompassData);
          this.setText("diagnostic.inventoryprovider","PLAYERINVENTORYDATA NOT RECEIVED");
          this.setText("diagnostic.powernameprovider","HUD POWER NAME FIELDS NOT RECEIVED");
          this.setText("diagnostic.environmentprovider","ENVIRONMENTEFFECTSDATA NOT RECEIVED");
@@ -125,6 +114,42 @@ package venworks.cui
          this.setText("environment.hazard.radiationshortstatus","WAITING");
          this.setText("quest.objective","");
          this.resetChangedSources();
+         try
+         {
+            providerSubscriptions.push({ provider:"LocalEnvironmentData", callback:this.onLocalEnvironmentData });
+            BSUIDataManager.Subscribe("LocalEnvironmentData",this.onLocalEnvironmentData);
+            providerSubscriptions.push({ provider:"LocalEnvData_Frequent", callback:this.onLocalEnvironmentFrequentData });
+            BSUIDataManager.Subscribe("LocalEnvData_Frequent",this.onLocalEnvironmentFrequentData);
+            providerSubscriptions.push({ provider:"PlayerData", callback:this.onPlayerData });
+            BSUIDataManager.Subscribe("PlayerData",this.onPlayerData);
+            providerSubscriptions.push({ provider:"PlayerFrequentData", callback:this.onPlayerFrequentData });
+            BSUIDataManager.Subscribe("PlayerFrequentData",this.onPlayerFrequentData);
+            providerSubscriptions.push({ provider:"PlayerInventoryData", callback:this.onPlayerInventoryData });
+            BSUIDataManager.Subscribe("PlayerInventoryData",this.onPlayerInventoryData);
+            providerSubscriptions.push({ provider:"WeaponData", callback:this.onWeaponData });
+            BSUIDataManager.Subscribe("WeaponData",this.onWeaponData);
+            providerSubscriptions.push({ provider:"HudJetpackData", callback:this.onJetpackData });
+            BSUIDataManager.Subscribe("HudJetpackData",this.onJetpackData);
+            providerSubscriptions.push({ provider:"HUDStarbornPowersData", callback:this.onStarbornPowersData });
+            BSUIDataManager.Subscribe("HUDStarbornPowersData",this.onStarbornPowersData);
+            providerSubscriptions.push({ provider:"FavoritesData", callback:this.onFavoritesData });
+            BSUIDataManager.Subscribe("FavoritesData",this.onFavoritesData);
+            providerSubscriptions.push({ provider:"ControlMapData", callback:this.onControlMapData });
+            BSUIDataManager.Subscribe("ControlMapData",this.onControlMapData);
+            providerSubscriptions.push({ provider:"EnvironmentEffectsData", callback:this.onEnvironmentEffectsData });
+            BSUIDataManager.Subscribe("EnvironmentEffectsData",this.onEnvironmentEffectsData);
+            providerSubscriptions.push({ provider:"PersonalEffectsData", callback:this.onPersonalEffectsData });
+            BSUIDataManager.Subscribe("PersonalEffectsData",this.onPersonalEffectsData);
+            providerSubscriptions.push({ provider:"StarmapSystemBodyInfoProvider", callback:this.onStarmapSystemBodyInfoData });
+            BSUIDataManager.Subscribe("StarmapSystemBodyInfoProvider",this.onStarmapSystemBodyInfoData);
+            providerSubscriptions.push({ provider:"HudCompassData", callback:this.onRadarCompassData });
+            BSUIDataManager.Subscribe("HudCompassData",this.onRadarCompassData);
+         }
+         catch(param1:Error)
+         {
+            this.dispose();
+            throw param1;
+         }
       }
 
       public static function normalizeSource(param1:String) : String
@@ -255,6 +280,10 @@ package venworks.cui
 
       private function onLocalEnvironmentData(param1:FromClientDataEvent) : void
       {
+         if(this.disposed)
+         {
+            return;
+         }
          this.setText("location.name",param1.data.sLocationName);
          this.setFinite("environment.oxygenpercentage",param1.data.fOxygenPercent);
          this.setFinite("environment.temperature",param1.data.fTemperature);
@@ -265,6 +294,10 @@ package venworks.cui
 
       private function onEnvironmentEffectsData(param1:FromClientDataEvent) : void
       {
+         if(this.disposed)
+         {
+            return;
+         }
          var effects:Array = param1.data.aEnvironmentEffects as Array;
          var activeEffects:Array = [false,false,false,false];
          var effect:Object = null;
@@ -370,6 +403,10 @@ package venworks.cui
 
       private function onStarmapSystemBodyInfoData(param1:FromClientDataEvent) : void
       {
+         if(this.disposed)
+         {
+            return;
+         }
          this.setText("diagnostic.starmapprovider","STARMAP BODY PROVIDER RECEIVED IN HUD: " +
             this.listCandidateFields(param1.data,["body","gravity","temp","atmosphere","magnetosphere","water"],8));
          this.notifyChanged();
@@ -377,6 +414,10 @@ package venworks.cui
 
       private function onPersonalEffectsData(param1:FromClientDataEvent) : void
       {
+         if(this.disposed)
+         {
+            return;
+         }
          var data:Object = param1 == null ? null : param1.data;
          tacticalAwareness.updatePersonalEffects(data);
          dispatchEvent(new Event(TACTICAL_AWARENESS_CHANGE));
@@ -384,6 +425,10 @@ package venworks.cui
 
       private function onRadarCompassData(param1:FromClientDataEvent) : void
       {
+         if(this.disposed)
+         {
+            return;
+         }
          compassData = param1 == null ? null : param1.data;
          this.setText("quest.objective",resolveTrackedObjective(compassData));
          tacticalAwareness.updateCompass(compassData);
@@ -394,6 +439,10 @@ package venworks.cui
 
       private function onLocalEnvironmentFrequentData(param1:FromClientDataEvent) : void
       {
+         if(this.disposed)
+         {
+            return;
+         }
          this.setFinite("environment.localtime",param1.data.fLocalPlanetTime);
          this.setFinite("player.universaltime",param1.data.fGalacticStandardTime / 24);
          this.universalTimeDiagnostic = "UT: fGalacticStandardTime=" +
@@ -406,6 +455,10 @@ package venworks.cui
 
       private function onPlayerData(param1:FromClientDataEvent) : void
       {
+         if(this.disposed)
+         {
+            return;
+         }
          if(tacticalAwareness.updateCombatState(Boolean(param1.data.bIsInCombat)))
          {
             dispatchEvent(new Event(TACTICAL_AWARENESS_CHANGE));
@@ -428,6 +481,10 @@ package venworks.cui
 
       private function onPlayerFrequentData(param1:FromClientDataEvent) : void
       {
+         if(this.disposed)
+         {
+            return;
+         }
          this.setFinite("player.health",param1.data.fHealth);
          this.setFinite("player.maxhealth",param1.data.fMaxHealth);
          this.setRatio("player.healthpercentage",param1.data.fHealth,param1.data.fMaxHealth);
@@ -446,6 +503,10 @@ package venworks.cui
 
       private function onWeaponData(param1:FromClientDataEvent) : void
       {
+         if(this.disposed)
+         {
+            return;
+         }
          var clip:Number = Number(param1.data.uClipAmmo);
          var total:Number = Number(param1.data.uTotalAmmo);
          var explosiveCount:Number = Number(param1.data.uExplosiveCount);
@@ -476,6 +537,10 @@ package venworks.cui
 
       private function onJetpackData(param1:FromClientDataEvent) : void
       {
+         if(this.disposed)
+         {
+            return;
+         }
          var charge:Number = Number(param1.data.fJetpackCharge);
          if(!isNaN(charge) && isFinite(charge))
          {
@@ -490,6 +555,10 @@ package venworks.cui
 
       private function onPlayerInventoryData(param1:FromClientDataEvent) : void
       {
+         if(this.disposed)
+         {
+            return;
+         }
          var items:Array = param1.data.aItems as Array;
          var item:Object = null;
          var weaponInfo:Object = null;
@@ -560,6 +629,10 @@ package venworks.cui
 
       private function onFavoritesData(param1:FromClientDataEvent) : void
       {
+         if(this.disposed)
+         {
+            return;
+         }
          var data:Object = param1 == null ? null : param1.data;
          var favorites:Array = null;
          var item:Object = null;
@@ -621,6 +694,10 @@ package venworks.cui
 
       private function onControlMapData(param1:FromClientDataEvent) : void
       {
+         if(this.disposed)
+         {
+            return;
+         }
          var data:Object = param1 == null ? null : param1.data;
          var index:int = 1;
          var hotkey:String = "";
@@ -640,6 +717,10 @@ package venworks.cui
 
       private function onStarbornPowersData(param1:FromClientDataEvent) : void
       {
+         if(this.disposed)
+         {
+            return;
+         }
          this.clearValue("power.key");
          this.clearValue("power.name");
          this.setText("power.key",param1.data.sKey);
@@ -848,10 +929,21 @@ package venworks.cui
 
       public function dispose() : void
       {
+         var subscription:Object = null;
+         if(this.disposed)
+         {
+            return;
+         }
+         this.disposed = true;
          if(this.exposureTimer != null)
          {
             this.exposureTimer.stop();
             this.exposureTimer.removeEventListener(TimerEvent.TIMER,this.onExposureTimer);
+         }
+         while(this.providerSubscriptions != null && this.providerSubscriptions.length != 0)
+         {
+            subscription = this.providerSubscriptions.pop();
+            BSUIDataManager.Unsubscribe(String(subscription.provider),subscription.callback as Function);
          }
       }
 
@@ -936,6 +1028,10 @@ package venworks.cui
 
       private function onExposureTimer(param1:TimerEvent) : void
       {
+         if(this.disposed)
+         {
+            return;
+         }
          var current:Number = 0;
          var target:Number = 0;
          var index:int = 0;
@@ -1055,6 +1151,14 @@ package venworks.cui
 
       private function updateExposureTimerState() : void
       {
+         if(this.disposed)
+         {
+            if(this.exposureTimer.running)
+            {
+               this.exposureTimer.stop();
+            }
+            return;
+         }
          var needsTimer:Boolean = this.hasActiveExposure() ||
             this.oxygenDrainDetected || this.oxygenActivity > 0;
          if(needsTimer && !this.exposureTimer.running)

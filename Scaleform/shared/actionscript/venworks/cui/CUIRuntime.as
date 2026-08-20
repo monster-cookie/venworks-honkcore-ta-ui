@@ -140,6 +140,7 @@ package venworks.cui
             this.setDiagnosticContext("PRE-PALETTE COMPOSITION",null,"COMPOSITE LOWERING");
             parser = new CUILayoutParser();
             config = parser.prepareForPalette(config);
+            valueContext = new CUIPlayerHudDataContext();
             paletteLoader = new CUIPaletteLoader();
             paletteLoader.addEventListener(Event.COMPLETE,this.onPaletteLoaded);
             paletteLoader.addEventListener(Event.CANCEL,this.onPaletteFailed);
@@ -209,7 +210,6 @@ package venworks.cui
             statusEffectBars = [];
             conditionContext = new CUIConditionContext();
             conditionContext.addEventListener(CUIConditionContext.CONDITION_CHANGE,this.onConditionChanged);
-            valueContext = new CUIPlayerHudDataContext();
             valueContext.addEventListener(CUIPlayerHudDataContext.VALUE_CHANGE,this.onValueChanged);
             valueContext.addEventListener(CUIPlayerHudDataContext.COMPASS_CHANGE,this.onCompassChanged);
             valueContext.addEventListener(CUIPlayerHudDataContext.TACTICAL_AWARENESS_CHANGE,this.onTacticalAwarenessChanged);
