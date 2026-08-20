@@ -260,6 +260,16 @@ $layoutSchemaPath = Resolve-RequiredFile `
 $paletteSchemaPath = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Schemas\VenworksCUI\palette-v1.xsd") `
   -Description "Venworks CUI palette schema"
+$paletteSourceDirectory = Resolve-RequiredDirectory `
+  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\palettes") `
+  -Description "Example palette source directory"
+$examplePaletteFileNames = @(
+  'crimson-fleet.xml',
+  'freestar-collective.xml',
+  'trackers-alliance.xml',
+  'venworks.xml'
+)
+$defaultPaletteFileName = 'venworks.xml'
 $fixtureDirectory = Resolve-RequiredDirectory `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\fixtures") `
   -Description "Scaleform fixture directory"
@@ -304,6 +314,71 @@ foreach ($requiredPaletteRole in @(
   if (@($validPaletteFixture.SelectNodes("/venworksCUIPalette/colors/color[@role='$requiredPaletteRole']")).Count -ne 1) {
     throw "Valid palette contract fixture is missing required color role '$requiredPaletteRole'."
   }
+}
+$expectedWarningColors = [ordered]@{
+  'state.clear' = '#64E572'
+  'state.caution' = '#FFD800'
+  'state.danger' = '#FF7B21'
+  'state.critical' = '#FF3C54'
+}
+$examplePaletteIdentitySignatures = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+foreach ($examplePaletteFileName in $examplePaletteFileNames) {
+  $examplePalettePath = Resolve-RequiredFile `
+    -Path (Join-Path $paletteSourceDirectory $examplePaletteFileName) `
+    -Description "Example palette '$examplePaletteFileName'"
+  $examplePaletteErrors = @(Get-XmlSchemaErrors -XmlPath $examplePalettePath -SchemaPath $paletteSchemaPath)
+  if ($examplePaletteErrors.Count -ne 0) {
+    throw "Example palette $examplePaletteFileName failed schema validation: $($examplePaletteErrors -join '; ')"
+  }
+
+  [xml]$examplePalette = Get-Content -LiteralPath $examplePalettePath -Raw
+  foreach ($requiredPaletteRole in @(
+    'foreground.primary', 'foreground.muted', 'accent.primary', 'accent.secondary',
+    'panel.background', 'panel.border', 'state.normal', 'state.selected', 'state.disabled',
+    'state.clear', 'state.caution', 'state.danger', 'state.critical', 'meter.health',
+    'meter.oxygen', 'meter.carbondioxide', 'meter.boost', 'marker.player', 'marker.ally',
+    'marker.hostile', 'marker.objective'
+  )) {
+    if (@($examplePalette.SelectNodes("/venworksCUIPalette/colors/color[@role='$requiredPaletteRole']")).Count -ne 1) {
+      throw "Example palette $examplePaletteFileName is missing required color role '$requiredPaletteRole'."
+    }
+  }
+  foreach ($requiredTypographyRole in @('body','label','heading')) {
+    if (@($examplePalette.SelectNodes("/venworksCUIPalette/typography/style[@role='$requiredTypographyRole']")).Count -ne 1) {
+      throw "Example palette $examplePaletteFileName is missing required typography role '$requiredTypographyRole'."
+    }
+  }
+  foreach ($requiredOpacityRole in @('opaque','panel','muted')) {
+    if (@($examplePalette.SelectNodes("/venworksCUIPalette/opacities/opacity[@role='$requiredOpacityRole']")).Count -ne 1) {
+      throw "Example palette $examplePaletteFileName is missing required opacity role '$requiredOpacityRole'."
+    }
+  }
+  if (@($examplePalette.SelectNodes("/venworksCUIPalette/strokes/stroke[@role='panel']")).Count -ne 1) {
+    throw "Example palette $examplePaletteFileName is missing required stroke role 'panel'."
+  }
+  if (@($examplePalette.SelectNodes("/venworksCUIPalette/assets/asset[@role='faction.logo']")).Count -ne 1) {
+    throw "Example palette $examplePaletteFileName is missing required asset role 'faction.logo'."
+  }
+  $paletteIdentityValues = foreach ($identityRole in @(
+    'foreground.primary', 'foreground.muted', 'accent.primary', 'accent.secondary',
+    'panel.background', 'panel.border', 'state.selected', 'marker.objective'
+  )) {
+    [string]$examplePalette.SelectSingleNode("/venworksCUIPalette/colors/color[@role='$identityRole']").value
+  }
+  $paletteIdentitySignature = $paletteIdentityValues -join '|'
+  if (!$examplePaletteIdentitySignatures.Add($paletteIdentitySignature)) {
+    throw "Example palette $examplePaletteFileName duplicates another palette's visual identity roles."
+  }
+  foreach ($warningRole in @('state.clear','state.caution','state.danger','state.critical')) {
+    $expectedWarningColor = [string]$expectedWarningColors[$warningRole]
+    $warningColor = [string]$examplePalette.SelectSingleNode("/venworksCUIPalette/colors/color[@role='$warningRole']").value
+    if ($warningColor -ne $expectedWarningColor) {
+      throw "Example palette $examplePaletteFileName must preserve warning color '$expectedWarningColor' for role '$warningRole'; found '$warningColor'."
+    }
+  }
+}
+if ($examplePaletteIdentitySignatures.Count -ne $examplePaletteFileNames.Count) {
+  throw 'Every example palette must have a distinct visual identity signature.'
 }
 foreach ($invalidPaletteFixtureName in @(
   'palette-unsupported.xml',
@@ -352,6 +427,9 @@ if ([string]$paletteCompositeFixture.venworksCUI.palette -ne 'contract-valid.xml
 }
 
 $providerProbeLayout = [xml](Get-Content -LiteralPath $providerProbeLayoutSource -Raw)
+if ([string]$providerProbeLayout.venworksCUI.palette -ne $defaultPaletteFileName) {
+  throw "The production layout must select the default palette '$defaultPaletteFileName'."
+}
 $playerHudDataContextText = Get-Content -LiteralPath $playerHudDataContextSource -Raw
 $tacticalAwarenessModelText = Get-Content -LiteralPath $tacticalAwarenessModelSource -Raw
 $conditionContextText = Get-Content -LiteralPath $conditionContextSource -Raw
@@ -1612,9 +1690,14 @@ try {
   $cuiOutputDirectory = Join-Path $resolvedProjectOutputDirectory "VenworksCUI"
   $assetOutputDirectory = Join-Path $cuiOutputDirectory "Assets"
   $componentOutputDirectory = Join-Path $cuiOutputDirectory "components"
+  $paletteOutputDirectory = Join-Path $cuiOutputDirectory "palettes"
   New-Item -ItemType Directory -Force -Path $assetOutputDirectory | Out-Null
   New-Item -ItemType Directory -Force -Path $componentOutputDirectory | Out-Null
+  New-Item -ItemType Directory -Force -Path $paletteOutputDirectory | Out-Null
   Copy-Item -LiteralPath $providerProbeLayoutSource -Destination (Join-Path $cuiOutputDirectory "layout.xml") -Force
+  foreach ($examplePaletteFileName in $examplePaletteFileNames) {
+    Copy-Item -LiteralPath (Join-Path $paletteSourceDirectory $examplePaletteFileName) -Destination (Join-Path $paletteOutputDirectory $examplePaletteFileName) -Force
+  }
   $retiredComponentNames = @(
     'environmental-hazard-diagnostic-strip.xml',
     'environment-status.xml',
@@ -2203,10 +2286,15 @@ try {
     $variantCuiOutputDirectory = Join-Path $outputPath "VenworksCUI"
     $variantAssetOutputDirectory = Join-Path $variantCuiOutputDirectory "Assets"
     $variantComponentOutputDirectory = Join-Path $variantCuiOutputDirectory "components"
+    $variantPaletteOutputDirectory = Join-Path $variantCuiOutputDirectory "palettes"
     if ($variantCuiOutputDirectory -ne $cuiOutputDirectory) {
       New-Item -ItemType Directory -Force -Path $variantAssetOutputDirectory | Out-Null
       New-Item -ItemType Directory -Force -Path $variantComponentOutputDirectory | Out-Null
+      New-Item -ItemType Directory -Force -Path $variantPaletteOutputDirectory | Out-Null
       Copy-Item -LiteralPath (Join-Path $cuiOutputDirectory "layout.xml") -Destination (Join-Path $variantCuiOutputDirectory "layout.xml") -Force
+      foreach ($examplePaletteFileName in $examplePaletteFileNames) {
+        Copy-Item -LiteralPath (Join-Path $paletteOutputDirectory $examplePaletteFileName) -Destination (Join-Path $variantPaletteOutputDirectory $examplePaletteFileName) -Force
+      }
       foreach ($componentFixtureName in @('contact-radar.xml','faction-display.xml','equipment-rail.xml','environmental-hazard-scanner.xml','helmet-awareness.xml','player-status-scanner.xml','quest-tracker.xml','scanner-overlay.xml')) {
         Copy-Item -LiteralPath (Join-Path $componentOutputDirectory $componentFixtureName) -Destination (Join-Path $variantComponentOutputDirectory $componentFixtureName) -Force
       }
@@ -2220,7 +2308,7 @@ try {
         }
       }
     }
-    foreach ($relativeCuiPath in @(
+    $relativeCuiPaths = @(
       'layout.xml',
       'components\contact-radar.xml',
       'components\faction-display.xml',
@@ -2233,7 +2321,9 @@ try {
       'Assets\gallery-vector.svg',
       'Assets\venworks-logo.svg',
       'Assets\gallery-invalid.svg'
-    )) {
+    )
+    $relativeCuiPaths += @($examplePaletteFileNames | ForEach-Object { "palettes\$_" })
+    foreach ($relativeCuiPath in $relativeCuiPaths) {
       $primaryHash = (Get-FileHash -LiteralPath (Join-Path $cuiOutputDirectory $relativeCuiPath) -Algorithm SHA256).Hash
       $variantHash = (Get-FileHash -LiteralPath (Join-Path $variantCuiOutputDirectory $relativeCuiPath) -Algorithm SHA256).Hash
       if ($variantHash -ne $primaryHash) {

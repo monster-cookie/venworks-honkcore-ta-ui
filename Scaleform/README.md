@@ -111,10 +111,11 @@ lowering but before ordinary layout validation. Composite output uses the same
 semantic color, typography, opacity, stroke, and asset roles as direct
 primitives. Fragments may consume those references but cannot select or import
 a palette themselves. Existing layouts containing only literal values retain
-their original composite styling. Palette selection occurs when the HUD starts;
-live theme switching is not part of the runtime contract. A later theme
-migration that selects a palette must deploy that palette under the fixed
-palette directory in all four staging variants.
+their original composite styling. The production layout selects `venworks.xml`
+by default, and the build deploys `venworks.xml`, `crimson-fleet.xml`,
+`freestar-collective.xml`, and `trackers-alliance.xml` under the fixed palette
+directory in all four staging variants. Palette selection occurs when the HUD
+starts; live theme switching is not part of the runtime contract.
 
 Dynamic CUI text retains Starfield's exported `PromptMessageWidget` symbol and
 styles its timeline-created `textField` child. The build verifies that this
@@ -145,10 +146,11 @@ with an independently hidden button, and an information panel with metadata,
 divider, and meter content. Goal 4G's positive and negative in-game checks are
 accepted. The palette contract fixtures exercise schema versioning, duplicate
 roles, bounded values, safe palette selection, unknown references, category
-compatibility, and every supported semantic reference family without changing
-the staged production theme. The palette-composite gallery additionally runs
-palette-backed icons and generated semantic styling through every bounded
-composite family. The staged `layout.xml` is the Goal 6 production HUD: it hides the
+compatibility, and every supported semantic reference family. The four shipped
+example palettes exercise the complete required semantic role set while
+preserving shared warning-state meanings. The palette-composite gallery
+additionally runs palette-backed icons and generated semantic styling through
+every bounded composite family. The staged `layout.xml` is the Goal 6 production HUD: it hides the
 diagnostic vanilla bottom-left Chronomark and right-meter group, places the
 split-tab Player Data scanner at lower-left and the split-tab Planet
 Data/environmental scanner at lower-right, and places the passive Goal 7

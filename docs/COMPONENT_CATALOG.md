@@ -62,6 +62,12 @@ traversal, subdirectories, schemes, queries, or fragments, and each file is
 limited to 65,536 characters. Selection occurs during HUD startup. Live palette
 switching is unsupported.
 
+The production root selects `venworks.xml` by default. Every release variant
+ships all four templates: `venworks.xml`, `crimson-fleet.xml`,
+`freestar-collective.xml`, and `trackers-alliance.xml`. Their complete semantic
+role sets share the same clear, caution, danger, and critical meanings while
+using faction-specific foreground, accent, panel, meter, and marker colors.
+
 The version-1 contract defines bounded, unique semantic roles for foreground,
 accent, panel, state, meter, and marker colors; allowlisted typography; opacity
 and stroke values; and packaged SVG, built-in icon, or approved embedded-symbol

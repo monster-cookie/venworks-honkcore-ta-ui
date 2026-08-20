@@ -6,15 +6,18 @@ class ModuleVariant {
     [string]$VariantName
     [string]$StagingFolderPath
     [string]$PluginModulePath
+    [string]$PaletteFileName
 
     ModuleVariant(
         [string]$variantName,
         [string]$stagingFolderPath,
-        [string]$pluginModulePath
+        [string]$pluginModulePath,
+        [string]$paletteFileName
     ) {
         $this.VariantName = $variantName
         $this.StagingFolderPath = $stagingFolderPath
         $this.PluginModulePath = $pluginModulePath
+        $this.PaletteFileName = $paletteFileName
     }
 }
 
@@ -53,25 +56,29 @@ $Global:Variants = @(
     [ModuleVariant]::new(
         "Trackers Alliance",
         "./Staging-TA",
-        "$ENV:MODULE_VARIANT_TA_PATH"
+        "$ENV:MODULE_VARIANT_TA_PATH",
+        "trackers-alliance.xml"
     )
 
     [ModuleVariant]::new(
         "Freestar Collective",
         "./Staging-FC",
-        "$ENV:MODULE_VARIANT_FC_PATH"
+        "$ENV:MODULE_VARIANT_FC_PATH",
+        "freestar-collective.xml"
     )
 
     [ModuleVariant]::new(
         "Crimson Fleet",
         "./Staging-CF",
-        "$ENV:MODULE_VARIANT_CF_PATH"
+        "$ENV:MODULE_VARIANT_CF_PATH",
+        "crimson-fleet.xml"
     )
 
     [ModuleVariant]::new(
         "Venworks",
         "./Staging-VWKS",
-        "$ENV:MODULE_VARIANT_VWKS_PATH"
+        "$ENV:MODULE_VARIANT_VWKS_PATH",
+        "venworks.xml"
     )
 )
 
