@@ -33,6 +33,7 @@ package venworks.cui
          this.parsePalette(param2);
          resolved = param1.copy();
          this.resolveNode(resolved);
+         this.requireFullyResolved(resolved);
          delete resolved.@palette;
          return resolved;
       }
@@ -257,14 +258,26 @@ package venworks.cui
 
       private function resolveNode(param1:XML) : void
       {
+         var attributes:XMLList = null;
          var attribute:XML = null;
+         var attributeNames:Array = [];
+         var attributeValues:Array = [];
+         var children:XMLList = null;
          var child:XML = null;
          var attributeName:String = null;
          var value:String = null;
-         for each(attribute in param1.attributes())
+         var index:int = 0;
+         attributes = param1.attributes();
+         for(index = 0; index < attributes.length(); ++index)
          {
-            attributeName = String(attribute.name());
-            value = String(attribute);
+            attribute = attributes[index];
+            attributeNames.push(String(attribute.name()));
+            attributeValues.push(String(attribute));
+         }
+         for(index = 0; index < attributeNames.length; ++index)
+         {
+            attributeName = String(attributeNames[index]);
+            value = String(attributeValues[index]);
             if(value.indexOf("@palette.") >= 0)
             {
                if(value.indexOf("@palette.") != 0)
@@ -274,9 +287,30 @@ package venworks.cui
                param1.@[attributeName] = this.resolveReference(value,param1,attributeName);
             }
          }
-         for each(child in param1.children())
+         children = param1.children();
+         for(index = 0; index < children.length(); ++index)
          {
+            child = children[index];
             this.resolveNode(child);
+         }
+      }
+
+      private function requireFullyResolved(param1:XML) : void
+      {
+         var attribute:XML = null;
+         var children:XMLList = null;
+         var index:int = 0;
+         for each(attribute in param1.attributes())
+         {
+            if(String(attribute).indexOf("@palette.") >= 0)
+            {
+               throw new Error("INVALID|Palette resolver left an unresolved reference on " + String(param1.name()) + ".@" + String(attribute.name()) + ".");
+            }
+         }
+         children = param1.children();
+         for(index = 0; index < children.length(); ++index)
+         {
+            this.requireFullyResolved(children[index]);
          }
       }
 

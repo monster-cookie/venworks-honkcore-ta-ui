@@ -459,6 +459,18 @@ if ($validPaletteErrors.Count -ne 0) {
   throw "Valid palette contract fixture failed schema validation: $($validPaletteErrors -join '; ')"
 }
 [xml]$validPaletteFixture = Get-Content -LiteralPath $validPaletteFixturePath -Raw
+$paletteGalleryFixturePath = Resolve-RequiredFile `
+  -Path (Join-Path $fixtureDirectory 'layout-palette-gallery.xml') `
+  -Description "Palette definition traversal fixture"
+[xml]$paletteGalleryFixture = Get-Content -LiteralPath $paletteGalleryFixturePath -Raw
+$paletteGalleryMeterStyles = @($paletteGalleryFixture.SelectNodes('/venworksCUI/definitions/meterStyle'))
+if ($paletteGalleryMeterStyles.Count -ne 1 -or
+    [string]$paletteGalleryMeterStyles[0].fillColor -ne '@palette.colors.meter.health' -or
+    [string]$paletteGalleryMeterStyles[0].emptyColor -ne '@palette.colors.panel.background' -or
+    [string]$paletteGalleryMeterStyles[0].fillOpacity -ne '@palette.opacities.opaque' -or
+    [string]$paletteGalleryMeterStyles[0].emptyOpacity -ne '@palette.opacities.muted') {
+  throw 'Palette gallery must retain palette-backed meterStyle attributes under definitions for runtime resolver regression coverage.'
+}
 foreach ($requiredPaletteRole in @(
   'foreground.primary', 'foreground.muted', 'accent.primary', 'accent.secondary',
   'panel.background', 'panel.border', 'state.normal', 'state.selected', 'state.disabled',
@@ -640,6 +652,9 @@ if ($paletteResolverText -notmatch '@palette\.colors\.' -or
     $paletteResolverText -notmatch '@palette\.opacities\.' -or
     $paletteResolverText -notmatch '@palette\.strokes\.' -or
     $paletteResolverText -notmatch '@palette\.assets\.' -or
+    $paletteResolverText -notmatch 'attributeNames:Array' -or
+    $paletteResolverText -notmatch 'attributeValues:Array' -or
+    $paletteResolverText -notmatch 'requireFullyResolved\(resolved\)' -or
     $paletteResolverText -notmatch 'CUIIconLibrary\.isAllowlisted' -or
     $paletteResolverText -notmatch 'CUISymbol\.isAllowlisted' -or
     $paletteResolverText -match 'ExternalInterface|SharedObject|getDefinitionByName|URLLoader') {
@@ -1221,6 +1236,16 @@ try {
     $reopenedCompositionResolverSource = Get-Content -LiteralPath $reopenedCompositionResolverPath -Raw
     if (!$reopenedCompositionResolverSource.Contains('type == "providerSymbol"')) {
       throw "Generated output composition resolver does not accept providerSymbol components."
+    }
+
+    $reopenedPaletteResolverPath = Join-Path `
+      (Join-Path $validationScriptsDirectory "scripts") `
+      "venworks\cui\CUIPaletteResolver.as"
+    $reopenedPaletteResolverSource = Get-Content -LiteralPath $reopenedPaletteResolverPath -Raw
+    if ($reopenedPaletteResolverSource -notmatch 'attributeNames:Array' -or
+        $reopenedPaletteResolverSource -notmatch 'attributeValues:Array' -or
+        $reopenedPaletteResolverSource -notmatch 'requireFullyResolved\(resolved\)') {
+      throw "Generated output palette resolver does not preserve snapshot-based attribute traversal and its unresolved-reference postcondition."
     }
 
     $validationSource = ($validationScripts | ForEach-Object {
