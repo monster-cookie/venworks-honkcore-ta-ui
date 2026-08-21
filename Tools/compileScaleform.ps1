@@ -81,6 +81,36 @@ function Read-Sha256File {
   return ([regex]::Match($hashLine, '[A-Fa-f0-9]{64}').Value).ToUpperInvariant()
 }
 
+function Write-PaletteSelectedLayout {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$SourcePath,
+
+    [Parameter(Mandatory = $true)]
+    [string]$DestinationPath,
+
+    [Parameter(Mandatory = $true)]
+    [string]$PaletteFileName
+  )
+
+  $layoutText = Get-Content -LiteralPath $SourcePath -Raw
+  $paletteMatches = [regex]::Matches($layoutText, '\bpalette="[^"]+"')
+  if ($paletteMatches.Count -ne 1) {
+    throw "Expected exactly one palette selector in $SourcePath; found $($paletteMatches.Count)."
+  }
+
+  $stagedLayoutText = [regex]::Replace(
+    $layoutText,
+    '\bpalette="[^"]+"',
+    "palette=`"$PaletteFileName`""
+  )
+  [System.IO.File]::WriteAllText(
+    $DestinationPath,
+    $stagedLayoutText,
+    [System.Text.UTF8Encoding]::new($false)
+  )
+}
+
 function Get-XmlSchemaErrors {
   param(
     [Parameter(Mandatory = $true)]
@@ -303,6 +333,21 @@ $resolvedOutputDirectories = @($OutputDirectory | ForEach-Object {
 if ($resolvedOutputDirectories.Count -eq 0) {
   throw "At least one output directory is required."
 }
+$releaseVariantNames = @(
+  'Venworks',
+  'Crimson Fleet',
+  'Freestar Collective',
+  'Trackers Alliance'
+)
+$releaseVariantPaletteFileNames = @(
+  'venworks.xml',
+  'crimson-fleet.xml',
+  'freestar-collective.xml',
+  'trackers-alliance.xml'
+)
+if ($resolvedOutputDirectories.Count -gt $releaseVariantPaletteFileNames.Count) {
+  throw "Expected at most $($releaseVariantPaletteFileNames.Count) release outputs; found $($resolvedOutputDirectories.Count)."
+}
 $resolvedProjectOutputDirectory = $resolvedOutputDirectories[0]
 $resolvedWorkDirectory = [System.IO.Path]::GetFullPath($WorkDirectory)
 $referenceCacheHelperPath = Resolve-RequiredFile `
@@ -318,6 +363,16 @@ $providerProbeLayoutSource = Resolve-RequiredFile `
 $providerProbeComponentDirectory = Resolve-RequiredDirectory `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\fixtures\components") `
   -Description "Goal 6 HUD component directory"
+$productionComponentFixtureNames = @(
+  'contact-radar.xml',
+  'faction-display.xml',
+  'equipment-rail.xml',
+  'environmental-hazard-scanner.xml',
+  'helmet-awareness.xml',
+  'player-status-scanner.xml',
+  'quest-tracker.xml',
+  'scanner-overlay.xml'
+)
 $playerHudDataContextSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\actionscript\venworks\cui\CUIPlayerHudDataContext.as") `
   -Description "Goal 6 player HUD data adapter"
@@ -530,6 +585,40 @@ $providerProbeLayout = [xml](Get-Content -LiteralPath $providerProbeLayoutSource
 if ([string]$providerProbeLayout.venworksCUI.palette -ne $defaultPaletteFileName) {
   throw "The production layout must select the default palette '$defaultPaletteFileName'."
 }
+$productionThemeSourcePaths = @($providerProbeLayoutSource) + @($productionComponentFixtureNames | ForEach-Object {
+  Join-Path $providerProbeComponentDirectory $_
+})
+$productionThemeText = @($productionThemeSourcePaths | ForEach-Object {
+  $sourceText = Get-Content -LiteralPath $_ -Raw
+  if ($sourceText -match '#[0-9A-Fa-f]{6}') {
+    throw "Production theme source must use semantic palette references instead of literal colors: $_"
+  }
+  $sourceText
+}) -join "`n"
+foreach ($requiredProductionPaletteReference in @(
+  '@palette.colors.foreground.primary',
+  '@palette.colors.foreground.muted',
+  '@palette.colors.accent.primary',
+  '@palette.colors.accent.secondary',
+  '@palette.colors.panel.background',
+  '@palette.colors.panel.border',
+  '@palette.colors.state.clear',
+  '@palette.colors.state.caution',
+  '@palette.colors.state.danger',
+  '@palette.colors.state.critical',
+  '@palette.colors.meter.health',
+  '@palette.colors.meter.oxygen',
+  '@palette.colors.meter.carbondioxide',
+  '@palette.colors.meter.boost',
+  '@palette.colors.marker.player',
+  '@palette.colors.marker.ally',
+  '@palette.colors.marker.hostile',
+  '@palette.assets.faction.logo'
+)) {
+  if (!$productionThemeText.Contains($requiredProductionPaletteReference)) {
+    throw "Production theme source is missing semantic palette reference '$requiredProductionPaletteReference'."
+  }
+}
 $playerHudDataContextText = Get-Content -LiteralPath $playerHudDataContextSource -Raw
 $tacticalAwarenessModelText = Get-Content -LiteralPath $tacticalAwarenessModelSource -Raw
 $conditionContextText = Get-Content -LiteralPath $conditionContextSource -Raw
@@ -673,14 +762,14 @@ if ($conditionContextText -notmatch 'CRITICAL_HEALTH_PERCENTAGE:Number\s*=\s*35'
     [string]$criticalHealthGroups[0].visibleWhen -ne 'criticalHealth' -or
     [string]$criticalHealthGroups[0].anchor -ne 'top-center' -or
     $criticalHealthPanels.Count -ne 1 -or
-    [string]$criticalHealthPanels[0].fillColor -ne '#310609' -or
-    [string]$criticalHealthPanels[0].strokeColor -ne '#FF5A5A' -or
+    [string]$criticalHealthPanels[0].fillColor -ne '@palette.colors.panel.background' -or
+    [string]$criticalHealthPanels[0].strokeColor -ne '@palette.colors.state.critical' -or
     $criticalHealthTitles.Count -ne 1 -or
     [string]$criticalHealthTitles[0].value -ne 'CRITICAL HEALTH' -or
     $criticalHealthValues.Count -ne 1 -or
     [string]$criticalHealthValues[0].valueTemplate -ne 'HEALTH {player.health:integer}/{player.maxHealth:integer}' -or
     $providerProbeLayout.OuterXml -match '(?i)vignette') {
-  throw 'Card 14C must bridge the existing player health percentage into one lifecycle-safe criticalHealth condition, show one red current/max-health box only below 35 percent, add no duplicate health provider subscription, and retain the archived vignette exclusion.'
+  throw 'Card 14C must bridge the existing player health percentage into one lifecycle-safe criticalHealth condition, show one palette-driven critical current/max-health box only below 35 percent, add no duplicate health provider subscription, and retain the archived vignette exclusion.'
 }
 foreach ($meterStyle in @($providerProbeLayout.venworksCUI.definitions.meterStyle)) {
   $renderer = [string]$meterStyle.renderer
@@ -1822,7 +1911,10 @@ try {
   New-Item -ItemType Directory -Force -Path $assetOutputDirectory | Out-Null
   New-Item -ItemType Directory -Force -Path $componentOutputDirectory | Out-Null
   New-Item -ItemType Directory -Force -Path $paletteOutputDirectory | Out-Null
-  Copy-Item -LiteralPath $providerProbeLayoutSource -Destination (Join-Path $cuiOutputDirectory "layout.xml") -Force
+  Write-PaletteSelectedLayout `
+    -SourcePath $providerProbeLayoutSource `
+    -DestinationPath (Join-Path $cuiOutputDirectory "layout.xml") `
+    -PaletteFileName $defaultPaletteFileName
   foreach ($examplePaletteFileName in $examplePaletteFileNames) {
     Copy-Item -LiteralPath (Join-Path $paletteSourceDirectory $examplePaletteFileName) -Destination (Join-Path $paletteOutputDirectory $examplePaletteFileName) -Force
   }
@@ -1843,7 +1935,7 @@ try {
       Remove-Item -LiteralPath $retiredComponentPath -Force
     }
   }
-  foreach ($componentFixtureName in @('contact-radar.xml','faction-display.xml','equipment-rail.xml','environmental-hazard-scanner.xml','helmet-awareness.xml','player-status-scanner.xml','quest-tracker.xml','scanner-overlay.xml')) {
+  foreach ($componentFixtureName in $productionComponentFixtureNames) {
     Copy-Item -LiteralPath (Join-Path $providerProbeComponentDirectory $componentFixtureName) -Destination (Join-Path $componentOutputDirectory $componentFixtureName) -Force
   }
   $stagedHelmetAwarenessText = Get-Content -LiteralPath (Join-Path $componentOutputDirectory 'helmet-awareness.xml') -Raw
@@ -1940,7 +2032,7 @@ try {
   $contactRadarPanelPaths = @($stagedContactRadar.SelectNodes('//path[@id="contact-radar.panel"]'))
   $contactRadarInteractiveNodes = @($stagedContactRadar.SelectNodes('//*[@action or @event or @onClick or @mouseEnabled]'))
   $factionDisplayPanelPaths = @($stagedFactionDisplay.SelectNodes('//path[@id="faction-display.panel"]'))
-  $factionDisplaySvgNodes = @($stagedFactionDisplay.SelectNodes('//svg[@src="venworks-logo.svg"]'))
+  $factionDisplaySvgNodes = @($stagedFactionDisplay.SelectNodes('//svg[@src="@palette.assets.faction.logo"]'))
   $factionDisplayTextNodes = @($stagedFactionDisplay.SelectNodes('//text'))
   if ($contactRadarIncludes.Count -ne 1 -or
       [string]$contactRadarIncludes[0].src -ne 'contact-radar.xml' -or
@@ -1984,7 +2076,7 @@ try {
       $factionDisplaySvgNodes.Count -ne 1 -or
       $factionDisplayTextNodes.Count -ne 0 -or
       $stagedContactRadarText -match 'diagnostic\.radar\.') {
-    throw 'Goal 8B must stage independent top-edge faction and passive contact-radar displays, exact 50/100/150/200-unit range circles, one owned SVG crest, no duplicate label, and no diagnostic bindings.'
+    throw 'Goal 8B must stage independent top-edge faction and passive contact-radar displays, exact 50/100/150/200-unit range circles, one palette-owned SVG crest, no duplicate label, and no diagnostic bindings.'
   }
   $questTrackerIncludes = @($providerProbeLayout.venworksCUI.includes.include | Where-Object {
     [string]$_.id -eq 'quest-tracker'
@@ -2076,7 +2168,7 @@ try {
   })
   $favoriteActiveMarkerFailures = @($favoriteActiveMarkers | Where-Object {
     [string]$_.value -ne '>' -or
-    [string]$_.color -ne '#FF4FE1' -or
+    [string]$_.color -ne '@palette.colors.accent.secondary' -or
     [int]$_.width -ne 12 -or
     [int]$_.height -ne 22 -or
     [int]$_.fontSize -ne 12 -or
@@ -2096,7 +2188,7 @@ try {
     $_.HasAttribute('id') -and $_.GetAttribute('id') -match '^contact\.(13|14|15)\.panel$'
   })
   $liveContactOutlineFailures = @($liveContactPanels | Where-Object {
-    [string]$_.strokeColor -ne '#FFB51B' -or
+    [string]$_.strokeColor -ne '@palette.colors.state.caution' -or
     [double]$_.strokeOpacity -lt 0.8 -or
     [double]$_.strokeWidth -lt 2
   })
@@ -2259,7 +2351,7 @@ try {
       $stagedEquipmentRailText -match 'uStartingSelection|diagnostic\.' -or
       $stagedEquipmentRailText -match 'value="(ITEM|POWER|COUNT\s*)"' -or
       $stagedEquipmentRailText -match 'id="rail\.panel"|id="contact\.14\.(none|grenade|mine)"') {
-    throw 'Goal 7 must stage one compact transparent passive ribbon at the physical right edge, use a bottom-only return aligned to Planet Data, contain three identically sized and aligned live-contact panels over its middle fill, remain ordered 1-5, weapon, throwable, power, 6-12 with mirrored uniformly stepped 20-unit two-line remapping-aware favorites, magenta chevron active markers, gold live-contact outlines, compact authoritative counts, and contain no vehicle prompt, cyan guide, opaque rail panel, diagnostic, or input behavior.'
+    throw 'Goal 7 must stage one compact transparent passive ribbon at the physical right edge, use a bottom-only return aligned to Planet Data, contain three identically sized and aligned live-contact panels over its middle fill, remain ordered 1-5, weapon, throwable, power, 6-12 with mirrored uniformly stepped 20-unit two-line remapping-aware favorites, palette-secondary chevron active markers, palette-caution live-contact outlines, compact authoritative counts, and contain no vehicle prompt, palette-border guide, opaque rail panel, diagnostic, or input behavior.'
   }
   $expectedHelmetLowerFrameFillPath = 'M 0 0 L 33 32 L 157 32 Q 169 32 169 44 L 169 52 Q 169 62 181 62 L 219 62 Q 231 62 231 52 L 231 44 Q 231 32 243 32 L 377 32 Q 385 32 385 40 L 385 237 C 399 237 407 243 417 253 Q 425 261 439 261 L 1481 261 Q 1495 261 1503 253 C 1513 243 1521 237 1535 237 L 1535 40 Q 1535 32 1543 32 L 1643 32 Q 1655 32 1655 44 L 1655 52 Q 1655 62 1667 62 L 1771 62 Q 1783 62 1783 52 L 1783 44 Q 1783 32 1795 32 L 1887 32 L 1920 0 L 1920 293 L 0 293 Z'
   $expectedHelmetUpperFrameFillPath = 'M 0 0 L 1920 0 L 1920 70 Q 1680 76 1450 92 L 1260 106 Q 1228 108 1204 118 Q 1190 126 1170 126 L 750 126 Q 730 126 716 118 Q 692 108 660 106 L 470 92 Q 240 76 0 70 Z'
@@ -2286,7 +2378,7 @@ try {
       [int]$helmetLowerFrameFillPaths[0].height -ne 293 -or
       [int]$helmetLowerFrameFillPaths[0].z -ne 80 -or
       [string]$helmetLowerFrameFillPaths[0].data -ne $expectedHelmetLowerFrameFillPath -or
-      [string]$helmetLowerFrameFillPaths[0].fillColor -ne '#03141D' -or
+      [string]$helmetLowerFrameFillPaths[0].fillColor -ne '@palette.colors.panel.background' -or
       [double]$helmetLowerFrameFillPaths[0].fillOpacity -ne 0.88 -or
       [double]$helmetLowerFrameFillPaths[0].strokeOpacity -ne 0 -or
       [int]$helmetLowerFrameFillPaths[0].viewBoxWidth -ne 1920 -or
@@ -2299,7 +2391,7 @@ try {
       [int]$helmetUpperFrameFillPaths[0].height -ne 126 -or
       [int]$helmetUpperFrameFillPaths[0].z -ne 80 -or
       [string]$helmetUpperFrameFillPaths[0].data -ne $expectedHelmetUpperFrameFillPath -or
-      [string]$helmetUpperFrameFillPaths[0].fillColor -ne '#03141D' -or
+      [string]$helmetUpperFrameFillPaths[0].fillColor -ne '@palette.colors.panel.background' -or
       [double]$helmetUpperFrameFillPaths[0].fillOpacity -ne 0.84 -or
       [double]$helmetUpperFrameFillPaths[0].strokeOpacity -ne 0 -or
       [int]$helmetUpperFrameFillPaths[0].viewBoxWidth -ne 1920 -or
@@ -2312,7 +2404,7 @@ try {
       [int]$helmetThreatRecessFillPaths[0].height -ne 48 -or
       [int]$helmetThreatRecessFillPaths[0].z -ne 81 -or
       [string]$helmetThreatRecessFillPaths[0].data -ne $expectedHelmetThreatRecessFillPath -or
-      [string]$helmetThreatRecessFillPaths[0].fillColor -ne '#020B10' -or
+      [string]$helmetThreatRecessFillPaths[0].fillColor -ne '@palette.colors.panel.background' -or
       [double]$helmetThreatRecessFillPaths[0].fillOpacity -ne 0.72 -or
       [double]$helmetThreatRecessFillPaths[0].strokeOpacity -ne 0 -or
       [int]$helmetThreatRecessFillPaths[0].viewBoxWidth -ne 320 -or
@@ -2410,7 +2502,10 @@ try {
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
   Copy-Item -LiteralPath $invalidSvgSource -Destination (Join-Path $assetOutputDirectory "gallery-invalid.svg") -Force
-  foreach ($outputPath in $resolvedOutputDirectories) {
+  for ($outputIndex = 0; $outputIndex -lt $resolvedOutputDirectories.Count; $outputIndex++) {
+    $outputPath = $resolvedOutputDirectories[$outputIndex]
+    $variantName = $releaseVariantNames[$outputIndex]
+    $variantPaletteFileName = $releaseVariantPaletteFileNames[$outputIndex]
     $variantCuiOutputDirectory = Join-Path $outputPath "VenworksCUI"
     $variantAssetOutputDirectory = Join-Path $variantCuiOutputDirectory "Assets"
     $variantComponentOutputDirectory = Join-Path $variantCuiOutputDirectory "components"
@@ -2419,11 +2514,10 @@ try {
       New-Item -ItemType Directory -Force -Path $variantAssetOutputDirectory | Out-Null
       New-Item -ItemType Directory -Force -Path $variantComponentOutputDirectory | Out-Null
       New-Item -ItemType Directory -Force -Path $variantPaletteOutputDirectory | Out-Null
-      Copy-Item -LiteralPath (Join-Path $cuiOutputDirectory "layout.xml") -Destination (Join-Path $variantCuiOutputDirectory "layout.xml") -Force
       foreach ($examplePaletteFileName in $examplePaletteFileNames) {
         Copy-Item -LiteralPath (Join-Path $paletteOutputDirectory $examplePaletteFileName) -Destination (Join-Path $variantPaletteOutputDirectory $examplePaletteFileName) -Force
       }
-      foreach ($componentFixtureName in @('contact-radar.xml','faction-display.xml','equipment-rail.xml','environmental-hazard-scanner.xml','helmet-awareness.xml','player-status-scanner.xml','quest-tracker.xml','scanner-overlay.xml')) {
+      foreach ($componentFixtureName in $productionComponentFixtureNames) {
         Copy-Item -LiteralPath (Join-Path $componentOutputDirectory $componentFixtureName) -Destination (Join-Path $variantComponentOutputDirectory $componentFixtureName) -Force
       }
       foreach ($assetFileName in @('gallery-vector.svg','venworks-logo.svg','gallery-invalid.svg')) {
@@ -2436,8 +2530,24 @@ try {
         }
       }
     }
+    $variantLayoutPath = Join-Path $variantCuiOutputDirectory 'layout.xml'
+    Write-PaletteSelectedLayout `
+      -SourcePath $providerProbeLayoutSource `
+      -DestinationPath $variantLayoutPath `
+      -PaletteFileName $variantPaletteFileName
+    [xml]$variantLayout = Get-Content -LiteralPath $variantLayoutPath -Raw
+    if ([string]$variantLayout.venworksCUI.palette -ne $variantPaletteFileName) {
+      throw "$variantName layout must select '$variantPaletteFileName'; found '$([string]$variantLayout.venworksCUI.palette)'."
+    }
+    $normalizedVariantLayoutText = (Get-Content -LiteralPath $variantLayoutPath -Raw).Replace(
+      "palette=`"$variantPaletteFileName`"",
+      "palette=`"$defaultPaletteFileName`""
+    )
+    $defaultLayoutText = Get-Content -LiteralPath (Join-Path $cuiOutputDirectory 'layout.xml') -Raw
+    if ($normalizedVariantLayoutText -cne $defaultLayoutText) {
+      throw "$variantName layout must differ from the default layout only by its palette selector."
+    }
     $relativeCuiPaths = @(
-      'layout.xml',
       'components\contact-radar.xml',
       'components\faction-display.xml',
       'components\equipment-rail.xml',

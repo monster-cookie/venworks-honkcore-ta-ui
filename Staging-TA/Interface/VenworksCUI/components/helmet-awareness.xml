@@ -4,13 +4,13 @@
          rotation="0" scaleX="1" scaleY="1" z="0">
     <compassTape id="helmet.compass" x="0" y="-58" width="826" height="48" opacity="1" visible="true"
                  rotation="0" scaleX="1" scaleY="1" z="3" fieldOfView="120"
-                 tickColor="#62DDF2" headingColor="#F2F7F9" centerColor="#FFB51B" fallbackColor="#F2F7F9" />
+                 tickColor="@palette.colors.accent.primary" headingColor="@palette.colors.foreground.primary" centerColor="@palette.colors.marker.player" fallbackColor="@palette.colors.foreground.primary" />
     <threatAlert id="helmet.threat" x="253" y="12" width="320" height="24" opacity="1" visible="true"
-                 rotation="0" scaleX="1" scaleY="1" z="2" backgroundColor="#020B10"
-                 clearColor="#62DDF2" cautionColor="#E6B840" dangerColor="#FF9A3D" criticalColor="#FF5A5A" />
+                 rotation="0" scaleX="1" scaleY="1" z="2" backgroundColor="@palette.colors.panel.background"
+                 clearColor="@palette.colors.state.clear" cautionColor="@palette.colors.state.caution" dangerColor="@palette.colors.state.danger" criticalColor="@palette.colors.state.critical" />
     <statusEffectBar id="helmet.status-effects" x="53" y="76" width="720" height="56" opacity="1" visible="true"
                      rotation="0" scaleX="1" scaleY="1" z="1" maxItems="16"
-                     debuffColor="#FF5A5A" sustenanceColor="#62DDF2" neutralColor="#F2F7F9"
-                     backgroundColor="#020B10" />
+                     debuffColor="@palette.colors.state.critical" sustenanceColor="@palette.colors.accent.primary" neutralColor="@palette.colors.foreground.primary"
+                     backgroundColor="@palette.colors.panel.background" />
   </group>
 </venworksCUIFragment>

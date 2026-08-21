@@ -4,20 +4,20 @@
     <path id="contact-radar.panel" x="0" y="0" width="228" height="226" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0"
           data="M 0 0 L 210 0 Q 228 0 228 18 L 228 208 Q 228 226 210 226 L 0 226 Z"
           viewBoxX="0" viewBoxY="0" viewBoxWidth="228" viewBoxHeight="226"
-          fillColor="#03141D" fillOpacity="0.70" strokeColor="#62DDF2" strokeOpacity="0.70" strokeWidth="2" />
+          fillColor="@palette.colors.panel.background" fillOpacity="0.70" strokeColor="@palette.colors.panel.border" strokeOpacity="0.70" strokeWidth="2" />
     <shape id="contact-radar.ring.200" x="22" y="21" width="184" height="184" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1"
-           shape="ellipse" fillColor="#03141D" fillOpacity="0.30" strokeColor="#62DDF2" strokeOpacity="0.72" strokeWidth="2" />
+           shape="ellipse" fillColor="@palette.colors.panel.background" fillOpacity="0.30" strokeColor="@palette.colors.panel.border" strokeOpacity="0.72" strokeWidth="2" />
     <shape id="contact-radar.ring.150" x="45" y="44" width="138" height="138" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1"
-           shape="ellipse" fillColor="#03141D" fillOpacity="0" strokeColor="#62DDF2" strokeOpacity="0.25" strokeWidth="1" />
+           shape="ellipse" fillColor="@palette.colors.panel.background" fillOpacity="0" strokeColor="@palette.colors.panel.border" strokeOpacity="0.25" strokeWidth="1" />
     <shape id="contact-radar.ring.100" x="68" y="67" width="92" height="92" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1"
-           shape="ellipse" fillColor="#03141D" fillOpacity="0" strokeColor="#62DDF2" strokeOpacity="0.25" strokeWidth="1" />
+           shape="ellipse" fillColor="@palette.colors.panel.background" fillOpacity="0" strokeColor="@palette.colors.panel.border" strokeOpacity="0.25" strokeWidth="1" />
     <shape id="contact-radar.ring.50" x="91" y="90" width="46" height="46" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1"
-           shape="ellipse" fillColor="#03141D" fillOpacity="0" strokeColor="#62DDF2" strokeOpacity="0.25" strokeWidth="1" />
+           shape="ellipse" fillColor="@palette.colors.panel.background" fillOpacity="0" strokeColor="@palette.colors.panel.border" strokeOpacity="0.25" strokeWidth="1" />
     <divider id="contact-radar.axis.horizontal" x="30" y="113" width="168" height="1" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1"
-             color="#62DDF2" strokeOpacity="0.18" strokeWidth="1" />
+             color="@palette.colors.accent.primary" strokeOpacity="0.18" strokeWidth="1" />
     <divider id="contact-radar.axis.vertical" x="114" y="29" width="1" height="168" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1"
-             color="#62DDF2" strokeOpacity="0.18" strokeWidth="1" />
+             color="@palette.colors.accent.primary" strokeOpacity="0.18" strokeWidth="1" />
     <contactRadar id="contact-radar.contacts" x="22" y="21" width="184" height="184" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
-                  enemyColor="#FF5A5A" allyColor="#F2F7F9" playerColor="#A76BFF" />
+                  enemyColor="@palette.colors.marker.hostile" allyColor="@palette.colors.marker.ally" playerColor="@palette.colors.marker.player" />
   </group>
 </venworksCUIFragment>

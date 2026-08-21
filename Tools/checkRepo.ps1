@@ -19,7 +19,6 @@ $expectedVariantPalettes = [ordered]@{
   "Crimson Fleet" = "crimson-fleet.xml"
   "Venworks" = "venworks.xml"
 }
-$defaultPaletteFileName = "venworks.xml"
 $paletteSourceDirectory = Join-Path $PSScriptRoot "..\Scaleform\shared\palettes"
 
 if ($Global:Variants.Count -ne $expectedVariantPalettes.Count) {
@@ -61,8 +60,8 @@ foreach ($variant in $Global:Variants) {
     throw "$($variant.VariantName) is missing its staged Venworks CUI layout: $variantLayoutPath"
   }
   [xml]$variantLayout = Get-Content -LiteralPath $variantLayoutPath -Raw
-  if ([string]$variantLayout.venworksCUI.palette -ne $defaultPaletteFileName) {
-    throw "$($variant.VariantName) layout must default to '$defaultPaletteFileName'; found '$([string]$variantLayout.venworksCUI.palette)'."
+  if ([string]$variantLayout.venworksCUI.palette -ne $expectedPaletteFileName) {
+    throw "$($variant.VariantName) layout must select '$expectedPaletteFileName'; found '$([string]$variantLayout.venworksCUI.palette)'."
   }
 
   foreach ($paletteFileName in $expectedVariantPalettes.Values) {
