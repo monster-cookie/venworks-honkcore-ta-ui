@@ -83,6 +83,7 @@ package venworks.cui
       {
          var source:String = String(paletteLoader.data);
          var palette:XML = null;
+         var resolver:CUIPaletteResolver = null;
          var message:String = null;
          this.clearListeners();
          if(source.length > MAX_PALETTE_BYTES)
@@ -101,7 +102,10 @@ package venworks.cui
          }
          try
          {
-            resolvedLayout = new CUIPaletteResolver().resolve(sourceLayout,palette);
+            resolver = new CUIPaletteResolver(palette);
+            resolvedLayout = sourceLayout.copy();
+            resolvedLayout.insertChildBefore(resolvedLayout.children()[0],palette.copy());
+            delete resolvedLayout.@palette;
          }
          catch(param3:Error)
          {

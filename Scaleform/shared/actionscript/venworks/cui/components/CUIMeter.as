@@ -1,6 +1,7 @@
 package venworks.cui.components
 {
    import flash.display.Shape;
+   import venworks.cui.CUIPaletteResolver;
 
    public class CUIMeter extends CUIComponent
    {
@@ -13,16 +14,16 @@ package venworks.cui.components
       protected var meterDirection:String;
       protected var partialSegments:Boolean;
 
-      public function CUIMeter(param1:XML, param2:XML)
+      public function CUIMeter(param1:XML, param2:XML, param3:CUIPaletteResolver)
       {
-         super(param1);
+         super(param1,param3);
          meterValue = this.readNumber(param1,"value",0);
          meterMaximum = this.readNumber(param1,"max",100);
          fillColor = this.readColor(param2,"fillColor",16777215);
          emptyColor = this.readColor(param2,"emptyColor",3355443);
          fillOpacity = this.readNumber(param2,"fillOpacity",1);
          emptyOpacity = this.readNumber(param2,"emptyOpacity",0.35);
-         meterDirection = param2.@direction.length() == 1 ? String(param2.@direction) : "right";
+         meterDirection = this.readString(param2,"direction","right");
          partialSegments = this.readBoolean(param2,"partialSegments",true);
       }
 

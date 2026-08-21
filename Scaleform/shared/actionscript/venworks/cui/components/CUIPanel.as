@@ -1,10 +1,12 @@
 package venworks.cui.components
 {
+   import venworks.cui.CUIPaletteResolver;
+
    public class CUIPanel extends CUIComponent
    {
-      public function CUIPanel(param1:XML)
+      public function CUIPanel(param1:XML, param2:CUIPaletteResolver)
       {
-         super(param1);
+         super(param1,param2);
          graphics.lineStyle(
             this.readNumber(param1,"strokeWidth",1),
             this.readColor(param1,"strokeColor",16777215),

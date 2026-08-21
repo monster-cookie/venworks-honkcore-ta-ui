@@ -1,6 +1,7 @@
 package venworks.cui.components
 {
    import flash.display.Sprite;
+   import venworks.cui.CUIPaletteResolver;
    import venworks.cui.CUISvgPathParser;
 
    public class CUIMask extends CUIComponent
@@ -8,9 +9,9 @@ package venworks.cui.components
       private var contentLayer:Sprite;
       private var maskShape:Sprite;
 
-      public function CUIMask(param1:XML)
+      public function CUIMask(param1:XML, param2:CUIPaletteResolver)
       {
-         super(param1);
+         super(param1,param2);
          contentLayer = new Sprite();
          maskShape = new Sprite();
          addChild(contentLayer);

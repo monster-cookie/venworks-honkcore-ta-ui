@@ -4,6 +4,7 @@ package venworks.cui.components
    import flash.text.TextField;
    import flash.text.TextFieldAutoSize;
    import flash.text.TextFormat;
+   import venworks.cui.CUIPaletteResolver;
    import venworks.cui.CUITextFieldHost;
 
    public final class CUIThreatAlert extends CUIComponent
@@ -18,9 +19,9 @@ package venworks.cui.components
       private var dangerColor:uint;
       private var criticalColor:uint;
 
-      public function CUIThreatAlert(param1:XML)
+      public function CUIThreatAlert(param1:XML, param2:CUIPaletteResolver)
       {
-         super(param1);
+         super(param1,param2);
          backgroundColor = this.readColor(param1,"backgroundColor",0x020B10);
          clearColor = this.readColor(param1,"clearColor",0x62DDF2);
          cautionColor = this.readColor(param1,"cautionColor",0xE6B840);

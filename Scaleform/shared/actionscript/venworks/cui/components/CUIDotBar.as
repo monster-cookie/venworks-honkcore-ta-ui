@@ -3,15 +3,16 @@ package venworks.cui.components
    import flash.display.Shape;
    import flash.display.Sprite;
    import flash.display.Graphics;
+   import venworks.cui.CUIPaletteResolver;
 
    public class CUIDotBar extends CUIMeter
    {
       private var segmentCount:int;
       private var segmentGap:Number;
 
-      public function CUIDotBar(param1:XML, param2:XML)
+      public function CUIDotBar(param1:XML, param2:XML, param3:CUIPaletteResolver)
       {
-         super(param1,param2);
+         super(param1,param2,param3);
          segmentCount = int(this.readNumber(param2,"segmentCount",12));
          segmentGap = this.readNumber(param2,"gap",2);
          this.redraw();

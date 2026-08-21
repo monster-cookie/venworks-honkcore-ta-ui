@@ -1,15 +1,18 @@
 package venworks.cui.components
 {
    import flash.display.Sprite;
+   import venworks.cui.CUIPaletteResolver;
 
    public class CUIComponent extends Sprite
    {
       protected var componentWidth:Number = 0;
       protected var componentHeight:Number = 0;
+      protected var paletteResolver:CUIPaletteResolver;
 
-      public function CUIComponent(param1:XML)
+      public function CUIComponent(param1:XML, param2:CUIPaletteResolver)
       {
          super();
+         paletteResolver = param2;
          this.configureBase(param1);
       }
 
@@ -36,7 +39,7 @@ package venworks.cui.components
          {
             return param3;
          }
-         return Number(param1.attribute(param2));
+         return Number(this.readString(param1,param2,""));
       }
 
       protected function readBoolean(param1:XML, param2:String, param3:Boolean) : Boolean
@@ -45,7 +48,7 @@ package venworks.cui.components
          {
             return param3;
          }
-         return String(param1.attribute(param2)).toLowerCase() == "true";
+         return this.readString(param1,param2,"").toLowerCase() == "true";
       }
 
       protected function readColor(param1:XML, param2:String, param3:uint) : uint
@@ -54,7 +57,22 @@ package venworks.cui.components
          {
             return param3;
          }
-         return uint(parseInt(String(param1.attribute(param2)).replace("#",""),16));
+         return uint(parseInt(this.readString(param1,param2,"").replace("#",""),16));
+      }
+
+      protected function readString(param1:XML, param2:String, param3:String) : String
+      {
+         var value:String = null;
+         if(param1.attribute(param2).length() == 0)
+         {
+            return param3;
+         }
+         value = String(param1.attribute(param2));
+         if(paletteResolver != null && value.indexOf("@palette.") == 0)
+         {
+            return paletteResolver.resolveAttribute(param1,param2);
+         }
+         return value;
       }
    }
 }

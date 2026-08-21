@@ -3,14 +3,15 @@ package venworks.cui.components
    import flash.display.DisplayObject;
    import flash.geom.ColorTransform;
    import flash.geom.Rectangle;
+   import venworks.cui.CUIPaletteResolver;
 
    public class CUIImage extends CUIComponent
    {
       protected var content:DisplayObject;
 
-      public function CUIImage(param1:XML, param2:DisplayObject)
+      public function CUIImage(param1:XML, param2:DisplayObject, param3:CUIPaletteResolver)
       {
-         super(param1);
+         super(param1,param3);
          if(param2 == null)
          {
             throw new Error("INVALID|Asset is unavailable: " + String(param1.@id));
@@ -22,26 +23,26 @@ package venworks.cui.components
                throw new Error("Asset has no renderable dimensions.");
             }
          }
-         catch(param3:Error)
+         catch(param4:Error)
          {
-            throw this.phaseError("dimension inspection",param1,param3);
+            throw this.phaseError("dimension inspection",param1,param4);
          }
          content = param2;
          try
          {
             addChild(content);
          }
-         catch(param4:Error)
+         catch(param5:Error)
          {
-            throw this.phaseError("display-list attachment",param1,param4);
+            throw this.phaseError("display-list attachment",param1,param5);
          }
          try
          {
             this.applyTint(param1);
          }
-         catch(param5:Error)
+         catch(param6:Error)
          {
-            throw this.phaseError("tint application",param1,param5);
+            throw this.phaseError("tint application",param1,param6);
          }
          try
          {

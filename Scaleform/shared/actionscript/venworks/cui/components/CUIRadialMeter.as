@@ -1,6 +1,7 @@
 package venworks.cui.components
 {
    import flash.display.Graphics;
+   import venworks.cui.CUIPaletteResolver;
 
    public class CUIRadialMeter extends CUIMeter
    {
@@ -9,9 +10,9 @@ package venworks.cui.components
       private var clockwise:Boolean;
       private var thickness:Number;
 
-      public function CUIRadialMeter(param1:XML, param2:XML)
+      public function CUIRadialMeter(param1:XML, param2:XML, param3:CUIPaletteResolver)
       {
-         super(param1,param2);
+         super(param1,param2,param3);
          startAngle = this.readNumber(param2,"startAngle",-90);
          sweepAngle = this.readNumber(param2,"sweepAngle",360);
          clockwise = this.readBoolean(param2,"clockwise",true);

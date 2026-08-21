@@ -4,6 +4,7 @@ package venworks.cui.components
    import flash.display.MovieClip;
    import flash.geom.ColorTransform;
    import flash.geom.Rectangle;
+   import venworks.cui.CUIPaletteResolver;
 
    public final class CUIProviderSymbol extends CUIComponent
    {
@@ -14,9 +15,9 @@ package venworks.cui.components
       private var loader:SymbolLoaderClip;
       private var currentSymbol:String = "";
 
-      public function CUIProviderSymbol(param1:XML)
+      public function CUIProviderSymbol(param1:XML, param2:CUIPaletteResolver)
       {
-         super(param1);
+         super(param1,param2);
          config = param1;
          loader = new SymbolLoaderClip();
          loader.visible = false;

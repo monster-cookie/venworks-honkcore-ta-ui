@@ -7,6 +7,7 @@ package venworks.cui.components
    import flash.display.Sprite;
    import flash.geom.Rectangle;
    import flash.utils.getDefinitionByName;
+   import venworks.cui.CUIPaletteResolver;
 
    public class CUISymbol extends CUIImage
    {
@@ -31,9 +32,10 @@ package venworks.cui.components
          }
       };
 
-      public function CUISymbol(param1:XML)
+      public function CUISymbol(param1:XML, param2:CUIPaletteResolver)
       {
-         super(param1,createEmbeddedSymbol(String(param1.@name)));
+         super(param1,createEmbeddedSymbol(param2 == null ? String(param1.@name) :
+            param2.resolveAttribute(param1,"name")),param2);
       }
 
       public static function isAllowlisted(param1:String) : Boolean

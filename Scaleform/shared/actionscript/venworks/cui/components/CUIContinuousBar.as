@@ -1,10 +1,12 @@
 package venworks.cui.components
 {
+   import venworks.cui.CUIPaletteResolver;
+
    public class CUIContinuousBar extends CUIMeter
    {
-      public function CUIContinuousBar(param1:XML, param2:XML)
+      public function CUIContinuousBar(param1:XML, param2:XML, param3:CUIPaletteResolver)
       {
-         super(param1,param2);
+         super(param1,param2,param3);
          this.redraw();
       }
 

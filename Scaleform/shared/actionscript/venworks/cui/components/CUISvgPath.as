@@ -1,12 +1,13 @@
 package venworks.cui.components
 {
    import venworks.cui.CUISvgPathParser;
+   import venworks.cui.CUIPaletteResolver;
 
    public class CUISvgPath extends CUIComponent
    {
-      public function CUISvgPath(param1:XML)
+      public function CUISvgPath(param1:XML, param2:CUIPaletteResolver)
       {
-         super(param1);
+         super(param1,param2);
          graphics.lineStyle(
             this.readNumber(param1,"strokeWidth",0),
             this.readColor(param1,"strokeColor",16777215),

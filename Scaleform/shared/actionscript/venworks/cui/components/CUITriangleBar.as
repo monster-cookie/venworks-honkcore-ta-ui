@@ -3,6 +3,7 @@ package venworks.cui.components
    import flash.display.Graphics;
    import flash.display.Shape;
    import flash.display.Sprite;
+   import venworks.cui.CUIPaletteResolver;
 
    public class CUITriangleBar extends CUIMeter
    {
@@ -10,12 +11,12 @@ package venworks.cui.components
       private var segmentGap:Number;
       private var alternating:Boolean;
 
-      public function CUITriangleBar(param1:XML, param2:XML)
+      public function CUITriangleBar(param1:XML, param2:XML, param3:CUIPaletteResolver)
       {
-         super(param1,param2);
+         super(param1,param2,param3);
          segmentCount = int(this.readNumber(param2,"segmentCount",12));
          segmentGap = this.readNumber(param2,"gap",2);
-         alternating = String(param2.@trianglePattern) == "alternating";
+         alternating = this.readString(param2,"trianglePattern","uniform") == "alternating";
          this.redraw();
       }
 

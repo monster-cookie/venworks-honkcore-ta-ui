@@ -22,35 +22,29 @@ package venworks.cui
       private var strokes:Object;
       private var assets:Object;
 
-      public function CUIPaletteResolver()
+      public function CUIPaletteResolver(param1:XML)
       {
          super();
+         this.parsePalette(param1);
       }
 
-      public function resolve(param1:XML, param2:XML) : XML
+      public function resolveAttribute(param1:XML, param2:String) : String
       {
-         var resolved:XML = null;
-         var replacements:Object = {};
-         var references:Array = [];
-         var reference:String = null;
-         var serialized:String = null;
-         this.parsePalette(param2);
-         resolved = param1.copy();
-         this.collectReferences(resolved,replacements);
-         for(reference in replacements)
+         var value:String = null;
+         if(param1.attribute(param2).length() != 1)
          {
-            references.push(reference);
+            throw new Error("INVALID|Missing " + param2 + " on " + String(param1.name()) + ".");
          }
-         references.sort(this.compareReferenceLengths);
-         serialized = resolved.toXMLString();
-         for each(reference in references)
+         value = String(param1.attribute(param2));
+         if(value.indexOf("@palette.") < 0)
          {
-            serialized = serialized.split(reference).join(String(replacements[reference]));
+            return value;
          }
-         resolved = new XML(serialized);
-         this.requireFullyResolved(resolved);
-         delete resolved.@palette;
-         return resolved;
+         if(value.indexOf("@palette.") != 0)
+         {
+            throw new Error("INVALID|Palette references must occupy an entire attribute value: " + param2);
+         }
+         return this.resolveReference(value,param1,param2);
       }
 
       private function parsePalette(param1:XML) : void
@@ -269,64 +263,6 @@ package venworks.cui
             result[role] = { kind:kind,value:value };
          }
          return result;
-      }
-
-      private function collectReferences(param1:XML, param2:Object) : void
-      {
-         var attributes:XMLList = null;
-         var attribute:XML = null;
-         var children:XMLList = null;
-         var child:XML = null;
-         var attributeName:String = null;
-         var reference:String = null;
-         var resolvedValue:String = null;
-         var index:int = 0;
-         attributes = param1.attributes();
-         for(index = 0; index < attributes.length(); ++index)
-         {
-            attribute = attributes[index];
-            attributeName = String(attribute.name());
-            reference = String(attribute);
-            if(reference.indexOf("@palette.") >= 0)
-            {
-               if(reference.indexOf("@palette.") != 0)
-               {
-                  throw new Error("INVALID|Palette references must occupy an entire attribute value: " + attributeName);
-               }
-               resolvedValue = this.resolveReference(reference,param1,attributeName);
-               if(param2.hasOwnProperty(reference) && String(param2[reference]) != resolvedValue)
-               {
-                  throw new Error("INVALID|Palette reference resolved inconsistently: " + reference);
-               }
-               param2[reference] = resolvedValue;
-            }
-         }
-         children = param1.children();
-         for(index = 0; index < children.length(); ++index)
-         {
-            child = children[index];
-            if(String(child.nodeKind()) == "element")
-            {
-               this.collectReferences(child,param2);
-            }
-            else if(child.toXMLString().indexOf("@palette.") >= 0)
-            {
-               throw new Error("INVALID|Palette references are only supported in attribute values.");
-            }
-         }
-      }
-
-      private function compareReferenceLengths(param1:Object, param2:Object) : Number
-      {
-         return String(param2).length - String(param1).length;
-      }
-
-      private function requireFullyResolved(param1:XML) : void
-      {
-         if(param1.toXMLString().indexOf("@palette.") >= 0)
-         {
-            throw new Error("INVALID|Palette resolver left an unresolved reference in the lowered layout.");
-         }
       }
 
       private function resolveReference(param1:String, param2:XML, param3:String) : String

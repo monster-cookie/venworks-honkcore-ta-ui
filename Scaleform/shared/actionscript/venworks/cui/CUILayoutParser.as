@@ -9,6 +9,7 @@ package venworks.cui
       private var componentRoot:XML;
       private var vanillaVisibilityRoot:XML;
       private var conditionParser:CUIConditionParser;
+      private var paletteResolver:CUIPaletteResolver;
       private var diagnosticNode:XML;
       private var diagnosticCheckpoint:String = "";
 
@@ -39,14 +40,21 @@ package venworks.cui
 
       public function parse(param1:XML) : void
       {
+         var rootOffset:int = 0;
          meterStyles = {};
          templates = {};
          definitionIds = {};
          componentIds = {};
          conditionParser = new CUIConditionParser();
          vanillaVisibilityRoot = <vanillaVisibility />;
-         this.rejectUnresolvedPaletteReferences(param1);
          this.requireName(param1,"venworksCUI");
+         if(param1.venworksCUIPalette.length() > 1)
+         {
+            throw new Error("INVALID|The runtime layout must contain at most one embedded palette.");
+         }
+         paletteResolver = param1.venworksCUIPalette.length() == 1 ?
+            new CUIPaletteResolver(param1.venworksCUIPalette[0]) : null;
+         this.validatePaletteReferences(param1);
          if(param1.descendants("include").length() != 0 || param1.descendants("includes").length() != 0)
          {
             throw new Error("INVALID|Layout imports must be resolved before parsing.");
@@ -73,15 +81,18 @@ package venworks.cui
          {
             throw new Error("INVALID|Exactly one definitions and one components element are required; vanillaVisibility is optional.");
          }
-         if(param1.children().length() != 2 && param1.children().length() != 3)
+         rootOffset = paletteResolver == null ? 0 : 1;
+         if(param1.children().length() != 2 + rootOffset && param1.children().length() != 3 + rootOffset)
          {
             throw new Error("INVALID|Unknown layout root element.");
          }
-         if(String(param1.children()[0].name()) != "definitions" ||
+         if(rootOffset == 1 && String(param1.children()[0].name()) != "venworksCUIPalette" ||
+            String(param1.children()[rootOffset].name()) != "definitions" ||
             String(param1.children()[param1.children().length() - 1].name()) != "components" ||
-            param1.children().length() == 3 && String(param1.children()[1].name()) != "vanillaVisibility")
+            param1.children().length() == 3 + rootOffset &&
+               String(param1.children()[rootOffset + 1].name()) != "vanillaVisibility")
          {
-            throw new Error("INVALID|Root order must be definitions, optional vanillaVisibility, then components.");
+            throw new Error("INVALID|Root order must be embedded palette when selected, definitions, optional vanillaVisibility, then components.");
          }
          this.parseDefinitions(param1.definitions[0]);
          if(param1.vanillaVisibility.length() == 1)
@@ -113,6 +124,11 @@ package venworks.cui
          return diagnosticCheckpoint;
       }
 
+      public function get palette() : CUIPaletteResolver
+      {
+         return paletteResolver;
+      }
+
       public function getMeterStyle(param1:String) : XML
       {
          if(meterStyles[param1] == null)
@@ -122,7 +138,7 @@ package venworks.cui
          return meterStyles[param1] as XML;
       }
 
-      private function rejectUnresolvedPaletteReferences(param1:XML) : void
+      private function validatePaletteReferences(param1:XML) : void
       {
          var attribute:XML = null;
          var child:XML = null;
@@ -130,12 +146,23 @@ package venworks.cui
          {
             if(String(attribute).indexOf("@palette.") >= 0)
             {
-               throw new Error("INVALID|Unresolved palette reference on " + String(param1.name()) + ".@" + String(attribute.name()) + ".");
+               if(paletteResolver == null)
+               {
+                  throw new Error("INVALID|Unresolved palette reference on " + String(param1.name()) + ".@" + String(attribute.name()) + ".");
+               }
+               paletteResolver.resolveAttribute(param1,String(attribute.name()));
             }
          }
          for each(child in param1.children())
          {
-            this.rejectUnresolvedPaletteReferences(child);
+            if(String(child.nodeKind()) == "element")
+            {
+               this.validatePaletteReferences(child);
+            }
+            else if(child.toXMLString().indexOf("@palette.") >= 0)
+            {
+               throw new Error("INVALID|Palette references are only supported in attribute values.");
+            }
          }
       }
 
@@ -625,9 +652,9 @@ package venworks.cui
             this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","name","color","fit","alignX","alignY"]);
             this.requirePositiveBounds(param1);
             this.requireSymbolKey(param1,"name");
-            if(!CUIIconLibrary.isAllowlisted(String(param1.@name)))
+            if(!CUIIconLibrary.isAllowlisted(this.resolveAttributeValue(param1,"name")))
             {
-               throw new Error("INVALID|Built-in icon is not allowlisted: " + String(param1.@name));
+               throw new Error("INVALID|Built-in icon is not allowlisted: " + this.resolveAttributeValue(param1,"name"));
             }
             if(param1.@color.length() == 1)
             {
@@ -651,9 +678,9 @@ package venworks.cui
             this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","name","color","fit","alignX","alignY"]);
             this.requirePositiveBounds(param1);
             this.requireSymbolKey(param1,"name");
-            if(!venworks.cui.components.CUISymbol.isAllowlisted(String(param1.@name)))
+            if(!venworks.cui.components.CUISymbol.isAllowlisted(this.resolveAttributeValue(param1,"name")))
             {
-               throw new Error("INVALID|Embedded symbol is not allowlisted: " + String(param1.@name));
+               throw new Error("INVALID|Embedded symbol is not allowlisted: " + this.resolveAttributeValue(param1,"name"));
             }
             if(param1.@color.length() == 1)
             {
@@ -707,7 +734,7 @@ package venworks.cui
 
       private function requireAssetPath(param1:XML) : void
       {
-         var value:String = String(param1.@src);
+         var value:String = this.resolveAttributeValue(param1,"src");
          var lowerValue:String = value.toLowerCase();
          var rootDescription:String = "Interface/VenworksCUI/Assets";
          var segments:Array = null;
@@ -734,7 +761,7 @@ package venworks.cui
 
       private function requireSymbolKey(param1:XML, param2:String) : String
       {
-         var value:String = String(param1.attribute(param2));
+         var value:String = this.resolveAttributeValue(param1,param2);
          if(param1.attribute(param2).length() != 1 || !/^[a-z][a-z0-9-]{0,63}$/.test(value))
          {
             throw new Error("INVALID|" + param2 + " must be a lowercase symbol key on symbol.");
@@ -834,7 +861,7 @@ package venworks.cui
 
       private function requireColor(param1:XML, param2:String) : void
       {
-         if(!/^#[0-9A-Fa-f]{6}$/.test(String(param1.attribute(param2))))
+         if(!/^#[0-9A-Fa-f]{6}$/.test(this.resolveAttributeValue(param1,param2)))
          {
             throw new Error("INVALID|" + param2 + " must use #RRGGBB.");
          }
@@ -842,7 +869,8 @@ package venworks.cui
 
       private function requireNonEmpty(param1:XML, param2:String) : void
       {
-         if(param1.attribute(param2).length() != 1 || String(param1.attribute(param2)).replace(/^\s+|\s+$/g,"").length == 0)
+         if(param1.attribute(param2).length() != 1 ||
+            this.resolveAttributeValue(param1,param2).replace(/^\s+|\s+$/g,"").length == 0)
          {
             throw new Error("INVALID|" + param2 + " cannot be empty.");
          }
@@ -864,7 +892,7 @@ package venworks.cui
          {
             return;
          }
-         value = String(param1.attribute(param2)).toLowerCase();
+         value = this.resolveAttributeValue(param1,param2).toLowerCase();
          if(value != "true" && value != "false")
          {
             throw new Error("INVALID|" + param2 + " must be true or false.");
@@ -873,7 +901,7 @@ package venworks.cui
 
       private function requireInteger(param1:XML, param2:String) : void
       {
-         if(param1.attribute(param2).length() != 1 || !/^-?[0-9]+$/.test(String(param1.attribute(param2))))
+         if(param1.attribute(param2).length() != 1 || !/^-?[0-9]+$/.test(this.resolveAttributeValue(param1,param2)))
          {
             throw new Error("INVALID|" + param2 + " must be an integer.");
          }
@@ -881,7 +909,8 @@ package venworks.cui
 
       private function requirePositiveInteger(param1:XML, param2:String) : void
       {
-         if(param1.attribute(param2).length() != 1 || !/^[0-9]+$/.test(String(param1.attribute(param2))) || int(param1.attribute(param2)) < 1)
+         var value:String = param1.attribute(param2).length() == 1 ? this.resolveAttributeValue(param1,param2) : "";
+         if(value.length == 0 || !/^[0-9]+$/.test(value) || int(value) < 1)
          {
             throw new Error("INVALID|" + param2 + " must be a positive integer.");
          }
@@ -890,7 +919,7 @@ package venworks.cui
       private function requirePositive(param1:XML, param2:String) : void
       {
          this.requireFinite(param1,param2);
-         if(Number(param1.attribute(param2)) <= 0)
+         if(Number(this.resolveAttributeValue(param1,param2)) <= 0)
          {
             throw new Error("INVALID|" + param2 + " must be greater than zero.");
          }
@@ -899,7 +928,7 @@ package venworks.cui
       private function requireUnitInterval(param1:XML, param2:String) : void
       {
          this.requireFinite(param1,param2);
-         if(Number(param1.attribute(param2)) < 0 || Number(param1.attribute(param2)) > 1)
+         if(Number(this.resolveAttributeValue(param1,param2)) < 0 || Number(this.resolveAttributeValue(param1,param2)) > 1)
          {
             throw new Error("INVALID|" + param2 + " must be between 0 and 1.");
          }
@@ -908,7 +937,7 @@ package venworks.cui
       private function requireFiniteNonNegative(param1:XML, param2:String) : void
       {
          this.requireFinite(param1,param2);
-         if(Number(param1.attribute(param2)) < 0)
+         if(Number(this.resolveAttributeValue(param1,param2)) < 0)
          {
             throw new Error("INVALID|" + param2 + " cannot be negative.");
          }
@@ -924,11 +953,21 @@ package venworks.cui
 
       private function requireFinite(param1:XML, param2:String) : void
       {
-         var value:Number = Number(param1.attribute(param2));
+         var value:Number = param1.attribute(param2).length() == 1 ?
+            Number(this.resolveAttributeValue(param1,param2)) : NaN;
          if(param1.attribute(param2).length() != 1 || isNaN(value) || !isFinite(value))
          {
             throw new Error("INVALID|" + param2 + " must be a finite number.");
          }
+      }
+
+      private function resolveAttributeValue(param1:XML, param2:String) : String
+      {
+         if(paletteResolver == null || String(param1.attribute(param2)).indexOf("@palette.") < 0)
+         {
+            return String(param1.attribute(param2));
+         }
+         return paletteResolver.resolveAttribute(param1,param2);
       }
    }
 }

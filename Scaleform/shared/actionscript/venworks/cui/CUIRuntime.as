@@ -40,6 +40,7 @@ package venworks.cui
       private var layoutConfig:XML;
       private var assetManager:CUIAssetManager;
       private var parser:CUILayoutParser;
+      private var paletteResolver:CUIPaletteResolver;
       private var layoutEngine:CUILayoutEngine;
       private var conditionParser:CUIConditionParser;
       private var conditionContext:CUIConditionContext;
@@ -160,9 +161,10 @@ package venworks.cui
          {
             this.setDiagnosticContext("PALETTE-RESOLVED LAYOUT VALIDATION",null,"PARSER INITIALIZATION");
             parser.parse(config);
+            paletteResolver = parser.palette;
             layoutConfig = config;
             this.setDiagnosticContext("ASSET MANAGER INITIALIZATION",null,"CONSTRUCTOR");
-            assetManager = new CUIAssetManager();
+            assetManager = new CUIAssetManager(paletteResolver);
             assetManager.addEventListener(Event.COMPLETE,this.onAssetsLoaded);
             assetManager.addEventListener(Event.CANCEL,this.onAssetFailed);
             this.setDiagnosticContext("ASSET COLLECTION",null,"COLLECTION AND REQUEST START");
@@ -404,98 +406,98 @@ package venworks.cui
          var radar:CUIContactRadar = null;
          if(type == "group")
          {
-            return new CUIGroup(param1);
+            return new CUIGroup(param1,paletteResolver);
          }
          if(type == "text")
          {
-            return new CUIText(param1);
+            return new CUIText(param1,paletteResolver);
          }
          if(type == "contactRadar")
          {
-            radar = new CUIContactRadar(param1);
+            radar = new CUIContactRadar(param1,paletteResolver);
             contactRadars.push(radar);
             return radar;
          }
          if(type == "compassTape")
          {
-            var compassTape:CUICompassTape = new CUICompassTape(param1);
+            var compassTape:CUICompassTape = new CUICompassTape(param1,paletteResolver);
             compassTapes.push(compassTape);
             return compassTape;
          }
          if(type == "scannerOverlay")
          {
-            var scannerOverlay:CUIScannerOverlay = new CUIScannerOverlay(param1);
+            var scannerOverlay:CUIScannerOverlay = new CUIScannerOverlay(param1,paletteResolver);
             scannerOverlays.push(scannerOverlay);
             return scannerOverlay;
          }
          if(type == "threatAlert")
          {
-            var threatAlert:CUIThreatAlert = new CUIThreatAlert(param1);
+            var threatAlert:CUIThreatAlert = new CUIThreatAlert(param1,paletteResolver);
             threatAlerts.push(threatAlert);
             return threatAlert;
          }
          if(type == "statusEffectBar")
          {
-            var statusEffectBar:CUIStatusEffectBar = new CUIStatusEffectBar(param1);
+            var statusEffectBar:CUIStatusEffectBar = new CUIStatusEffectBar(param1,paletteResolver);
             statusEffectBars.push(statusEffectBar);
             return statusEffectBar;
          }
          if(type == "panel")
          {
-            return new CUIPanel(param1);
+            return new CUIPanel(param1,paletteResolver);
          }
          if(type == "shape")
          {
-            return new CUIShape(param1);
+            return new CUIShape(param1,paletteResolver);
          }
          if(type == "divider")
          {
-            return new CUIDivider(param1);
+            return new CUIDivider(param1,paletteResolver);
          }
          if(type == "svg")
          {
-            return new CUISvg(param1,assetManager.getSvg(String(param1.@id)));
+            return new CUISvg(param1,assetManager.getSvg(String(param1.@id)),paletteResolver);
          }
          if(type == "path")
          {
-            return new CUISvgPath(param1);
+            return new CUISvgPath(param1,paletteResolver);
          }
          if(type == "mask")
          {
-            return new CUIMask(param1);
+            return new CUIMask(param1,paletteResolver);
          }
          if(type == "icon")
          {
-            return new CUIIcon(param1);
+            return new CUIIcon(param1,paletteResolver);
          }
          if(type == "providerSymbol")
          {
-            return new CUIProviderSymbol(param1);
+            return new CUIProviderSymbol(param1,paletteResolver);
          }
          if(type == "symbol")
          {
-            return new CUISymbol(param1);
+            return new CUISymbol(param1,paletteResolver);
          }
          if(type == "meter")
          {
             style = parser.getMeterStyle(String(param1.@style));
             if(String(style.@renderer) == "continuous")
             {
-               return new CUIContinuousBar(param1,style);
+               return new CUIContinuousBar(param1,style,paletteResolver);
             }
             if(String(style.@renderer) == "triangles")
             {
-               return new CUITriangleBar(param1,style);
+               return new CUITriangleBar(param1,style,paletteResolver);
             }
             if(String(style.@renderer) == "segments")
             {
-               return new CUISegmentedBar(param1,style);
+               return new CUISegmentedBar(param1,style,paletteResolver);
             }
             if(String(style.@renderer) == "dots")
             {
-               return new CUIDotBar(param1,style);
+               return new CUIDotBar(param1,style,paletteResolver);
             }
-            return new CUIRadialMeter(param1,style);
+            return new CUIRadialMeter(param1,style,paletteResolver);
          }
          throw new Error("INVALID|Unknown component: " + type);
       }

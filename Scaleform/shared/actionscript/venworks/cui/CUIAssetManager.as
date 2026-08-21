@@ -16,10 +16,12 @@ package venworks.cui
       private var pending:int;
       private var failed:Boolean;
       private var failureMessage:String;
+      private var paletteResolver:CUIPaletteResolver;
 
-      public function CUIAssetManager()
+      public function CUIAssetManager(param1:CUIPaletteResolver)
       {
          super();
+         paletteResolver = param1;
          records = [];
          assets = {};
       }
@@ -67,9 +69,11 @@ package venworks.cui
       private function loadSvg(param1:XML) : void
       {
          var loader:URLLoader = new URLLoader();
+         var source:String = paletteResolver == null ? String(param1.@src) :
+            paletteResolver.resolveAttribute(param1,"src");
          var record:Object = {
             id:String(param1.@id),
-            src:String(param1.@src),
+            src:source,
             loader:loader,
             xml:null
          };

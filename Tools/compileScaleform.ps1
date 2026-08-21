@@ -394,6 +394,9 @@ $paletteResolverSource = Resolve-RequiredFile `
 $layoutParserSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\actionscript\venworks\cui\CUILayoutParser.as") `
   -Description "CUI layout parser"
+$componentBaseSource = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\actionscript\venworks\cui\components\CUIComponent.as") `
+  -Description "CUI component base"
 $compositionResolverSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\actionscript\venworks\cui\CUICompositionResolver.as") `
   -Description "CUI composition resolver"
@@ -638,38 +641,43 @@ $runtimeText = Get-Content -LiteralPath $runtimeSource -Raw
 $paletteLoaderText = Get-Content -LiteralPath $paletteLoaderSource -Raw
 $paletteResolverText = Get-Content -LiteralPath $paletteResolverSource -Raw
 $layoutParserText = Get-Content -LiteralPath $layoutParserSource -Raw
+$componentBaseText = Get-Content -LiteralPath $componentBaseSource -Raw
 $compositionResolverText = Get-Content -LiteralPath $compositionResolverSource -Raw
 $compositeResolverText = Get-Content -LiteralPath $compositeResolverSource -Raw
 if ($paletteLoaderText -notmatch 'PALETTE_ROOT:String\s*=\s*"VenworksCUI/palettes/"' -or
     $paletteLoaderText -notmatch 'MAX_PALETTE_BYTES:int\s*=\s*65536' -or
     $paletteLoaderText -notmatch 'Palette paths must name one XML file under VenworksCUI/palettes' -or
     $paletteLoaderText -notmatch 'CUI PALETTE (MISSING|MALFORMED|UNSUPPORTED|INVALID|SECURITY ERROR)' -or
+    $paletteLoaderText -notmatch 'insertChildBefore\(resolvedLayout\.children\(\)\[0\],palette\.copy\(\)\)' -or
     $paletteLoaderText -match 'https?://') {
-  throw 'CUI palette loading must remain bounded to one safe XML file under VenworksCUI/palettes with actionable failure categories.'
+  throw 'CUI palette loading must remain bounded to one safe XML file, embed the complete palette, and retain actionable failure categories.'
 }
 if ($paletteResolverText -notmatch '@palette\.colors\.' -or
     $paletteResolverText -notmatch '@palette\.typography\.' -or
     $paletteResolverText -notmatch '@palette\.opacities\.' -or
     $paletteResolverText -notmatch '@palette\.strokes\.' -or
     $paletteResolverText -notmatch '@palette\.assets\.' -or
-    $paletteResolverText -notmatch 'collectReferences\s*\(\s*resolved\s*,\s*replacements\s*\)' -or
-    $paletteResolverText -notmatch 'references\.sort\s*\(\s*this\.compareReferenceLengths\s*\)' -or
-    $paletteResolverText -notmatch 'serialized\s*=\s*resolved\.toXMLString\(\)' -or
-    $paletteResolverText -notmatch 'split\(reference\)\.join\(String\(replacements\[reference\]\)\)' -or
-    $paletteResolverText -notmatch 'resolved\s*=\s*new XML\(serialized\)' -or
+    $paletteResolverText -notmatch 'public function resolveAttribute\s*\(param1:XML, param2:String\)\s*:\s*String' -or
+    $paletteResolverText -match 'toXMLString\(\)' -or
+    $paletteResolverText -match 'split\(reference\)\.join' -or
+    $paletteResolverText -match 'new XML\(serialized\)' -or
     $paletteResolverText -match 'attribute\.setChildren\s*\(' -or
     $paletteResolverText -match '\[attributeName\]\s*=' -or
-    $paletteResolverText -notmatch 'requireFullyResolved\(resolved\)' -or
     $paletteResolverText -notmatch 'CUIIconLibrary\.isAllowlisted' -or
     $paletteResolverText -notmatch 'CUISymbol\.isAllowlisted' -or
     $paletteResolverText -match 'ExternalInterface|SharedObject|getDefinitionByName|URLLoader') {
-  throw 'CUI palette resolution must cover every approved semantic category and remain data-only with allowlisted packaged assets.'
+  throw 'CUI palette resolution must resolve attributes at read time across every approved semantic category without rewriting XML.'
 }
 if ($runtimeText -notmatch 'new CUIPaletteLoader\(\)' -or
     $runtimeText -notmatch 'paletteLoader\.load\(config\)' -or
     $runtimeText -notmatch 'var config:XML = paletteLoader\.layout' -or
-    $runtimeText -notmatch 'parser\.parse\(config\)') {
-  throw 'CUI runtime must centrally resolve the selected palette after import composition and before layout parsing.'
+    $runtimeText -notmatch 'parser\.parse\(config\)' -or
+    $runtimeText -notmatch 'paletteResolver\s*=\s*parser\.palette' -or
+    $runtimeText -notmatch 'new CUIAssetManager\(paletteResolver\)' -or
+    $layoutParserText -notmatch 'validatePaletteReferences\(param1\)' -or
+    $layoutParserText -notmatch 'new CUIPaletteResolver\(param1\.venworksCUIPalette\[0\]\)' -or
+    $componentBaseText -notmatch 'paletteResolver\.resolveAttribute\(param1,param2\)') {
+  throw 'CUI runtime must embed, validate, and resolve the selected palette at each parser, asset, and component read boundary.'
 }
 $palettePreparationIndex = $runtimeText.IndexOf('config = parser.prepareForPalette(config)')
 $paletteLoadIndex = $runtimeText.IndexOf('paletteLoader.load(config)')
@@ -1252,15 +1260,13 @@ try {
         $reopenedPaletteResolverSource -notmatch '@palette\.opacities\.' -or
         $reopenedPaletteResolverSource -notmatch '@palette\.strokes\.' -or
         $reopenedPaletteResolverSource -notmatch '@palette\.assets\.' -or
-        $reopenedPaletteResolverSource -notmatch 'collectReferences\s*\(\s*resolved\s*,\s*replacements\s*\)' -or
-        $reopenedPaletteResolverSource -notmatch 'references\.sort\s*\(\s*this\.compareReferenceLengths\s*\)' -or
-        $reopenedPaletteResolverSource -notmatch 'serialized\s*=\s*resolved\.toXMLString\(\)' -or
-        $reopenedPaletteResolverSource -notmatch 'split\(reference\)\.join\(String\(replacements\[reference\]\)\)' -or
-        $reopenedPaletteResolverSource -notmatch 'resolved\s*=\s*new XML\(serialized\)' -or
+        $reopenedPaletteResolverSource -notmatch 'public function resolveAttribute\s*\(param1:XML, param2:String\)\s*:\s*String' -or
+        $reopenedPaletteResolverSource -match 'toXMLString\(\)' -or
+        $reopenedPaletteResolverSource -match 'split\(reference\)\.join' -or
+        $reopenedPaletteResolverSource -match 'new XML\(serialized\)' -or
         $reopenedPaletteResolverSource -match 'attribute\.setChildren\s*\(' -or
-        $reopenedPaletteResolverSource -match '\[attributeName\]\s*=' -or
-        $reopenedPaletteResolverSource -notmatch 'requireFullyResolved\(resolved\)') {
-      throw "Generated output palette resolver does not preserve validated whole-layout palette replacement, longest-reference-first ordering, XML reparsing, and its unresolved-reference postcondition."
+        $reopenedPaletteResolverSource -match '\[attributeName\]\s*=') {
+      throw "Generated output palette resolver does not preserve validated read-time palette resolution without XML rewriting."
     }
 
     $validationSource = ($validationScripts | ForEach-Object {

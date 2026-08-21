@@ -7,6 +7,7 @@ package venworks.cui.components
    import flash.text.TextField;
    import flash.text.TextFormat;
    import flash.utils.getDefinitionByName;
+   import venworks.cui.CUIPaletteResolver;
    import venworks.cui.CUITextFieldHost;
 
    public final class CUIStatusEffectBar extends CUIComponent
@@ -23,9 +24,9 @@ package venworks.cui.components
       private var backgroundColor:uint;
       private var effectWidgetClass:Class;
 
-      public function CUIStatusEffectBar(param1:XML)
+      public function CUIStatusEffectBar(param1:XML, param2:CUIPaletteResolver)
       {
-         super(param1);
+         super(param1,param2);
          maximumItems = Math.max(1,Math.min(HARD_MAX_ITEMS,int(this.readNumber(param1,"maxItems",HARD_MAX_ITEMS))));
          debuffColor = this.readColor(param1,"debuffColor",0xFF5A5A);
          sustenanceColor = this.readColor(param1,"sustenanceColor",0x62DDF2);

@@ -6,6 +6,7 @@ package venworks.cui.components
    import flash.text.TextField;
    import flash.text.TextFormat;
    import flash.utils.Timer;
+   import venworks.cui.CUIPaletteResolver;
    import venworks.cui.CUITextFieldHost;
 
    public final class CUIScannerOverlay extends CUIComponent
@@ -32,9 +33,9 @@ package venworks.cui.components
       private var pulseTimer:Timer;
       private var pulseStep:int;
 
-      public function CUIScannerOverlay(param1:XML)
+      public function CUIScannerOverlay(param1:XML, param2:CUIPaletteResolver)
       {
-         super(param1);
+         super(param1,param2);
          mouseEnabled = false;
          mouseChildren = false;
          fieldOfView = Math.max(30,Math.min(180,this.readNumber(param1,"fieldOfView",90)));

@@ -54,8 +54,10 @@ The normal build validates the positive palette contract and palette-layout
 unsafe paths to fail structurally, and keeps unknown-role and incompatible-role
 fixtures structurally valid for the runtime semantic gate. The runtime lowers
 bounded composites, templates, repeaters, and states on a copy of the fully
-imported layout before palette resolution, then performs ordinary parser
-validation on the resolved primitive tree. The palette-composite fixture covers
+imported layout, inserts the complete selected palette at the head of that
+runtime tree, and resolves semantic values only when the parser, asset manager,
+or components consume an attribute. No palette step rewrites or reparses the
+layout XML. The palette-composite fixture covers
 buttons, quick bars, information panels, warnings, palette-backed composite
 icons, every button state, and every warning severity. The build also verifies
 that the authored loader remains fixed to `VenworksCUI/palettes`, retains its

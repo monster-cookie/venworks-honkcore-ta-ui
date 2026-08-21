@@ -60,7 +60,8 @@ A root layout may select one versioned palette by safe filename. Palette files
 are loaded only from `Interface/VenworksCUI/palettes`; paths cannot contain
 traversal, subdirectories, schemes, queries, or fragments, and each file is
 limited to 65,536 characters. Selection occurs during HUD startup. Live palette
-switching is unsupported.
+switching without reloading the HUD is unsupported, but players can select any
+packaged theme by changing the root palette filename before the next load.
 
 The production root selects `venworks.xml` by default. Every release variant
 ships all four templates: `venworks.xml`, `crimson-fleet.xml`,
@@ -79,11 +80,13 @@ Layout attributes consume deterministic references in the form
 `@palette.<category>.<role>` or
 `@palette.<category>.<role>.<field>`. After root and fragment imports are
 resolved, the runtime lowers bounded composites, templates, repeaters, and
-states on a copy of the layout. The palette resolver then replaces references
-on the resulting primitive tree before the ordinary layout parser runs and
-removes the root selection attribute. Buttons, quick bars, information panels,
-and warnings generate their presentation from semantic palette roles when a
-palette is selected, including palette-backed composite icons.
+states on a copy of the layout. The palette loader inserts the complete selected
+palette as the first node in the runtime layout tree. The parser, asset manager,
+and component value readers resolve semantic references against that embedded
+palette when each attribute is consumed; they do not rewrite, serialize, or
+reparse layout attributes. Buttons, quick bars, information panels, and warnings
+generate their presentation from semantic palette roles when a palette is
+selected, including palette-backed composite icons.
 Fragments can use the selected root palette but cannot select or import one.
 Unknown roles, duplicate roles, missing required roles, unsupported versions,
 invalid values, incompatible attribute categories, unresolved references, and
@@ -101,7 +104,7 @@ Literal-only version-1 layouts remain compatible.
 | Bounded state selection | Implemented | Select one of up to 16 declared templates without expressions or arbitrary method calls. |
 | Data-only conditions | Implemented | Evaluate bounded, case-insensitive visibility expressions against verified vanilla state with fail-hidden unknown initialization. |
 | Vanilla visibility adapter | Implemented | Compose real display visibility and optional bounded absolute or original-position-relative placement only for explicitly mapped whole default UI pieces while preserving vanilla providers and lifecycle behavior. |
-| Strict palette resolution | Implemented | Resolve one root-selected, versioned semantic palette across the primitive tree after bounded composite/template/repeater lowering and before parser validation, without changing hierarchy, provider, visibility, or vanilla-ownership contracts. |
+| Strict palette resolution | Implemented | Embed one root-selected, versioned semantic palette after bounded composite/template/repeater lowering and resolve typed values at parser, asset, and component read boundaries without changing hierarchy, provider, visibility, or vanilla-ownership contracts. |
 
 Goal 4A keeps a fixed 1920-by-1080 design coordinate system and relies on
 Starfield's `Extensions.visibleRect` for viewport boundaries. It does not

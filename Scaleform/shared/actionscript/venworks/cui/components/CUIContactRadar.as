@@ -2,6 +2,7 @@ package venworks.cui.components
 {
    import flash.display.Shape;
    import flash.display.Sprite;
+   import venworks.cui.CUIPaletteResolver;
 
    public final class CUIContactRadar extends CUIComponent
    {
@@ -22,9 +23,9 @@ package venworks.cui.components
       private var allyColor:uint;
       private var playerColor:uint;
 
-      public function CUIContactRadar(param1:XML)
+      public function CUIContactRadar(param1:XML, param2:CUIPaletteResolver)
       {
-         super(param1);
+         super(param1,param2);
          enemyColor = this.readColor(param1,"enemyColor",0xFF5A5A);
          allyColor = this.readColor(param1,"allyColor",0xF2F7F9);
          playerColor = this.readColor(param1,"playerColor",0xA76BFF);

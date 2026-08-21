@@ -8,6 +8,7 @@ package venworks.cui.components
    import flash.text.TextField;
    import flash.text.TextFormat;
    import flash.utils.getDefinitionByName;
+   import venworks.cui.CUIPaletteResolver;
    import venworks.cui.CUITextFieldHost;
 
    public final class CUICompassTape extends CUIComponent
@@ -34,9 +35,9 @@ package venworks.cui.components
       private var fallbackColor:uint;
       private var markerClass:Class;
 
-      public function CUICompassTape(param1:XML)
+      public function CUICompassTape(param1:XML, param2:CUIPaletteResolver)
       {
-         super(param1);
+         super(param1,param2);
          fieldOfView = this.readNumber(param1,"fieldOfView",120);
          tickColor = this.readColor(param1,"tickColor",0x62DDF2);
          headingColor = this.readColor(param1,"headingColor",0xF2F7F9);
