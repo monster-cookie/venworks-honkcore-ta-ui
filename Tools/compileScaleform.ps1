@@ -652,11 +652,13 @@ if ($paletteResolverText -notmatch '@palette\.colors\.' -or
     $paletteResolverText -notmatch '@palette\.opacities\.' -or
     $paletteResolverText -notmatch '@palette\.strokes\.' -or
     $paletteResolverText -notmatch '@palette\.assets\.' -or
-    $paletteResolverText -notmatch 'attributeNodes:Array' -or
-    $paletteResolverText -notmatch 'attributeNames:Array' -or
-    $paletteResolverText -notmatch 'attributeValues:Array' -or
-    $paletteResolverText -notmatch 'attribute\.setChildren\(resolvedValue\)' -or
-    $paletteResolverText -match 'param1\.@\[attributeName\]\s*=' -or
+    $paletteResolverText -notmatch 'collectReferences\s*\(\s*resolved\s*,\s*replacements\s*\)' -or
+    $paletteResolverText -notmatch 'references\.sort\s*\(\s*this\.compareReferenceLengths\s*\)' -or
+    $paletteResolverText -notmatch 'serialized\s*=\s*resolved\.toXMLString\(\)' -or
+    $paletteResolverText -notmatch 'split\(reference\)\.join\(String\(replacements\[reference\]\)\)' -or
+    $paletteResolverText -notmatch 'resolved\s*=\s*new XML\(serialized\)' -or
+    $paletteResolverText -match 'attribute\.setChildren\s*\(' -or
+    $paletteResolverText -match '\[attributeName\]\s*=' -or
     $paletteResolverText -notmatch 'requireFullyResolved\(resolved\)' -or
     $paletteResolverText -notmatch 'CUIIconLibrary\.isAllowlisted' -or
     $paletteResolverText -notmatch 'CUISymbol\.isAllowlisted' -or
@@ -1245,13 +1247,20 @@ try {
       (Join-Path $validationScriptsDirectory "scripts") `
       "venworks\cui\CUIPaletteResolver.as"
     $reopenedPaletteResolverSource = Get-Content -LiteralPath $reopenedPaletteResolverPath -Raw
-    if ($reopenedPaletteResolverSource -notmatch 'attributeNodes:Array' -or
-        $reopenedPaletteResolverSource -notmatch 'attributeNames:Array' -or
-        $reopenedPaletteResolverSource -notmatch 'attributeValues:Array' -or
-        $reopenedPaletteResolverSource -notmatch 'attribute\.setChildren\(resolvedValue\)' -or
+    if ($reopenedPaletteResolverSource -notmatch '@palette\.colors\.' -or
+        $reopenedPaletteResolverSource -notmatch '@palette\.typography\.' -or
+        $reopenedPaletteResolverSource -notmatch '@palette\.opacities\.' -or
+        $reopenedPaletteResolverSource -notmatch '@palette\.strokes\.' -or
+        $reopenedPaletteResolverSource -notmatch '@palette\.assets\.' -or
+        $reopenedPaletteResolverSource -notmatch 'collectReferences\s*\(\s*resolved\s*,\s*replacements\s*\)' -or
+        $reopenedPaletteResolverSource -notmatch 'references\.sort\s*\(\s*this\.compareReferenceLengths\s*\)' -or
+        $reopenedPaletteResolverSource -notmatch 'serialized\s*=\s*resolved\.toXMLString\(\)' -or
+        $reopenedPaletteResolverSource -notmatch 'split\(reference\)\.join\(String\(replacements\[reference\]\)\)' -or
+        $reopenedPaletteResolverSource -notmatch 'resolved\s*=\s*new XML\(serialized\)' -or
+        $reopenedPaletteResolverSource -match 'attribute\.setChildren\s*\(' -or
         $reopenedPaletteResolverSource -match '\[attributeName\]\s*=' -or
         $reopenedPaletteResolverSource -notmatch 'requireFullyResolved\(resolved\)') {
-      throw "Generated output palette resolver does not preserve direct captured-attribute mutation, snapshot traversal, and its unresolved-reference postcondition."
+      throw "Generated output palette resolver does not preserve validated whole-layout palette replacement, longest-reference-first ordering, XML reparsing, and its unresolved-reference postcondition."
     }
 
     $validationSource = ($validationScripts | ForEach-Object {

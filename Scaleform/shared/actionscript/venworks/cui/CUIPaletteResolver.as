@@ -30,9 +30,24 @@ package venworks.cui
       public function resolve(param1:XML, param2:XML) : XML
       {
          var resolved:XML = null;
+         var replacements:Object = {};
+         var references:Array = [];
+         var reference:String = null;
+         var serialized:String = null;
          this.parsePalette(param2);
          resolved = param1.copy();
-         this.resolveNode(resolved);
+         this.collectReferences(resolved,replacements);
+         for(reference in replacements)
+         {
+            references.push(reference);
+         }
+         references.sort(this.compareReferenceLengths);
+         serialized = resolved.toXMLString();
+         for each(reference in references)
+         {
+            serialized = serialized.split(reference).join(String(replacements[reference]));
+         }
+         resolved = new XML(serialized);
          this.requireFullyResolved(resolved);
          delete resolved.@palette;
          return resolved;
@@ -256,66 +271,61 @@ package venworks.cui
          return result;
       }
 
-      private function resolveNode(param1:XML) : void
+      private function collectReferences(param1:XML, param2:Object) : void
       {
          var attributes:XMLList = null;
          var attribute:XML = null;
-         var attributeNodes:Array = [];
-         var attributeNames:Array = [];
-         var attributeValues:Array = [];
          var children:XMLList = null;
          var child:XML = null;
          var attributeName:String = null;
-         var value:String = null;
+         var reference:String = null;
          var resolvedValue:String = null;
          var index:int = 0;
          attributes = param1.attributes();
          for(index = 0; index < attributes.length(); ++index)
          {
             attribute = attributes[index];
-            attributeNodes.push(attribute);
-            attributeNames.push(String(attribute.name()));
-            attributeValues.push(String(attribute));
-         }
-         for(index = 0; index < attributeNames.length; ++index)
-         {
-            attributeName = String(attributeNames[index]);
-            value = String(attributeValues[index]);
-            attribute = attributeNodes[index];
-            if(value.indexOf("@palette.") >= 0)
+            attributeName = String(attribute.name());
+            reference = String(attribute);
+            if(reference.indexOf("@palette.") >= 0)
             {
-               if(value.indexOf("@palette.") != 0)
+               if(reference.indexOf("@palette.") != 0)
                {
                   throw new Error("INVALID|Palette references must occupy an entire attribute value: " + attributeName);
                }
-               resolvedValue = this.resolveReference(value,param1,attributeName);
-               attribute.setChildren(resolvedValue);
+               resolvedValue = this.resolveReference(reference,param1,attributeName);
+               if(param2.hasOwnProperty(reference) && String(param2[reference]) != resolvedValue)
+               {
+                  throw new Error("INVALID|Palette reference resolved inconsistently: " + reference);
+               }
+               param2[reference] = resolvedValue;
             }
          }
          children = param1.children();
          for(index = 0; index < children.length(); ++index)
          {
             child = children[index];
-            this.resolveNode(child);
+            if(String(child.nodeKind()) == "element")
+            {
+               this.collectReferences(child,param2);
+            }
+            else if(child.toXMLString().indexOf("@palette.") >= 0)
+            {
+               throw new Error("INVALID|Palette references are only supported in attribute values.");
+            }
          }
+      }
+
+      private function compareReferenceLengths(param1:Object, param2:Object) : Number
+      {
+         return String(param2).length - String(param1).length;
       }
 
       private function requireFullyResolved(param1:XML) : void
       {
-         var attribute:XML = null;
-         var children:XMLList = null;
-         var index:int = 0;
-         for each(attribute in param1.attributes())
+         if(param1.toXMLString().indexOf("@palette.") >= 0)
          {
-            if(String(attribute).indexOf("@palette.") >= 0)
-            {
-               throw new Error("INVALID|Palette resolver left an unresolved reference on " + String(param1.name()) + ".@" + String(attribute.name()) + ".");
-            }
-         }
-         children = param1.children();
-         for(index = 0; index < children.length(); ++index)
-         {
-            this.requireFullyResolved(children[index]);
+            throw new Error("INVALID|Palette resolver left an unresolved reference in the lowered layout.");
          }
       }
 
