@@ -260,17 +260,20 @@ package venworks.cui
       {
          var attributes:XMLList = null;
          var attribute:XML = null;
+         var attributeNodes:Array = [];
          var attributeNames:Array = [];
          var attributeValues:Array = [];
          var children:XMLList = null;
          var child:XML = null;
          var attributeName:String = null;
          var value:String = null;
+         var resolvedValue:String = null;
          var index:int = 0;
          attributes = param1.attributes();
          for(index = 0; index < attributes.length(); ++index)
          {
             attribute = attributes[index];
+            attributeNodes.push(attribute);
             attributeNames.push(String(attribute.name()));
             attributeValues.push(String(attribute));
          }
@@ -278,13 +281,15 @@ package venworks.cui
          {
             attributeName = String(attributeNames[index]);
             value = String(attributeValues[index]);
+            attribute = attributeNodes[index];
             if(value.indexOf("@palette.") >= 0)
             {
                if(value.indexOf("@palette.") != 0)
                {
                   throw new Error("INVALID|Palette references must occupy an entire attribute value: " + attributeName);
                }
-               param1.@[attributeName] = this.resolveReference(value,param1,attributeName);
+               resolvedValue = this.resolveReference(value,param1,attributeName);
+               attribute.setChildren(resolvedValue);
             }
          }
          children = param1.children();

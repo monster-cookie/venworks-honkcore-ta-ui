@@ -652,8 +652,11 @@ if ($paletteResolverText -notmatch '@palette\.colors\.' -or
     $paletteResolverText -notmatch '@palette\.opacities\.' -or
     $paletteResolverText -notmatch '@palette\.strokes\.' -or
     $paletteResolverText -notmatch '@palette\.assets\.' -or
+    $paletteResolverText -notmatch 'attributeNodes:Array' -or
     $paletteResolverText -notmatch 'attributeNames:Array' -or
     $paletteResolverText -notmatch 'attributeValues:Array' -or
+    $paletteResolverText -notmatch 'attribute\.setChildren\(resolvedValue\)' -or
+    $paletteResolverText -match 'param1\.@\[attributeName\]\s*=' -or
     $paletteResolverText -notmatch 'requireFullyResolved\(resolved\)' -or
     $paletteResolverText -notmatch 'CUIIconLibrary\.isAllowlisted' -or
     $paletteResolverText -notmatch 'CUISymbol\.isAllowlisted' -or
@@ -1242,10 +1245,13 @@ try {
       (Join-Path $validationScriptsDirectory "scripts") `
       "venworks\cui\CUIPaletteResolver.as"
     $reopenedPaletteResolverSource = Get-Content -LiteralPath $reopenedPaletteResolverPath -Raw
-    if ($reopenedPaletteResolverSource -notmatch 'attributeNames:Array' -or
+    if ($reopenedPaletteResolverSource -notmatch 'attributeNodes:Array' -or
+        $reopenedPaletteResolverSource -notmatch 'attributeNames:Array' -or
         $reopenedPaletteResolverSource -notmatch 'attributeValues:Array' -or
+        $reopenedPaletteResolverSource -notmatch 'attribute\.setChildren\(resolvedValue\)' -or
+        $reopenedPaletteResolverSource -match '\[attributeName\]\s*=' -or
         $reopenedPaletteResolverSource -notmatch 'requireFullyResolved\(resolved\)') {
-      throw "Generated output palette resolver does not preserve snapshot-based attribute traversal and its unresolved-reference postcondition."
+      throw "Generated output palette resolver does not preserve direct captured-attribute mutation, snapshot traversal, and its unresolved-reference postcondition."
     }
 
     $validationSource = ($validationScripts | ForEach-Object {
