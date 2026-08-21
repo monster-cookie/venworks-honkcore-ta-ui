@@ -493,12 +493,13 @@ input, callbacks, persistence, native code, or SFSE behavior. Its panel, binding
 and count/type formatting are absent from the production HUD; the existing
 `HudCompassData` subscription remains solely to deliver radar data.
 
-The adjacent `faction-display` fragment owns the Venworks SVG crest and its
+The adjacent `faction-display` fragment owns its palette-selected SVG crest and
 panel separately from `contact-radar`. Each has an independent layout include,
 so a theme or player configuration can hide the faction display while leaving
-the passive radar active. The crest identifies the configured theme, not the
-player's live faction membership. Branding text embedded in the owned SVG is
-the sole Venworks label; the layout must not add a duplicate text label.
+the passive radar active. The selected crest identifies the configured theme,
+not the player's live faction membership. Branding text embedded in a selected
+owned SVG, when present, is the sole logo label; the layout must not add a
+duplicate text label.
 
 The contact radar is also independent from Bethesda's Watch. It remains on the
 owned `VenworksCUIComponentLayer`, uses its own fixed-size `Shape` pool, and only

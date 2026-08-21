@@ -409,6 +409,9 @@ $gallerySvgSource = Resolve-RequiredFile `
 $venworksLogoSvgSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\venworks-logo.svg") `
   -Description "Owned Venworks logo SVG asset"
+$freestarCollectiveLogoSvgSource = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\freestar-collective-logo.svg") `
+  -Description "Owned Freestar Collective logo SVG asset"
 $invalidSvgSource = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\assets\gallery-invalid.svg") `
   -Description "Goal 4E invalid SVG fixture"
@@ -428,6 +431,13 @@ $examplePaletteFileNames = @(
   'trackers-alliance.xml',
   'venworks.xml'
 )
+$expectedPaletteFactionLogoFileNames = @{
+  'crimson-fleet.xml' = 'venworks-logo.svg'
+  'freestar-collective.xml' = 'freestar-collective-logo.svg'
+  'starfield.xml' = 'venworks-logo.svg'
+  'trackers-alliance.xml' = 'venworks-logo.svg'
+  'venworks.xml' = 'venworks-logo.svg'
+}
 $defaultPaletteFileName = 'venworks.xml'
 $fixtureDirectory = Resolve-RequiredDirectory `
   -Path (Join-Path $PSScriptRoot "..\Scaleform\shared\fixtures") `
@@ -527,8 +537,13 @@ foreach ($examplePaletteFileName in $examplePaletteFileNames) {
   if (@($examplePalette.SelectNodes("/venworksCUIPalette/strokes/stroke[@role='panel']")).Count -ne 1) {
     throw "Example palette $examplePaletteFileName is missing required stroke role 'panel'."
   }
-  if (@($examplePalette.SelectNodes("/venworksCUIPalette/assets/asset[@role='faction.logo']")).Count -ne 1) {
+  $factionLogoAssets = @($examplePalette.SelectNodes("/venworksCUIPalette/assets/asset[@role='faction.logo']"))
+  if ($factionLogoAssets.Count -ne 1) {
     throw "Example palette $examplePaletteFileName is missing required asset role 'faction.logo'."
+  }
+  $expectedFactionLogoFileName = [string]$expectedPaletteFactionLogoFileNames[$examplePaletteFileName]
+  if ([string]$factionLogoAssets[0].value -ne $expectedFactionLogoFileName) {
+    throw "Example palette $examplePaletteFileName must select faction logo '$expectedFactionLogoFileName'; found '$([string]$factionLogoAssets[0].value)'."
   }
   $paletteIdentityValues = foreach ($identityRole in @(
     'foreground.primary', 'foreground.muted', 'accent.primary', 'accent.secondary',
@@ -2548,6 +2563,7 @@ try {
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
+  Copy-Item -LiteralPath $freestarCollectiveLogoSvgSource -Destination (Join-Path $assetOutputDirectory "freestar-collective-logo.svg") -Force
   Copy-Item -LiteralPath $invalidSvgSource -Destination (Join-Path $assetOutputDirectory "gallery-invalid.svg") -Force
   for ($outputIndex = 0; $outputIndex -lt $resolvedOutputDirectories.Count; $outputIndex++) {
     $outputPath = $resolvedOutputDirectories[$outputIndex]
@@ -2567,7 +2583,7 @@ try {
       foreach ($componentFixtureName in $productionComponentFixtureNames) {
         Copy-Item -LiteralPath (Join-Path $componentOutputDirectory $componentFixtureName) -Destination (Join-Path $variantComponentOutputDirectory $componentFixtureName) -Force
       }
-      foreach ($assetFileName in @('gallery-vector.svg','venworks-logo.svg','gallery-invalid.svg')) {
+      foreach ($assetFileName in @('gallery-vector.svg','venworks-logo.svg','freestar-collective-logo.svg','gallery-invalid.svg')) {
         Copy-Item -LiteralPath (Join-Path $assetOutputDirectory $assetFileName) -Destination (Join-Path $variantAssetOutputDirectory $assetFileName) -Force
       }
       foreach ($retiredComponentName in $retiredComponentNames) {
@@ -2605,6 +2621,7 @@ try {
       'components\scanner-overlay.xml',
       'Assets\gallery-vector.svg',
       'Assets\venworks-logo.svg',
+      'Assets\freestar-collective-logo.svg',
       'Assets\gallery-invalid.svg'
     )
     $relativeCuiPaths += @($examplePaletteFileNames | ForEach-Object { "palettes\$_" })
