@@ -93,7 +93,8 @@ the approved 21-icon subset, converts SVG arcs to bounded cubic paths, and
 writes deterministic same-domain ActionScript. Normal Scaleform builds use the
 committed generated class and do not require Font Awesome. The Venworks and
 Freestar Collective logos are not part of this library; they remain owned loose
-SVG assets.
+SVG assets. The authored Trackers Alliance SVG is likewise packaged as a loose
+asset; its raster and DDS visual references are not repository content.
 
 The build injects the Venworks-only ABC seed, reads its vanilla XML from the
 ignored reference cache, exports patched and reopened ActionScript only into
