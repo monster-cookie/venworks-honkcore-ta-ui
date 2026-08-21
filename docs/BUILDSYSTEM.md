@@ -65,10 +65,11 @@ size and path bounds, and that the ordering and semantic composite output
 survive the normal/large movie import and reopen cycle. The production layout
 selects `venworks.xml` by default. The build validates and stages
 `venworks.xml`, `crimson-fleet.xml`, `freestar-collective.xml`, and
-`trackers-alliance.xml` under `Interface/VenworksCUI/palettes` in all four
-release variants. Repository checks enforce the exact release-variant names,
-their corresponding palette filenames, the Venworks default selector, and
-byte-identical source and staged palette files.
+`trackers-alliance.xml`, plus the neutral `starfield.xml`, under
+`Interface/VenworksCUI/palettes` in all four release variants. Repository checks
+enforce the exact four release-variant names, their corresponding selected
+palette filenames, the Venworks default selector, and byte-identical source and
+staged copies of all five user-selectable palette files.
 
 ## One-domain Scaleform rule
 

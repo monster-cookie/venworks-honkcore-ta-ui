@@ -424,6 +424,7 @@ $paletteSourceDirectory = Resolve-RequiredDirectory `
 $examplePaletteFileNames = @(
   'crimson-fleet.xml',
   'freestar-collective.xml',
+  'starfield.xml',
   'trackers-alliance.xml',
   'venworks.xml'
 )

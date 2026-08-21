@@ -113,8 +113,10 @@ primitives. Fragments may consume those references but cannot select or import
 a palette themselves. Existing layouts containing only literal values retain
 their original composite styling. The production layout selects `venworks.xml`
 by default, and the build deploys `venworks.xml`, `crimson-fleet.xml`,
-`freestar-collective.xml`, and `trackers-alliance.xml` under the fixed palette
-directory in all four staging variants. Palette selection occurs when the HUD
+`freestar-collective.xml`, `trackers-alliance.xml`, and `starfield.xml` under
+the fixed palette directory in all four staging variants. The Starfield palette
+preserves the neutral white-and-slate presentation, while Trackers Alliance uses
+a dark red-and-white faction identity. Palette selection occurs when the HUD
 starts; live theme switching is not part of the runtime contract.
 
 Dynamic CUI text retains Starfield's exported `PromptMessageWidget` symbol and

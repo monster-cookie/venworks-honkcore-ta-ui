@@ -19,6 +19,13 @@ $expectedVariantPalettes = [ordered]@{
   "Crimson Fleet" = "crimson-fleet.xml"
   "Venworks" = "venworks.xml"
 }
+$expectedPaletteFileNames = @(
+  "venworks.xml"
+  "crimson-fleet.xml"
+  "freestar-collective.xml"
+  "trackers-alliance.xml"
+  "starfield.xml"
+)
 $paletteSourceDirectory = Join-Path $PSScriptRoot "..\Scaleform\shared\palettes"
 
 if ($Global:Variants.Count -ne $expectedVariantPalettes.Count) {
@@ -64,7 +71,7 @@ foreach ($variant in $Global:Variants) {
     throw "$($variant.VariantName) layout must select '$expectedPaletteFileName'; found '$([string]$variantLayout.venworksCUI.palette)'."
   }
 
-  foreach ($paletteFileName in $expectedVariantPalettes.Values) {
+  foreach ($paletteFileName in $expectedPaletteFileNames) {
     $paletteSourcePath = Join-Path $paletteSourceDirectory $paletteFileName
     $variantPalettePath = Join-Path (Join-Path $variantCuiDirectory "palettes") $paletteFileName
     if (!(Test-Path -LiteralPath $paletteSourcePath -PathType Leaf)) {

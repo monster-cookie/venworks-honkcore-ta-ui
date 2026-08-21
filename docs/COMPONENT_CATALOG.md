@@ -64,10 +64,12 @@ switching without reloading the HUD is unsupported, but players can select any
 packaged theme by changing the root palette filename before the next load.
 
 The production root selects `venworks.xml` by default. Every release variant
-ships all four templates: `venworks.xml`, `crimson-fleet.xml`,
-`freestar-collective.xml`, and `trackers-alliance.xml`. Their complete semantic
-role sets share the same clear, caution, danger, and critical meanings while
-using faction-specific foreground, accent, panel, meter, and marker colors.
+ships all five templates: `venworks.xml`, `crimson-fleet.xml`,
+`freestar-collective.xml`, `trackers-alliance.xml`, and `starfield.xml`. The
+Starfield template preserves the neutral white-and-slate presentation, while
+Trackers Alliance restores a dark red-and-white faction identity. Their complete
+semantic role sets share the same clear, caution, danger, and critical meanings
+while using theme-specific foreground, accent, panel, meter, and marker colors.
 
 The version-1 contract defines bounded, unique semantic roles for foreground,
 accent, panel, state, meter, and marker colors; allowlisted typography; opacity
