@@ -460,6 +460,7 @@ foreach ($positiveFixtureName in @(
   'composite-foundations-gallery.xml',
   'layout-palette-gallery.xml',
   'layout-palette-composites.xml',
+  'layout-prototype-id-gallery.xml',
   'chronomark-provider-probe.xml'
 )) {
   $positiveFixturePath = Resolve-RequiredFile `
@@ -469,6 +470,55 @@ foreach ($positiveFixtureName in @(
   if ($schemaErrors.Count -ne 0) {
     throw "Positive fixture $positiveFixtureName failed schema validation: $($schemaErrors -join '; ')"
   }
+}
+
+$prototypeIdFixturePath = Resolve-RequiredFile `
+  -Path (Join-Path $fixtureDirectory 'layout-prototype-id-gallery.xml') `
+  -Description 'Prototype-safe identifier fixture'
+[xml]$prototypeIdFixture = Get-Content -LiteralPath $prototypeIdFixturePath -Raw
+foreach ($prototypeIdentifier in @('toString','hasOwnProperty','constructor')) {
+  if (@($prototypeIdFixture.SelectNodes("//*[@id='$prototypeIdentifier' or @name='$prototypeIdentifier' or @target='$prototypeIdentifier']")).Count -eq 0) {
+    throw "Prototype-safe identifier fixture does not exercise '$prototypeIdentifier'."
+  }
+}
+
+$duplicateIdFixturePath = Resolve-RequiredFile `
+  -Path (Join-Path $fixtureDirectory 'layout-duplicate-id.xml') `
+  -Description 'Duplicate prototype-safe identifier fixture'
+$duplicateIdSchemaErrors = @(Get-XmlSchemaErrors -XmlPath $duplicateIdFixturePath -SchemaPath $layoutSchemaPath)
+if ($duplicateIdSchemaErrors.Count -ne 0) {
+  throw "Duplicate identifier fixture should pass structural schema validation: $($duplicateIdSchemaErrors -join '; ')"
+}
+[xml]$duplicateIdFixture = Get-Content -LiteralPath $duplicateIdFixturePath -Raw
+if (@($duplicateIdFixture.SelectNodes('/venworksCUI/components/*[@id="toString"]')).Count -ne 2) {
+  throw 'Duplicate identifier fixture must retain two prototype-colliding component IDs.'
+}
+
+$invalidMeterGapFixturePath = Resolve-RequiredFile `
+  -Path (Join-Path $fixtureDirectory 'layout-invalid-meter-gap.xml') `
+  -Description 'Semantically invalid meter-gap fixture'
+$invalidMeterGapSchemaErrors = @(Get-XmlSchemaErrors -XmlPath $invalidMeterGapFixturePath -SchemaPath $layoutSchemaPath)
+if ($invalidMeterGapSchemaErrors.Count -ne 0) {
+  throw "Meter-gap fixture should pass structural schema validation: $($invalidMeterGapSchemaErrors -join '; ')"
+}
+[xml]$invalidMeterGapFixture = Get-Content -LiteralPath $invalidMeterGapFixturePath -Raw
+$invalidMeterGapStyle = $invalidMeterGapFixture.venworksCUI.definitions.meterStyle
+$invalidMeterGapComponent = $invalidMeterGapFixture.venworksCUI.components.meter
+$invalidMeterTotalGap = [double]$invalidMeterGapStyle.gap * ([int]$invalidMeterGapStyle.segmentCount - 1)
+if ($invalidMeterTotalGap -lt [double]$invalidMeterGapComponent.width) {
+  throw 'Meter-gap fixture no longer consumes the meter directional axis.'
+}
+
+[xml]$gallerySvgFixture = Get-Content -LiteralPath $gallerySvgSource -Raw
+$galleryRootTransform = [string]$gallerySvgFixture.svg.transform
+$galleryCompensationGroups = @($gallerySvgFixture.SelectNodes('/*[local-name()="svg"]/*[local-name()="g" and @transform="translate(-8 -4)"]'))
+$galleryDirectOpacitySwatches = @($gallerySvgFixture.SelectNodes('//*[local-name()="rect" and @opacity="0.25"]'))
+$galleryNestedOpacitySwatches = @($gallerySvgFixture.SelectNodes('//*[local-name()="g" and @opacity="0.5"]/*[local-name()="rect" and @opacity="0.5"]'))
+if ($galleryRootTransform -ne 'translate(8 4)' -or
+    $galleryCompensationGroups.Count -ne 1 -or
+    $galleryDirectOpacitySwatches.Count -ne 1 -or
+    $galleryNestedOpacitySwatches.Count -ne 1) {
+  throw 'SVG gallery must retain the compensated root transform and equivalent direct/nested opacity probes.'
 }
 
 $validPaletteFixturePath = Resolve-RequiredFile `
@@ -1466,6 +1516,7 @@ try {
       'updateFavoriteActiveConditions',
       'Meter direction must be right, left, down, or up',
       'Meter segmentCount must be between 1 and 64',
+      'Meter gaps consume its axis',
       'Radial thickness exceeds meter bounds',
       'alternating',
       'clockwise',
@@ -1495,6 +1546,7 @@ try {
     }
 
     $reopenedAssetManagerPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIAssetManager.as'
+    $reopenedSvgParserPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUISvgParser.as'
     $reopenedLayoutParserPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUILayoutParser.as'
     $reopenedLayoutEnginePath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUILayoutEngine.as'
     $reopenedCompositionResolverPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUICompositionResolver.as'
@@ -1518,6 +1570,7 @@ try {
     $reopenedVanillaVisibilityPath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIVanillaVisibilityAdapter.as'
     $reopenedRuntimePath = Join-Path $validationScriptsDirectory 'scripts\venworks\cui\CUIRuntime.as'
     $reopenedAssetManagerSource = Get-Content -LiteralPath $reopenedAssetManagerPath -Raw
+    $reopenedSvgParserSource = Get-Content -LiteralPath $reopenedSvgParserPath -Raw
     $reopenedLayoutParserSource = Get-Content -LiteralPath $reopenedLayoutParserPath -Raw
     $reopenedLayoutEngineSource = Get-Content -LiteralPath $reopenedLayoutEnginePath -Raw
     $reopenedCompositionResolverSource = Get-Content -LiteralPath $reopenedCompositionResolverPath -Raw
@@ -1568,6 +1621,29 @@ try {
         !$reopenedLayoutParserSource.Contains('Text value cannot be empty: ')) {
       throw 'Generated layout parser does not allow empty dynamic text fallbacks while rejecting empty static text.'
     }
+    if ($reopenedLayoutParserSource -notmatch 'private\s+function\s+mapKey' -or
+        $reopenedLayoutParserSource -notmatch 'return\s+"\$"\s*\+\s*param1' -or
+        $reopenedLayoutParserSource -notmatch 'componentIds\[this\.mapKey\(id\)\]' -or
+        $reopenedLayoutParserSource -notmatch 'definitionIds\[this\.mapKey\(id\)\]' -or
+        $reopenedLayoutParserSource -notmatch 'meterStyles\[this\.mapKey\(param2\)\]' -or
+        $reopenedCompositionResolverSource -notmatch 'private\s+function\s+mapKey' -or
+        $reopenedCompositionResolverSource -notmatch 'nodes\[this\.mapKey\(target\)\]' -or
+        $reopenedCompositionResolverSource -notmatch 'itemIds\[this\.mapKey\(itemId\)\]' -or
+        $reopenedCompositionResolverSource -notmatch 'optionNames\[this\.mapKey\(optionName\)\]' -or
+        $reopenedCompositionResolverSource -notmatch 'templates\[key\]') {
+      throw 'Generated layout composition maps do not retain prototype-safe identifier keys.'
+    }
+    if ($reopenedLayoutParserSource -notmatch 'function\s+validateLinearMeterGap' -or
+        $reopenedLayoutParserSource -notmatch 'totalGap\s*=\s*Number\(param2\.@gap\)\s*\*\s*\(int\(param2\.@segmentCount\)\s*-\s*1\)' -or
+        $reopenedLayoutParserSource -notmatch 'totalGap\s*>=\s*axisLength' -or
+        $reopenedLayoutParserSource -notmatch 'Meter gaps consume its axis') {
+      throw 'Generated layout parser does not reject linear meter gaps that consume the directional axis.'
+    }
+    if ($reopenedSvgParserSource -notmatch 'this\.applyTransform\(transformedContent,String\(param1\.@transform\)\)' -or
+        $reopenedSvgParserSource -notmatch 'this\.renderChildren\(param1,transformedContent' -or
+        $reopenedSvgParserSource -notmatch 'result\.opacity\s*\*=\s*this\.requireOpacity') {
+      throw 'Generated SVG parser does not retain root transforms and multiplicative nested opacity.'
+    }
     foreach ($identifierValidatorSource in @(
       $reopenedLayoutParserSource,
       $reopenedCompositionResolverSource,
@@ -1604,6 +1680,14 @@ try {
         $reopenedConditionContextSource -notmatch 'changedConditions\[name\]\s*!==\s*true' -or
         $reopenedConditionContextSource -match 'dispatchEvent\s*\(\s*new Event\s*\(\s*Event\.CHANGE') {
       throw 'Generated condition context does not retain changed-condition events and no-op suppression.'
+    }
+    if ($reopenedConditionContextSource -notmatch 'MAX_INVENTORY_ITEMS\s*:\s*int\s*=\s*256' -or
+        $reopenedConditionContextSource -notmatch 'DIGIPICK_FORM_ID\s*:\s*Number\s*=\s*10' -or
+        $reopenedConditionContextSource -notmatch 'limit\s*=\s*Math\.min\(items\.length,MAX_INVENTORY_ITEMS\)' -or
+        $reopenedConditionContextSource -notmatch 'formId\s*==\s*DIGIPICK_FORM_ID' -or
+        $reopenedConditionContextSource -notmatch 'count\s*>\s*0' -or
+        $reopenedConditionContextSource -notmatch 'this\.setValue\("digipicksavailable",this\.hasDigipicks\(param1\)\)') {
+      throw 'Generated digipick availability condition does not require a bounded recognized entry with a positive count.'
     }
     if ($reopenedConditionContextSource -notmatch 'CRITICAL_HEALTH_PERCENTAGE\s*:\s*Number\s*=\s*35' -or
         $reopenedConditionContextSource -notmatch 'name\s*==\s*"criticalhealth"' -or
@@ -1836,11 +1920,17 @@ try {
         $reopenedScannerOverlaySource -notmatch 'pulseStep\s*>=\s*PULSE_RING_THRESHOLDS\.length\s*\+\s*PULSE_HOLD_STEPS' -or
         $reopenedScannerOverlaySource -notmatch 'Event\.ADDED_TO_STAGE' -or
         $reopenedScannerOverlaySource -notmatch 'Event\.REMOVED_FROM_STAGE' -or
+        $reopenedScannerOverlaySource -notmatch 'public\s+function\s+updateVisibilityState' -or
+        $reopenedScannerOverlaySource -notmatch 'private\s+function\s+isEffectivelyVisible' -or
+        $reopenedScannerOverlaySource -notmatch 'stage\s*==\s*null' -or
+        $reopenedScannerOverlaySource -notmatch 'current\s*=\s*current\.parent' -or
+        $reopenedScannerOverlaySource -notmatch 'pulseTimer\.running' -or
+        $reopenedRuntimeSource -notmatch 'scannerOverlay\.updateVisibilityState\(\)' -or
         $reopenedScannerOverlaySource -notmatch 'mouseEnabled\s*=\s*false' -or
         $reopenedScannerOverlaySource -notmatch 'mouseChildren\s*=\s*false' -or
         $reopenedScannerOverlaySource -match 'Event\.ENTER_FRAME' -or
         $reopenedScannerOverlaySource -notmatch 'NO VALID CONTACTS') {
-      throw 'Generated scanner overlay does not retain the bounded 1000-distance all-marker contact contract, five-by-five radial square-to-dot pulse, deterministic codenames, and stage-scoped timer lifecycle.'
+      throw 'Generated scanner overlay does not retain the bounded 1000-distance all-marker contact contract, five-by-five radial square-to-dot pulse, deterministic codenames, and effective-visibility timer lifecycle.'
     }
     if ($reopenedTacticalAwarenessModelSource -notmatch 'CRITICAL_HOSTILE_DISTANCE\s*:\s*Number\s*=\s*25' -or
         $reopenedTacticalAwarenessModelSource -notmatch 'SEVERE_HOSTILE_DISTANCE\s*:\s*Number\s*=\s*50' -or

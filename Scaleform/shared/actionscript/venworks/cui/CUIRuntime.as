@@ -707,6 +707,7 @@ package venworks.cui
       {
          var binding:CUIVisibilityBinding = null;
          var adapter:CUIVanillaVisibilityAdapter = null;
+         var scannerOverlay:CUIScannerOverlay = null;
          for each(binding in visibilityBindings)
          {
             if(binding.isAffectedBy(param1))
@@ -720,6 +721,10 @@ package venworks.cui
             {
                adapter.apply(conditionContext);
             }
+         }
+         for each(scannerOverlay in scannerOverlays)
+         {
+            scannerOverlay.updateVisibilityState();
          }
       }
 

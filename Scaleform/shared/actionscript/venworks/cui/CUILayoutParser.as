@@ -131,11 +131,12 @@ package venworks.cui
 
       public function getMeterStyle(param1:String) : XML
       {
-         if(meterStyles[param1] == null)
+         var key:String = this.mapKey(param1);
+         if(meterStyles[key] == null)
          {
             throw new Error("INVALID|Unknown meter style reference: " + param1);
          }
-         return meterStyles[param1] as XML;
+         return meterStyles[key] as XML;
       }
 
       private function validatePaletteReferences(param1:XML) : void
@@ -185,11 +186,11 @@ package venworks.cui
                throw new Error("INVALID|Unknown definition: " + type);
             }
             id = this.requireId(definition);
-            if(definitionIds[id] != null)
+            if(definitionIds[this.mapKey(id)] != null)
             {
                throw new Error("INVALID|Duplicate definition id: " + id);
             }
-            definitionIds[id] = true;
+            definitionIds[this.mapKey(id)] = true;
             if(type == "meterStyle")
             {
                this.parseMeterStyle(definition,id);
@@ -226,11 +227,11 @@ package venworks.cui
                throw new Error("INVALID|Unknown definition: " + type);
             }
             id = this.requireId(definition);
-            if(ids[id] != null)
+            if(ids[this.mapKey(id)] != null)
             {
                throw new Error("INVALID|Duplicate definition id: " + id);
             }
-            ids[id] = true;
+            ids[this.mapKey(id)] = true;
             if(type == "template")
             {
                ++templateCount;
@@ -238,7 +239,7 @@ package venworks.cui
                {
                   throw new Error("INVALID|The layout exceeds the 64-template limit.");
                }
-               result[id] = definition;
+               result[this.mapKey(id)] = definition;
             }
          }
          return result;
@@ -268,7 +269,7 @@ package venworks.cui
             this.requireAttributes(target,["id","visibleWhen","x","y","anchor","offsetX","offsetY"]);
             id = this.requireId(target);
             normalized = CUIVanillaVisibilityAdapter.normalizeTarget(id);
-            if(targets[normalized] != null)
+            if(targets[this.mapKey(normalized)] != null)
             {
                throw new Error("INVALID|Duplicate vanilla visibility target: " + id);
             }
@@ -276,7 +277,7 @@ package venworks.cui
             {
                throw new Error("INVALID|Vanilla visibility target is not allowlisted: " + id);
             }
-            targets[normalized] = true;
+            targets[this.mapKey(normalized)] = true;
             this.requireCondition(target,"visibleWhen");
             hasAbsolutePlacement = target.@x.length() + target.@y.length() + target.@anchor.length() != 0;
             hasRelativePlacement = target.@offsetX.length() + target.@offsetY.length() != 0;
@@ -378,7 +379,7 @@ package venworks.cui
                this.rejectMeterAttributes(param1,["trianglePattern"]);
             }
          }
-         meterStyles[param2] = param1;
+         meterStyles[this.mapKey(param2)] = param1;
       }
 
       private function requireLinearDirection(param1:XML) : void
@@ -425,7 +426,7 @@ package venworks.cui
          componentIds = {};
          this.validateComponent(root);
          componentIds = savedComponentIds;
-         templates[param2] = param1;
+         templates[this.mapKey(param2)] = param1;
       }
 
       private function validateChildren(param1:XML, param2:Boolean = false) : void
@@ -609,6 +610,7 @@ package venworks.cui
             {
                throw new Error("INVALID|Radial thickness exceeds meter bounds: " + String(param1.@id));
             }
+            this.validateLinearMeterGap(param1,style);
          }
          else if(type == "svg")
          {
@@ -699,11 +701,11 @@ package venworks.cui
          var id:String = null;
          this.requireAttributes(param1,param2);
          id = this.requireId(param1);
-         if(componentIds[id] != null)
+         if(componentIds[this.mapKey(id)] != null)
          {
             throw new Error("INVALID|Duplicate component id: " + id);
          }
-         componentIds[id] = true;
+         componentIds[this.mapKey(id)] = true;
          this.requireFinite(param1,"x");
          this.requireFinite(param1,"y");
          this.requireFiniteNonNegative(param1,"width");
@@ -730,6 +732,31 @@ package venworks.cui
          {
             throw new Error("INVALID|Component width and height must be positive: " + String(param1.@id));
          }
+      }
+
+      private function validateLinearMeterGap(param1:XML, param2:XML) : void
+      {
+         var renderer:String = String(param2.@renderer);
+         var direction:String = null;
+         var axisLength:Number = NaN;
+         var totalGap:Number = NaN;
+         if(renderer != "segments" && renderer != "dots" && renderer != "triangles")
+         {
+            return;
+         }
+         direction = String(param2.@direction);
+         axisLength = direction == "left" || direction == "right" ?
+            Number(param1.@width) : Number(param1.@height);
+         totalGap = Number(param2.@gap) * (int(param2.@segmentCount) - 1);
+         if(totalGap >= axisLength)
+         {
+            throw new Error("INVALID|Meter gaps consume its axis: " + String(param1.@id));
+         }
+      }
+
+      private function mapKey(param1:String) : String
+      {
+         return "$" + param1;
       }
 
       private function requireAssetPath(param1:XML) : void

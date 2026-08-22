@@ -11,6 +11,8 @@ package venworks.cui
 
       private static const FAVORITE_SLOT_COUNT:int = 12;
       private static const CRITICAL_HEALTH_PERCENTAGE:Number = 35;
+      private static const MAX_INVENTORY_ITEMS:int = 256;
+      private static const DIGIPICK_FORM_ID:Number = 10;
 
       private var values:Object;
       private var changedConditions:Object;
@@ -221,8 +223,48 @@ package venworks.cui
 
       private function onPlayerInventoryData(param1:FromClientDataEvent) : void
       {
-         this.setValue("digipicksavailable",param1.data.aItems is Array);
+         this.setValue("digipicksavailable",this.hasDigipicks(param1));
          this.notifyChanged();
+      }
+
+      private function hasDigipicks(param1:FromClientDataEvent) : Boolean
+      {
+         var items:Array = param1 == null || param1.data == null ? null :
+            param1.data.aItems as Array;
+         var item:Object = null;
+         var formId:Number = NaN;
+         var editorId:String = "";
+         var name:String = "";
+         var count:Number = NaN;
+         var index:int = 0;
+         var limit:int = 0;
+         if(items == null)
+         {
+            return false;
+         }
+         limit = Math.min(items.length,MAX_INVENTORY_ITEMS);
+         while(index < limit)
+         {
+            item = items[index];
+            if(item != null)
+            {
+               formId = Number(item.uFormID);
+               editorId = item.sEditorID !== undefined && item.sEditorID !== null ? String(item.sEditorID) :
+                  (item.EditorID !== undefined && item.EditorID !== null ? String(item.EditorID) : "");
+               name = item.sName !== undefined && item.sName !== null ? String(item.sName) : "";
+               if((!isNaN(formId) && isFinite(formId) && formId == DIGIPICK_FORM_ID) ||
+                  editorId.toLowerCase() == "digipick" || name.toLowerCase() == "digipick")
+               {
+                  count = Number(item.uCount);
+                  if(!isNaN(count) && isFinite(count) && count > 0)
+                  {
+                     return true;
+                  }
+               }
+            }
+            ++index;
+         }
+         return false;
       }
 
       private function resetFavoriteConditions() : void

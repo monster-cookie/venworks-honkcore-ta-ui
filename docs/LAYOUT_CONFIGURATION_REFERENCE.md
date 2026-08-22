@@ -362,6 +362,13 @@ favorite01Item
 
 Replace `01` with any two-digit slot through `12`.
 
+`favorite01Active` through `favorite12Active` compare the localized favorite
+name with the independently live weapon or power name. Weapon matching follows
+the current game language. Power matching currently relies on an English name
+mapped from the live HUD power key, so active-power favorite highlighting is
+reliable only in English until HUDMenu exposes a verified language-independent
+favorite-power identifier.
+
 ### Numeric conditions
 
 `hudOpacityPercentage` is the only numeric condition. It requires a comparison
@@ -636,7 +643,9 @@ positive. Rectangle and ellipse masks must not declare path geometry.
 Values are clamped by the renderer to the range from zero through the current
 maximum. If the live source or maximum is unknown, the authored fallback is
 used. A radial style's `thickness` cannot exceed the smaller of the meter's
-configured width and height.
+configured width and height. For segmented, dot, and triangle styles, all gaps
+combined must be smaller than the meter's directional axis so every segment
+retains positive space.
 
 ## Specialized live components
 
@@ -647,7 +656,7 @@ width and height.
 |---|---|---|
 | `contactRadar` | `enemyColor`, `allyColor`, `playerColor` | Displays only the runtime's bounded, validated acquired-contact model. |
 | `compassTape` | `fieldOfView`, `tickColor`, `headingColor`, `centerColor`, `fallbackColor` | `fieldOfView` is 30 through 180 degrees. |
-| `scannerOverlay` | `fieldOfView`, `maxTargets`, `flickerIntervalMs`, `scanningColor`, `gridColor`, `contactColor`, `hostileColor`, `backgroundColor` | Field of view is 30-180; targets 1-5; interval 50-2000 milliseconds. |
+| `scannerOverlay` | `fieldOfView`, `maxTargets`, `flickerIntervalMs`, `scanningColor`, `gridColor`, `contactColor`, `hostileColor`, `backgroundColor` | Field of view is 30-180; targets 1-5; interval 50-2000 milliseconds. Its pulse timer stops and resets whenever it or any display-list ancestor is hidden. |
 | `threatAlert` | `backgroundColor`, `clearColor`, `cautionColor`, `dangerColor`, `criticalColor` | Uses the bounded player-threat model; it does not replace Bethesda's enemy health or stealth UI. |
 | `statusEffectBar` | `maxItems`, `debuffColor`, `sustenanceColor`, `neutralColor`, `backgroundColor` | `maxItems` is 1 through 16. |
 
@@ -916,7 +925,9 @@ may also declare `width`, `height`, `fill`, `stroke`, `fill-opacity`,
 Shape elements accept only their geometry attributes plus the common style and
 transform attributes. Colors are `#RRGGBB` or `none`. Opacity is 0 through 1;
 stroke width is non-negative. Supported transforms are bounded `translate`,
-`scale`, and one-angle `rotate` operations.
+`scale`, and one-angle `rotate` operations. Root transforms compose after the
+view-box offset, and nested `opacity` values multiply through the ancestor
+chain.
 
 SVG limits and exclusions:
 

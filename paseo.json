@@ -1,5 +1,5 @@
 {
   "worktree": {
-    "setup": "pwsh -NoProfile -File ./tools/Setup-ScaleformEnvironment.ps1"
+    "setup": "pwsh -NoProfile -File ./Tools/Setup-ScaleformEnvironment.ps1"
   }
 }

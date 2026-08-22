@@ -109,6 +109,10 @@ a separate loose override containing the additional changed files.
 - Direct PNG, JPEG, and DDS assets are unsupported by the Starfield Scaleform
   runtime. Custom loose artwork must use the supported local SVG subset.
 - Palette changes require a new HUD load; live switching is unsupported.
+- Active-power highlighting for favorite slots currently compares Bethesda's
+  localized favorite name with an English name mapped from the live HUD power
+  key. It is therefore reliable only in English until HUDMenu exposes a stable
+  language-independent favorite-power identifier.
 - The normal HUD has broader current in-game evidence than the large HUD and
   ultrawide presentation. Final large-HUD, ultrawide, and contact-radar
   startup/transition acceptance remains in progress; build and staging success

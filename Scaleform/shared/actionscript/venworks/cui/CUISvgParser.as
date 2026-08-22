@@ -32,6 +32,7 @@ package venworks.cui
          var viewBox:Array = null;
          var root:Sprite = null;
          var content:Sprite = null;
+         var transformedContent:Sprite = null;
          if(name != "svg")
          {
             throw new Error("INVALID|Local SVG root must be svg.");
@@ -50,8 +51,11 @@ package venworks.cui
          content.x = -viewBox[0];
          content.y = -viewBox[1];
          root.addChild(content);
+         transformedContent = new Sprite();
+         content.addChild(transformedContent);
+         this.applyTransform(transformedContent,String(param1.@transform));
          elementCount = 1;
-         this.renderChildren(param1,content,this.createStyle(param1,null),1);
+         this.renderChildren(param1,transformedContent,this.createStyle(param1,null),1);
          return root;
       }
 
@@ -208,7 +212,7 @@ package venworks.cui
          }
          if(param1.@opacity.length() == 1)
          {
-            result.opacity = this.requireOpacity(String(param1.@opacity),"opacity");
+            result.opacity *= this.requireOpacity(String(param1.@opacity),"opacity");
          }
          return result;
       }

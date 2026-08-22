@@ -187,7 +187,7 @@ gamer-facing configuration surface.
 | Warning panel | Complete | Severity color, icon, title, detail, and visibility/state rules. |
 | Item/ammo readout | Future | Weapon/item icon, amount, reserve amount, state color, and optional meter. |
 | Status-effect row | Implemented | Bounded active-effects presentation using verified HUD data; large-HUD acceptance remains pending. |
-| Scanner overlay | Implemented | Scanner-only heading banner, 5-by-5 square-to-dot radial pulse, and up to five validated forward contacts. It preserves Bethesda's reticle/crosshair and uses deterministic type/handle codenames instead of names or random data. |
+| Scanner overlay | Implemented | Scanner-only heading banner, 5-by-5 square-to-dot radial pulse, and up to five validated forward contacts. Its pulse timer runs only while the component and every display-list ancestor are visible. It preserves Bethesda's reticle/crosshair and uses deterministic type/handle codenames instead of names or random data. |
 | Reticle/crosshair | Vanilla-owned; not configurable | Bethesda retains the complete visual and lifecycle owner; proven crosshair data remains condition input only. |
 
 The Goal 7 equipment rail is intentionally passive. Favorites Menu remains the
@@ -425,7 +425,11 @@ independently live name. This permits an ammo-less active melee entry to change
 from the generic item presentation to the weapon presentation without treating
 every ammo-less favorite as a weapon. Bethesda key
 `ArtifactPower_ElementalBlast` maps to `Elemental Pull` in both the data and
-condition contexts. `uStartingSelection`, `bIsEquipped`, menu-owned image
+condition contexts. FavoritesData currently exposes only the localized power
+name verified by this HUD, while the independently live HUD power key maps to
+an English name. Active-power favorite highlighting is therefore reliable only
+in English; no language-independent FavoritesData identifier is used without
+runtime evidence. `uStartingSelection`, `bIsEquipped`, menu-owned image
 buffers, and unproven slot indices are not production inputs. The ribbon
 contains no actions or input handlers. The vehicle-exit prompt is independently
 centered in the fixed lower helmet seal and remains visible only in a vehicle.

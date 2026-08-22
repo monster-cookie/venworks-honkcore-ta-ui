@@ -189,11 +189,11 @@ package venworks.cui
             }
             this.requireAttributes(item,["id","visible","visibleWhen"]);
             itemId = this.requireId(item);
-            if(itemIds[itemId] != null)
+            if(itemIds[this.mapKey(itemId)] != null)
             {
                throw new Error("INVALID|Duplicate repeater item id: " + itemId);
             }
-            itemIds[itemId] = true;
+            itemIds[this.mapKey(itemId)] = true;
             itemVisible = this.readOptionalBoolean(item,"visible",true);
             this.validateOverrides(templateId,item);
             if(!itemVisible)
@@ -273,11 +273,11 @@ package venworks.cui
             }
             this.requireAttributes(option,["name","template"]);
             optionName = this.requireNamedValue(option,"name");
-            if(optionNames[optionName] != null)
+            if(optionNames[this.mapKey(optionName)] != null)
             {
                throw new Error("INVALID|Duplicate state option name: " + optionName);
             }
-            optionNames[optionName] = true;
+            optionNames[this.mapKey(optionName)] = true;
             templateId = this.requireAttribute(option,"template");
             this.requireTemplate(templateId);
             this.validateOverrides(templateId,option);
@@ -354,7 +354,7 @@ package venworks.cui
             }
             this.requireAttributes(override,["target","text","meterValue","visible","visibleWhen"]);
             target = this.requireNamedValue(override,"target");
-            targetNode = nodes[target] as XML;
+            targetNode = nodes[this.mapKey(target)] as XML;
             if(targetNode == null)
             {
                throw new Error("INVALID|Unknown template override target: " + target);
@@ -405,11 +405,11 @@ package venworks.cui
       {
          var id:String = this.requireId(param1);
          var child:XML = null;
-         if(param2[id] != null)
+         if(param2[this.mapKey(id)] != null)
          {
             throw new Error("INVALID|Duplicate local template component id: " + id);
          }
-         param2[id] = param1;
+         param2[this.mapKey(id)] = param1;
          for each(child in param1.children())
          {
             this.collectLocalIds(child,param2);
@@ -442,11 +442,12 @@ package venworks.cui
 
       private function requireTemplate(param1:String) : XML
       {
-         if(templates[param1] == null)
+         var key:String = this.mapKey(param1);
+         if(templates[key] == null)
          {
             throw new Error("INVALID|Unknown template reference: " + param1);
          }
-         return templates[param1] as XML;
+         return templates[key] as XML;
       }
 
       private function copyOptionalAttribute(param1:XML, param2:XML, param3:String) : void
@@ -489,11 +490,17 @@ package venworks.cui
       private function recordOverride(param1:Object, param2:String, param3:String) : void
       {
          var key:String = param2 + "." + param3;
-         if(param1[key] != null)
+         var storageKey:String = this.mapKey(key);
+         if(param1[storageKey] != null)
          {
             throw new Error("INVALID|Duplicate template override: " + key);
          }
-         param1[key] = true;
+         param1[storageKey] = true;
+      }
+
+      private function mapKey(param1:String) : String
+      {
+         return "$" + param1;
       }
 
       private function countComponents(param1:XML) : int

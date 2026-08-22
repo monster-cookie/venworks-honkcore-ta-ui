@@ -1,5 +1,6 @@
 package venworks.cui.components
 {
+   import flash.display.DisplayObject;
    import flash.display.Shape;
    import flash.events.Event;
    import flash.events.TimerEvent;
@@ -67,6 +68,24 @@ package venworks.cui.components
          }
          this.updateHeading(direction);
          this.updateContacts(targets,direction);
+      }
+
+      public function updateVisibilityState() : void
+      {
+         if(this.isEffectivelyVisible())
+         {
+            if(!pulseTimer.running)
+            {
+               pulseStep = 0;
+               this.drawGrid();
+               pulseTimer.start();
+            }
+            return;
+         }
+         pulseTimer.stop();
+         pulseTimer.reset();
+         pulseStep = 0;
+         this.drawGrid();
       }
 
       private function createOverlay() : void
@@ -338,11 +357,27 @@ package venworks.cui.components
          return !isNaN(param1) && isFinite(param1);
       }
 
+      private function isEffectivelyVisible() : Boolean
+      {
+         var current:DisplayObject = this;
+         if(stage == null)
+         {
+            return false;
+         }
+         while(current != null)
+         {
+            if(!current.visible)
+            {
+               return false;
+            }
+            current = current.parent;
+         }
+         return true;
+      }
+
       private function onAddedToStage(param1:Event) : void
       {
-         pulseStep = 0;
-         this.drawGrid();
-         pulseTimer.start();
+         this.updateVisibilityState();
       }
 
       private function onRemovedFromStage(param1:Event) : void
@@ -355,6 +390,11 @@ package venworks.cui.components
 
       private function onPulseTimer(param1:TimerEvent) : void
       {
+         if(!this.isEffectivelyVisible())
+         {
+            this.updateVisibilityState();
+            return;
+         }
          if(pulseStep >= PULSE_RING_THRESHOLDS.length + PULSE_HOLD_STEPS)
          {
             pulseStep = 0;
