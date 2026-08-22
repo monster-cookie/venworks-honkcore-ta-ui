@@ -1,22 +1,8 @@
-# Title
-
-Venworks Customizable HUD - Crimson Fleet Theme
-
-# Tagline
-
-A from-scratch, XML-customizable Starfield HUD with the Crimson Fleet palette, tactical data, a contact radar, and five included color palettes.
-
-# Description Markdown
-
 # Overview
 
 Venworks Customizable HUD overhauls Starfield's interface with a new HUD written from the ground up in Scaleform and ActionScript 3. This Creation starts with the Crimson Fleet palette and crest. Every gauge, contact, status bar, and information panel has a defined gameplay or interface purpose; this is not a static mockup placed over the game.
 
 **Beta platforms:** This beta targets PC and every console platform supported by Starfield Creations. Console testing and feedback are especially welcome.
-
-> **New HUD and HONKCORE compatibility**
->
-> This is a new custom HUD written from the ground up in Scaleform and ActionScript. It is not compatible with HONKCORE and has an expanded feature set.
 
 # Features
 
@@ -50,8 +36,6 @@ Versioned XML controls layout, visibility, colors, typography, meters, icons, re
 
 Install this Creation through Starfield Creations and enable only one Venworks Customizable HUD theme. All four theme Creations replace the same HUD movies and configuration paths, so enabling more than one creates file conflicts.
 
-**Compatibility:** This HUD has no HONKCORE dependency. Do not install it with HONKCORE or another mod that replaces `hudmenu.gfx` or `hudmenu_lrg.gfx` unless a purpose-built compatibility patch explicitly combines them.
-
 ## Change the active palette on PC
 
 Console players should install the Creation whose title matches the starting palette they want. PC players can switch among all five packaged palettes:
@@ -72,14 +56,13 @@ Mod-manager updates and Creation reinstalls can overwrite PC XML changes. Keep a
 
 # Documentation
 
-- Source and overview: <https://github.com/monster-cookie/venworks-honkcore-ta-ui>
-- User configuration guide: <https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/docs/USER_CONFIGURATION.md>
-- Layout reference: <https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/docs/LAYOUT_CONFIGURATION_REFERENCE.md>
-- Palette reference: <https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/docs/PALETTE_CONFIGURATION_REFERENCE.md>
+- Source and overview: https://github.com/monster-cookie/venworks-honkcore-ta-ui
+- User configuration guide: https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/docs/USER_CONFIGURATION.md
+- Layout reference: https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/docs/LAYOUT_CONFIGURATION_REFERENCE.md
+- Palette reference: https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/docs/PALETTE_CONFIGURATION_REFERENCE.md
 
-> **Venworks Discord Community**
->
-> I've reopened the Venworks Discord community as a central place for my mods, modding research, support, beta feedback, and bug reports:
-> <https://discord.gg/DTbmrJDMxZ>
->
-> I'll continue releasing my mods through Bethesda Game Studios Creations and on Nexus, but recent site updates have made Nexus notifications and the Bugs and Posts sections less reliable.
+# Venworks Discord Community
+
+I've reopened the Venworks Discord community as a central place for my mods, modding research, support, beta feedback, and bug reports: https://discord.gg/DTbmrJDMxZ
+
+I'll continue releasing my mods through Bethesda Game Studios Creations and on Nexus, but recent site updates have made Nexus notifications and the Bugs and Posts sections less reliable.

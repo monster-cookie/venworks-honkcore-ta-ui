@@ -1,0 +1,25 @@
+# Bethesda Creations Listing Metadata
+
+## Venworks Theme
+
+- Title: `Venworks Customizable HUD - Venworks Theme`
+- Tagline: `An XML-customizable Starfield HUD with tactical player, equipment, environment, scanner, objective, and contact-radar displays supporting multiple themes and color palettes.`
+- Description Markdown: `Venworks-Theme.md`
+
+## Trackers Alliance Theme
+
+- Title: `Venworks Customizable HUD - Trackers Alliance Theme`
+- Tagline: `An XML-customizable Starfield HUD with tactical player, equipment, environment, scanner, objective, and contact-radar displays supporting multiple themes and color palettes.`
+- Description Markdown: `Trackers-Alliance-Theme.md`
+
+## Freestar Collective Theme
+
+- Title: `Venworks Customizable HUD - Freestar Collective Theme`
+- Tagline: `An XML-customizable Starfield HUD with tactical player, equipment, environment, scanner, objective, and contact-radar displays supporting multiple themes and color palettes.`
+- Description Markdown: `Freestar-Collective-Theme.md`
+
+## Crimson Fleet Theme
+
+- Title: `Venworks Customizable HUD - Crimson Fleet Theme`
+- Tagline: `An XML-customizable Starfield HUD with tactical player, equipment, environment, scanner, objective, and contact-radar displays supporting multiple themes and color palettes.`
+- Description Markdown: `Crimson-Fleet-Theme.md`

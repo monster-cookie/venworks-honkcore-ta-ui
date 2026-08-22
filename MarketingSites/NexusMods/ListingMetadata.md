@@ -3,7 +3,7 @@
 ## Public listing
 
 - Title: `Venworks Customizable HUD`
-- Summary: `A from-scratch, XML-customizable Starfield HUD with tactical player, equipment, environment, scanner, objective, and contact-radar displays.`
+- Summary: `An XML-customizable Starfield HUD with tactical player, equipment, environment, scanner, objective, and contact-radar displays supporting multiple themes and color palettes.`
 - Category: `User Interface`
 - Release status: `Beta`
 - Version: Set only after the release branch is merged and tagged.
