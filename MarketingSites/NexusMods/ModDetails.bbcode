@@ -68,18 +68,20 @@ A .NET WYSIWYG application for creating and modifying themes is a long-term road
 [img]https://cdn.venworkscreations.com/NexusMods/description-divider-installation-instructions-1600x120.png[/img]
 [size=3][b][u]Via Vortex or Mod Organizer 2[/u][/b][/size]
 
-Install one new theme variant as you would any other Starfield mod. Let it win the intended conflicts for [font=Courier New]hudmenu.gfx[/font], [font=Courier New]hudmenu_lrg.gfx[/font], and [font=Courier New]Interface\VenworksCUI[/font]. Do not enable more than one new theme variant.
+Choose one theme and one PC package shape. Nexus PC - Normal is recommended: it installs an ESM, Windows BA2 archives, and one loose [font=Courier New]Interface\VenworksCUI\layout.xml[/font]. Enable the ESM and let the package win the intended HUD conflicts. The two compiled GFX movies remain protected inside the Main BA2.
+
+Nexus PC - Fully Loose Files installs the complete loose [font=Courier New]Interface[/font] tree without an ESM or BA2. Use it only when component fragments, palettes, or SVG assets must also remain loose. Do not install Normal and Fully Loose Files together, and do not enable more than one theme variant.
 
 [size=3][b][u]Manually[/u][/b][/size]
 
-A mod manager is strongly recommended because it makes file conflicts, updates, and recovery safer. For a manual installation, copy the package's [font=Courier New]Interface[/font] directory into [font=Courier New]<Starfield installation directory>\Data[/font]. Back up files before overwriting them.
+A mod manager is strongly recommended because it makes file conflicts, plugin activation, updates, and recovery safer. A manual Normal installation must copy the ESM, the supplied Windows BA2 archives, and the loose [font=Courier New]Interface\VenworksCUI\layout.xml[/font] to [font=Courier New]<Starfield installation directory>\Data[/font], then enable the ESM. A manual Fully Loose Files installation copies its [font=Courier New]Interface[/font] directory into [font=Courier New]Data[/font]. Back up files before overwriting them.
 
 [size=3][b][u]Change the active color palette on PC[/u][/b][/size]
 
 [list=1]
 [*]Enable only one Venworks Customizable HUD release variant.[/*]
 [*]Fully exit Starfield.[/*]
-[*]Back up the complete active [font=Courier New]Interface\VenworksCUI[/font] directory. Mod-manager updates, reinstalls, purge/deploy operations, and conflict changes can overwrite local XML edits.[/*]
+[*]Back up the active loose [font=Courier New]Interface\VenworksCUI\layout.xml[/font]. If you use Fully Loose Files or an advanced override, back up the complete [font=Courier New]Interface\VenworksCUI[/font] directory.[/*]
 [*]Open [font=Courier New]Interface\VenworksCUI\layout.xml[/font] in a plain-text or XML editor.[/*]
 [*]Find the root [font=Courier New]<venworksCUI>[/font] element and change only its [font=Courier New]palette[/font] attribute. For example: [font=Courier New]palette="trackers-alliance.xml"[/font].[/*]
 [*]Choose one packaged filename: [font=Courier New]venworks.xml[/font], [font=Courier New]trackers-alliance.xml[/font], [font=Courier New]freestar-collective.xml[/font], [font=Courier New]crimson-fleet.xml[/font], or [font=Courier New]starfield.xml[/font].[/*]
@@ -87,7 +89,7 @@ A mod manager is strongly recommended because it makes file conflicts, updates, 
 [*]Save the file and fully restart Starfield. Live palette switching is not supported.[/*]
 [/list]
 
-The safest long-term PC setup is a small personal override mod containing the customized [font=Courier New]Interface\VenworksCUI[/font] files and loading after the selected release variant. Console players should install the Creation whose title matches the starting palette they want.
+The Normal package supports layout and packaged-palette selection through its loose [font=Courier New]layout.xml[/font]. Advanced component, palette, or SVG changes require Fully Loose Files or a small personal override containing only the changed [font=Courier New]Interface\VenworksCUI[/font] files. Console players should install the Creation whose title and platform match the starting palette and system they want.
 
 [img]https://cdn.venworkscreations.com/NexusMods/description-divider-known-issues-1600x120.png[/img]
 [list]

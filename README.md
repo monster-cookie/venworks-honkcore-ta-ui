@@ -55,11 +55,21 @@ determines the starting configuration.
 
 ## Installation
 
-Install one theme variant with a Starfield-capable mod manager and let it win
-conflicts with other packages that replace `hudmenu.gfx` or
-`hudmenu_lrg.gfx`. Advanced manual installation is possible by copying the
-package's `Interface` directory into Starfield's `Data` directory, but a mod
-manager makes conflict handling and recovery safer.
+Choose one theme and one PC package shape. The recommended Nexus PC - Normal
+package installs a root ESM, Windows BA2 archives, and one loose
+`Interface\VenworksCUI\layout.xml`. Enable the ESM and let the package win HUD
+conflicts. The loose layout remains directly editable while the compiled
+`hudmenu.gfx` and `hudmenu_lrg.gfx` files stay protected inside the Main BA2.
+
+The Nexus PC - Fully Loose Files package installs the complete `Interface`
+tree without an ESM or BA2. Use it only when component fragments, palettes, or
+SVG assets must also remain loose. Do not install the normal and fully loose
+packages together. A Starfield-capable mod manager is strongly recommended for
+either package shape.
+
+Bethesda Creations use separate ESM-and-BA2-only packages for PC, Xbox, and
+PS5. Install only the package supplied for the current platform and enable only
+one theme variant.
 
 This release has no HONKCORE dependency. It will conflict with other HUD mods
 that overwrite either of the same GFX movies unless a purpose-built compatible
@@ -84,6 +94,10 @@ Configuration authors can use the complete references:
 Configuration files are loaded when the HUD movie starts. There is no live
 reload command; fully exit and restart Starfield after changing XML or SVG
 files.
+
+The normal Nexus package exposes only `layout.xml` as a loose file. Advanced
+component, palette, and SVG customization requires the fully loose package or
+a separate loose override containing the additional changed files.
 
 ## Current limitations and validation status
 

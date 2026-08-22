@@ -14,16 +14,21 @@ complete palette contract and custom-theme workflow, use the
 1. Enable only one Venworks Customizable HUD release variant. All four variants
    install the same HUD and configuration paths.
 2. Fully exit Starfield.
-3. Back up the complete `Interface\VenworksCUI` directory from the active mod.
+3. Back up the loose `Interface\VenworksCUI\layout.xml` from the normal package.
+   If you use the fully loose package or an advanced override, back up the
+   complete `Interface\VenworksCUI` directory.
 4. Use a plain-text or XML editor that preserves UTF-8 text and straight ASCII
    quotation marks.
 5. Keep a copy of every customized file outside the downloaded mod package.
 
 Mod-manager updates, reinstalls, purge/deploy operations, and file-conflict
-changes can replace local edits. The safest long-term setup is a small personal
+changes can replace local edits. The normal Nexus package supplies only
+`layout.xml` loose; its component fragments, palettes, and SVG assets remain in
+the BA2. The safest long-term setup for advanced changes is a small personal
 override mod containing only your changed `Interface\VenworksCUI` files and
-loading after the selected theme variant. If you edit the downloaded mod
-directly, keep a separate backup that an update cannot overwrite.
+loading after the selected theme variant. Alternatively, use the Nexus PC -
+Fully Loose Files package by itself. If you edit a downloaded file directly,
+keep a separate backup that an update cannot overwrite.
 
 Do not edit `hudmenu.gfx` or `hudmenu_lrg.gfx` to make the XML changes in this
 guide. The packaged movies already contain the configuration runtime.
@@ -52,6 +57,11 @@ The important files are:
 | `Interface\VenworksCUI\components\*.xml` | Defines the contents of each reusable HUD section. |
 | `Interface\VenworksCUI\palettes\*.xml` | Defines semantic colors, typography, opacity, strokes, and the faction crest. |
 | `Interface\VenworksCUI\Assets\*.svg` | Contains supported local vector artwork used by the layout or palettes. |
+
+The Nexus PC - Normal package exposes only `layout.xml` from this tree as a
+loose file. The runtime resolves the referenced component fragments, palettes,
+and SVG assets from the package's BA2. Do not install the normal and fully loose
+packages together.
 
 When using a mod manager, open the active mod's own file directory rather than
 assuming the deployed `Data` copy is the authoritative source. The exact

@@ -1,5 +1,66 @@
 # Build system
 
+## Release artifact pipeline
+
+The complete release build is a local Windows process followed by platform-neutral
+ZIP assembly in GitHub Actions. `Archive2.exe` is not installed or downloaded by
+the workflow. Before committing a release build, run these steps from the
+repository root:
+
+1. Run `Tools/compileScaleform.ps1` with the validated Java, JPEXS, and vanilla
+   Interface inputs. This updates the loose `Interface` payload in all four
+   staging folders.
+2. Run `Tools/createPackages.ps1`. The script reads `TOOL_PATH_ARCHIVER` from
+   `.env`, validates each variant's root ESM, and runs all six platform archive
+   commands for every staging folder.
+3. Run `Tools/checkRepo.ps1`. The repository check validates variant metadata,
+   palettes, the root stub ESMs, and every generated BA2 file.
+4. Review and commit the staged loose files, ESMs, and Git LFS-managed BA2 files
+   together. A BA2 must be rebuilt whenever its staged source payload changes.
+5. After the change reaches `master`, create the release tag. The Ubuntu release
+   workflow uses `Tools/createReleasePackages.ps1` to assemble the committed
+   artifacts; it never invokes Archive2.
+
+Each variant uses one stable package base, such as
+`Venworks-CustomizableHUD-FreestarCollective`. `Tools/createPackages.ps1`
+creates these version-independent files from the matching staging root:
+
+```text
+<PackageBase>.esm
+<PackageBase> - Main.ba2
+<PackageBase> - Textures.ba2
+<PackageBase> - Main_XBox.ba2
+<PackageBase> - Textures_XBox.ba2
+<PackageBase> - Main_PS.ba2
+<PackageBase> - Textures_PS.ba2
+```
+
+The Archive2 format, compression, maximum-size, include-filter, and
+exclude-filter arguments in `Tools/createPackages.ps1` are part of the platform
+packaging contract. Preserve them exactly. The Windows, Xbox, and PS5 Main and
+Textures commands must all run even when a source category is currently empty.
+Archive2 does not create a texture BA2 when its include filter matches no files,
+so each platform package contains its Main BA2 plus a Textures BA2 only when the
+texture command produces one.
+SVG assets currently follow the Main-archive filters. Moving SVGs into a texture
+archive is deferred until the generated console archives can be tested.
+
+The release workflow produces five ZIP shapes for each of the four themes:
+
+| Package | Contents |
+|---|---|
+| Nexus PC - Normal | Root ESM, Windows Main BA2, any generated Windows Textures BA2, and loose `Interface\VenworksCUI\layout.xml` |
+| Nexus PC - Fully Loose Files | Complete loose `Interface` tree, with no ESM or BA2 |
+| Bethesda PC | Root ESM, Windows Main BA2, and any generated Windows Textures BA2 only |
+| Bethesda Xbox | Root ESM, Xbox Main BA2, and any generated Xbox Textures BA2 only |
+| Bethesda PS5 | Root ESM, PS5 Main BA2, and any generated PS5 Textures BA2 only |
+
+This creates 20 release ZIPs. The normal Nexus package leaves only `layout.xml`
+loose so the compiled HUD movies remain protected by the BA2. Users who need to
+edit component fragments, palettes, or SVG assets must use the fully loose
+package or provide a separate loose override. Do not install the normal and
+fully loose packages together.
+
 ## Persistent BGS reference cache
 
 `Tools/cacheBgsScaleform.ps1` maintains the curated vanilla reference set under
@@ -134,9 +195,10 @@ as an external compile-time API. The generated seed contains names and empty AVM
 slots only; production implementations still come exclusively from the authored
 repository sources during the normal build.
 
-After regeneration, run `Tools/checkRepo.ps1` followed by the complete
-`Tools/compileScaleform.ps1` command. A successful build must import, reopen, and
-validate every authored class in both normal and large HUD movies.
+After regeneration, run the complete `Tools/compileScaleform.ps1` command,
+`Tools/createPackages.ps1`, and then `Tools/checkRepo.ps1`. A successful build
+must import, reopen, and validate every authored class in both normal and large
+HUD movies and regenerate all platform archives from those staged movies.
 
 ## Component registration contract
 

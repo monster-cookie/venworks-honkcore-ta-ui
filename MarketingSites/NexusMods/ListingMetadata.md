@@ -22,21 +22,30 @@
 
 ## New-release file display names
 
+Each theme publishes two Nexus files:
+
+1. `<Theme display name> - Nexus PC - Normal`
+2. `<Theme display name> - Nexus PC - Fully Loose Files`
+
+The four theme display names are:
+
 1. `Venworks Customizable HUD - Venworks Theme`
 2. `Venworks Customizable HUD - Trackers Alliance Theme`
 3. `Venworks Customizable HUD - Freestar Collective Theme`
 4. `Venworks Customizable HUD - Crimson Fleet Theme`
 
-Every new-release file must select the matching starting palette and package
-all five supported palette XML files. Assign file versions only after the
+Every new-release file must select the matching starting palette and contain
+all five supported palette XML files, either inside the Normal package's BA2 or
+as files in the Fully Loose Files package. Assign file versions only after the
 release tag exists.
 
 ## Publication prerequisites
 
-- Confirm the four release archives produced by the repaired release system.
+- Confirm the eight Nexus PC archives produced by the release system: Normal
+  and Fully Loose Files for each of the four themes.
 - Supply current, unedited in-game screenshots that show the final build and
   correctly identify each theme.
-- Confirm the release tag and use it consistently for the listing and four new
+- Confirm the release tag and use it consistently for the listing and eight new
   files.
 - Keep the release labeled as beta.
 - Do not remove the old HONKCORE files from the Files section.

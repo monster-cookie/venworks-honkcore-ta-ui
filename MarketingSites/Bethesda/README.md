@@ -41,8 +41,10 @@ formatting restrained and remains understandable without rendered markup.
 
 1. Merge and tag the release, then use that tag as the public version. The copy
    deliberately contains no guessed version number.
-2. Confirm that the upload package for each Creation selects the matching
-   starting palette while including all five packaged palette files.
+2. Confirm that every Creation has separate PC, Xbox, and PS5 packages. Each
+   package must contain only the root ESM, its platform-matching Main BA2, and
+   any generated platform-matching Textures BA2. It must select the matching
+   starting palette and include all five palettes inside the BA2 payload.
 3. Supply current, unedited in-game screenshots for all four themes. Do not use
    the legacy screenshots under `MarketingSites\Images` as evidence of this
    release without confirming that they show the final build.
@@ -53,8 +55,9 @@ formatting restrained and remains understandable without rendered markup.
 6. Select PC and every console platform supported by Starfield Creations.
 7. Keep the release marked as beta and request console testing until every
    supported console build has direct runtime evidence.
-8. Publish only one package per listing and tell players to enable only one HUD
-   theme at a time because all four replace the same interface files.
+8. Publish only the matching package to each platform under a listing, and tell
+   players to enable only one HUD theme at a time because all four replace the
+   same interface files.
 9. Recheck every GitHub documentation link after the release reaches the
    default branch.
 
