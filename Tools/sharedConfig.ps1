@@ -73,7 +73,7 @@ $Global:Variants = @(
     [ModuleVariant]::new(
         "TA",
         "Trackers Alliance",
-        "Venworks Customizable HUD - Trackers Alliance Theme",
+        "Venworks - Customizable HUD - Trackers Alliance Theme",
         "Venworks-CustomizableHUD-TrackersAlliance",
         "./Staging-TA",
         "$ENV:MODULE_VARIANT_TA_PATH",
@@ -83,7 +83,7 @@ $Global:Variants = @(
     [ModuleVariant]::new(
         "FC",
         "Freestar Collective",
-        "Venworks Customizable HUD - Freestar Collective Theme",
+        "Venworks - Customizable HUD - Freestar Collective Theme",
         "Venworks-CustomizableHUD-FreestarCollective",
         "./Staging-FC",
         "$ENV:MODULE_VARIANT_FC_PATH",
@@ -93,7 +93,7 @@ $Global:Variants = @(
     [ModuleVariant]::new(
         "CF",
         "Crimson Fleet",
-        "Venworks Customizable HUD - Crimson Fleet Theme",
+        "Venworks - Customizable HUD - Crimson Fleet Theme",
         "Venworks-CustomizableHUD-CrimsonFleet",
         "./Staging-CF",
         "$ENV:MODULE_VARIANT_CF_PATH",
@@ -103,7 +103,7 @@ $Global:Variants = @(
     [ModuleVariant]::new(
         "VWKS",
         "Venworks",
-        "Venworks Customizable HUD - Venworks Theme",
+        "Venworks - Customizable HUD - Venworks Theme",
         "Venworks-CustomizableHUD-Venworks",
         "./Staging-VWKS",
         "$ENV:MODULE_VARIANT_VWKS_PATH",
