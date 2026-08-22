@@ -1,4 +1,4 @@
-name: Package HONKCORE Release
+name: Package Venworks Customizable HUD Release
 
 on:
   push:
@@ -11,6 +11,10 @@ permissions:
 ###############################################################################
 # CONFIG: Update these for this creation.
 #
+# Keep UPLOAD_TO_NEXUSMODS set to false until the new Nexus group/file IDs are configured. When false, Nexus
+# configuration validation and uploads are skipped even if legacy file IDs and the API key remain configured.
+# Re-enable Nexus uploads by configuring the new IDs and changing UPLOAD_TO_NEXUSMODS to true.
+#
 # Store the API key as a repository Actions secret. Store file IDs as repository Actions variables because they are not sensitive.
 #
 #   - NEXUSMODS_API_KEY the API key to use see https://www.nexusmods.com/settings/api-keys use the developer API key at the bottom of the page
@@ -22,19 +26,20 @@ permissions:
 #
 ###############################################################################
 env:
+  UPLOAD_TO_NEXUSMODS: false
   NEXUSMODS_CATEGORY: main
   NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
 
-  NEXUS_DISPLAY_NAME_FC: "Venworks - HONKCORE - Freestar Collective UI"
+  RELEASE_DISPLAY_NAME_FC: "Venworks Customizable HUD - Freestar Collective Theme"
   NEXUSMODS_FILE_ID_FC: ${{ vars.NEXUSMODS_FILE_ID_FC || secrets.NEXUSMODS_FILE_ID_FC }}
 
-  NEXUS_DISPLAY_NAME_CF: "Venworks - HONKCORE - Crimson Fleet UI"
+  RELEASE_DISPLAY_NAME_CF: "Venworks Customizable HUD - Crimson Fleet Theme"
   NEXUSMODS_FILE_ID_CF: ${{ vars.NEXUSMODS_FILE_ID_CF || secrets.NEXUSMODS_FILE_ID_CF }}
 
-  NEXUS_DISPLAY_NAME_TA: "Venworks - HONKCORE - Trackers Alliance UI"
+  RELEASE_DISPLAY_NAME_TA: "Venworks Customizable HUD - Trackers Alliance Theme"
   NEXUSMODS_FILE_ID_TA: ${{ vars.NEXUSMODS_FILE_ID_TA || secrets.NEXUSMODS_FILE_ID_TA }}
 
-  NEXUS_DISPLAY_NAME_VWKS: "Venworks - HONKCORE - Venworks UI"
+  RELEASE_DISPLAY_NAME_VWKS: "Venworks Customizable HUD - Venworks Theme"
   NEXUSMODS_FILE_ID_VWKS: ${{ vars.NEXUSMODS_FILE_ID_VWKS || secrets.NEXUSMODS_FILE_ID_VWKS }}
 
 
@@ -100,27 +105,27 @@ jobs:
           $variants = @(
             [pscustomobject]@{
               Key = 'FC'
-              DisplayName = $env:NEXUS_DISPLAY_NAME_FC
+              DisplayName = $env:RELEASE_DISPLAY_NAME_FC
               SourceFolder = 'Staging-FC'
-              ZipName = "$($env:NEXUS_DISPLAY_NAME_FC).zip"
+              ZipName = "$($env:RELEASE_DISPLAY_NAME_FC).zip"
             },
             [pscustomobject]@{
               Key = 'CF'
-              DisplayName = $env:NEXUS_DISPLAY_NAME_CF
+              DisplayName = $env:RELEASE_DISPLAY_NAME_CF
               SourceFolder = 'Staging-CF'
-              ZipName = "$($env:NEXUS_DISPLAY_NAME_CF).zip"
+              ZipName = "$($env:RELEASE_DISPLAY_NAME_CF).zip"
             },
             [pscustomobject]@{
               Key = 'TA'
-              DisplayName = $env:NEXUS_DISPLAY_NAME_TA
+              DisplayName = $env:RELEASE_DISPLAY_NAME_TA
               SourceFolder = 'Staging-TA'
-              ZipName = "$($env:NEXUS_DISPLAY_NAME_TA).zip"
+              ZipName = "$($env:RELEASE_DISPLAY_NAME_TA).zip"
             },
             [pscustomobject]@{
               Key = 'VWKS'
-              DisplayName = $env:NEXUS_DISPLAY_NAME_VWKS
+              DisplayName = $env:RELEASE_DISPLAY_NAME_VWKS
               SourceFolder = 'Staging-VWKS'
-              ZipName = "$($env:NEXUS_DISPLAY_NAME_VWKS).zip"
+              ZipName = "$($env:RELEASE_DISPLAY_NAME_VWKS).zip"
             }
           )
 
@@ -182,7 +187,7 @@ jobs:
       - name: Upload release package artifacts
         uses: actions/upload-artifact@v6
         with:
-          name: honkcore-release-${{ env.PACKAGE_VERSION }}
+          name: venworks-customizable-hud-release-${{ env.PACKAGE_VERSION }}
           path: artifacts/release/*.zip
           if-no-files-found: error
 
@@ -201,7 +206,7 @@ jobs:
       - name: Download release package artifact
         uses: actions/download-artifact@v6
         with:
-          name: honkcore-release-${{ env.PACKAGE_VERSION }}
+          name: venworks-customizable-hud-release-${{ env.PACKAGE_VERSION }}
           path: ./artifacts/release
 
       - name: Extract release notes
@@ -293,10 +298,10 @@ jobs:
           $ErrorActionPreference = 'Stop'
 
           $packages = @{
-            fc = "$($env:NEXUS_DISPLAY_NAME_FC).zip"
-            cf = "$($env:NEXUS_DISPLAY_NAME_CF).zip"
-            ta = "$($env:NEXUS_DISPLAY_NAME_TA).zip"
-            vwks = "$($env:NEXUS_DISPLAY_NAME_VWKS).zip"
+            fc = "$($env:RELEASE_DISPLAY_NAME_FC).zip"
+            cf = "$($env:RELEASE_DISPLAY_NAME_CF).zip"
+            ta = "$($env:RELEASE_DISPLAY_NAME_TA).zip"
+            vwks = "$($env:RELEASE_DISPLAY_NAME_VWKS).zip"
           }
 
           foreach ($package in $packages.GetEnumerator()) {
@@ -328,36 +333,37 @@ jobs:
             ${{ steps.release-package.outputs.vwks_path }}
 
       - name: Validate Nexus Mods upload configuration
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true }}
         shell: bash
         run: |
           configured_uploads=0
 
           if [ -n "$NEXUSMODS_FILE_ID_FC" ]; then
-            echo "Ready to upload $NEXUS_DISPLAY_NAME_FC."
+            echo "Ready to upload $RELEASE_DISPLAY_NAME_FC."
             configured_uploads=$((configured_uploads + 1))
           else
-            echo "::notice::Skipping $NEXUS_DISPLAY_NAME_FC because NEXUSMODS_FILE_ID_FC is not configured."
+            echo "::notice::Skipping $RELEASE_DISPLAY_NAME_FC because NEXUSMODS_FILE_ID_FC is not configured."
           fi
 
           if [ -n "$NEXUSMODS_FILE_ID_CF" ]; then
-            echo "Ready to upload $NEXUS_DISPLAY_NAME_CF."
+            echo "Ready to upload $RELEASE_DISPLAY_NAME_CF."
             configured_uploads=$((configured_uploads + 1))
           else
-            echo "::notice::Skipping $NEXUS_DISPLAY_NAME_CF because NEXUSMODS_FILE_ID_CF is not configured."
+            echo "::notice::Skipping $RELEASE_DISPLAY_NAME_CF because NEXUSMODS_FILE_ID_CF is not configured."
           fi
 
           if [ -n "$NEXUSMODS_FILE_ID_TA" ]; then
-            echo "Ready to upload $NEXUS_DISPLAY_NAME_TA."
+            echo "Ready to upload $RELEASE_DISPLAY_NAME_TA."
             configured_uploads=$((configured_uploads + 1))
           else
-            echo "::notice::Skipping $NEXUS_DISPLAY_NAME_TA because NEXUSMODS_FILE_ID_TA is not configured."
+            echo "::notice::Skipping $RELEASE_DISPLAY_NAME_TA because NEXUSMODS_FILE_ID_TA is not configured."
           fi
 
           if [ -n "$NEXUSMODS_FILE_ID_VWKS" ]; then
-            echo "Ready to upload $NEXUS_DISPLAY_NAME_VWKS."
+            echo "Ready to upload $RELEASE_DISPLAY_NAME_VWKS."
             configured_uploads=$((configured_uploads + 1))
           else
-            echo "::notice::Skipping $NEXUS_DISPLAY_NAME_VWKS because NEXUSMODS_FILE_ID_VWKS is not configured."
+            echo "::notice::Skipping $RELEASE_DISPLAY_NAME_VWKS because NEXUSMODS_FILE_ID_VWKS is not configured."
           fi
 
           if [ "$configured_uploads" -gt 0 ] && [ -z "$NEXUSMODS_API_KEY" ]; then
@@ -368,7 +374,7 @@ jobs:
           echo "$configured_uploads Nexus Mods upload(s) configured."
 
       - name: Upload Freestar Collective release to Nexus Mods
-        if: ${{ env.NEXUSMODS_FILE_ID_FC != '' }}
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_FC != '' }}
         uses: Nexus-Mods/upload-action@v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
@@ -376,14 +382,14 @@ jobs:
           filename: ${{ steps.release-package.outputs.fc_path }}
           version: ${{ env.PACKAGE_VERSION }}
           category: ${{ env.NEXUSMODS_CATEGORY }}
-          display_name: ${{ env.NEXUS_DISPLAY_NAME_FC }}
+          display_name: ${{ env.RELEASE_DISPLAY_NAME_FC }}
           archive_existing_version: true
           primary_mod_manager_download: false
           allow_mod_manager_download: true
           description: ${{ steps.release-notes.outputs.nexus_description }}
 
       - name: Upload Crimson Fleet release to Nexus Mods
-        if: ${{ env.NEXUSMODS_FILE_ID_CF != '' }}
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_CF != '' }}
         uses: Nexus-Mods/upload-action@v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
@@ -391,14 +397,14 @@ jobs:
           filename: ${{ steps.release-package.outputs.cf_path }}
           version: ${{ env.PACKAGE_VERSION }}
           category: ${{ env.NEXUSMODS_CATEGORY }}
-          display_name: ${{ env.NEXUS_DISPLAY_NAME_CF }}
+          display_name: ${{ env.RELEASE_DISPLAY_NAME_CF }}
           archive_existing_version: true
           primary_mod_manager_download: false
           allow_mod_manager_download: true
           description: ${{ steps.release-notes.outputs.nexus_description }}
 
       - name: Upload Trackers Alliance release to Nexus Mods
-        if: ${{ env.NEXUSMODS_FILE_ID_TA != '' }}
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_TA != '' }}
         uses: Nexus-Mods/upload-action@v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
@@ -406,14 +412,14 @@ jobs:
           filename: ${{ steps.release-package.outputs.ta_path }}
           version: ${{ env.PACKAGE_VERSION }}
           category: ${{ env.NEXUSMODS_CATEGORY }}
-          display_name: ${{ env.NEXUS_DISPLAY_NAME_TA }}
+          display_name: ${{ env.RELEASE_DISPLAY_NAME_TA }}
           archive_existing_version: true
           primary_mod_manager_download: false
           allow_mod_manager_download: true
           description: ${{ steps.release-notes.outputs.nexus_description }}
 
       - name: Upload Venworks release to Nexus Mods
-        if: ${{ env.NEXUSMODS_FILE_ID_VWKS != '' }}
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_VWKS != '' }}
         uses: Nexus-Mods/upload-action@v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
@@ -421,7 +427,7 @@ jobs:
           filename: ${{ steps.release-package.outputs.vwks_path }}
           version: ${{ env.PACKAGE_VERSION }}
           category: ${{ env.NEXUSMODS_CATEGORY }}
-          display_name: ${{ env.NEXUS_DISPLAY_NAME_VWKS }}
+          display_name: ${{ env.RELEASE_DISPLAY_NAME_VWKS }}
           archive_existing_version: true
           primary_mod_manager_download: false
           allow_mod_manager_download: true
