@@ -37,6 +37,6 @@
     <stroke role="panel" color="panel.border" opacity="muted" width="2" />
   </strokes>
   <assets>
-    <asset role="faction.logo" kind="svg" value="venworks-logo.svg" />
+    <asset role="faction.logo" kind="svg" value="crimson-fleet-logo.svg" />
   </assets>
 </venworksCUIPalette>

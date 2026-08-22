@@ -91,10 +91,10 @@ Awesome source subset changes:
 Font Awesome source SVGs are not repository content. The generator imports only
 the approved 21-icon subset, converts SVG arcs to bounded cubic paths, and
 writes deterministic same-domain ActionScript. Normal Scaleform builds use the
-committed generated class and do not require Font Awesome. The Venworks and
-Freestar Collective logos are not part of this library; they remain owned loose
-SVG assets. The authored Trackers Alliance SVG is likewise packaged as a loose
-asset; its raster and DDS visual references are not repository content.
+committed generated class and do not require Font Awesome. The Venworks,
+Freestar Collective, Crimson Fleet, and Trackers Alliance logos are not part of
+this library; they remain authored loose SVG assets. Their raster and DDS visual
+references are not repository content.
 
 The build injects the Venworks-only ABC seed, reads its vanilla XML from the
 ignored reference cache, exports patched and reopened ActionScript only into
@@ -117,9 +117,10 @@ their original composite styling. The production layout selects `venworks.xml`
 by default, and the build deploys `venworks.xml`, `crimson-fleet.xml`,
 `freestar-collective.xml`, `trackers-alliance.xml`, and `starfield.xml` under
 the fixed palette directory in all four staging variants. The Starfield palette
-preserves the neutral white-and-slate presentation, while Trackers Alliance uses
-a dark red-and-white faction identity. Palette selection occurs when the HUD
-starts; live theme switching is not part of the runtime contract.
+preserves the neutral white-and-slate presentation, while Crimson Fleet and
+Trackers Alliance use their faction-specific dark-red-and-white identities.
+Palette selection occurs when the HUD starts; live theme switching is not part
+of the runtime contract.
 
 Dynamic CUI text retains Starfield's exported `PromptMessageWidget` symbol and
 styles its timeline-created `textField` child. The build verifies that this
