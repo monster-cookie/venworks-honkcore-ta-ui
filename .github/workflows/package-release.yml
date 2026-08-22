@@ -1,47 +1,50 @@
-name: Package HONKCORE Release
+name: Package Venworks Customizable HUD Release
 
 on:
   push:
     tags:
       - "v*.*.*"
 
-permissions:
-  contents: write
+permissions: {}
 
 ###############################################################################
 # CONFIG: Update these for this creation.
 #
+# Keep UPLOAD_TO_NEXUSMODS set to false until the new Nexus group/file IDs are configured. When false, Nexus
+# configuration validation and uploads are skipped even if legacy file IDs and the API key remain configured.
+# Re-enable Nexus uploads by configuring the new IDs and changing UPLOAD_TO_NEXUSMODS to true.
+#
 # Store the API key as a repository Actions secret. Store file IDs as repository Actions variables because they are not sensitive.
 #
 #   - NEXUSMODS_API_KEY the API key to use see https://www.nexusmods.com/settings/api-keys use the developer API key at the bottom of the page
-#   - NEXUSMODS_FILE_ID_FC, NEXUSMODS_FILE_ID_CF, NEXUSMODS_FILE_ID_TA, and NEXUSMODS_FILE_ID_VWKS the FILE ID to replace in the Mod's Files section:
+#   - NEXUSMODS_FILE_ID_<KEY>_NORMAL and NEXUSMODS_FILE_ID_<KEY>_LOOSE the FILE IDs to replace in the Mod's Files section for each theme:
 #       To get a file ID to use in this action, you need to have created a mod page on Nexus Mods and uploaded at least one file. The file ID
 #       can be found by checking the "API Info" option in the Files tab of the public-facing mod page, or in the edit menu of the Manage Files page.
-#       Configure file IDs as repository Actions variables. A missing file ID skips only that variant's Nexus upload so its first package can
+#       Configure file IDs as repository Actions variables. A missing file ID skips only that package's Nexus upload so its first package can
 #       be uploaded manually. Existing repository secrets with the same names remain supported as fallbacks.
 #
 ###############################################################################
 env:
+  UPLOAD_TO_NEXUSMODS: false
   NEXUSMODS_CATEGORY: main
   NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
 
-  NEXUS_DISPLAY_NAME_FC: "Venworks - HONKCORE - Freestar Collective UI"
-  NEXUSMODS_FILE_ID_FC: ${{ vars.NEXUSMODS_FILE_ID_FC || secrets.NEXUSMODS_FILE_ID_FC }}
-
-  NEXUS_DISPLAY_NAME_CF: "Venworks - HONKCORE - Crimson Fleet UI"
-  NEXUSMODS_FILE_ID_CF: ${{ vars.NEXUSMODS_FILE_ID_CF || secrets.NEXUSMODS_FILE_ID_CF }}
-
-  NEXUS_DISPLAY_NAME_TA: "Venworks - HONKCORE - Trackers Alliance UI"
-  NEXUSMODS_FILE_ID_TA: ${{ vars.NEXUSMODS_FILE_ID_TA || secrets.NEXUSMODS_FILE_ID_TA }}
-
-  NEXUS_DISPLAY_NAME_VWKS: "Venworks - HONKCORE - Venworks UI"
-  NEXUSMODS_FILE_ID_VWKS: ${{ vars.NEXUSMODS_FILE_ID_VWKS || secrets.NEXUSMODS_FILE_ID_VWKS }}
+  NEXUSMODS_FILE_ID_FC_NORMAL: ${{ vars.NEXUSMODS_FILE_ID_FC_NORMAL || secrets.NEXUSMODS_FILE_ID_FC_NORMAL }}
+  NEXUSMODS_FILE_ID_FC_LOOSE: ${{ vars.NEXUSMODS_FILE_ID_FC_LOOSE || secrets.NEXUSMODS_FILE_ID_FC_LOOSE }}
+  NEXUSMODS_FILE_ID_CF_NORMAL: ${{ vars.NEXUSMODS_FILE_ID_CF_NORMAL || secrets.NEXUSMODS_FILE_ID_CF_NORMAL }}
+  NEXUSMODS_FILE_ID_CF_LOOSE: ${{ vars.NEXUSMODS_FILE_ID_CF_LOOSE || secrets.NEXUSMODS_FILE_ID_CF_LOOSE }}
+  NEXUSMODS_FILE_ID_TA_NORMAL: ${{ vars.NEXUSMODS_FILE_ID_TA_NORMAL || secrets.NEXUSMODS_FILE_ID_TA_NORMAL }}
+  NEXUSMODS_FILE_ID_TA_LOOSE: ${{ vars.NEXUSMODS_FILE_ID_TA_LOOSE || secrets.NEXUSMODS_FILE_ID_TA_LOOSE }}
+  NEXUSMODS_FILE_ID_VWKS_NORMAL: ${{ vars.NEXUSMODS_FILE_ID_VWKS_NORMAL || secrets.NEXUSMODS_FILE_ID_VWKS_NORMAL }}
+  NEXUSMODS_FILE_ID_VWKS_LOOSE: ${{ vars.NEXUSMODS_FILE_ID_VWKS_LOOSE || secrets.NEXUSMODS_FILE_ID_VWKS_LOOSE }}
 
 
 jobs:
   validate-tag-source:
     name: Validate Tag Source
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       version: ${{ steps.validate.outputs.version }}
     steps:
@@ -78,13 +81,16 @@ jobs:
     name: Package Release
     needs: validate-tag-source
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       PACKAGE_VERSION: ${{ needs.validate-tag-source.outputs.version }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           lfs: true
+          persist-credentials: false
 
       - name: Prepare release packages
         id: package
@@ -92,97 +98,20 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
 
-          Add-Type -AssemblyName System.IO.Compression.FileSystem
-
           $releaseRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts/release'
-          New-Item -ItemType Directory -Force -Path $releaseRoot | Out-Null
+          & "$env:GITHUB_WORKSPACE/Tools/createReleasePackages.ps1" -OutputDirectory $releaseRoot
 
-          $variants = @(
-            [pscustomobject]@{
-              Key = 'FC'
-              DisplayName = $env:NEXUS_DISPLAY_NAME_FC
-              SourceFolder = 'Staging-FC'
-              ZipName = "$($env:NEXUS_DISPLAY_NAME_FC).zip"
-            },
-            [pscustomobject]@{
-              Key = 'CF'
-              DisplayName = $env:NEXUS_DISPLAY_NAME_CF
-              SourceFolder = 'Staging-CF'
-              ZipName = "$($env:NEXUS_DISPLAY_NAME_CF).zip"
-            },
-            [pscustomobject]@{
-              Key = 'TA'
-              DisplayName = $env:NEXUS_DISPLAY_NAME_TA
-              SourceFolder = 'Staging-TA'
-              ZipName = "$($env:NEXUS_DISPLAY_NAME_TA).zip"
-            },
-            [pscustomobject]@{
-              Key = 'VWKS'
-              DisplayName = $env:NEXUS_DISPLAY_NAME_VWKS
-              SourceFolder = 'Staging-VWKS'
-              ZipName = "$($env:NEXUS_DISPLAY_NAME_VWKS).zip"
-            }
-          )
-
-          foreach ($variant in $variants) {
-            $sourcePath = Join-Path $env:GITHUB_WORKSPACE $variant.SourceFolder
-            if (-not [System.IO.Directory]::Exists($sourcePath)) {
-              throw "Required staging folder '$($variant.SourceFolder)' was not found."
-            }
-
-            $sourceFiles = @(Get-ChildItem -LiteralPath $sourcePath -File -Recurse -Force)
-            if ($sourceFiles.Count -eq 0) {
-              throw "Required staging folder '$($variant.SourceFolder)' does not contain any files."
-            }
-
-            $zipPath = Join-Path $releaseRoot $variant.ZipName
-            if ([System.IO.File]::Exists($zipPath)) {
-              Remove-Item -LiteralPath $zipPath -Force
-            }
-
-            Write-Host "Creating $($variant.DisplayName) from $($variant.SourceFolder)."
-            [System.IO.Compression.ZipFile]::CreateFromDirectory($sourcePath, $zipPath)
-          }
-
-          $blockedTopLevelFolders = @('Staging-FC', 'Staging-CF', 'Staging-TA', 'Staging-VWKS')
-          foreach ($variant in $variants) {
-            $zipPath = Join-Path $releaseRoot $variant.ZipName
-            if (-not [System.IO.File]::Exists($zipPath)) {
-              throw "Generated archive '$zipPath' was not found."
-            }
-
-            $zipFile = Get-Item -LiteralPath $zipPath
-            if ($zipFile.Length -le 0) {
-              throw "Generated archive '$zipPath' is empty."
-            }
-
-            $archive = [System.IO.Compression.ZipFile]::OpenRead($zipPath)
-            try {
-              if ($archive.Entries.Count -eq 0) {
-                throw "Generated archive '$zipPath' does not contain any entries."
-              }
-
-              Write-Host "Contents of $($variant.ZipName):"
-              foreach ($entry in $archive.Entries) {
-                Write-Host "  $($entry.FullName)"
-
-                $firstSegment = ($entry.FullName -split '/')[0]
-                if ($blockedTopLevelFolders -contains $firstSegment) {
-                  throw "Archive '$($variant.ZipName)' contains staging folder '$firstSegment' at the archive root."
-                }
-              }
-            }
-            finally {
-              $archive.Dispose()
-            }
+          $releaseFiles = @(Get-ChildItem -LiteralPath $releaseRoot -File -Filter '*.zip')
+          if ($releaseFiles.Count -ne 20) {
+            throw "Expected 20 release ZIPs; found $($releaseFiles.Count)."
           }
 
           "release_root=$releaseRoot" >> $env:GITHUB_OUTPUT
 
       - name: Upload release package artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: honkcore-release-${{ env.PACKAGE_VERSION }}
+          name: venworks-customizable-hud-release-${{ env.PACKAGE_VERSION }}
           path: artifacts/release/*.zip
           if-no-files-found: error
 
@@ -192,16 +121,32 @@ jobs:
       - validate-tag-source
       - package-release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     env:
       PACKAGE_VERSION: ${{ needs.validate-tag-source.outputs.version }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Resolve release variant configuration
+        id: variant-config
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          . "$env:GITHUB_WORKSPACE/Tools/sharedConfig.ps1" -SkipEnvironment
+          foreach ($variant in $Global:Variants) {
+            $key = $variant.VariantKey.ToLowerInvariant()
+            "$($key)_display_name=$($variant.ReleaseDisplayName)" >> $env:GITHUB_OUTPUT
+          }
 
       - name: Download release package artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
-          name: honkcore-release-${{ env.PACKAGE_VERSION }}
+          name: venworks-customizable-hud-release-${{ env.PACKAGE_VERSION }}
           path: ./artifacts/release
 
       - name: Extract release notes
@@ -292,29 +237,54 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
 
-          $packages = @{
-            fc = "$($env:NEXUS_DISPLAY_NAME_FC).zip"
-            cf = "$($env:NEXUS_DISPLAY_NAME_CF).zip"
-            ta = "$($env:NEXUS_DISPLAY_NAME_TA).zip"
-            vwks = "$($env:NEXUS_DISPLAY_NAME_VWKS).zip"
+          . "$env:GITHUB_WORKSPACE/Tools/sharedConfig.ps1" -SkipEnvironment
+          $releaseRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts/release'
+          $packageSuffixes = @(
+            'Nexus PC - Normal',
+            'Nexus PC - Fully Loose Files',
+            'Bethesda PC',
+            'Bethesda Xbox',
+            'Bethesda PS5'
+          )
+          $expectedPackageNames = [System.Collections.Generic.List[string]]::new()
+
+          foreach ($variant in $Global:Variants) {
+            $key = $variant.VariantKey.ToLowerInvariant()
+            foreach ($packageSuffix in $packageSuffixes) {
+              $packageName = "$($variant.ReleaseDisplayName) - $packageSuffix.zip"
+              $expectedPackageNames.Add($packageName)
+              $packagePath = Join-Path $releaseRoot $packageName
+              if (-not [System.IO.File]::Exists($packagePath)) {
+                throw "Unable to find release package '$packageName' for version $env:PACKAGE_VERSION."
+              }
+              if ((Get-Item -LiteralPath $packagePath).Length -le 0) {
+                throw "Release package '$packageName' is empty."
+              }
+            }
+
+            $normalPath = Join-Path $releaseRoot "$($variant.ReleaseDisplayName) - Nexus PC - Normal.zip"
+            $loosePath = Join-Path $releaseRoot "$($variant.ReleaseDisplayName) - Nexus PC - Fully Loose Files.zip"
+            "$($key)_normal_path=$normalPath" >> $env:GITHUB_OUTPUT
+            "$($key)_loose_path=$loosePath" >> $env:GITHUB_OUTPUT
           }
 
-          foreach ($package in $packages.GetEnumerator()) {
-            $packagePath = Join-Path $env:GITHUB_WORKSPACE "artifacts/release/$($package.Value)"
-            if (-not [System.IO.File]::Exists($packagePath)) {
-              throw "Unable to find release package '$($package.Value)' for version $env:PACKAGE_VERSION."
+          $actualPackageNames = @(
+            Get-ChildItem -LiteralPath $releaseRoot -File -Filter '*.zip' |
+              Select-Object -ExpandProperty Name |
+              Sort-Object
+          )
+          $expectedPackageNames = @($expectedPackageNames | Sort-Object)
+          if ($actualPackageNames.Count -ne $expectedPackageNames.Count) {
+            throw "Expected $($expectedPackageNames.Count) release packages; found $($actualPackageNames.Count)."
+          }
+          for ($index = 0; $index -lt $expectedPackageNames.Count; $index++) {
+            if ($actualPackageNames[$index] -cne $expectedPackageNames[$index]) {
+              throw "Downloaded release package set contains unexpected files."
             }
-
-            $packageFile = Get-Item -LiteralPath $packagePath
-            if ($packageFile.Length -le 0) {
-              throw "Release package '$($package.Value)' is empty."
-            }
-
-            "$($package.Key)_path=$packagePath" >> $env:GITHUB_OUTPUT
           }
 
       - name: Create GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
@@ -322,43 +292,36 @@ jobs:
           fail_on_unmatched_files: true
           overwrite_files: true
           files: |
-            ${{ steps.release-package.outputs.fc_path }}
-            ${{ steps.release-package.outputs.cf_path }}
-            ${{ steps.release-package.outputs.ta_path }}
-            ${{ steps.release-package.outputs.vwks_path }}
+            artifacts/release/*.zip
 
       - name: Validate Nexus Mods upload configuration
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true }}
         shell: bash
+        env:
+          RELEASE_DISPLAY_NAME_FC: ${{ steps.variant-config.outputs.fc_display_name }}
+          RELEASE_DISPLAY_NAME_CF: ${{ steps.variant-config.outputs.cf_display_name }}
+          RELEASE_DISPLAY_NAME_TA: ${{ steps.variant-config.outputs.ta_display_name }}
+          RELEASE_DISPLAY_NAME_VWKS: ${{ steps.variant-config.outputs.vwks_display_name }}
         run: |
           configured_uploads=0
 
-          if [ -n "$NEXUSMODS_FILE_ID_FC" ]; then
-            echo "Ready to upload $NEXUS_DISPLAY_NAME_FC."
-            configured_uploads=$((configured_uploads + 1))
-          else
-            echo "::notice::Skipping $NEXUS_DISPLAY_NAME_FC because NEXUSMODS_FILE_ID_FC is not configured."
-          fi
+          check_upload() {
+            if [ -n "$1" ]; then
+              echo "Ready to upload $2."
+              configured_uploads=$((configured_uploads + 1))
+            else
+              echo "::notice::Skipping $2 because $3 is not configured."
+            fi
+          }
 
-          if [ -n "$NEXUSMODS_FILE_ID_CF" ]; then
-            echo "Ready to upload $NEXUS_DISPLAY_NAME_CF."
-            configured_uploads=$((configured_uploads + 1))
-          else
-            echo "::notice::Skipping $NEXUS_DISPLAY_NAME_CF because NEXUSMODS_FILE_ID_CF is not configured."
-          fi
-
-          if [ -n "$NEXUSMODS_FILE_ID_TA" ]; then
-            echo "Ready to upload $NEXUS_DISPLAY_NAME_TA."
-            configured_uploads=$((configured_uploads + 1))
-          else
-            echo "::notice::Skipping $NEXUS_DISPLAY_NAME_TA because NEXUSMODS_FILE_ID_TA is not configured."
-          fi
-
-          if [ -n "$NEXUSMODS_FILE_ID_VWKS" ]; then
-            echo "Ready to upload $NEXUS_DISPLAY_NAME_VWKS."
-            configured_uploads=$((configured_uploads + 1))
-          else
-            echo "::notice::Skipping $NEXUS_DISPLAY_NAME_VWKS because NEXUSMODS_FILE_ID_VWKS is not configured."
-          fi
+          check_upload "$NEXUSMODS_FILE_ID_FC_NORMAL" "$RELEASE_DISPLAY_NAME_FC - Nexus PC - Normal" "NEXUSMODS_FILE_ID_FC_NORMAL"
+          check_upload "$NEXUSMODS_FILE_ID_FC_LOOSE" "$RELEASE_DISPLAY_NAME_FC - Nexus PC - Fully Loose Files" "NEXUSMODS_FILE_ID_FC_LOOSE"
+          check_upload "$NEXUSMODS_FILE_ID_CF_NORMAL" "$RELEASE_DISPLAY_NAME_CF - Nexus PC - Normal" "NEXUSMODS_FILE_ID_CF_NORMAL"
+          check_upload "$NEXUSMODS_FILE_ID_CF_LOOSE" "$RELEASE_DISPLAY_NAME_CF - Nexus PC - Fully Loose Files" "NEXUSMODS_FILE_ID_CF_LOOSE"
+          check_upload "$NEXUSMODS_FILE_ID_TA_NORMAL" "$RELEASE_DISPLAY_NAME_TA - Nexus PC - Normal" "NEXUSMODS_FILE_ID_TA_NORMAL"
+          check_upload "$NEXUSMODS_FILE_ID_TA_LOOSE" "$RELEASE_DISPLAY_NAME_TA - Nexus PC - Fully Loose Files" "NEXUSMODS_FILE_ID_TA_LOOSE"
+          check_upload "$NEXUSMODS_FILE_ID_VWKS_NORMAL" "$RELEASE_DISPLAY_NAME_VWKS - Nexus PC - Normal" "NEXUSMODS_FILE_ID_VWKS_NORMAL"
+          check_upload "$NEXUSMODS_FILE_ID_VWKS_LOOSE" "$RELEASE_DISPLAY_NAME_VWKS - Nexus PC - Fully Loose Files" "NEXUSMODS_FILE_ID_VWKS_LOOSE"
 
           if [ "$configured_uploads" -gt 0 ] && [ -z "$NEXUSMODS_API_KEY" ]; then
             echo "NEXUSMODS_API_KEY is required for Nexus Mods uploads."
@@ -367,61 +330,121 @@ jobs:
 
           echo "$configured_uploads Nexus Mods upload(s) configured."
 
-      - name: Upload Freestar Collective release to Nexus Mods
-        if: ${{ env.NEXUSMODS_FILE_ID_FC != '' }}
-        uses: Nexus-Mods/upload-action@v1.0.0-beta.8
+      - name: Upload Freestar Collective normal release to Nexus Mods
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_FC_NORMAL != '' }}
+        uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
-          file_id: ${{ env.NEXUSMODS_FILE_ID_FC }}
-          filename: ${{ steps.release-package.outputs.fc_path }}
+          file_id: ${{ env.NEXUSMODS_FILE_ID_FC_NORMAL }}
+          filename: ${{ steps.release-package.outputs.fc_normal_path }}
           version: ${{ env.PACKAGE_VERSION }}
           category: ${{ env.NEXUSMODS_CATEGORY }}
-          display_name: ${{ env.NEXUS_DISPLAY_NAME_FC }}
+          display_name: "${{ steps.variant-config.outputs.fc_display_name }} - Nexus PC - Normal"
           archive_existing_version: true
           primary_mod_manager_download: false
           allow_mod_manager_download: true
           description: ${{ steps.release-notes.outputs.nexus_description }}
 
-      - name: Upload Crimson Fleet release to Nexus Mods
-        if: ${{ env.NEXUSMODS_FILE_ID_CF != '' }}
-        uses: Nexus-Mods/upload-action@v1.0.0-beta.8
+      - name: Upload Freestar Collective fully loose release to Nexus Mods
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_FC_LOOSE != '' }}
+        uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
-          file_id: ${{ env.NEXUSMODS_FILE_ID_CF }}
-          filename: ${{ steps.release-package.outputs.cf_path }}
+          file_id: ${{ env.NEXUSMODS_FILE_ID_FC_LOOSE }}
+          filename: ${{ steps.release-package.outputs.fc_loose_path }}
           version: ${{ env.PACKAGE_VERSION }}
           category: ${{ env.NEXUSMODS_CATEGORY }}
-          display_name: ${{ env.NEXUS_DISPLAY_NAME_CF }}
+          display_name: "${{ steps.variant-config.outputs.fc_display_name }} - Nexus PC - Fully Loose Files"
           archive_existing_version: true
           primary_mod_manager_download: false
           allow_mod_manager_download: true
           description: ${{ steps.release-notes.outputs.nexus_description }}
 
-      - name: Upload Trackers Alliance release to Nexus Mods
-        if: ${{ env.NEXUSMODS_FILE_ID_TA != '' }}
-        uses: Nexus-Mods/upload-action@v1.0.0-beta.8
+      - name: Upload Crimson Fleet normal release to Nexus Mods
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_CF_NORMAL != '' }}
+        uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
-          file_id: ${{ env.NEXUSMODS_FILE_ID_TA }}
-          filename: ${{ steps.release-package.outputs.ta_path }}
+          file_id: ${{ env.NEXUSMODS_FILE_ID_CF_NORMAL }}
+          filename: ${{ steps.release-package.outputs.cf_normal_path }}
           version: ${{ env.PACKAGE_VERSION }}
           category: ${{ env.NEXUSMODS_CATEGORY }}
-          display_name: ${{ env.NEXUS_DISPLAY_NAME_TA }}
+          display_name: "${{ steps.variant-config.outputs.cf_display_name }} - Nexus PC - Normal"
           archive_existing_version: true
           primary_mod_manager_download: false
           allow_mod_manager_download: true
           description: ${{ steps.release-notes.outputs.nexus_description }}
 
-      - name: Upload Venworks release to Nexus Mods
-        if: ${{ env.NEXUSMODS_FILE_ID_VWKS != '' }}
-        uses: Nexus-Mods/upload-action@v1.0.0-beta.8
+      - name: Upload Crimson Fleet fully loose release to Nexus Mods
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_CF_LOOSE != '' }}
+        uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
-          file_id: ${{ env.NEXUSMODS_FILE_ID_VWKS }}
-          filename: ${{ steps.release-package.outputs.vwks_path }}
+          file_id: ${{ env.NEXUSMODS_FILE_ID_CF_LOOSE }}
+          filename: ${{ steps.release-package.outputs.cf_loose_path }}
           version: ${{ env.PACKAGE_VERSION }}
           category: ${{ env.NEXUSMODS_CATEGORY }}
-          display_name: ${{ env.NEXUS_DISPLAY_NAME_VWKS }}
+          display_name: "${{ steps.variant-config.outputs.cf_display_name }} - Nexus PC - Fully Loose Files"
+          archive_existing_version: true
+          primary_mod_manager_download: false
+          allow_mod_manager_download: true
+          description: ${{ steps.release-notes.outputs.nexus_description }}
+
+      - name: Upload Trackers Alliance normal release to Nexus Mods
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_TA_NORMAL != '' }}
+        uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
+        with:
+          api_key: ${{ env.NEXUSMODS_API_KEY }}
+          file_id: ${{ env.NEXUSMODS_FILE_ID_TA_NORMAL }}
+          filename: ${{ steps.release-package.outputs.ta_normal_path }}
+          version: ${{ env.PACKAGE_VERSION }}
+          category: ${{ env.NEXUSMODS_CATEGORY }}
+          display_name: "${{ steps.variant-config.outputs.ta_display_name }} - Nexus PC - Normal"
+          archive_existing_version: true
+          primary_mod_manager_download: false
+          allow_mod_manager_download: true
+          description: ${{ steps.release-notes.outputs.nexus_description }}
+
+      - name: Upload Trackers Alliance fully loose release to Nexus Mods
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_TA_LOOSE != '' }}
+        uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
+        with:
+          api_key: ${{ env.NEXUSMODS_API_KEY }}
+          file_id: ${{ env.NEXUSMODS_FILE_ID_TA_LOOSE }}
+          filename: ${{ steps.release-package.outputs.ta_loose_path }}
+          version: ${{ env.PACKAGE_VERSION }}
+          category: ${{ env.NEXUSMODS_CATEGORY }}
+          display_name: "${{ steps.variant-config.outputs.ta_display_name }} - Nexus PC - Fully Loose Files"
+          archive_existing_version: true
+          primary_mod_manager_download: false
+          allow_mod_manager_download: true
+          description: ${{ steps.release-notes.outputs.nexus_description }}
+
+      - name: Upload Venworks normal release to Nexus Mods
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_VWKS_NORMAL != '' }}
+        uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
+        with:
+          api_key: ${{ env.NEXUSMODS_API_KEY }}
+          file_id: ${{ env.NEXUSMODS_FILE_ID_VWKS_NORMAL }}
+          filename: ${{ steps.release-package.outputs.vwks_normal_path }}
+          version: ${{ env.PACKAGE_VERSION }}
+          category: ${{ env.NEXUSMODS_CATEGORY }}
+          display_name: "${{ steps.variant-config.outputs.vwks_display_name }} - Nexus PC - Normal"
+          archive_existing_version: true
+          primary_mod_manager_download: false
+          allow_mod_manager_download: true
+          description: ${{ steps.release-notes.outputs.nexus_description }}
+
+      - name: Upload Venworks fully loose release to Nexus Mods
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_VWKS_LOOSE != '' }}
+        uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
+        with:
+          api_key: ${{ env.NEXUSMODS_API_KEY }}
+          file_id: ${{ env.NEXUSMODS_FILE_ID_VWKS_LOOSE }}
+          filename: ${{ steps.release-package.outputs.vwks_loose_path }}
+          version: ${{ env.PACKAGE_VERSION }}
+          category: ${{ env.NEXUSMODS_CATEGORY }}
+          display_name: "${{ steps.variant-config.outputs.vwks_display_name }} - Nexus PC - Fully Loose Files"
           archive_existing_version: true
           primary_mod_manager_download: false
           allow_mod_manager_download: true

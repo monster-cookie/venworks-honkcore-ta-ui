@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080"
+             safeLeft="64" safeTop="36" safeRight="64" safeBottom="36">
+  <definitions>
+    <meterStyle id="vanilla.placeholder" renderer="continuous"
+                fillColor="#35E6E6" emptyColor="#183B48"
+                fillOpacity="1" emptyOpacity="0.7" />
+  </definitions>
+  <vanillaVisibility>
+    <target id="topCenter" visibleWhen="never" />
+    <target id="bottomLeft" visibleWhen="always" x="25" y="25" anchor="top-left" />
+    <target id="socialCommandIcons" visibleWhen="always" />
+    <target id="floatingQuestMarkers" visibleWhen="always" />
+    <target id="crewBuffWidget" visibleWhen="always" />
+  </vanillaVisibility>
+  <components>
+    <text id="adapter.notice" x="0" y="42" width="760" height="38" opacity="1" visible="true" visibleWhen="always"
+          rotation="0" scaleX="1" scaleY="1" z="100" anchor="top-center"
+          value="VANILLA ADAPTER TEST: TOP CENTER HIDDEN" font="$MAIN_Font_Bold" fontSize="18" color="#FFB51B" bold="false" align="center" />
+  </components>
+</venworksCUI>

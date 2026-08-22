@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080"
+             safeLeft="64" safeTop="36" safeRight="64" safeBottom="36">
+  <definitions>
+    <meterStyle id="defined.style" renderer="continuous"
+                fillColor="#FFFFFF" emptyColor="#000000"
+                fillOpacity="1" emptyOpacity="1" />
+  </definitions>
+  <components>
+    <meter id="invalid.reference" x="0" y="0" width="100" height="10" z="0"
+           style="missing.style" value="50" max="100" />
+  </components>
+</venworksCUI>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUIFragment schemaVersion="1" runtimeVersion="1">
+  <group id="root" x="0" y="0" width="900" height="520" opacity="1" visible="true"
+         rotation="0" scaleX="1" scaleY="1" z="0">
+    <scannerOverlay id="scanner.overlay" x="0" y="0" width="900" height="520" opacity="1" visible="true"
+                    rotation="0" scaleX="1" scaleY="1" z="0" fieldOfView="90" maxTargets="5"
+                    flickerIntervalMs="140" scanningColor="@palette.colors.accent.primary" gridColor="@palette.colors.accent.secondary"
+                    contactColor="@palette.colors.marker.player" hostileColor="@palette.colors.marker.hostile" backgroundColor="@palette.colors.panel.background" />
+  </group>
+</venworksCUIFragment>
+

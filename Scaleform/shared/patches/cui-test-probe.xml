@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scaleformPatch name="cui-test-probe" version="1">
+  <preconditions stageWidthTwips="38400" stageHeightTwips="21600"
+                 characterId="354" rootDepth="1000" />
+  <tags>
+    <item type="DefineEditTextTag" align="1" autoSize="false" border="false" characterID="354" fontClass="$MAIN_Font_Bold" fontHeight="360" forceWriteAsLong="true" hasFont="false" hasFontClass="true" hasLayout="true" hasMaxLength="false" hasText="true" hasTextColor="true" html="true" indent="0" initialText="&lt;p align=&quot;center&quot;&gt;&lt;font size=&quot;18&quot; color=&quot;#ffff00&quot; letterSpacing=&quot;1.00&quot; kerning=&quot;0&quot;&gt;VENWORKS CUI TEST&lt;/font&gt;&lt;/p&gt;" leading="40" leftMargin="0" multiline="false" noSelect="true" password="false" readOnly="true" rightMargin="0" useOutlines="true" variableName="" wasStatic="false" wordWrap="false">
+      <bounds type="RECT" Xmax="6000" Xmin="0" Ymax="941" Ymin="-299" nbits="14" />
+      <textColor type="RGBA" alpha="255" blue="0" green="255" red="255" />
+    </item>
+    <item type="CSMSettingsTag" forceWriteAsLong="true" gridFit="2" reserved="0" reserved2="0" sharpness="0.0" textID="354" thickness="0.0" useFlashType="1" />
+    <item type="PlaceObject2Tag" characterId="354" depth="1000" forceWriteAsLong="true" name="VenworksCuiTest_txt" placeFlagHasCharacter="true" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="false" placeFlagHasMatrix="true" placeFlagHasName="true" placeFlagHasRatio="false" placeFlagMove="false">
+      <matrix type="MATRIX" hasRotate="false" hasScale="false" nRotateBits="0" nScaleBits="0" nTranslateBits="16" translateX="16200" translateY="19800" />
+    </item>
+  </tags>
+</scaleformPatch>

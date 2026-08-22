@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080"
+             safeLeft="64" safeTop="36" safeRight="64" safeBottom="36">
+  <definitions>
+    <meterStyle id="gap.invalid" renderer="segments" direction="right" partialSegments="true"
+                fillColor="#FFFFFF" emptyColor="#000000"
+                fillOpacity="1" emptyOpacity="1" segmentCount="4" gap="10" />
+  </definitions>
+  <components>
+    <meter id="gap.invalid" x="0" y="0" width="30" height="10" opacity="1" visible="true"
+           rotation="0" scaleX="1" scaleY="1" z="0"
+           style="gap.invalid" value="50" max="100" />
+  </components>
+</venworksCUI>

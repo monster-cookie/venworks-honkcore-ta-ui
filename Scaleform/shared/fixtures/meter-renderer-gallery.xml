@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080"
+             safeLeft="64" safeTop="36" safeRight="64" safeBottom="36">
+  <definitions>
+    <meterStyle id="meter.continuous.right" renderer="continuous" direction="right"
+                fillColor="#35E6E6" emptyColor="#183B48" fillOpacity="1" emptyOpacity="0.7" />
+    <meterStyle id="meter.segments.partial" renderer="segments" direction="right" partialSegments="true"
+                fillColor="#35E6E6" emptyColor="#183B48" fillOpacity="1" emptyOpacity="0.7" segmentCount="12" gap="4" />
+    <meterStyle id="meter.segments.whole" renderer="segments" direction="right" partialSegments="false"
+                fillColor="#F39CDE" emptyColor="#422342" fillOpacity="1" emptyOpacity="0.7" segmentCount="12" gap="4" />
+    <meterStyle id="meter.dots.partial" renderer="dots" direction="right" partialSegments="true"
+                fillColor="#35E6E6" emptyColor="#183B48" fillOpacity="1" emptyOpacity="0.7" segmentCount="10" gap="6" />
+    <meterStyle id="meter.triangles.uniform" renderer="triangles" direction="right" partialSegments="true" trianglePattern="uniform"
+                fillColor="#35E6E6" emptyColor="#183B48" fillOpacity="1" emptyOpacity="0.7" segmentCount="12" gap="3" />
+    <meterStyle id="meter.triangles.alternating" renderer="triangles" direction="right" partialSegments="true" trianglePattern="alternating"
+                fillColor="#FFD800" emptyColor="#4A4215" fillOpacity="1" emptyOpacity="0.7" segmentCount="14" gap="2" />
+    <meterStyle id="meter.segments.left" renderer="segments" direction="left" partialSegments="true"
+                fillColor="#FFB51B" emptyColor="#493618" fillOpacity="1" emptyOpacity="0.7" segmentCount="10" gap="4" />
+    <meterStyle id="meter.segments.down" renderer="segments" direction="down" partialSegments="true"
+                fillColor="#35E6E6" emptyColor="#183B48" fillOpacity="1" emptyOpacity="0.7" segmentCount="8" gap="4" />
+    <meterStyle id="meter.dots.up" renderer="dots" direction="up" partialSegments="true"
+                fillColor="#F39CDE" emptyColor="#422342" fillOpacity="1" emptyOpacity="0.7" segmentCount="8" gap="5" />
+    <meterStyle id="meter.radial.clockwise" renderer="radial" startAngle="-90" sweepAngle="270" clockwise="true" thickness="10"
+                fillColor="#35E6E6" emptyColor="#183B48" fillOpacity="1" emptyOpacity="0.7" />
+    <meterStyle id="meter.radial.counter" renderer="radial" startAngle="-90" sweepAngle="270" clockwise="false" thickness="10"
+                fillColor="#FFD800" emptyColor="#4A4215" fillOpacity="1" emptyOpacity="0.7" />
+  </definitions>
+  <components>
+    <group id="meter.gallery.left" x="0" y="12" width="650" height="510" opacity="1" visible="true"
+           rotation="0" scaleX="1" scaleY="1" z="100" anchor="top-left">
+      <panel id="meter.gallery.left.panel" x="0" y="0" width="650" height="510" opacity="1" visible="true"
+             rotation="0" scaleX="1" scaleY="1" z="0" fillColor="#071923" fillOpacity="0.92"
+             strokeColor="#35E6E6" strokeOpacity="0.9" strokeWidth="2" />
+      <text id="meter.gallery.left.title" x="22" y="14" width="606" height="34" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="1" value="CUI METER RENDERERS — LINEAR"
+            font="$MAIN_Font_Bold" fontSize="19" color="#F7FCFF" bold="true" align="left" />
+      <divider id="meter.gallery.left.divider" x="22" y="54" width="606" height="0" opacity="1" visible="true"
+               rotation="0" scaleX="1" scaleY="1" z="1" color="#35E6E6" strokeOpacity="0.8" strokeWidth="2" />
+      <text id="meter.label.continuous" x="22" y="72" width="190" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+            value="CONTINUOUS 65%" font="$MAIN_Font_Bold" fontSize="14" color="#F7FCFF" bold="false" align="left" />
+      <meter id="meter.continuous" x="220" y="76" width="404" height="18" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+             style="meter.continuous.right" value="65" max="100" />
+      <text id="meter.label.segments" x="22" y="124" width="190" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+            value="SEGMENTS PARTIAL" font="$MAIN_Font_Bold" fontSize="14" color="#F7FCFF" bold="false" align="left" />
+      <meter id="meter.segments" x="220" y="126" width="404" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+             style="meter.segments.partial" value="54" max="100" />
+      <text id="meter.label.whole" x="22" y="176" width="190" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+            value="SEGMENTS WHOLE" font="$MAIN_Font_Bold" fontSize="14" color="#F7FCFF" bold="false" align="left" />
+      <meter id="meter.segments.whole" x="220" y="178" width="404" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+             style="meter.segments.whole" value="54" max="100" />
+      <text id="meter.label.dots" x="22" y="228" width="190" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+            value="DOTS 3 / 7" font="$MAIN_Font_Bold" fontSize="14" color="#F7FCFF" bold="false" align="left" />
+      <meter id="meter.dots" x="220" y="226" width="404" height="28" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+             style="meter.dots.partial" value="3" max="7" />
+      <text id="meter.label.uniform" x="22" y="280" width="190" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+            value="TRIANGLES 50%" font="$MAIN_Font_Bold" fontSize="14" color="#F7FCFF" bold="false" align="left" />
+      <meter id="meter.triangles.uniform" x="220" y="280" width="404" height="28" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+             style="meter.triangles.uniform" value="50" max="100" />
+      <text id="meter.label.alternating" x="22" y="334" width="190" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+            value="ALTERNATING 63%" font="$MAIN_Font_Bold" fontSize="14" color="#FFD800" bold="false" align="left" />
+      <meter id="meter.triangles.alternating" x="220" y="332" width="404" height="30" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+             style="meter.triangles.alternating" value="63" max="100" />
+      <text id="meter.label.left" x="22" y="390" width="190" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+            value="REVERSE LEFT 45%" font="$MAIN_Font_Bold" fontSize="14" color="#FFB51B" bold="false" align="left" />
+      <meter id="meter.segments.left" x="220" y="392" width="404" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+             style="meter.segments.left" value="45" max="100" />
+      <text id="meter.gallery.left.footer" x="22" y="458" width="606" height="28" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+            value="FIXED VALUES — LIVE HUD DATA UNCHANGED" font="$MAIN_Font_Bold" fontSize="13" color="#35E6E6" bold="false" align="center" />
+    </group>
+
+    <group id="meter.gallery.top.right" x="0" y="12" width="576" height="390" opacity="1" visible="true"
+           rotation="0" scaleX="1" scaleY="1" z="100" anchor="top-right">
+      <panel id="meter.gallery.right.panel" x="0" y="0" width="576" height="390" opacity="1" visible="true"
+             rotation="0" scaleX="1" scaleY="1" z="0" fillColor="#071923" fillOpacity="0.92"
+             strokeColor="#35E6E6" strokeOpacity="0.9" strokeWidth="2" />
+      <text id="meter.gallery.right.title" x="20" y="14" width="536" height="34" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="1" value="VERTICAL + RADIAL"
+            font="$MAIN_Font_Bold" fontSize="19" color="#F7FCFF" bold="true" align="left" />
+      <divider id="meter.gallery.right.divider" x="20" y="54" width="536" height="0" opacity="1" visible="true"
+               rotation="0" scaleX="1" scaleY="1" z="1" color="#35E6E6" strokeOpacity="0.8" strokeWidth="2" />
+      <text id="meter.label.down" x="24" y="72" width="130" height="24" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+            value="DOWN 60%" font="$MAIN_Font_Bold" fontSize="13" color="#35E6E6" bold="false" align="center" />
+      <meter id="meter.segments.down" x="72" y="104" width="34" height="220" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+             style="meter.segments.down" value="60" max="100" />
+      <text id="meter.label.up" x="152" y="72" width="130" height="24" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+            value="UP 40%" font="$MAIN_Font_Bold" fontSize="13" color="#F39CDE" bold="false" align="center" />
+      <meter id="meter.dots.up" x="200" y="104" width="34" height="220" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+             style="meter.dots.up" value="40" max="100" />
+      <text id="meter.label.radial.zero" x="292" y="72" width="80" height="24" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+            value="0%" font="$MAIN_Font_Bold" fontSize="13" color="#F7FCFF" bold="false" align="center" />
+      <meter id="meter.radial.zero" x="292" y="104" width="80" height="80" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+             style="meter.radial.clockwise" value="0" max="100" />
+      <text id="meter.label.radial.partial" x="396" y="72" width="140" height="24" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+            value="CW 50%" font="$MAIN_Font_Bold" fontSize="13" color="#35E6E6" bold="false" align="center" />
+      <meter id="meter.radial.partial" x="426" y="104" width="80" height="80" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+             style="meter.radial.clockwise" value="50" max="100" />
+      <text id="meter.label.radial.counter" x="286" y="218" width="126" height="24" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+            value="CCW 75%" font="$MAIN_Font_Bold" fontSize="13" color="#FFD800" bold="false" align="center" />
+      <meter id="meter.radial.counter" x="310" y="250" width="80" height="80" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+             style="meter.radial.counter" value="75" max="100" />
+      <text id="meter.label.radial.full" x="420" y="218" width="126" height="24" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+            value="FULL 100%" font="$MAIN_Font_Bold" fontSize="13" color="#35E6E6" bold="false" align="center" />
+      <meter id="meter.radial.full" x="444" y="250" width="80" height="80" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2"
+             style="meter.radial.clockwise" value="100" max="100" />
+    </group>
+  </components>
+</venworksCUI>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUIFragment schemaVersion="1" runtimeVersion="1">
+  <includes><include id="nested" src="weapon-status.xml" x="0" y="0" z="1" /></includes>
+  <group id="root" x="0" y="0" width="100" height="100" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" />
+</venworksCUIFragment>

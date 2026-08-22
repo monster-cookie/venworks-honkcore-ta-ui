@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080"
+             safeLeft="64" safeTop="36" safeRight="64" safeBottom="36">
+  <definitions>
+    <meterStyle id="anchor.continuous" renderer="continuous"
+                fillColor="#35E6E6" emptyColor="#183B48"
+                fillOpacity="1" emptyOpacity="0.7" />
+  </definitions>
+  <components>
+    <group id="anchor.top-left" anchor="top-left" x="12" y="12" width="250" height="64" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="20">
+      <panel id="anchor.top-left.panel" x="0" y="0" width="250" height="64" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" fillColor="#071923" fillOpacity="0.94" strokeColor="#35E6E6" strokeOpacity="1" strokeWidth="2" />
+      <text id="anchor.top-left.text" x="12" y="15" width="226" height="34" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="TOP LEFT" font="$MAIN_Font_Bold" fontSize="18" color="#F7FCFF" bold="true" align="left" />
+    </group>
+    <group id="anchor.top-center" anchor="top-center" x="0" y="12" width="250" height="64" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="20">
+      <panel id="anchor.top-center.panel" x="0" y="0" width="250" height="64" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" fillColor="#071923" fillOpacity="0.94" strokeColor="#35E6E6" strokeOpacity="1" strokeWidth="2" />
+      <text id="anchor.top-center.text" x="12" y="15" width="226" height="34" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="TOP CENTER" font="$MAIN_Font_Bold" fontSize="18" color="#F7FCFF" bold="true" align="center" />
+    </group>
+    <group id="anchor.top-right" anchor="top-right" x="-12" y="12" width="250" height="64" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="20">
+      <panel id="anchor.top-right.panel" x="0" y="0" width="250" height="64" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" fillColor="#071923" fillOpacity="0.94" strokeColor="#35E6E6" strokeOpacity="1" strokeWidth="2" />
+      <text id="anchor.top-right.text" x="12" y="15" width="226" height="34" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="TOP RIGHT" font="$MAIN_Font_Bold" fontSize="18" color="#F7FCFF" bold="true" align="right" />
+    </group>
+    <group id="anchor.center-left" anchor="center-left" x="12" y="0" width="250" height="64" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="20">
+      <panel id="anchor.center-left.panel" x="0" y="0" width="250" height="64" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" fillColor="#071923" fillOpacity="0.94" strokeColor="#35E6E6" strokeOpacity="1" strokeWidth="2" />
+      <text id="anchor.center-left.text" x="12" y="15" width="226" height="34" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="CENTER LEFT" font="$MAIN_Font_Bold" fontSize="18" color="#F7FCFF" bold="true" align="left" />
+    </group>
+    <group id="anchor.center" anchor="center" x="0" y="0" width="640" height="320" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="10">
+      <panel id="anchor.center.panel" x="0" y="0" width="640" height="320" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" fillColor="#071923" fillOpacity="0.94" strokeColor="#35E6E6" strokeOpacity="1" strokeWidth="2" />
+      <text id="anchor.center.title" anchor="top-center" x="0" y="20" width="560" height="40" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" value="CENTER — NESTED GROUP ANCHORS" font="$MAIN_Font_Bold" fontSize="20" color="#F7FCFF" bold="true" align="center" />
+      <panel id="anchor.nested.top-left" anchor="top-left" x="24" y="80" width="180" height="54" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" fillColor="#102C38" fillOpacity="0.9" strokeColor="#35E6E6" strokeOpacity="0.7" strokeWidth="1" />
+      <panel id="anchor.nested.top-right" anchor="top-right" x="-24" y="80" width="180" height="54" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" fillColor="#102C38" fillOpacity="0.9" strokeColor="#35E6E6" strokeOpacity="0.7" strokeWidth="1" />
+      <panel id="anchor.nested.bottom-left" anchor="bottom-left" x="24" y="-24" width="180" height="54" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" fillColor="#102C38" fillOpacity="0.9" strokeColor="#35E6E6" strokeOpacity="0.7" strokeWidth="1" />
+      <panel id="anchor.nested.bottom-right" anchor="bottom-right" x="-24" y="-24" width="180" height="54" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" fillColor="#102C38" fillOpacity="0.9" strokeColor="#35E6E6" strokeOpacity="0.7" strokeWidth="1" />
+      <text id="anchor.center.note" anchor="center" x="0" y="22" width="500" height="34" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" value="ROOT + GROUP-RELATIVE PLACEMENT" font="$MAIN_Font_Bold" fontSize="16" color="#35E6E6" bold="false" align="center" />
+    </group>
+    <group id="anchor.center-right" anchor="center-right" x="-12" y="0" width="250" height="64" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="20">
+      <panel id="anchor.center-right.panel" x="0" y="0" width="250" height="64" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" fillColor="#071923" fillOpacity="0.94" strokeColor="#35E6E6" strokeOpacity="1" strokeWidth="2" />
+      <text id="anchor.center-right.text" x="12" y="15" width="226" height="34" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="CENTER RIGHT" font="$MAIN_Font_Bold" fontSize="18" color="#F7FCFF" bold="true" align="right" />
+    </group>
+    <group id="anchor.bottom-left" anchor="bottom-left" x="12" y="-12" width="250" height="64" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="20">
+      <panel id="anchor.bottom-left.panel" x="0" y="0" width="250" height="64" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" fillColor="#071923" fillOpacity="0.94" strokeColor="#35E6E6" strokeOpacity="1" strokeWidth="2" />
+      <text id="anchor.bottom-left.text" x="12" y="15" width="226" height="34" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="BOTTOM LEFT" font="$MAIN_Font_Bold" fontSize="18" color="#F7FCFF" bold="true" align="left" />
+    </group>
+    <group id="anchor.bottom-center" anchor="bottom-center" x="0" y="-12" width="250" height="64" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="20">
+      <panel id="anchor.bottom-center.panel" x="0" y="0" width="250" height="64" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" fillColor="#071923" fillOpacity="0.94" strokeColor="#35E6E6" strokeOpacity="1" strokeWidth="2" />
+      <text id="anchor.bottom-center.text" x="12" y="15" width="226" height="34" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="BOTTOM CENTER" font="$MAIN_Font_Bold" fontSize="18" color="#F7FCFF" bold="true" align="center" />
+    </group>
+    <group id="anchor.bottom-right" anchor="bottom-right" x="-12" y="-12" width="250" height="64" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="20">
+      <panel id="anchor.bottom-right.panel" x="0" y="0" width="250" height="64" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" fillColor="#071923" fillOpacity="0.94" strokeColor="#35E6E6" strokeOpacity="1" strokeWidth="2" />
+      <text id="anchor.bottom-right.text" x="12" y="15" width="226" height="34" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="BOTTOM RIGHT" font="$MAIN_Font_Bold" fontSize="18" color="#F7FCFF" bold="true" align="right" />
+    </group>
+    <group id="absolute.control" x="78" y="150" width="280" height="54" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="30">
+      <panel id="absolute.control.panel" x="0" y="0" width="280" height="54" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" fillColor="#102C38" fillOpacity="0.94" strokeColor="#FFB52E" strokeOpacity="1" strokeWidth="2" />
+      <text id="absolute.control.text" x="10" y="11" width="260" height="32" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" value="ABSOLUTE X=78 Y=150" font="$MAIN_Font_Bold" fontSize="16" color="#FFB52E" bold="false" align="center" />
+    </group>
+  </components>
+</venworksCUI>

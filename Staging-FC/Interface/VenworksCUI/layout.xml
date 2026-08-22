@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080"
+             safeLeft="64" safeTop="36" safeRight="64" safeBottom="36" palette="freestar-collective.xml">
+  <definitions>
+    <meterStyle id="player.xp" renderer="segments"
+                fillColor="@palette.colors.accent.primary" emptyColor="@palette.colors.panel.background"
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="16" gap="2"
+                direction="right" partialSegments="true" />
+    <meterStyle id="player.health" renderer="segments"
+                fillColor="@palette.colors.meter.health" emptyColor="@palette.colors.panel.background"
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="16" gap="2"
+                direction="right" partialSegments="true" />
+    <meterStyle id="player.oxygen" renderer="segments"
+                fillColor="@palette.colors.meter.oxygen" emptyColor="@palette.colors.panel.background"
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="16" gap="2"
+                direction="right" partialSegments="true" />
+    <meterStyle id="player.carbondioxide" renderer="segments"
+                fillColor="@palette.colors.meter.carbondioxide" emptyColor="@palette.colors.panel.background"
+                fillOpacity="1" emptyOpacity="0" segmentCount="16" gap="2"
+                direction="right" partialSegments="true" />
+    <meterStyle id="player.boost" renderer="segments"
+                fillColor="@palette.colors.meter.boost" emptyColor="@palette.colors.panel.background"
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="16" gap="2"
+                direction="right" partialSegments="true" />
+    <meterStyle id="player.encumbrance" renderer="segments"
+                fillColor="@palette.colors.state.clear" emptyColor="@palette.colors.panel.background"
+                fillOpacity="1" emptyOpacity="0.7" segmentCount="16" gap="2"
+                direction="right" partialSegments="true" />
+    <meterStyle id="environment.air" renderer="segments"
+                fillColor="@palette.colors.accent.primary" emptyColor="@palette.colors.panel.background"
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="8" gap="2"
+                direction="up" partialSegments="true" />
+    <meterStyle id="environment.thermal" renderer="segments"
+                fillColor="@palette.colors.state.caution" emptyColor="@palette.colors.panel.background"
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="8" gap="2"
+                direction="up" partialSegments="true" />
+    <meterStyle id="environment.corrosive" renderer="segments"
+                fillColor="@palette.colors.state.caution" emptyColor="@palette.colors.panel.background"
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="8" gap="2"
+                direction="up" partialSegments="true" />
+    <meterStyle id="environment.radiation" renderer="segments"
+                fillColor="@palette.colors.state.critical" emptyColor="@palette.colors.panel.background"
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="8" gap="2"
+                direction="up" partialSegments="true" />
+    <meterStyle id="environment.protection" renderer="segments"
+                fillColor="@palette.colors.accent.primary" emptyColor="@palette.colors.panel.background"
+                fillOpacity="1" emptyOpacity="0.78" segmentCount="16" gap="2"
+                direction="right" partialSegments="true" />
+  </definitions>
+  <vanillaVisibility>
+    <target id="bottomLeft" visibleWhen="inScanner" offsetX="0" offsetY="266" />
+    <target id="rightMeters" visibleWhen="never" />
+  </vanillaVisibility>
+  <includes>
+    <include id="faction-display" src="faction-display.xml"
+             x="-64" y="-36" anchor="top-left" visible="true" visibleWhen="always" z="103" />
+    <include id="contact-radar" src="contact-radar.xml"
+             x="155" y="-36" anchor="top-left" visible="true" visibleWhen="always" z="104" />
+    <include id="quest-tracker" src="quest-tracker.xml"
+             x="-64" y="190" anchor="top-left" visible="true" visibleWhen="always" z="102" />
+    <include id="environmental-hazard-scanner" src="environmental-hazard-scanner.xml"
+             x="39" y="11" anchor="bottom-right" visible="true" visibleWhen="always" z="90" />
+    <include id="player-status-scanner" src="player-status-scanner.xml"
+             x="-39" y="11" anchor="bottom-left" visible="true" visibleWhen="always" z="100" />
+    <include id="equipment-rail" src="equipment-rail.xml"
+             x="64" y="36" anchor="top-right" visible="true" visibleWhen="always" z="102" />
+    <include id="helmet-awareness" src="helmet-awareness.xml"
+             x="0" y="22" anchor="top-center" visible="true" visibleWhen="always" z="110" />
+    <include id="scanner-overlay" src="scanner-overlay.xml"
+             x="0" y="0" anchor="center" visible="true" visibleWhen="inScanner" z="109" />
+  </includes>
+  <components>
+    <path id="helmet.lower-frame.fill" x="-64" y="36" width="1920" height="293" opacity="1" visible="true"
+          anchor="bottom-left" rotation="0" scaleX="1" scaleY="1" z="80"
+          data="M 0 0 L 33 32 L 157 32 Q 169 32 169 44 L 169 52 Q 169 62 181 62 L 219 62 Q 231 62 231 52 L 231 44 Q 231 32 243 32 L 377 32 Q 385 32 385 40 L 385 237 C 399 237 407 243 417 253 Q 425 261 439 261 L 1481 261 Q 1495 261 1503 253 C 1513 243 1521 237 1535 237 L 1535 40 Q 1535 32 1543 32 L 1643 32 Q 1655 32 1655 44 L 1655 52 Q 1655 62 1667 62 L 1771 62 Q 1783 62 1783 52 L 1783 44 Q 1783 32 1795 32 L 1887 32 L 1920 0 L 1920 293 L 0 293 Z"
+          viewBoxX="0" viewBoxY="0" viewBoxWidth="1920" viewBoxHeight="293"
+          fillColor="@palette.colors.panel.background" fillOpacity="0.88" strokeColor="@palette.colors.panel.border" strokeOpacity="0" strokeWidth="0" />
+    <path id="helmet.upper-frame.fill" x="-64" y="-36" width="1920" height="126" opacity="1" visible="true"
+          anchor="top-left" rotation="0" scaleX="1" scaleY="1" z="80"
+          data="M 0 0 L 1920 0 L 1920 70 Q 1680 76 1450 92 L 1260 106 Q 1228 108 1204 118 Q 1190 126 1170 126 L 750 126 Q 730 126 716 118 Q 692 108 660 106 L 470 92 Q 240 76 0 70 Z"
+          viewBoxX="0" viewBoxY="0" viewBoxWidth="1920" viewBoxHeight="126"
+          fillColor="@palette.colors.panel.background" fillOpacity="0.84" strokeColor="@palette.colors.panel.border" strokeOpacity="0" strokeWidth="0" />
+    <path id="helmet.threat-recess.fill" x="0" y="22" width="320" height="48" opacity="1" visible="true"
+          anchor="top-center" rotation="0" scaleX="1" scaleY="1" z="81"
+          data="M 16 0 L 304 0 Q 320 0 320 16 L 320 32 Q 320 48 304 48 L 16 48 Q 0 48 0 32 L 0 16 Q 0 0 16 0 Z"
+          viewBoxX="0" viewBoxY="0" viewBoxWidth="320" viewBoxHeight="48"
+          fillColor="@palette.colors.panel.background" fillOpacity="0.72" strokeColor="@palette.colors.panel.border" strokeOpacity="0" strokeWidth="0" />
+    <group id="player.critical-health" x="0" y="166" width="320" height="70" opacity="1" visible="true"
+           visibleWhen="criticalHealth" anchor="top-center" rotation="0" scaleX="1" scaleY="1" z="120">
+      <panel id="player.critical-health.panel" x="0" y="0" width="320" height="70" opacity="1" visible="true"
+             rotation="0" scaleX="1" scaleY="1" z="0"
+             fillColor="@palette.colors.panel.background" fillOpacity="0.94" strokeColor="@palette.colors.state.critical" strokeOpacity="1" strokeWidth="2" />
+      <text id="player.critical-health.title" x="12" y="7" width="296" height="24" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="1" value="CRITICAL HEALTH"
+            font="$MAIN_Font_Bold" fontSize="12" color="@palette.colors.state.critical" bold="false" align="center" />
+      <text id="player.critical-health.value" x="12" y="32" width="296" height="28" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="1"
+            valueTemplate="HEALTH {player.health:integer}/{player.maxHealth:integer}" value="HEALTH --/--"
+            font="$MAIN_Font_Bold" fontSize="15" color="@palette.colors.foreground.primary" bold="false" align="center" />
+    </group>
+    <group id="helmet.vehicle-exit" x="0" y="36" width="184" height="36" opacity="1" visible="true"
+           visibleWhen="inVehicle" anchor="bottom-center" rotation="0" scaleX="1" scaleY="1" z="103">
+      <text id="vehicle.exit.label" x="0" y="4" width="138" height="28" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="0" value="$EXIT HOLD"
+            font="$MAIN_Font_Bold" fontSize="11" color="@palette.colors.foreground.primary" bold="false" align="right" />
+      <symbol id="vehicle.exit.glyph" x="146" y="0" width="36" height="36" opacity="1" visible="true"
+              rotation="0" scaleX="1" scaleY="1" z="0" name="vehicle-exit-prompt"
+              fit="contain" alignX="left" alignY="center" />
+    </group>
+  </components>
+</venworksCUI>

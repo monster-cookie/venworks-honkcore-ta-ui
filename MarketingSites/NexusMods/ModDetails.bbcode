@@ -1,0 +1,139 @@
+[img]https://cdn.venworkscreations.com/NexusMods/description-divider-overview-1600x120.png[/img]
+Venworks Customizable HUD overhauls Starfield’s interface with customizable displays for combat, player status, equipment, environmental hazards, scanning, objectives, and nearby contacts.
+
+The scanner identifies confirmed contacts and assigns them consistent codenames. The environment display shows your suit protection and active hazards, while the radar tracks detected contacts around your position.
+
+This is a beta release. Previous HONKCORE themes remain available as legacy downloads in the Files section, but they are not compatible with this HUD and should not be installed alongside it.
+
+[quote]
+[size=4][b][u]New HUD and HONKCORE compatibility[/u][/b][/size]
+
+This is a new custom HUD written from the ground up in Scaleform and ActionScript. It is not compatible with HONKCORE and has an expanded feature set.
+[/quote]
+
+[quote]
+[size=4][b][u]Venworks Discord Community[/u][/b][/size]
+
+’ve reopened the [url=https://discord.gg/DTbmrJDMxZ]Venworks Discord community[/url] as a central place for my mods, modding research, support, beta feedback, and bug reports. 
+
+I’ll continue releasing my mods here on Nexus and through the Bethesda Game Studios Creations site (mostly for consoles), but recent site updates have made Nexus notifications and the Bugs and Posts sections less reliable.
+[/quote]
+
+[img]https://cdn.venworkscreations.com/NexusMods/description-divider-features-1600x120.png[/img]
+[list]
+[*]A configurable helmet frame with compass heading, threat state, active status effects, and Bethesda's current vehicle-exit control glyph.[/*]
+[*]Player information for level, experience, health, oxygen, CO2, boost, carry mass, credits, digipicks, universal time, and a deterministic player serial.[/*]
+[*]A passive equipment rail for all 12 favorite slots plus live weapon, ammunition, explosive, and power information.[/*]
+[*]Planet and environment panels for location, local time, oxygen, temperature, gravity, suit protection, and active thermal, airborne, corrosive, and radiation categories.[/*]
+[*]Environmental exposure bars that combine active Bethesda hazard categories, suit-protection depletion, and sustained player-O2 drain into modeled relative values. They are not real-world hazard measurements.[/*]
+[*]A persistent tracked-objective panel.[/*]
+[*]A full 360-degree contact radar for companions, parked ships, parked or recently exited vehicles, and acquired hostile contacts.[/*]
+[*]A scanner-only 90-degree forward display that validates contacts, shows the nearest five, and assigns deterministic codenames for enemies, companions, ships, vehicles, positions, and other points of interest.[/*]
+[*]Strict, atomic XML loading. Invalid or unsafe layout, palette, fragment, or SVG configuration prevents a partial custom HUD and displays a categorized diagnostic.[/*]
+[/list]
+
+[size=3][b][u]Contact radar and scanner behavior[/u][/b][/size]
+
+The radar maps contacts through the full 360 degrees around the player and displays companions, parked ships, parked or recently exited vehicles, and acquired hostile contacts up to 200 provider units away. The range uses Starfield's provider value and is not claimed to be meters.
+
+Bethesda controls when hostile contacts are initially detected and delivered to the HUD. The radar does not discover unaware actors or act as a life-form detector. Once a hostile is acquired, it remains ranged and tracked until it moves beyond the radar's 200-unit limit.
+
+The scanner panel is a separate forward-looking display. It validates contact data, sorts by distance, shows at most five contacts, and assigns stable display-only codenames such as enemy, companion, ship, vehicle, position, and POI identifiers. It does not consume actor names or invent random contacts.
+
+[size=3][b][u]Beta platforms and feedback[/u][/b][/size]
+
+The release targets PC and every console platform supported by Starfield Creations. Console testing and feedback are especially needed during the beta. Large-HUD, ultrawide, and radar-transition feedback is also welcome.
+
+[img]https://cdn.venworkscreations.com/NexusMods/description-divider-overview-1600x120.png[/img]
+
+[size=3][b][u]Release themes[/u][/b][/size]
+
+Four separately distributed variants choose different starting palettes. Enable only one variant at a time. Every new variant includes all five stock palettes, so PC players can switch the active palette without reinstalling the HUD.
+
+[list]
+[*][b]Venworks Customizable HUD - Venworks Theme[/b] — starts with [font=Courier New]venworks.xml[/font].[/*]
+[*][b]Venworks Customizable HUD - Trackers Alliance Theme[/b] — starts with [font=Courier New]trackers-alliance.xml[/font].[/*]
+[*][b]Venworks Customizable HUD - Freestar Collective Theme[/b] — starts with [font=Courier New]freestar-collective.xml[/font].[/*]
+[*][b]Venworks Customizable HUD - Crimson Fleet Theme[/b] — starts with [font=Courier New]crimson-fleet.xml[/font].[/*]
+[/list]
+
+The additional neutral option is [font=Courier New]starfield.xml[/font].
+
+[size=3][b][u]XML customization[/u][/b][/size]
+
+Versioned XML controls layout, visibility, colors, typography, meters, icons, reusable component fragments, and approved Bethesda HUD sections. Start with the [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/docs/USER_CONFIGURATION.md]user configuration guide[/url], then use the complete [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/docs/LAYOUT_CONFIGURATION_REFERENCE.md]layout reference[/url] and [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/docs/PALETTE_CONFIGURATION_REFERENCE.md]palette reference[/url].
+
+A .NET WYSIWYG application for creating and modifying themes is a long-term roadmap item. It is not included in this beta.
+
+[img]https://cdn.venworkscreations.com/NexusMods/description-divider-installation-instructions-1600x120.png[/img]
+[size=3][b][u]Via Vortex or Mod Organizer 2[/u][/b][/size]
+
+Choose one theme and one PC package shape. Nexus PC - Normal is recommended: it installs an ESM, Windows BA2 archives, and one loose [font=Courier New]Interface\VenworksCUI\layout.xml[/font]. Enable the ESM and let the package win the intended HUD conflicts. The two compiled GFX movies remain protected inside the Main BA2.
+
+Nexus PC - Fully Loose Files installs the complete loose [font=Courier New]Interface[/font] tree without an ESM or BA2. Use it only when component fragments, palettes, or SVG assets must also remain loose. Do not install Normal and Fully Loose Files together, and do not enable more than one theme variant.
+
+[size=3][b][u]Manually[/u][/b][/size]
+
+A mod manager is strongly recommended because it makes file conflicts, plugin activation, updates, and recovery safer. A manual Normal installation must copy the ESM, the supplied Windows BA2 archives, and the loose [font=Courier New]Interface\VenworksCUI\layout.xml[/font] to [font=Courier New]<Starfield installation directory>\Data[/font], then enable the ESM. A manual Fully Loose Files installation copies its [font=Courier New]Interface[/font] directory into [font=Courier New]Data[/font]. Back up files before overwriting them.
+
+[size=3][b][u]Change the active color palette on PC[/u][/b][/size]
+
+[list=1]
+[*]Enable only one Venworks Customizable HUD release variant.[/*]
+[*]Fully exit Starfield.[/*]
+[*]Back up the active loose [font=Courier New]Interface\VenworksCUI\layout.xml[/font]. If you use Fully Loose Files or an advanced override, back up the complete [font=Courier New]Interface\VenworksCUI[/font] directory.[/*]
+[*]Open [font=Courier New]Interface\VenworksCUI\layout.xml[/font] in a plain-text or XML editor.[/*]
+[*]Find the root [font=Courier New]<venworksCUI>[/font] element and change only its [font=Courier New]palette[/font] attribute. For example: [font=Courier New]palette="trackers-alliance.xml"[/font].[/*]
+[*]Choose one packaged filename: [font=Courier New]venworks.xml[/font], [font=Courier New]trackers-alliance.xml[/font], [font=Courier New]freestar-collective.xml[/font], [font=Courier New]crimson-fleet.xml[/font], or [font=Courier New]starfield.xml[/font].[/*]
+[*]The filename must refer directly to one XML file under [font=Courier New]Interface\VenworksCUI\palettes[/font]. Subdirectories, path traversal, URLs, query strings, and fragments are rejected.[/*]
+[*]Save the file and fully restart Starfield. Live palette switching is not supported.[/*]
+[/list]
+
+The Normal package supports layout and packaged-palette selection through its loose [font=Courier New]layout.xml[/font]. Advanced component, palette, or SVG changes require Fully Loose Files or a small personal override containing only the changed [font=Courier New]Interface\VenworksCUI[/font] files. Console players should install the Creation whose title and platform match the starting palette and system they want.
+
+[img]https://cdn.venworkscreations.com/NexusMods/description-divider-known-issues-1600x120.png[/img]
+[list]
+[*]This is a beta release.[/*]
+[*]The configurable release covers the on-foot player HUD. Ship UI remains outside the current release.[/*]
+[*]The radar is an acquired-contact display, not a life-form detector. Neutral creatures and unaware potential hostiles are not guaranteed to appear.[/*]
+[*]Palette and other XML changes require a complete Starfield restart; live reload is unsupported.[/*]
+[*]Do not combine this HUD with HONKCORE or another mod that replaces the same HUD movies unless a purpose-built compatibility patch explicitly combines their changes.[/*]
+[/list]
+
+[size=3][b][u]Legacy HONKCORE files[/u][/b][/size]
+
+The previous HONKCORE theme downloads will remain in the Files section for players who want the older release. Those legacy files still require HONKCORE and are not upgrades, requirements, or companions for Venworks Customizable HUD. Install either a legacy HONKCORE theme or one new customizable HUD theme, never both.
+
+[img]https://cdn.venworkscreations.com/NexusMods/description-divider-my-other-creations-1600x120.png[/img]
+[size=3][b][u]Modding tools[/u][/b][/size]
+
+[list]
+[*][url=https://www.nexusmods.com/site/mods/1999]Creations Forge[/url]: A cross-platform desktop and command-line application for importing, browsing, and comparing Bethesda plugin records for Fallout 4, Skyrim, and Starfield.[/*]
+[/list]
+
+[size=3][b][u]Starfield[/u][/b][/size]
+
+[list]
+[*][url=https://www.nexusmods.com/starfield/mods/7097]Venworks - Core[/url]: A utility library shared by my creations.[/*]
+[*][url=https://www.nexusmods.com/starfield/mods/8050]Venworks - Encounters Overhaul[/url]: Expands open-world caves and encounters.[/*]
+[*][url=https://www.nexusmods.com/starfield/mods/8411]Fix for Walter Vanishing in MQ101 and blocking quests[/url]: Prevents certain leveled-list overrides from causing Walter to stop functioning and disappear.[/*]
+[/list]
+
+[img]https://cdn.venworkscreations.com/NexusMods/description-divider-social-presence-1600x120.png[/img]
+
+[list]
+[*]Join the [url=https://discord.gg/DTbmrJDMxZ]Venworks Discord Community[/url] for discussion, support, and beta feedback.[/*]
+[*]I can also usually be found in the [url=https://discord.gg/quarteronion]Quarter Onion Games Discord Server[/url].[/*]
+[*]Follow me on X as [url=https://x.com/monstercookiebd]@monstercookiebd[/url].[/*]
+[*]Follow me on Threads as [url=https://www.threads.net/@monstercookiebd]@monstercookiebd[/url].[/*]
+[/list]
+
+[img]https://cdn.venworkscreations.com/NexusMods/description-divider-source-code-1600x120.png[/img]
+
+The complete source code and technical documentation are available in the [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui]venworks-honkcore-ta-ui GitHub repository[/url].
+
+[size=3][b][u]Credits[/u][/b][/size]
+[list]
+[*]Big thanks to beepcmyk for both addons and for tolerating all the SVG abuse I give them.[/*]
+[*]Thanks to Targeteron for the helpful hints.[/*]
+[/list]

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080"
+             safeLeft="64" safeTop="36" safeRight="64" safeBottom="36">
+  <definitions>
+    <meterStyle id="constructor" renderer="continuous" direction="right"
+                fillColor="#35E6E6" emptyColor="#183B48"
+                fillOpacity="1" emptyOpacity="0.7" />
+    <template id="toString">
+      <group id="hasOwnProperty" x="0" y="0" width="180" height="56" opacity="1" visible="true"
+             rotation="0" scaleX="1" scaleY="1" z="0">
+        <meter id="constructor" x="8" y="8" width="164" height="12" opacity="1" visible="true"
+               rotation="0" scaleX="1" scaleY="1" z="0"
+               style="constructor" value="50" max="100" />
+        <text id="toString" x="8" y="26" width="164" height="22" opacity="1" visible="true"
+              rotation="0" scaleX="1" scaleY="1" z="1"
+              value="PROTOTYPE-SAFE IDS" font="$MAIN_Font" fontSize="12" color="#FFFFFF"
+              bold="false" align="center" />
+      </group>
+    </template>
+  </definitions>
+  <components>
+    <instance id="toString" template="toString" x="20" y="20" z="0">
+      <override target="hasOwnProperty" visible="true" />
+    </instance>
+    <repeater id="constructor" template="toString" x="220" y="20" width="180" height="56"
+              visible="true" z="1" flow="horizontal" gapX="0" gapY="0" columns="1">
+      <item id="hasOwnProperty">
+        <override target="toString" text="REPEATER MAP LOOKUP" />
+      </item>
+    </repeater>
+    <state id="hasOwnProperty" selected="constructor" x="420" y="20" z="2">
+      <option name="constructor" template="toString">
+        <override target="constructor" meterValue="75" />
+      </option>
+    </state>
+  </components>
+</venworksCUI>

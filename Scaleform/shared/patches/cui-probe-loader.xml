@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<actionScriptPatch name="cui-runtime-bootstrap" version="1" script="HUDMenu">
+  <insertions>
+    <insertion position="after"><anchor><![CDATA[   import flash.net.URLRequest;]]></anchor><content><![CDATA[
+   import venworks.cui.CUIRuntime;]]></content></insertion>
+    <insertion position="after"><anchor><![CDATA[      private var SkillPatchLoader:Loader = null;]]></anchor><content><![CDATA[
+      
+      private var VenworksCUIRuntimeInstance:CUIRuntime = null;]]></content></insertion>
+    <insertion position="after"><anchor><![CDATA[         super.onAddedToStage();]]></anchor><content><![CDATA[
+         if(this.VenworksCUIRuntimeInstance == null)
+         {
+            this.VenworksCUIRuntimeInstance = new CUIRuntime(this);
+            this.VenworksCUIRuntimeInstance.load();
+         }
+]]></content></insertion>
+    <insertion position="after"><anchor><![CDATA[         CENTER_GROUP_POINT.y = this.CenterGroup_mc.y;]]></anchor><content><![CDATA[
+         if(this.VenworksCUIRuntimeInstance != null)
+         {
+            this.VenworksCUIRuntimeInstance.reapplyVanillaPlacements();
+         }
+]]></content></insertion>
+    <insertion position="after"><anchor><![CDATA[               SocialCommandIcons_mc.visible = param1.data.ModeVisibilityA[HUDUtils.SOCIAL_COMMAND_ICONS].bVisible;]]></anchor><content><![CDATA[
+               if(this.VenworksCUIRuntimeInstance != null)
+               {
+                  this.VenworksCUIRuntimeInstance.updateVanillaHudModeVisibility(param1.data.ModeVisibilityA);
+               }
+]]></content></insertion>
+  </insertions>
+</actionScriptPatch>

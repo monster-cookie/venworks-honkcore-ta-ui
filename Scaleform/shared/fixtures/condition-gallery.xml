@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080"
+             safeLeft="64" safeTop="36" safeRight="64" safeBottom="36">
+  <definitions>
+    <meterStyle id="condition.placeholder" renderer="continuous"
+                fillColor="#35E6E6" emptyColor="#183B48"
+                fillOpacity="1" emptyOpacity="0.7" />
+    <template id="condition.card.true">
+      <group id="root" x="0" y="0" width="500" height="72" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0">
+        <panel id="panel" x="0" y="0" width="500" height="72" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0"
+               fillColor="#071923" fillOpacity="0.95" strokeColor="#35E6E6" strokeOpacity="1" strokeWidth="2" />
+        <text id="label" x="18" y="19" width="464" height="34" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1"
+              value="CONDITION TRUE" font="$MAIN_Font_Bold" fontSize="18" color="#F7FCFF" bold="false" align="center" />
+      </group>
+    </template>
+    <template id="condition.card.false">
+      <group id="root" x="0" y="0" width="500" height="72" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0">
+        <panel id="panel" x="0" y="0" width="500" height="72" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0"
+               fillColor="#29170A" fillOpacity="0.95" strokeColor="#FFB51B" strokeOpacity="1" strokeWidth="2" />
+        <text id="label" x="18" y="19" width="464" height="34" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1"
+              value="CONDITION FALSE" font="$MAIN_Font_Bold" fontSize="18" color="#FFCE63" bold="false" align="center" />
+      </group>
+    </template>
+    <template id="condition.row">
+      <group id="root" x="0" y="0" width="250" height="42" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0">
+        <panel id="panel" x="0" y="0" width="250" height="42" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0"
+               fillColor="#102C38" fillOpacity="0.92" strokeColor="#35E6E6" strokeOpacity="0.75" strokeWidth="1" />
+        <text id="label" x="10" y="8" width="230" height="26" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1"
+              value="REPEATER CONDITION" font="$MAIN_Font_Bold" fontSize="13" color="#F7FCFF" bold="false" align="center" />
+      </group>
+    </template>
+    <template id="condition.state">
+      <group id="root" x="0" y="0" width="420" height="52" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0">
+        <panel id="panel" x="0" y="0" width="420" height="52" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0"
+               fillColor="#071923" fillOpacity="0.95" strokeColor="#35E6E6" strokeOpacity="0.8" strokeWidth="1" />
+        <text id="label" x="12" y="11" width="396" height="30" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1"
+              value="STATE VISIBILITY: ACTIVE" font="$MAIN_Font_Bold" fontSize="15" color="#35E6E6" bold="false" align="center" />
+      </group>
+    </template>
+  </definitions>
+  <components>
+    <group id="condition.gallery" x="0" y="-32" width="1120" height="520" opacity="1" visible="true" visibleWhen="ALWAYS"
+           rotation="0" scaleX="1" scaleY="1" z="100" anchor="center">
+      <panel id="gallery.panel" x="0" y="0" width="1120" height="520" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0"
+             fillColor="#071923" fillOpacity="0.93" strokeColor="#35E6E6" strokeOpacity="1" strokeWidth="2" />
+      <text id="gallery.title" x="24" y="18" width="1072" height="40" opacity="1" visible="true" visibleWhen="always" rotation="0" scaleX="1" scaleY="1" z="1"
+            value="VENWORKS CUI CONDITION GALLERY" font="$MAIN_Font_Bold" fontSize="23" color="#F7FCFF" bold="false" align="center" />
+      <instance id="camera.first" template="condition.card.true" x="30" y="78" z="10">
+        <override target="root" visibleWhen="FIRST_PERSON" />
+        <override target="label" text="CAMERA: FIRST PERSON" />
+      </instance>
+      <instance id="camera.third" template="condition.card.false" x="30" y="78" visibleWhen="thirdPerson" z="11">
+        <override target="label" text="CAMERA: THIRD PERSON" />
+      </instance>
+      <instance id="combat.true" template="condition.card.true" x="30" y="166" visibleWhen="inCombat" z="10">
+        <override target="label" text="COMBAT: ACTIVE" />
+      </instance>
+      <instance id="combat.false" template="condition.card.false" x="30" y="166" visibleWhen="NOT inCombat" z="11">
+        <override target="label" text="COMBAT: INACTIVE" />
+      </instance>
+      <instance id="scanner.true" template="condition.card.true" x="30" y="254" visibleWhen="IN_SCANNER" z="10">
+        <override target="label" text="SCANNER: OPEN" />
+      </instance>
+      <instance id="scanner.false" template="condition.card.false" x="30" y="254" visibleWhen="not in_scanner" z="11">
+        <override target="label" text="SCANNER: CLOSED" />
+      </instance>
+      <instance id="sneaking.true" template="condition.card.true" x="30" y="342" visibleWhen="isSneaking" z="10">
+        <override target="label" text="SNEAKING: ACTIVE" />
+      </instance>
+      <instance id="sneaking.false" template="condition.card.false" x="30" y="342" visibleWhen="NOT IS_SNEAKING" z="11">
+        <override target="label" text="SNEAKING: INACTIVE" />
+      </instance>
+      <instance id="aiming.true" template="condition.card.true" x="590" y="78" visibleWhen="weaponAiming" z="10">
+        <override target="label" text="WEAPON AIMING: TRUE" />
+      </instance>
+      <instance id="aiming.false" template="condition.card.false" x="590" y="78" visibleWhen="NOT weapon_aiming" z="11">
+        <override target="label" text="WEAPON AIMING: FALSE" />
+      </instance>
+      <instance id="vehicle.true" template="condition.card.true" x="590" y="166" visibleWhen="inVehicle" z="10">
+        <override target="label" text="VEHICLE: IN VEHICLE" />
+      </instance>
+      <instance id="vehicle.false" template="condition.card.false" x="590" y="166" visibleWhen="NOT IN_VEHICLE" z="11">
+        <override target="label" text="VEHICLE: ON FOOT" />
+      </instance>
+      <instance id="hud.true" template="condition.card.true" x="590" y="254" visibleWhen="HUD_VISIBLE" z="10">
+        <override target="label" text="HUD OPACITY: VISIBLE" />
+      </instance>
+      <instance id="hud.false" template="condition.card.false" x="590" y="254" visibleWhen="NOT hudVisible" z="11">
+        <override target="label" text="HUD OPACITY: HIDDEN" />
+      </instance>
+      <instance id="compound.true" template="condition.card.true" x="590" y="342"
+                visibleWhen="hudOpacityPercentage &gt;= 1 AND (firstPerson OR thirdPerson)" z="10">
+        <override target="label" text="COMPOUND + NUMERIC: TRUE" />
+      </instance>
+      <instance id="compound.false" template="condition.card.false" x="590" y="342"
+                visibleWhen="NOT (hudOpacityPercentage &gt;= 1 AND (firstPerson OR thirdPerson))" z="11">
+        <override target="label" text="COMPOUND + NUMERIC: FALSE" />
+      </instance>
+    </group>
+    <state id="condition.state.test" selected="active" x="0" y="-84" anchor="bottom-center" visibleWhen="always" z="120">
+      <option name="active" template="condition.state" />
+    </state>
+    <repeater id="condition.repeater" template="condition.row" x="0" y="-28" width="790" height="42"
+              anchor="bottom-center" visible="true" visibleWhen="always" z="121" flow="horizontal" gapX="20" gapY="0" columns="1">
+      <item id="always" visibleWhen="always"><override target="label" text="ITEM: ALWAYS" /></item>
+      <item id="scanner" visibleWhen="inScanner"><override target="label" text="ITEM: SCANNER" /></item>
+      <item id="vehicle" visibleWhen="inVehicle"><override target="label" text="ITEM: VEHICLE" /></item>
+    </repeater>
+  </components>
+</venworksCUI>

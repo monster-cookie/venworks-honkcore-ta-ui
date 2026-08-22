@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUIPalette schemaVersion="1">
+  <colors>
+    <color role="foreground.primary" value="#F7E8C8" />
+    <color role="foreground.muted" value="#B9A176" />
+    <color role="accent.primary" value="#D99A36" />
+    <color role="accent.secondary" value="#80502A" />
+    <color role="panel.background" value="#1A1209" />
+    <color role="panel.border" value="#B8792E" />
+    <color role="state.normal" value="#F7E8C8" />
+    <color role="state.selected" value="#D99A36" />
+    <color role="state.disabled" value="#6F6048" />
+    <color role="state.clear" value="#64E572" />
+    <color role="state.caution" value="#FFD800" />
+    <color role="state.danger" value="#FF7B21" />
+    <color role="state.critical" value="#FF3C54" />
+    <color role="meter.health" value="#C65A45" />
+    <color role="meter.oxygen" value="#67B7C8" />
+    <color role="meter.carbondioxide" value="#D99A36" />
+    <color role="meter.boost" value="#B9783E" />
+    <color role="marker.player" value="#F7E8C8" />
+    <color role="marker.ally" value="#64E572" />
+    <color role="marker.hostile" value="#FF3C54" />
+    <color role="marker.objective" value="#D99A36" />
+  </colors>
+  <typography>
+    <style role="body" font="$MAIN_Font" fontSize="16" bold="false" color="foreground.primary" />
+    <style role="label" font="$MAIN_Font" fontSize="14" bold="false" color="foreground.muted" />
+    <style role="heading" font="$MAIN_Font_Bold" fontSize="22" bold="true" color="foreground.primary" />
+  </typography>
+  <opacities>
+    <opacity role="opaque" value="1" />
+    <opacity role="panel" value="0.94" />
+    <opacity role="muted" value="0.7" />
+  </opacities>
+  <strokes>
+    <stroke role="panel" color="panel.border" opacity="muted" width="2" />
+  </strokes>
+  <assets>
+    <asset role="faction.logo" kind="svg" value="freestar-collective-logo.svg" />
+  </assets>
+</venworksCUIPalette>

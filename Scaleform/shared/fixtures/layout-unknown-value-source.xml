@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080" safeLeft="64" safeTop="36" safeRight="64" safeBottom="36">
+  <definitions><meterStyle id="test.style" renderer="continuous" fillColor="#35E6E6" emptyColor="#183B48" fillOpacity="1" emptyOpacity="1" /></definitions>
+  <components>
+    <text id="test" x="0" y="0" width="400" height="40" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1"
+          value="INVALID" source="inventory.credits" format="integer" font="$MAIN_Font_Bold" fontSize="18" color="#FFFFFF" bold="false" align="center" />
+  </components>
+</venworksCUI>

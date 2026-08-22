@@ -1,0 +1,679 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <xs:simpleType name="idType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[A-Za-z][A-Za-z0-9._-]{0,63}" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="paletteReferenceType">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="17" />
+      <xs:maxLength value="128" />
+      <xs:pattern value="@palette[.](colors|typography|opacities|strokes|assets)[.][A-Za-z][A-Za-z0-9-]*([.][A-Za-z][A-Za-z0-9-]*)*" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="literalColorType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="#[0-9A-Fa-f]{6}" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="colorType">
+    <xs:union memberTypes="literalColorType paletteReferenceType" />
+  </xs:simpleType>
+
+  <xs:simpleType name="literalSymbolKeyType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[a-z][a-z0-9-]{0,63}" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="symbolKeyType">
+    <xs:union memberTypes="literalSymbolKeyType paletteReferenceType" />
+  </xs:simpleType>
+
+  <xs:simpleType name="literalOpacityType">
+    <xs:restriction base="xs:decimal">
+      <xs:minInclusive value="0" />
+      <xs:maxInclusive value="1" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="opacityType">
+    <xs:union memberTypes="literalOpacityType paletteReferenceType" />
+  </xs:simpleType>
+
+  <xs:simpleType name="literalStrictBooleanType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="true" />
+      <xs:enumeration value="false" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="strictBooleanType">
+    <xs:union memberTypes="literalStrictBooleanType paletteReferenceType" />
+  </xs:simpleType>
+
+  <xs:simpleType name="positiveIntegerType">
+    <xs:union memberTypes="xs:positiveInteger paletteReferenceType" />
+  </xs:simpleType>
+
+  <xs:simpleType name="nonNegativeIntegerType">
+    <xs:union memberTypes="xs:nonNegativeInteger paletteReferenceType" />
+  </xs:simpleType>
+
+  <xs:simpleType name="meterDirectionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="right" />
+      <xs:enumeration value="left" />
+      <xs:enumeration value="down" />
+      <xs:enumeration value="up" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="trianglePatternType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="uniform" />
+      <xs:enumeration value="alternating" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="radialStartAngleType">
+    <xs:restriction base="xs:decimal">
+      <xs:minInclusive value="-360" />
+      <xs:maxInclusive value="360" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="radialSweepAngleType">
+    <xs:restriction base="xs:decimal">
+      <xs:minExclusive value="0" />
+      <xs:maxInclusive value="360" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="positiveDecimalType">
+    <xs:restriction base="xs:decimal">
+      <xs:minExclusive value="0" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="scannerFieldOfViewType">
+    <xs:restriction base="xs:decimal">
+      <xs:minInclusive value="30" />
+      <xs:maxInclusive value="180" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="scannerTargetCountType">
+    <xs:restriction base="xs:positiveInteger">
+      <xs:maxInclusive value="5" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="scannerFlickerIntervalType">
+    <xs:restriction base="xs:positiveInteger">
+      <xs:minInclusive value="50" />
+      <xs:maxInclusive value="2000" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="anchorType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="top-left" />
+      <xs:enumeration value="top-center" />
+      <xs:enumeration value="top-right" />
+      <xs:enumeration value="center-left" />
+      <xs:enumeration value="center" />
+      <xs:enumeration value="center-right" />
+      <xs:enumeration value="bottom-left" />
+      <xs:enumeration value="bottom-center" />
+      <xs:enumeration value="bottom-right" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="literalAssetPathType">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="5" />
+      <xs:maxLength value="128" />
+      <xs:pattern value="[A-Za-z0-9][A-Za-z0-9._/-]*" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="assetPathType">
+    <xs:union memberTypes="literalAssetPathType paletteReferenceType" />
+  </xs:simpleType>
+
+  <xs:simpleType name="assetFitType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="contain" />
+      <xs:enumeration value="cover" />
+      <xs:enumeration value="stretch" />
+      <xs:enumeration value="none" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="horizontalAlignmentType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="left" />
+      <xs:enumeration value="center" />
+      <xs:enumeration value="right" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="verticalAlignmentType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="top" />
+      <xs:enumeration value="center" />
+      <xs:enumeration value="bottom" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="maskShapeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="rectangle" />
+      <xs:enumeration value="ellipse" />
+      <xs:enumeration value="path" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="buttonStateType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="normal" />
+      <xs:enumeration value="selected" />
+      <xs:enumeration value="disabled" />
+      <xs:enumeration value="warning" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="warningSeverityType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="info" />
+      <xs:enumeration value="warning" />
+      <xs:enumeration value="danger" />
+      <xs:enumeration value="critical" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="valueSourceType">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="1" />
+      <xs:maxLength value="64" />
+      <xs:pattern value="[A-Za-z][A-Za-z0-9._]*" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="valueFormatType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="raw" />
+      <xs:enumeration value="integer" />
+      <xs:enumeration value="percent" />
+      <xs:enumeration value="temperature" />
+      <xs:enumeration value="gravity" />
+      <xs:enumeration value="time24" />
+      <xs:enumeration value="boolean" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="valueTemplateType">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="1" />
+      <xs:maxLength value="256" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:attributeGroup name="componentAttributes">
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="x" type="xs:decimal" use="required" />
+    <xs:attribute name="y" type="xs:decimal" use="required" />
+    <xs:attribute name="width" type="xs:nonNegativeInteger" use="required" />
+    <xs:attribute name="height" type="xs:nonNegativeInteger" use="required" />
+    <xs:attribute name="opacity" type="opacityType" default="1" />
+    <xs:attribute name="visible" type="strictBooleanType" default="true" />
+    <xs:attribute name="visibleWhen" type="xs:string" />
+    <xs:attribute name="rotation" type="xs:decimal" default="0" />
+    <xs:attribute name="scaleX" type="xs:decimal" default="1" />
+    <xs:attribute name="scaleY" type="xs:decimal" default="1" />
+    <xs:attribute name="z" type="xs:integer" use="required" />
+    <xs:attribute name="anchor" type="anchorType" />
+  </xs:attributeGroup>
+
+  <xs:complexType name="textType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="value" type="xs:string" use="required" />
+    <xs:attribute name="source" type="valueSourceType" />
+    <xs:attribute name="format" type="valueFormatType" default="raw" />
+    <xs:attribute name="valueTemplate" type="valueTemplateType" />
+    <xs:attribute name="font" type="xs:string" use="required" />
+    <xs:attribute name="fontSize" type="positiveIntegerType" use="required" />
+    <xs:attribute name="color" type="colorType" use="required" />
+    <xs:attribute name="bold" type="strictBooleanType" default="false" />
+    <xs:attribute name="multiline" type="strictBooleanType" default="false" />
+    <xs:attribute name="wordWrap" type="strictBooleanType" default="false" />
+    <xs:attribute name="align" use="required">
+      <xs:simpleType><xs:restriction base="xs:string"><xs:enumeration value="left" /><xs:enumeration value="center" /><xs:enumeration value="right" /></xs:restriction></xs:simpleType>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="panelType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="fillColor" type="colorType" use="required" />
+    <xs:attribute name="fillOpacity" type="opacityType" use="required" />
+    <xs:attribute name="strokeColor" type="colorType" use="required" />
+    <xs:attribute name="strokeOpacity" type="opacityType" use="required" />
+    <xs:attribute name="strokeWidth" type="nonNegativeIntegerType" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="shapeType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="shape" use="required"><xs:simpleType><xs:restriction base="xs:string"><xs:enumeration value="rectangle" /><xs:enumeration value="ellipse" /></xs:restriction></xs:simpleType></xs:attribute>
+    <xs:attribute name="fillColor" type="colorType" use="required" />
+    <xs:attribute name="fillOpacity" type="opacityType" use="required" />
+    <xs:attribute name="strokeColor" type="colorType" use="required" />
+    <xs:attribute name="strokeOpacity" type="opacityType" use="required" />
+    <xs:attribute name="strokeWidth" type="nonNegativeIntegerType" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="dividerType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="color" type="colorType" use="required" />
+    <xs:attribute name="strokeOpacity" type="opacityType" use="required" />
+    <xs:attribute name="strokeWidth" type="positiveIntegerType" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="contactRadarType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="enemyColor" type="colorType" use="required" />
+    <xs:attribute name="allyColor" type="colorType" use="required" />
+    <xs:attribute name="playerColor" type="colorType" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="compassTapeType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="fieldOfView" type="xs:decimal" use="required" />
+    <xs:attribute name="tickColor" type="colorType" use="required" />
+    <xs:attribute name="headingColor" type="colorType" use="required" />
+    <xs:attribute name="centerColor" type="colorType" use="required" />
+    <xs:attribute name="fallbackColor" type="colorType" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="scannerOverlayType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="fieldOfView" type="scannerFieldOfViewType" use="required" />
+    <xs:attribute name="maxTargets" type="scannerTargetCountType" use="required" />
+    <xs:attribute name="flickerIntervalMs" type="scannerFlickerIntervalType" use="required" />
+    <xs:attribute name="scanningColor" type="colorType" use="required" />
+    <xs:attribute name="gridColor" type="colorType" use="required" />
+    <xs:attribute name="contactColor" type="colorType" use="required" />
+    <xs:attribute name="hostileColor" type="colorType" use="required" />
+    <xs:attribute name="backgroundColor" type="colorType" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="threatAlertType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="backgroundColor" type="colorType" use="required" />
+    <xs:attribute name="clearColor" type="colorType" use="required" />
+    <xs:attribute name="cautionColor" type="colorType" use="required" />
+    <xs:attribute name="dangerColor" type="colorType" use="required" />
+    <xs:attribute name="criticalColor" type="colorType" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="statusEffectBarType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="maxItems" type="xs:positiveInteger" use="required" />
+    <xs:attribute name="debuffColor" type="colorType" use="required" />
+    <xs:attribute name="sustenanceColor" type="colorType" use="required" />
+    <xs:attribute name="neutralColor" type="colorType" use="required" />
+    <xs:attribute name="backgroundColor" type="colorType" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="meterType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="style" type="idType" use="required" />
+    <xs:attribute name="value" type="xs:decimal" use="required" />
+    <xs:attribute name="max" type="xs:decimal" use="required" />
+    <xs:attribute name="source" type="valueSourceType" />
+    <xs:attribute name="maxSource" type="valueSourceType" />
+  </xs:complexType>
+
+  <xs:complexType name="assetType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="src" type="assetPathType" use="required" />
+    <xs:attribute name="fit" type="assetFitType" default="contain" />
+    <xs:attribute name="alignX" type="horizontalAlignmentType" default="center" />
+    <xs:attribute name="alignY" type="verticalAlignmentType" default="center" />
+  </xs:complexType>
+
+  <xs:complexType name="pathType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="data" type="xs:string" use="required" />
+    <xs:attribute name="viewBoxX" type="xs:decimal" use="required" />
+    <xs:attribute name="viewBoxY" type="xs:decimal" use="required" />
+    <xs:attribute name="viewBoxWidth" type="positiveDecimalType" use="required" />
+    <xs:attribute name="viewBoxHeight" type="positiveDecimalType" use="required" />
+    <xs:attribute name="fillColor" type="colorType" use="required" />
+    <xs:attribute name="fillOpacity" type="opacityType" use="required" />
+    <xs:attribute name="strokeColor" type="colorType" use="required" />
+    <xs:attribute name="strokeOpacity" type="opacityType" use="required" />
+    <xs:attribute name="strokeWidth" type="nonNegativeIntegerType" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="symbolType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="name" type="symbolKeyType" use="required" />
+    <xs:attribute name="color" type="colorType" />
+    <xs:attribute name="fit" type="assetFitType" default="contain" />
+    <xs:attribute name="alignX" type="horizontalAlignmentType" default="center" />
+    <xs:attribute name="alignY" type="verticalAlignmentType" default="center" />
+  </xs:complexType>
+
+  <xs:complexType name="providerSymbolType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="source" type="xs:string" use="required" />
+    <xs:attribute name="color" type="colorType" />
+    <xs:attribute name="fit" type="assetFitType" default="contain" />
+    <xs:attribute name="alignX" type="horizontalAlignmentType" default="center" />
+    <xs:attribute name="alignY" type="verticalAlignmentType" default="center" />
+  </xs:complexType>
+
+  <xs:complexType name="iconType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="name" type="symbolKeyType" use="required" />
+    <xs:attribute name="color" type="colorType" />
+    <xs:attribute name="fit" type="assetFitType" default="contain" />
+    <xs:attribute name="alignX" type="horizontalAlignmentType" default="center" />
+    <xs:attribute name="alignY" type="verticalAlignmentType" default="center" />
+  </xs:complexType>
+
+  <xs:complexType name="buttonType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="label" type="xs:string" use="required" />
+    <xs:attribute name="icon" type="symbolKeyType" />
+    <xs:attribute name="key" type="xs:string" />
+    <xs:attribute name="state" type="buttonStateType" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="quickBarButtonType">
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="label" type="xs:string" use="required" />
+    <xs:attribute name="icon" type="symbolKeyType" />
+    <xs:attribute name="key" type="xs:string" />
+    <xs:attribute name="state" type="buttonStateType" use="required" />
+    <xs:attribute name="visible" type="strictBooleanType" default="true" />
+    <xs:attribute name="visibleWhen" type="xs:string" />
+  </xs:complexType>
+
+  <xs:complexType name="quickBarType">
+    <xs:sequence><xs:element name="button" type="quickBarButtonType" minOccurs="1" maxOccurs="16" /></xs:sequence>
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="buttonHeight" type="xs:positiveInteger" use="required" />
+    <xs:attribute name="gap" type="xs:nonNegativeInteger" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="informationRowType">
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="label" type="xs:string" use="required" />
+    <xs:attribute name="value" type="xs:string" use="required" />
+    <xs:attribute name="icon" type="symbolKeyType" />
+    <xs:attribute name="visible" type="strictBooleanType" default="true" />
+    <xs:attribute name="visibleWhen" type="xs:string" />
+  </xs:complexType>
+
+  <xs:complexType name="informationMeterType">
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="label" type="xs:string" />
+    <xs:attribute name="style" type="idType" use="required" />
+    <xs:attribute name="value" type="xs:decimal" use="required" />
+    <xs:attribute name="max" type="xs:decimal" use="required" />
+    <xs:attribute name="icon" type="symbolKeyType" />
+    <xs:attribute name="visible" type="strictBooleanType" default="true" />
+    <xs:attribute name="visibleWhen" type="xs:string" />
+  </xs:complexType>
+
+  <xs:complexType name="informationDividerType">
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="visible" type="strictBooleanType" default="true" />
+    <xs:attribute name="visibleWhen" type="xs:string" />
+  </xs:complexType>
+
+  <xs:complexType name="informationPanelType">
+    <xs:choice minOccurs="0" maxOccurs="20">
+      <xs:element name="row" type="informationRowType" />
+      <xs:element name="meter" type="informationMeterType" />
+      <xs:element name="divider" type="informationDividerType" />
+    </xs:choice>
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="title" type="xs:string" use="required" />
+    <xs:attribute name="icon" type="symbolKeyType" />
+    <xs:attribute name="body" type="xs:string" />
+  </xs:complexType>
+
+  <xs:complexType name="warningType">
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="severity" type="warningSeverityType" use="required" />
+    <xs:attribute name="icon" type="symbolKeyType" />
+    <xs:attribute name="title" type="xs:string" use="required" />
+    <xs:attribute name="message" type="xs:string" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="overrideType">
+    <xs:attribute name="target" type="idType" use="required" />
+    <xs:attribute name="text" type="xs:string" />
+    <xs:attribute name="meterValue" type="xs:decimal" />
+    <xs:attribute name="visible" type="strictBooleanType" />
+    <xs:attribute name="visibleWhen" type="xs:string" />
+  </xs:complexType>
+
+  <xs:complexType name="instanceType">
+    <xs:sequence><xs:element name="override" type="overrideType" minOccurs="0" maxOccurs="unbounded" /></xs:sequence>
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="template" type="idType" use="required" />
+    <xs:attribute name="x" type="xs:decimal" use="required" />
+    <xs:attribute name="y" type="xs:decimal" use="required" />
+    <xs:attribute name="anchor" type="anchorType" />
+    <xs:attribute name="visible" type="strictBooleanType" />
+    <xs:attribute name="visibleWhen" type="xs:string" />
+    <xs:attribute name="z" type="xs:integer" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="repeaterItemType">
+    <xs:sequence><xs:element name="override" type="overrideType" minOccurs="0" maxOccurs="unbounded" /></xs:sequence>
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="visible" type="strictBooleanType" default="true" />
+    <xs:attribute name="visibleWhen" type="xs:string" />
+  </xs:complexType>
+
+  <xs:complexType name="repeaterType">
+    <xs:sequence><xs:element name="item" type="repeaterItemType" minOccurs="1" maxOccurs="64" /></xs:sequence>
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="template" type="idType" use="required" />
+    <xs:attribute name="x" type="xs:decimal" use="required" />
+    <xs:attribute name="y" type="xs:decimal" use="required" />
+    <xs:attribute name="width" type="xs:nonNegativeInteger" use="required" />
+    <xs:attribute name="height" type="xs:nonNegativeInteger" use="required" />
+    <xs:attribute name="anchor" type="anchorType" />
+    <xs:attribute name="visible" type="strictBooleanType" default="true" />
+    <xs:attribute name="visibleWhen" type="xs:string" />
+    <xs:attribute name="z" type="xs:integer" use="required" />
+    <xs:attribute name="flow" use="required"><xs:simpleType><xs:restriction base="xs:string"><xs:enumeration value="vertical" /><xs:enumeration value="horizontal" /><xs:enumeration value="grid" /></xs:restriction></xs:simpleType></xs:attribute>
+    <xs:attribute name="gapX" type="xs:nonNegativeInteger" use="required" />
+    <xs:attribute name="gapY" type="xs:nonNegativeInteger" use="required" />
+    <xs:attribute name="columns" type="xs:positiveInteger" />
+  </xs:complexType>
+
+  <xs:complexType name="stateOptionType">
+    <xs:sequence><xs:element name="override" type="overrideType" minOccurs="0" maxOccurs="unbounded" /></xs:sequence>
+    <xs:attribute name="name" type="idType" use="required" />
+    <xs:attribute name="template" type="idType" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="stateType">
+    <xs:sequence><xs:element name="option" type="stateOptionType" minOccurs="1" maxOccurs="16" /></xs:sequence>
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="selected" type="idType" use="required" />
+    <xs:attribute name="x" type="xs:decimal" use="required" />
+    <xs:attribute name="y" type="xs:decimal" use="required" />
+    <xs:attribute name="anchor" type="anchorType" />
+    <xs:attribute name="visible" type="strictBooleanType" />
+    <xs:attribute name="visibleWhen" type="xs:string" />
+    <xs:attribute name="z" type="xs:integer" use="required" />
+  </xs:complexType>
+
+  <xs:group name="componentChoice">
+    <xs:choice>
+      <xs:element name="group" type="groupType" />
+      <xs:element name="text" type="textType" />
+      <xs:element name="panel" type="panelType" />
+      <xs:element name="shape" type="shapeType" />
+      <xs:element name="divider" type="dividerType" />
+      <xs:element name="contactRadar" type="contactRadarType" />
+      <xs:element name="compassTape" type="compassTapeType" />
+      <xs:element name="scannerOverlay" type="scannerOverlayType" />
+      <xs:element name="threatAlert" type="threatAlertType" />
+      <xs:element name="statusEffectBar" type="statusEffectBarType" />
+      <xs:element name="meter" type="meterType" />
+      <xs:element name="svg" type="assetType" />
+      <xs:element name="path" type="pathType" />
+      <xs:element name="mask" type="maskType" />
+      <xs:element name="icon" type="iconType" />
+      <xs:element name="symbol" type="symbolType" />
+      <xs:element name="providerSymbol" type="providerSymbolType" />
+      <xs:element name="button" type="buttonType" />
+      <xs:element name="quickBar" type="quickBarType" />
+      <xs:element name="informationPanel" type="informationPanelType" />
+      <xs:element name="warning" type="warningType" />
+      <xs:element name="instance" type="instanceType" />
+      <xs:element name="repeater" type="repeaterType" />
+      <xs:element name="state" type="stateType" />
+    </xs:choice>
+  </xs:group>
+
+  <xs:complexType name="groupType">
+    <xs:sequence><xs:group ref="componentChoice" minOccurs="0" maxOccurs="unbounded" /></xs:sequence>
+    <xs:attributeGroup ref="componentAttributes" />
+  </xs:complexType>
+
+  <xs:complexType name="maskType">
+    <xs:sequence><xs:group ref="componentChoice" minOccurs="1" maxOccurs="unbounded" /></xs:sequence>
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="shape" type="maskShapeType" use="required" />
+    <xs:attribute name="data" type="xs:string" />
+    <xs:attribute name="viewBoxX" type="xs:decimal" />
+    <xs:attribute name="viewBoxY" type="xs:decimal" />
+    <xs:attribute name="viewBoxWidth" type="positiveDecimalType" />
+    <xs:attribute name="viewBoxHeight" type="positiveDecimalType" />
+  </xs:complexType>
+
+  <xs:group name="templateComponentChoice">
+    <xs:choice>
+      <xs:element name="group" type="templateGroupType" />
+      <xs:element name="text" type="textType" />
+      <xs:element name="panel" type="panelType" />
+      <xs:element name="shape" type="shapeType" />
+      <xs:element name="divider" type="dividerType" />
+      <xs:element name="meter" type="meterType" />
+      <xs:element name="svg" type="assetType" />
+      <xs:element name="path" type="pathType" />
+      <xs:element name="mask" type="templateMaskType" />
+      <xs:element name="icon" type="iconType" />
+      <xs:element name="symbol" type="symbolType" />
+      <xs:element name="providerSymbol" type="providerSymbolType" />
+    </xs:choice>
+  </xs:group>
+
+  <xs:complexType name="templateGroupType">
+    <xs:sequence><xs:group ref="templateComponentChoice" minOccurs="0" maxOccurs="unbounded" /></xs:sequence>
+    <xs:attributeGroup ref="componentAttributes" />
+  </xs:complexType>
+
+  <xs:complexType name="templateMaskType">
+    <xs:sequence><xs:group ref="templateComponentChoice" minOccurs="1" maxOccurs="unbounded" /></xs:sequence>
+    <xs:attributeGroup ref="componentAttributes" />
+    <xs:attribute name="shape" type="maskShapeType" use="required" />
+    <xs:attribute name="data" type="xs:string" />
+    <xs:attribute name="viewBoxX" type="xs:decimal" />
+    <xs:attribute name="viewBoxY" type="xs:decimal" />
+    <xs:attribute name="viewBoxWidth" type="positiveDecimalType" />
+    <xs:attribute name="viewBoxHeight" type="positiveDecimalType" />
+  </xs:complexType>
+
+  <xs:complexType name="templateType">
+    <xs:sequence><xs:element name="group" type="templateGroupType" /></xs:sequence>
+    <xs:attribute name="id" type="idType" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="meterStyleType">
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="renderer" use="required"><xs:simpleType><xs:restriction base="xs:string"><xs:enumeration value="continuous" /><xs:enumeration value="triangles" /><xs:enumeration value="segments" /><xs:enumeration value="dots" /><xs:enumeration value="radial" /></xs:restriction></xs:simpleType></xs:attribute>
+    <xs:attribute name="fillColor" type="colorType" use="required" />
+    <xs:attribute name="emptyColor" type="colorType" use="required" />
+    <xs:attribute name="fillOpacity" type="opacityType" use="required" />
+    <xs:attribute name="emptyOpacity" type="opacityType" use="required" />
+    <xs:attribute name="segmentCount" type="xs:positiveInteger" />
+    <xs:attribute name="gap" type="xs:nonNegativeInteger" />
+    <xs:attribute name="direction" type="meterDirectionType" />
+    <xs:attribute name="partialSegments" type="strictBooleanType" />
+    <xs:attribute name="trianglePattern" type="trianglePatternType" />
+    <xs:attribute name="startAngle" type="radialStartAngleType" />
+    <xs:attribute name="sweepAngle" type="radialSweepAngleType" />
+    <xs:attribute name="clockwise" type="strictBooleanType" />
+    <xs:attribute name="thickness" type="positiveDecimalType" />
+  </xs:complexType>
+
+  <xs:complexType name="vanillaVisibilityTargetType">
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="visibleWhen" type="xs:string" use="required" />
+    <xs:attribute name="x" type="xs:decimal" />
+    <xs:attribute name="y" type="xs:decimal" />
+    <xs:attribute name="anchor" type="anchorType" />
+    <xs:attribute name="offsetX" type="xs:decimal" />
+    <xs:attribute name="offsetY" type="xs:decimal" />
+  </xs:complexType>
+
+  <xs:complexType name="includeType">
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="src" use="required"><xs:simpleType><xs:restriction base="xs:string"><xs:pattern value="[A-Za-z0-9][A-Za-z0-9._-]{0,59}\.xml" /></xs:restriction></xs:simpleType></xs:attribute>
+    <xs:attribute name="x" type="xs:decimal" use="required" />
+    <xs:attribute name="y" type="xs:decimal" use="required" />
+    <xs:attribute name="anchor" type="anchorType" />
+    <xs:attribute name="visible" type="strictBooleanType" default="true" />
+    <xs:attribute name="visibleWhen" type="xs:string" />
+    <xs:attribute name="z" type="xs:decimal" use="required" />
+  </xs:complexType>
+
+  <xs:element name="venworksCUI">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="definitions"><xs:complexType><xs:choice minOccurs="1" maxOccurs="unbounded"><xs:element name="meterStyle" type="meterStyleType" /><xs:element name="template" type="templateType" /></xs:choice></xs:complexType></xs:element>
+        <xs:element name="vanillaVisibility" minOccurs="0"><xs:complexType><xs:sequence><xs:element name="target" type="vanillaVisibilityTargetType" minOccurs="1" maxOccurs="16" /></xs:sequence></xs:complexType></xs:element>
+        <xs:element name="includes" minOccurs="0"><xs:complexType><xs:sequence><xs:element name="include" type="includeType" minOccurs="1" maxOccurs="16" /></xs:sequence></xs:complexType></xs:element>
+        <xs:element name="components"><xs:complexType><xs:sequence><xs:group ref="componentChoice" minOccurs="0" maxOccurs="unbounded" /></xs:sequence></xs:complexType></xs:element>
+      </xs:sequence>
+      <xs:attribute name="schemaVersion" fixed="1" use="required" />
+      <xs:attribute name="runtimeVersion" fixed="1" use="required" />
+      <xs:attribute name="designWidth" type="xs:positiveInteger" fixed="1920" use="required" />
+      <xs:attribute name="designHeight" type="xs:positiveInteger" fixed="1080" use="required" />
+      <xs:attribute name="safeLeft" type="xs:nonNegativeInteger" use="required" />
+      <xs:attribute name="safeTop" type="xs:nonNegativeInteger" use="required" />
+      <xs:attribute name="safeRight" type="xs:nonNegativeInteger" use="required" />
+      <xs:attribute name="safeBottom" type="xs:nonNegativeInteger" use="required" />
+      <xs:attribute name="palette" use="optional"><xs:simpleType><xs:restriction base="xs:string"><xs:pattern value="[A-Za-z0-9][A-Za-z0-9._-]{0,59}\.xml" /></xs:restriction></xs:simpleType></xs:attribute>
+    </xs:complexType>
+    <xs:key name="definitionIds"><xs:selector xpath="definitions/meterStyle | definitions/template" /><xs:field xpath="@id" /></xs:key>
+    <xs:key name="meterStyleIds"><xs:selector xpath="definitions/meterStyle" /><xs:field xpath="@id" /></xs:key>
+    <xs:key name="templateIds"><xs:selector xpath="definitions/template" /><xs:field xpath="@id" /></xs:key>
+    <xs:key name="includeIds"><xs:selector xpath="includes/include" /><xs:field xpath="@id" /></xs:key>
+    <xs:keyref name="meterStyleReferences" refer="meterStyleIds"><xs:selector xpath=".//meter" /><xs:field xpath="@style" /></xs:keyref>
+    <xs:keyref name="templateReferences" refer="templateIds"><xs:selector xpath=".//instance | .//repeater | .//option" /><xs:field xpath="@template" /></xs:keyref>
+  </xs:element>
+
+  <xs:element name="venworksCUIFragment">
+    <xs:complexType>
+      <xs:sequence><xs:element name="group" type="groupType" /></xs:sequence>
+      <xs:attribute name="schemaVersion" fixed="1" use="required" />
+      <xs:attribute name="runtimeVersion" fixed="1" use="required" />
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

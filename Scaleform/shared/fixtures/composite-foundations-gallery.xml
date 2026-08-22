@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080"
+             safeLeft="64" safeTop="36" safeRight="64" safeBottom="36">
+  <definitions>
+    <meterStyle id="composite.meter" renderer="triangles" direction="right" partialSegments="true" trianglePattern="alternating"
+                fillColor="#35E6E6" emptyColor="#183B48" fillOpacity="1" emptyOpacity="0.7" segmentCount="12" gap="3" />
+  </definitions>
+  <components>
+    <warning id="notice.info" x="100" y="12" width="340" height="100" z="100" anchor="top-left"
+             severity="info" icon="shield" title="SYSTEMS NOMINAL" message="CUI COMPOSITES ONLINE" />
+    <warning id="notice.warning" x="460" y="12" width="340" height="100" z="100" anchor="top-left"
+             severity="warning" icon="oxygen" title="O2 RESERVE LOW" message="CHECK LIFE SUPPORT" />
+    <warning id="notice.danger" x="820" y="12" width="340" height="100" z="100" anchor="top-left"
+             severity="danger" icon="poison" title="TOXIN EXPOSURE" message="SEEK CLEAN ATMOSPHERE" />
+    <warning id="notice.critical" x="1180" y="12" width="340" height="100" z="100" anchor="top-left"
+             severity="critical" icon="warning" title="HULL BREACH" message="EVACUATE IMMEDIATELY" />
+
+    <button id="button.normal" x="340" y="138" width="240" height="56" z="100" anchor="top-left"
+            label="NAVIGATION" icon="objective" key="1" state="normal" />
+    <button id="button.selected" x="600" y="138" width="240" height="56" z="100" anchor="top-left"
+            label="SCANNER" icon="scanner" key="2" state="selected" />
+    <button id="button.disabled" x="860" y="138" width="240" height="56" z="100" anchor="top-left"
+            label="VEHICLE" icon="vehicle" key="3" state="disabled" />
+    <button id="button.warning" x="1120" y="138" width="240" height="56" z="100" anchor="top-left"
+            label="HAZARD" icon="burning" key="4" state="warning" />
+
+    <quickBar id="quickbar.primary" x="0" y="230" width="280" height="400" z="100" anchor="top-left"
+              buttonHeight="54" gap="8">
+      <button id="scanner" label="SCANNER" icon="scanner" key="1" state="normal" />
+      <button id="weapon" label="WEAPON" icon="weapon" key="2" state="selected" />
+      <button id="medkit" label="MEDKIT" icon="health" key="3" state="normal" visibleWhen="ALWAYS" />
+      <button id="poison" label="ANTITOXIN" icon="poison" key="4" state="warning" />
+      <button id="disabled" label="LOCKED" icon="shield" key="5" state="disabled" />
+      <button id="hidden" label="HIDDEN SLOT" icon="stealth" key="6" state="normal" visible="false" />
+    </quickBar>
+
+    <informationPanel id="info.planet" x="0" y="230" width="410" height="350" z="100" anchor="top-right"
+                      title="CASSIOPEIA I" icon="objective" body="SURVEY AND ENVIRONMENTAL SUMMARY">
+      <row id="atmosphere" label="ATMOSPHERE" value="O2 21%" icon="oxygen" />
+      <row id="gravity" label="GRAVITY" value="1.04G" />
+      <row id="cargo" label="CARGO" value="88 / 565 KG" icon="cargo" />
+      <divider id="details" />
+      <meter id="survey" label="SURVEY PROGRESS" style="composite.meter" value="63" max="100" icon="scanner" />
+    </informationPanel>
+  </components>
+</venworksCUI>

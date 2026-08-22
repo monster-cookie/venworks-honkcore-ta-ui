@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080"
+             safeLeft="64" safeTop="36" safeRight="64" safeBottom="36" palette="../outside.xml">
+  <definitions>
+    <meterStyle id="unsafe.palette.path" renderer="continuous" direction="right"
+                fillColor="#FFFFFF" emptyColor="#000000" fillOpacity="1" emptyOpacity="0.5" />
+  </definitions>
+  <components />
+</venworksCUI>

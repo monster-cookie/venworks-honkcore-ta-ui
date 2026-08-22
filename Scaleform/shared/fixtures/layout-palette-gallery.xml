@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080"
+             safeLeft="64" safeTop="36" safeRight="64" safeBottom="36" palette="contract-valid.xml">
+  <definitions>
+    <meterStyle id="palette.gallery.meter" renderer="continuous" direction="right"
+                fillColor="@palette.colors.meter.health" emptyColor="@palette.colors.panel.background"
+                fillOpacity="@palette.opacities.opaque" emptyOpacity="@palette.opacities.muted" />
+  </definitions>
+  <components>
+    <group id="palette.gallery" x="530" y="250" width="860" height="500" opacity="1" visible="true"
+           rotation="0" scaleX="1" scaleY="1" z="100">
+      <panel id="palette.gallery.panel" x="0" y="0" width="860" height="500" opacity="@palette.opacities.opaque"
+             visible="true" rotation="0" scaleX="1" scaleY="1" z="0"
+             fillColor="@palette.colors.panel.background" fillOpacity="@palette.opacities.panel"
+             strokeColor="@palette.strokes.panel.color" strokeOpacity="@palette.strokes.panel.opacity"
+             strokeWidth="@palette.strokes.panel.width" />
+      <text id="palette.gallery.heading" x="32" y="24" width="600" height="42" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="1" value="STRICT PALETTE CONTRACT"
+            font="@palette.typography.heading.font" fontSize="@palette.typography.heading.fontSize"
+            color="@palette.typography.heading.color" bold="@palette.typography.heading.bold" align="left" />
+      <divider id="palette.gallery.divider" x="32" y="76" width="796" height="0" opacity="1" visible="true"
+               rotation="0" scaleX="1" scaleY="1" z="1" color="@palette.colors.accent.primary"
+               strokeOpacity="@palette.opacities.muted" strokeWidth="@palette.strokes.panel.width" />
+      <meter id="palette.gallery.health" x="32" y="110" width="620" height="24" opacity="1" visible="true"
+             rotation="0" scaleX="1" scaleY="1" z="1" style="palette.gallery.meter" value="67" max="100" />
+      <svg id="palette.gallery.logo" x="680" y="104" width="132" height="132" opacity="1" visible="true"
+           rotation="0" scaleX="1" scaleY="1" z="1" src="@palette.assets.faction.logo"
+           fit="contain" alignX="center" alignY="center" />
+      <icon id="palette.gallery.marker" x="32" y="180" width="64" height="64" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="1" name="@palette.assets.marker.icon"
+            color="@palette.colors.marker.objective" fit="contain" alignX="center" alignY="center" />
+      <symbol id="palette.gallery.environment" x="120" y="180" width="64" height="64" opacity="1" visible="true"
+              rotation="0" scaleX="1" scaleY="1" z="1" name="@palette.assets.environment.symbol"
+              color="@palette.colors.state.caution" fit="contain" alignX="center" alignY="center" />
+    </group>
+  </components>
+</venworksCUI>
