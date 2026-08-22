@@ -96,7 +96,7 @@ The packaged choices are:
 |---|---|
 | Venworks Customizable HUD - Venworks Theme | `venworks.xml` |
 | Venworks Customizable HUD - Trackers Alliance Theme | `trackers-alliance.xml` |
-| Venworks Customizable HUD - Freestar Alliance Theme | `freestar-collective.xml` |
+| Venworks Customizable HUD - Freestar Collective Theme | `freestar-collective.xml` |
 | Venworks Customizable HUD - Crimson Fleet Theme | `crimson-fleet.xml` |
 | Neutral Starfield option | `starfield.xml` |
 

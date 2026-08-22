@@ -45,16 +45,13 @@ changed without reinstalling the HUD.
 |---|---|
 | Venworks Customizable HUD - Venworks Theme | `venworks.xml` |
 | Venworks Customizable HUD - Trackers Alliance Theme | `trackers-alliance.xml` |
-| Venworks Customizable HUD - Freestar Alliance Theme | `freestar-collective.xml` |
+| Venworks Customizable HUD - Freestar Collective Theme | `freestar-collective.xml` |
 | Venworks Customizable HUD - Crimson Fleet Theme | `crimson-fleet.xml` |
 | Additional included neutral option | `starfield.xml` |
 
 Enable only one release variant at a time. The variants install the same HUD
 movie and configuration paths, so whichever package wins file conflicts also
 determines the starting configuration.
-
-The public Freestar Alliance name intentionally maps to the existing
-`freestar-collective.xml` configuration filename for compatibility.
 
 ## Installation
 

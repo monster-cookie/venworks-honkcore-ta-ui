@@ -22,12 +22,9 @@ Every release variant packages all five palette XML files under
 |---|---|
 | Venworks Customizable HUD - Venworks Theme | `venworks.xml` |
 | Venworks Customizable HUD - Trackers Alliance Theme | `trackers-alliance.xml` |
-| Venworks Customizable HUD - Freestar Alliance Theme | `freestar-collective.xml` |
+| Venworks Customizable HUD - Freestar Collective Theme | `freestar-collective.xml` |
 | Venworks Customizable HUD - Crimson Fleet Theme | `crimson-fleet.xml` |
 | Included neutral Starfield option | `starfield.xml` |
-
-The public Freestar Alliance name maps to the retained
-`freestar-collective.xml` filename for compatibility.
 
 All five packaged palettes currently resolve their `faction.logo` roles to SVG
 files included with the HUD.
