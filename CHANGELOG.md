@@ -1,5 +1,9 @@
 # Venworks - Customizable HUD and Themes
 
+## Version 2.0.2 (August 22, 2026)
+
+- No changes just wiring up Nexus API from GitHub Actions.
+
 ## Version 2.0.0 (August 22, 2026)
 
 **BREAKING CHANGE — READ BEFORE UPGRADING:** This release completely replaces the previous HONKCORE-based themes. It no longer depends on or works with HONKCORE, and the old HONKCORE theme and configuration files are no longer included. Do not upgrade unless you are willing to stop using HONKCORE for this HUD. Remove the previous theme and install either a legacy HONKCORE version or the new Venworks Customizable HUD—never both.

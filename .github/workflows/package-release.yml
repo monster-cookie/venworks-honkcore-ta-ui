@@ -25,7 +25,7 @@ permissions: {}
 #
 ###############################################################################
 env:
-  UPLOAD_TO_NEXUSMODS: false
+  UPLOAD_TO_NEXUSMODS: true
   NEXUSMODS_CATEGORY: main
   NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
 
