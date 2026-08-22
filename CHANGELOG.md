@@ -1,4 +1,19 @@
-# Venworks - HONKCORE - UI Themes
+# Venworks - Customizable HUD and Themes
+
+## Version 2.0.0 (August 22, 2026)
+
+**BREAKING CHANGE — READ BEFORE UPGRADING:** This release completely replaces the previous HONKCORE-based themes. It no longer depends on or works with HONKCORE, and the old HONKCORE theme and configuration files are no longer included. Do not upgrade unless you are willing to stop using HONKCORE for this HUD. Remove the previous theme and install either a legacy HONKCORE version or the new Venworks Customizable HUD—never both.
+
+- Rebuilt the player HUD from the ground up as the new Venworks Customizable HUD.
+- Added a helmet display with compass heading, threat warnings, active status effects, and the environment warnings.
+- Added expanded player, equipment, and environmental information, including health, oxygen, boost, carry weight, favorites, weapons, ammunition, explosives, powers, suit protection, gravity, temperature, and environmental hazards.
+- Added a persistent tracked-objective panel, a 360-degree acquired-contact radar, and a scanner-only forward-contact display with consistent contact codenames.
+- Added four separately packaged themes: Venworks, Trackers Alliance, Freestar Collective, and Crimson Fleet—with five included color palettes.
+- Added PC customization for HUD placement, visibility, colors, typography, meters, icons, and individual HUD sections through XML configuration.
+- Added clear on-screen diagnostics when a custom configuration is missing or invalid instead of partially loading a broken HUD.
+- Added Nexus PC packages for normal or fully loose installation and Bethesda Creations packages for PC, Xbox, and PlayStation 5. Enable only one theme package at a time.
+- Preserved Bethesda's combat-sensitive HUD elements, including reticles, crosshairs, enemy health, stealth indicators, and hit or kill feedback to avoid engine crashes.
+- Other mods that replace `hudmenu.gfx` or `hudmenu_lrg.gfx` are incompatible unless a purpose-built patch combines their changes.
 
 ## Version 1.0.8
 
