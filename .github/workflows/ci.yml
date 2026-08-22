@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-committed-release:
+    name: Verify Committed Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Verify PowerShell and committed release payload
+        shell: pwsh
+        run: ./Tools/verifyCommittedRelease.ps1
+
+  package-release:
+    name: Package Release Smoke Test
+    needs: verify-committed-release
+    runs-on: ubuntu-latest
+    env:
+      GIT_LFS_SKIP_SMUDGE: "1"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Fetch release package LFS inputs
+        shell: bash
+        run: |
+          git lfs pull --include="Staging-*/*.ba2,Staging-*/*.esm" --exclude=""
+
+          for file in Staging-*/*.ba2 Staging-*/*.esm; do
+            if grep -Fqx "version https://git-lfs.github.com/spec/v1" "$file"; then
+              echo "::error file=$file::Release input remains a Git LFS pointer."
+              exit 1
+            fi
+          done
+
+      - name: Create and verify release packages
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $releaseRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts/ci-release'
+          & "$env:GITHUB_WORKSPACE/Tools/createReleasePackages.ps1" -OutputDirectory $releaseRoot
+
+          $releaseFiles = @(Get-ChildItem -LiteralPath $releaseRoot -File -Filter '*.zip')
+          if ($releaseFiles.Count -ne 20) {
+            throw "Expected 20 release ZIPs; found $($releaseFiles.Count)."
+          }
+          if (@($releaseFiles | Where-Object { $_.Length -le 0 }).Count -ne 0) {
+            throw 'One or more release ZIPs are empty.'
+          }
+
+          Write-Host "Verified all 20 release ZIPs."

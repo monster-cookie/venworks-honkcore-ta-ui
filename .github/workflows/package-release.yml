@@ -5,8 +5,7 @@ on:
     tags:
       - "v*.*.*"
 
-permissions:
-  contents: write
+permissions: {}
 
 ###############################################################################
 # CONFIG: Update these for this creation.
@@ -44,6 +43,8 @@ jobs:
   validate-tag-source:
     name: Validate Tag Source
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       version: ${{ steps.validate.outputs.version }}
     steps:
@@ -80,13 +81,16 @@ jobs:
     name: Package Release
     needs: validate-tag-source
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       PACKAGE_VERSION: ${{ needs.validate-tag-source.outputs.version }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           lfs: true
+          persist-credentials: false
 
       - name: Prepare release packages
         id: package
@@ -105,7 +109,7 @@ jobs:
           "release_root=$releaseRoot" >> $env:GITHUB_OUTPUT
 
       - name: Upload release package artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: venworks-customizable-hud-release-${{ env.PACKAGE_VERSION }}
           path: artifacts/release/*.zip
@@ -117,11 +121,15 @@ jobs:
       - validate-tag-source
       - package-release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     env:
       PACKAGE_VERSION: ${{ needs.validate-tag-source.outputs.version }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
 
       - name: Resolve release variant configuration
         id: variant-config
@@ -136,7 +144,7 @@ jobs:
           }
 
       - name: Download release package artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
           name: venworks-customizable-hud-release-${{ env.PACKAGE_VERSION }}
           path: ./artifacts/release
@@ -276,7 +284,7 @@ jobs:
           }
 
       - name: Create GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
@@ -324,7 +332,7 @@ jobs:
 
       - name: Upload Freestar Collective normal release to Nexus Mods
         if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_FC_NORMAL != '' }}
-        uses: Nexus-Mods/upload-action@v1.0.0-beta.8
+        uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
           file_id: ${{ env.NEXUSMODS_FILE_ID_FC_NORMAL }}
@@ -339,7 +347,7 @@ jobs:
 
       - name: Upload Freestar Collective fully loose release to Nexus Mods
         if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_FC_LOOSE != '' }}
-        uses: Nexus-Mods/upload-action@v1.0.0-beta.8
+        uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
           file_id: ${{ env.NEXUSMODS_FILE_ID_FC_LOOSE }}
@@ -354,7 +362,7 @@ jobs:
 
       - name: Upload Crimson Fleet normal release to Nexus Mods
         if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_CF_NORMAL != '' }}
-        uses: Nexus-Mods/upload-action@v1.0.0-beta.8
+        uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
           file_id: ${{ env.NEXUSMODS_FILE_ID_CF_NORMAL }}
@@ -369,7 +377,7 @@ jobs:
 
       - name: Upload Crimson Fleet fully loose release to Nexus Mods
         if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_CF_LOOSE != '' }}
-        uses: Nexus-Mods/upload-action@v1.0.0-beta.8
+        uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
           file_id: ${{ env.NEXUSMODS_FILE_ID_CF_LOOSE }}
@@ -384,7 +392,7 @@ jobs:
 
       - name: Upload Trackers Alliance normal release to Nexus Mods
         if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_TA_NORMAL != '' }}
-        uses: Nexus-Mods/upload-action@v1.0.0-beta.8
+        uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
           file_id: ${{ env.NEXUSMODS_FILE_ID_TA_NORMAL }}
@@ -399,7 +407,7 @@ jobs:
 
       - name: Upload Trackers Alliance fully loose release to Nexus Mods
         if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_TA_LOOSE != '' }}
-        uses: Nexus-Mods/upload-action@v1.0.0-beta.8
+        uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
           file_id: ${{ env.NEXUSMODS_FILE_ID_TA_LOOSE }}
@@ -414,7 +422,7 @@ jobs:
 
       - name: Upload Venworks normal release to Nexus Mods
         if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_VWKS_NORMAL != '' }}
-        uses: Nexus-Mods/upload-action@v1.0.0-beta.8
+        uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
           file_id: ${{ env.NEXUSMODS_FILE_ID_VWKS_NORMAL }}
@@ -429,7 +437,7 @@ jobs:
 
       - name: Upload Venworks fully loose release to Nexus Mods
         if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_VWKS_LOOSE != '' }}
-        uses: Nexus-Mods/upload-action@v1.0.0-beta.8
+        uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
           file_id: ${{ env.NEXUSMODS_FILE_ID_VWKS_LOOSE }}
