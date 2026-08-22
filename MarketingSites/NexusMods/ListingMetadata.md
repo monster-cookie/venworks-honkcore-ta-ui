@@ -24,15 +24,16 @@
 
 Each theme publishes two Nexus files:
 
-1. `<Theme display name> - Nexus PC - Normal`
-2. `<Theme display name> - Nexus PC - Fully Loose Files`
+1. `Venworks - HUD - CF Theme (Loose)`
+2. `Venworks - HUD - CF Theme (Normal)`
+3. `Venworks - HUD - FC Theme (Loose)`
+4. `Venworks - HUD - FC Theme (Normal)`
+5. `Venworks - HUD - TA Theme (Loose)`
+6. `Venworks - HUD - TA Theme (Normal)`
+7. `Venworks - HUD - Venworks Theme (Loose)`
+8. `Venworks - HUD - Venworks Theme (Normal)`
 
-The four theme display names are:
-
-1. `Venworks Customizable HUD - Venworks Theme`
-2. `Venworks Customizable HUD - Trackers Alliance Theme`
-3. `Venworks Customizable HUD - Freestar Collective Theme`
-4. `Venworks Customizable HUD - Crimson Fleet Theme`
+Nexus Mods file display names must not exceed 50 characters.
 
 Every new-release file must select the matching starting palette and contain
 all five supported palette XML files, either inside the Normal package's BA2 or

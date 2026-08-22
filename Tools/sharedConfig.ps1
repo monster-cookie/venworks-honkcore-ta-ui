@@ -11,6 +11,8 @@ class ModuleVariant {
     [string]$VariantKey
     [string]$VariantName
     [string]$ReleaseDisplayName
+    [string]$NexusNormalDisplayName
+    [string]$NexusLooseDisplayName
     [string]$PackageBaseName
     [string]$StagingFolderPath
     [string]$PluginModulePath
@@ -20,6 +22,8 @@ class ModuleVariant {
         [string]$variantKey,
         [string]$variantName,
         [string]$releaseDisplayName,
+        [string]$nexusNormalDisplayName,
+        [string]$nexusLooseDisplayName,
         [string]$packageBaseName,
         [string]$stagingFolderPath,
         [string]$pluginModulePath,
@@ -28,6 +32,8 @@ class ModuleVariant {
         $this.VariantKey = $variantKey
         $this.VariantName = $variantName
         $this.ReleaseDisplayName = $releaseDisplayName
+        $this.NexusNormalDisplayName = $nexusNormalDisplayName
+        $this.NexusLooseDisplayName = $nexusLooseDisplayName
         $this.PackageBaseName = $packageBaseName
         $this.StagingFolderPath = $stagingFolderPath
         $this.PluginModulePath = $pluginModulePath
@@ -74,6 +80,8 @@ $Global:Variants = @(
         "TA",
         "Trackers Alliance",
         "Venworks - Customizable HUD - Trackers Alliance Theme",
+        "Venworks - HUD - TA Theme (Normal)",
+        "Venworks - HUD - TA Theme (Loose)",
         "Venworks-CustomizableHUD-TrackersAlliance",
         "./Staging-TA",
         "$ENV:MODULE_VARIANT_TA_PATH",
@@ -84,6 +92,8 @@ $Global:Variants = @(
         "FC",
         "Freestar Collective",
         "Venworks - Customizable HUD - Freestar Collective Theme",
+        "Venworks - HUD - FC Theme (Normal)",
+        "Venworks - HUD - FC Theme (Loose)",
         "Venworks-CustomizableHUD-FreestarCollective",
         "./Staging-FC",
         "$ENV:MODULE_VARIANT_FC_PATH",
@@ -94,6 +104,8 @@ $Global:Variants = @(
         "CF",
         "Crimson Fleet",
         "Venworks - Customizable HUD - Crimson Fleet Theme",
+        "Venworks - HUD - CF Theme (Normal)",
+        "Venworks - HUD - CF Theme (Loose)",
         "Venworks-CustomizableHUD-CrimsonFleet",
         "./Staging-CF",
         "$ENV:MODULE_VARIANT_CF_PATH",
@@ -104,6 +116,8 @@ $Global:Variants = @(
         "VWKS",
         "Venworks",
         "Venworks - Customizable HUD - Venworks Theme",
+        "Venworks - HUD - Venworks Theme (Normal)",
+        "Venworks - HUD - Venworks Theme (Loose)",
         "Venworks-CustomizableHUD-Venworks",
         "./Staging-VWKS",
         "$ENV:MODULE_VARIANT_VWKS_PATH",

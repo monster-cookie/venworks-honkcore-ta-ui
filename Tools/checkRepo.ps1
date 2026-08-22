@@ -17,6 +17,8 @@ $expectedVariants = [ordered]@{
   "TA" = [ordered]@{
     VariantName = "Trackers Alliance"
     ReleaseDisplayName = "Venworks Customizable HUD - Trackers Alliance Theme"
+    NexusNormalDisplayName = "Venworks - HUD - TA Theme (Normal)"
+    NexusLooseDisplayName = "Venworks - HUD - TA Theme (Loose)"
     PackageBaseName = "Venworks-CustomizableHUD-TrackersAlliance"
     StagingFolderPath = "./Staging-TA"
     PaletteFileName = "trackers-alliance.xml"
@@ -24,6 +26,8 @@ $expectedVariants = [ordered]@{
   "FC" = [ordered]@{
     VariantName = "Freestar Collective"
     ReleaseDisplayName = "Venworks Customizable HUD - Freestar Collective Theme"
+    NexusNormalDisplayName = "Venworks - HUD - FC Theme (Normal)"
+    NexusLooseDisplayName = "Venworks - HUD - FC Theme (Loose)"
     PackageBaseName = "Venworks-CustomizableHUD-FreestarCollective"
     StagingFolderPath = "./Staging-FC"
     PaletteFileName = "freestar-collective.xml"
@@ -31,6 +35,8 @@ $expectedVariants = [ordered]@{
   "CF" = [ordered]@{
     VariantName = "Crimson Fleet"
     ReleaseDisplayName = "Venworks Customizable HUD - Crimson Fleet Theme"
+    NexusNormalDisplayName = "Venworks - HUD - CF Theme (Normal)"
+    NexusLooseDisplayName = "Venworks - HUD - CF Theme (Loose)"
     PackageBaseName = "Venworks-CustomizableHUD-CrimsonFleet"
     StagingFolderPath = "./Staging-CF"
     PaletteFileName = "crimson-fleet.xml"
@@ -38,6 +44,8 @@ $expectedVariants = [ordered]@{
   "VWKS" = [ordered]@{
     VariantName = "Venworks"
     ReleaseDisplayName = "Venworks Customizable HUD - Venworks Theme"
+    NexusNormalDisplayName = "Venworks - HUD - Venworks Theme (Normal)"
+    NexusLooseDisplayName = "Venworks - HUD - Venworks Theme (Loose)"
     PackageBaseName = "Venworks-CustomizableHUD-Venworks"
     StagingFolderPath = "./Staging-VWKS"
     PaletteFileName = "venworks.xml"
@@ -70,9 +78,23 @@ foreach ($variant in $Global:Variants) {
     throw "Unexpected release variant key '$($variant.VariantKey)'."
   }
   $expectedVariant = $expectedVariants[[string]$variant.VariantKey]
+  foreach ($nexusPropertyName in @(
+    "NexusNormalDisplayName",
+    "NexusLooseDisplayName"
+  )) {
+    $nexusDisplayName = [string]$variant.$nexusPropertyName
+    if ([string]::IsNullOrWhiteSpace($nexusDisplayName)) {
+      throw "Release variant '$($variant.VariantKey)' must define a non-empty $nexusPropertyName."
+    }
+    if ($nexusDisplayName.Length -gt 50) {
+      throw "Release variant '$($variant.VariantKey)' $nexusPropertyName is $($nexusDisplayName.Length) characters; Nexus Mods permits at most 50."
+    }
+  }
   foreach ($propertyName in @(
     "VariantName",
     "ReleaseDisplayName",
+    "NexusNormalDisplayName",
+    "NexusLooseDisplayName",
     "PackageBaseName",
     "StagingFolderPath",
     "PaletteFileName"

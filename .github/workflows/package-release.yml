@@ -140,7 +140,8 @@ jobs:
           . "$env:GITHUB_WORKSPACE/Tools/sharedConfig.ps1" -SkipEnvironment
           foreach ($variant in $Global:Variants) {
             $key = $variant.VariantKey.ToLowerInvariant()
-            "$($key)_display_name=$($variant.ReleaseDisplayName)" >> $env:GITHUB_OUTPUT
+            "$($key)_nexus_normal_display_name=$($variant.NexusNormalDisplayName)" >> $env:GITHUB_OUTPUT
+            "$($key)_nexus_loose_display_name=$($variant.NexusLooseDisplayName)" >> $env:GITHUB_OUTPUT
           }
 
       - name: Download release package artifact
@@ -298,30 +299,46 @@ jobs:
         if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true }}
         shell: bash
         env:
-          RELEASE_DISPLAY_NAME_FC: ${{ steps.variant-config.outputs.fc_display_name }}
-          RELEASE_DISPLAY_NAME_CF: ${{ steps.variant-config.outputs.cf_display_name }}
-          RELEASE_DISPLAY_NAME_TA: ${{ steps.variant-config.outputs.ta_display_name }}
-          RELEASE_DISPLAY_NAME_VWKS: ${{ steps.variant-config.outputs.vwks_display_name }}
+          NEXUS_DISPLAY_NAME_FC_NORMAL: ${{ steps.variant-config.outputs.fc_nexus_normal_display_name }}
+          NEXUS_DISPLAY_NAME_FC_LOOSE: ${{ steps.variant-config.outputs.fc_nexus_loose_display_name }}
+          NEXUS_DISPLAY_NAME_CF_NORMAL: ${{ steps.variant-config.outputs.cf_nexus_normal_display_name }}
+          NEXUS_DISPLAY_NAME_CF_LOOSE: ${{ steps.variant-config.outputs.cf_nexus_loose_display_name }}
+          NEXUS_DISPLAY_NAME_TA_NORMAL: ${{ steps.variant-config.outputs.ta_nexus_normal_display_name }}
+          NEXUS_DISPLAY_NAME_TA_LOOSE: ${{ steps.variant-config.outputs.ta_nexus_loose_display_name }}
+          NEXUS_DISPLAY_NAME_VWKS_NORMAL: ${{ steps.variant-config.outputs.vwks_nexus_normal_display_name }}
+          NEXUS_DISPLAY_NAME_VWKS_LOOSE: ${{ steps.variant-config.outputs.vwks_nexus_loose_display_name }}
         run: |
           configured_uploads=0
 
           check_upload() {
+            local display_name="$2"
+            local display_name_length=${#display_name}
+
+            if [ -z "$display_name" ]; then
+              echo "::error::Nexus Mods display name for $3 is empty."
+              exit 1
+            fi
+            if [ "$display_name_length" -gt 50 ]; then
+              echo "::error::Nexus Mods display name for $3 is $display_name_length characters; the maximum is 50: $display_name"
+              exit 1
+            fi
+
             if [ -n "$1" ]; then
-              echo "Ready to upload $2."
+              echo "Ready to upload $display_name."
               configured_uploads=$((configured_uploads + 1))
             else
-              echo "::notice::Skipping $2 because $3 is not configured."
+              echo "::notice::Skipping $display_name because $3 is not configured."
             fi
           }
 
-          check_upload "$NEXUSMODS_FILE_ID_FC_NORMAL" "$RELEASE_DISPLAY_NAME_FC - Nexus PC - Normal" "NEXUSMODS_FILE_ID_FC_NORMAL"
-          check_upload "$NEXUSMODS_FILE_ID_FC_LOOSE" "$RELEASE_DISPLAY_NAME_FC - Nexus PC - Fully Loose Files" "NEXUSMODS_FILE_ID_FC_LOOSE"
-          check_upload "$NEXUSMODS_FILE_ID_CF_NORMAL" "$RELEASE_DISPLAY_NAME_CF - Nexus PC - Normal" "NEXUSMODS_FILE_ID_CF_NORMAL"
-          check_upload "$NEXUSMODS_FILE_ID_CF_LOOSE" "$RELEASE_DISPLAY_NAME_CF - Nexus PC - Fully Loose Files" "NEXUSMODS_FILE_ID_CF_LOOSE"
-          check_upload "$NEXUSMODS_FILE_ID_TA_NORMAL" "$RELEASE_DISPLAY_NAME_TA - Nexus PC - Normal" "NEXUSMODS_FILE_ID_TA_NORMAL"
-          check_upload "$NEXUSMODS_FILE_ID_TA_LOOSE" "$RELEASE_DISPLAY_NAME_TA - Nexus PC - Fully Loose Files" "NEXUSMODS_FILE_ID_TA_LOOSE"
-          check_upload "$NEXUSMODS_FILE_ID_VWKS_NORMAL" "$RELEASE_DISPLAY_NAME_VWKS - Nexus PC - Normal" "NEXUSMODS_FILE_ID_VWKS_NORMAL"
-          check_upload "$NEXUSMODS_FILE_ID_VWKS_LOOSE" "$RELEASE_DISPLAY_NAME_VWKS - Nexus PC - Fully Loose Files" "NEXUSMODS_FILE_ID_VWKS_LOOSE"
+          check_upload "$NEXUSMODS_FILE_ID_FC_NORMAL" "$NEXUS_DISPLAY_NAME_FC_NORMAL" "NEXUSMODS_FILE_ID_FC_NORMAL"
+          check_upload "$NEXUSMODS_FILE_ID_FC_LOOSE" "$NEXUS_DISPLAY_NAME_FC_LOOSE" "NEXUSMODS_FILE_ID_FC_LOOSE"
+          check_upload "$NEXUSMODS_FILE_ID_CF_NORMAL" "$NEXUS_DISPLAY_NAME_CF_NORMAL" "NEXUSMODS_FILE_ID_CF_NORMAL"
+          check_upload "$NEXUSMODS_FILE_ID_CF_LOOSE" "$NEXUS_DISPLAY_NAME_CF_LOOSE" "NEXUSMODS_FILE_ID_CF_LOOSE"
+          check_upload "$NEXUSMODS_FILE_ID_TA_NORMAL" "$NEXUS_DISPLAY_NAME_TA_NORMAL" "NEXUSMODS_FILE_ID_TA_NORMAL"
+          check_upload "$NEXUSMODS_FILE_ID_TA_LOOSE" "$NEXUS_DISPLAY_NAME_TA_LOOSE" "NEXUSMODS_FILE_ID_TA_LOOSE"
+          check_upload "$NEXUSMODS_FILE_ID_VWKS_NORMAL" "$NEXUS_DISPLAY_NAME_VWKS_NORMAL" "NEXUSMODS_FILE_ID_VWKS_NORMAL"
+          check_upload "$NEXUSMODS_FILE_ID_VWKS_LOOSE" "$NEXUS_DISPLAY_NAME_VWKS_LOOSE" "NEXUSMODS_FILE_ID_VWKS_LOOSE"
 
           if [ "$configured_uploads" -gt 0 ] && [ -z "$NEXUSMODS_API_KEY" ]; then
             echo "NEXUSMODS_API_KEY is required for Nexus Mods uploads."
@@ -339,7 +356,7 @@ jobs:
           filename: ${{ steps.release-package.outputs.fc_normal_path }}
           version: ${{ env.PACKAGE_VERSION }}
           category: ${{ env.NEXUSMODS_CATEGORY }}
-          display_name: "${{ steps.variant-config.outputs.fc_display_name }} - Nexus PC - Normal"
+          display_name: ${{ steps.variant-config.outputs.fc_nexus_normal_display_name }}
           archive_existing_version: true
           primary_mod_manager_download: false
           allow_mod_manager_download: true
@@ -354,7 +371,7 @@ jobs:
           filename: ${{ steps.release-package.outputs.fc_loose_path }}
           version: ${{ env.PACKAGE_VERSION }}
           category: ${{ env.NEXUSMODS_CATEGORY }}
-          display_name: "${{ steps.variant-config.outputs.fc_display_name }} - Nexus PC - Fully Loose Files"
+          display_name: ${{ steps.variant-config.outputs.fc_nexus_loose_display_name }}
           archive_existing_version: true
           primary_mod_manager_download: false
           allow_mod_manager_download: true
@@ -369,7 +386,7 @@ jobs:
           filename: ${{ steps.release-package.outputs.cf_normal_path }}
           version: ${{ env.PACKAGE_VERSION }}
           category: ${{ env.NEXUSMODS_CATEGORY }}
-          display_name: "${{ steps.variant-config.outputs.cf_display_name }} - Nexus PC - Normal"
+          display_name: ${{ steps.variant-config.outputs.cf_nexus_normal_display_name }}
           archive_existing_version: true
           primary_mod_manager_download: false
           allow_mod_manager_download: true
@@ -384,7 +401,7 @@ jobs:
           filename: ${{ steps.release-package.outputs.cf_loose_path }}
           version: ${{ env.PACKAGE_VERSION }}
           category: ${{ env.NEXUSMODS_CATEGORY }}
-          display_name: "${{ steps.variant-config.outputs.cf_display_name }} - Nexus PC - Fully Loose Files"
+          display_name: ${{ steps.variant-config.outputs.cf_nexus_loose_display_name }}
           archive_existing_version: true
           primary_mod_manager_download: false
           allow_mod_manager_download: true
@@ -399,7 +416,7 @@ jobs:
           filename: ${{ steps.release-package.outputs.ta_normal_path }}
           version: ${{ env.PACKAGE_VERSION }}
           category: ${{ env.NEXUSMODS_CATEGORY }}
-          display_name: "${{ steps.variant-config.outputs.ta_display_name }} - Nexus PC - Normal"
+          display_name: ${{ steps.variant-config.outputs.ta_nexus_normal_display_name }}
           archive_existing_version: true
           primary_mod_manager_download: false
           allow_mod_manager_download: true
@@ -414,7 +431,7 @@ jobs:
           filename: ${{ steps.release-package.outputs.ta_loose_path }}
           version: ${{ env.PACKAGE_VERSION }}
           category: ${{ env.NEXUSMODS_CATEGORY }}
-          display_name: "${{ steps.variant-config.outputs.ta_display_name }} - Nexus PC - Fully Loose Files"
+          display_name: ${{ steps.variant-config.outputs.ta_nexus_loose_display_name }}
           archive_existing_version: true
           primary_mod_manager_download: false
           allow_mod_manager_download: true
@@ -429,7 +446,7 @@ jobs:
           filename: ${{ steps.release-package.outputs.vwks_normal_path }}
           version: ${{ env.PACKAGE_VERSION }}
           category: ${{ env.NEXUSMODS_CATEGORY }}
-          display_name: "${{ steps.variant-config.outputs.vwks_display_name }} - Nexus PC - Normal"
+          display_name: ${{ steps.variant-config.outputs.vwks_nexus_normal_display_name }}
           archive_existing_version: true
           primary_mod_manager_download: false
           allow_mod_manager_download: true
@@ -444,7 +461,7 @@ jobs:
           filename: ${{ steps.release-package.outputs.vwks_loose_path }}
           version: ${{ env.PACKAGE_VERSION }}
           category: ${{ env.NEXUSMODS_CATEGORY }}
-          display_name: "${{ steps.variant-config.outputs.vwks_display_name }} - Nexus PC - Fully Loose Files"
+          display_name: ${{ steps.variant-config.outputs.vwks_nexus_loose_display_name }}
           archive_existing_version: true
           primary_mod_manager_download: false
           allow_mod_manager_download: true
