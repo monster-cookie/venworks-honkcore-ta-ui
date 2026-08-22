@@ -122,3 +122,6 @@ meta.ini
 # Converted Art Resources from the pipeline
 art-converted/
 *.bak
+
+# Codex local work tree
+.work/
