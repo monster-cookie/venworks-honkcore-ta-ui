@@ -1,3 +1,8 @@
+[CmdletBinding()]
+param(
+  [string[]]$VariantKey
+)
+
 # Abort on first error
 $PSNativeCommandUseErrorActionPreference = $true
 $ErrorActionPreference = "Stop"
@@ -16,7 +21,54 @@ if (!(Test-Path -LiteralPath $archive2Path -PathType Leaf)) {
   throw "Archive2.exe was not found at the TOOL_PATH_ARCHIVER location."
 }
 
-foreach ($variant in $Global:Variants) {
+$archiveDefinitions = [ordered]@{
+  "Main" = [pscustomobject]@{
+    FileSuffix = "Main.ba2"
+    Format = "General"
+    Compression = "Default"
+    FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
+    Required = $true
+  }
+  "Textures" = [pscustomobject]@{
+    FileSuffix = "Textures.ba2"
+    Format = "DDS"
+    Compression = "Default"
+    FilterArgument = '-includeFilters=.*\\.*\.dds'
+    Required = $false
+  }
+  "Main_XBox" = [pscustomobject]@{
+    FileSuffix = "Main_XBox.ba2"
+    Format = "General"
+    Compression = "XBox"
+    FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
+    Required = $true
+  }
+  "Textures_XBox" = [pscustomobject]@{
+    FileSuffix = "Textures_XBox.ba2"
+    Format = "XBoxDDS"
+    Compression = "XBox"
+    FilterArgument = '-includeFilters=.*\\.*\.dds'
+    Required = $false
+  }
+  "Main_PS" = [pscustomobject]@{
+    FileSuffix = "Main_PS.ba2"
+    Format = "General"
+    Compression = "Default"
+    FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
+    Required = $true
+  }
+  "Textures_PS" = [pscustomobject]@{
+    FileSuffix = "Textures_PS.ba2"
+    Format = "DDS"
+    Compression = "Default"
+    FilterArgument = '-includeFilters=.*\\.*\.dds'
+    Required = $false
+  }
+}
+
+$variants = @(Get-ModuleVariants -VariantKey $VariantKey)
+
+foreach ($variant in $variants) {
   if (!(Test-Path -LiteralPath $variant.StagingFolderPath -PathType Container)) {
     throw "$($variant.VariantName) staging folder does not exist: $($variant.StagingFolderPath)"
   }
@@ -46,55 +98,66 @@ foreach ($variant in $Global:Variants) {
 
   Write-Host -ForegroundColor Green "Creating $($variant.VariantName) archives from $stagingPath"
 
-  $mainArchiveNames = @(
-    "$($variant.PackageBaseName) - Main.ba2",
-    "$($variant.PackageBaseName) - Main_XBox.ba2",
-    "$($variant.PackageBaseName) - Main_PS.ba2"
-  )
-  $textureArchiveNames = @(
-    "$($variant.PackageBaseName) - Textures.ba2",
-    "$($variant.PackageBaseName) - Textures_XBox.ba2",
-    "$($variant.PackageBaseName) - Textures_PS.ba2"
-  )
-  foreach ($archiveName in @($mainArchiveNames + $textureArchiveNames)) {
+  $selectedArchiveTargets = @($variant.ArchiveTargets)
+  if ($selectedArchiveTargets.Count -eq 0) {
+    throw "$($variant.VariantName) does not define any archive targets."
+  }
+  if (@($selectedArchiveTargets | Select-Object -Unique).Count -ne $selectedArchiveTargets.Count) {
+    throw "$($variant.VariantName) defines duplicate archive targets."
+  }
+  foreach ($archiveTarget in $selectedArchiveTargets) {
+    if (!$archiveDefinitions.Contains([string]$archiveTarget)) {
+      throw "$($variant.VariantName) defines unknown archive target '$archiveTarget'."
+    }
+  }
+
+  foreach ($archiveDefinition in $archiveDefinitions.Values) {
+    $archiveName = "$($variant.PackageBaseName) - $($archiveDefinition.FileSuffix)"
     $archivePath = Join-Path $packageOutputPath $archiveName
     if (Test-Path -LiteralPath $archivePath -PathType Leaf) {
       Remove-Item -LiteralPath $archivePath -Force
     }
   }
 
-  # Creating the Windows Archives and placing them in the variant Staging folder
-  & $archive2Path "$stagingPath\" -root="$stagingPath\" -create="$packageOutputPath\$($variant.PackageBaseName) - Main.ba2" -format="General" -compression="Default" -maxSizeMB=2048 -excludeFilters=".*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2"
-  & $archive2Path "$stagingPath\" -root="$stagingPath\" -create="$packageOutputPath\$($variant.PackageBaseName) - Textures.ba2" -format="DDS" -compression="Default" -maxSizeMB=2048 -includeFilters=".*\\.*\.dds"
-
-  # Creating the XBox Archives and placing them in the variant Staging folder
-  & $archive2Path "$stagingPath\" -root="$stagingPath\" -create="$packageOutputPath\$($variant.PackageBaseName) - Main_XBox.ba2" -format="General" -compression="XBox" -maxSizeMB=2048 -excludeFilters=".*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2"
-  & $archive2Path "$stagingPath\" -root="$stagingPath\" -create="$packageOutputPath\$($variant.PackageBaseName) - Textures_XBox.ba2" -format="XBoxDDS" -compression="XBox" -maxSizeMB=2048 -includeFilters=".*\\.*\.dds"
-
-  # Creating the PS Archives and placing them in the variant Staging folder (Currently Archiver2 has not been updated for PS support)
-  & $archive2Path "$stagingPath\" -root="$stagingPath\" -create="$packageOutputPath\$($variant.PackageBaseName) - Main_PS.ba2" -format="General" -compression="Default" -maxSizeMB=2048 -excludeFilters=".*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2"
-  & $archive2Path "$stagingPath\" -root="$stagingPath\" -create="$packageOutputPath\$($variant.PackageBaseName) - Textures_PS.ba2" -format="DDS" -compression="Default" -maxSizeMB=2048 -includeFilters=".*\\.*\.dds"
-
-  foreach ($archiveName in $mainArchiveNames) {
+  foreach ($archiveTarget in $selectedArchiveTargets) {
+    $archiveDefinition = $archiveDefinitions[[string]$archiveTarget]
+    $archiveName = "$($variant.PackageBaseName) - $($archiveDefinition.FileSuffix)"
     $archivePath = Join-Path $packageOutputPath $archiveName
-    if (!(Test-Path -LiteralPath $archivePath -PathType Leaf)) {
-      throw "Archive2 did not create the expected $($variant.VariantName) archive: $archivePath"
+    $archiveArguments = @(
+      "$stagingPath\",
+      "-root=$stagingPath\",
+      "-create=$archivePath",
+      "-format=$($archiveDefinition.Format)",
+      "-compression=$($archiveDefinition.Compression)",
+      "-maxSizeMB=2048",
+      [string]$archiveDefinition.FilterArgument
+    )
+    & $archive2Path @archiveArguments
+
+    if ($archiveDefinition.Required -and !(Test-Path -LiteralPath $archivePath -PathType Leaf)) {
+      throw "Archive2 did not create the expected $($variant.VariantName) archive target '$archiveTarget': $archivePath"
     }
-    if ((Get-Item -LiteralPath $archivePath).Length -le 0) {
-      throw "Archive2 created an empty $($variant.VariantName) archive: $archivePath"
-    }
-  }
-  foreach ($archiveName in $textureArchiveNames) {
-    $archivePath = Join-Path $packageOutputPath $archiveName
     if ((Test-Path -LiteralPath $archivePath -PathType Leaf) -and
         (Get-Item -LiteralPath $archivePath).Length -le 0) {
       throw "Archive2 created an empty $($variant.VariantName) archive: $archivePath"
+    }
+  }
+
+  foreach ($archiveTarget in $archiveDefinitions.Keys) {
+    if ($selectedArchiveTargets -contains $archiveTarget) {
+      continue
+    }
+    $archiveDefinition = $archiveDefinitions[$archiveTarget]
+    $archiveName = "$($variant.PackageBaseName) - $($archiveDefinition.FileSuffix)"
+    $archivePath = Join-Path $packageOutputPath $archiveName
+    if (Test-Path -LiteralPath $archivePath -PathType Leaf) {
+      throw "$($variant.VariantName) contains an archive outside its configured targets: $archivePath"
     }
   }
 }
 
 Write-Host -ForegroundColor Cyan "`n`n"
 Write-Host -ForegroundColor Cyan "**************************************************"
-Write-Host -ForegroundColor Cyan "**  Variant BA2 Archives Created for All Targets **"
+Write-Host -ForegroundColor Cyan "** Variant BA2 Archives Created for Selected Targets **"
 Write-Host -ForegroundColor Cyan "**************************************************"
 Write-Host -ForegroundColor Cyan "`n`n"

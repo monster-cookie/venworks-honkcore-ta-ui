@@ -17,6 +17,7 @@ class ModuleVariant {
     [string]$StagingFolderPath
     [string]$PluginModulePath
     [string]$PaletteFileName
+    [string[]]$ArchiveTargets
 
     ModuleVariant(
         [string]$variantKey,
@@ -27,7 +28,8 @@ class ModuleVariant {
         [string]$packageBaseName,
         [string]$stagingFolderPath,
         [string]$pluginModulePath,
-        [string]$paletteFileName
+        [string]$paletteFileName,
+        [string[]]$archiveTargets
     ) {
         $this.VariantKey = $variantKey
         $this.VariantName = $variantName
@@ -38,6 +40,7 @@ class ModuleVariant {
         $this.StagingFolderPath = $stagingFolderPath
         $this.PluginModulePath = $pluginModulePath
         $this.PaletteFileName = $paletteFileName
+        $this.ArchiveTargets = $archiveTargets
     }
 }
 
@@ -73,9 +76,19 @@ if (!$SkipEnvironment) {
   Write-Host -ForegroundColor Yellow "Freestar Collective Variant Folder is $ENV:MODULE_VARIANT_FC_PATH"
   Write-Host -ForegroundColor Yellow "Crimson Fleet Variant Folder is $ENV:MODULE_VARIANT_CF_PATH"
   Write-Host -ForegroundColor Yellow "Venworks Variant Folder is $ENV:MODULE_VARIANT_VWKS_PATH"
+  Write-Host -ForegroundColor Yellow "Minimalist Variant Folder is $ENV:MODULE_VARIANT_MIN_PATH"
 }
 
-$Global:Variants = @(
+$releaseArchiveTargets = @(
+    "Main",
+    "Textures",
+    "Main_XBox",
+    "Textures_XBox",
+    "Main_PS",
+    "Textures_PS"
+)
+
+$Global:ReleaseVariants = @(
     [ModuleVariant]::new(
         "TA",
         "Trackers Alliance",
@@ -85,7 +98,8 @@ $Global:Variants = @(
         "Venworks-CustomizableHUD-TrackersAlliance",
         "./Staging-TA",
         "$ENV:MODULE_VARIANT_TA_PATH",
-        "trackers-alliance.xml"
+        "trackers-alliance.xml",
+        $releaseArchiveTargets
     )
 
     [ModuleVariant]::new(
@@ -97,7 +111,8 @@ $Global:Variants = @(
         "Venworks-CustomizableHUD-FreestarCollective",
         "./Staging-FC",
         "$ENV:MODULE_VARIANT_FC_PATH",
-        "freestar-collective.xml"
+        "freestar-collective.xml",
+        $releaseArchiveTargets
     )
 
     [ModuleVariant]::new(
@@ -109,7 +124,8 @@ $Global:Variants = @(
         "Venworks-CustomizableHUD-CrimsonFleet",
         "./Staging-CF",
         "$ENV:MODULE_VARIANT_CF_PATH",
-        "crimson-fleet.xml"
+        "crimson-fleet.xml",
+        $releaseArchiveTargets
     )
 
     [ModuleVariant]::new(
@@ -121,8 +137,60 @@ $Global:Variants = @(
         "Venworks-CustomizableHUD-Venworks",
         "./Staging-VWKS",
         "$ENV:MODULE_VARIANT_VWKS_PATH",
-        "venworks.xml"
+        "venworks.xml",
+        $releaseArchiveTargets
     )
 )
+
+$Global:SpikeVariants = @(
+    [ModuleVariant]::new(
+        "MIN",
+        "Minimalist",
+        "Venworks - Customizable HUD - Minimalist",
+        "Venworks - HUD - Minimalist (Normal)",
+        "Venworks - HUD - Minimalist (Loose)",
+        "Venworks-CustomizableHUD-Minimalist",
+        "./Staging-MIN",
+        "$ENV:MODULE_VARIANT_MIN_PATH",
+        "",
+        @("Main_PS")
+    )
+)
+
+$Global:Variants = @($Global:ReleaseVariants)
+$Global:AllVariants = @($Global:ReleaseVariants + $Global:SpikeVariants)
+
+function Global:Get-ModuleVariants {
+  [CmdletBinding()]
+  param(
+    [string[]]$VariantKey
+  )
+
+  if ($null -eq $VariantKey -or $VariantKey.Count -eq 0) {
+    return @($Global:ReleaseVariants)
+  }
+
+  $normalizedKeys = @($VariantKey | ForEach-Object {
+    if ([string]::IsNullOrWhiteSpace($_)) {
+      throw "Variant keys cannot be empty."
+    }
+    $_.Trim().ToUpperInvariant()
+  })
+  if (@($normalizedKeys | Select-Object -Unique).Count -ne $normalizedKeys.Count) {
+    throw "Variant keys cannot be repeated."
+  }
+
+  $selectedVariants = foreach ($normalizedKey in $normalizedKeys) {
+    $matches = @($Global:AllVariants | Where-Object {
+      [string]$_.VariantKey -eq $normalizedKey
+    })
+    if ($matches.Count -ne 1) {
+      throw "Unknown module variant key '$normalizedKey'."
+    }
+    $matches[0]
+  }
+
+  return @($selectedVariants)
+}
 
 $Global:SharedConfigurationLoaded=$true

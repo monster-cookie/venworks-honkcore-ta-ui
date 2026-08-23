@@ -45,6 +45,41 @@ texture command produces one.
 SVG assets currently follow the Main-archive filters. Moving SVGs into a texture
 archive is deferred until the generated console archives can be tested.
 
+## PS5 Minimalist spike
+
+The experimental `MIN` variant is separate from the four release variants and
+does not participate in the 20-package release matrix. It tests a PS5 Main
+archive with no external SVG, palette, or DDS payload. Configure its ignored
+module path in `.env`:
+
+```text
+MODULE_VARIANT_MIN_PATH=<absolute path to the Minimalist module folder>
+```
+
+Create only its staging Junction and build only its artifacts with:
+
+```powershell
+.\Tools\setupRepo.ps1 -VariantKey MIN
+.\Tools\compileMinimalistSpike.ps1 `
+  -JavaPath ".work/tools/java/bin/java.exe" `
+  -JpexsJarPath ".work/tools/jpexs/ffdec.jar" `
+  -VanillaInterfacePath "Scaleform/.work/vanilla-interface-extracted/interface"
+.\Tools\createPackages.ps1 -VariantKey MIN
+.\Tools\verifyMinimalistSpike.ps1
+```
+
+The Minimalist compiler uses the production HUD movies, resolves the
+`starfield.xml` color roles to literal XML colors, removes the palette selector
+and faction display, and moves the contact radar to the former faction-display
+position. It then removes the `Assets` and `palettes` directories. The result
+contains the renamed stub ESM, four GFX files, the reduced loose CUI
+configuration, and only `<PackageBase> - Main_PS.ba2`.
+
+The shared GFX still contains unused SVG-capable runtime code. A successful PS5
+test therefore narrows the crash investigation to external SVG or palette/faction
+loading; it does not independently prove which removed behavior caused the
+crash. DDS substitution remains a separate follow-up experiment.
+
 The release workflow produces five ZIP shapes for each of the four themes:
 
 | Package | Contents |
