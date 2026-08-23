@@ -2670,18 +2670,18 @@ try {
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.localTime"' -or
       $stagedEnvironmentalScannerText -notmatch 'id="planet\.time\.label" x="214" y="8" width="68" height="22"' -or
       $stagedEnvironmentalScannerText -notmatch 'id="planet\.time" x="288" y="6" width="58" height="22"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="planet\.panel" x="8" y="32" width="344" height="60"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="planet\.name" x="14" y="34" width="332" height="18"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="planet\.oxygen" x="36" y="52" width="48" height="18"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="planet\.solar-transition" x="214" y="18" width="132" height="14"' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="environment\.solarTransitionCountdown" format="raw"' -or
+      $stagedEnvironmentalScannerText -notmatch 'value="" font="\$MAIN_Font_Bold" fontSize="8" color="@palette\.colors\.foreground\.primary" bold="true" align="right"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="planet\.panel" x="8" y="32" width="344" height="42"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="planet\.name" x="14" y="34" width="332" height="22"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="planet\.oxygen" x="36" y="52" width="48" height="22"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.oxygenPercentage"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.temperature"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.gravity"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="planet\.solar-transition" x="14" y="70" width="332" height="18"' -or
-      $stagedEnvironmentalScannerText -notmatch 'source="environment\.solarTransitionCountdown" format="raw"' -or
-      $stagedEnvironmentalScannerText -notmatch 'value="" font="\$MAIN_Font_Bold" fontSize="9" color="@palette\.colors\.foreground\.primary" bold="true"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="title" x="12" y="92" width="336" height="22"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="header\.line" x="8" y="113" width="344" height="0"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="protection\.panel" x="8" y="113" width="344" height="36"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="title" x="12" y="80" width="336" height="22"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="header\.line" x="8" y="101" width="344" height="0"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="protection\.panel" x="8" y="107" width="344" height="36"' -or
       $stagedEnvironmentalScannerText -match 'RELATIVE LOAD' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.protectionLevel"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.protectionPercentage"' -or
@@ -2694,8 +2694,8 @@ try {
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.thermalShortStatus"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.corrosiveShortStatus"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.radiationShortStatus"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="protection\.status" x="122" y="114" width="166" height="22"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="protection\.meter" x="14" y="136" width="332" height="8"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="protection\.status" x="122" y="108" width="166" height="22"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="protection\.meter" x="14" y="130" width="332" height="8"' -or
       $stagedEnvironmentalScannerText -notmatch 'id="channels\.panel" x="8" y="149" width="344" height="79"' -or
       $stagedEnvironmentalScannerText -notmatch 'id="airwater\.label" x="12" y="151" width="80" height="18"' -or
       $stagedEnvironmentalScannerText -notmatch 'id="airwater\.status" x="12" y="168" width="80" height="20"' -or
@@ -2707,7 +2707,7 @@ try {
       $stagedEnvironmentalScannerText -notmatch 'id="corrosive\.exposure" x="198" y="190" width="44" height="34"' -or
       $stagedEnvironmentalScannerText -notmatch 'id="radiation\.exposure" x="282" y="190" width="44" height="34"' -or
       $stagedEnvironmentalScannerText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE|THREAT INDEX|VACUUM)') {
-    throw 'The accepted HUD must stage the unified helmet architecture, Card 16k solar-transition row, content-only player and environmental scanners, vertical elemental channels, reserved threat recess, and passive upper-right equipment rail with no retired diagnostics or invented data.'
+    throw 'The accepted HUD must stage the unified helmet architecture, Card 16k solar-transition header countdown, content-only player and environmental scanners, vertical elemental channels, reserved threat recess, and passive upper-right equipment rail with no retired diagnostics or invented data.'
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
