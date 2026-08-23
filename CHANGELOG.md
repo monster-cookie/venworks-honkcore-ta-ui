@@ -1,10 +1,13 @@
 # Venworks - Customizable HUD and Themes
 
+## UNRELEASED
+
+- Fixed scanner startup restoring the vanilla tracked quest while keeping the vanilla Watch display hidden.
+- Documented that mods replacing `hudmessagesmenu.gfx` or `hudmessagesmenu_lrg.gfx` are incompatible unless a purpose-built patch combines their changes; load order alone is not a compatibility solution.
+
 ## Version 2.0.2 (August 22, 2026)
 
 - No changes just wiring up Nexus API from GitHub Actions.
-- Fixed scanner startup restoring the vanilla tracked quest while keeping the vanilla Watch display hidden.
-- Documented that mods replacing `hudmessagesmenu.gfx` or `hudmessagesmenu_lrg.gfx` are incompatible unless a purpose-built patch combines their changes; load order alone is not a compatibility solution.
 
 ## Version 2.0.0 (August 22, 2026)
 
