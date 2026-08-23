@@ -352,10 +352,11 @@ environmental critical override does not inspect generic player-health loss.
 
 The production fragment stacks a confirmed `PLANET DATA` context section above
 the suit-exposure section. It reuses `location.name`,
-`environment.localTime`, `environment.oxygenPercentage`,
-`environment.temperature`, and `environment.gravity`; those values are no
-longer duplicated by the lower-left environment fragment. Local temperature
-can provide hot/cold context but is not Thermal severity. O2 `0%` cannot
+`environment.localTime`, `environment.solarTransitionCountdown`,
+`environment.oxygenPercentage`, `environment.temperature`, and
+`environment.gravity`; those values are no longer duplicated by the lower-left
+environment fragment. Local temperature can provide hot/cold context but is
+not Thermal severity. O2 `0%` cannot
 distinguish vacuum from an oxygen-free atmosphere. No
 allowlisted source currently claims CO2 composition, atmospheric pressure,
 vacuum, physical hazard units, per-channel Bethesda severity, or an aggregate
@@ -369,7 +370,12 @@ modeled channel loads; it is not included in the accepted production layout.
 value confirmed by the bounded HUD runtime probe and a Character Menu comparison.
 The production data context divides it by 24 before the shared day-fraction
 clock formatter. `fLocalPlanetTime` is already a normalized local-day fraction
-and is not converted.
+and is not converted. The solar-transition string uses the same rounded local
+clock minute, treats 06:00 as sunrise and 18:00 as sunset, and displays the
+remaining local-clock hours and minutes. A positive finite
+`fLocalPlanetHoursPerDay` is required as the availability gate, but the value
+does not scale the countdown. This follows Starfield's simplified local-day
+semantics and is not a latitude-, axial-tilt-, or season-aware horizon forecast.
 
 ## Goal 6 player scanner bindings
 

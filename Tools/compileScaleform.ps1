@@ -254,6 +254,54 @@ function Assert-PlayerHudDataContextLifecycle {
   }
 }
 
+function Assert-SolarTransitionCountdown {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Source,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Context
+  )
+
+  $locationHandler = [regex]::Match(
+    $Source,
+    '(?s)private\s+function\s+onLocalEnvironmentData\s*\([^)]*\)\s*:\s*void\s*\{.*?(?=\r?\n\s+private\s+function)'
+  )
+  $frequentHandler = [regex]::Match(
+    $Source,
+    '(?s)private\s+function\s+onLocalEnvironmentFrequentData\s*\([^)]*\)\s*:\s*void\s*\{.*?(?=\r?\n\s+private\s+function)'
+  )
+  $updater = [regex]::Match(
+    $Source,
+    '(?s)private\s+function\s+updateSolarTransitionCountdown\s*\([^)]*\)\s*:\s*void\s*\{.*?(?=\r?\n\s+private\s+function)'
+  )
+  $formatter = [regex]::Match(
+    $Source,
+    '(?s)private\s+function\s+formatSolarTransitionCountdown\s*\([^)]*\)\s*:\s*String\s*\{.*?(?=\r?\n\s+private\s+function)'
+  )
+
+  if ($Source -notmatch 'source\s*==\s*"environment\.solartransitioncountdown"' -or
+      !$locationHandler.Success -or
+      $locationHandler.Value -notmatch 'clearValue\s*\(\s*"environment\.solartransitioncountdown"\s*\)' -or
+      $locationHandler.Value -notmatch '(?s)clearValue\s*\(\s*"environment\.solartransitioncountdown"\s*\).*?if\s*\(\s*param1\s*==\s*null\s*\|\|\s*param1\.data\s*==\s*null\s*\)' -or
+      !$frequentHandler.Success -or
+      $frequentHandler.Value -notmatch '(?s)if\s*\(\s*param1\s*==\s*null\s*\|\|\s*param1\.data\s*==\s*null\s*\).*?clearValue\s*\(\s*"environment\.solartransitioncountdown"\s*\)' -or
+      $frequentHandler.Value -notmatch 'updateSolarTransitionCountdown\s*\(\s*param1\.data\.fLocalPlanetTime\s*,\s*param1\.data\.fLocalPlanetHoursPerDay\s*\)' -or
+      !$updater.Success -or
+      $updater.Value -notmatch 'if\s*\(\s*param1\s*==\s*null\s*\|\|\s*param2\s*==\s*null\s*\)' -or
+      $updater.Value -notmatch 'hoursPerDay\s*<=\s*0' -or
+      $updater.Value -notmatch 'clearValue\s*\(\s*"environment\.solartransitioncountdown"\s*\)' -or
+      !$formatter.Success -or
+      $formatter.Value -notmatch 'Math\.floor\s*\(\s*normalized\s*\*\s*1440\s*\+\s*0\.5\s*\)' -or
+      $formatter.Value -notmatch 'currentMinute\s*<\s*360' -or
+      $formatter.Value -notmatch 'currentMinute\s*<\s*1080' -or
+      $formatter.Value -notmatch '"SUNRISE"' -or
+      $formatter.Value -notmatch '"SUNSET"' -or
+      $formatter.Value -notmatch 'return\s+transition\s*\+\s*" IN "\s*\+\s*duration') {
+    throw "$Context does not retain Card 16k's fail-hidden 06:00/18:00 local-clock solar-transition countdown contract."
+  }
+}
+
 function Invoke-Jpexs {
   param(
     [Parameter(Mandatory = $true)]
@@ -760,6 +808,9 @@ $valueDefaultsIndex = $playerHudDataContextText.IndexOf('this.resetEnvironmental
 $valueChangeResetIndex = $playerHudDataContextText.IndexOf('this.resetChangedSources();')
 $firstValueSubscriptionIndex = $playerHudDataContextText.IndexOf('BSUIDataManager.Subscribe("LocalEnvironmentData",this.onLocalEnvironmentData)')
 Assert-PlayerHudDataContextLifecycle `
+  -Source $playerHudDataContextText `
+  -Context 'Authored CUIPlayerHudDataContext'
+Assert-SolarTransitionCountdown `
   -Source $playerHudDataContextText `
   -Context 'Authored CUIPlayerHudDataContext'
 if ($palettePreparationIndex -lt 0 -or $paletteLoadIndex -lt 0 -or $palettePreparationIndex -ge $paletteLoadIndex -or
@@ -1844,6 +1895,9 @@ try {
     Assert-PlayerHudDataContextLifecycle `
       -Source $reopenedPlayerHudDataContextSource `
       -Context 'Generated CUIPlayerHudDataContext'
+    Assert-SolarTransitionCountdown `
+      -Source $reopenedPlayerHudDataContextSource `
+      -Context 'Generated CUIPlayerHudDataContext'
     if ($reopenedPalettePreparationIndex -lt 0 -or $reopenedPaletteLoadIndex -lt 0 -or
         $reopenedPalettePreparationIndex -ge $reopenedPaletteLoadIndex -or
         $reopenedValueContextInitializationIndex -lt 0 -or $reopenedValueContextInitializationIndex -ge $reopenedPaletteLoadIndex -or
@@ -2616,10 +2670,18 @@ try {
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.localTime"' -or
       $stagedEnvironmentalScannerText -notmatch 'id="planet\.time\.label" x="214" y="8" width="68" height="22"' -or
       $stagedEnvironmentalScannerText -notmatch 'id="planet\.time" x="288" y="6" width="58" height="22"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="planet\.solar-transition" x="214" y="18" width="132" height="14"' -or
+      $stagedEnvironmentalScannerText -notmatch 'source="environment\.solarTransitionCountdown" format="raw"' -or
+      $stagedEnvironmentalScannerText -notmatch 'value="" font="\$MAIN_Font_Bold" fontSize="8" color="@palette\.colors\.foreground\.primary" bold="true" align="right"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="planet\.panel" x="8" y="32" width="344" height="42"' -or
       $stagedEnvironmentalScannerText -notmatch 'id="planet\.name" x="14" y="34" width="332" height="22"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="planet\.oxygen" x="36" y="52" width="48" height="22"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.oxygenPercentage"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.temperature"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.gravity"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="title" x="12" y="80" width="336" height="22"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="header\.line" x="8" y="101" width="344" height="0"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="protection\.panel" x="8" y="107" width="344" height="36"' -or
       $stagedEnvironmentalScannerText -match 'RELATIVE LOAD' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.protectionLevel"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.protectionPercentage"' -or
@@ -2633,6 +2695,8 @@ try {
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.corrosiveShortStatus"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.radiationShortStatus"' -or
       $stagedEnvironmentalScannerText -notmatch 'id="protection\.status" x="122" y="108" width="166" height="22"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="protection\.meter" x="14" y="130" width="332" height="8"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="channels\.panel" x="8" y="149" width="344" height="79"' -or
       $stagedEnvironmentalScannerText -notmatch 'id="airwater\.label" x="12" y="151" width="80" height="18"' -or
       $stagedEnvironmentalScannerText -notmatch 'id="airwater\.status" x="12" y="168" width="80" height="20"' -or
       $stagedEnvironmentalScannerText -notmatch 'id="thermal\.status" x="96" y="168" width="80" height="20"' -or
@@ -2643,7 +2707,7 @@ try {
       $stagedEnvironmentalScannerText -notmatch 'id="corrosive\.exposure" x="198" y="190" width="44" height="34"' -or
       $stagedEnvironmentalScannerText -notmatch 'id="radiation\.exposure" x="282" y="190" width="44" height="34"' -or
       $stagedEnvironmentalScannerText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE|THREAT INDEX|VACUUM)') {
-    throw 'The accepted HUD must stage the unified helmet architecture, content-only player and environmental scanners, vertical elemental channels, reserved threat recess, and passive upper-right equipment rail with no retired diagnostics or invented data.'
+    throw 'The accepted HUD must stage the unified helmet architecture, Card 16k solar-transition header countdown, content-only player and environmental scanners, vertical elemental channels, reserved threat recess, and passive upper-right equipment rail with no retired diagnostics or invented data.'
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
