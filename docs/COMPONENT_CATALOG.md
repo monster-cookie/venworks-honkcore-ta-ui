@@ -544,13 +544,16 @@ when Bethesda suppresses the floating marker outside scanner mode without
 inventing a new provider or mutating provider data.
 
 Vanilla `FloatingQuestMarkerBase` remains active and completes its provider
-processing before suppression. A narrow late-frame ownership pass mirrors
-Bethesda's visible-marker clip ordering, restores configured vanilla-target
-placement after HUD timeline updates, and sets `visible = false` only on the
-`Text_mc` for a marker with non-empty tracked-objective text and
-`bShouldShowText`. Quest icons, offscreen arrows, and numeric distance text stay
-under Bethesda ownership; the production layout does not hide the whole
-`floatingQuestMarkers` target or use alpha suppression.
+processing before suppression. An `ENTER_FRAME` trigger schedules one
+`Event.RENDER` ownership pass per HUD frame, so the mutations occur after
+Bethesda's visible-marker and scanner timeline updates. The render-phase pass
+mirrors Bethesda's visible-marker clip ordering, restores configured
+vanilla-target placement, and sets `visible = false` only on the `Text_mc` for a
+marker with non-empty tracked-objective text and `bShouldShowText`. Quest icons,
+offscreen arrows, and numeric distance text stay under Bethesda ownership; the
+production layout does not hide the whole `floatingQuestMarkers` target or use
+alpha suppression. Runtime teardown removes the frame trigger and any pending
+render callback.
 
 Live CUI delivery is dependency-aware. `HudCompassData` dispatches a dedicated
 radar event, so weapon, XP, inventory, environment, and other value-provider

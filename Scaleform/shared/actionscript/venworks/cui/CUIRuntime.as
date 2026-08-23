@@ -3,6 +3,7 @@ package venworks.cui
    import Shared.AS3.Events.CustomEvent;
    import flash.display.DisplayObjectContainer;
    import flash.display.Sprite;
+   import flash.display.Stage;
    import flash.events.Event;
    import venworks.cui.components.CUIComponent;
    import venworks.cui.components.CUIContinuousBar;
@@ -57,6 +58,8 @@ package venworks.cui
       private var diagnosticNode:XML;
       private var diagnosticCheckpoint:String = "";
       private var vanillaOwnershipReconciliationActive:Boolean = false;
+      private var vanillaOwnershipRenderScheduled:Boolean = false;
+      private var vanillaOwnershipStage:Stage = null;
 
       public function CUIRuntime(param1:DisplayObjectContainer)
       {
@@ -614,14 +617,34 @@ package venworks.cui
          }
          vanillaOwnershipReconciliationActive = true;
          owner.addEventListener(Event.ENTER_FRAME,this.onVanillaOwnershipFrame);
+         this.scheduleVanillaOwnershipRender();
       }
 
       private function onVanillaOwnershipFrame(param1:Event) : void
       {
+         this.scheduleVanillaOwnershipRender();
+      }
+
+      private function scheduleVanillaOwnershipRender() : void
+      {
+         var targetStage:Stage = owner == null ? null : owner.stage;
+         if(!vanillaOwnershipReconciliationActive || vanillaOwnershipRenderScheduled || targetStage == null)
+         {
+            return;
+         }
+         vanillaOwnershipRenderScheduled = true;
+         vanillaOwnershipStage = targetStage;
+         vanillaOwnershipStage.addEventListener(Event.RENDER,this.onVanillaOwnershipRender);
+         vanillaOwnershipStage.invalidate();
+      }
+
+      private function onVanillaOwnershipRender(param1:Event) : void
+      {
          var adapter:CUIVanillaVisibilityAdapter = null;
+         this.cancelVanillaOwnershipRender();
          try
          {
-            this.setDiagnosticContext("LATE-FRAME VANILLA OWNERSHIP",null);
+            this.setDiagnosticContext("RENDER-PHASE VANILLA OWNERSHIP",null);
             for each(adapter in vanillaAdapters)
             {
                adapter.reapplyPlacement();
@@ -635,12 +658,23 @@ package venworks.cui
          }
       }
 
+      private function cancelVanillaOwnershipRender() : void
+      {
+         if(vanillaOwnershipStage != null)
+         {
+            vanillaOwnershipStage.removeEventListener(Event.RENDER,this.onVanillaOwnershipRender);
+         }
+         vanillaOwnershipRenderScheduled = false;
+         vanillaOwnershipStage = null;
+      }
+
       private function stopVanillaOwnershipReconciliation() : void
       {
          if(owner != null)
          {
             owner.removeEventListener(Event.ENTER_FRAME,this.onVanillaOwnershipFrame);
          }
+         this.cancelVanillaOwnershipRender();
          vanillaOwnershipReconciliationActive = false;
       }
 

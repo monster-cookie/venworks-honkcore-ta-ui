@@ -1615,7 +1615,11 @@ try {
     ).Value
     $reopenedVanillaOwnershipFrameHandler = [regex]::Match(
       $reopenedRuntimeSource,
-      '(?s)private function onVanillaOwnershipFrame\b.*?(?=\s+private function stopVanillaOwnershipReconciliation\b)'
+      '(?s)private function onVanillaOwnershipFrame\b.*?(?=\s+private function scheduleVanillaOwnershipRender\b)'
+    ).Value
+    $reopenedVanillaOwnershipRenderHandler = [regex]::Match(
+      $reopenedRuntimeSource,
+      '(?s)private function onVanillaOwnershipRender\b.*?(?=\s+private function cancelVanillaOwnershipRender\b)'
     ).Value
     $reopenedContactRenderHandler = [regex]::Match(
       $reopenedContactRadarSource,
@@ -1754,17 +1758,29 @@ try {
         $reopenedRuntimeSource -notmatch 'function\s+suppressVanillaTrackedQuestText' -or
         $reopenedRuntimeSource -notmatch 'function\s+startVanillaOwnershipReconciliation' -or
         $reopenedRuntimeSource -notmatch 'function\s+onVanillaOwnershipFrame' -or
+        $reopenedRuntimeSource -notmatch 'function\s+scheduleVanillaOwnershipRender' -or
+        $reopenedRuntimeSource -notmatch 'function\s+onVanillaOwnershipRender' -or
+        $reopenedRuntimeSource -notmatch 'function\s+cancelVanillaOwnershipRender' -or
         $reopenedRuntimeSource -notmatch 'function\s+stopVanillaOwnershipReconciliation' -or
         $reopenedRuntimeSource -notmatch 'owner\.addEventListener\s*\(\s*Event\.ENTER_FRAME\s*,\s*this\.onVanillaOwnershipFrame\s*\)' -or
         $reopenedRuntimeSource -notmatch 'owner\.removeEventListener\s*\(\s*Event\.ENTER_FRAME\s*,\s*this\.onVanillaOwnershipFrame\s*\)' -or
         ([regex]::Matches($reopenedRuntimeSource, 'Event\.ENTER_FRAME')).Count -ne 2 -or
+        $reopenedRuntimeSource -notmatch 'vanillaOwnershipStage\.addEventListener\s*\(\s*Event\.RENDER\s*,\s*this\.onVanillaOwnershipRender\s*\)' -or
+        $reopenedRuntimeSource -notmatch 'vanillaOwnershipStage\.removeEventListener\s*\(\s*Event\.RENDER\s*,\s*this\.onVanillaOwnershipRender\s*\)' -or
+        ([regex]::Matches($reopenedRuntimeSource, 'Event\.RENDER')).Count -ne 2 -or
+        $reopenedRuntimeSource -notmatch 'vanillaOwnershipStage\.invalidate\s*\(\s*\)' -or
+        ([regex]::Matches($reopenedRuntimeSource, 'this\.scheduleVanillaOwnershipRender\s*\(\s*\)')).Count -ne 2 -or
+        ([regex]::Matches($reopenedRuntimeSource, 'this\.cancelVanillaOwnershipRender\s*\(\s*\)')).Count -ne 2 -or
         $reopenedRuntimeSource -notmatch 'this\.startVanillaOwnershipReconciliation\s*\(\s*\)' -or
         $reopenedRuntimeSource -notmatch 'this\.stopVanillaOwnershipReconciliation\s*\(\s*\)' -or
-        $reopenedRuntimeSource -match 'Event\.RENDER|questTextSuppressionScheduled|questTextSuppressionStage' -or
+        $reopenedRuntimeSource -match 'questTextSuppressionScheduled|questTextSuppressionStage' -or
         $reopenedVanillaOwnershipFrameHandler.Length -eq 0 -or
-        $reopenedVanillaOwnershipFrameHandler -notmatch 'adapter\.reapplyPlacement\s*\(\s*\)' -or
-        $reopenedVanillaOwnershipFrameHandler -notmatch 'suppressVanillaTrackedQuestText\s*\(\s*\)' -or
-        $reopenedVanillaOwnershipFrameHandler -match 'applyValues|applyConditions|applyContactRadars|applyTacticalAwareness|renderChildren' -or
+        $reopenedVanillaOwnershipFrameHandler -notmatch 'scheduleVanillaOwnershipRender\s*\(\s*\)' -or
+        $reopenedVanillaOwnershipFrameHandler -match 'reapplyPlacement|suppressVanillaTrackedQuestText|applyValues|applyConditions|applyContactRadars|applyTacticalAwareness|renderChildren' -or
+        $reopenedVanillaOwnershipRenderHandler.Length -eq 0 -or
+        $reopenedVanillaOwnershipRenderHandler -notmatch 'adapter\.reapplyPlacement\s*\(\s*\)' -or
+        $reopenedVanillaOwnershipRenderHandler -notmatch 'suppressVanillaTrackedQuestText\s*\(\s*\)' -or
+        $reopenedVanillaOwnershipRenderHandler -match 'applyValues|applyConditions|applyContactRadars|applyTacticalAwareness|renderChildren' -or
         $reopenedRuntimeSource -notmatch 'getChildByName\s*\(\s*"FloatingQuestMarkerBase"\s*\)' -or
         $reopenedRuntimeSource -notmatch 'Text_mc.*visible\s*=\s*false' -or
         $reopenedRuntimeSource -match 'Text_mc.*alpha\s*=' -or
