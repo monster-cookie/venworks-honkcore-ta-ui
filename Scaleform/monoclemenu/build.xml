@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scaleformBuild name="monoclemenu"
+                inputFile="monoclemenu.swf"
+                outputFile="monoclemenu.swf"
+                vanillaHashFile="vanilla.sha256"
+                expectedHashFile="validation/expected.sha256"
+                actionScriptPatch="../shared/patches/cui-monocle-planet-info.xml" />

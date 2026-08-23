@@ -3,7 +3,6 @@ package venworks.cui
    import Shared.AS3.Events.CustomEvent;
    import flash.display.DisplayObjectContainer;
    import flash.display.Sprite;
-   import flash.display.Stage;
    import flash.events.Event;
    import venworks.cui.components.CUIComponent;
    import venworks.cui.components.CUIContinuousBar;
@@ -57,9 +56,6 @@ package venworks.cui
       private var diagnosticPhase:String = "";
       private var diagnosticNode:XML;
       private var diagnosticCheckpoint:String = "";
-      private var vanillaOwnershipReconciliationActive:Boolean = false;
-      private var vanillaOwnershipRenderScheduled:Boolean = false;
-      private var vanillaOwnershipStage:Stage = null;
 
       public function CUIRuntime(param1:DisplayObjectContainer)
       {
@@ -227,7 +223,6 @@ package venworks.cui
             this.applyTacticalAwareness();
             this.setDiagnosticContext("INITIAL VISIBILITY EVALUATION",null);
             this.applyConditions();
-            this.startVanillaOwnershipReconciliation();
             this.clearDiagnosticContext();
             diagnostics.clear();
          }
@@ -609,107 +604,6 @@ package venworks.cui
          }
       }
 
-      private function startVanillaOwnershipReconciliation() : void
-      {
-         if(vanillaOwnershipReconciliationActive || owner == null)
-         {
-            return;
-         }
-         vanillaOwnershipReconciliationActive = true;
-         owner.addEventListener(Event.ENTER_FRAME,this.onVanillaOwnershipFrame);
-         this.scheduleVanillaOwnershipRender();
-      }
-
-      private function onVanillaOwnershipFrame(param1:Event) : void
-      {
-         this.scheduleVanillaOwnershipRender();
-      }
-
-      private function scheduleVanillaOwnershipRender() : void
-      {
-         var targetStage:Stage = owner == null ? null : owner.stage;
-         if(!vanillaOwnershipReconciliationActive || vanillaOwnershipRenderScheduled || targetStage == null)
-         {
-            return;
-         }
-         vanillaOwnershipRenderScheduled = true;
-         vanillaOwnershipStage = targetStage;
-         vanillaOwnershipStage.addEventListener(Event.RENDER,this.onVanillaOwnershipRender);
-         vanillaOwnershipStage.invalidate();
-      }
-
-      private function onVanillaOwnershipRender(param1:Event) : void
-      {
-         var adapter:CUIVanillaVisibilityAdapter = null;
-         this.cancelVanillaOwnershipRender();
-         try
-         {
-            this.setDiagnosticContext("RENDER-PHASE VANILLA OWNERSHIP",null);
-            for each(adapter in vanillaAdapters)
-            {
-               adapter.reapplyPlacement();
-            }
-            this.suppressVanillaTrackedQuestText();
-            this.clearDiagnosticContext();
-         }
-         catch(param2:Error)
-         {
-            this.showRuntimeError(param2);
-         }
-      }
-
-      private function cancelVanillaOwnershipRender() : void
-      {
-         if(vanillaOwnershipStage != null)
-         {
-            vanillaOwnershipStage.removeEventListener(Event.RENDER,this.onVanillaOwnershipRender);
-         }
-         vanillaOwnershipRenderScheduled = false;
-         vanillaOwnershipStage = null;
-      }
-
-      private function stopVanillaOwnershipReconciliation() : void
-      {
-         if(owner != null)
-         {
-            owner.removeEventListener(Event.ENTER_FRAME,this.onVanillaOwnershipFrame);
-         }
-         this.cancelVanillaOwnershipRender();
-         vanillaOwnershipReconciliationActive = false;
-      }
-
-      private function suppressVanillaTrackedQuestText() : void
-      {
-         var questMarkerRoot:DisplayObjectContainer = owner.getChildByName("FloatingQuestMarkerBase") as DisplayObjectContainer;
-         var compassData:Object = valueContext == null ? null : valueContext.currentCompassData;
-         var missionMarkers:Array = compassData == null ? null : compassData.aMissionMarkers as Array;
-         var marker:Object = null;
-         var markerClip:Object = null;
-         var markerIndex:int = 0;
-         var markerClipIndex:int = 0;
-         if(questMarkerRoot == null || missionMarkers == null)
-         {
-            return;
-         }
-         while(markerIndex < missionMarkers.length && markerClipIndex < questMarkerRoot.numChildren)
-         {
-            marker = missionMarkers[markerIndex];
-            if(marker != null && Boolean(marker.bFloatingMarkerVisible))
-            {
-               markerClip = questMarkerRoot.getChildAt(markerClipIndex);
-               if(marker.bShouldShowText === true && marker.strText !== undefined && marker.strText !== null &&
-                  String(marker.strText).replace(/\s/g,"").length > 0 &&
-                  markerClip != null && markerClip["Text_mc"] != null &&
-                  Boolean(markerClip["Text_mc"].visible))
-               {
-                  markerClip["Text_mc"].visible = false;
-               }
-               ++markerClipIndex;
-            }
-            ++markerIndex;
-         }
-      }
-
       private function applyTacticalAwareness() : void
       {
          var compassTape:CUICompassTape = null;
@@ -763,7 +657,6 @@ package venworks.cui
       private function clearComponentLayer() : void
       {
          var adapter:CUIVanillaVisibilityAdapter = null;
-         this.stopVanillaOwnershipReconciliation();
          if(conditionContext != null)
          {
             conditionContext.removeEventListener(CUIConditionContext.CONDITION_CHANGE,this.onConditionChanged);

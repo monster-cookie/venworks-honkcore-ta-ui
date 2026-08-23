@@ -528,12 +528,11 @@ present with a blank text field when no active tracked-objective text exists.
 It has no scanner, aiming, combat, or view-mode condition and therefore remains
 part of normal, aiming, and scanner HUD compositions.
 
-The Bethesda-owned `bottomLeft` survey group remains independent of the quest
-component. It is configured with `visibleWhen="inScanner"`, `offsetX="0"`, and
-`offsetY="266"`, placing its survey window about 125 design units above Player
-Data while retaining Bethesda's original transform, provider processing, and
-timeline animation. Outside scanner mode the whole group is set to
-`visible = false`; alpha is not used as the hiding contract.
+The scanner survey panel is not part of HUDMenu's `bottomLeft` group. Bethesda
+creates it as `MonocleMenu.PlanetInfo_mc` whenever the on-foot scanner opens.
+The normal and large Monocle movies apply a 266-design-unit Y offset in that
+owner's constructor, retaining its provider processing, nested timelines, and
+visibility behavior without moving the unrelated Watch/environment group.
 
 The value is derived from the existing read-only
 `HudCompassData.aMissionMarkers` array. Resolution prefers the non-empty
@@ -543,17 +542,13 @@ not depend on `bFloatingMarkerVisible`, keeping the tracked objective available
 when Bethesda suppresses the floating marker outside scanner mode without
 inventing a new provider or mutating provider data.
 
-Vanilla `FloatingQuestMarkerBase` remains active and completes its provider
-processing before suppression. An `ENTER_FRAME` trigger schedules one
-`Event.RENDER` ownership pass per HUD frame, so the mutations occur after
-Bethesda's visible-marker and scanner timeline updates. The render-phase pass
-mirrors Bethesda's visible-marker clip ordering, restores configured
-vanilla-target placement, and sets `visible = false` only on the `Text_mc` for a
-marker with non-empty tracked-objective text and `bShouldShowText`. Quest icons,
-offscreen arrows, and numeric distance text stay under Bethesda ownership; the
-production layout does not hide the whole `floatingQuestMarkers` target or use
-alpha suppression. Runtime teardown removes the frame trigger and any pending
-render callback.
+The duplicated scanner objective is not owned by `FloatingQuestMarkerBase`.
+`HUDMessagesMenu` receives `MonocleMenu_Opened` and normally enables its
+always-up active-quest objective list. The normal and large HUD Messages movies
+are patched at that handler to keep the always-up list hidden only for the
+on-foot scanner. Temporary quest notifications, ship-scanner behavior, quest
+markers, offscreen arrows, and numeric distances retain Bethesda's original
+code paths. HUDMenu performs no sibling-movie lookup or per-frame correction.
 
 Live CUI delivery is dependency-aware. `HudCompassData` dispatches a dedicated
 radar event, so weapon, XP, inventory, environment, and other value-provider
@@ -565,8 +560,7 @@ vanilla adapters re-evaluate only when their expressions consume one of those
 names, with HUD opacity retained as an explicit vanilla-adapter dependency.
 Bethesda HUD-mode changes reapply only vanilla adapters. Initial component
 construction remains a complete one-time evaluation so unchanged defaults are
-still rendered. Live callbacks apply their affected domain directly. The narrow
-ownership pass does not redraw components or rerun provider pipelines; the
+still rendered. Live callbacks apply their affected domain directly. The
 rejected generic next-frame queue caused lag, stalls, and delayed pause response
 during Bloodthirsty testing and remains absent from the production baseline.
 

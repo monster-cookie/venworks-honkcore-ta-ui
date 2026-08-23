@@ -3,7 +3,7 @@
 ## Version 2.0.2 (August 22, 2026)
 
 - No changes just wiring up Nexus API from GitHub Actions.
-- Fixed scanner frame updates restoring the vanilla quest text and resetting the survey data position.
+- Fixed scanner startup restoring the vanilla tracked quest and resetting the survey panel to its stock position.
 
 ## Version 2.0.0 (August 22, 2026)
 

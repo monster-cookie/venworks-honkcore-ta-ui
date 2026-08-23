@@ -1613,14 +1613,6 @@ try {
       $reopenedRuntimeSource,
       '(?s)public function updateVanillaHudModeVisibility\b.*?(?=\s+private function onLoaded\b)'
     ).Value
-    $reopenedVanillaOwnershipFrameHandler = [regex]::Match(
-      $reopenedRuntimeSource,
-      '(?s)private function onVanillaOwnershipFrame\b.*?(?=\s+private function scheduleVanillaOwnershipRender\b)'
-    ).Value
-    $reopenedVanillaOwnershipRenderHandler = [regex]::Match(
-      $reopenedRuntimeSource,
-      '(?s)private function onVanillaOwnershipRender\b.*?(?=\s+private function cancelVanillaOwnershipRender\b)'
-    ).Value
     $reopenedContactRenderHandler = [regex]::Match(
       $reopenedContactRadarSource,
       '(?s)private function renderContact\b.*?(?=\s+private function selectContactStyle\b)'
@@ -1755,39 +1747,9 @@ try {
         $reopenedPlayerHudDataContextSource -notmatch 'strText' -or
         $reopenedPlayerHudDataContextSource -match 'bFloatingMarkerVisible' -or
         $reopenedConditionContextSource -match 'hastrackedobjective|CUIPlayerHudDataContext\.resolveTrackedObjective' -or
-        $reopenedRuntimeSource -notmatch 'function\s+suppressVanillaTrackedQuestText' -or
-        $reopenedRuntimeSource -notmatch 'function\s+startVanillaOwnershipReconciliation' -or
-        $reopenedRuntimeSource -notmatch 'function\s+onVanillaOwnershipFrame' -or
-        $reopenedRuntimeSource -notmatch 'function\s+scheduleVanillaOwnershipRender' -or
-        $reopenedRuntimeSource -notmatch 'function\s+onVanillaOwnershipRender' -or
-        $reopenedRuntimeSource -notmatch 'function\s+cancelVanillaOwnershipRender' -or
-        $reopenedRuntimeSource -notmatch 'function\s+stopVanillaOwnershipReconciliation' -or
-        $reopenedRuntimeSource -notmatch 'owner\.addEventListener\s*\(\s*Event\.ENTER_FRAME\s*,\s*this\.onVanillaOwnershipFrame\s*\)' -or
-        $reopenedRuntimeSource -notmatch 'owner\.removeEventListener\s*\(\s*Event\.ENTER_FRAME\s*,\s*this\.onVanillaOwnershipFrame\s*\)' -or
-        ([regex]::Matches($reopenedRuntimeSource, 'Event\.ENTER_FRAME')).Count -ne 2 -or
-        $reopenedRuntimeSource -notmatch 'vanillaOwnershipStage\.addEventListener\s*\(\s*Event\.RENDER\s*,\s*this\.onVanillaOwnershipRender\s*\)' -or
-        $reopenedRuntimeSource -notmatch 'vanillaOwnershipStage\.removeEventListener\s*\(\s*Event\.RENDER\s*,\s*this\.onVanillaOwnershipRender\s*\)' -or
-        ([regex]::Matches($reopenedRuntimeSource, 'Event\.RENDER')).Count -ne 2 -or
-        $reopenedRuntimeSource -notmatch 'vanillaOwnershipStage\.invalidate\s*\(\s*\)' -or
-        ([regex]::Matches($reopenedRuntimeSource, 'this\.scheduleVanillaOwnershipRender\s*\(\s*\)')).Count -ne 2 -or
-        ([regex]::Matches($reopenedRuntimeSource, 'this\.cancelVanillaOwnershipRender\s*\(\s*\)')).Count -ne 2 -or
-        $reopenedRuntimeSource -notmatch 'this\.startVanillaOwnershipReconciliation\s*\(\s*\)' -or
-        $reopenedRuntimeSource -notmatch 'this\.stopVanillaOwnershipReconciliation\s*\(\s*\)' -or
-        $reopenedRuntimeSource -match 'questTextSuppressionScheduled|questTextSuppressionStage' -or
-        $reopenedVanillaOwnershipFrameHandler.Length -eq 0 -or
-        $reopenedVanillaOwnershipFrameHandler -notmatch 'scheduleVanillaOwnershipRender\s*\(\s*\)' -or
-        $reopenedVanillaOwnershipFrameHandler -match 'reapplyPlacement|suppressVanillaTrackedQuestText|applyValues|applyConditions|applyContactRadars|applyTacticalAwareness|renderChildren' -or
-        $reopenedVanillaOwnershipRenderHandler.Length -eq 0 -or
-        $reopenedVanillaOwnershipRenderHandler -notmatch 'adapter\.reapplyPlacement\s*\(\s*\)' -or
-        $reopenedVanillaOwnershipRenderHandler -notmatch 'suppressVanillaTrackedQuestText\s*\(\s*\)' -or
-        $reopenedVanillaOwnershipRenderHandler -match 'applyValues|applyConditions|applyContactRadars|applyTacticalAwareness|renderChildren' -or
-        $reopenedRuntimeSource -notmatch 'getChildByName\s*\(\s*"FloatingQuestMarkerBase"\s*\)' -or
-        $reopenedRuntimeSource -notmatch 'Text_mc.*visible\s*=\s*false' -or
-        $reopenedRuntimeSource -match 'Text_mc.*alpha\s*=' -or
-        $reopenedCompassChangeHandler -match 'VanillaOwnership|suppressVanillaTrackedQuestText' -or
-        $reopenedRuntimeSource -match 'questMarkerRoot\.visible\s*=\s*false' -or
-        $reopenedRuntimeSource -match 'markerClip\.visible\s*=\s*false') {
-      throw 'Cards 142 and 148 must retain the tracked-objective value and narrowly reconcile vanilla placement and quest-marker text after Bethesda frame updates.'
+        $reopenedRuntimeSource -match 'VanillaOwnership|suppressVanillaTrackedQuestText|FloatingQuestMarkerBase|Event\.RENDER|Event\.ENTER_FRAME|questTextSuppressionScheduled|questTextSuppressionStage' -or
+        $reopenedCompassChangeHandler -match 'VanillaOwnership|suppressVanillaTrackedQuestText') {
+      throw 'Card 142 must retain the tracked-objective value, and Card 148 must not mutate sibling-menu quest or survey owners from HUDMenu.'
     }
     foreach ($meterRenderer in @('CUIContinuousBar','CUISegmentedBar','CUITriangleBar','CUIDotBar','CUIRadialMeter')) {
       $meterRendererPath = Join-Path $validationScriptsDirectory "scripts\venworks\cui\components\$meterRenderer.as"
@@ -2604,13 +2566,7 @@ try {
       [string]$helmetVehicleExitLabels[0].value -ne '$EXIT HOLD' -or
       $helmetVehicleExitGlyphs.Count -ne 1 -or
       [string]$helmetVehicleExitGlyphs[0].name -ne 'vehicle-exit-prompt' -or
-      $bottomLeftTargets.Count -ne 1 -or
-      [string]$bottomLeftTargets[0].visibleWhen -ne 'inScanner' -or
-      [string]$bottomLeftTargets[0].offsetX -ne '0' -or
-      [string]$bottomLeftTargets[0].offsetY -ne '266' -or
-      $bottomLeftTargets[0].HasAttribute('anchor') -or
-      $bottomLeftTargets[0].HasAttribute('x') -or
-      $bottomLeftTargets[0].HasAttribute('y') -or
+      $bottomLeftTargets.Count -ne 0 -or
       [int]$stagedPlayerScannerGroup.width -ne 360 -or
       [int]$stagedPlayerScannerGroup.height -ne 236 -or
       $stagedPlayerStructuralPaths.Count -ne 0 -or
@@ -2777,3 +2733,19 @@ finally {
     Remove-Item -LiteralPath $resolvedBuildWorkDirectory -Recurse -Force
   }
 }
+
+$overrideCompilerPath = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot 'compileScaleformOverrides.ps1') `
+  -Description 'Bethesda owner-movie override compiler'
+$overrideCompilerArguments = @{
+  JavaPath = $script:ResolvedJavaPath
+  JpexsJarPath = $script:ResolvedJpexsJarPath
+  VanillaInterfacePath = $resolvedVanillaInterfacePath
+  OutputDirectory = $resolvedOutputDirectories
+  WorkDirectory = $resolvedWorkDirectory
+  ReferenceCacheManifestPath = $resolvedReferenceCacheManifestPath
+}
+if ($KeepWork) {
+  $overrideCompilerArguments.KeepWork = $true
+}
+& $overrideCompilerPath @overrideCompilerArguments

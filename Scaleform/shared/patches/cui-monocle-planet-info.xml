@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<actionScriptPatch name="cui-monocle-planet-info" version="1" script="MonocleMenu">
+  <insertions>
+    <insertion position="after"><anchor><![CDATA[         super();]]></anchor><content><![CDATA[
+         this.PlanetInfo_mc.y += 266;]]></content></insertion>
+  </insertions>
+  <validation>
+    <require><![CDATA[super\s*\(\s*\)\s*;\s*this\.PlanetInfo_mc\.y\s*\+=\s*266\s*;]]></require>
+  </validation>
+</actionScriptPatch>
