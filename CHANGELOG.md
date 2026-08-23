@@ -3,7 +3,7 @@
 ## Version 2.0.2 (August 22, 2026)
 
 - No changes just wiring up Nexus API from GitHub Actions.
-- Fixed scanner startup restoring the vanilla tracked quest and resetting the survey panel to its stock position.
+- Fixed scanner startup restoring the vanilla tracked quest while keeping the vanilla Watch display hidden.
 
 ## Version 2.0.0 (August 22, 2026)
 

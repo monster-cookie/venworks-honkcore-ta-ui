@@ -14,9 +14,8 @@ output are written to `Scaleform/.work`.
 
 - Eclipse Temurin Java 21 (or a compatible Java 21 runtime)
 - JPEXS Free Flash Decompiler 26.2.1
-- Clean `hudmenu.gfx`, `hudmenu_lrg.gfx`, `hudmessagesmenu.gfx`,
-  `hudmessagesmenu_lrg.gfx`, `monoclemenu.swf`, and `monoclemenu_lrg.swf`
-  files extracted from `Starfield - Interface.ba2`
+- Clean `hudmenu.gfx`, `hudmenu_lrg.gfx`, `hudmessagesmenu.gfx`, and
+  `hudmessagesmenu_lrg.gfx` files extracted from `Starfield - Interface.ba2`
 - The complete reference-cache command additionally requires every movie and
   provider fixture listed in `reference-cache.xml` from the same vanilla
   Interface extraction
@@ -78,9 +77,11 @@ quest markers, icons, arrows, distance labels, and temporary quest notifications
 remain under Bethesda ownership. `HUDMessagesMenu` is patched at its
 `MonocleMenu_Opened` handler so opening the on-foot scanner keeps only the
 always-up objective list hidden; ship-scanner behavior is unchanged.
-`MonocleMenu` applies the production 266-design-unit Y offset directly to its
-own `PlanetInfo_mc` survey panel when that movie is constructed. No HUD-wide
-frame callback or cross-movie display lookup is used.
+The HUDMenu-owned Watch/environment cluster is configured with
+`visibleWhen="never"`, which applies real display visibility without positional
+hiding. Bethesda's original Monocle movies retain scanner input, labels, and
+survey placement. No HUD-wide frame callback or cross-movie display lookup is
+used.
 
 Regenerate the curated built-in icon definitions when their approved Font
 Awesome source subset changes:
@@ -102,11 +103,11 @@ The build injects the Venworks-only ABC seed into both HUD sizes, reads its
 vanilla XML from the ignored reference cache, exports patched and reopened
 ActionScript only into ignored temporary storage, verifies the authored
 `HUDMenu` patch anchors, and imports the patched document class plus the
-repository-authored CUI classes. A separate bounded override pass patches the
-normal and large `HUDMessagesMenu` and `MonocleMenu` document classes at their
-exact vanilla anchors. Both passes confirm that every other exported class
-remains textually identical and that reopened outputs contain the required
-contracts. Full exported Bethesda classes are never repository source.
+repository-authored CUI classes. A separate bounded override pass patches only
+the normal and large `HUDMessagesMenu` document classes at their exact vanilla
+anchor. Both passes confirm that every other exported class remains textually
+identical and that reopened outputs contain the required contracts. Full
+exported Bethesda classes are never repository source.
 
 Root layouts may select one optional, version-1 palette by filename with the
 `palette` attribute. The runtime loads that file only from

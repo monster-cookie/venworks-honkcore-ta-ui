@@ -2566,7 +2566,13 @@ try {
       [string]$helmetVehicleExitLabels[0].value -ne '$EXIT HOLD' -or
       $helmetVehicleExitGlyphs.Count -ne 1 -or
       [string]$helmetVehicleExitGlyphs[0].name -ne 'vehicle-exit-prompt' -or
-      $bottomLeftTargets.Count -ne 0 -or
+      $bottomLeftTargets.Count -ne 1 -or
+      [string]$bottomLeftTargets[0].visibleWhen -ne 'never' -or
+      $bottomLeftTargets[0].HasAttribute('offsetX') -or
+      $bottomLeftTargets[0].HasAttribute('offsetY') -or
+      $bottomLeftTargets[0].HasAttribute('anchor') -or
+      $bottomLeftTargets[0].HasAttribute('x') -or
+      $bottomLeftTargets[0].HasAttribute('y') -or
       [int]$stagedPlayerScannerGroup.width -ne 360 -or
       [int]$stagedPlayerScannerGroup.height -ne 236 -or
       $stagedPlayerStructuralPaths.Count -ne 0 -or

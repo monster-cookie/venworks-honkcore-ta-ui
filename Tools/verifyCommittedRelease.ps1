@@ -240,14 +240,6 @@ $movies = @(
   [pscustomobject]@{
     FileName = 'hudmessagesmenu_lrg.gfx'
     ExpectedHashPath = 'Scaleform/hudmessagesmenu_lrg/validation/expected.sha256'
-  },
-  [pscustomobject]@{
-    FileName = 'monoclemenu.swf'
-    ExpectedHashPath = 'Scaleform/monoclemenu/validation/expected.sha256'
-  },
-  [pscustomobject]@{
-    FileName = 'monoclemenu_lrg.swf'
-    ExpectedHashPath = 'Scaleform/monoclemenu_lrg/validation/expected.sha256'
   }
 )
 

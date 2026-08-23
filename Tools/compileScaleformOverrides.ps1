@@ -22,9 +22,7 @@ param(
 
   [string[]]$ManifestPath = @(
     (Join-Path $PSScriptRoot "..\Scaleform\hudmessagesmenu\build.xml"),
-    (Join-Path $PSScriptRoot "..\Scaleform\hudmessagesmenu_lrg\build.xml"),
-    (Join-Path $PSScriptRoot "..\Scaleform\monoclemenu\build.xml"),
-    (Join-Path $PSScriptRoot "..\Scaleform\monoclemenu_lrg\build.xml")
+    (Join-Path $PSScriptRoot "..\Scaleform\hudmessagesmenu_lrg\build.xml")
   ),
 
   [switch]$KeepWork,

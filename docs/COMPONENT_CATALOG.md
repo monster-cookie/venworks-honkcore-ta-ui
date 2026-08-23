@@ -530,9 +530,16 @@ part of normal, aiming, and scanner HUD compositions.
 
 The scanner survey panel is not part of HUDMenu's `bottomLeft` group. Bethesda
 creates it as `MonocleMenu.PlanetInfo_mc` whenever the on-foot scanner opens.
-The normal and large Monocle movies apply a 266-design-unit Y offset in that
-owner's constructor, retaining its provider processing, nested timelines, and
-visibility behavior without moving the unrelated Watch/environment group.
+The shipped build does not override either Monocle movie: recompiling its
+document class broke scanner button initialization and prevented scanner exit
+despite passing static reopen checks. Survey placement therefore remains at
+Bethesda's stock position pending a separately validated, bytecode-preserving
+approach.
+
+HUDMenu's `bottomLeft` target is the Watch/environment cluster replaced by the
+custom HUD. Its production rule uses `visibleWhen="never"`, applying real
+`visible = false` behavior without relying on an offset that can fail under UI
+scaling or aspect-ratio changes.
 
 The value is derived from the existing read-only
 `HudCompassData.aMissionMarkers` array. Resolution prefers the non-empty

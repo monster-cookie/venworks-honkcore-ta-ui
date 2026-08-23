@@ -265,23 +265,26 @@ hide, or reposition only six whole Bethesda HUD targets:
 | Target ID | Bethesda display |
 |---|---|
 | `topCenter` | Top-center HUD group. |
-| `bottomLeft` | Bottom-left HUD group. |
+| `bottomLeft` | Watch/environment HUD group. |
 | `rightMeters` | Right-side meters. |
 | `socialCommandIcons` | Social command icons. |
 | `floatingQuestMarkers` | Floating quest markers. |
 | `crewBuffWidget` | Crew buff widget. |
 
 Target names are case-insensitive and ignore underscores. The production layout
-moves Bethesda's bottom-left group only while scanning and suppresses the
-right-side meters:
+suppresses the Bethesda Watch/environment group and right-side meters with real
+display visibility:
 
 ```xml
 <vanillaVisibility>
-  <target id="bottomLeft" visibleWhen="inScanner"
-          offsetX="0" offsetY="266" />
+  <target id="bottomLeft" visibleWhen="never" />
   <target id="rightMeters" visibleWhen="never" />
 </vanillaVisibility>
 ```
+
+Do not use an offset to move an unwanted target outside the design area. That
+is not a visibility contract and can fail under UI scaling or aspect-ratio
+changes.
 
 Relative placement requires `offsetX` and `offsetY` together and adds them to
 Bethesda's original position. Absolute placement requires `x`, `y`, and

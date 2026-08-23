@@ -59,8 +59,7 @@ Choose one theme and one PC package shape. The recommended Nexus PC - Normal
 package installs a root ESM, Windows BA2 archives, and one loose
 `Interface\VenworksCUI\layout.xml`. Enable the ESM and let the package win HUD
 conflicts. The loose layout remains directly editable while the compiled
-`hudmenu*`, `hudmessagesmenu*`, and `monoclemenu*` files stay protected inside
-the Main BA2.
+`hudmenu*` and `hudmessagesmenu*` files stay protected inside the Main BA2.
 
 The Nexus PC - Fully Loose Files package installs the complete `Interface`
 tree without an ESM or BA2. Use it only when component fragments, palettes, or
@@ -73,10 +72,9 @@ PS5. Install only the package supplied for the current platform and enable only
 one theme variant.
 
 This release has no HONKCORE dependency. It conflicts with other HUD mods that
-overwrite any of `hudmenu*.gfx`, `hudmessagesmenu*.gfx`, or `monoclemenu*.swf`
-unless a purpose-built compatibility patch combines their changes. This
-includes NSFNA ULTIMATE's Monocle files; disable that mod until its separate bug
-fixes are merged into a compatible build.
+overwrite either `hudmenu*.gfx` or `hudmessagesmenu*.gfx` unless a purpose-built
+compatibility patch combines their changes. It does not ship Monocle menu
+overrides.
 
 ## Configuration
 
