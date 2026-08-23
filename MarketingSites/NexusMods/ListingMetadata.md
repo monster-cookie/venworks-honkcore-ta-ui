@@ -13,9 +13,11 @@
 - Required mods: None.
 - Remove the obsolete HONKCORE hard requirement.
 - Remove the obsolete HUD Info Widget soft requirement.
-- State that HONKCORE and other mods replacing `hudmenu.gfx` or
-  `hudmenu_lrg.gfx` are incompatible unless a purpose-built patch combines the
-  changes.
+- State that HONKCORE and other mods replacing `hudmenu.gfx`,
+  `hudmenu_lrg.gfx`, `hudmessagesmenu.gfx`, or `hudmessagesmenu_lrg.gfx` are
+  incompatible unless a purpose-built patch combines the changes. Load order
+  only selects which mod's changes are discarded; it does not make the movies
+  compatible.
 - Retain the old HONKCORE theme downloads in the Files section as legacy files.
   Do not mark them as files for the new customizable HUD, and do not tell users
   to install a legacy HONKCORE file alongside a new theme.

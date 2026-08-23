@@ -14,8 +14,8 @@ output are written to `Scaleform/.work`.
 
 - Eclipse Temurin Java 21 (or a compatible Java 21 runtime)
 - JPEXS Free Flash Decompiler 26.2.1
-- Clean `hudmenu.gfx` and `hudmenu_lrg.gfx` files extracted from
-  `Starfield - Interface.ba2`
+- Clean `hudmenu.gfx`, `hudmenu_lrg.gfx`, `hudmessagesmenu.gfx`, and
+  `hudmessagesmenu_lrg.gfx` files extracted from `Starfield - Interface.ba2`
 - The complete reference-cache command additionally requires every movie and
   provider fixture listed in `reference-cache.xml` from the same vanilla
   Interface extraction
@@ -55,8 +55,8 @@ From the repository root:
   -VanillaInterfacePath "C:\path\to\extracted\interface"
 ```
 
-By default, validated GFX files are copied to the `Interface` directories under
-`Staging-VWKS`, `Staging-CF`, `Staging-FC`, and `Staging-TA`. The first
+By default, validated Scaleform movies are copied to the `Interface`
+directories under `Staging-VWKS`, `Staging-CF`, `Staging-FC`, and `Staging-TA`. The first
 `-OutputDirectory` destination receives the active `layout.xml` and loose SVG
 assets; the default first destination is `Staging-VWKS/Interface`. The script
 refuses to build from unrecognized vanilla inputs or publish outputs whose
@@ -73,12 +73,15 @@ beneath the faction and contact-radar panels, binds the existing `HudCompassData
 tracked-objective text, and remains independent of scanner and aiming state
 while leaving its text field blank when the objective is empty.
 The objective resolver is independent of floating-marker visibility. Vanilla
-quest markers finish processing before a one-shot pre-render pass sets only the
-selected objective `Text_mc.visible` to `false`; icons, arrows, and distance
-labels remain under Bethesda ownership. In scanner mode, the Bethesda-owned
-bottom-left survey group is made visible and shifted 266 design units below its
-original position so it clears the joined objective cluster; outside scanner
-mode the whole group is set to `visible = false`.
+quest markers, icons, arrows, distance labels, and temporary quest notifications
+remain under Bethesda ownership. `HUDMessagesMenu` is patched at its
+`MonocleMenu_Opened` handler so opening the on-foot scanner keeps only the
+always-up objective list hidden; ship-scanner behavior is unchanged.
+The HUDMenu-owned Watch/environment cluster is configured with
+`visibleWhen="never"`, which applies real display visibility without positional
+hiding. Bethesda's original Monocle movies retain scanner input, labels, and
+survey placement. No HUD-wide frame callback or cross-movie display lookup is
+used.
 
 Regenerate the curated built-in icon definitions when their approved Font
 Awesome source subset changes:
@@ -96,13 +99,15 @@ Freestar Collective, Crimson Fleet, and Trackers Alliance logos are not part of
 this library; they remain authored loose SVG assets. Their raster and DDS visual
 references are not repository content.
 
-The build injects the Venworks-only ABC seed, reads its vanilla XML from the
-ignored reference cache, exports patched and reopened ActionScript only into
-ignored temporary storage, verifies the authored `HUDMenu` patch anchors, and
-imports the patched document class plus the repository-authored CUI classes.
-It confirms that every other exported class remains textually identical and
-that the reopened output contains the required layout and production contracts.
-Full exported Bethesda classes are never repository source.
+The build injects the Venworks-only ABC seed into both HUD sizes, reads its
+vanilla XML from the ignored reference cache, exports patched and reopened
+ActionScript only into ignored temporary storage, verifies the authored
+`HUDMenu` patch anchors, and imports the patched document class plus the
+repository-authored CUI classes. A separate bounded override pass patches only
+the normal and large `HUDMessagesMenu` document classes at their exact vanilla
+anchor. Both passes confirm that every other exported class remains textually
+identical and that reopened outputs contain the required contracts. Full
+exported Bethesda classes are never repository source.
 
 Root layouts may select one optional, version-1 palette by filename with the
 `palette` attribute. The runtime loads that file only from

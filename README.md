@@ -59,7 +59,7 @@ Choose one theme and one PC package shape. The recommended Nexus PC - Normal
 package installs a root ESM, Windows BA2 archives, and one loose
 `Interface\VenworksCUI\layout.xml`. Enable the ESM and let the package win HUD
 conflicts. The loose layout remains directly editable while the compiled
-`hudmenu.gfx` and `hudmenu_lrg.gfx` files stay protected inside the Main BA2.
+`hudmenu*` and `hudmessagesmenu*` files stay protected inside the Main BA2.
 
 The Nexus PC - Fully Loose Files package installs the complete `Interface`
 tree without an ESM or BA2. Use it only when component fragments, palettes, or
@@ -71,9 +71,12 @@ Bethesda Creations use separate ESM-and-BA2-only packages for PC, Xbox, and
 PS5. Install only the package supplied for the current platform and enable only
 one theme variant.
 
-This release has no HONKCORE dependency. It will conflict with other HUD mods
-that overwrite either of the same GFX movies unless a purpose-built compatible
-patch combines their changes.
+This release has no HONKCORE dependency. It is incompatible with any mod that
+replaces `hudmenu.gfx`, `hudmenu_lrg.gfx`, `hudmessagesmenu.gfx`, or
+`hudmessagesmenu_lrg.gfx` unless a purpose-built compatibility patch combines
+their changes. Load order only selects which mod's changes are discarded; it
+does not make the movies compatible. This release does not ship Monocle menu
+overrides.
 
 ## Configuration
 

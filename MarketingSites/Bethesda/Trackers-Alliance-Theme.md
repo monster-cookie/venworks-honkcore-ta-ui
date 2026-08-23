@@ -36,6 +36,8 @@ Versioned XML controls layout, visibility, colors, typography, meters, icons, re
 
 Install this Creation through Starfield Creations and enable only one Venworks Customizable HUD theme. All four theme Creations replace the same HUD movies and configuration paths, so enabling more than one creates file conflicts.
 
+**Compatibility warning:** This Creation is incompatible with any mod or Creation that replaces `hudmenu.gfx`, `hudmenu_lrg.gfx`, `hudmessagesmenu.gfx`, or `hudmessagesmenu_lrg.gfx` unless a purpose-built compatibility patch combines their changes. Load order only selects which mod's changes are discarded; it does not make the movies compatible.
+
 ## Change the active palette on PC
 
 Console players should install the Creation whose title matches the starting palette they want. PC players can switch among all five packaged palettes:

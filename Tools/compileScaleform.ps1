@@ -1737,7 +1737,7 @@ try {
         $reopenedHudModeHandler -notmatch 'adapter\.updateHudMode\s*\(\s*hudModeVisibility\s*\)' -or
         $reopenedHudModeHandler -notmatch 'adapter\.apply\s*\(\s*conditionContext\s*\)' -or
         $reopenedHudModeHandler -match 'applyValues|applyContactRadars|applyConditions' -or
-        $reopenedRuntimeSource -match 'Event\.ENTER_FRAME|pendingValueSources|pendingConditionNames|pendingCompassUpdate|pendingHudModeUpdate|frameUpdateScheduled|scheduleFrameUpdate|onFrameUpdate|applyPending') {
+        $reopenedRuntimeSource -match 'pendingValueSources|pendingConditionNames|pendingCompassUpdate|pendingHudModeUpdate|frameUpdateScheduled|scheduleFrameUpdate|onFrameUpdate|applyPending') {
       throw 'Generated runtime does not retain direct provider-local value, condition, compass, tactical-awareness, and HUD-mode routing boundaries, or still contains the rejected frame queue.'
     }
     if ($reopenedPlayerHudDataContextSource -notmatch 'source\s*==\s*"quest\.objective"' -or
@@ -1747,21 +1747,9 @@ try {
         $reopenedPlayerHudDataContextSource -notmatch 'strText' -or
         $reopenedPlayerHudDataContextSource -match 'bFloatingMarkerVisible' -or
         $reopenedConditionContextSource -match 'hastrackedobjective|CUIPlayerHudDataContext\.resolveTrackedObjective' -or
-        $reopenedRuntimeSource -notmatch 'function\s+suppressVanillaTrackedQuestText' -or
-        $reopenedRuntimeSource -notmatch 'function\s+scheduleVanillaTrackedQuestTextSuppression' -or
-        $reopenedRuntimeSource -notmatch 'function\s+onQuestTextSuppressionRender' -or
-        $reopenedRuntimeSource -notmatch 'function\s+cancelVanillaTrackedQuestTextSuppression' -or
-        $reopenedRuntimeSource -notmatch 'addEventListener\s*\(\s*Event\.RENDER\s*,\s*this\.onQuestTextSuppressionRender\s*\)' -or
-        $reopenedRuntimeSource -notmatch 'removeEventListener\s*\(\s*Event\.RENDER\s*,\s*this\.onQuestTextSuppressionRender\s*\)' -or
-        $reopenedRuntimeSource -notmatch 'questTextSuppressionStage\.invalidate\s*\(\s*\)' -or
-        $reopenedRuntimeSource -notmatch 'getChildByName\s*\(\s*"FloatingQuestMarkerBase"\s*\)' -or
-        $reopenedRuntimeSource -notmatch 'Text_mc.*visible\s*=\s*false' -or
-        $reopenedRuntimeSource -match 'Text_mc.*alpha\s*=' -or
-        $reopenedCompassChangeHandler -notmatch 'scheduleVanillaTrackedQuestTextSuppression\s*\(' -or
-        $reopenedCompassChangeHandler -match 'suppressVanillaTrackedQuestText\s*\(' -or
-        $reopenedRuntimeSource -match 'questMarkerRoot\.visible\s*=\s*false' -or
-        $reopenedRuntimeSource -match 'markerClip\.visible\s*=\s*false') {
-      throw 'Card 142 must retain a floating-visibility-independent tracked-objective value and suppress only vanilla quest-marker text during a one-shot post-provider render pass.'
+        $reopenedRuntimeSource -match 'VanillaOwnership|suppressVanillaTrackedQuestText|FloatingQuestMarkerBase|Event\.RENDER|Event\.ENTER_FRAME|questTextSuppressionScheduled|questTextSuppressionStage' -or
+        $reopenedCompassChangeHandler -match 'VanillaOwnership|suppressVanillaTrackedQuestText') {
+      throw 'Card 142 must retain the tracked-objective value, and Card 148 must not mutate sibling-menu quest or survey owners from HUDMenu.'
     }
     foreach ($meterRenderer in @('CUIContinuousBar','CUISegmentedBar','CUITriangleBar','CUIDotBar','CUIRadialMeter')) {
       $meterRendererPath = Join-Path $validationScriptsDirectory "scripts\venworks\cui\components\$meterRenderer.as"
@@ -2579,9 +2567,9 @@ try {
       $helmetVehicleExitGlyphs.Count -ne 1 -or
       [string]$helmetVehicleExitGlyphs[0].name -ne 'vehicle-exit-prompt' -or
       $bottomLeftTargets.Count -ne 1 -or
-      [string]$bottomLeftTargets[0].visibleWhen -ne 'inScanner' -or
-      [string]$bottomLeftTargets[0].offsetX -ne '0' -or
-      [string]$bottomLeftTargets[0].offsetY -ne '266' -or
+      [string]$bottomLeftTargets[0].visibleWhen -ne 'never' -or
+      $bottomLeftTargets[0].HasAttribute('offsetX') -or
+      $bottomLeftTargets[0].HasAttribute('offsetY') -or
       $bottomLeftTargets[0].HasAttribute('anchor') -or
       $bottomLeftTargets[0].HasAttribute('x') -or
       $bottomLeftTargets[0].HasAttribute('y') -or
@@ -2751,3 +2739,19 @@ finally {
     Remove-Item -LiteralPath $resolvedBuildWorkDirectory -Recurse -Force
   }
 }
+
+$overrideCompilerPath = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot 'compileScaleformOverrides.ps1') `
+  -Description 'Bethesda owner-movie override compiler'
+$overrideCompilerArguments = @{
+  JavaPath = $script:ResolvedJavaPath
+  JpexsJarPath = $script:ResolvedJpexsJarPath
+  VanillaInterfacePath = $resolvedVanillaInterfacePath
+  OutputDirectory = $resolvedOutputDirectories
+  WorkDirectory = $resolvedWorkDirectory
+  ReferenceCacheManifestPath = $resolvedReferenceCacheManifestPath
+}
+if ($KeepWork) {
+  $overrideCompilerArguments.KeepWork = $true
+}
+& $overrideCompilerPath @overrideCompilerArguments

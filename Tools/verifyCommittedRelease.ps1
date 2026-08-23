@@ -232,6 +232,14 @@ $movies = @(
   [pscustomobject]@{
     FileName = 'hudmenu_lrg.gfx'
     ExpectedHashPath = 'Scaleform/hudmenu_lrg/validation/expected.sha256'
+  },
+  [pscustomobject]@{
+    FileName = 'hudmessagesmenu.gfx'
+    ExpectedHashPath = 'Scaleform/hudmessagesmenu/validation/expected.sha256'
+  },
+  [pscustomobject]@{
+    FileName = 'hudmessagesmenu_lrg.gfx'
+    ExpectedHashPath = 'Scaleform/hudmessagesmenu_lrg/validation/expected.sha256'
   }
 )
 
@@ -302,4 +310,4 @@ foreach ($movie in $movies) {
   }
 }
 
-Write-Host "Verified committed GFX hashes and complete staged VenworksCUI payloads for all four variants."
+Write-Host "Verified committed Scaleform movie hashes and complete staged VenworksCUI payloads for all four variants."

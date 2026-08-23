@@ -48,7 +48,7 @@
                 direction="right" partialSegments="true" />
   </definitions>
   <vanillaVisibility>
-    <target id="bottomLeft" visibleWhen="inScanner" offsetX="0" offsetY="266" />
+    <target id="bottomLeft" visibleWhen="never" />
     <target id="rightMeters" visibleWhen="never" />
   </vanillaVisibility>
   <includes>

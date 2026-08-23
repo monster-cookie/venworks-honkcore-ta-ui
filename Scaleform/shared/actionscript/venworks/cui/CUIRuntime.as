@@ -3,7 +3,6 @@ package venworks.cui
    import Shared.AS3.Events.CustomEvent;
    import flash.display.DisplayObjectContainer;
    import flash.display.Sprite;
-   import flash.display.Stage;
    import flash.events.Event;
    import venworks.cui.components.CUIComponent;
    import venworks.cui.components.CUIContinuousBar;
@@ -57,8 +56,6 @@ package venworks.cui
       private var diagnosticPhase:String = "";
       private var diagnosticNode:XML;
       private var diagnosticCheckpoint:String = "";
-      private var questTextSuppressionScheduled:Boolean = false;
-      private var questTextSuppressionStage:Stage;
 
       public function CUIRuntime(param1:DisplayObjectContainer)
       {
@@ -223,7 +220,6 @@ package venworks.cui
             this.applyValues();
             this.syncCriticalHealthCondition();
             this.applyContactRadars();
-            this.scheduleVanillaTrackedQuestTextSuppression();
             this.applyTacticalAwareness();
             this.setDiagnosticContext("INITIAL VISIBILITY EVALUATION",null);
             this.applyConditions();
@@ -555,7 +551,6 @@ package venworks.cui
          {
             this.setDiagnosticContext("LIVE CONTACT RADAR EVALUATION",null);
             this.applyContactRadars();
-            this.scheduleVanillaTrackedQuestTextSuppression();
             this.clearDiagnosticContext();
          }
          catch(param2:Error)
@@ -606,75 +601,6 @@ package venworks.cui
          for each(radar in contactRadars)
          {
             radar.updateData(valueContext.currentCompassData);
-         }
-      }
-
-      private function scheduleVanillaTrackedQuestTextSuppression() : void
-      {
-         var targetStage:Stage = owner == null ? null : owner.stage;
-         if(questTextSuppressionScheduled || targetStage == null)
-         {
-            return;
-         }
-         questTextSuppressionScheduled = true;
-         questTextSuppressionStage = targetStage;
-         questTextSuppressionStage.addEventListener(Event.RENDER,this.onQuestTextSuppressionRender);
-         questTextSuppressionStage.invalidate();
-      }
-
-      private function onQuestTextSuppressionRender(param1:Event) : void
-      {
-         this.cancelVanillaTrackedQuestTextSuppression();
-         try
-         {
-            this.setDiagnosticContext("POST-COMPASS QUEST TEXT SUPPRESSION",null);
-            this.suppressVanillaTrackedQuestText();
-            this.clearDiagnosticContext();
-         }
-         catch(param2:Error)
-         {
-            this.showRuntimeError(param2);
-         }
-      }
-
-      private function cancelVanillaTrackedQuestTextSuppression() : void
-      {
-         if(questTextSuppressionStage != null)
-         {
-            questTextSuppressionStage.removeEventListener(Event.RENDER,this.onQuestTextSuppressionRender);
-         }
-         questTextSuppressionScheduled = false;
-         questTextSuppressionStage = null;
-      }
-
-      private function suppressVanillaTrackedQuestText() : void
-      {
-         var questMarkerRoot:DisplayObjectContainer = owner.getChildByName("FloatingQuestMarkerBase") as DisplayObjectContainer;
-         var compassData:Object = valueContext == null ? null : valueContext.currentCompassData;
-         var missionMarkers:Array = compassData == null ? null : compassData.aMissionMarkers as Array;
-         var marker:Object = null;
-         var markerClip:Object = null;
-         var markerIndex:int = 0;
-         var markerClipIndex:int = 0;
-         if(questMarkerRoot == null || missionMarkers == null)
-         {
-            return;
-         }
-         while(markerIndex < missionMarkers.length && markerClipIndex < questMarkerRoot.numChildren)
-         {
-            marker = missionMarkers[markerIndex];
-            if(marker != null && Boolean(marker.bFloatingMarkerVisible))
-            {
-               markerClip = questMarkerRoot.getChildAt(markerClipIndex);
-               if(marker.bShouldShowText === true && marker.strText !== undefined && marker.strText !== null &&
-                  String(marker.strText).replace(/\s/g,"").length > 0 &&
-                  markerClip != null && markerClip["Text_mc"] != null)
-               {
-                  markerClip["Text_mc"].visible = false;
-               }
-               ++markerClipIndex;
-            }
-            ++markerIndex;
          }
       }
 
@@ -731,7 +657,6 @@ package venworks.cui
       private function clearComponentLayer() : void
       {
          var adapter:CUIVanillaVisibilityAdapter = null;
-         this.cancelVanillaTrackedQuestTextSuppression();
          if(conditionContext != null)
          {
             conditionContext.removeEventListener(CUIConditionContext.CONDITION_CHANGE,this.onConditionChanged);

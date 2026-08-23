@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<actionScriptPatch name="cui-hudmessages-scanner-quest" version="1" script="HUDMessagesMenu">
+  <insertions>
+    <insertion position="before"><anchor><![CDATA[            if(GlobalFunc.HasFireForgetEvent(param1.data,"MonocleMenu_Opened") || GlobalFunc.HasFireForgetEvent(param1.data,"ShipHud_OnMonocleToggle_Opened"))]]></anchor><content><![CDATA[            if(GlobalFunc.HasFireForgetEvent(param1.data,"MonocleMenu_Opened"))
+            {
+               UpdateQuestUpdateObjectiveLists(false);
+            }
+            else ]]></content></insertion>
+  </insertions>
+  <validation>
+    <require><![CDATA[if\s*\(GlobalFunc\.HasFireForgetEvent\(param1\.data,"MonocleMenu_Opened"\)\)\s*\{\s*UpdateQuestUpdateObjectiveLists\(false\);\s*\}\s*else\s+if\s*\(GlobalFunc\.HasFireForgetEvent\(param1\.data,"MonocleMenu_Opened"\)\s*\|\|\s*GlobalFunc\.HasFireForgetEvent\(param1\.data,"ShipHud_OnMonocleToggle_Opened"\)\)\s*\{\s*UpdateQuestUpdateObjectiveLists\(true\);]]></require>
+  </validation>
+</actionScriptPatch>
