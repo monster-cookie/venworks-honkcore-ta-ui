@@ -148,7 +148,7 @@ The production fragments are:
 | `faction-display` | `faction-display.xml` | Palette-selected faction crest. |
 | `contact-radar` | `contact-radar.xml` | Bounded acquired-contact radar. |
 | `quest-tracker` | `quest-tracker.xml` | Persistent tracked objective. |
-| `environmental-hazard-scanner` | `environmental-hazard-scanner.xml` | Location, planet, protection, and exposure status. |
+| `environmental-hazard-scanner` | `environmental-hazard-scanner.xml` | Location, planet, local solar-transition countdown, protection, and exposure status. |
 | `player-status-scanner` | `player-status-scanner.xml` | Player statistics and meters. |
 | `equipment-rail` | `equipment-rail.xml` | Favorites, weapon, explosive, and power information. |
 | `helmet-awareness` | `helmet-awareness.xml` | Compass, threat state, and status effects. |

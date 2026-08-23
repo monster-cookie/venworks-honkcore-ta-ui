@@ -2,6 +2,7 @@
 
 ## UNRELEASED
 
+- Added a local-time countdown to the next 06:00 sunrise or 18:00 sunset in the Planet Data panel.
 - Fixed scanner startup restoring the vanilla tracked quest while keeping the vanilla Watch display hidden.
 - Documented that mods replacing `hudmessagesmenu.gfx` or `hudmessagesmenu_lrg.gfx` are incompatible unless a purpose-built patch combines their changes; load order alone is not a compatibility solution.
 

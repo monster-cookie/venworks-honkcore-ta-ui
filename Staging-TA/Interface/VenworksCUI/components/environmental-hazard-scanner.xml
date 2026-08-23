@@ -11,50 +11,54 @@
     <text id="planet.time" x="288" y="6" width="58" height="22" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" source="environment.localTime" format="time24"
           value="--:--" font="$MAIN_Font_Bold" fontSize="10" color="@palette.colors.foreground.primary" bold="false" align="right" />
-    <panel id="planet.panel" x="8" y="32" width="344" height="42" opacity="1" visible="true"
+    <panel id="planet.panel" x="8" y="32" width="344" height="60" opacity="1" visible="true"
            rotation="0" scaleX="1" scaleY="1" z="1"
            fillColor="@palette.colors.panel.background" fillOpacity="0.58" strokeColor="@palette.colors.panel.border" strokeOpacity="0.35" strokeWidth="1" />
-    <text id="planet.name" x="14" y="34" width="332" height="22" opacity="1" visible="true"
+    <text id="planet.name" x="14" y="34" width="332" height="18" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" source="location.name" format="raw"
           value="LOCATION WAITING" font="$MAIN_Font_Bold" fontSize="10" color="@palette.colors.foreground.primary" bold="false" align="left" />
-    <text id="planet.oxygen.label" x="14" y="52" width="20" height="22" opacity="1" visible="true"
+    <text id="planet.oxygen.label" x="14" y="52" width="20" height="18" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" value="O2"
           font="$MAIN_Font_Bold" fontSize="9" color="@palette.colors.foreground.muted" bold="false" align="left" />
-    <text id="planet.oxygen" x="36" y="52" width="48" height="22" opacity="1" visible="true"
+    <text id="planet.oxygen" x="36" y="52" width="48" height="18" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" source="environment.oxygenPercentage" format="percent"
           value="--%" font="$MAIN_Font_Bold" fontSize="9" color="@palette.colors.foreground.primary" bold="false" align="left" />
-    <text id="planet.temperature.label" x="94" y="52" width="36" height="22" opacity="1" visible="true"
+    <text id="planet.temperature.label" x="94" y="52" width="36" height="18" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" value="TEMP"
           font="$MAIN_Font_Bold" fontSize="9" color="@palette.colors.foreground.muted" bold="false" align="left" />
-    <text id="planet.temperature" x="132" y="52" width="58" height="22" opacity="1" visible="true"
+    <text id="planet.temperature" x="132" y="52" width="58" height="18" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" source="environment.temperature" format="temperature"
           value="--°" font="$MAIN_Font_Bold" fontSize="9" color="@palette.colors.foreground.primary" bold="false" align="left" />
-    <text id="planet.gravity.label" x="200" y="52" width="36" height="22" opacity="1" visible="true"
+    <text id="planet.gravity.label" x="200" y="52" width="36" height="18" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" value="GRAV"
           font="$MAIN_Font_Bold" fontSize="9" color="@palette.colors.foreground.muted" bold="false" align="left" />
-    <text id="planet.gravity" x="238" y="52" width="72" height="22" opacity="1" visible="true"
+    <text id="planet.gravity" x="238" y="52" width="72" height="18" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" source="environment.gravity" format="gravity"
           value="--.--g" font="$MAIN_Font_Bold" fontSize="9" color="@palette.colors.foreground.primary" bold="false" align="left" />
 
-    <text id="title" x="12" y="80" width="336" height="22" opacity="1" visible="true"
+    <text id="planet.solar-transition" x="14" y="70" width="332" height="18" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="2" source="environment.solarTransitionCountdown" format="raw"
+          value="" font="$MAIN_Font_Bold" fontSize="9" color="@palette.colors.foreground.primary" bold="true" align="left" />
+
+    <text id="title" x="12" y="92" width="336" height="22" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" value="ENVIRONMENTAL HAZARDS"
           font="$MAIN_Font_Bold" fontSize="13" color="@palette.colors.accent.primary" bold="false" align="left" />
-    <divider id="header.line" x="8" y="101" width="344" height="0" opacity="1" visible="true"
+    <divider id="header.line" x="8" y="113" width="344" height="0" opacity="1" visible="true"
              rotation="0" scaleX="1" scaleY="1" z="1" color="@palette.colors.accent.primary" strokeOpacity="0.68" strokeWidth="1" />
 
-    <panel id="protection.panel" x="8" y="107" width="344" height="36" opacity="1" visible="true"
+    <panel id="protection.panel" x="8" y="113" width="344" height="36" opacity="1" visible="true"
            rotation="0" scaleX="1" scaleY="1" z="1"
            fillColor="@palette.colors.panel.background" fillOpacity="0.72" strokeColor="@palette.colors.panel.border" strokeOpacity="0.45" strokeWidth="1" />
-    <text id="protection.label" x="14" y="108" width="106" height="22" opacity="1" visible="true"
+    <text id="protection.label" x="14" y="114" width="106" height="22" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" value="SUIT PROTECTION"
           font="$MAIN_Font_Bold" fontSize="9" color="@palette.colors.accent.primary" bold="false" align="left" />
-    <text id="protection.status" x="122" y="108" width="166" height="22" opacity="1" visible="true"
+    <text id="protection.status" x="122" y="114" width="166" height="22" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" source="environment.protectionStatus" format="raw"
           value="PROVIDER WAITING" font="$MAIN_Font_Bold" fontSize="8" color="@palette.colors.state.caution" bold="false" align="right" />
-    <text id="protection.value" x="292" y="107" width="54" height="22" opacity="1" visible="true"
+    <text id="protection.value" x="292" y="113" width="54" height="22" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" source="environment.protectionPercentage" format="percent"
           value="--%" font="$MAIN_Font_Bold" fontSize="11" color="@palette.colors.foreground.primary" bold="false" align="right" />
-    <meter id="protection.meter" x="14" y="130" width="332" height="8" opacity="1" visible="true"
+    <meter id="protection.meter" x="14" y="136" width="332" height="8" opacity="1" visible="true"
            rotation="0" scaleX="1" scaleY="1" z="2" style="environment.protection"
            value="0" max="1" source="environment.protectionLevel" />
 
