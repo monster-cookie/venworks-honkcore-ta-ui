@@ -23,3 +23,13 @@
 - Title: `Venworks Customizable HUD - Crimson Fleet Theme`
 - Tagline: `An XML-customizable Starfield HUD with tactical player, equipment, environment, scanner, objective, and contact-radar displays supporting multiple themes and color palettes.`
 - Description Markdown: `Crimson-Fleet-Theme.md`
+
+## Compatibility metadata
+
+- Required Creations: None.
+- Every listing must state that mods or Creations replacing `hudmenu.gfx`,
+  `hudmenu_lrg.gfx`, `hudmessagesmenu.gfx`, or `hudmessagesmenu_lrg.gfx` are
+  incompatible unless a purpose-built compatibility patch combines their
+  changes.
+- State that load order only selects which mod's changes are discarded; it
+  does not make the movies compatible.

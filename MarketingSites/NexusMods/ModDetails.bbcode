@@ -66,7 +66,7 @@ A .NET WYSIWYG application for creating and modifying themes is a long-term road
 [img]https://cdn.venworkscreations.com/NexusMods/description-divider-installation-instructions-1600x120.png[/img]
 [size=3][b][u]Via Vortex or Mod Organizer 2[/u][/b][/size]
 
-Choose one theme and one PC package shape. Nexus PC - Normal is recommended: it installs an ESM, Windows BA2 archives, and one loose [font=Courier New]Interface\VenworksCUI\layout.xml[/font]. Enable the ESM and let the package win the intended HUD conflicts. The two compiled GFX movies remain protected inside the Main BA2.
+Choose one theme and one PC package shape. Nexus PC - Normal is recommended: it installs an ESM, Windows BA2 archives, and one loose [font=Courier New]Interface\VenworksCUI\layout.xml[/font]. Enable the ESM and let the package win the intended HUD conflicts. The four normal and large HUD and HUDMessages GFX movies remain protected inside the Main BA2.
 
 Nexus PC - Fully Loose Files installs the complete loose [font=Courier New]Interface[/font] tree without an ESM or BA2. Use it only when component fragments, palettes, or SVG assets must also remain loose. Do not install Normal and Fully Loose Files together, and do not enable more than one theme variant.
 
@@ -95,7 +95,7 @@ The Normal package supports layout and packaged-palette selection through its lo
 [*]The configurable release covers the on-foot player HUD. Ship UI remains outside the current release.[/*]
 [*]The radar is an acquired-contact display, not a life-form detector. Neutral creatures and unaware potential hostiles are not guaranteed to appear.[/*]
 [*]Palette and other XML changes require a complete Starfield restart; live reload is unsupported.[/*]
-[*]Do not combine this HUD with HONKCORE or another mod that replaces the same HUD movies unless a purpose-built compatibility patch explicitly combines their changes.[/*]
+[*]This HUD is incompatible with any mod that replaces [font=Courier New]hudmenu.gfx[/font], [font=Courier New]hudmenu_lrg.gfx[/font], [font=Courier New]hudmessagesmenu.gfx[/font], or [font=Courier New]hudmessagesmenu_lrg.gfx[/font] unless a purpose-built compatibility patch combines their changes. Load order only selects which mod's changes are discarded; it does not make the movies compatible.[/*]
 [/list]
 
 [size=3][b][u]Legacy HONKCORE files[/u][/b][/size]

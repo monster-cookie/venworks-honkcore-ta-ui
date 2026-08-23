@@ -71,9 +71,11 @@ Bethesda Creations use separate ESM-and-BA2-only packages for PC, Xbox, and
 PS5. Install only the package supplied for the current platform and enable only
 one theme variant.
 
-This release has no HONKCORE dependency. It conflicts with other HUD mods that
-overwrite either `hudmenu*.gfx` or `hudmessagesmenu*.gfx` unless a purpose-built
-compatibility patch combines their changes. It does not ship Monocle menu
+This release has no HONKCORE dependency. It is incompatible with any mod that
+replaces `hudmenu.gfx`, `hudmenu_lrg.gfx`, `hudmessagesmenu.gfx`, or
+`hudmessagesmenu_lrg.gfx` unless a purpose-built compatibility patch combines
+their changes. Load order only selects which mod's changes are discarded; it
+does not make the movies compatible. This release does not ship Monocle menu
 overrides.
 
 ## Configuration
