@@ -3,7 +3,6 @@ package venworks.cui
    import Shared.AS3.Events.CustomEvent;
    import flash.display.DisplayObjectContainer;
    import flash.display.Sprite;
-   import flash.display.Stage;
    import flash.events.Event;
    import venworks.cui.components.CUIComponent;
    import venworks.cui.components.CUIContinuousBar;
@@ -57,8 +56,7 @@ package venworks.cui
       private var diagnosticPhase:String = "";
       private var diagnosticNode:XML;
       private var diagnosticCheckpoint:String = "";
-      private var questTextSuppressionScheduled:Boolean = false;
-      private var questTextSuppressionStage:Stage;
+      private var vanillaOwnershipReconciliationActive:Boolean = false;
 
       public function CUIRuntime(param1:DisplayObjectContainer)
       {
@@ -223,10 +221,10 @@ package venworks.cui
             this.applyValues();
             this.syncCriticalHealthCondition();
             this.applyContactRadars();
-            this.scheduleVanillaTrackedQuestTextSuppression();
             this.applyTacticalAwareness();
             this.setDiagnosticContext("INITIAL VISIBILITY EVALUATION",null);
             this.applyConditions();
+            this.startVanillaOwnershipReconciliation();
             this.clearDiagnosticContext();
             diagnostics.clear();
          }
@@ -555,7 +553,6 @@ package venworks.cui
          {
             this.setDiagnosticContext("LIVE CONTACT RADAR EVALUATION",null);
             this.applyContactRadars();
-            this.scheduleVanillaTrackedQuestTextSuppression();
             this.clearDiagnosticContext();
          }
          catch(param2:Error)
@@ -609,25 +606,26 @@ package venworks.cui
          }
       }
 
-      private function scheduleVanillaTrackedQuestTextSuppression() : void
+      private function startVanillaOwnershipReconciliation() : void
       {
-         var targetStage:Stage = owner == null ? null : owner.stage;
-         if(questTextSuppressionScheduled || targetStage == null)
+         if(vanillaOwnershipReconciliationActive || owner == null)
          {
             return;
          }
-         questTextSuppressionScheduled = true;
-         questTextSuppressionStage = targetStage;
-         questTextSuppressionStage.addEventListener(Event.RENDER,this.onQuestTextSuppressionRender);
-         questTextSuppressionStage.invalidate();
+         vanillaOwnershipReconciliationActive = true;
+         owner.addEventListener(Event.ENTER_FRAME,this.onVanillaOwnershipFrame);
       }
 
-      private function onQuestTextSuppressionRender(param1:Event) : void
+      private function onVanillaOwnershipFrame(param1:Event) : void
       {
-         this.cancelVanillaTrackedQuestTextSuppression();
+         var adapter:CUIVanillaVisibilityAdapter = null;
          try
          {
-            this.setDiagnosticContext("POST-COMPASS QUEST TEXT SUPPRESSION",null);
+            this.setDiagnosticContext("LATE-FRAME VANILLA OWNERSHIP",null);
+            for each(adapter in vanillaAdapters)
+            {
+               adapter.reapplyPlacement();
+            }
             this.suppressVanillaTrackedQuestText();
             this.clearDiagnosticContext();
          }
@@ -637,14 +635,13 @@ package venworks.cui
          }
       }
 
-      private function cancelVanillaTrackedQuestTextSuppression() : void
+      private function stopVanillaOwnershipReconciliation() : void
       {
-         if(questTextSuppressionStage != null)
+         if(owner != null)
          {
-            questTextSuppressionStage.removeEventListener(Event.RENDER,this.onQuestTextSuppressionRender);
+            owner.removeEventListener(Event.ENTER_FRAME,this.onVanillaOwnershipFrame);
          }
-         questTextSuppressionScheduled = false;
-         questTextSuppressionStage = null;
+         vanillaOwnershipReconciliationActive = false;
       }
 
       private function suppressVanillaTrackedQuestText() : void
@@ -668,7 +665,8 @@ package venworks.cui
                markerClip = questMarkerRoot.getChildAt(markerClipIndex);
                if(marker.bShouldShowText === true && marker.strText !== undefined && marker.strText !== null &&
                   String(marker.strText).replace(/\s/g,"").length > 0 &&
-                  markerClip != null && markerClip["Text_mc"] != null)
+                  markerClip != null && markerClip["Text_mc"] != null &&
+                  Boolean(markerClip["Text_mc"].visible))
                {
                   markerClip["Text_mc"].visible = false;
                }
@@ -731,7 +729,7 @@ package venworks.cui
       private function clearComponentLayer() : void
       {
          var adapter:CUIVanillaVisibilityAdapter = null;
-         this.cancelVanillaTrackedQuestTextSuppression();
+         this.stopVanillaOwnershipReconciliation();
          if(conditionContext != null)
          {
             conditionContext.removeEventListener(CUIConditionContext.CONDITION_CHANGE,this.onConditionChanged);

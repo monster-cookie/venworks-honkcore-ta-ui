@@ -544,12 +544,13 @@ when Bethesda suppresses the floating marker outside scanner mode without
 inventing a new provider or mutating provider data.
 
 Vanilla `FloatingQuestMarkerBase` remains active and completes its provider
-processing before suppression. After each compass update the runtime schedules
-a one-shot `Event.RENDER` pass, mirrors Bethesda's visible-marker clip ordering,
-and sets `visible = false` only on the `Text_mc` for a marker with non-empty
-tracked-objective text and `bShouldShowText`. Quest icons, offscreen arrows, and
-numeric distance text stay under Bethesda ownership; the production layout
-does not hide the whole `floatingQuestMarkers` target or use alpha suppression.
+processing before suppression. A narrow late-frame ownership pass mirrors
+Bethesda's visible-marker clip ordering, restores configured vanilla-target
+placement after HUD timeline updates, and sets `visible = false` only on the
+`Text_mc` for a marker with non-empty tracked-objective text and
+`bShouldShowText`. Quest icons, offscreen arrows, and numeric distance text stay
+under Bethesda ownership; the production layout does not hide the whole
+`floatingQuestMarkers` target or use alpha suppression.
 
 Live CUI delivery is dependency-aware. `HudCompassData` dispatches a dedicated
 radar event, so weapon, XP, inventory, environment, and other value-provider
@@ -561,9 +562,10 @@ vanilla adapters re-evaluate only when their expressions consume one of those
 names, with HUD opacity retained as an explicit vanilla-adapter dependency.
 Bethesda HUD-mode changes reapply only vanilla adapters. Initial component
 construction remains a complete one-time evaluation so unchanged defaults are
-still rendered. Live callbacks apply their affected domain directly; the
-rejected next-frame queue caused lag, stalls, and delayed pause response during
-Bloodthirsty testing and is absent from the current production baseline.
+still rendered. Live callbacks apply their affected domain directly. The narrow
+ownership pass does not redraw components or rerun provider pipelines; the
+rejected generic next-frame queue caused lag, stalls, and delayed pause response
+during Bloodthirsty testing and remains absent from the production baseline.
 
 The radar's 32 pooled contact containers retain prebuilt red-dot, white-dot, and
 white-square children. Live compass updates only select the required child and

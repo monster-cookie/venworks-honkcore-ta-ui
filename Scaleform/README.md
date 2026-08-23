@@ -73,12 +73,13 @@ beneath the faction and contact-radar panels, binds the existing `HudCompassData
 tracked-objective text, and remains independent of scanner and aiming state
 while leaving its text field blank when the objective is empty.
 The objective resolver is independent of floating-marker visibility. Vanilla
-quest markers finish processing before a one-shot pre-render pass sets only the
-selected objective `Text_mc.visible` to `false`; icons, arrows, and distance
-labels remain under Bethesda ownership. In scanner mode, the Bethesda-owned
-bottom-left survey group is made visible and shifted 266 design units below its
-original position so it clears the joined objective cluster; outside scanner
-mode the whole group is set to `visible = false`.
+quest markers remain active, while a narrow late-frame ownership pass restores
+the configured vanilla-target placement and sets only the selected objective
+`Text_mc.visible` to `false` after Bethesda HUD updates. Icons, arrows, and
+distance labels remain under Bethesda ownership. In scanner mode, the
+Bethesda-owned bottom-left survey group is made visible and shifted 266 design
+units below its original position so it clears the joined objective cluster;
+outside scanner mode the whole group is set to `visible = false`.
 
 Regenerate the curated built-in icon definitions when their approved Font
 Awesome source subset changes:

@@ -1613,6 +1613,10 @@ try {
       $reopenedRuntimeSource,
       '(?s)public function updateVanillaHudModeVisibility\b.*?(?=\s+private function onLoaded\b)'
     ).Value
+    $reopenedVanillaOwnershipFrameHandler = [regex]::Match(
+      $reopenedRuntimeSource,
+      '(?s)private function onVanillaOwnershipFrame\b.*?(?=\s+private function stopVanillaOwnershipReconciliation\b)'
+    ).Value
     $reopenedContactRenderHandler = [regex]::Match(
       $reopenedContactRadarSource,
       '(?s)private function renderContact\b.*?(?=\s+private function selectContactStyle\b)'
@@ -1737,7 +1741,7 @@ try {
         $reopenedHudModeHandler -notmatch 'adapter\.updateHudMode\s*\(\s*hudModeVisibility\s*\)' -or
         $reopenedHudModeHandler -notmatch 'adapter\.apply\s*\(\s*conditionContext\s*\)' -or
         $reopenedHudModeHandler -match 'applyValues|applyContactRadars|applyConditions' -or
-        $reopenedRuntimeSource -match 'Event\.ENTER_FRAME|pendingValueSources|pendingConditionNames|pendingCompassUpdate|pendingHudModeUpdate|frameUpdateScheduled|scheduleFrameUpdate|onFrameUpdate|applyPending') {
+        $reopenedRuntimeSource -match 'pendingValueSources|pendingConditionNames|pendingCompassUpdate|pendingHudModeUpdate|frameUpdateScheduled|scheduleFrameUpdate|onFrameUpdate|applyPending') {
       throw 'Generated runtime does not retain direct provider-local value, condition, compass, tactical-awareness, and HUD-mode routing boundaries, or still contains the rejected frame queue.'
     }
     if ($reopenedPlayerHudDataContextSource -notmatch 'source\s*==\s*"quest\.objective"' -or
@@ -1748,20 +1752,26 @@ try {
         $reopenedPlayerHudDataContextSource -match 'bFloatingMarkerVisible' -or
         $reopenedConditionContextSource -match 'hastrackedobjective|CUIPlayerHudDataContext\.resolveTrackedObjective' -or
         $reopenedRuntimeSource -notmatch 'function\s+suppressVanillaTrackedQuestText' -or
-        $reopenedRuntimeSource -notmatch 'function\s+scheduleVanillaTrackedQuestTextSuppression' -or
-        $reopenedRuntimeSource -notmatch 'function\s+onQuestTextSuppressionRender' -or
-        $reopenedRuntimeSource -notmatch 'function\s+cancelVanillaTrackedQuestTextSuppression' -or
-        $reopenedRuntimeSource -notmatch 'addEventListener\s*\(\s*Event\.RENDER\s*,\s*this\.onQuestTextSuppressionRender\s*\)' -or
-        $reopenedRuntimeSource -notmatch 'removeEventListener\s*\(\s*Event\.RENDER\s*,\s*this\.onQuestTextSuppressionRender\s*\)' -or
-        $reopenedRuntimeSource -notmatch 'questTextSuppressionStage\.invalidate\s*\(\s*\)' -or
+        $reopenedRuntimeSource -notmatch 'function\s+startVanillaOwnershipReconciliation' -or
+        $reopenedRuntimeSource -notmatch 'function\s+onVanillaOwnershipFrame' -or
+        $reopenedRuntimeSource -notmatch 'function\s+stopVanillaOwnershipReconciliation' -or
+        $reopenedRuntimeSource -notmatch 'owner\.addEventListener\s*\(\s*Event\.ENTER_FRAME\s*,\s*this\.onVanillaOwnershipFrame\s*\)' -or
+        $reopenedRuntimeSource -notmatch 'owner\.removeEventListener\s*\(\s*Event\.ENTER_FRAME\s*,\s*this\.onVanillaOwnershipFrame\s*\)' -or
+        ([regex]::Matches($reopenedRuntimeSource, 'Event\.ENTER_FRAME')).Count -ne 2 -or
+        $reopenedRuntimeSource -notmatch 'this\.startVanillaOwnershipReconciliation\s*\(\s*\)' -or
+        $reopenedRuntimeSource -notmatch 'this\.stopVanillaOwnershipReconciliation\s*\(\s*\)' -or
+        $reopenedRuntimeSource -match 'Event\.RENDER|questTextSuppressionScheduled|questTextSuppressionStage' -or
+        $reopenedVanillaOwnershipFrameHandler.Length -eq 0 -or
+        $reopenedVanillaOwnershipFrameHandler -notmatch 'adapter\.reapplyPlacement\s*\(\s*\)' -or
+        $reopenedVanillaOwnershipFrameHandler -notmatch 'suppressVanillaTrackedQuestText\s*\(\s*\)' -or
+        $reopenedVanillaOwnershipFrameHandler -match 'applyValues|applyConditions|applyContactRadars|applyTacticalAwareness|renderChildren' -or
         $reopenedRuntimeSource -notmatch 'getChildByName\s*\(\s*"FloatingQuestMarkerBase"\s*\)' -or
         $reopenedRuntimeSource -notmatch 'Text_mc.*visible\s*=\s*false' -or
         $reopenedRuntimeSource -match 'Text_mc.*alpha\s*=' -or
-        $reopenedCompassChangeHandler -notmatch 'scheduleVanillaTrackedQuestTextSuppression\s*\(' -or
-        $reopenedCompassChangeHandler -match 'suppressVanillaTrackedQuestText\s*\(' -or
+        $reopenedCompassChangeHandler -match 'VanillaOwnership|suppressVanillaTrackedQuestText' -or
         $reopenedRuntimeSource -match 'questMarkerRoot\.visible\s*=\s*false' -or
         $reopenedRuntimeSource -match 'markerClip\.visible\s*=\s*false') {
-      throw 'Card 142 must retain a floating-visibility-independent tracked-objective value and suppress only vanilla quest-marker text during a one-shot post-provider render pass.'
+      throw 'Cards 142 and 148 must retain the tracked-objective value and narrowly reconcile vanilla placement and quest-marker text after Bethesda frame updates.'
     }
     foreach ($meterRenderer in @('CUIContinuousBar','CUISegmentedBar','CUITriangleBar','CUIDotBar','CUIRadialMeter')) {
       $meterRendererPath = Join-Path $validationScriptsDirectory "scripts\venworks\cui\components\$meterRenderer.as"
