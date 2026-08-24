@@ -15,6 +15,29 @@ if (!(Test-Path Variable:Global:SharedConfigurationLoaded) -or !$Global:SharedCo
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
+function Assert-NotGitLfsPointer {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Path,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Description
+  )
+
+  $stream = [System.IO.File]::OpenRead($Path)
+  try {
+    $buffer = [byte[]]::new([Math]::Min(128, [int]$stream.Length))
+    [void]$stream.Read($buffer, 0, $buffer.Length)
+  }
+  finally {
+    $stream.Dispose()
+  }
+  $prefix = [System.Text.Encoding]::UTF8.GetString($buffer)
+  if ($prefix.StartsWith("version https://git-lfs.github.com/spec/v1", [System.StringComparison]::Ordinal)) {
+    throw "$Description remains a Git LFS pointer: $Path"
+  }
+}
+
 function Resolve-RequiredFile {
   param(
     [Parameter(Mandatory = $true)]
@@ -32,6 +55,7 @@ function Resolve-RequiredFile {
   if ($file.Length -le 0) {
     throw "$Description is empty: $Path"
   }
+  Assert-NotGitLfsPointer -Path $file.FullName -Description $Description
 
   return $file.FullName
 }
@@ -68,6 +92,7 @@ function Resolve-OptionalFile {
   if ($file.Length -le 0) {
     throw "$Description is empty: $Path"
   }
+  Assert-NotGitLfsPointer -Path $file.FullName -Description $Description
 
   return $file.FullName
 }

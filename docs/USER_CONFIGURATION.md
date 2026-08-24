@@ -11,8 +11,9 @@ complete palette contract and custom-theme workflow, use the
 
 ## Before editing
 
-1. Enable only one Venworks Customizable HUD release variant. All four variants
-   install the same HUD and configuration paths.
+1. Enable only one Venworks Customizable HUD release variant. The four themed
+   variants and the PS5-only Minimalist variant install the same HUD and
+   configuration paths, so they must never be enabled together.
 2. Fully exit Starfield.
 3. Back up the loose `Interface\VenworksCUI\layout.xml` from the normal package.
    If you use the fully loose package or an advanced override, back up the
@@ -35,8 +36,8 @@ guide. The packaged movies already contain the configuration runtime.
 
 ## Installed files
 
-The runtime reads these paths relative to Starfield's `Data\Interface`
-directory:
+The four themed variants expose these runtime paths relative to Starfield's
+`Data\Interface` directory:
 
 ```text
 VenworksCUI\
@@ -57,6 +58,10 @@ The important files are:
 | `Interface\VenworksCUI\components\*.xml` | Defines the contents of each reusable HUD section. |
 | `Interface\VenworksCUI\palettes\*.xml` | Defines semantic colors, typography, opacity, strokes, and the faction crest. |
 | `Interface\VenworksCUI\Assets\*.svg` | Contains supported local vector artwork used by the layout or palettes. |
+
+Minimalist intentionally omits the external `Assets` and `palettes` directories,
+uses literal Starfield colors, and does not include the faction-display
+fragment. It is a PS5 package rather than a customizable Nexus theme.
 
 The Nexus PC - Normal package exposes only `layout.xml` from this tree as a
 loose file. The runtime resolves the referenced component fragments, palettes,
@@ -114,9 +119,10 @@ The filename must name one XML file directly inside
 `Interface\VenworksCUI\palettes`. Subdirectories, path traversal, URLs, query
 strings, and fragments are rejected.
 
-Every release variant already includes all five palette XML files. The release
+Every themed release variant includes all five palette XML files. The themed
 variant only chooses the initial default. All five current palette logo
-references resolve to SVG files included with the HUD.
+references resolve to SVG files included with the themed HUD. Minimalist does
+not load an external palette or SVG asset.
 
 ## Move a complete HUD section
 

@@ -1,6 +1,8 @@
 [CmdletBinding()]
 param(
-  [string[]]$VariantKey
+  [string[]]$VariantKey,
+
+  [switch]$Committed
 )
 
 # Abort on first error
@@ -13,12 +15,37 @@ if (!$Global:SharedConfigurationLoaded) {
   . "$PSScriptRoot/sharedConfig.ps1"
 }
 
+$repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
+
 if ([string]::IsNullOrWhiteSpace($ENV:TOOL_PATH_ARCHIVER)) {
   throw "TOOL_PATH_ARCHIVER must name the directory containing Archive2.exe."
 }
 $archive2Path = Join-Path $ENV:TOOL_PATH_ARCHIVER "Archive2.exe"
 if (!(Test-Path -LiteralPath $archive2Path -PathType Leaf)) {
   throw "Archive2.exe was not found at the TOOL_PATH_ARCHIVER location."
+}
+
+function Assert-NotGitLfsPointer {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Path,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Description
+  )
+
+  $stream = [System.IO.File]::OpenRead($Path)
+  try {
+    $buffer = [byte[]]::new([Math]::Min(128, [int]$stream.Length))
+    [void]$stream.Read($buffer, 0, $buffer.Length)
+  }
+  finally {
+    $stream.Dispose()
+  }
+  $prefix = [System.Text.Encoding]::UTF8.GetString($buffer)
+  if ($prefix.StartsWith("version https://git-lfs.github.com/spec/v1", [System.StringComparison]::Ordinal)) {
+    throw "$Description remains a Git LFS pointer: $Path"
+  }
 }
 
 $archiveDefinitions = [ordered]@{
@@ -69,32 +96,39 @@ $archiveDefinitions = [ordered]@{
 $variants = @(Get-ModuleVariants -VariantKey $VariantKey)
 
 foreach ($variant in $variants) {
-  if (!(Test-Path -LiteralPath $variant.StagingFolderPath -PathType Container)) {
-    throw "$($variant.VariantName) staging folder does not exist: $($variant.StagingFolderPath)"
+  $stagingFolderPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot $variant.StagingFolderPath))
+  if (!(Test-Path -LiteralPath $stagingFolderPath -PathType Container)) {
+    throw "$($variant.VariantName) staging folder does not exist: $stagingFolderPath"
   }
 
-  $stagingItem = Get-Item -LiteralPath $variant.StagingFolderPath
-  if ($stagingItem.LinkType -ne "Junction") {
-    throw "$($variant.VariantName) staging folder must be a Junction: $($variant.StagingFolderPath)"
+  $stagingPath = (Resolve-Path -LiteralPath $stagingFolderPath).Path
+  if ($Committed) {
+    $packageOutputPath = $stagingPath
   }
-  $stagingPath = (Resolve-Path -LiteralPath $variant.StagingFolderPath).Path
-  if (!(Test-Path -LiteralPath $variant.PluginModulePath -PathType Container)) {
-    throw "$($variant.VariantName) physical module folder does not exist: $($variant.PluginModulePath)"
-  }
-  $packageOutputPath = (Resolve-Path -LiteralPath $variant.PluginModulePath).Path
-  $stagingTargets = @($stagingItem.Target)
-  if ($stagingTargets.Count -ne 1 -or
-      ![string]::Equals(
-        [System.IO.Path]::GetFullPath([string]$stagingTargets[0]),
-        $packageOutputPath,
-        [System.StringComparison]::OrdinalIgnoreCase
-      )) {
-    throw "$($variant.VariantName) staging Junction does not target its configured physical module folder."
+  else {
+    $stagingItem = Get-Item -LiteralPath $stagingFolderPath
+    if ($stagingItem.LinkType -ne "Junction") {
+      throw "$($variant.VariantName) staging folder must be a Junction: $stagingFolderPath"
+    }
+    if (!(Test-Path -LiteralPath $variant.PluginModulePath -PathType Container)) {
+      throw "$($variant.VariantName) physical module folder does not exist: $($variant.PluginModulePath)"
+    }
+    $packageOutputPath = (Resolve-Path -LiteralPath $variant.PluginModulePath).Path
+    $stagingTargets = @($stagingItem.Target)
+    if ($stagingTargets.Count -ne 1 -or
+        ![string]::Equals(
+          [System.IO.Path]::GetFullPath([string]$stagingTargets[0]),
+          $packageOutputPath,
+          [System.StringComparison]::OrdinalIgnoreCase
+        )) {
+      throw "$($variant.VariantName) staging Junction does not target its configured physical module folder."
+    }
   }
   $pluginPath = Join-Path $stagingPath "$($variant.PackageBaseName).esm"
   if (!(Test-Path -LiteralPath $pluginPath -PathType Leaf)) {
     throw "$($variant.VariantName) is missing its required root plugin: $pluginPath"
   }
+  Assert-NotGitLfsPointer -Path $pluginPath -Description "$($variant.VariantName) root plugin"
 
   Write-Host -ForegroundColor Green "Creating $($variant.VariantName) archives from $stagingPath"
 

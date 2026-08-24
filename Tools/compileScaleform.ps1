@@ -9,12 +9,7 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$VanillaInterfacePath,
 
-  [string[]]$OutputDirectory = @(
-    (Join-Path $PSScriptRoot "..\Staging-VWKS\Interface"),
-    (Join-Path $PSScriptRoot "..\Staging-CF\Interface"),
-    (Join-Path $PSScriptRoot "..\Staging-FC\Interface"),
-    (Join-Path $PSScriptRoot "..\Staging-TA\Interface")
-  ),
+  [string]$OutputDirectory = (Join-Path $PSScriptRoot "..\Scaleform\.work\compiled-interface"),
 
   [string]$WorkDirectory = (Join-Path $PSScriptRoot "..\Scaleform\.work"),
 
@@ -24,8 +19,6 @@ param(
     (Join-Path $PSScriptRoot "..\Scaleform\hudmenu\build.xml"),
     (Join-Path $PSScriptRoot "..\Scaleform\hudmenu_lrg\build.xml")
   ),
-
-  [hashtable]$ExpectedHashPathByOutputFile = @{},
 
   [switch]$KeepWork,
 
@@ -434,28 +427,8 @@ function Apply-ActionScriptPatch {
 $script:ResolvedJavaPath = Resolve-RequiredFile -Path $JavaPath -Description "Java executable"
 $script:ResolvedJpexsJarPath = Resolve-RequiredFile -Path $JpexsJarPath -Description "JPEXS JAR"
 $resolvedVanillaInterfacePath = (Resolve-Path -LiteralPath $VanillaInterfacePath).Path
-$resolvedOutputDirectories = @($OutputDirectory | ForEach-Object {
-  [System.IO.Path]::GetFullPath($_)
-} | Select-Object -Unique)
-if ($resolvedOutputDirectories.Count -eq 0) {
-  throw "At least one output directory is required."
-}
-$releaseVariantNames = @(
-  'Venworks',
-  'Crimson Fleet',
-  'Freestar Collective',
-  'Trackers Alliance'
-)
-$releaseVariantPaletteFileNames = @(
-  'venworks.xml',
-  'crimson-fleet.xml',
-  'freestar-collective.xml',
-  'trackers-alliance.xml'
-)
-if ($resolvedOutputDirectories.Count -gt $releaseVariantPaletteFileNames.Count) {
-  throw "Expected at most $($releaseVariantPaletteFileNames.Count) release outputs; found $($resolvedOutputDirectories.Count)."
-}
-$resolvedProjectOutputDirectory = $resolvedOutputDirectories[0]
+$resolvedOutputDirectory = [System.IO.Path]::GetFullPath($OutputDirectory)
+$resolvedProjectOutputDirectory = $resolvedOutputDirectory
 $resolvedWorkDirectory = [System.IO.Path]::GetFullPath($WorkDirectory)
 $referenceCacheHelperPath = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "sharedScaleformReferenceCache.ps1") `
@@ -1173,9 +1146,7 @@ if (!(Test-Path -LiteralPath $resolvedVanillaInterfacePath -PathType Container))
   throw "Vanilla interface directory does not exist: $VanillaInterfacePath"
 }
 
-foreach ($outputPath in $resolvedOutputDirectories) {
-  New-Item -ItemType Directory -Force -Path $outputPath | Out-Null
-}
+New-Item -ItemType Directory -Force -Path $resolvedOutputDirectory | Out-Null
 New-Item -ItemType Directory -Force -Path $resolvedWorkDirectory | Out-Null
 $referenceCacheContext = New-ScaleformReferenceCacheContext `
   -JavaPath $script:ResolvedJavaPath `
@@ -1204,12 +1175,8 @@ try {
     $vanillaHashPath = Resolve-RequiredFile `
       -Path (Join-Path $manifestDirectory ([string]$build.vanillaHashFile)) `
       -Description "Vanilla hash file"
-    $expectedHashCandidate = Join-Path $manifestDirectory ([string]$build.expectedHashFile)
-    if ($ExpectedHashPathByOutputFile.ContainsKey([string]$build.outputFile)) {
-      $expectedHashCandidate = [string]$ExpectedHashPathByOutputFile[[string]$build.outputFile]
-    }
     $expectedHashPath = Resolve-RequiredFile `
-      -Path $expectedHashCandidate `
+      -Path (Join-Path $manifestDirectory ([string]$build.expectedHashFile)) `
       -Description "Expected output hash file"
     $abcSeedPatchPath = Resolve-RequiredFile `
       -Path (Join-Path $manifestDirectory ([string]$build.abcSeedPatch)) `
@@ -2200,11 +2167,9 @@ try {
       throw "Generated hash mismatch for $($build.outputFile). Expected $expectedOutputHash; found $actualOutputHash."
     }
 
-    foreach ($outputPath in $resolvedOutputDirectories) {
-      $destinationPath = Join-Path $outputPath ([string]$build.outputFile)
-      Copy-Item -LiteralPath $generatedGfxPath -Destination $destinationPath -Force
-      Write-Host -ForegroundColor Green "Built and validated $destinationPath ($actualOutputHash)"
-    }
+    $destinationPath = Join-Path $resolvedOutputDirectory ([string]$build.outputFile)
+    Copy-Item -LiteralPath $generatedGfxPath -Destination $destinationPath -Force
+    Write-Host -ForegroundColor Green "Built and validated $destinationPath ($actualOutputHash)"
   }
 
   $cuiOutputDirectory = Join-Path $resolvedProjectOutputDirectory "VenworksCUI"
@@ -2818,77 +2783,7 @@ try {
   Copy-Item -LiteralPath $crimsonFleetLogoSvgSource -Destination (Join-Path $assetOutputDirectory "crimson-fleet-logo.svg") -Force
   Copy-Item -LiteralPath $trackersAllianceLogoSvgSource -Destination (Join-Path $assetOutputDirectory "trackers-alliance-logo.svg") -Force
   Copy-Item -LiteralPath $invalidSvgSource -Destination (Join-Path $assetOutputDirectory "gallery-invalid.svg") -Force
-  for ($outputIndex = 0; $outputIndex -lt $resolvedOutputDirectories.Count; $outputIndex++) {
-    $outputPath = $resolvedOutputDirectories[$outputIndex]
-    $variantName = $releaseVariantNames[$outputIndex]
-    $variantPaletteFileName = $releaseVariantPaletteFileNames[$outputIndex]
-    $variantCuiOutputDirectory = Join-Path $outputPath "VenworksCUI"
-    $variantAssetOutputDirectory = Join-Path $variantCuiOutputDirectory "Assets"
-    $variantComponentOutputDirectory = Join-Path $variantCuiOutputDirectory "components"
-    $variantPaletteOutputDirectory = Join-Path $variantCuiOutputDirectory "palettes"
-    if ($variantCuiOutputDirectory -ne $cuiOutputDirectory) {
-      New-Item -ItemType Directory -Force -Path $variantAssetOutputDirectory | Out-Null
-      New-Item -ItemType Directory -Force -Path $variantComponentOutputDirectory | Out-Null
-      New-Item -ItemType Directory -Force -Path $variantPaletteOutputDirectory | Out-Null
-      foreach ($examplePaletteFileName in $examplePaletteFileNames) {
-        Copy-Item -LiteralPath (Join-Path $paletteOutputDirectory $examplePaletteFileName) -Destination (Join-Path $variantPaletteOutputDirectory $examplePaletteFileName) -Force
-      }
-      foreach ($componentFixtureName in $productionComponentFixtureNames) {
-        Copy-Item -LiteralPath (Join-Path $componentOutputDirectory $componentFixtureName) -Destination (Join-Path $variantComponentOutputDirectory $componentFixtureName) -Force
-      }
-      foreach ($assetFileName in @('gallery-vector.svg','venworks-logo.svg','freestar-collective-logo.svg','crimson-fleet-logo.svg','trackers-alliance-logo.svg','gallery-invalid.svg')) {
-        Copy-Item -LiteralPath (Join-Path $assetOutputDirectory $assetFileName) -Destination (Join-Path $variantAssetOutputDirectory $assetFileName) -Force
-      }
-      foreach ($retiredComponentName in $retiredComponentNames) {
-        $retiredComponentPath = Join-Path $variantComponentOutputDirectory $retiredComponentName
-        if (Test-Path -LiteralPath $retiredComponentPath) {
-          Remove-Item -LiteralPath $retiredComponentPath -Force
-        }
-      }
-    }
-    $variantLayoutPath = Join-Path $variantCuiOutputDirectory 'layout.xml'
-    Write-PaletteSelectedLayout `
-      -SourcePath $providerProbeLayoutSource `
-      -DestinationPath $variantLayoutPath `
-      -PaletteFileName $variantPaletteFileName
-    [xml]$variantLayout = Get-Content -LiteralPath $variantLayoutPath -Raw
-    if ([string]$variantLayout.venworksCUI.palette -ne $variantPaletteFileName) {
-      throw "$variantName layout must select '$variantPaletteFileName'; found '$([string]$variantLayout.venworksCUI.palette)'."
-    }
-    $normalizedVariantLayoutText = (Get-Content -LiteralPath $variantLayoutPath -Raw).Replace(
-      "palette=`"$variantPaletteFileName`"",
-      "palette=`"$defaultPaletteFileName`""
-    )
-    $defaultLayoutText = Get-Content -LiteralPath (Join-Path $cuiOutputDirectory 'layout.xml') -Raw
-    if ($normalizedVariantLayoutText -cne $defaultLayoutText) {
-      throw "$variantName layout must differ from the default layout only by its palette selector."
-    }
-    $relativeCuiPaths = @(
-      'components\contact-radar.xml',
-      'components\faction-display.xml',
-      'components\equipment-rail.xml',
-      'components\environmental-hazard-scanner.xml',
-      'components\helmet-awareness.xml',
-      'components\player-status-scanner.xml',
-      'components\quest-tracker.xml',
-      'components\scanner-overlay.xml',
-      'Assets\gallery-vector.svg',
-      'Assets\venworks-logo.svg',
-      'Assets\freestar-collective-logo.svg',
-      'Assets\crimson-fleet-logo.svg',
-      'Assets\trackers-alliance-logo.svg',
-      'Assets\gallery-invalid.svg'
-    )
-    $relativeCuiPaths += @($examplePaletteFileNames | ForEach-Object { "palettes\$_" })
-    foreach ($relativeCuiPath in $relativeCuiPaths) {
-      $primaryHash = (Get-FileHash -LiteralPath (Join-Path $cuiOutputDirectory $relativeCuiPath) -Algorithm SHA256).Hash
-      $variantHash = (Get-FileHash -LiteralPath (Join-Path $variantCuiOutputDirectory $relativeCuiPath) -Algorithm SHA256).Hash
-      if ($variantHash -ne $primaryHash) {
-        throw "Staged CUI payload mismatch for $relativeCuiPath in $variantCuiOutputDirectory."
-      }
-    }
-    Write-Host -ForegroundColor Green "Staged the persistent quest tracker, Goal 10 scanner overlay, accepted Goal 9 awareness surfaces, and production helmet HUD in $variantCuiOutputDirectory"
-  }
+  Write-Host -ForegroundColor Green "Built the shared validated CUI payload in $cuiOutputDirectory"
 }
 finally {
   if ($KeepWork) {
@@ -2914,7 +2809,7 @@ $overrideCompilerArguments = @{
   JavaPath = $script:ResolvedJavaPath
   JpexsJarPath = $script:ResolvedJpexsJarPath
   VanillaInterfacePath = $resolvedVanillaInterfacePath
-  OutputDirectory = $resolvedOutputDirectories
+  OutputDirectory = @($resolvedOutputDirectory)
   WorkDirectory = $resolvedWorkDirectory
   ReferenceCacheManifestPath = $resolvedReferenceCacheManifestPath
 }

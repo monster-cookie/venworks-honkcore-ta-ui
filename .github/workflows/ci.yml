@@ -20,6 +20,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          lfs: true
           persist-credentials: false
 
       - name: Verify PowerShell and committed release payload
@@ -56,14 +57,41 @@ jobs:
           $ErrorActionPreference = 'Stop'
 
           $releaseRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts/ci-release'
-          & "$env:GITHUB_WORKSPACE/Tools/createReleasePackages.ps1" -OutputDirectory $releaseRoot
+          $variantKeys = @('VWKS', 'CF', 'FC', 'TA', 'MIN')
+          & "$env:GITHUB_WORKSPACE/Tools/createReleasePackages.ps1" `
+            -OutputDirectory $releaseRoot `
+            -VariantKey $variantKeys
 
           $releaseFiles = @(Get-ChildItem -LiteralPath $releaseRoot -File -Filter '*.zip')
-          if ($releaseFiles.Count -ne 20) {
-            throw "Expected 20 release ZIPs; found $($releaseFiles.Count)."
+          if ($releaseFiles.Count -ne 21) {
+            throw "Expected 21 release ZIPs; found $($releaseFiles.Count)."
           }
           if (@($releaseFiles | Where-Object { $_.Length -le 0 }).Count -ne 0) {
             throw 'One or more release ZIPs are empty.'
           }
 
-          Write-Host "Verified all 20 release ZIPs."
+          $minimalistZipPath = Join-Path $releaseRoot 'Venworks - Customizable HUD - Minimalist - Bethesda PS5.zip'
+          if (!(Test-Path -LiteralPath $minimalistZipPath -PathType Leaf)) {
+            throw 'The Minimalist Bethesda PS5 release ZIP was not created.'
+          }
+          $minimalistZip = [System.IO.Compression.ZipFile]::OpenRead($minimalistZipPath)
+          try {
+            $minimalistEntries = @($minimalistZip.Entries.FullName | Sort-Object)
+          }
+          finally {
+            $minimalistZip.Dispose()
+          }
+          $expectedMinimalistEntries = @(
+            'Venworks-CustomizableHUD-Minimalist - Main_PS.ba2',
+            'Venworks-CustomizableHUD-Minimalist.esm'
+          ) | Sort-Object
+          if ($minimalistEntries.Count -ne $expectedMinimalistEntries.Count) {
+            throw "Minimalist ZIP contains $($minimalistEntries.Count) entries; expected $($expectedMinimalistEntries.Count)."
+          }
+          for ($index = 0; $index -lt $expectedMinimalistEntries.Count; $index++) {
+            if ($minimalistEntries[$index] -cne $expectedMinimalistEntries[$index]) {
+              throw 'Minimalist ZIP contains unexpected entries.'
+            }
+          }
+
+          Write-Host "Verified all 21 release ZIPs, including the exact Minimalist PS5 package."

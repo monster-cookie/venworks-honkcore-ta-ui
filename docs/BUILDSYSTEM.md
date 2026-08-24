@@ -7,19 +7,37 @@ ZIP assembly in GitHub Actions. `Archive2.exe` is not installed or downloaded by
 the workflow. Before committing a release build, run these steps from the
 repository root:
 
-1. Run `Tools/compileScaleform.ps1` with the validated Java, JPEXS, and vanilla
-   Interface inputs. This updates the loose `Interface` payload in all four
-   staging folders.
-2. Run `Tools/createPackages.ps1`. The script reads `TOOL_PATH_ARCHIVER` from
-   `.env`, validates each variant's root ESM, and runs all six platform archive
-   commands for every staging folder.
-3. Run `Tools/checkRepo.ps1`. The repository check validates variant metadata,
-   palettes, the root stub ESMs, and every generated BA2 file.
+1. Run `Tools/buildVariant.ps1` with the validated Java, JPEXS, vanilla
+   Interface inputs, and explicit variant keys. It compiles the common GFX once,
+   then stages each selected variant's independent configuration profile.
+2. Run `Tools/createPackages.ps1` with the same variant keys. The script reads
+   `TOOL_PATH_ARCHIVER` from `.env`, validates each variant's root ESM, and runs
+   only that variant's configured platform archive targets.
+3. Run `Tools/verifyVariant.ps1` with the same variant keys, followed by
+   `Tools/verifyCommittedRelease.ps1`. These checks validate the independent
+   payload profiles, movie hashes, root stub ESMs, generated BA2 files, and the
+   complete committed release inventory.
 4. Review and commit the staged loose files, ESMs, and Git LFS-managed BA2 files
    together. A BA2 must be rebuilt whenever its staged source payload changes.
 5. After the change reaches `master`, create the release tag. The Ubuntu release
    workflow uses `Tools/createReleasePackages.ps1` to assemble the committed
    artifacts; it never invokes Archive2.
+
+For repository-local regeneration without Vortex Junctions, use the deliberate
+`-Committed` mode on `buildVariant.ps1` and `createPackages.ps1`. Omitting
+`-VariantKey` continues to select only the four themed release variants; include
+`MIN` explicitly when regenerating the complete five-variant release:
+
+```powershell
+./Tools/buildVariant.ps1 `
+  -VariantKey VWKS,CF,FC,TA,MIN `
+  -JavaPath ".work/tools/java/bin/java.exe" `
+  -JpexsJarPath ".work/tools/jpexs/ffdec.jar" `
+  -VanillaInterfacePath "Scaleform/.work/vanilla-interface-extracted/interface" `
+  -Committed
+./Tools/createPackages.ps1 -VariantKey VWKS,CF,FC,TA,MIN -Committed
+./Tools/verifyCommittedRelease.ps1
+```
 
 Each variant uses one stable package base, such as
 `Venworks-CustomizableHUD-FreestarCollective`. `Tools/createPackages.ps1`
@@ -35,7 +53,9 @@ creates these version-independent files from the matching staging root:
 <PackageBase> - Textures_PS.ba2
 ```
 
-The Archive2 format, compression, maximum-size, include-filter, and
+The four themed profiles select all six archive targets shown above. Minimalist
+selects only `Main_PS`, so its committed root contains only its ESM and PS5 Main
+BA2. The Archive2 format, compression, maximum-size, include-filter, and
 exclude-filter arguments in `Tools/createPackages.ps1` are part of the platform
 packaging contract. Preserve them exactly. The Windows, Xbox, and PS5 Main and
 Textures commands must all run even when a source category is currently empty.
@@ -45,12 +65,27 @@ texture command produces one.
 SVG assets currently follow the Main-archive filters. Moving SVGs into a texture
 archive is deferred until the generated console archives can be tested.
 
-## PS5 Minimalist spike
+## Variant build profiles
 
-The experimental `MIN` variant is separate from the four release variants and
-does not participate in the 20-package release matrix. It tests a PS5 Main
-archive with no external SVG, palette, or DDS payload. Configure its ignored
-module path in `.env`:
+`Tools/compileScaleform.ps1` is the lower-level common movie compiler. It
+validates and writes one set of normal/large HUD and HUD-messages movies; it does
+not select palettes, mirror configuration payloads, or invoke Archive2.
+`Tools/buildVariant.ps1` consumes that common output and stages each selected
+profile from `Scaleform/variants/<KEY>/build.psd1` independently. A profile owns
+its layout source, component inventory, assets, palettes, palette mode, and
+optional stub-ESM source. Adding or removing one component in one profile does
+not require making the other profiles match.
+
+The four themed profiles currently share the production layout, eight component
+fragments, six SVG assets, and five external palettes. Minimalist independently
+declares seven component fragments and its own layout, omitting only the faction
+display while moving the contact radar into the former upper-left slot.
+
+## PS5 Minimalist release
+
+The `MIN` variant is a PS5-only release profile with no external SVG, palette,
+or DDS payload. Configure its ignored module path in `.env` for Junction-based
+local builds:
 
 ```text
 MODULE_VARIANT_MIN_PATH=<absolute path to the Minimalist module folder>
@@ -60,31 +95,27 @@ Create only its staging Junction and build only its artifacts with:
 
 ```powershell
 .\Tools\setupRepo.ps1 -VariantKey MIN
-.\Tools\verifyPs5MinimalistScaleform.ps1
-.\Tools\compileMinimalistSpike.ps1 `
+.\Tools\buildVariant.ps1 -VariantKey MIN `
   -JavaPath ".work/tools/java/bin/java.exe" `
   -JpexsJarPath ".work/tools/jpexs/ffdec.jar" `
   -VanillaInterfacePath "Scaleform/.work/vanilla-interface-extracted/interface"
 .\Tools\createPackages.ps1 -VariantKey MIN
-.\Tools\verifyMinimalistSpike.ps1
+.\Tools\verifyVariant.ps1 -VariantKey MIN
 .\Tools\createReleasePackages.ps1 `
   -VariantKey MIN `
   -OutputDirectory ".work/release-packages"
 ```
 
-`Tools/compilePs5MinimalistScaleform.ps1` is the dedicated PS5 HUD-movie entry
-point used by the Minimalist compiler. It validates the independent 10-provider
-condition context and 14-provider value context before and after compilation,
-including the six intentionally duplicated provider names, transactional
-startup, callback containment, deferred teardown, and bootstrap diagnostics.
-It does not combine providers into a shared subscription or broker. This
-separate entry point is also the boundary for later PS5-only feature-removal
-experiments, such as compiling out SVG support, without changing the ordinary
-four-variant Scaleform workflow. Its two HUD movies use dedicated expected-hash
-files under `Scaleform/ps5-minimalist/validation`; the normal and large release
-hash baselines remain unchanged until the spike is deliberately graduated.
+The common movie compiler validates the independent 10-provider condition
+context and 14-provider value context before and after compilation, including
+the six intentionally duplicated provider names, transactional startup,
+callback containment, deferred teardown, and bootstrap diagnostics. It does
+not combine providers into a shared subscription or broker. All five variants
+therefore use the same hardened movie hashes. If a later PS5 investigation must
+compile out SVG-capable ActionScript, add a distinct movie profile rather than
+changing Minimalist's independent XML payload contract.
 
-The Minimalist compiler uses the production HUD movies, resolves the
+The Minimalist profile uses the common production HUD movies, resolves the
 `starfield.xml` color roles to literal XML colors, removes the palette selector
 and faction display, and moves the contact radar to the former faction-display
 position. It then removes the `Assets` and `palettes` directories. The result
@@ -92,7 +123,8 @@ contains the renamed stub ESM, four GFX files, the reduced loose CUI
 configuration, and only `<PackageBase> - Main_PS.ba2`.
 The selected release-package command creates one Bethesda PS5 ZIP containing
 only the root Minimalist ESM and its PS5 Main BA2. Omitting `-VariantKey` keeps
-the normal four-theme, 20-package release matrix unchanged.
+the normal four-theme selection unchanged; the release workflows explicitly
+select all five variants.
 
 The shared GFX still contains unused SVG-capable runtime code. A successful PS5
 test therefore narrows the crash investigation to external SVG or palette/faction
@@ -109,7 +141,8 @@ The release workflow produces five ZIP shapes for each of the four themes:
 | Bethesda Xbox | Root ESM, Xbox Main BA2, and any generated Xbox Textures BA2 only |
 | Bethesda PS5 | Root ESM, PS5 Main BA2, and any generated PS5 Textures BA2 only |
 
-This creates 20 release ZIPs. The normal Nexus package leaves only `layout.xml`
+Minimalist adds one Bethesda PS5 ZIP containing only its ESM and PS5 Main BA2,
+for 21 release ZIPs total. The normal Nexus package leaves only `layout.xml`
 loose so the compiled HUD movies remain protected by the BA2. Users who need to
 edit component fragments, palettes, or SVG assets must use the fully loose
 package or provide a separate loose override. Do not install the normal and
@@ -249,8 +282,9 @@ as an external compile-time API. The generated seed contains names and empty AVM
 slots only; production implementations still come exclusively from the authored
 repository sources during the normal build.
 
-After regeneration, run the complete `Tools/compileScaleform.ps1` command,
-`Tools/createPackages.ps1`, and then `Tools/checkRepo.ps1`. A successful build
+After regeneration, run the complete five-variant `Tools/buildVariant.ps1`
+command, `Tools/createPackages.ps1`, and then
+`Tools/verifyCommittedRelease.ps1`. A successful build
 must import, reopen, and validate every authored class in both normal and large
 HUD movies and regenerate all platform archives from those staged movies.
 

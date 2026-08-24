@@ -99,11 +99,14 @@ jobs:
           $ErrorActionPreference = 'Stop'
 
           $releaseRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts/release'
-          & "$env:GITHUB_WORKSPACE/Tools/createReleasePackages.ps1" -OutputDirectory $releaseRoot
+          $variantKeys = @('VWKS', 'CF', 'FC', 'TA', 'MIN')
+          & "$env:GITHUB_WORKSPACE/Tools/createReleasePackages.ps1" `
+            -OutputDirectory $releaseRoot `
+            -VariantKey $variantKeys
 
           $releaseFiles = @(Get-ChildItem -LiteralPath $releaseRoot -File -Filter '*.zip')
-          if ($releaseFiles.Count -ne 20) {
-            throw "Expected 20 release ZIPs; found $($releaseFiles.Count)."
+          if ($releaseFiles.Count -ne 21) {
+            throw "Expected 21 release ZIPs; found $($releaseFiles.Count)."
           }
 
           "release_root=$releaseRoot" >> $env:GITHUB_OUTPUT
@@ -240,7 +243,7 @@ jobs:
 
           . "$env:GITHUB_WORKSPACE/Tools/sharedConfig.ps1" -SkipEnvironment
           $releaseRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts/release'
-          $packageSuffixes = @(
+          $themedPackageSuffixes = @(
             'Nexus PC - Normal',
             'Nexus PC - Fully Loose Files',
             'Bethesda PC',
@@ -248,9 +251,21 @@ jobs:
             'Bethesda PS5'
           )
           $expectedPackageNames = [System.Collections.Generic.List[string]]::new()
+          $releaseVariants = @(Get-ModuleVariants -VariantKey @('VWKS', 'CF', 'FC', 'TA', 'MIN'))
 
-          foreach ($variant in $Global:Variants) {
+          foreach ($variant in $releaseVariants) {
             $key = $variant.VariantKey.ToLowerInvariant()
+            $selectedArchiveTargets = @($variant.ArchiveTargets)
+            $isPs5Only = (
+              $selectedArchiveTargets.Count -eq 1 -and
+              $selectedArchiveTargets[0] -eq 'Main_PS'
+            )
+            $packageSuffixes = if ($isPs5Only) {
+              @('Bethesda PS5')
+            }
+            else {
+              $themedPackageSuffixes
+            }
             foreach ($packageSuffix in $packageSuffixes) {
               $packageName = "$($variant.ReleaseDisplayName) - $packageSuffix.zip"
               $expectedPackageNames.Add($packageName)
@@ -263,10 +278,12 @@ jobs:
               }
             }
 
-            $normalPath = Join-Path $releaseRoot "$($variant.ReleaseDisplayName) - Nexus PC - Normal.zip"
-            $loosePath = Join-Path $releaseRoot "$($variant.ReleaseDisplayName) - Nexus PC - Fully Loose Files.zip"
-            "$($key)_normal_path=$normalPath" >> $env:GITHUB_OUTPUT
-            "$($key)_loose_path=$loosePath" >> $env:GITHUB_OUTPUT
+            if (!$isPs5Only) {
+              $normalPath = Join-Path $releaseRoot "$($variant.ReleaseDisplayName) - Nexus PC - Normal.zip"
+              $loosePath = Join-Path $releaseRoot "$($variant.ReleaseDisplayName) - Nexus PC - Fully Loose Files.zip"
+              "$($key)_normal_path=$normalPath" >> $env:GITHUB_OUTPUT
+              "$($key)_loose_path=$loosePath" >> $env:GITHUB_OUTPUT
+            }
           }
 
           $actualPackageNames = @(

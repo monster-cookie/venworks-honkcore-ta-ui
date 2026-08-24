@@ -1,95 +1,76 @@
-# Abort on first error
+[CmdletBinding()]
+param(
+  [string[]]$VariantKey
+)
+
 $PSNativeCommandUseErrorActionPreference = $true
 $ErrorActionPreference = "Stop"
+Set-StrictMode -Version Latest
 
-# If not loaded already pull in the shared config
-if (!$Global:SharedConfigurationLoaded) {
+if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction SilentlyContinue)) {
   Write-Host -ForegroundColor Green "Importing Shared Configuration"
   . "$PSScriptRoot\sharedConfig.ps1"
-}
-
-If (![System.IO.File]::Exists(".env")) {
-  Write-Host -ForegroundColor Red "ERROR: .env file must be created and configured to run this."
-  Exit
 }
 
 $expectedVariants = [ordered]@{
   "TA" = [ordered]@{
     VariantName = "Trackers Alliance"
-    ReleaseDisplayName = "Venworks Customizable HUD - Trackers Alliance Theme"
+    ReleaseDisplayName = "Venworks - Customizable HUD - Trackers Alliance Theme"
     NexusNormalDisplayName = "Venworks - HUD - TA Theme (Normal)"
     NexusLooseDisplayName = "Venworks - HUD - TA Theme (Loose)"
     PackageBaseName = "Venworks-CustomizableHUD-TrackersAlliance"
     StagingFolderPath = "./Staging-TA"
     PaletteFileName = "trackers-alliance.xml"
+    ArchiveTargets = @("Main", "Textures", "Main_XBox", "Textures_XBox", "Main_PS", "Textures_PS")
   }
   "FC" = [ordered]@{
     VariantName = "Freestar Collective"
-    ReleaseDisplayName = "Venworks Customizable HUD - Freestar Collective Theme"
+    ReleaseDisplayName = "Venworks - Customizable HUD - Freestar Collective Theme"
     NexusNormalDisplayName = "Venworks - HUD - FC Theme (Normal)"
     NexusLooseDisplayName = "Venworks - HUD - FC Theme (Loose)"
     PackageBaseName = "Venworks-CustomizableHUD-FreestarCollective"
     StagingFolderPath = "./Staging-FC"
     PaletteFileName = "freestar-collective.xml"
+    ArchiveTargets = @("Main", "Textures", "Main_XBox", "Textures_XBox", "Main_PS", "Textures_PS")
   }
   "CF" = [ordered]@{
     VariantName = "Crimson Fleet"
-    ReleaseDisplayName = "Venworks Customizable HUD - Crimson Fleet Theme"
+    ReleaseDisplayName = "Venworks - Customizable HUD - Crimson Fleet Theme"
     NexusNormalDisplayName = "Venworks - HUD - CF Theme (Normal)"
     NexusLooseDisplayName = "Venworks - HUD - CF Theme (Loose)"
     PackageBaseName = "Venworks-CustomizableHUD-CrimsonFleet"
     StagingFolderPath = "./Staging-CF"
     PaletteFileName = "crimson-fleet.xml"
+    ArchiveTargets = @("Main", "Textures", "Main_XBox", "Textures_XBox", "Main_PS", "Textures_PS")
   }
   "VWKS" = [ordered]@{
     VariantName = "Venworks"
-    ReleaseDisplayName = "Venworks Customizable HUD - Venworks Theme"
+    ReleaseDisplayName = "Venworks - Customizable HUD - Venworks Theme"
     NexusNormalDisplayName = "Venworks - HUD - Venworks Theme (Normal)"
     NexusLooseDisplayName = "Venworks - HUD - Venworks Theme (Loose)"
     PackageBaseName = "Venworks-CustomizableHUD-Venworks"
     StagingFolderPath = "./Staging-VWKS"
     PaletteFileName = "venworks.xml"
+    ArchiveTargets = @("Main", "Textures", "Main_XBox", "Textures_XBox", "Main_PS", "Textures_PS")
   }
-}
-$expectedPaletteFileNames = @(
-  "venworks.xml"
-  "crimson-fleet.xml"
-  "freestar-collective.xml"
-  "trackers-alliance.xml"
-  "starfield.xml"
-)
-$paletteSourceDirectory = Join-Path $PSScriptRoot "..\Scaleform\shared\palettes"
-
-if ($Global:Variants.Count -ne $expectedVariants.Count) {
-  throw "Expected exactly $($expectedVariants.Count) release variants; found $($Global:Variants.Count)."
-}
-foreach ($expectedVariantKey in $expectedVariants.Keys) {
-  $matchingVariants = @($Global:Variants | Where-Object { [string]$_.VariantKey -eq $expectedVariantKey })
-  if ($matchingVariants.Count -ne 1) {
-    throw "Expected release variant key '$expectedVariantKey' exactly once; found $($matchingVariants.Count)."
+  "MIN" = [ordered]@{
+    VariantName = "Minimalist"
+    ReleaseDisplayName = "Venworks - Customizable HUD - Minimalist"
+    NexusNormalDisplayName = "Venworks - HUD - Minimalist (Normal)"
+    NexusLooseDisplayName = "Venworks - HUD - Minimalist (Loose)"
+    PackageBaseName = "Venworks-CustomizableHUD-Minimalist"
+    StagingFolderPath = "./Staging-MIN"
+    PaletteFileName = ""
+    ArchiveTargets = @("Main_PS")
   }
 }
 
-$pluginHashes = [System.Collections.Generic.List[string]]::new()
-foreach ($variant in $Global:Variants) {
-  Write-Host -ForegroundColor Cyan "Validating variant $($variant.VariantName) in $($variant.StagingFolderPath)"
-
+$variants = @(Get-ModuleVariants -VariantKey $VariantKey)
+foreach ($variant in $variants) {
   if (!$expectedVariants.Contains([string]$variant.VariantKey)) {
-    throw "Unexpected release variant key '$($variant.VariantKey)'."
+    throw "Unexpected variant key '$($variant.VariantKey)'."
   }
   $expectedVariant = $expectedVariants[[string]$variant.VariantKey]
-  foreach ($nexusPropertyName in @(
-    "NexusNormalDisplayName",
-    "NexusLooseDisplayName"
-  )) {
-    $nexusDisplayName = [string]$variant.$nexusPropertyName
-    if ([string]::IsNullOrWhiteSpace($nexusDisplayName)) {
-      throw "Release variant '$($variant.VariantKey)' must define a non-empty $nexusPropertyName."
-    }
-    if ($nexusDisplayName.Length -gt 50) {
-      throw "Release variant '$($variant.VariantKey)' $nexusPropertyName is $($nexusDisplayName.Length) characters; Nexus Mods permits at most 50."
-    }
-  }
   foreach ($propertyName in @(
     "VariantName",
     "ReleaseDisplayName",
@@ -100,113 +81,32 @@ foreach ($variant in $Global:Variants) {
     "PaletteFileName"
   )) {
     if ([string]$variant.$propertyName -cne [string]$expectedVariant[$propertyName]) {
-      throw "Release variant '$($variant.VariantKey)' must use $propertyName '$($expectedVariant[$propertyName])'; found '$($variant.$propertyName)'."
+      throw "Variant '$($variant.VariantKey)' must use $propertyName '$($expectedVariant[$propertyName])'; found '$($variant.$propertyName)'."
+    }
+  }
+  foreach ($nexusPropertyName in @("NexusNormalDisplayName", "NexusLooseDisplayName")) {
+    $displayName = [string]$variant.$nexusPropertyName
+    if ([string]::IsNullOrWhiteSpace($displayName) -or $displayName.Length -gt 50) {
+      throw "Variant '$($variant.VariantKey)' has an invalid Nexus display name in $nexusPropertyName."
     }
   }
 
-  $expectedPaletteFileName = [string]$expectedVariant.PaletteFileName
-  if ([string]$variant.PaletteFileName -ne $expectedPaletteFileName) {
-    throw "Release variant '$($variant.VariantName)' must map to palette '$expectedPaletteFileName'; found '$($variant.PaletteFileName)'."
+  $actualArchiveTargets = @($variant.ArchiveTargets)
+  $expectedArchiveTargets = @($expectedVariant.ArchiveTargets)
+  if ($actualArchiveTargets.Count -ne $expectedArchiveTargets.Count) {
+    throw "Variant '$($variant.VariantKey)' archive target count differs from its contract."
   }
-
-  if (![System.IO.Directory]::Exists($variant.StagingFolderPath)) {
-    Write-Host -ForegroundColor Red "$($variant.VariantName) variant Staging folder doesn't exist. Please rerun the setupRepo script."
-    Exit
-  }
-
-  if ([System.IO.Directory]::Exists("$($variant.StagingFolderPath)")) {
-    if ((Get-Item -Path "$($variant.StagingFolderPath)").LinkType -ne "Junction") {
-      Write-Host -ForegroundColor Red "$($variant.VariantName) variant Staging folder is no longer a Junction. Please delete it and rerun the setupRepo script."
-      Exit
-    }
-  }
-
-  $expectedPluginName = "$($variant.PackageBaseName).esm"
-  $pluginFiles = @(Get-ChildItem -LiteralPath $variant.StagingFolderPath -Recurse -File -Filter "*.esm")
-  if ($pluginFiles.Count -ne 1 -or $pluginFiles[0].Name -cne $expectedPluginName -or
-      $pluginFiles[0].Directory.FullName -cne (Resolve-Path -LiteralPath $variant.StagingFolderPath).Path) {
-    throw "$($variant.VariantName) must contain exactly one root plugin named '$expectedPluginName'."
-  }
-  if ($pluginFiles[0].Length -le 0) {
-    throw "$($variant.VariantName) plugin is empty: $($pluginFiles[0].FullName)"
-  }
-  $pluginHashes.Add((Get-FileHash -LiteralPath $pluginFiles[0].FullName -Algorithm SHA256).Hash)
-
-  $expectedMainArchiveNames = @(
-    "$($variant.PackageBaseName) - Main.ba2",
-    "$($variant.PackageBaseName) - Main_XBox.ba2",
-    "$($variant.PackageBaseName) - Main_PS.ba2"
-  )
-  $expectedTextureArchiveNames = @(
-    "$($variant.PackageBaseName) - Textures.ba2",
-    "$($variant.PackageBaseName) - Textures_XBox.ba2",
-    "$($variant.PackageBaseName) - Textures_PS.ba2"
-  )
-  $archiveFiles = @(Get-ChildItem -LiteralPath $variant.StagingFolderPath -Recurse -File -Filter "*.ba2")
-  $stagingRoot = (Resolve-Path -LiteralPath $variant.StagingFolderPath).Path
-  $allowedArchiveNames = @($expectedMainArchiveNames + $expectedTextureArchiveNames)
-  foreach ($archiveFile in $archiveFiles) {
-    if ($archiveFile.Directory.FullName -cne $stagingRoot -or
-        $allowedArchiveNames -cnotcontains $archiveFile.Name) {
-      throw "$($variant.VariantName) contains an unexpected BA2 archive: $($archiveFile.FullName)"
-    }
-    if ($archiveFile.Length -le 0) {
-      throw "$($variant.VariantName) BA2 is empty: $($archiveFile.FullName)"
-    }
-  }
-  foreach ($expectedArchiveName in $expectedMainArchiveNames) {
-    $matchingArchives = @($archiveFiles | Where-Object {
-      $_.Name -ceq $expectedArchiveName -and $_.Directory.FullName -ceq $stagingRoot
-    })
-    if ($matchingArchives.Count -ne 1) {
-      throw "$($variant.VariantName) must contain one root BA2 named '$expectedArchiveName'."
-    }
-  }
-  $ddsFiles = @(Get-ChildItem -LiteralPath (Join-Path $variant.StagingFolderPath "Interface") -Recurse -File -Filter "*.dds")
-  if ($ddsFiles.Count -ne 0) {
-    foreach ($expectedArchiveName in $expectedTextureArchiveNames) {
-      $matchingArchives = @($archiveFiles | Where-Object {
-        $_.Name -ceq $expectedArchiveName -and $_.Directory.FullName -ceq $stagingRoot
-      })
-      if ($matchingArchives.Count -ne 1) {
-        throw "$($variant.VariantName) has DDS sources and must contain one root BA2 named '$expectedArchiveName'."
-      }
-    }
-  }
-
-  $variantCuiDirectory = Join-Path $variant.StagingFolderPath "Interface\VenworksCUI"
-  $variantLayoutPath = Join-Path $variantCuiDirectory "layout.xml"
-  if (!(Test-Path -LiteralPath $variantLayoutPath -PathType Leaf)) {
-    throw "$($variant.VariantName) is missing its staged Venworks CUI layout: $variantLayoutPath"
-  }
-  [xml]$variantLayout = Get-Content -LiteralPath $variantLayoutPath -Raw
-  if ([string]$variantLayout.venworksCUI.palette -ne $expectedPaletteFileName) {
-    throw "$($variant.VariantName) layout must select '$expectedPaletteFileName'; found '$([string]$variantLayout.venworksCUI.palette)'."
-  }
-
-  foreach ($paletteFileName in $expectedPaletteFileNames) {
-    $paletteSourcePath = Join-Path $paletteSourceDirectory $paletteFileName
-    $variantPalettePath = Join-Path (Join-Path $variantCuiDirectory "palettes") $paletteFileName
-    if (!(Test-Path -LiteralPath $paletteSourcePath -PathType Leaf)) {
-      throw "Palette source is missing: $paletteSourcePath"
-    }
-    if (!(Test-Path -LiteralPath $variantPalettePath -PathType Leaf)) {
-      throw "$($variant.VariantName) is missing staged palette '$paletteFileName'."
-    }
-    $sourcePaletteHash = (Get-FileHash -LiteralPath $paletteSourcePath -Algorithm SHA256).Hash
-    $stagedPaletteHash = (Get-FileHash -LiteralPath $variantPalettePath -Algorithm SHA256).Hash
-    if ($stagedPaletteHash -ne $sourcePaletteHash) {
-      throw "$($variant.VariantName) staged palette '$paletteFileName' does not match its source file."
+  for ($index = 0; $index -lt $expectedArchiveTargets.Count; $index++) {
+    if ([string]$actualArchiveTargets[$index] -cne [string]$expectedArchiveTargets[$index]) {
+      throw "Variant '$($variant.VariantKey)' archive target mismatch. Expected '$($expectedArchiveTargets[$index])'; found '$($actualArchiveTargets[$index])'."
     }
   }
 }
 
-if (@($pluginHashes | Select-Object -Unique).Count -ne 1) {
-  throw "The four release plugins must remain byte-identical stub ESM payloads."
-}
+& (Join-Path $PSScriptRoot "verifyVariant.ps1") -VariantKey @($variants.VariantKey)
 
 Write-Host -ForegroundColor Cyan "`n`n"
 Write-Host -ForegroundColor Cyan "**************************************************"
-Write-Host -ForegroundColor Cyan "**  Variant Staging and Package Artifacts Valid **"
+Write-Host -ForegroundColor Cyan "**  Selected Variant Build Artifacts Are Valid  **"
 Write-Host -ForegroundColor Cyan "**************************************************"
 Write-Host -ForegroundColor Cyan "`n`n"
