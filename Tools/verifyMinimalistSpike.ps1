@@ -286,6 +286,7 @@ if ($layoutDocument.venworksCUI.HasAttribute("palette")) {
 }
 $factionIncludes = @($layoutDocument.SelectNodes('/venworksCUI/includes/include[@id="faction-display"]'))
 $radarIncludes = @($layoutDocument.SelectNodes('/venworksCUI/includes/include[@id="contact-radar"]'))
+$environmentalScannerIncludes = @($layoutDocument.SelectNodes('/venworksCUI/includes/include[@id="environmental-hazard-scanner"]'))
 if ($factionIncludes.Count -ne 0) {
   throw "Minimalist layout retains the faction display include."
 }
@@ -294,6 +295,12 @@ if ($radarIncludes.Count -ne 1 -or
     [string]$radarIncludes[0].y -ne "-36" -or
     [string]$radarIncludes[0].anchor -ne "top-left") {
   throw "Minimalist contact radar is not in the former faction-display position."
+}
+if ($environmentalScannerIncludes.Count -ne 1 -or
+    [string]$environmentalScannerIncludes[0].x -ne "39" -or
+    [string]$environmentalScannerIncludes[0].y -ne "29" -or
+    [string]$environmentalScannerIncludes[0].anchor -ne "bottom-right") {
+  throw "Minimalist environmental scanner does not preserve the equipment-rail seam after adding the countdown row."
 }
 
 $layoutSchemaPath = Resolve-RequiredFile `
@@ -317,6 +324,46 @@ foreach ($componentFileName in $componentFileNames) {
     throw "Minimalist component '$componentFileName' differs beyond Starfield color literalization."
   }
   $configurationPaths += $stagedComponentPath
+}
+
+$environmentalScannerPath = Join-Path $resolvedStagingPath "Interface\VenworksCUI\components\environmental-hazard-scanner.xml"
+[xml]$environmentalScannerDocument = Get-Content -LiteralPath $environmentalScannerPath -Raw
+$solarTransitionNode = $environmentalScannerDocument.SelectSingleNode('//text[@id="planet.solar-transition"]')
+$planetNameNode = $environmentalScannerDocument.SelectSingleNode('//text[@id="planet.name"]')
+$planetPanelNode = $environmentalScannerDocument.SelectSingleNode('//panel[@id="planet.panel"]')
+$rootNode = $environmentalScannerDocument.SelectSingleNode('//group[@id="root"]')
+$oxygenNode = $environmentalScannerDocument.SelectSingleNode('//text[@id="planet.oxygen"]')
+$environmentTitleNode = $environmentalScannerDocument.SelectSingleNode('//text[@id="title"]')
+$protectionMeterNode = $environmentalScannerDocument.SelectSingleNode('//meter[@id="protection.meter"]')
+if ($null -eq $solarTransitionNode -or
+    [string]$solarTransitionNode.x -ne "14" -or
+    [string]$solarTransitionNode.y -ne "52" -or
+    [string]$solarTransitionNode.width -ne "332" -or
+    [string]$solarTransitionNode.height -ne "22" -or
+    [string]$solarTransitionNode.align -ne "right") {
+  throw "Minimalist solar-transition countdown is not on its dedicated full-width row."
+}
+if ($null -eq $planetNameNode -or
+    [string]$planetNameNode.x -ne "14" -or
+    [string]$planetNameNode.y -ne "34" -or
+    [string]$planetNameNode.width -ne "332" -or
+    [string]$planetNameNode.height -ne "22") {
+  throw "Minimalist planet name is not restored to its full-width row."
+}
+if ($null -eq $rootNode -or
+    [string]$rootNode.height -ne "254" -or
+    $null -eq $planetPanelNode -or
+    [string]$planetPanelNode.x -ne "8" -or
+    [string]$planetPanelNode.y -ne "32" -or
+    [string]$planetPanelNode.width -ne "344" -or
+    [string]$planetPanelNode.height -ne "60" -or
+    $null -eq $oxygenNode -or
+    [string]$oxygenNode.y -ne "70" -or
+    $null -eq $environmentTitleNode -or
+    [string]$environmentTitleNode.y -ne "98" -or
+    $null -eq $protectionMeterNode -or
+    [string]$protectionMeterNode.y -ne "148") {
+  throw "Minimalist dedicated countdown row is not reflected consistently in the panel and hazard offsets."
 }
 
 foreach ($configurationPath in $configurationPaths) {

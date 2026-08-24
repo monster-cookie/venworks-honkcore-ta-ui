@@ -67,6 +67,9 @@ Create only its staging Junction and build only its artifacts with:
   -VanillaInterfacePath "Scaleform/.work/vanilla-interface-extracted/interface"
 .\Tools\createPackages.ps1 -VariantKey MIN
 .\Tools\verifyMinimalistSpike.ps1
+.\Tools\createReleasePackages.ps1 `
+  -VariantKey MIN `
+  -OutputDirectory ".work/release-packages"
 ```
 
 `Tools/compilePs5MinimalistScaleform.ps1` is the dedicated PS5 HUD-movie entry
@@ -87,6 +90,9 @@ and faction display, and moves the contact radar to the former faction-display
 position. It then removes the `Assets` and `palettes` directories. The result
 contains the renamed stub ESM, four GFX files, the reduced loose CUI
 configuration, and only `<PackageBase> - Main_PS.ba2`.
+The selected release-package command creates one Bethesda PS5 ZIP containing
+only the root Minimalist ESM and its PS5 Main BA2. Omitting `-VariantKey` keeps
+the normal four-theme, 20-package release matrix unchanged.
 
 The shared GFX still contains unused SVG-capable runtime code. A successful PS5
 test therefore narrows the crash investigation to external SVG or palette/faction
