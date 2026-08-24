@@ -1,8 +1,8 @@
 # Overview
 
-Venworks Customizable HUD - Minimalist is an experimental PS5-focused variant of the Venworks HUD. It removes the faction-logo panel, returns the contact radar to that upper-left position, and keeps the rest of the tactical HUD available while the broader minimalist design is developed.
+Venworks Customizable HUD - Minimalist is an experimental work-in-progress variant of the Venworks HUD for PC, Xbox, and PS5. It removes the faction-logo panel, returns the contact radar to that upper-left position, and keeps the rest of the tactical HUD available while the broader minimalist design is developed.
 
-**Beta platform:** This initial package targets PS5. It has been cold-started, save-loaded, and exercised in normal HUD and scanner modes on PS5, but continued console testing and feedback are welcome.
+**Beta status:** This variant is packaged for PC, Xbox, and PS5. It has been cold-started, save-loaded, and exercised in normal HUD and scanner modes on PS5; direct PC, Xbox, and additional PS5 feedback remain welcome.
 
 # Current features
 
@@ -14,7 +14,7 @@ Venworks Customizable HUD - Minimalist is an experimental PS5-focused variant of
 - A full 360-degree acquired-contact radar in the former faction-panel position.
 - Guarded HUD startup, independent event registrations, contained callbacks, and categorized diagnostics intended to expose configuration or provider failures without leaving a partially initialized custom HUD.
 
-# PS5 Minimalist configuration
+# Minimalist configuration
 
 This package intentionally contains no external SVG, palette, or DDS files. Its Starfield colors are written directly into the XML configuration, and it does not include the faction display or a texture archive.
 
@@ -28,7 +28,7 @@ The separate scanner display covers a 90-degree forward field, validates contact
 
 # Installation
 
-Install this Creation through Starfield Creations and enable only one Venworks Customizable HUD variant. All five variants replace the same HUD movies and configuration paths, so enabling more than one creates file conflicts.
+Install this Creation through Starfield Creations, or install the matching PC package from Nexus, and enable only one Venworks Customizable HUD variant. All five variants replace the same HUD movies and configuration paths, so enabling more than one creates file conflicts.
 
 For manual or mod-manager testing, deploy the package to Starfield's `Data` location. An `Engine` deployment does not place these interface overrides where the game expects them.
 
@@ -44,7 +44,7 @@ The current Minimalist roadmap is a planning snapshot, not a promise of dates, v
 
 # Current beta boundaries
 
-- The current package is a PS5-focused stability spike, not the finished Minimalist visual redesign.
+- The current all-platform package is not the finished Minimalist visual redesign.
 - Neutral creatures and unaware potential hostiles are not guaranteed to appear on the acquired-contact radar.
 - Large-HUD, ultrawide, radar-transition, and additional console feedback remain valuable during beta testing.
 

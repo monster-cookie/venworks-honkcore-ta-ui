@@ -1,6 +1,20 @@
+<#
+.SYNOPSIS
+Checks shared release metadata and verifies selected variant artifacts.
+
+.PARAMETER VariantKeys
+One or more keys from `$Global:ReleaseVariants`. Omit this parameter to process
+all release variants. `VariantKey` remains a compatibility alias.
+
+.PARAMETER Committed
+Verifies the tracked staging directories instead of requiring local junctions.
+#>
 [CmdletBinding()]
 param(
-  [string[]]$VariantKey
+  [Alias("VariantKey")]
+  [string[]]$VariantKeys,
+
+  [switch]$Committed
 )
 
 $PSNativeCommandUseErrorActionPreference = $true
@@ -12,98 +26,93 @@ if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction Si
   . "$PSScriptRoot\sharedConfig.ps1"
 }
 
-$expectedVariants = [ordered]@{
-  "TA" = [ordered]@{
-    VariantName = "Trackers Alliance"
-    ReleaseDisplayName = "Venworks - Customizable HUD - Trackers Alliance Theme"
-    NexusNormalDisplayName = "Venworks - HUD - TA Theme (Normal)"
-    NexusLooseDisplayName = "Venworks - HUD - TA Theme (Loose)"
-    PackageBaseName = "Venworks-CustomizableHUD-TrackersAlliance"
-    StagingFolderPath = "./Staging-TA"
-    PaletteFileName = "trackers-alliance.xml"
-    ArchiveTargets = @("Main", "Textures", "Main_XBox", "Textures_XBox", "Main_PS", "Textures_PS")
+$repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
+$releaseVariants = @($Global:ReleaseVariants)
+if ($releaseVariants.Count -ne 5) {
+  throw "ReleaseVariants must contain all five release variants; found $($releaseVariants.Count)."
+}
+
+$requiredStringProperties = @(
+  "VariantKey",
+  "VariantName",
+  "ReleaseDisplayName",
+  "NexusNormalDisplayName",
+  "NexusLooseDisplayName",
+  "PackageBaseName",
+  "StagingFolderPath",
+  "PaletteFileName"
+)
+foreach ($propertyName in $requiredStringProperties) {
+  $values = @($releaseVariants | ForEach-Object { [string]$_.$propertyName })
+  if (@($values | Where-Object { [string]::IsNullOrWhiteSpace($_) }).Count -ne 0) {
+    throw "Every release variant must define $propertyName."
   }
-  "FC" = [ordered]@{
-    VariantName = "Freestar Collective"
-    ReleaseDisplayName = "Venworks - Customizable HUD - Freestar Collective Theme"
-    NexusNormalDisplayName = "Venworks - HUD - FC Theme (Normal)"
-    NexusLooseDisplayName = "Venworks - HUD - FC Theme (Loose)"
-    PackageBaseName = "Venworks-CustomizableHUD-FreestarCollective"
-    StagingFolderPath = "./Staging-FC"
-    PaletteFileName = "freestar-collective.xml"
-    ArchiveTargets = @("Main", "Textures", "Main_XBox", "Textures_XBox", "Main_PS", "Textures_PS")
-  }
-  "CF" = [ordered]@{
-    VariantName = "Crimson Fleet"
-    ReleaseDisplayName = "Venworks - Customizable HUD - Crimson Fleet Theme"
-    NexusNormalDisplayName = "Venworks - HUD - CF Theme (Normal)"
-    NexusLooseDisplayName = "Venworks - HUD - CF Theme (Loose)"
-    PackageBaseName = "Venworks-CustomizableHUD-CrimsonFleet"
-    StagingFolderPath = "./Staging-CF"
-    PaletteFileName = "crimson-fleet.xml"
-    ArchiveTargets = @("Main", "Textures", "Main_XBox", "Textures_XBox", "Main_PS", "Textures_PS")
-  }
-  "VWKS" = [ordered]@{
-    VariantName = "Venworks"
-    ReleaseDisplayName = "Venworks - Customizable HUD - Venworks Theme"
-    NexusNormalDisplayName = "Venworks - HUD - Venworks Theme (Normal)"
-    NexusLooseDisplayName = "Venworks - HUD - Venworks Theme (Loose)"
-    PackageBaseName = "Venworks-CustomizableHUD-Venworks"
-    StagingFolderPath = "./Staging-VWKS"
-    PaletteFileName = "venworks.xml"
-    ArchiveTargets = @("Main", "Textures", "Main_XBox", "Textures_XBox", "Main_PS", "Textures_PS")
-  }
-  "MIN" = [ordered]@{
-    VariantName = "Minimalist"
-    ReleaseDisplayName = "Venworks - Customizable HUD - Minimalist"
-    NexusNormalDisplayName = "Venworks - HUD - Minimalist (Normal)"
-    NexusLooseDisplayName = "Venworks - HUD - Minimalist (Loose)"
-    PackageBaseName = "Venworks-CustomizableHUD-Minimalist"
-    StagingFolderPath = "./Staging-MIN"
-    PaletteFileName = ""
-    ArchiveTargets = @("Main_PS")
+  if ($propertyName -in @("VariantKey", "VariantName", "ReleaseDisplayName", "PackageBaseName", "StagingFolderPath") -and
+      @($values | Select-Object -Unique).Count -ne $values.Count) {
+    throw "Release variant property $propertyName must be unique."
   }
 }
 
-$variants = @(Get-ModuleVariants -VariantKey $VariantKey)
-foreach ($variant in $variants) {
-  if (!$expectedVariants.Contains([string]$variant.VariantKey)) {
-    throw "Unexpected variant key '$($variant.VariantKey)'."
-  }
-  $expectedVariant = $expectedVariants[[string]$variant.VariantKey]
-  foreach ($propertyName in @(
-    "VariantName",
-    "ReleaseDisplayName",
-    "NexusNormalDisplayName",
-    "NexusLooseDisplayName",
-    "PackageBaseName",
-    "StagingFolderPath",
-    "PaletteFileName"
-  )) {
-    if ([string]$variant.$propertyName -cne [string]$expectedVariant[$propertyName]) {
-      throw "Variant '$($variant.VariantKey)' must use $propertyName '$($expectedVariant[$propertyName])'; found '$($variant.$propertyName)'."
-    }
-  }
+$allowedArchiveTargets = @("Main", "Textures", "Main_XBox", "Textures_XBox", "Main_PS", "Textures_PS")
+$requiredMainTargets = @("Main", "Main_XBox", "Main_PS")
+$forbiddenProfileProperties = @(
+  "VariantKey",
+  "VariantName",
+  "ReleaseDisplayName",
+  "NexusNormalDisplayName",
+  "NexusLooseDisplayName",
+  "PackageBaseName",
+  "StagingFolderPath",
+  "PluginModulePath",
+  "PaletteFileName",
+  "ArchiveTargets"
+)
+foreach ($variant in $releaseVariants) {
   foreach ($nexusPropertyName in @("NexusNormalDisplayName", "NexusLooseDisplayName")) {
-    $displayName = [string]$variant.$nexusPropertyName
-    if ([string]::IsNullOrWhiteSpace($displayName) -or $displayName.Length -gt 50) {
-      throw "Variant '$($variant.VariantKey)' has an invalid Nexus display name in $nexusPropertyName."
+    if (([string]$variant.$nexusPropertyName).Length -gt 50) {
+      throw "Variant '$($variant.VariantKey)' exceeds the Nexus display-name limit in $nexusPropertyName."
     }
   }
 
-  $actualArchiveTargets = @($variant.ArchiveTargets)
-  $expectedArchiveTargets = @($expectedVariant.ArchiveTargets)
-  if ($actualArchiveTargets.Count -ne $expectedArchiveTargets.Count) {
-    throw "Variant '$($variant.VariantKey)' archive target count differs from its contract."
+  $archiveTargets = @($variant.ArchiveTargets)
+  if ($archiveTargets.Count -eq 0 -or
+      @($archiveTargets | Select-Object -Unique).Count -ne $archiveTargets.Count -or
+      @($archiveTargets | Where-Object { $_ -notin $allowedArchiveTargets }).Count -ne 0) {
+    throw "Variant '$($variant.VariantKey)' has invalid or repeated archive targets."
   }
-  for ($index = 0; $index -lt $expectedArchiveTargets.Count; $index++) {
-    if ([string]$actualArchiveTargets[$index] -cne [string]$expectedArchiveTargets[$index]) {
-      throw "Variant '$($variant.VariantKey)' archive target mismatch. Expected '$($expectedArchiveTargets[$index])'; found '$($actualArchiveTargets[$index])'."
+  foreach ($requiredMainTarget in $requiredMainTargets) {
+    if ($requiredMainTarget -notin $archiveTargets) {
+      throw "Variant '$($variant.VariantKey)' must publish the $requiredMainTarget archive."
+    }
+  }
+
+  $profilePath = Join-Path $repositoryRoot "Scaleform\variants\$($variant.VariantKey)\build.psd1"
+  if (!(Test-Path -LiteralPath $profilePath -PathType Leaf)) {
+    throw "Variant '$($variant.VariantKey)' is missing its build profile: $profilePath"
+  }
+  $profile = Import-PowerShellDataFile -LiteralPath $profilePath
+  foreach ($forbiddenProperty in $forbiddenProfileProperties) {
+    if ($profile.ContainsKey($forbiddenProperty)) {
+      throw "Variant '$($variant.VariantKey)' build profile duplicates shared property '$forbiddenProperty'."
     }
   }
 }
 
-& (Join-Path $PSScriptRoot "verifyVariant.ps1") -VariantKey @($variants.VariantKey)
+$profileKeys = @(
+  Get-ChildItem -LiteralPath (Join-Path $repositoryRoot "Scaleform\variants") -Directory |
+    Select-Object -ExpandProperty Name |
+    Sort-Object
+)
+$releaseKeys = @($releaseVariants.VariantKey | Sort-Object)
+if ([string]::Join("`n", $profileKeys) -cne [string]::Join("`n", $releaseKeys)) {
+  throw "Scaleform profile directories must match ReleaseVariants exactly."
+}
+
+$variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
+
+& (Join-Path $PSScriptRoot "verifyVariant.ps1") `
+  -VariantKeys @($variants.VariantKey) `
+  -Committed:$Committed
 
 Write-Host -ForegroundColor Cyan "`n`n"
 Write-Host -ForegroundColor Cyan "**************************************************"

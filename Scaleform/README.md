@@ -50,7 +50,6 @@ From the repository root:
 
 ```powershell
 ./Tools/buildVariant.ps1 `
-  -VariantKey VWKS,CF,FC,TA,MIN `
   -JavaPath "C:\path\to\java.exe" `
   -JpexsJarPath "C:\path\to\ffdec.jar" `
   -VanillaInterfacePath "C:\path\to\extracted\interface"
@@ -62,9 +61,11 @@ stages each selected variant's independent profile from
 the production layout, components, SVG assets, and external palettes.
 Minimalist uses its own faction-free layout, seven-component inventory, and
 literal Starfield colors with no external SVG, palette, or DDS files. Omitting
-`-VariantKey` continues to select only the four themed variants. Use
-`-Committed` to regenerate tracked staging directories without Vortex
-Junctions.
+`-VariantKeys` selects all five release variants. Pass one key, such as
+`-VariantKeys MIN`, or an array, such as
+`-VariantKeys @("TA", "MIN")`, to select a subset. The singular
+`-VariantKey` name remains a compatibility alias. Use `-Committed` to
+regenerate tracked staging directories without Vortex Junctions.
 
 `compileScaleform.ps1` remains the lower-level common movie compiler. It writes
 one validated output directory and never mirrors variant configuration or runs

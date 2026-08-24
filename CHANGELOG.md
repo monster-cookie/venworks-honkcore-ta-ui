@@ -3,9 +3,9 @@
 ## UNRELEASED
 
 - Added a local-time countdown to the next 06:00 sunrise or 18:00 sunset in the Planet Data panel.
-- Added the PS5-only Minimalist release variant with the faction panel removed, the radar restored to the upper-left slot, literal Starfield colors, and no external SVG, palette, or DDS payload.
+- Added the work-in-progress Minimalist release variant for PC, Xbox, and PS5 with the faction panel removed, the radar restored to the upper-left slot, literal Starfield colors, and no external SVG, palette, or DDS payload.
 - Hardened the independent HUD provider registrations with transactional startup, callback containment, diagnostics, and idempotent teardown while preserving all intentional cross-context registrations.
-- Added independent data-driven build profiles for all five variants, a single shared GFX compile, committed-artifact regeneration, and a 21-package release matrix with Minimalist published only as a Bethesda PS5 package.
+- Added independent data-driven build profiles for all five variants, a single shared GFX compile, committed-artifact regeneration, and a 25-package release matrix covering Nexus PC and Bethesda PC, Xbox, and PS5 packages for every variant.
 - Fixed scanner startup restoring the vanilla tracked quest while keeping the vanilla Watch display hidden.
 - Documented that mods replacing `hudmessagesmenu.gfx` or `hudmessagesmenu_lrg.gfx` are incompatible unless a purpose-built patch combines their changes; load order alone is not a compatibility solution.
 

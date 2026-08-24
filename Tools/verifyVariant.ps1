@@ -1,6 +1,15 @@
+<#
+.SYNOPSIS
+Verifies staged or committed artifacts for release variants.
+
+.PARAMETER VariantKeys
+One or more keys from `$Global:ReleaseVariants`. Omit this parameter to process
+all release variants. `VariantKey` remains a compatibility alias.
+#>
 [CmdletBinding()]
 param(
-  [string[]]$VariantKey,
+  [Alias("VariantKey")]
+  [string[]]$VariantKeys,
 
   [switch]$Committed
 )
@@ -242,7 +251,7 @@ if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction Si
   }
 }
 
-$variants = @(Get-ModuleVariants -VariantKey $VariantKey)
+$variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
 $movieDefinitions = @(
   [pscustomobject]@{ FileName = "hudmenu.gfx"; ExpectedHashPath = "Scaleform\hudmenu\validation\expected.sha256" },
   [pscustomobject]@{ FileName = "hudmenu_lrg.gfx"; ExpectedHashPath = "Scaleform\hudmenu_lrg\validation\expected.sha256" },
@@ -263,9 +272,8 @@ foreach ($variant in $variants) {
     -Path (Join-Path $repositoryRoot "Scaleform\variants\$($variant.VariantKey)\build.psd1") `
     -Description "$($variant.VariantName) build profile"
   $profile = Import-PowerShellDataFile -LiteralPath $profilePath
-  if ([string]$profile.VariantKey -cne [string]$variant.VariantKey -or
-      [string]$profile.MovieProfile -cne "shared") {
-    throw "$($variant.VariantName) build profile identity is invalid."
+  if ([string]$profile.MovieProfile -cne "shared") {
+    throw "$($variant.VariantName) build profile movie selection is invalid."
   }
 
   $stagingPath = Resolve-RequiredDirectory `
@@ -310,21 +318,23 @@ foreach ($variant in $variants) {
     -Description "$($variant.VariantName) layout source"
   $expectedLayoutText = [System.IO.File]::ReadAllText($layoutSourcePath)
   $literalColors = $null
+  $selectedPaletteFileName = [string]$variant.PaletteFileName
   if ([string]$profile.PaletteMode -ceq "External") {
     $paletteMatches = @([regex]::Matches($expectedLayoutText, '\bpalette="[^"]+"'))
-    if ($paletteMatches.Count -ne 1 -or [string]$profile.PaletteFileName -cne [string]$variant.PaletteFileName) {
+    if ($paletteMatches.Count -ne 1 -or
+        @($profile.PaletteFileNames | Where-Object { [string]$_ -ceq $selectedPaletteFileName }).Count -ne 1) {
       throw "$($variant.VariantName) external palette profile is invalid."
     }
     $expectedLayoutText = [regex]::Replace(
       $expectedLayoutText,
       '\bpalette="[^"]+"',
-      "palette=`"$($profile.PaletteFileName)`"",
+      "palette=`"$selectedPaletteFileName`"",
       1
     )
   }
   elseif ([string]$profile.PaletteMode -ceq "Literal") {
     $literalPalettePath = Resolve-RequiredFile `
-      -Path (Join-Path (Resolve-RepositoryPath -RelativePath ([string]$profile.PaletteSourceDirectory) -Description "$($variant.VariantName) palette source") ([string]$profile.PaletteFileName)) `
+      -Path (Join-Path (Resolve-RepositoryPath -RelativePath ([string]$profile.PaletteSourceDirectory) -Description "$($variant.VariantName) palette source") $selectedPaletteFileName) `
       -Description "$($variant.VariantName) literal palette"
     $literalColors = Get-LiteralPaletteColors -PalettePath $literalPalettePath
     if ($expectedLayoutText -match '@palette\.|\bpalette="') {

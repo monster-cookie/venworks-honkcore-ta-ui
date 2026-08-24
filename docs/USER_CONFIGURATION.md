@@ -11,9 +11,9 @@ complete palette contract and custom-theme workflow, use the
 
 ## Before editing
 
-1. Enable only one Venworks Customizable HUD release variant. The four themed
-   variants and the PS5-only Minimalist variant install the same HUD and
-   configuration paths, so they must never be enabled together.
+1. Enable only one of the five Venworks Customizable HUD release variants. All
+   variants install the same HUD and configuration paths, so they must never be
+   enabled together.
 2. Fully exit Starfield.
 3. Back up the loose `Interface\VenworksCUI\layout.xml` from the normal package.
    If you use the fully loose package or an advanced override, back up the
@@ -61,7 +61,8 @@ The important files are:
 
 Minimalist intentionally omits the external `Assets` and `palettes` directories,
 uses literal Starfield colors, and does not include the faction-display
-fragment. It is a PS5 package rather than a customizable Nexus theme.
+fragment. Its normal Nexus package exposes the reduced `layout.xml` loose, and
+its fully loose Nexus package exposes the complete reduced interface tree.
 
 The Nexus PC - Normal package exposes only `layout.xml` from this tree as a
 loose file. The runtime resolves the referenced component fragments, palettes,

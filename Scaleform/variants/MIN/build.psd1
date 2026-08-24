@@ -1,5 +1,4 @@
 @{
-  VariantKey = 'MIN'
   MovieProfile = 'shared'
   LayoutSource = 'Scaleform/variants/MIN/layout.xml'
   ComponentSourceDirectory = 'Scaleform/shared/fixtures/components'
@@ -17,6 +16,5 @@
   PaletteMode = 'Literal'
   PaletteSourceDirectory = 'Scaleform/shared/palettes'
   PaletteFileNames = @()
-  PaletteFileName = 'starfield.xml'
   PluginSourcePath = 'Staging-TA/Venworks-CustomizableHUD-TrackersAlliance.esm'
 }

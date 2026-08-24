@@ -37,6 +37,8 @@ env:
   NEXUSMODS_FILE_ID_TA_LOOSE: ${{ vars.NEXUSMODS_FILE_ID_TA_LOOSE || secrets.NEXUSMODS_FILE_ID_TA_LOOSE }}
   NEXUSMODS_FILE_ID_VWKS_NORMAL: ${{ vars.NEXUSMODS_FILE_ID_VWKS_NORMAL || secrets.NEXUSMODS_FILE_ID_VWKS_NORMAL }}
   NEXUSMODS_FILE_ID_VWKS_LOOSE: ${{ vars.NEXUSMODS_FILE_ID_VWKS_LOOSE || secrets.NEXUSMODS_FILE_ID_VWKS_LOOSE }}
+  NEXUSMODS_FILE_ID_MIN_NORMAL: ${{ vars.NEXUSMODS_FILE_ID_MIN_NORMAL || secrets.NEXUSMODS_FILE_ID_MIN_NORMAL }}
+  NEXUSMODS_FILE_ID_MIN_LOOSE: ${{ vars.NEXUSMODS_FILE_ID_MIN_LOOSE || secrets.NEXUSMODS_FILE_ID_MIN_LOOSE }}
 
 
 jobs:
@@ -99,14 +101,12 @@ jobs:
           $ErrorActionPreference = 'Stop'
 
           $releaseRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts/release'
-          $variantKeys = @('VWKS', 'CF', 'FC', 'TA', 'MIN')
           & "$env:GITHUB_WORKSPACE/Tools/createReleasePackages.ps1" `
-            -OutputDirectory $releaseRoot `
-            -VariantKey $variantKeys
+            -OutputDirectory $releaseRoot
 
           $releaseFiles = @(Get-ChildItem -LiteralPath $releaseRoot -File -Filter '*.zip')
-          if ($releaseFiles.Count -ne 21) {
-            throw "Expected 21 release ZIPs; found $($releaseFiles.Count)."
+          if ($releaseFiles.Count -ne 25) {
+            throw "Expected 25 release ZIPs; found $($releaseFiles.Count)."
           }
 
           "release_root=$releaseRoot" >> $env:GITHUB_OUTPUT
@@ -141,7 +141,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
 
           . "$env:GITHUB_WORKSPACE/Tools/sharedConfig.ps1" -SkipEnvironment
-          foreach ($variant in $Global:Variants) {
+          foreach ($variant in $Global:ReleaseVariants) {
             $key = $variant.VariantKey.ToLowerInvariant()
             "$($key)_nexus_normal_display_name=$($variant.NexusNormalDisplayName)" >> $env:GITHUB_OUTPUT
             "$($key)_nexus_loose_display_name=$($variant.NexusLooseDisplayName)" >> $env:GITHUB_OUTPUT
@@ -243,7 +243,7 @@ jobs:
 
           . "$env:GITHUB_WORKSPACE/Tools/sharedConfig.ps1" -SkipEnvironment
           $releaseRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts/release'
-          $themedPackageSuffixes = @(
+          $packageSuffixes = @(
             'Nexus PC - Normal',
             'Nexus PC - Fully Loose Files',
             'Bethesda PC',
@@ -251,21 +251,9 @@ jobs:
             'Bethesda PS5'
           )
           $expectedPackageNames = [System.Collections.Generic.List[string]]::new()
-          $releaseVariants = @(Get-ModuleVariants -VariantKey @('VWKS', 'CF', 'FC', 'TA', 'MIN'))
 
-          foreach ($variant in $releaseVariants) {
+          foreach ($variant in $Global:ReleaseVariants) {
             $key = $variant.VariantKey.ToLowerInvariant()
-            $selectedArchiveTargets = @($variant.ArchiveTargets)
-            $isPs5Only = (
-              $selectedArchiveTargets.Count -eq 1 -and
-              $selectedArchiveTargets[0] -eq 'Main_PS'
-            )
-            $packageSuffixes = if ($isPs5Only) {
-              @('Bethesda PS5')
-            }
-            else {
-              $themedPackageSuffixes
-            }
             foreach ($packageSuffix in $packageSuffixes) {
               $packageName = "$($variant.ReleaseDisplayName) - $packageSuffix.zip"
               $expectedPackageNames.Add($packageName)
@@ -278,12 +266,10 @@ jobs:
               }
             }
 
-            if (!$isPs5Only) {
-              $normalPath = Join-Path $releaseRoot "$($variant.ReleaseDisplayName) - Nexus PC - Normal.zip"
-              $loosePath = Join-Path $releaseRoot "$($variant.ReleaseDisplayName) - Nexus PC - Fully Loose Files.zip"
-              "$($key)_normal_path=$normalPath" >> $env:GITHUB_OUTPUT
-              "$($key)_loose_path=$loosePath" >> $env:GITHUB_OUTPUT
-            }
+            $normalPath = Join-Path $releaseRoot "$($variant.ReleaseDisplayName) - Nexus PC - Normal.zip"
+            $loosePath = Join-Path $releaseRoot "$($variant.ReleaseDisplayName) - Nexus PC - Fully Loose Files.zip"
+            "$($key)_normal_path=$normalPath" >> $env:GITHUB_OUTPUT
+            "$($key)_loose_path=$loosePath" >> $env:GITHUB_OUTPUT
           }
 
           $actualPackageNames = @(
@@ -324,6 +310,8 @@ jobs:
           NEXUS_DISPLAY_NAME_TA_LOOSE: ${{ steps.variant-config.outputs.ta_nexus_loose_display_name }}
           NEXUS_DISPLAY_NAME_VWKS_NORMAL: ${{ steps.variant-config.outputs.vwks_nexus_normal_display_name }}
           NEXUS_DISPLAY_NAME_VWKS_LOOSE: ${{ steps.variant-config.outputs.vwks_nexus_loose_display_name }}
+          NEXUS_DISPLAY_NAME_MIN_NORMAL: ${{ steps.variant-config.outputs.min_nexus_normal_display_name }}
+          NEXUS_DISPLAY_NAME_MIN_LOOSE: ${{ steps.variant-config.outputs.min_nexus_loose_display_name }}
         run: |
           configured_uploads=0
 
@@ -356,6 +344,8 @@ jobs:
           check_upload "$NEXUSMODS_FILE_ID_TA_LOOSE" "$NEXUS_DISPLAY_NAME_TA_LOOSE" "NEXUSMODS_FILE_ID_TA_LOOSE"
           check_upload "$NEXUSMODS_FILE_ID_VWKS_NORMAL" "$NEXUS_DISPLAY_NAME_VWKS_NORMAL" "NEXUSMODS_FILE_ID_VWKS_NORMAL"
           check_upload "$NEXUSMODS_FILE_ID_VWKS_LOOSE" "$NEXUS_DISPLAY_NAME_VWKS_LOOSE" "NEXUSMODS_FILE_ID_VWKS_LOOSE"
+          check_upload "$NEXUSMODS_FILE_ID_MIN_NORMAL" "$NEXUS_DISPLAY_NAME_MIN_NORMAL" "NEXUSMODS_FILE_ID_MIN_NORMAL"
+          check_upload "$NEXUSMODS_FILE_ID_MIN_LOOSE" "$NEXUS_DISPLAY_NAME_MIN_LOOSE" "NEXUSMODS_FILE_ID_MIN_LOOSE"
 
           if [ "$configured_uploads" -gt 0 ] && [ -z "$NEXUSMODS_API_KEY" ]; then
             echo "NEXUSMODS_API_KEY is required for Nexus Mods uploads."
@@ -479,6 +469,36 @@ jobs:
           version: ${{ env.PACKAGE_VERSION }}
           category: ${{ env.NEXUSMODS_CATEGORY }}
           display_name: ${{ steps.variant-config.outputs.vwks_nexus_loose_display_name }}
+          archive_existing_version: true
+          primary_mod_manager_download: false
+          allow_mod_manager_download: true
+          description: ${{ steps.release-notes.outputs.nexus_description }}
+
+      - name: Upload Minimalist normal release to Nexus Mods
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_MIN_NORMAL != '' }}
+        uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
+        with:
+          api_key: ${{ env.NEXUSMODS_API_KEY }}
+          file_id: ${{ env.NEXUSMODS_FILE_ID_MIN_NORMAL }}
+          filename: ${{ steps.release-package.outputs.min_normal_path }}
+          version: ${{ env.PACKAGE_VERSION }}
+          category: ${{ env.NEXUSMODS_CATEGORY }}
+          display_name: ${{ steps.variant-config.outputs.min_nexus_normal_display_name }}
+          archive_existing_version: true
+          primary_mod_manager_download: false
+          allow_mod_manager_download: true
+          description: ${{ steps.release-notes.outputs.nexus_description }}
+
+      - name: Upload Minimalist fully loose release to Nexus Mods
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_MIN_LOOSE != '' }}
+        uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
+        with:
+          api_key: ${{ env.NEXUSMODS_API_KEY }}
+          file_id: ${{ env.NEXUSMODS_FILE_ID_MIN_LOOSE }}
+          filename: ${{ steps.release-package.outputs.min_loose_path }}
+          version: ${{ env.PACKAGE_VERSION }}
+          category: ${{ env.NEXUSMODS_CATEGORY }}
+          display_name: ${{ steps.variant-config.outputs.min_nexus_loose_display_name }}
           archive_existing_version: true
           primary_mod_manager_download: false
           allow_mod_manager_download: true

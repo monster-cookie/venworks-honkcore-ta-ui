@@ -43,14 +43,14 @@ formatting restrained and remains understandable without rendered markup.
 
 1. Merge and tag the release, then use that tag as the public version. The copy
    deliberately contains no guessed version number.
-2. Confirm that each of the four themed Creations has separate PC, Xbox, and
+2. Confirm that each of the five Creations has separate PC, Xbox, and
    PS5 packages. Each package must contain only the root ESM, its
    platform-matching Main BA2, and any generated platform-matching Textures
-   BA2. It must select the matching starting palette and include all five
-   palettes inside the BA2 payload.
-3. Confirm that Minimalist has only its PS5 package. It must contain only the
-   root Minimalist ESM and PS5 Main BA2, with no external SVG, palette, DDS, or
-   texture-archive content.
+   BA2. Each themed Creation must select its matching starting palette and
+   include all five palettes inside the BA2 payload.
+3. Confirm that Minimalist's PC, Xbox, and PS5 packages each contain only the
+   root Minimalist ESM and the matching platform Main BA2, with no external
+   SVG, palette, DDS, or texture-archive content.
 4. Supply current, unedited in-game screenshots for all five Creations. The
    `WIP_MinimalistTheme_Normal.png` and
    `WIP_MinimalistTheme_Scanning.png` files are intentional work-in-progress
@@ -60,8 +60,7 @@ formatting restrained and remains understandable without rendered markup.
 5. Upload the overview bar through a supported Bethesda image field; do not try
    to embed its CDN URL in the description.
 6. Preview the plain GitHub and Discord URLs on the website before publication.
-7. Select PC and every console platform supported by each package. Minimalist
-   is PS5-only in this spike.
+7. Select PC, Xbox, and PS5 for every Creation.
 8. Keep the release marked as beta and request console testing until every
    supported console build has direct runtime evidence.
 9. Publish only the matching package to each platform under a listing, and tell

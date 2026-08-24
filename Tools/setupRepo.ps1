@@ -1,6 +1,15 @@
+<#
+.SYNOPSIS
+Creates local staging junctions for release variants.
+
+.PARAMETER VariantKeys
+One or more keys from `$Global:ReleaseVariants`. Omit this parameter to process
+all release variants. `VariantKey` remains a compatibility alias.
+#>
 [CmdletBinding()]
 param(
-  [string[]]$VariantKey
+  [Alias("VariantKey")]
+  [string[]]$VariantKeys
 )
 
 # Abort on first error
@@ -18,7 +27,7 @@ If (![System.IO.File]::Exists(".env")) {
   Exit
 }
 
-$variants = @(Get-ModuleVariants -VariantKey $VariantKey)
+$variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
 
 foreach ($variant in $variants) {
   Write-Host -ForegroundColor Cyan "Setting variant $($variant.VariantName) using $($variant.StagingFolderPath) and linked to $($variant.PluginModulePath)"

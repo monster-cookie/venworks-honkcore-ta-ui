@@ -27,7 +27,7 @@
 ## Minimalist
 
 - Title: `Venworks Customizable HUD - Minimalist`
-- Tagline: `A PS5-focused experimental Starfield HUD with the faction panel removed, the contact radar restored to the upper-left, and external SVG, palette, and DDS content excluded.`
+- Tagline: `An experimental all-platform Starfield HUD with the faction panel removed, the contact radar restored to the upper-left, and external SVG, palette, and DDS content excluded.`
 - Description Markdown: `Minimalist.md`
 
 ## Compatibility metadata

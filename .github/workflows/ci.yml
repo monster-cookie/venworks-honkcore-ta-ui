@@ -57,41 +57,56 @@ jobs:
           $ErrorActionPreference = 'Stop'
 
           $releaseRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts/ci-release'
-          $variantKeys = @('VWKS', 'CF', 'FC', 'TA', 'MIN')
           & "$env:GITHUB_WORKSPACE/Tools/createReleasePackages.ps1" `
-            -OutputDirectory $releaseRoot `
-            -VariantKey $variantKeys
+            -OutputDirectory $releaseRoot
 
           $releaseFiles = @(Get-ChildItem -LiteralPath $releaseRoot -File -Filter '*.zip')
-          if ($releaseFiles.Count -ne 21) {
-            throw "Expected 21 release ZIPs; found $($releaseFiles.Count)."
+          if ($releaseFiles.Count -ne 25) {
+            throw "Expected 25 release ZIPs; found $($releaseFiles.Count)."
           }
           if (@($releaseFiles | Where-Object { $_.Length -le 0 }).Count -ne 0) {
             throw 'One or more release ZIPs are empty.'
           }
 
-          $minimalistZipPath = Join-Path $releaseRoot 'Venworks - Customizable HUD - Minimalist - Bethesda PS5.zip'
-          if (!(Test-Path -LiteralPath $minimalistZipPath -PathType Leaf)) {
-            throw 'The Minimalist Bethesda PS5 release ZIP was not created.'
+          $minimalistBase = 'Venworks-CustomizableHUD-Minimalist'
+          $minimalistStagingPath = Join-Path $env:GITHUB_WORKSPACE 'Staging-MIN'
+          $minimalistLooseEntries = @(
+            Get-ChildItem -LiteralPath (Join-Path $minimalistStagingPath 'Interface') -Recurse -File |
+              ForEach-Object { $_.FullName.Substring($minimalistStagingPath.Length + 1).Replace('\', '/') } |
+              Sort-Object
+          )
+          $expectedEntriesBySuffix = [ordered]@{
+            'Nexus PC - Normal' = @(
+              "$minimalistBase - Main.ba2"
+              "$minimalistBase.esm"
+              'Interface/VenworksCUI/layout.xml'
+            )
+            'Nexus PC - Fully Loose Files' = $minimalistLooseEntries
+            'Bethesda PC' = @("$minimalistBase - Main.ba2", "$minimalistBase.esm")
+            'Bethesda Xbox' = @("$minimalistBase - Main_XBox.ba2", "$minimalistBase.esm")
+            'Bethesda PS5' = @("$minimalistBase - Main_PS.ba2", "$minimalistBase.esm")
           }
-          $minimalistZip = [System.IO.Compression.ZipFile]::OpenRead($minimalistZipPath)
-          try {
-            $minimalistEntries = @($minimalistZip.Entries.FullName | Sort-Object)
-          }
-          finally {
-            $minimalistZip.Dispose()
-          }
-          $expectedMinimalistEntries = @(
-            'Venworks-CustomizableHUD-Minimalist - Main_PS.ba2',
-            'Venworks-CustomizableHUD-Minimalist.esm'
-          ) | Sort-Object
-          if ($minimalistEntries.Count -ne $expectedMinimalistEntries.Count) {
-            throw "Minimalist ZIP contains $($minimalistEntries.Count) entries; expected $($expectedMinimalistEntries.Count)."
-          }
-          for ($index = 0; $index -lt $expectedMinimalistEntries.Count; $index++) {
-            if ($minimalistEntries[$index] -cne $expectedMinimalistEntries[$index]) {
-              throw 'Minimalist ZIP contains unexpected entries.'
+          foreach ($packageSuffix in $expectedEntriesBySuffix.Keys) {
+            $minimalistZipPath = Join-Path $releaseRoot "Venworks - Customizable HUD - Minimalist - $packageSuffix.zip"
+            if (!(Test-Path -LiteralPath $minimalistZipPath -PathType Leaf)) {
+              throw "The Minimalist $packageSuffix release ZIP was not created."
+            }
+            $minimalistZip = [System.IO.Compression.ZipFile]::OpenRead($minimalistZipPath)
+            try {
+              $minimalistEntries = @($minimalistZip.Entries.FullName | Sort-Object)
+            }
+            finally {
+              $minimalistZip.Dispose()
+            }
+            $expectedMinimalistEntries = @($expectedEntriesBySuffix[$packageSuffix] | Sort-Object)
+            if ($minimalistEntries.Count -ne $expectedMinimalistEntries.Count) {
+              throw "Minimalist $packageSuffix ZIP contains $($minimalistEntries.Count) entries; expected $($expectedMinimalistEntries.Count)."
+            }
+            for ($index = 0; $index -lt $expectedMinimalistEntries.Count; $index++) {
+              if ($minimalistEntries[$index] -cne $expectedMinimalistEntries[$index]) {
+                throw "Minimalist $packageSuffix ZIP contains unexpected entries."
+              }
             }
           }
 
-          Write-Host "Verified all 21 release ZIPs, including the exact Minimalist PS5 package."
+          Write-Host "Verified all 25 release ZIPs, including all five exact Minimalist packages."

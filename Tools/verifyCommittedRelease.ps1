@@ -313,7 +313,7 @@ foreach ($movie in $movies) {
   }
 }
 
-Write-Host "Verified committed Scaleform movie hashes and complete staged VenworksCUI payloads for all four variants."
+Write-Host "Verified committed Scaleform movie hashes and complete staged VenworksCUI payloads for all five variants."
 
 $archive2ScriptReferences = @(
   & git -C $repositoryRoot grep -l -F "Archive2.exe" -- `
@@ -330,7 +330,6 @@ if ($archive2ScriptReferences.Count -ne 1 -or
 Write-Host "Verified that createPackages.ps1 exclusively owns Archive2 invocation."
 
 & (Join-Path $PSScriptRoot "verifyVariant.ps1") `
-  -VariantKey @("VWKS", "CF", "FC", "TA", "MIN") `
   -Committed
 
 Write-Host "Verified all five committed variant profiles and their configured release inputs."

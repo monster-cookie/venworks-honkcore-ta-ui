@@ -140,9 +140,7 @@ $Global:ReleaseVariants = @(
         "venworks.xml",
         $releaseArchiveTargets
     )
-)
 
-$Global:SpikeVariants = @(
     [ModuleVariant]::new(
         "MIN",
         "Minimalist",
@@ -152,25 +150,23 @@ $Global:SpikeVariants = @(
         "Venworks-CustomizableHUD-Minimalist",
         "./Staging-MIN",
         "$ENV:MODULE_VARIANT_MIN_PATH",
-        "",
-        @("Main_PS")
+        "starfield.xml",
+        @("Main", "Main_XBox", "Main_PS")
     )
 )
-
-$Global:Variants = @($Global:ReleaseVariants)
-$Global:AllVariants = @($Global:ReleaseVariants + $Global:SpikeVariants)
 
 function Global:Get-ModuleVariants {
   [CmdletBinding()]
   param(
-    [string[]]$VariantKey
+    [Alias("VariantKey")]
+    [string[]]$VariantKeys
   )
 
-  if ($null -eq $VariantKey -or $VariantKey.Count -eq 0) {
+  if ($null -eq $VariantKeys -or $VariantKeys.Count -eq 0) {
     return @($Global:ReleaseVariants)
   }
 
-  $normalizedKeys = @($VariantKey | ForEach-Object {
+  $normalizedKeys = @($VariantKeys | ForEach-Object {
     if ([string]::IsNullOrWhiteSpace($_)) {
       throw "Variant keys cannot be empty."
     }
@@ -181,7 +177,7 @@ function Global:Get-ModuleVariants {
   }
 
   $selectedVariants = foreach ($normalizedKey in $normalizedKeys) {
-    $matches = @($Global:AllVariants | Where-Object {
+    $matches = @($Global:ReleaseVariants | Where-Object {
       [string]$_.VariantKey -eq $normalizedKey
     })
     if ($matches.Count -ne 1) {

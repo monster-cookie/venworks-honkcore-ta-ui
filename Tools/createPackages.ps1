@@ -1,6 +1,15 @@
+<#
+.SYNOPSIS
+Creates configured platform archives for release variants.
+
+.PARAMETER VariantKeys
+One or more keys from `$Global:ReleaseVariants`. Omit this parameter to process
+all release variants. `VariantKey` remains a compatibility alias.
+#>
 [CmdletBinding()]
 param(
-  [string[]]$VariantKey,
+  [Alias("VariantKey")]
+  [string[]]$VariantKeys,
 
   [switch]$Committed
 )
@@ -93,7 +102,7 @@ $archiveDefinitions = [ordered]@{
   }
 }
 
-$variants = @(Get-ModuleVariants -VariantKey $VariantKey)
+$variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
 
 foreach ($variant in $variants) {
   $stagingFolderPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot $variant.StagingFolderPath))

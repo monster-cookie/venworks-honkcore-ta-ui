@@ -1,5 +1,4 @@
 @{
-  VariantKey = 'TA'
   MovieProfile = 'shared'
   LayoutSource = 'Scaleform/shared/fixtures/chronomark-provider-probe.xml'
   ComponentSourceDirectory = 'Scaleform/shared/fixtures/components'
@@ -31,6 +30,5 @@
     'trackers-alliance.xml'
     'starfield.xml'
   )
-  PaletteFileName = 'trackers-alliance.xml'
   PluginSourcePath = ''
 }

@@ -1,8 +1,17 @@
+<#
+.SYNOPSIS
+Assembles version-independent Nexus and Bethesda release ZIPs.
+
+.PARAMETER VariantKeys
+One or more keys from `$Global:ReleaseVariants`. Omit this parameter to process
+all release variants. `VariantKey` remains a compatibility alias.
+#>
 [CmdletBinding()]
 param(
   [string]$OutputDirectory = (Join-Path (Join-Path $PSScriptRoot "..") "artifacts/release"),
 
-  [string[]]$VariantKey
+  [Alias("VariantKey")]
+  [string[]]$VariantKeys
 )
 
 $ErrorActionPreference = "Stop"
@@ -181,7 +190,7 @@ function New-ReleaseZip {
 $resolvedOutputDirectory = [System.IO.Path]::GetFullPath($OutputDirectory)
 New-Item -ItemType Directory -Force -Path $resolvedOutputDirectory | Out-Null
 
-$variants = @(Get-ModuleVariants -VariantKey $VariantKey)
+$variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
 
 foreach ($variant in $variants) {
   $stagingPath = (Resolve-Path -LiteralPath $variant.StagingFolderPath).Path
@@ -197,23 +206,6 @@ foreach ($variant in $variants) {
   $texturesXboxName = "$($variant.PackageBaseName) - Textures_XBox.ba2"
   $mainPsName = "$($variant.PackageBaseName) - Main_PS.ba2"
   $texturesPsName = "$($variant.PackageBaseName) - Textures_PS.ba2"
-
-  $selectedArchiveTargets = @($variant.ArchiveTargets)
-  $isPs5Only = (
-    $selectedArchiveTargets.Count -eq 1 -and
-    $selectedArchiveTargets[0] -eq "Main_PS"
-  )
-  if ($isPs5Only) {
-    $pluginPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $pluginName) -Description "$($variant.VariantName) plugin"
-    $mainPsPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $mainPsName) -Description "$($variant.VariantName) PS5 Main archive"
-    $packageFiles = @(
-      New-PackageFile -SourcePath $pluginPath -EntryName $pluginName
-      New-PackageFile -SourcePath $mainPsPath -EntryName $mainPsName
-    )
-    $zipName = "$($variant.ReleaseDisplayName) - Bethesda PS5.zip"
-    New-ReleaseZip -ZipPath (Join-Path $resolvedOutputDirectory $zipName) -Files $packageFiles
-    continue
-  }
 
   $pluginPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $pluginName) -Description "$($variant.VariantName) plugin"
   $mainPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $mainName) -Description "$($variant.VariantName) Windows Main archive"
@@ -280,8 +272,8 @@ foreach ($variant in $variants) {
   }
 }
 
-if ($null -eq $VariantKey -or $VariantKey.Count -eq 0) {
-  Write-Host -ForegroundColor Cyan "Created all five release package shapes for all four themes."
+if ($null -eq $VariantKeys -or $VariantKeys.Count -eq 0) {
+  Write-Host -ForegroundColor Cyan "Created all five release package shapes for all five variants."
 }
 else {
   Write-Host -ForegroundColor Cyan "Created the configured release package shapes for the selected variants."

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Compiles the shared Scaleform movies and stages independent variant payloads.
+
+.PARAMETER VariantKeys
+One or more keys from `$Global:ReleaseVariants`. Omit this parameter to process
+all release variants. `VariantKey` remains a compatibility alias.
+#>
 [CmdletBinding()]
 param(
   [Parameter(Mandatory = $true)]
@@ -9,7 +17,8 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$VanillaInterfacePath,
 
-  [string[]]$VariantKey,
+  [Alias("VariantKey")]
+  [string[]]$VariantKeys,
 
   [string]$WorkDirectory = (Join-Path $PSScriptRoot "..\Scaleform\.work"),
 
@@ -223,7 +232,7 @@ if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction Si
   }
 }
 
-$variants = @(Get-ModuleVariants -VariantKey $VariantKey)
+$variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
 if ($variants.Count -eq 0) {
   throw "At least one variant must be selected."
 }
@@ -269,9 +278,6 @@ try {
       -Path (Join-Path $repositoryRoot "Scaleform\variants\$($variant.VariantKey)\build.psd1") `
       -Description "$($variant.VariantName) build profile"
     $profile = Import-PowerShellDataFile -LiteralPath $profilePath
-    if ([string]$profile.VariantKey -cne [string]$variant.VariantKey) {
-      throw "$($variant.VariantName) build profile declares variant key '$($profile.VariantKey)'."
-    }
     if ([string]$profile.MovieProfile -cne "shared") {
       throw "$($variant.VariantName) selects unsupported movie profile '$($profile.MovieProfile)'."
     }
@@ -279,6 +285,7 @@ try {
     Assert-UniqueSafeFileNames -FileNames @($profile.ComponentFileNames) -Context "$($variant.VariantName) component profile"
     Assert-UniqueSafeFileNames -FileNames @($profile.AssetFileNames) -Context "$($variant.VariantName) asset profile"
     Assert-UniqueSafeFileNames -FileNames @($profile.PaletteFileNames) -Context "$($variant.VariantName) palette profile"
+    Assert-UniqueSafeFileNames -FileNames @([string]$variant.PaletteFileName) -Context "$($variant.VariantName) selected palette"
 
     $layoutSourcePath = Resolve-RequiredFile `
       -Path (Resolve-RepositoryPath -RelativePath ([string]$profile.LayoutSource) -Description "$($variant.VariantName) layout source") `
@@ -326,11 +333,12 @@ try {
     New-Item -ItemType Directory -Force -Path $componentOutputDirectory | Out-Null
 
     $paletteMode = [string]$profile.PaletteMode
+    $selectedPaletteFileName = [string]$variant.PaletteFileName
     $layoutText = [System.IO.File]::ReadAllText($layoutSourcePath)
     $literalColors = $null
     if ($paletteMode -ceq "External") {
-      if ([string]$profile.PaletteFileName -cne [string]$variant.PaletteFileName) {
-        throw "$($variant.VariantName) profile palette '$($profile.PaletteFileName)' differs from shared configuration '$($variant.PaletteFileName)'."
+      if (@($profile.PaletteFileNames | Where-Object { [string]$_ -ceq $selectedPaletteFileName }).Count -ne 1) {
+        throw "$($variant.VariantName) selected palette '$selectedPaletteFileName' is not present exactly once in its payload profile."
       }
       $paletteMatches = @([regex]::Matches($layoutText, '\bpalette="[^"]+"'))
       if ($paletteMatches.Count -ne 1) {
@@ -339,7 +347,7 @@ try {
       $layoutText = [regex]::Replace(
         $layoutText,
         '\bpalette="[^"]+"',
-        "palette=`"$($profile.PaletteFileName)`"",
+        "palette=`"$selectedPaletteFileName`"",
         1
       )
     }
@@ -348,7 +356,7 @@ try {
         throw "$($variant.VariantName) literal-palette layout must already contain literal values and no palette selector."
       }
       $literalPalettePath = Resolve-RequiredFile `
-        -Path (Join-Path (Resolve-RepositoryPath -RelativePath ([string]$profile.PaletteSourceDirectory) -Description "$($variant.VariantName) palette source") ([string]$profile.PaletteFileName)) `
+        -Path (Join-Path (Resolve-RepositoryPath -RelativePath ([string]$profile.PaletteSourceDirectory) -Description "$($variant.VariantName) palette source") $selectedPaletteFileName) `
         -Description "$($variant.VariantName) literal palette"
       $literalColors = Get-LiteralPaletteColors -PalettePath $literalPalettePath
     }
