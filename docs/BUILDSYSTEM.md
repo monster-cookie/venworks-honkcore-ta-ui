@@ -60,6 +60,7 @@ Create only its staging Junction and build only its artifacts with:
 
 ```powershell
 .\Tools\setupRepo.ps1 -VariantKey MIN
+.\Tools\verifyPs5MinimalistScaleform.ps1
 .\Tools\compileMinimalistSpike.ps1 `
   -JavaPath ".work/tools/java/bin/java.exe" `
   -JpexsJarPath ".work/tools/jpexs/ffdec.jar" `
@@ -67,6 +68,18 @@ Create only its staging Junction and build only its artifacts with:
 .\Tools\createPackages.ps1 -VariantKey MIN
 .\Tools\verifyMinimalistSpike.ps1
 ```
+
+`Tools/compilePs5MinimalistScaleform.ps1` is the dedicated PS5 HUD-movie entry
+point used by the Minimalist compiler. It validates the independent 10-provider
+condition context and 14-provider value context before and after compilation,
+including the six intentionally duplicated provider names, transactional
+startup, callback containment, deferred teardown, and bootstrap diagnostics.
+It does not combine providers into a shared subscription or broker. This
+separate entry point is also the boundary for later PS5-only feature-removal
+experiments, such as compiling out SVG support, without changing the ordinary
+four-variant Scaleform workflow. Its two HUD movies use dedicated expected-hash
+files under `Scaleform/ps5-minimalist/validation`; the normal and large release
+hash baselines remain unchanged until the spike is deliberately graduated.
 
 The Minimalist compiler uses the production HUD movies, resolves the
 `starfield.xml` color roles to literal XML colors, removes the palette selector

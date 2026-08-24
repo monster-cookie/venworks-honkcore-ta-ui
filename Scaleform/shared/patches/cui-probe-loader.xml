@@ -2,15 +2,46 @@
 <actionScriptPatch name="cui-runtime-bootstrap" version="1" script="HUDMenu">
   <insertions>
     <insertion position="after"><anchor><![CDATA[   import flash.net.URLRequest;]]></anchor><content><![CDATA[
+   import venworks.cui.CUIDiagnosticsPanel;
    import venworks.cui.CUIRuntime;]]></content></insertion>
     <insertion position="after"><anchor><![CDATA[      private var SkillPatchLoader:Loader = null;]]></anchor><content><![CDATA[
       
-      private var VenworksCUIRuntimeInstance:CUIRuntime = null;]]></content></insertion>
+       private var VenworksCUIRuntimeInstance:CUIRuntime = null;
+       private var VenworksCUIBootstrapDiagnostics:CUIDiagnosticsPanel = null;]]></content></insertion>
     <insertion position="after"><anchor><![CDATA[         super.onAddedToStage();]]></anchor><content><![CDATA[
-         if(this.VenworksCUIRuntimeInstance == null)
+         if(this.VenworksCUIRuntimeInstance == null || this.VenworksCUIRuntimeInstance.isDisposed)
          {
-            this.VenworksCUIRuntimeInstance = new CUIRuntime(this);
-            this.VenworksCUIRuntimeInstance.load();
+            try
+            {
+               this.VenworksCUIRuntimeInstance = new CUIRuntime(this);
+               this.VenworksCUIRuntimeInstance.load();
+               if(this.VenworksCUIBootstrapDiagnostics != null &&
+                  this.VenworksCUIBootstrapDiagnostics.parent === this)
+               {
+                  this.removeChild(this.VenworksCUIBootstrapDiagnostics);
+               }
+               this.VenworksCUIBootstrapDiagnostics = null;
+            }
+            catch(venworksBootstrapError:Error)
+            {
+               this.VenworksCUIRuntimeInstance = null;
+               try
+               {
+                  if(this.VenworksCUIBootstrapDiagnostics == null)
+                  {
+                     this.VenworksCUIBootstrapDiagnostics = new CUIDiagnosticsPanel();
+                     this.addChild(this.VenworksCUIBootstrapDiagnostics);
+                  }
+                  this.VenworksCUIBootstrapDiagnostics.showError(
+                     "CUI STARTUP ERROR",
+                     "CODE: CUI-EVT-BOOTSTRAP\n" + venworksBootstrapError.toString()
+                  );
+               }
+               catch(venworksDiagnosticsError:Error)
+               {
+                  trace("CUI-EVT-BOOTSTRAP | " + venworksBootstrapError.toString());
+               }
+            }
          }
 ]]></content></insertion>
     <insertion position="after"><anchor><![CDATA[         CENTER_GROUP_POINT.y = this.CenterGroup_mc.y;]]></anchor><content><![CDATA[

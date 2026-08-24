@@ -8,6 +8,7 @@ package venworks.cui
    public final class CUIConditionContext extends EventDispatcher
    {
       public static const CONDITION_CHANGE:String = "cuiConditionChange";
+      public static const PROVIDER_ERROR:String = "cuiConditionProviderError";
 
       private static const FAVORITE_SLOT_COUNT:int = 12;
       private static const CRITICAL_HEALTH_PERCENTAGE:Number = 35;
@@ -22,6 +23,11 @@ package venworks.cui
       private var favoriteWeapons:Array;
       private var activeWeaponName:String = "";
       private var activePowerName:String = "";
+      private var providerSubscriptions:Array;
+      private var started:Boolean = false;
+      private var disposed:Boolean = false;
+      private var faulted:Boolean = false;
+      private var disposalErrorMessage:String = "";
 
       public function CUIConditionContext()
       {
@@ -31,19 +37,185 @@ package venworks.cui
          favoriteNames = [];
          favoritePowers = [];
          favoriteWeapons = [];
+         providerSubscriptions = [];
          this.setValue("criticalhealth",false);
          this.resetFavoriteConditions();
-         BSUIDataManager.Subscribe("HudCrosshairData",this.onCrosshairData);
-         BSUIDataManager.Subscribe("HUDStealthData",this.onStealthData);
-         BSUIDataManager.Subscribe("HudCompassData",this.onCompassData);
-         BSUIDataManager.Subscribe("HUDVehicleData",this.onVehicleData);
-         BSUIDataManager.Subscribe("HUDOpacityData",this.onOpacityData);
-         BSUIDataManager.Subscribe("WeaponData",this.onWeaponData);
-         BSUIDataManager.Subscribe("HUDStarbornPowersData",this.onStarbornPowersData);
-         BSUIDataManager.Subscribe("FavoritesData",this.onFavoritesData);
-         BSUIDataManager.Subscribe("HudJetpackData",this.onJetpackData);
-         BSUIDataManager.Subscribe("PlayerInventoryData",this.onPlayerInventoryData);
          this.resetChangedConditions();
+      }
+
+      public function start() : void
+      {
+         if(this.disposed)
+         {
+            throw new Error("CUI-EVT-LIFECYCLE|Condition providers cannot start after disposal.");
+         }
+         if(this.started)
+         {
+            return;
+         }
+         this.started = true;
+         try
+         {
+            this.subscribeProvider("HudCrosshairData",this.onCrosshairData);
+            this.subscribeProvider("HUDStealthData",this.onStealthData);
+            this.subscribeProvider("HudCompassData",this.onCompassData);
+            this.subscribeProvider("HUDVehicleData",this.onVehicleData);
+            this.subscribeProvider("HUDOpacityData",this.onOpacityData);
+            this.subscribeProvider("WeaponData",this.onWeaponData);
+            this.subscribeProvider("HUDStarbornPowersData",this.onStarbornPowersData);
+            this.subscribeProvider("FavoritesData",this.onFavoritesData);
+            this.subscribeProvider("HudJetpackData",this.onJetpackData);
+            this.subscribeProvider("PlayerInventoryData",this.onPlayerInventoryData);
+         }
+         catch(param1:Error)
+         {
+            this.faulted = true;
+            this.dispose();
+            throw param1;
+         }
+         this.resetChangedConditions();
+      }
+
+      public function get lastDisposalError() : String
+      {
+         return this.disposalErrorMessage;
+      }
+
+      public function dispose() : void
+      {
+         var subscription:Object = null;
+         var failure:Error = null;
+         if(this.disposed)
+         {
+            return;
+         }
+         this.disposed = true;
+         this.faulted = true;
+         while(this.providerSubscriptions.length != 0)
+         {
+            subscription = this.providerSubscriptions.pop();
+            if(String(subscription.state) == "active")
+            {
+               try
+               {
+                  BSUIDataManager.Unsubscribe(String(subscription.provider),subscription.callback as Function);
+               }
+               catch(param1:Error)
+               {
+                  if(failure == null)
+                  {
+                     failure = param1;
+                     this.disposalErrorMessage = "CUI-EVT-UNSUBSCRIBE | CONDITION | " +
+                        String(subscription.provider) + " | " + param1.toString();
+                  }
+               }
+            }
+            subscription.state = "disposed";
+         }
+         if(failure != null)
+         {
+            trace(this.disposalErrorMessage);
+         }
+      }
+
+      private function subscribeProvider(param1:String, param2:Function) : void
+      {
+         var existing:Object = null;
+         var context:CUIConditionContext = this;
+         var subscription:Object = null;
+         var callback:Function = null;
+         if(this.disposed || this.faulted)
+         {
+            throw new Error("CUI-EVT-LIFECYCLE|Condition provider registration stopped after a fault.");
+         }
+         for each(existing in this.providerSubscriptions)
+         {
+            if(String(existing.provider) == param1 && existing.handler === param2)
+            {
+               throw new Error("CUI-EVT-LIFECYCLE|Condition provider is already registered: " + param1);
+            }
+         }
+         subscription = {
+            provider:param1,
+            handler:param2,
+            callback:null,
+            state:"pending",
+            handling:false
+         };
+         callback = function(param3:FromClientDataEvent):void
+         {
+            context.handleProviderEvent(subscription,param3);
+         };
+         subscription.callback = callback;
+         this.providerSubscriptions.push(subscription);
+         try
+         {
+            BSUIDataManager.Subscribe(param1,callback);
+            subscription.state = "active";
+         }
+         catch(param3:Error)
+         {
+            throw new Error("CUI-EVT-SUBSCRIBE|CONDITION | " + param1 + " | " + param3.toString(),param3.errorID);
+         }
+      }
+
+      private function handleProviderEvent(param1:Object, param2:FromClientDataEvent) : void
+      {
+         var handler:Function = null;
+         if(this.disposed || this.faulted)
+         {
+            return;
+         }
+         if(Boolean(param1.handling))
+         {
+            this.failProvider(param1,"CUI-EVT-REENTRANT",new Error("Provider callback re-entered before returning."));
+            return;
+         }
+         if(param2 == null || param2.data == null)
+         {
+            this.failProvider(param1,"CUI-EVT-PAYLOAD",new Error("Provider callback did not contain data."));
+            return;
+         }
+         param1.handling = true;
+         try
+         {
+            handler = param1.handler as Function;
+            handler(param2);
+         }
+         catch(param3:Error)
+         {
+            this.failProvider(param1,"CUI-EVT-CALLBACK",param3);
+         }
+         finally
+         {
+            param1.handling = false;
+         }
+      }
+
+      private function failProvider(param1:Object, param2:String, param3:Error) : void
+      {
+         var details:Object = null;
+         if(this.disposed || this.faulted)
+         {
+            return;
+         }
+         this.faulted = true;
+         details = {
+            code:param2,
+            consumer:"CONDITION",
+            provider:String(param1.provider),
+            message:param3.toString(),
+            errorID:param3.errorID,
+            stack:param3.getStackTrace()
+         };
+         try
+         {
+            dispatchEvent(new CustomEvent(PROVIDER_ERROR,details));
+         }
+         catch(param4:Error)
+         {
+            trace(param2 + " | CONDITION | " + String(param1.provider) + " | " + param3.toString());
+         }
       }
 
       public static function normalizeName(param1:String) : String

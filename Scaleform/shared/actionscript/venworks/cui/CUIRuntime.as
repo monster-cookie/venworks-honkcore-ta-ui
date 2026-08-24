@@ -56,6 +56,8 @@ package venworks.cui
       private var diagnosticPhase:String = "";
       private var diagnosticNode:XML;
       private var diagnosticCheckpoint:String = "";
+      private var disposed:Boolean = false;
+      private var teardownPending:Boolean = false;
 
       public function CUIRuntime(param1:DisplayObjectContainer)
       {
@@ -67,18 +69,32 @@ package venworks.cui
          diagnostics.name = "VenworksCUIDiagnosticsPanel";
          owner.addChild(componentLayer);
          owner.addChild(diagnostics);
+         owner.addEventListener(Event.REMOVED_FROM_STAGE,this.onOwnerRemovedFromStage);
+      }
+
+      public function get isDisposed() : Boolean
+      {
+         return this.disposed;
       }
 
       public function load() : void
       {
-         if(loader != null)
+         if(this.disposed || loader != null)
          {
             return;
          }
-         loader = new CUILayoutImportLoader();
-         loader.addEventListener(Event.COMPLETE,this.onLoaded);
-         loader.addEventListener(Event.CANCEL,this.onLoadFailed);
-         loader.load();
+         try
+         {
+            loader = new CUILayoutImportLoader();
+            loader.addEventListener(Event.COMPLETE,this.onLoaded);
+            loader.addEventListener(Event.CANCEL,this.onLoadFailed);
+            loader.load();
+         }
+         catch(param1:Error)
+         {
+            this.setDiagnosticContext("CUI BOOTSTRAP",null,"LAYOUT LOADER START");
+            this.showRuntimeError(param1);
+         }
       }
 
       public function reapplyVanillaPlacements() : void
@@ -99,7 +115,7 @@ package venworks.cui
          }
          catch(param1:Error)
          {
-            this.showRuntimeError(param1);
+            this.showLiveEventError(param1,"VANILLA SAFE-RECT PLACEMENT");
          }
       }
 
@@ -125,7 +141,7 @@ package venworks.cui
          }
          catch(param2:Error)
          {
-            this.showRuntimeError(param2);
+            this.showLiveEventError(param2,"VANILLA HUD MODE VISIBILITY");
          }
       }
 
@@ -139,6 +155,9 @@ package venworks.cui
             parser = new CUILayoutParser();
             config = parser.prepareForPalette(config);
             valueContext = new CUIPlayerHudDataContext();
+            valueContext.addEventListener(CUIPlayerHudDataContext.PROVIDER_ERROR,this.onProviderError);
+            this.setDiagnosticContext("VALUE PROVIDER REGISTRATION",null,"TRANSACTIONAL START");
+            valueContext.start();
             paletteLoader = new CUIPaletteLoader();
             paletteLoader.addEventListener(Event.COMPLETE,this.onPaletteLoaded);
             paletteLoader.addEventListener(Event.CANCEL,this.onPaletteFailed);
@@ -208,6 +227,9 @@ package venworks.cui
             threatAlerts = [];
             statusEffectBars = [];
             conditionContext = new CUIConditionContext();
+            conditionContext.addEventListener(CUIConditionContext.PROVIDER_ERROR,this.onProviderError);
+            this.setDiagnosticContext("CONDITION PROVIDER REGISTRATION",null,"TRANSACTIONAL START");
+            conditionContext.start();
             conditionContext.addEventListener(CUIConditionContext.CONDITION_CHANGE,this.onConditionChanged);
             valueContext.addEventListener(CUIPlayerHudDataContext.VALUE_CHANGE,this.onValueChanged);
             valueContext.addEventListener(CUIPlayerHudDataContext.COMPASS_CHANGE,this.onCompassChanged);
@@ -239,6 +261,105 @@ package venworks.cui
          diagnostics.showError("CUI ASSET LOAD ERROR","PHASE: ASSET LOADING\n" + assetManager.errorMessage);
       }
 
+      private function onProviderError(param1:CustomEvent) : void
+      {
+         var details:Object = param1 == null ? null : param1.params;
+         var lines:Array = [];
+         if(this.disposed || this.teardownPending)
+         {
+            return;
+         }
+         if(details == null)
+         {
+            details = {
+               code:"CUI-EVT-REPORTING",
+               consumer:"UNKNOWN",
+               provider:"UNKNOWN",
+               message:"Provider error event did not contain diagnostic details."
+            };
+         }
+         lines.push("CODE: " + String(details.code));
+         lines.push("CONSUMER: " + String(details.consumer));
+         lines.push("PROVIDER: " + String(details.provider));
+         if(Number(details.errorID) != 0)
+         {
+            lines.push("ERROR ID: " + String(details.errorID));
+         }
+         if(details.message != null && String(details.message).length != 0)
+         {
+            lines.push(String(details.message));
+         }
+         if(details.stack != null && String(details.stack).length != 0)
+         {
+            lines.push("STACK: " + String(details.stack));
+         }
+         try
+         {
+            componentLayer.visible = false;
+            diagnostics.showError("CUI EVENT HANDLER ERROR",lines.join("\n"));
+         }
+         catch(param2:Error)
+         {
+            trace("CUI-EVT-REPORTING | " + param2.toString());
+         }
+         this.deferComponentTeardown();
+      }
+
+      private function showLiveEventError(param1:Error, param2:String) : void
+      {
+         var detail:String = null;
+         if(this.disposed || this.teardownPending)
+         {
+            return;
+         }
+         try
+         {
+            detail = "CODE: CUI-EVT-CALLBACK\nCONSUMER: RUNTIME\nEVENT: " + param2 + "\n" +
+               this.formatRuntimeError(param1,param1.message);
+            componentLayer.visible = false;
+            diagnostics.showError("CUI EVENT HANDLER ERROR",detail);
+         }
+         catch(param3:Error)
+         {
+            trace("CUI-EVT-REPORTING | RUNTIME | " + param2 + " | " + param3.toString());
+         }
+         this.deferComponentTeardown();
+      }
+
+      private function deferComponentTeardown() : void
+      {
+         if(this.disposed || this.teardownPending)
+         {
+            return;
+         }
+         this.teardownPending = true;
+         owner.addEventListener(Event.ENTER_FRAME,this.onDeferredComponentTeardown);
+      }
+
+      private function onDeferredComponentTeardown(param1:Event) : void
+      {
+         owner.removeEventListener(Event.ENTER_FRAME,this.onDeferredComponentTeardown);
+         this.teardownPending = false;
+         try
+         {
+            this.clearComponentLayer();
+         }
+         catch(param2:Error)
+         {
+            try
+            {
+               diagnostics.showError(
+                  "CUI TEARDOWN ERROR",
+                  "CODE: CUI-EVT-TEARDOWN\n" + this.formatRuntimeError(param2,param2.message)
+               );
+            }
+            catch(param3:Error)
+            {
+               trace("CUI-EVT-TEARDOWN | " + param2.toString());
+            }
+         }
+      }
+
       private function clearAssetListeners() : void
       {
          if(assetManager != null)
@@ -266,6 +387,13 @@ package venworks.cui
          if(message.indexOf("UNSUPPORTED|") == 0)
          {
             diagnostics.showError("CUI LAYOUT UNSUPPORTED",detail);
+         }
+         else if(message.indexOf("CUI-EVT-") == 0)
+         {
+            diagnostics.showError(
+               "CUI EVENT REGISTRATION ERROR",
+               "CODE: " + message.substring(0,separator) + "\n" + detail
+            );
          }
          else
          {
@@ -526,7 +654,7 @@ package venworks.cui
          }
          catch(param2:Error)
          {
-            this.showRuntimeError(param2);
+            this.showLiveEventError(param2,"CONDITION CHANGE");
          }
       }
 
@@ -541,7 +669,7 @@ package venworks.cui
          }
          catch(param2:Error)
          {
-            this.showRuntimeError(param2);
+            this.showLiveEventError(param2,"VALUE CHANGE");
          }
       }
 
@@ -555,7 +683,7 @@ package venworks.cui
          }
          catch(param2:Error)
          {
-            this.showRuntimeError(param2);
+            this.showLiveEventError(param2,"COMPASS CHANGE");
          }
       }
 
@@ -569,7 +697,7 @@ package venworks.cui
          }
          catch(param2:Error)
          {
-            this.showRuntimeError(param2);
+            this.showLiveEventError(param2,"TACTICAL AWARENESS CHANGE");
          }
       }
 
@@ -654,25 +782,71 @@ package venworks.cui
          }
       }
 
+      public function dispose() : void
+      {
+         if(this.disposed)
+         {
+            return;
+         }
+         this.disposed = true;
+         owner.removeEventListener(Event.REMOVED_FROM_STAGE,this.onOwnerRemovedFromStage);
+         if(this.teardownPending)
+         {
+            owner.removeEventListener(Event.ENTER_FRAME,this.onDeferredComponentTeardown);
+            this.teardownPending = false;
+         }
+         this.clearListeners();
+         this.clearPaletteListeners();
+         this.clearAssetListeners();
+         this.clearComponentLayer();
+         if(componentLayer.parent === owner)
+         {
+            owner.removeChild(componentLayer);
+         }
+         if(diagnostics.parent === owner)
+         {
+            owner.removeChild(diagnostics);
+         }
+      }
+
+      private function onOwnerRemovedFromStage(param1:Event) : void
+      {
+         this.dispose();
+      }
+
       private function clearComponentLayer() : void
       {
          var adapter:CUIVanillaVisibilityAdapter = null;
+         var adapterFailure:Error = null;
          if(conditionContext != null)
          {
             conditionContext.removeEventListener(CUIConditionContext.CONDITION_CHANGE,this.onConditionChanged);
+            conditionContext.removeEventListener(CUIConditionContext.PROVIDER_ERROR,this.onProviderError);
+            conditionContext.dispose();
          }
          if(valueContext != null)
          {
             valueContext.removeEventListener(CUIPlayerHudDataContext.VALUE_CHANGE,this.onValueChanged);
             valueContext.removeEventListener(CUIPlayerHudDataContext.COMPASS_CHANGE,this.onCompassChanged);
             valueContext.removeEventListener(CUIPlayerHudDataContext.TACTICAL_AWARENESS_CHANGE,this.onTacticalAwarenessChanged);
+            valueContext.removeEventListener(CUIPlayerHudDataContext.PROVIDER_ERROR,this.onProviderError);
             valueContext.dispose();
          }
          if(vanillaAdapters != null)
          {
             for each(adapter in vanillaAdapters)
             {
-               adapter.dispose();
+               try
+               {
+                  adapter.dispose();
+               }
+               catch(param1:Error)
+               {
+                  if(adapterFailure == null)
+                  {
+                     adapterFailure = param1;
+                  }
+               }
             }
          }
          while(componentLayer.numChildren > 0)
@@ -687,6 +861,12 @@ package venworks.cui
          scannerOverlays = [];
          threatAlerts = [];
          statusEffectBars = [];
+         conditionContext = null;
+         valueContext = null;
+         if(adapterFailure != null)
+         {
+            trace("CUI-EVT-TEARDOWN | VANILLA ADAPTER | " + adapterFailure.toString());
+         }
       }
    }
 }

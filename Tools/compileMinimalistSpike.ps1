@@ -9,7 +9,7 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$VanillaInterfacePath,
 
-  [string]$WorkDirectory = (Join-Path $PSScriptRoot "..\Scaleform\.work"),
+  [string]$WorkDirectory = (Join-Path $PSScriptRoot "..\Scaleform\.work\ps5-minimalist"),
 
   [switch]$KeepWork
 )
@@ -132,15 +132,15 @@ $compileParameters = @{
   JavaPath = $JavaPath
   JpexsJarPath = $JpexsJarPath
   VanillaInterfacePath = $VanillaInterfacePath
-  OutputDirectory = @($interfaceOutputDirectory)
+  OutputDirectory = $interfaceOutputDirectory
   WorkDirectory = $WorkDirectory
 }
 if ($KeepWork) {
   $compileParameters.KeepWork = $true
 }
 
-Write-Host -ForegroundColor Green "Compiling Minimalist HUD movies"
-& (Join-Path $PSScriptRoot "compileScaleform.ps1") @compileParameters
+Write-Host -ForegroundColor Green "Compiling Minimalist HUD movies through the PS5 spike entry point"
+& (Join-Path $PSScriptRoot "compilePs5MinimalistScaleform.ps1") @compileParameters
 & (Join-Path $PSScriptRoot "compileScaleformOverrides.ps1") @compileParameters
 
 $cuiOutputDirectory = Join-Path $interfaceOutputDirectory "VenworksCUI"

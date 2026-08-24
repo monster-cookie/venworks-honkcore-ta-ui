@@ -14,6 +14,7 @@ package venworks.cui
       public static const VALUE_CHANGE:String = "cuiValueChange";
       public static const COMPASS_CHANGE:String = "cuiCompassChange";
       public static const TACTICAL_AWARENESS_CHANGE:String = "cuiTacticalAwarenessChange";
+      public static const PROVIDER_ERROR:String = "cuiValueProviderError";
 
       private static const MAX_DIAGNOSTIC_FIELDS:int = 12;
       private static const MAX_PLAYER_DIAGNOSTIC_FIELDS:int = 32;
@@ -65,7 +66,10 @@ package venworks.cui
       private var compassData:Object;
       private var tacticalAwareness:CUITacticalAwarenessModel;
       private var providerSubscriptions:Array;
+      private var started:Boolean = false;
       private var disposed:Boolean = false;
+      private var faulted:Boolean = false;
+      private var disposalErrorMessage:String = "";
 
       public function CUIPlayerHudDataContext()
       {
@@ -114,41 +118,150 @@ package venworks.cui
          this.setText("environment.hazard.radiationshortstatus","WAITING");
          this.setText("quest.objective","");
          this.resetChangedSources();
+      }
+
+      public function start() : void
+      {
+         if(this.disposed)
+         {
+            throw new Error("CUI-EVT-LIFECYCLE|Value providers cannot start after disposal.");
+         }
+         if(this.started)
+         {
+            return;
+         }
+         this.started = true;
          try
          {
-            providerSubscriptions.push({ provider:"LocalEnvironmentData", callback:this.onLocalEnvironmentData });
-            BSUIDataManager.Subscribe("LocalEnvironmentData",this.onLocalEnvironmentData);
-            providerSubscriptions.push({ provider:"LocalEnvData_Frequent", callback:this.onLocalEnvironmentFrequentData });
-            BSUIDataManager.Subscribe("LocalEnvData_Frequent",this.onLocalEnvironmentFrequentData);
-            providerSubscriptions.push({ provider:"PlayerData", callback:this.onPlayerData });
-            BSUIDataManager.Subscribe("PlayerData",this.onPlayerData);
-            providerSubscriptions.push({ provider:"PlayerFrequentData", callback:this.onPlayerFrequentData });
-            BSUIDataManager.Subscribe("PlayerFrequentData",this.onPlayerFrequentData);
-            providerSubscriptions.push({ provider:"PlayerInventoryData", callback:this.onPlayerInventoryData });
-            BSUIDataManager.Subscribe("PlayerInventoryData",this.onPlayerInventoryData);
-            providerSubscriptions.push({ provider:"WeaponData", callback:this.onWeaponData });
-            BSUIDataManager.Subscribe("WeaponData",this.onWeaponData);
-            providerSubscriptions.push({ provider:"HudJetpackData", callback:this.onJetpackData });
-            BSUIDataManager.Subscribe("HudJetpackData",this.onJetpackData);
-            providerSubscriptions.push({ provider:"HUDStarbornPowersData", callback:this.onStarbornPowersData });
-            BSUIDataManager.Subscribe("HUDStarbornPowersData",this.onStarbornPowersData);
-            providerSubscriptions.push({ provider:"FavoritesData", callback:this.onFavoritesData });
-            BSUIDataManager.Subscribe("FavoritesData",this.onFavoritesData);
-            providerSubscriptions.push({ provider:"ControlMapData", callback:this.onControlMapData });
-            BSUIDataManager.Subscribe("ControlMapData",this.onControlMapData);
-            providerSubscriptions.push({ provider:"EnvironmentEffectsData", callback:this.onEnvironmentEffectsData });
-            BSUIDataManager.Subscribe("EnvironmentEffectsData",this.onEnvironmentEffectsData);
-            providerSubscriptions.push({ provider:"PersonalEffectsData", callback:this.onPersonalEffectsData });
-            BSUIDataManager.Subscribe("PersonalEffectsData",this.onPersonalEffectsData);
-            providerSubscriptions.push({ provider:"StarmapSystemBodyInfoProvider", callback:this.onStarmapSystemBodyInfoData });
-            BSUIDataManager.Subscribe("StarmapSystemBodyInfoProvider",this.onStarmapSystemBodyInfoData);
-            providerSubscriptions.push({ provider:"HudCompassData", callback:this.onRadarCompassData });
-            BSUIDataManager.Subscribe("HudCompassData",this.onRadarCompassData);
+            this.subscribeProvider("LocalEnvironmentData",this.onLocalEnvironmentData);
+            this.subscribeProvider("LocalEnvData_Frequent",this.onLocalEnvironmentFrequentData);
+            this.subscribeProvider("PlayerData",this.onPlayerData);
+            this.subscribeProvider("PlayerFrequentData",this.onPlayerFrequentData);
+            this.subscribeProvider("PlayerInventoryData",this.onPlayerInventoryData);
+            this.subscribeProvider("WeaponData",this.onWeaponData);
+            this.subscribeProvider("HudJetpackData",this.onJetpackData);
+            this.subscribeProvider("HUDStarbornPowersData",this.onStarbornPowersData);
+            this.subscribeProvider("FavoritesData",this.onFavoritesData);
+            this.subscribeProvider("ControlMapData",this.onControlMapData);
+            this.subscribeProvider("EnvironmentEffectsData",this.onEnvironmentEffectsData);
+            this.subscribeProvider("PersonalEffectsData",this.onPersonalEffectsData);
+            this.subscribeProvider("StarmapSystemBodyInfoProvider",this.onStarmapSystemBodyInfoData);
+            this.subscribeProvider("HudCompassData",this.onRadarCompassData);
          }
          catch(param1:Error)
          {
+            this.faulted = true;
             this.dispose();
             throw param1;
+         }
+      }
+
+      public function get lastDisposalError() : String
+      {
+         return this.disposalErrorMessage;
+      }
+
+      private function subscribeProvider(param1:String, param2:Function) : void
+      {
+         var existing:Object = null;
+         var context:CUIPlayerHudDataContext = this;
+         var subscription:Object = null;
+         var callback:Function = null;
+         if(this.disposed || this.faulted)
+         {
+            throw new Error("CUI-EVT-LIFECYCLE|Value provider registration stopped after a fault.");
+         }
+         for each(existing in this.providerSubscriptions)
+         {
+            if(String(existing.provider) == param1 && existing.handler === param2)
+            {
+               throw new Error("CUI-EVT-LIFECYCLE|Value provider is already registered: " + param1);
+            }
+         }
+         subscription = {
+            provider:param1,
+            handler:param2,
+            callback:null,
+            state:"pending",
+            handling:false
+         };
+         callback = function(param3:FromClientDataEvent):void
+         {
+            context.handleProviderEvent(subscription,param3);
+         };
+         subscription.callback = callback;
+         this.providerSubscriptions.push(subscription);
+         try
+         {
+            BSUIDataManager.Subscribe(param1,callback);
+            subscription.state = "active";
+         }
+         catch(param3:Error)
+         {
+            throw new Error("CUI-EVT-SUBSCRIBE|VALUE | " + param1 + " | " + param3.toString(),param3.errorID);
+         }
+      }
+
+      private function handleProviderEvent(param1:Object, param2:FromClientDataEvent) : void
+      {
+         var handler:Function = null;
+         if(this.disposed || this.faulted)
+         {
+            return;
+         }
+         if(Boolean(param1.handling))
+         {
+            this.failProvider(param1,"CUI-EVT-REENTRANT",new Error("Provider callback re-entered before returning."));
+            return;
+         }
+         if(param2 == null || param2.data == null)
+         {
+            this.failProvider(param1,"CUI-EVT-PAYLOAD",new Error("Provider callback did not contain data."));
+            return;
+         }
+         param1.handling = true;
+         try
+         {
+            handler = param1.handler as Function;
+            handler(param2);
+         }
+         catch(param3:Error)
+         {
+            this.failProvider(param1,"CUI-EVT-CALLBACK",param3);
+         }
+         finally
+         {
+            param1.handling = false;
+         }
+      }
+
+      private function failProvider(param1:Object, param2:String, param3:Error) : void
+      {
+         var details:Object = null;
+         if(this.disposed || this.faulted)
+         {
+            return;
+         }
+         this.faulted = true;
+         if(this.exposureTimer != null)
+         {
+            this.exposureTimer.stop();
+         }
+         details = {
+            code:param2,
+            consumer:"VALUE",
+            provider:String(param1.provider),
+            message:param3.toString(),
+            errorID:param3.errorID,
+            stack:param3.getStackTrace()
+         };
+         try
+         {
+            dispatchEvent(new CustomEvent(PROVIDER_ERROR,details));
+         }
+         catch(param4:Error)
+         {
+            trace(param2 + " | VALUE | " + String(param1.provider) + " | " + param3.toString());
          }
       }
 
@@ -930,11 +1043,13 @@ package venworks.cui
       public function dispose() : void
       {
          var subscription:Object = null;
+         var failure:Error = null;
          if(this.disposed)
          {
             return;
          }
          this.disposed = true;
+         this.faulted = true;
          if(this.exposureTimer != null)
          {
             this.exposureTimer.stop();
@@ -943,7 +1058,27 @@ package venworks.cui
          while(this.providerSubscriptions != null && this.providerSubscriptions.length != 0)
          {
             subscription = this.providerSubscriptions.pop();
-            BSUIDataManager.Unsubscribe(String(subscription.provider),subscription.callback as Function);
+            if(String(subscription.state) == "active")
+            {
+               try
+               {
+                  BSUIDataManager.Unsubscribe(String(subscription.provider),subscription.callback as Function);
+               }
+               catch(param1:Error)
+               {
+                  if(failure == null)
+                  {
+                     failure = param1;
+                     this.disposalErrorMessage = "CUI-EVT-UNSUBSCRIBE | VALUE | " +
+                        String(subscription.provider) + " | " + param1.toString();
+                  }
+               }
+            }
+            subscription.state = "disposed";
+         }
+         if(failure != null)
+         {
+            trace(this.disposalErrorMessage);
          }
       }
 
@@ -1028,10 +1163,22 @@ package venworks.cui
 
       private function onExposureTimer(param1:TimerEvent) : void
       {
-         if(this.disposed)
+         if(this.disposed || this.faulted)
          {
             return;
          }
+         try
+         {
+            this.updateExposureState();
+         }
+         catch(param2:Error)
+         {
+            this.failProvider({ provider:"EXPOSURE_TIMER" },"CUI-EVT-CALLBACK",param2);
+         }
+      }
+
+      private function updateExposureState() : void
+      {
          var current:Number = 0;
          var target:Number = 0;
          var index:int = 0;

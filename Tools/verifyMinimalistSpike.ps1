@@ -180,6 +180,9 @@ if ($stagingTargets.Count -ne 1 -or
   throw "Minimalist staging Junction does not target its configured physical module folder."
 }
 
+& (Join-Path $PSScriptRoot "verifyPs5MinimalistScaleform.ps1") `
+  -InterfacePath (Join-Path $resolvedStagingPath "Interface")
+
 $componentFileNames = @(
   "contact-radar.xml",
   "equipment-rail.xml",
@@ -190,8 +193,8 @@ $componentFileNames = @(
   "scanner-overlay.xml"
 )
 $movieDefinitions = @(
-  [pscustomobject]@{ FileName = "hudmenu.gfx"; ExpectedHashPath = "Scaleform\hudmenu\validation\expected.sha256" },
-  [pscustomobject]@{ FileName = "hudmenu_lrg.gfx"; ExpectedHashPath = "Scaleform\hudmenu_lrg\validation\expected.sha256" },
+  [pscustomobject]@{ FileName = "hudmenu.gfx"; ExpectedHashPath = "Scaleform\ps5-minimalist\validation\hudmenu.sha256" },
+  [pscustomobject]@{ FileName = "hudmenu_lrg.gfx"; ExpectedHashPath = "Scaleform\ps5-minimalist\validation\hudmenu_lrg.sha256" },
   [pscustomobject]@{ FileName = "hudmessagesmenu.gfx"; ExpectedHashPath = "Scaleform\hudmessagesmenu\validation\expected.sha256" },
   [pscustomobject]@{ FileName = "hudmessagesmenu_lrg.gfx"; ExpectedHashPath = "Scaleform\hudmessagesmenu_lrg\validation\expected.sha256" }
 )
