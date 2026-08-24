@@ -46,11 +46,13 @@ function Get-ProviderRegistrations {
 
   return @([regex]::Matches(
     $Source,
-    'this\.subscribeProvider\s*\(\s*"(?<provider>[^"]+)"\s*,\s*this\.(?<handler>[A-Za-z][A-Za-z0-9]*)\s*\)'
+    'this\.subscribeProvider\s*\(\s*"(?<provider>[^"]+)"\s*,\s*this\.(?<handler>[A-Za-z][A-Za-z0-9]*)(?:\s*,\s*(?<allowNullData>true|false))?\s*\)'
   ) | ForEach-Object {
     [pscustomobject]@{
       Provider = [string]$_.Groups['provider'].Value
       Handler = [string]$_.Groups['handler'].Value
+      AllowNullData = $_.Groups['allowNullData'].Success -and
+        $_.Groups['allowNullData'].Value -ceq 'true'
     }
   })
 }
@@ -77,7 +79,11 @@ function Assert-ProviderLifecycle {
   for ($index = 0; $index -lt $ExpectedRegistrations.Count; $index++) {
     $expected = $ExpectedRegistrations[$index]
     $actual = $actualRegistrations[$index]
-    if ($actual.Provider -cne $expected.Provider -or $actual.Handler -cne $expected.Handler) {
+    $expectedAllowsNullData = $expected.PSObject.Properties.Name -contains 'AllowNullData' -and
+      [bool]$expected.AllowNullData
+    if ($actual.Provider -cne $expected.Provider -or
+        $actual.Handler -cne $expected.Handler -or
+        $actual.AllowNullData -ne $expectedAllowsNullData) {
       throw "$Context registration $($index + 1) is $($actual.Provider)/$($actual.Handler); expected $($expected.Provider)/$($expected.Handler)."
     }
   }
@@ -118,7 +124,49 @@ function Assert-ProviderLifecycle {
     throw "$Context introduces a shared provider broker or fan-out path."
   }
 
+  $nullDataRegistrations = @($ExpectedRegistrations | Where-Object {
+    $_.PSObject.Properties.Name -contains 'AllowNullData' -and [bool]$_.AllowNullData
+  })
+  if ($nullDataRegistrations.Count -gt 0) {
+    foreach ($requiredPattern in @(
+      'param3\s*:\s*Boolean\s*=\s*false',
+      'allowNullData\s*:\s*param3',
+      '\(\s*param2\s*==\s*null\s*\|\|\s*param2\.data\s*==\s*null\s*\)\s*&&\s*!Boolean\s*\(\s*param1\.allowNullData\s*\)'
+    )) {
+      if ($Source -notmatch $requiredPattern) {
+        throw "$Context does not constrain null-data tolerance to the approved environment registrations."
+      }
+    }
+  }
+  elseif ($Source -match 'allowNullData') {
+    throw "$Context unexpectedly permits null provider data."
+  }
+
   return $actualRegistrations
+}
+
+function Assert-SolarTransitionCountdown {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Source
+  )
+
+  foreach ($requiredPattern in @(
+    'source\s*==\s*"environment\.solartransitioncountdown"',
+    'clearValue\s*\(\s*"environment\.solartransitioncountdown"\s*\)',
+    'updateSolarTransitionCountdown\s*\(\s*param1\.data\.fLocalPlanetTime\s*,\s*param1\.data\.fLocalPlanetHoursPerDay\s*\)',
+    'hoursPerDay\s*<=\s*0',
+    'Math\.floor\s*\(\s*normalized\s*\*\s*1440\s*\+\s*0\.5\s*\)',
+    'currentMinute\s*<\s*360',
+    'currentMinute\s*<\s*1080',
+    '"SUNRISE"',
+    '"SUNSET"',
+    'return\s+transition\s*\+\s*" IN "\s*\+\s*duration'
+  )) {
+    if ($Source -notmatch $requiredPattern) {
+      throw "CUIPlayerHudDataContext lost the fail-hidden sunrise/sunset countdown contract."
+    }
+  }
 }
 
 function Assert-OrderedTokens {
@@ -176,8 +224,8 @@ $conditionExpected = @(
   [pscustomobject]@{ Provider = "PlayerInventoryData"; Handler = "onPlayerInventoryData" }
 )
 $valueExpected = @(
-  [pscustomobject]@{ Provider = "LocalEnvironmentData"; Handler = "onLocalEnvironmentData" },
-  [pscustomobject]@{ Provider = "LocalEnvData_Frequent"; Handler = "onLocalEnvironmentFrequentData" },
+  [pscustomobject]@{ Provider = "LocalEnvironmentData"; Handler = "onLocalEnvironmentData"; AllowNullData = $true },
+  [pscustomobject]@{ Provider = "LocalEnvData_Frequent"; Handler = "onLocalEnvironmentFrequentData"; AllowNullData = $true },
   [pscustomobject]@{ Provider = "PlayerData"; Handler = "onPlayerData" },
   [pscustomobject]@{ Provider = "PlayerFrequentData"; Handler = "onPlayerFrequentData" },
   [pscustomobject]@{ Provider = "PlayerInventoryData"; Handler = "onPlayerInventoryData" },
@@ -202,6 +250,7 @@ $valueRegistrations = @(Assert-ProviderLifecycle `
   -Context "CUIPlayerHudDataContext" `
   -ExpectedRegistrations $valueExpected `
   -Consumer "VALUE")
+Assert-SolarTransitionCountdown -Source $valueSource
 
 $conditionProviders = @($conditionRegistrations.Provider)
 $valueProviders = @($valueRegistrations.Provider)

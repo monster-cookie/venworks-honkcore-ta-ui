@@ -418,6 +418,7 @@ weapon.icon
 weapon.ammoType
 weapon.explosiveLabel
 environment.protectionStatus
+environment.solarTransitionCountdown
 environment.hazard.airWaterStatus
 environment.hazard.thermalStatus
 environment.hazard.corrosiveStatus

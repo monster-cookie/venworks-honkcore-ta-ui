@@ -133,8 +133,8 @@ package venworks.cui
          this.started = true;
          try
          {
-            this.subscribeProvider("LocalEnvironmentData",this.onLocalEnvironmentData);
-            this.subscribeProvider("LocalEnvData_Frequent",this.onLocalEnvironmentFrequentData);
+            this.subscribeProvider("LocalEnvironmentData",this.onLocalEnvironmentData,true);
+            this.subscribeProvider("LocalEnvData_Frequent",this.onLocalEnvironmentFrequentData,true);
             this.subscribeProvider("PlayerData",this.onPlayerData);
             this.subscribeProvider("PlayerFrequentData",this.onPlayerFrequentData);
             this.subscribeProvider("PlayerInventoryData",this.onPlayerInventoryData);
@@ -161,7 +161,7 @@ package venworks.cui
          return this.disposalErrorMessage;
       }
 
-      private function subscribeProvider(param1:String, param2:Function) : void
+      private function subscribeProvider(param1:String, param2:Function, param3:Boolean = false) : void
       {
          var existing:Object = null;
          var context:CUIPlayerHudDataContext = this;
@@ -183,11 +183,12 @@ package venworks.cui
             handler:param2,
             callback:null,
             state:"pending",
-            handling:false
+            handling:false,
+            allowNullData:param3
          };
-         callback = function(param3:FromClientDataEvent):void
+         callback = function(param4:FromClientDataEvent):void
          {
-            context.handleProviderEvent(subscription,param3);
+            context.handleProviderEvent(subscription,param4);
          };
          subscription.callback = callback;
          this.providerSubscriptions.push(subscription);
@@ -196,9 +197,9 @@ package venworks.cui
             BSUIDataManager.Subscribe(param1,callback);
             subscription.state = "active";
          }
-         catch(param3:Error)
+         catch(param4:Error)
          {
-            throw new Error("CUI-EVT-SUBSCRIBE|VALUE | " + param1 + " | " + param3.toString(),param3.errorID);
+            throw new Error("CUI-EVT-SUBSCRIBE|VALUE | " + param1 + " | " + param4.toString(),param4.errorID);
          }
       }
 
@@ -214,7 +215,7 @@ package venworks.cui
             this.failProvider(param1,"CUI-EVT-REENTRANT",new Error("Provider callback re-entered before returning."));
             return;
          }
-         if(param2 == null || param2.data == null)
+         if((param2 == null || param2.data == null) && !Boolean(param1.allowNullData))
          {
             this.failProvider(param1,"CUI-EVT-PAYLOAD",new Error("Provider callback did not contain data."));
             return;
@@ -277,7 +278,8 @@ package venworks.cui
          {
             return "string";
          }
-         if(source == "location.name" || source == "player.serial" ||
+         if(source == "location.name" || source == "environment.solartransitioncountdown" ||
+            source == "player.serial" ||
             source == "power.key" || source == "power.name" ||
             source == "quest.objective" ||
             source == "weapon.name" || source == "weapon.icon" || source == "weapon.ammotype" ||
@@ -395,6 +397,12 @@ package venworks.cui
       {
          if(this.disposed)
          {
+            return;
+         }
+         this.clearValue("environment.solartransitioncountdown");
+         if(param1 == null || param1.data == null)
+         {
+            this.notifyChanged();
             return;
          }
          this.setText("location.name",param1.data.sLocationName);
@@ -556,7 +564,14 @@ package venworks.cui
          {
             return;
          }
+         if(param1 == null || param1.data == null)
+         {
+            this.clearValue("environment.solartransitioncountdown");
+            this.notifyChanged();
+            return;
+         }
          this.setFinite("environment.localtime",param1.data.fLocalPlanetTime);
+         this.updateSolarTransitionCountdown(param1.data.fLocalPlanetTime,param1.data.fLocalPlanetHoursPerDay);
          this.setFinite("player.universaltime",param1.data.fGalacticStandardTime / 24);
          this.universalTimeDiagnostic = "UT: fGalacticStandardTime=" +
             this.formatDiagnosticValue(param1.data.fGalacticStandardTime) +
@@ -564,6 +579,69 @@ package venworks.cui
             " | fLocalPlanetHoursPerDay=" + this.formatDiagnosticValue(param1.data.fLocalPlanetHoursPerDay);
          this.updatePlayerTimeInventoryDiagnostic();
          this.notifyChanged();
+      }
+
+      private function updateSolarTransitionCountdown(param1:Object, param2:Object) : void
+      {
+         if(param1 == null || param2 == null)
+         {
+            this.clearValue("environment.solartransitioncountdown");
+            return;
+         }
+         var localTime:Number = Number(param1);
+         var hoursPerDay:Number = Number(param2);
+         if(isNaN(localTime) || !isFinite(localTime) || isNaN(hoursPerDay) || !isFinite(hoursPerDay) || hoursPerDay <= 0)
+         {
+            this.clearValue("environment.solartransitioncountdown");
+            return;
+         }
+         this.setText("environment.solartransitioncountdown",this.formatSolarTransitionCountdown(localTime));
+      }
+
+      private function formatSolarTransitionCountdown(param1:Number) : String
+      {
+         var normalized:Number = param1 - Math.floor(param1);
+         var currentMinute:int = 0;
+         var remainingMinutes:int = 0;
+         var transition:String = "";
+         var hours:int = 0;
+         var minutes:int = 0;
+         var duration:String = "";
+         if(normalized < 0)
+         {
+            normalized += 1;
+         }
+         currentMinute = int(Math.floor(normalized * 1440 + 0.5)) % 1440;
+         if(currentMinute < 360)
+         {
+            transition = "SUNRISE";
+            remainingMinutes = 360 - currentMinute;
+         }
+         else if(currentMinute < 1080)
+         {
+            transition = "SUNSET";
+            remainingMinutes = 1080 - currentMinute;
+         }
+         else
+         {
+            transition = "SUNRISE";
+            remainingMinutes = 1440 - currentMinute + 360;
+         }
+         hours = int(remainingMinutes / 60);
+         minutes = remainingMinutes % 60;
+         if(hours > 0)
+         {
+            duration = hours.toString() + "H";
+            if(minutes > 0)
+            {
+               duration += " " + (minutes < 10 ? "0" : "") + minutes.toString() + "M";
+            }
+         }
+         else
+         {
+            duration = minutes.toString() + "M";
+         }
+         return transition + " IN " + duration;
       }
 
       private function onPlayerData(param1:FromClientDataEvent) : void
