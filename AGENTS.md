@@ -6,6 +6,7 @@ These rules apply throughout the repository.
 
 - Before asking task-specific clarifying questions, defining a goal, planning, using external project-management systems, or editing files, check for `AGENT-REPO-CONTEXT.md` in the repository root.
 - When present, read `AGENT-REPO-CONTEXT.md` completely and treat it as required repository-specific instructions, subordinate to this file and all higher-priority instructions.
+- Repository mappings, project identifiers, local paths, repository URLs, and external-system identities belong in `AGENT-REPO-CONTEXT.md`, not this shared instruction file.
 - Do not assume repository-specific rules, project identifiers, external systems, paths, or conventions from another repository.
 - If the repository-specific context declares an external source of truth, retrieve the relevant current information before planning or implementation.
 - If required repository context or its declared external source of truth cannot be read or verified, stop and ask the user how to proceed.
@@ -59,12 +60,13 @@ These rules apply throughout the repository.
 - Always treat branches named `main`, `master`, and `trunk` as protected, even if one is not currently the remote default.
 - Before any Git or GitHub mutation, determine the current branch with `git branch --show-current`.
 - Determine the remote default branch from `refs/remotes/origin/HEAD` when available.
-- If the current branch is empty, detached, protected, or cannot be determined confidently, do not perform mutations. Stop and ask the user to create or select a working branch or worktree.
+- If the current branch is empty, detached, or cannot be determined confidently, do not perform mutations and stop for user direction.
+- If the current branch is protected, do not edit, commit to, or push it. The agent may create and switch to a non-protected working branch only when the exact branch name, intended base, and branch-creation steps are included in an approved task-specific plan.
 - Do not make implementation edits directly on a protected branch unless the user explicitly approves that exceptional scope. Even with approval to edit, never commit directly to or push directly to a protected branch.
 
 ### Allowed working-branch delivery
 
-- On an already-existing, non-protected working branch, the agent may perform the following operations only when they are listed in an approved task-specific plan:
+- On a non-protected working branch that was either already selected or created and selected under an approved task-specific plan, the agent may perform the following operations only when they are listed in that plan:
   - stage files within the approved task scope;
   - create new commits containing only the approved changes;
   - push the current branch to a same-named branch on `origin`;
@@ -85,7 +87,8 @@ These rules apply throughout the repository.
 - Never use `--force`, `--force-with-lease`, remote ref deletion, or tag pushing.
 - Never merge, close, or approve a pull request.
 - Never merge, rebase, cherry-pick, revert, reset, amend, restore, or check out files unless separately and explicitly approved in the task-specific plan.
-- Never create, delete, rename, or switch branches. The user or task environment must place the agent on the intended working branch.
+- The agent may create and switch to a non-protected working branch only when the exact branch name and both operations are listed in an approved task-specific plan. Before doing so, verify the current branch, remote default branch, intended base commit, target branch name, and worktree state; confirm the target is not protected; and preserve unrelated changes. Use the `codex/` prefix by default unless the user approves another name.
+- Never delete or rename branches.
 - Never create or delete tags or stashes.
 - Never modify remotes, repository configuration, hooks, worktrees, submodules, branch protection, rulesets, secrets, releases, or repository settings.
 - Preserve unrelated staged, unstaged, and untracked user changes.
@@ -108,9 +111,9 @@ Before edits, produce a plan containing:
 - Scope and intent.
 - Exact file paths expected to change.
 - A code-level checklist.
-- UI impacts, if any. (Exclude if this doesn't apply to the project)
-- Data model, persistence, or schema impacts, if any. (Exclude if this doesn't apply to the project)
-- Configuration, environment variable, path, logging, dependency injection, or workflow impacts, if any. (Exclude if this doesn't apply to the project)
+- UI impacts, if any. Exclude this when it does not apply.
+- Data model, persistence, or schema impacts, if any. Exclude this when it does not apply.
+- Configuration, environment variable, path, logging, dependency injection, or workflow impacts, if any. Exclude this when it does not apply.
 - Documentation impacts, or the exact statement: `Documentation impacts: None.`
 - Risks and rollback notes.
 - A validation plan with specific commands or manual checks.

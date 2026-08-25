@@ -49,23 +49,28 @@ reopened exports for its full validation cycle.
 From the repository root:
 
 ```powershell
-./Tools/compileScaleform.ps1 `
+./Tools/buildVariant.ps1 `
   -JavaPath "C:\path\to\java.exe" `
   -JpexsJarPath "C:\path\to\ffdec.jar" `
   -VanillaInterfacePath "C:\path\to\extracted\interface"
 ```
 
-By default, validated Scaleform movies are copied to the `Interface`
-directories under `Staging-VWKS`, `Staging-CF`, `Staging-FC`, and `Staging-TA`. The first
-`-OutputDirectory` destination receives the active `layout.xml` and loose SVG
-assets; the default first destination is `Staging-VWKS/Interface`. The script
-refuses to build from unrecognized vanilla inputs or publish outputs whose
-hashes differ from the validation records.
+`buildVariant.ps1` compiles and validates the four common GFX movies once, then
+stages each selected variant's independent profile from
+`Scaleform/variants/<KEY>/build.psd1`. The four themed profiles currently share
+the production layout, components, SVG assets, and external palettes.
+Minimalist uses its own faction-free layout, seven-component inventory, and
+literal Starfield colors with no external SVG, palette, or DDS files. Omitting
+`-VariantKeys` selects all five release variants. Pass one key, such as
+`-VariantKeys MIN`, or an array, such as
+`-VariantKeys @("TA", "MIN")`, to select a subset. The singular
+`-VariantKey` name remains a compatibility alias. Use `-Committed` to
+regenerate tracked staging directories without Vortex Junctions.
 
-The first output is the primary staging source for `layout.xml`, loose assets,
-and root-placed production fragments under `VenworksCUI/components`. The build
-then mirrors and hash-verifies that complete CUI payload across every remaining
-default output. Deploy `layout.xml` and the component directory together.
+`compileScaleform.ps1` remains the lower-level common movie compiler. It writes
+one validated output directory and never mirrors variant configuration or runs
+Archive2. Deploy each profile's generated `layout.xml` and component directory
+together.
 Component imports are relative filenames resolved only inside this fixed
 directory; nested imports and path traversal are unsupported. The production
 payload includes `quest-tracker.xml`, whose upper-left panel joins directly
@@ -121,7 +126,7 @@ a palette themselves. Existing layouts containing only literal values retain
 their original composite styling. The production layout selects `venworks.xml`
 by default, and the build deploys `venworks.xml`, `crimson-fleet.xml`,
 `freestar-collective.xml`, `trackers-alliance.xml`, and `starfield.xml` under
-the fixed palette directory in all four staging variants. The Starfield palette
+the fixed palette directory in all four themed staging variants. The Starfield palette
 preserves the neutral white-and-slate presentation, while Crimson Fleet and
 Trackers Alliance use their faction-specific dark-red-and-white identities.
 Palette selection occurs when the HUD starts; live theme switching is not part

@@ -1,6 +1,17 @@
+<#
+.SYNOPSIS
+Assembles version-independent Nexus and Bethesda release ZIPs.
+
+.PARAMETER VariantKeys
+One or more keys from `$Global:ReleaseVariants`. Omit this parameter to process
+all release variants. `VariantKey` remains a compatibility alias.
+#>
 [CmdletBinding()]
 param(
-  [string]$OutputDirectory = (Join-Path (Join-Path $PSScriptRoot "..") "artifacts/release")
+  [string]$OutputDirectory = (Join-Path (Join-Path $PSScriptRoot "..") "artifacts/release"),
+
+  [Alias("VariantKey")]
+  [string[]]$VariantKeys
 )
 
 $ErrorActionPreference = "Stop"
@@ -12,6 +23,29 @@ if (!(Test-Path Variable:Global:SharedConfigurationLoaded) -or !$Global:SharedCo
 }
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+function Assert-NotGitLfsPointer {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Path,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Description
+  )
+
+  $stream = [System.IO.File]::OpenRead($Path)
+  try {
+    $buffer = [byte[]]::new([Math]::Min(128, [int]$stream.Length))
+    [void]$stream.Read($buffer, 0, $buffer.Length)
+  }
+  finally {
+    $stream.Dispose()
+  }
+  $prefix = [System.Text.Encoding]::UTF8.GetString($buffer)
+  if ($prefix.StartsWith("version https://git-lfs.github.com/spec/v1", [System.StringComparison]::Ordinal)) {
+    throw "$Description remains a Git LFS pointer: $Path"
+  }
+}
 
 function Resolve-RequiredFile {
   param(
@@ -30,6 +64,7 @@ function Resolve-RequiredFile {
   if ($file.Length -le 0) {
     throw "$Description is empty: $Path"
   }
+  Assert-NotGitLfsPointer -Path $file.FullName -Description $Description
 
   return $file.FullName
 }
@@ -66,6 +101,7 @@ function Resolve-OptionalFile {
   if ($file.Length -le 0) {
     throw "$Description is empty: $Path"
   }
+  Assert-NotGitLfsPointer -Path $file.FullName -Description $Description
 
   return $file.FullName
 }
@@ -154,7 +190,9 @@ function New-ReleaseZip {
 $resolvedOutputDirectory = [System.IO.Path]::GetFullPath($OutputDirectory)
 New-Item -ItemType Directory -Force -Path $resolvedOutputDirectory | Out-Null
 
-foreach ($variant in $Global:Variants) {
+$variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
+
+foreach ($variant in $variants) {
   $stagingPath = (Resolve-Path -LiteralPath $variant.StagingFolderPath).Path
   $interfacePath = Join-Path $stagingPath "Interface"
   if (!(Test-Path -LiteralPath $interfacePath -PathType Container)) {
@@ -234,4 +272,9 @@ foreach ($variant in $Global:Variants) {
   }
 }
 
-Write-Host -ForegroundColor Cyan "Created all five release package shapes for all four themes."
+if ($null -eq $VariantKeys -or $VariantKeys.Count -eq 0) {
+  Write-Host -ForegroundColor Cyan "Created all five release package shapes for all five variants."
+}
+else {
+  Write-Host -ForegroundColor Cyan "Created the configured release package shapes for the selected variants."
+}

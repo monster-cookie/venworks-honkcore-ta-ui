@@ -169,7 +169,10 @@ function Assert-ExpectedLayout {
   }
 }
 
-$trackedPowerShellScripts = @(& git -C $repositoryRoot ls-files -- '*.ps1')
+$trackedPowerShellScripts = @(
+  & git -C $repositoryRoot ls-files -- '*.ps1' |
+    Where-Object { Test-Path -LiteralPath (Join-Path $repositoryRoot $_) -PathType Leaf }
+)
 if ($LASTEXITCODE -ne 0) {
   throw "Unable to inventory tracked PowerShell scripts."
 }
@@ -310,4 +313,23 @@ foreach ($movie in $movies) {
   }
 }
 
-Write-Host "Verified committed Scaleform movie hashes and complete staged VenworksCUI payloads for all four variants."
+Write-Host "Verified committed Scaleform movie hashes and complete staged VenworksCUI payloads for all five variants."
+
+$archive2ScriptReferences = @(
+  & git -C $repositoryRoot grep -l -F "Archive2.exe" -- `
+    "Tools/*.ps1" `
+    ":(exclude)Tools/verifyCommittedRelease.ps1"
+)
+if ($LASTEXITCODE -ne 0) {
+  throw "Unable to inventory PowerShell Archive2 references."
+}
+if ($archive2ScriptReferences.Count -ne 1 -or
+    $archive2ScriptReferences[0].Replace('\', '/') -cne "Tools/createPackages.ps1") {
+  throw "Tools/createPackages.ps1 must remain the only PowerShell script that invokes Archive2.exe. Found: $($archive2ScriptReferences -join ', ')"
+}
+Write-Host "Verified that createPackages.ps1 exclusively owns Archive2 invocation."
+
+& (Join-Path $PSScriptRoot "verifyVariant.ps1") `
+  -Committed
+
+Write-Host "Verified all five committed variant profiles and their configured release inputs."

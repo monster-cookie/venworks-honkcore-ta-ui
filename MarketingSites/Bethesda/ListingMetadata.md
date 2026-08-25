@@ -24,6 +24,12 @@
 - Tagline: `An XML-customizable Starfield HUD with tactical player, equipment, environment, scanner, objective, and contact-radar displays supporting multiple themes and color palettes.`
 - Description Markdown: `Crimson-Fleet-Theme.md`
 
+## Minimalist
+
+- Title: `Venworks Customizable HUD - Minimalist`
+- Tagline: `An experimental all-platform Starfield HUD with the faction panel removed, the contact radar restored to the upper-left, and external SVG, palette, and DDS content excluded.`
+- Description Markdown: `Minimalist.md`
+
 ## Compatibility metadata
 
 - Required Creations: None.

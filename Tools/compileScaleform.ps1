@@ -9,12 +9,7 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$VanillaInterfacePath,
 
-  [string[]]$OutputDirectory = @(
-    (Join-Path $PSScriptRoot "..\Staging-VWKS\Interface"),
-    (Join-Path $PSScriptRoot "..\Staging-CF\Interface"),
-    (Join-Path $PSScriptRoot "..\Staging-FC\Interface"),
-    (Join-Path $PSScriptRoot "..\Staging-TA\Interface")
-  ),
+  [string]$OutputDirectory = (Join-Path $PSScriptRoot "..\Scaleform\.work\compiled-interface"),
 
   [string]$WorkDirectory = (Join-Path $PSScriptRoot "..\Scaleform\.work"),
 
@@ -25,7 +20,9 @@ param(
     (Join-Path $PSScriptRoot "..\Scaleform\hudmenu_lrg\build.xml")
   ),
 
-  [switch]$KeepWork
+  [switch]$KeepWork,
+
+  [switch]$UpdateExpectedHashes
 )
 
 $PSNativeCommandUseErrorActionPreference = $true
@@ -79,6 +76,25 @@ function Read-Sha256File {
   }
 
   return ([regex]::Match($hashLine, '[A-Fa-f0-9]{64}').Value).ToUpperInvariant()
+}
+
+function Write-Sha256File {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Path,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Hash,
+
+    [Parameter(Mandatory = $true)]
+    [string]$FileName
+  )
+
+  [System.IO.File]::WriteAllText(
+    $Path,
+    "$($Hash.ToUpperInvariant())  $FileName`r`n",
+    [System.Text.UTF8Encoding]::new($false)
+  )
 }
 
 function Write-PaletteSelectedLayout {
@@ -154,18 +170,86 @@ function Assert-CuiIdentifier {
   }
 }
 
-function Assert-PlayerHudDataContextLifecycle {
+function Assert-GuardedProviderLifecycle {
   param(
     [Parameter(Mandatory = $true)]
     [string]$Source,
 
     [Parameter(Mandatory = $true)]
-    [string]$Context
+    [string]$Context,
+
+    [Parameter(Mandatory = $true)]
+    [object[]]$ProviderSubscriptions,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Consumer
   )
 
+  if ($Source -notmatch 'private\s+var\s+providerSubscriptions\s*:\s*Array' -or
+      $Source -notmatch 'private\s+var\s+started\s*:\s*Boolean\s*=\s*false' -or
+      $Source -notmatch 'private\s+var\s+disposed\s*:\s*Boolean\s*=\s*false' -or
+      $Source -notmatch 'private\s+var\s+faulted\s*:\s*Boolean\s*=\s*false' -or
+      [regex]::Matches($Source, 'BSUIDataManager\.Subscribe\s*\(').Count -ne 1 -or
+      [regex]::Matches($Source, 'BSUIDataManager\.Unsubscribe\s*\(').Count -ne 1 -or
+      [regex]::Matches($Source, 'providerSubscriptions\.push\s*\(').Count -ne 1 -or
+      [regex]::Matches($Source, 'this\.subscribeProvider\s*\(\s*"').Count -ne $ProviderSubscriptions.Count) {
+    throw "$Context does not retain its exact guarded provider lifecycle registry."
+  }
+
+  foreach ($providerSubscription in $ProviderSubscriptions) {
+    $provider = [regex]::Escape([string]$providerSubscription.Provider)
+    $handler = [regex]::Escape([string]$providerSubscription.Handler)
+    $allowNullData = $providerSubscription.ContainsKey('AllowNullData') -and
+      [bool]$providerSubscription.AllowNullData
+    $nullDataArgument = if ($allowNullData) { '\s*,\s*true' } else { '' }
+    $registrationPattern = 'this\.subscribeProvider\s*\(\s*"' + $provider +
+      '"\s*,\s*this\.' + $handler + $nullDataArgument + '\s*\)'
+    if ([regex]::Matches($Source, $registrationPattern).Count -ne 1) {
+      throw "$Context does not independently register $($providerSubscription.Provider) with $($providerSubscription.Handler)."
+    }
+  }
+
+  $startMethod = [regex]::Match($Source,'(?s)public\s+function\s+start\s*\(\s*\)\s*:\s*void\s*\{.*?(?=\r?\n\s+(?:private|public)\s+function)')
+  $subscribeMethod = [regex]::Match($Source,'(?s)private\s+function\s+subscribeProvider\s*\([^)]*\)\s*:\s*void\s*\{.*?(?=\r?\n\s+(?:private|public)\s+function)')
+  $callbackMethod = [regex]::Match($Source,'(?s)private\s+function\s+handleProviderEvent\s*\([^)]*\)\s*:\s*void\s*\{.*?(?=\r?\n\s+(?:private|public)\s+function)')
+  $disposeMethod = [regex]::Match($Source,'(?s)public\s+function\s+dispose\s*\(\s*\)\s*:\s*void\s*\{.*?(?=\r?\n\s+(?:private|public)\s+function)')
+  if (!$startMethod.Success -or $startMethod.Value -notmatch 'this\.started' -or
+      $startMethod.Value -notmatch 'this\.dispose\s*\(\s*\)' -or
+      !$subscribeMethod.Success -or $subscribeMethod.Value -notmatch '"?state"?\s*:\s*"pending"' -or
+      $subscribeMethod.Value.IndexOf('providerSubscriptions.push') -ge $subscribeMethod.Value.IndexOf('BSUIDataManager.Subscribe') -or
+      $subscribeMethod.Value -notmatch 'callback\s*=\s*function' -or
+      !$callbackMethod.Success -or $callbackMethod.Value -notmatch 'CUI-EVT-REENTRANT' -or
+      $callbackMethod.Value -notmatch 'CUI-EVT-PAYLOAD' -or
+      $callbackMethod.Value -notmatch 'CUI-EVT-CALLBACK' -or
+      !$disposeMethod.Success -or $disposeMethod.Value -notmatch 'providerSubscriptions\.pop\s*\(\s*\)' -or
+      $disposeMethod.Value -notmatch 'catch\s*\([^:]+:\s*Error\s*\)' -or
+      $disposeMethod.Value.IndexOf('this.disposed = true') -ge $disposeMethod.Value.IndexOf('BSUIDataManager.Unsubscribe')) {
+    throw "$Context does not provide guarded transactional startup, callback containment, and reverse-order teardown."
+  }
+  $nullDataProviders = @($ProviderSubscriptions | Where-Object {
+    $_.ContainsKey('AllowNullData') -and [bool]$_.AllowNullData
+  })
+  if ($nullDataProviders.Count -gt 0) {
+    if ($subscribeMethod.Value -notmatch 'param3\s*:\s*Boolean\s*=\s*false' -or
+        $subscribeMethod.Value -notmatch '"?allowNullData"?\s*:\s*param3' -or
+        $callbackMethod.Value -notmatch '\(\s*param2\s*==\s*null\s*\|\|\s*param2\.data\s*==\s*null\s*\)\s*&&\s*!Boolean\s*\(\s*param1\.allowNullData\s*\)') {
+      throw "$Context does not limit null-data tolerance to explicitly opted-in registrations."
+    }
+  }
+  elseif ($Source -match 'allowNullData') {
+    throw "$Context unexpectedly permits null provider data."
+  }
+  if ($Source -match 'CUIDataProvider(?:Hub|Broker)|fanout|fan-out' -or
+      $Source -notmatch ('"?consumer"?\s*:\s*"' + [regex]::Escape($Consumer) + '"')) {
+    throw "$Context must retain an independent consumer identity without shared provider fan-out."
+  }
+}
+
+function Assert-PlayerHudDataContextLifecycle {
+  param([string]$Source, [string]$Context)
   $providerSubscriptions = @(
-    @{ Provider = 'LocalEnvironmentData'; Handler = 'onLocalEnvironmentData' },
-    @{ Provider = 'LocalEnvData_Frequent'; Handler = 'onLocalEnvironmentFrequentData' },
+    @{ Provider = 'LocalEnvironmentData'; Handler = 'onLocalEnvironmentData'; AllowNullData = $true },
+    @{ Provider = 'LocalEnvData_Frequent'; Handler = 'onLocalEnvironmentFrequentData'; AllowNullData = $true },
     @{ Provider = 'PlayerData'; Handler = 'onPlayerData' },
     @{ Provider = 'PlayerFrequentData'; Handler = 'onPlayerFrequentData' },
     @{ Provider = 'PlayerInventoryData'; Handler = 'onPlayerInventoryData' },
@@ -179,66 +263,16 @@ function Assert-PlayerHudDataContextLifecycle {
     @{ Provider = 'StarmapSystemBodyInfoProvider'; Handler = 'onStarmapSystemBodyInfoData' },
     @{ Provider = 'HudCompassData'; Handler = 'onRadarCompassData' }
   )
-
-  if ($Source -notmatch 'private\s+var\s+providerSubscriptions\s*:\s*Array' -or
-      $Source -notmatch 'private\s+var\s+disposed\s*:\s*Boolean\s*=\s*false' -or
-      [regex]::Matches($Source, 'BSUIDataManager\.Subscribe\s*\(').Count -ne $providerSubscriptions.Count -or
-      [regex]::Matches($Source, 'providerSubscriptions\.push\s*\(').Count -ne $providerSubscriptions.Count) {
-    throw "$Context does not retain the exact 14-provider lifecycle registry."
-  }
-
-  foreach ($providerSubscription in $providerSubscriptions) {
-    $provider = [regex]::Escape([string]$providerSubscription.Provider)
-    $handler = [regex]::Escape([string]$providerSubscription.Handler)
-    $registrationPattern = 'providerSubscriptions\.push\s*\(\s*\{\s*"?provider"?\s*:\s*"' +
-      $provider + '"\s*,\s*"?callback"?\s*:\s*this\.' + $handler + '\s*\}\s*\)'
-    $subscriptionPattern = 'BSUIDataManager\.Subscribe\s*\(\s*"' + $provider +
-      '"\s*,\s*this\.' + $handler + '\s*\)'
-    $registrationMatch = [regex]::Match($Source, $registrationPattern)
-    $subscriptionMatch = [regex]::Match($Source, $subscriptionPattern)
-    if (!$registrationMatch.Success -or !$subscriptionMatch.Success -or
-        $registrationMatch.Index -ge $subscriptionMatch.Index) {
-      throw "$Context does not record $($providerSubscription.Provider) before subscribing its exact callback."
-    }
-
-    $handlerPattern = '(?s)private\s+function\s+' + $handler +
-      '\s*\([^)]*\)\s*:\s*void\s*\{.*?(?=\r?\n\s+(?:private|public)\s+function)'
-    $handlerMatch = [regex]::Match($Source, $handlerPattern)
-    if (!$handlerMatch.Success -or
-        $handlerMatch.Value -notmatch 'if\s*\(\s*this\.disposed\s*\)\s*\{\s*return\s*;\s*\}') {
-      throw "$Context does not guard $($providerSubscription.Handler) after disposal."
-    }
-  }
-
-  $subscriptionFailure = [regex]::Match(
-    $Source,
-    '(?s)try\s*\{.*?BSUIDataManager\.Subscribe\s*\(\s*"HudCompassData".*?\}\s*catch\s*\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*:\s*Error\s*\)\s*\{\s*this\.dispose\s*\(\s*\)\s*;\s*throw\s+\1\s*;\s*\}'
-  )
-  if (!$subscriptionFailure.Success) {
-    throw "$Context does not dispose partial provider registration before rethrowing the original subscription failure."
-  }
-
-  $disposeMethod = [regex]::Match(
-    $Source,
-    '(?s)public\s+function\s+dispose\s*\(\s*\)\s*:\s*void\s*\{.*?(?=\r?\n\s+private\s+function\s+resetEnvironmentalHazards)'
-  )
-  $disposedIndex = $disposeMethod.Value.IndexOf('this.disposed = true')
-  $unsubscribeIndex = $disposeMethod.Value.IndexOf('BSUIDataManager.Unsubscribe')
-  if (!$disposeMethod.Success -or
-      $disposeMethod.Value -notmatch 'if\s*\(\s*this\.disposed\s*\)\s*\{\s*return\s*;\s*\}' -or
-      $disposeMethod.Value -notmatch 'providerSubscriptions\.pop\s*\(\s*\)' -or
-      $disposeMethod.Value -notmatch 'BSUIDataManager\.Unsubscribe\s*\(\s*String\s*\(\s*subscription\.provider\s*\)\s*,\s*subscription\.callback\s+as\s+Function\s*\)' -or
-      $disposedIndex -lt 0 -or $unsubscribeIndex -le $disposedIndex) {
-    throw "$Context disposal is not idempotent, reverse-order, and disposed-before-unsubscribe."
-  }
-
+  Assert-GuardedProviderLifecycle -Source $Source -Context $Context `
+    -ProviderSubscriptions $providerSubscriptions -Consumer 'VALUE'
   foreach ($timerMethodName in @('onExposureTimer','updateExposureTimerState')) {
     $timerMethod = [regex]::Match(
       $Source,
       ('(?s)private\s+function\s+' + $timerMethodName +
         '\s*\([^)]*\)\s*:\s*void\s*\{.*?(?=\r?\n\s+(?:private|public)\s+function)')
     )
-    if (!$timerMethod.Success -or $timerMethod.Value -notmatch 'if\s*\(\s*this\.disposed\s*\)') {
+    if (!$timerMethod.Success -or
+        $timerMethod.Value -notmatch 'if\s*\(\s*this\.disposed(?:\s*\|\|\s*this\.faulted)?\s*\)') {
       throw "$Context does not prevent $timerMethodName from running after disposal."
     }
   }
@@ -252,6 +286,24 @@ function Assert-PlayerHudDataContextLifecycle {
   if ($timerDisposedIndex -lt 0 -or $timerStartIndex -le $timerDisposedIndex) {
     throw "$Context can restart the exposure timer after disposal."
   }
+}
+
+function Assert-ConditionContextLifecycle {
+  param([string]$Source, [string]$Context)
+  $providerSubscriptions = @(
+    @{ Provider = 'HudCrosshairData'; Handler = 'onCrosshairData' },
+    @{ Provider = 'HUDStealthData'; Handler = 'onStealthData' },
+    @{ Provider = 'HudCompassData'; Handler = 'onCompassData' },
+    @{ Provider = 'HUDVehicleData'; Handler = 'onVehicleData' },
+    @{ Provider = 'HUDOpacityData'; Handler = 'onOpacityData' },
+    @{ Provider = 'WeaponData'; Handler = 'onWeaponData' },
+    @{ Provider = 'HUDStarbornPowersData'; Handler = 'onStarbornPowersData' },
+    @{ Provider = 'FavoritesData'; Handler = 'onFavoritesData' },
+    @{ Provider = 'HudJetpackData'; Handler = 'onJetpackData' },
+    @{ Provider = 'PlayerInventoryData'; Handler = 'onPlayerInventoryData' }
+  )
+  Assert-GuardedProviderLifecycle -Source $Source -Context $Context `
+    -ProviderSubscriptions $providerSubscriptions -Consumer 'CONDITION'
 }
 
 function Assert-SolarTransitionCountdown {
@@ -375,28 +427,8 @@ function Apply-ActionScriptPatch {
 $script:ResolvedJavaPath = Resolve-RequiredFile -Path $JavaPath -Description "Java executable"
 $script:ResolvedJpexsJarPath = Resolve-RequiredFile -Path $JpexsJarPath -Description "JPEXS JAR"
 $resolvedVanillaInterfacePath = (Resolve-Path -LiteralPath $VanillaInterfacePath).Path
-$resolvedOutputDirectories = @($OutputDirectory | ForEach-Object {
-  [System.IO.Path]::GetFullPath($_)
-} | Select-Object -Unique)
-if ($resolvedOutputDirectories.Count -eq 0) {
-  throw "At least one output directory is required."
-}
-$releaseVariantNames = @(
-  'Venworks',
-  'Crimson Fleet',
-  'Freestar Collective',
-  'Trackers Alliance'
-)
-$releaseVariantPaletteFileNames = @(
-  'venworks.xml',
-  'crimson-fleet.xml',
-  'freestar-collective.xml',
-  'trackers-alliance.xml'
-)
-if ($resolvedOutputDirectories.Count -gt $releaseVariantPaletteFileNames.Count) {
-  throw "Expected at most $($releaseVariantPaletteFileNames.Count) release outputs; found $($resolvedOutputDirectories.Count)."
-}
-$resolvedProjectOutputDirectory = $resolvedOutputDirectories[0]
+$resolvedOutputDirectory = [System.IO.Path]::GetFullPath($OutputDirectory)
+$resolvedProjectOutputDirectory = $resolvedOutputDirectory
 $resolvedWorkDirectory = [System.IO.Path]::GetFullPath($WorkDirectory)
 $referenceCacheHelperPath = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "sharedScaleformReferenceCache.ps1") `
@@ -802,21 +834,36 @@ if ($runtimeText -notmatch 'new CUIPaletteLoader\(\)' -or
 $palettePreparationIndex = $runtimeText.IndexOf('config = parser.prepareForPalette(config)')
 $paletteLoadIndex = $runtimeText.IndexOf('paletteLoader.load(config)')
 $valueContextInitializationIndex = $runtimeText.IndexOf('valueContext = new CUIPlayerHudDataContext()')
+$valueProviderErrorListenerIndex = $runtimeText.IndexOf('valueContext.addEventListener(CUIPlayerHudDataContext.PROVIDER_ERROR,this.onProviderError)')
+$valueContextStartIndex = $runtimeText.IndexOf('valueContext.start()')
 $assetLoadedHandlerIndex = $runtimeText.IndexOf('private function onAssetsLoaded')
+$conditionContextInitializationIndex = $runtimeText.IndexOf('conditionContext = new CUIConditionContext()')
+$conditionProviderErrorListenerIndex = $runtimeText.IndexOf('conditionContext.addEventListener(CUIConditionContext.PROVIDER_ERROR,this.onProviderError)')
+$conditionContextStartIndex = $runtimeText.IndexOf('conditionContext.start()')
 $valueContextListenerIndex = $runtimeText.IndexOf('valueContext.addEventListener(CUIPlayerHudDataContext.VALUE_CHANGE,this.onValueChanged)')
+$conditionContextListenerIndex = $runtimeText.IndexOf('conditionContext.addEventListener(CUIConditionContext.CONDITION_CHANGE,this.onConditionChanged)')
 $valueDefaultsIndex = $playerHudDataContextText.IndexOf('this.resetEnvironmentalHazards();')
 $valueChangeResetIndex = $playerHudDataContextText.IndexOf('this.resetChangedSources();')
-$firstValueSubscriptionIndex = $playerHudDataContextText.IndexOf('BSUIDataManager.Subscribe("LocalEnvironmentData",this.onLocalEnvironmentData)')
+$firstValueSubscriptionIndex = $playerHudDataContextText.IndexOf('this.subscribeProvider("LocalEnvironmentData",this.onLocalEnvironmentData,true)')
 Assert-PlayerHudDataContextLifecycle `
   -Source $playerHudDataContextText `
   -Context 'Authored CUIPlayerHudDataContext'
+Assert-ConditionContextLifecycle `
+  -Source $conditionContextText `
+  -Context 'Authored CUIConditionContext'
 Assert-SolarTransitionCountdown `
   -Source $playerHudDataContextText `
   -Context 'Authored CUIPlayerHudDataContext'
 if ($palettePreparationIndex -lt 0 -or $paletteLoadIndex -lt 0 -or $palettePreparationIndex -ge $paletteLoadIndex -or
     $valueContextInitializationIndex -lt 0 -or $valueContextInitializationIndex -ge $paletteLoadIndex -or
+    $valueProviderErrorListenerIndex -le $valueContextInitializationIndex -or
+    $valueContextStartIndex -le $valueProviderErrorListenerIndex -or $valueContextStartIndex -ge $paletteLoadIndex -or
     ([regex]::Matches($runtimeText, 'valueContext = new CUIPlayerHudDataContext\(\)').Count -ne 1) -or
     $assetLoadedHandlerIndex -lt 0 -or $valueContextListenerIndex -le $assetLoadedHandlerIndex -or
+    $conditionContextInitializationIndex -le $assetLoadedHandlerIndex -or
+    $conditionProviderErrorListenerIndex -le $conditionContextInitializationIndex -or
+    $conditionContextStartIndex -le $conditionProviderErrorListenerIndex -or
+    $conditionContextListenerIndex -le $conditionContextStartIndex -or
     $valueDefaultsIndex -lt 0 -or $valueChangeResetIndex -le $valueDefaultsIndex -or
     $firstValueSubscriptionIndex -le $valueChangeResetIndex -or
     $layoutParserText -notmatch 'new CUICompositionResolver\(compositionTemplates,param1\.@palette\.length\(\) == 1\)' -or
@@ -860,7 +907,7 @@ if ($playerHudDataContextText -notmatch 'weapon\.explosivelabel' -or
   throw 'Goal 7 must derive a deterministic generic throwable label from the live explosive count and type.'
 }
 if ($playerHudDataContextText -notmatch 'ButtonKeyHelper' -or
-    $playerHudDataContextText -notmatch 'Subscribe\("ControlMapData",this\.onControlMapData\)' -or
+    $playerHudDataContextText -notmatch 'subscribeProvider\("ControlMapData",this\.onControlMapData\)' -or
     $playerHudDataContextText -notmatch 'GetButtonNameForEvent\("Quickkey" \+ index\.toString\(\)\)' -or
     $playerHudDataContextText -notmatch 'favorite\." \+ this\.formatFavoriteSlot\(index\) \+ "\.hotkey"') {
   throw 'Goal 7 favorite labels must resolve Quickkey1 through Quickkey12 from Bethesda ControlMapData with ButtonKeyHelper.'
@@ -870,16 +917,16 @@ if ($playerHudDataContextText -notmatch 'refreshFavoriteSlotText\(\)' -or
     $conditionContextText -notmatch 'effectiveWeapon = Boolean\(favoriteWeapons\[index\]\) \|\| weaponMatch') {
   throw 'Goal 7 must classify and highlight an ammo-less melee favorite only when its normalized name exactly matches the live weapon name.'
 }
-if ($playerHudDataContextText -notmatch 'Subscribe\("PersonalEffectsData",this\.onPersonalEffectsData\)' -or
-    $playerHudDataContextText -match 'Subscribe\("PersonalAlertsData"|Subscribe\("PlayerStatusData"' -or
-    $playerHudDataContextText -match 'Subscribe\("HUDStealthData"' -or
+if ($playerHudDataContextText -notmatch 'subscribeProvider\("PersonalEffectsData",this\.onPersonalEffectsData\)' -or
+    $playerHudDataContextText -match 'subscribeProvider\("PersonalAlertsData"|subscribeProvider\("PlayerStatusData"' -or
+    $playerHudDataContextText -match 'subscribeProvider\("HUDStealthData"' -or
     $playerHudDataContextText -notmatch 'TACTICAL_AWARENESS_CHANGE:String\s*=\s*"cuiTacticalAwarenessChange"' -or
     $playerHudDataContextText -notmatch 'tacticalAwareness\.updatePersonalEffects\(data\)' -or
     $playerHudDataContextText -notmatch 'tacticalAwareness\.updateEnvironment\(' -or
     $playerHudDataContextText -notmatch 'tacticalAwareness\.updateCompass\(compassData\)' -or
-    $playerHudDataContextText -notmatch 'Subscribe\("PlayerData",this\.onPlayerData\)' -or
+    $playerHudDataContextText -notmatch 'subscribeProvider\("PlayerData",this\.onPlayerData\)' -or
     $playerHudDataContextText -notmatch 'tacticalAwareness\.updateCombatState\(Boolean\(param1\.data\.bIsInCombat\)\)' -or
-    $conditionContextText -notmatch 'Subscribe\("HUDStealthData",this\.onStealthData\)' -or
+    $conditionContextText -notmatch 'subscribeProvider\("HUDStealthData",this\.onStealthData\)' -or
     $conditionContextText -notmatch 'Boolean\(param1\.data\.bIsInCombat\)' -or
     $runtimeText -match 'syncTacticalCombatState|conditionContext\.getValue\("incombat"\)|valueContext\.updateCombatState' -or
     $tacticalAwarenessModelText -notmatch 'HOSTILE_MAX:Number\s*=\s*35' -or
@@ -905,7 +952,7 @@ if ($conditionContextText -notmatch 'CRITICAL_HEALTH_PERCENTAGE:Number\s*=\s*35'
     $conditionContextText -notmatch 'name == "criticalhealth"' -or
     $conditionContextText -notmatch 'percentage < CRITICAL_HEALTH_PERCENTAGE' -or
     $conditionContextText -notmatch 'function updateCriticalHealth\(param1:Object\)' -or
-    $conditionContextText -match 'Subscribe\("PlayerFrequentData"' -or
+    $conditionContextText -match 'subscribeProvider\("PlayerFrequentData"' -or
     $runtimeText -notmatch 'syncCriticalHealthCondition\(\)' -or
     $runtimeText -notmatch 'syncCriticalHealthCondition\(param1\.params\)' -or
     $runtimeText -notmatch 'valueContext\.getValue\(source\)' -or
@@ -1099,9 +1146,7 @@ if (!(Test-Path -LiteralPath $resolvedVanillaInterfacePath -PathType Container))
   throw "Vanilla interface directory does not exist: $VanillaInterfacePath"
 }
 
-foreach ($outputPath in $resolvedOutputDirectories) {
-  New-Item -ItemType Directory -Force -Path $outputPath | Out-Null
-}
+New-Item -ItemType Directory -Force -Path $resolvedOutputDirectory | Out-Null
 New-Item -ItemType Directory -Force -Path $resolvedWorkDirectory | Out-Null
 $referenceCacheContext = New-ScaleformReferenceCacheContext `
   -JavaPath $script:ResolvedJavaPath `
@@ -1798,7 +1843,10 @@ try {
         $reopenedPlayerHudDataContextSource -notmatch 'strText' -or
         $reopenedPlayerHudDataContextSource -match 'bFloatingMarkerVisible' -or
         $reopenedConditionContextSource -match 'hastrackedobjective|CUIPlayerHudDataContext\.resolveTrackedObjective' -or
-        $reopenedRuntimeSource -match 'VanillaOwnership|suppressVanillaTrackedQuestText|FloatingQuestMarkerBase|Event\.RENDER|Event\.ENTER_FRAME|questTextSuppressionScheduled|questTextSuppressionStage' -or
+        $reopenedRuntimeSource -match 'VanillaOwnership|suppressVanillaTrackedQuestText|FloatingQuestMarkerBase|Event\.RENDER|questTextSuppressionScheduled|questTextSuppressionStage' -or
+        [regex]::Matches($reopenedRuntimeSource, 'Event\.ENTER_FRAME').Count -ne 3 -or
+        $reopenedRuntimeSource -notmatch 'owner\.addEventListener\(Event\.ENTER_FRAME,this\.onDeferredComponentTeardown\)' -or
+        $reopenedRuntimeSource -notmatch 'owner\.removeEventListener\(Event\.ENTER_FRAME,this\.onDeferredComponentTeardown\)' -or
         $reopenedCompassChangeHandler -match 'VanillaOwnership|suppressVanillaTrackedQuestText') {
       throw 'Card 142 must retain the tracked-objective value, and Card 148 must not mutate sibling-menu quest or survey owners from HUDMenu.'
     }
@@ -1887,22 +1935,38 @@ try {
     $reopenedPalettePreparationIndex = $reopenedRuntimeSource.IndexOf('config = parser.prepareForPalette(config)')
     $reopenedPaletteLoadIndex = $reopenedRuntimeSource.IndexOf('paletteLoader.load(config)')
     $reopenedValueContextInitializationIndex = $reopenedRuntimeSource.IndexOf('valueContext = new CUIPlayerHudDataContext()')
+    $reopenedValueProviderErrorListenerIndex = $reopenedRuntimeSource.IndexOf('valueContext.addEventListener(CUIPlayerHudDataContext.PROVIDER_ERROR,this.onProviderError)')
+    $reopenedValueContextStartIndex = $reopenedRuntimeSource.IndexOf('valueContext.start()')
     $reopenedAssetLoadedHandlerIndex = $reopenedRuntimeSource.IndexOf('private function onAssetsLoaded')
+    $reopenedConditionContextInitializationIndex = $reopenedRuntimeSource.IndexOf('conditionContext = new CUIConditionContext()')
+    $reopenedConditionProviderErrorListenerIndex = $reopenedRuntimeSource.IndexOf('conditionContext.addEventListener(CUIConditionContext.PROVIDER_ERROR,this.onProviderError)')
+    $reopenedConditionContextStartIndex = $reopenedRuntimeSource.IndexOf('conditionContext.start()')
     $reopenedValueContextListenerIndex = $reopenedRuntimeSource.IndexOf('valueContext.addEventListener(CUIPlayerHudDataContext.VALUE_CHANGE,this.onValueChanged)')
+    $reopenedConditionContextListenerIndex = $reopenedRuntimeSource.IndexOf('conditionContext.addEventListener(CUIConditionContext.CONDITION_CHANGE,this.onConditionChanged)')
     $reopenedValueDefaultsIndex = $reopenedPlayerHudDataContextSource.IndexOf('this.resetEnvironmentalHazards();')
     $reopenedValueChangeResetIndex = $reopenedPlayerHudDataContextSource.IndexOf('this.resetChangedSources();')
-    $reopenedFirstValueSubscriptionIndex = $reopenedPlayerHudDataContextSource.IndexOf('BSUIDataManager.Subscribe("LocalEnvironmentData",this.onLocalEnvironmentData)')
+    $reopenedFirstValueSubscriptionIndex = $reopenedPlayerHudDataContextSource.IndexOf('this.subscribeProvider("LocalEnvironmentData",this.onLocalEnvironmentData,true)')
     Assert-PlayerHudDataContextLifecycle `
       -Source $reopenedPlayerHudDataContextSource `
       -Context 'Generated CUIPlayerHudDataContext'
+    Assert-ConditionContextLifecycle `
+      -Source $reopenedConditionContextSource `
+      -Context 'Generated CUIConditionContext'
     Assert-SolarTransitionCountdown `
       -Source $reopenedPlayerHudDataContextSource `
       -Context 'Generated CUIPlayerHudDataContext'
     if ($reopenedPalettePreparationIndex -lt 0 -or $reopenedPaletteLoadIndex -lt 0 -or
         $reopenedPalettePreparationIndex -ge $reopenedPaletteLoadIndex -or
         $reopenedValueContextInitializationIndex -lt 0 -or $reopenedValueContextInitializationIndex -ge $reopenedPaletteLoadIndex -or
+        $reopenedValueProviderErrorListenerIndex -le $reopenedValueContextInitializationIndex -or
+        $reopenedValueContextStartIndex -le $reopenedValueProviderErrorListenerIndex -or
+        $reopenedValueContextStartIndex -ge $reopenedPaletteLoadIndex -or
         ([regex]::Matches($reopenedRuntimeSource, 'valueContext = new CUIPlayerHudDataContext\(\)').Count -ne 1) -or
         $reopenedAssetLoadedHandlerIndex -lt 0 -or $reopenedValueContextListenerIndex -le $reopenedAssetLoadedHandlerIndex -or
+        $reopenedConditionContextInitializationIndex -le $reopenedAssetLoadedHandlerIndex -or
+        $reopenedConditionProviderErrorListenerIndex -le $reopenedConditionContextInitializationIndex -or
+        $reopenedConditionContextStartIndex -le $reopenedConditionProviderErrorListenerIndex -or
+        $reopenedConditionContextListenerIndex -le $reopenedConditionContextStartIndex -or
         $reopenedValueDefaultsIndex -lt 0 -or $reopenedValueChangeResetIndex -le $reopenedValueDefaultsIndex -or
         $reopenedFirstValueSubscriptionIndex -le $reopenedValueChangeResetIndex -or
         $reopenedLayoutParserSource -notmatch 'function\s+prepareForPalette' -or
@@ -1980,10 +2044,10 @@ try {
         $reopenedTacticalAwarenessModelSource -notmatch 'inCombat\s*\|\|\s*nearestHostileDistance\s*<\s*CRITICAL_HOSTILE_DISTANCE' -or
         $reopenedTacticalAwarenessModelSource -notmatch 'nearestHostileDistance\s*<\s*SEVERE_HOSTILE_DISTANCE' -or
         $reopenedTacticalAwarenessModelSource -notmatch 'score\s*=\s*Math\.max\(score,SEVERE_HOSTILE_SCORE\)' -or
-        $reopenedPlayerHudDataContextSource -notmatch 'Subscribe\("PlayerData",this\.onPlayerData\)' -or
+        $reopenedPlayerHudDataContextSource -notmatch 'subscribeProvider\("PlayerData",this\.onPlayerData\)' -or
         $reopenedPlayerHudDataContextSource -notmatch 'tacticalAwareness\.updateCombatState\(Boolean\(param1\.data\.bIsInCombat\)\)' -or
-        $reopenedPlayerHudDataContextSource -match 'Subscribe\("HUDStealthData"' -or
-        $reopenedConditionContextSource -notmatch 'Subscribe\("HUDStealthData",this\.onStealthData\)' -or
+        $reopenedPlayerHudDataContextSource -match 'subscribeProvider\("HUDStealthData"' -or
+        $reopenedConditionContextSource -notmatch 'subscribeProvider\("HUDStealthData",this\.onStealthData\)' -or
         $reopenedConditionContextSource -notmatch 'Boolean\(param1\.data\.bIsInCombat\)' -or
         $reopenedRuntimeSource -match 'syncTacticalCombatState|conditionContext\.getValue\("incombat"\)|valueContext\.updateCombatState') {
       throw 'Generated Goal 9 combat escalation must use PlayerData.bIsInCombat directly, keep HUDStealthData limited to the condition context, and retain the strict 25/50-unit proximity boundaries, 90-percent floor, and 100-percent combat/critical override.'
@@ -2002,8 +2066,8 @@ try {
         $reopenedThreatAlertSource -notmatch 'this\.formatLabel\(color\)') {
       throw 'Generated Goal 9 renderers do not retain the Watch icon reuse, eight-way heading tape, two-row bounded status display, fixed centered threat field, and percentage threat presentation.'
     }
-    if ($reopenedPlayerHudDataContextSource -match 'Subscribe\("PersonalAlertsData"|Subscribe\("PlayerStatusData"' -or
-        $reopenedPlayerHudDataContextSource -notmatch 'Subscribe\("PersonalEffectsData",this\.onPersonalEffectsData\)') {
+    if ($reopenedPlayerHudDataContextSource -match 'subscribeProvider\("PersonalAlertsData"|subscribeProvider\("PlayerStatusData"' -or
+        $reopenedPlayerHudDataContextSource -notmatch 'subscribeProvider\("PersonalEffectsData",this\.onPersonalEffectsData\)') {
       throw 'Generated Goal 9 HUD context still uses menu-scoped/transient status providers or lost the persistent PersonalEffectsData subscription.'
     }
     if ($reopenedContactRadarSource -notmatch 'param1\.scaleX\s*=\s*1' -or
@@ -2046,7 +2110,7 @@ try {
       throw 'Generated contact radar is not independent from Bethesda Watch ownership and rendering.'
     }
     if ($reopenedPlayerHudDataContextSource -match 'diagnostic\.compassmarkers|updateCompassMarkerDiagnostic|"G:"|" TYPES:"' -or
-        !$reopenedPlayerHudDataContextSource.Contains('BSUIDataManager.Subscribe("HudCompassData",this.onRadarCompassData)') -or
+        !$reopenedPlayerHudDataContextSource.Contains('this.subscribeProvider("HudCompassData",this.onRadarCompassData)') -or
         !$reopenedPlayerHudDataContextSource.Contains('currentCompassData') -or
         $reopenedPlayerHudDataContextSource -notmatch 'compassData\s*=\s*param1\s*==\s*null\s*\?\s*null\s*:\s*param1\.data') {
       throw 'Generated player HUD data context does not retain radar compass delivery or still contains the retired marker-count diagnostic.'
@@ -2091,17 +2155,21 @@ try {
       throw "Generated ActionScript still contains retired direct DDS loading support."
     }
 
-    $expectedOutputHash = Read-Sha256File -Path $expectedHashPath
     $actualOutputHash = (Get-FileHash -LiteralPath $generatedGfxPath -Algorithm SHA256).Hash
+    if ($UpdateExpectedHashes) {
+      Write-Sha256File `
+        -Path $expectedHashPath `
+        -Hash $actualOutputHash `
+        -FileName ([string]$build.outputFile)
+    }
+    $expectedOutputHash = Read-Sha256File -Path $expectedHashPath
     if ($actualOutputHash -ne $expectedOutputHash) {
       throw "Generated hash mismatch for $($build.outputFile). Expected $expectedOutputHash; found $actualOutputHash."
     }
 
-    foreach ($outputPath in $resolvedOutputDirectories) {
-      $destinationPath = Join-Path $outputPath ([string]$build.outputFile)
-      Copy-Item -LiteralPath $generatedGfxPath -Destination $destinationPath -Force
-      Write-Host -ForegroundColor Green "Built and validated $destinationPath ($actualOutputHash)"
-    }
+    $destinationPath = Join-Path $resolvedOutputDirectory ([string]$build.outputFile)
+    Copy-Item -LiteralPath $generatedGfxPath -Destination $destinationPath -Force
+    Write-Host -ForegroundColor Green "Built and validated $destinationPath ($actualOutputHash)"
   }
 
   $cuiOutputDirectory = Join-Path $resolvedProjectOutputDirectory "VenworksCUI"
@@ -2563,7 +2631,7 @@ try {
       [string]$environmentalScannerIncludes[0].anchor -ne 'bottom-right' -or
       [string]$environmentalScannerIncludes[0].visibleWhen -ne 'always' -or
       [int]$environmentalScannerIncludes[0].x -ne 39 -or
-      [int]$environmentalScannerIncludes[0].y -ne 11 -or
+      [int]$environmentalScannerIncludes[0].y -ne 29 -or
       $playerScannerIncludes.Count -ne 1 -or
       [string]$playerScannerIncludes[0].src -ne 'player-status-scanner.xml' -or
       [string]$playerScannerIncludes[0].anchor -ne 'bottom-left' -or
@@ -2661,7 +2729,7 @@ try {
         [int]$_.segmentCount -ne 8
       }).Count -ne 0 -or
       [int]$stagedEnvironmentalScannerGroup.width -ne 360 -or
-      [int]$stagedEnvironmentalScannerGroup.height -ne 236 -or
+      [int]$stagedEnvironmentalScannerGroup.height -ne 254 -or
       $stagedEnvironmentalStructuralPaths.Count -ne 0 -or
       $stagedEnvironmentalScannerText -match 'id="planet\.line"' -or
       $stagedEnvironmentalScannerText -notmatch 'value="PLANET DATA"' -or
@@ -2670,18 +2738,18 @@ try {
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.localTime"' -or
       $stagedEnvironmentalScannerText -notmatch 'id="planet\.time\.label" x="214" y="8" width="68" height="22"' -or
       $stagedEnvironmentalScannerText -notmatch 'id="planet\.time" x="288" y="6" width="58" height="22"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="planet\.solar-transition" x="214" y="18" width="132" height="14"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="planet\.solar-transition" x="14" y="52" width="332" height="22"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.solarTransitionCountdown" format="raw"' -or
       $stagedEnvironmentalScannerText -notmatch 'value="" font="\$MAIN_Font_Bold" fontSize="8" color="@palette\.colors\.foreground\.primary" bold="true" align="right"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="planet\.panel" x="8" y="32" width="344" height="42"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="planet\.panel" x="8" y="32" width="344" height="60"' -or
       $stagedEnvironmentalScannerText -notmatch 'id="planet\.name" x="14" y="34" width="332" height="22"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="planet\.oxygen" x="36" y="52" width="48" height="22"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="planet\.oxygen" x="36" y="70" width="48" height="22"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.oxygenPercentage"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.temperature"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.gravity"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="title" x="12" y="80" width="336" height="22"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="header\.line" x="8" y="101" width="344" height="0"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="protection\.panel" x="8" y="107" width="344" height="36"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="title" x="12" y="98" width="336" height="22"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="header\.line" x="8" y="119" width="344" height="0"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="protection\.panel" x="8" y="125" width="344" height="36"' -or
       $stagedEnvironmentalScannerText -match 'RELATIVE LOAD' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.protectionLevel"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.protectionPercentage"' -or
@@ -2694,20 +2762,20 @@ try {
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.thermalShortStatus"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.corrosiveShortStatus"' -or
       $stagedEnvironmentalScannerText -notmatch 'source="environment\.hazard\.radiationShortStatus"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="protection\.status" x="122" y="108" width="166" height="22"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="protection\.meter" x="14" y="130" width="332" height="8"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="channels\.panel" x="8" y="149" width="344" height="79"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="airwater\.label" x="12" y="151" width="80" height="18"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="airwater\.status" x="12" y="168" width="80" height="20"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="thermal\.status" x="96" y="168" width="80" height="20"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="corrosive\.status" x="180" y="168" width="80" height="20"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="radiation\.status" x="264" y="168" width="80" height="20"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="airwater\.exposure" x="30" y="190" width="44" height="34"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="thermal\.exposure" x="114" y="190" width="44" height="34"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="corrosive\.exposure" x="198" y="190" width="44" height="34"' -or
-      $stagedEnvironmentalScannerText -notmatch 'id="radiation\.exposure" x="282" y="190" width="44" height="34"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="protection\.status" x="122" y="126" width="166" height="22"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="protection\.meter" x="14" y="148" width="332" height="8"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="channels\.panel" x="8" y="167" width="344" height="79"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="airwater\.label" x="12" y="169" width="80" height="18"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="airwater\.status" x="12" y="186" width="80" height="20"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="thermal\.status" x="96" y="186" width="80" height="20"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="corrosive\.status" x="180" y="186" width="80" height="20"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="radiation\.status" x="264" y="186" width="80" height="20"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="airwater\.exposure" x="30" y="208" width="44" height="34"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="thermal\.exposure" x="114" y="208" width="44" height="34"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="corrosive\.exposure" x="198" y="208" width="44" height="34"' -or
+      $stagedEnvironmentalScannerText -notmatch 'id="radiation\.exposure" x="282" y="208" width="44" height="34"' -or
       $stagedEnvironmentalScannerText -match 'value="[^\"]*(ppm|μSv/h|mmpy|SAMPLE RATE|THREAT INDEX|VACUUM)') {
-    throw 'The accepted HUD must stage the unified helmet architecture, Card 16k solar-transition header countdown, content-only player and environmental scanners, vertical elemental channels, reserved threat recess, and passive upper-right equipment rail with no retired diagnostics or invented data.'
+    throw 'The accepted HUD must stage the unified helmet architecture, Card 16k dedicated solar-transition countdown row, content-only player and environmental scanners, vertical elemental channels, reserved threat recess, and passive upper-right equipment rail with no retired diagnostics or invented data.'
   }
   Copy-Item -LiteralPath $gallerySvgSource -Destination (Join-Path $assetOutputDirectory "gallery-vector.svg") -Force
   Copy-Item -LiteralPath $venworksLogoSvgSource -Destination (Join-Path $assetOutputDirectory "venworks-logo.svg") -Force
@@ -2715,77 +2783,7 @@ try {
   Copy-Item -LiteralPath $crimsonFleetLogoSvgSource -Destination (Join-Path $assetOutputDirectory "crimson-fleet-logo.svg") -Force
   Copy-Item -LiteralPath $trackersAllianceLogoSvgSource -Destination (Join-Path $assetOutputDirectory "trackers-alliance-logo.svg") -Force
   Copy-Item -LiteralPath $invalidSvgSource -Destination (Join-Path $assetOutputDirectory "gallery-invalid.svg") -Force
-  for ($outputIndex = 0; $outputIndex -lt $resolvedOutputDirectories.Count; $outputIndex++) {
-    $outputPath = $resolvedOutputDirectories[$outputIndex]
-    $variantName = $releaseVariantNames[$outputIndex]
-    $variantPaletteFileName = $releaseVariantPaletteFileNames[$outputIndex]
-    $variantCuiOutputDirectory = Join-Path $outputPath "VenworksCUI"
-    $variantAssetOutputDirectory = Join-Path $variantCuiOutputDirectory "Assets"
-    $variantComponentOutputDirectory = Join-Path $variantCuiOutputDirectory "components"
-    $variantPaletteOutputDirectory = Join-Path $variantCuiOutputDirectory "palettes"
-    if ($variantCuiOutputDirectory -ne $cuiOutputDirectory) {
-      New-Item -ItemType Directory -Force -Path $variantAssetOutputDirectory | Out-Null
-      New-Item -ItemType Directory -Force -Path $variantComponentOutputDirectory | Out-Null
-      New-Item -ItemType Directory -Force -Path $variantPaletteOutputDirectory | Out-Null
-      foreach ($examplePaletteFileName in $examplePaletteFileNames) {
-        Copy-Item -LiteralPath (Join-Path $paletteOutputDirectory $examplePaletteFileName) -Destination (Join-Path $variantPaletteOutputDirectory $examplePaletteFileName) -Force
-      }
-      foreach ($componentFixtureName in $productionComponentFixtureNames) {
-        Copy-Item -LiteralPath (Join-Path $componentOutputDirectory $componentFixtureName) -Destination (Join-Path $variantComponentOutputDirectory $componentFixtureName) -Force
-      }
-      foreach ($assetFileName in @('gallery-vector.svg','venworks-logo.svg','freestar-collective-logo.svg','crimson-fleet-logo.svg','trackers-alliance-logo.svg','gallery-invalid.svg')) {
-        Copy-Item -LiteralPath (Join-Path $assetOutputDirectory $assetFileName) -Destination (Join-Path $variantAssetOutputDirectory $assetFileName) -Force
-      }
-      foreach ($retiredComponentName in $retiredComponentNames) {
-        $retiredComponentPath = Join-Path $variantComponentOutputDirectory $retiredComponentName
-        if (Test-Path -LiteralPath $retiredComponentPath) {
-          Remove-Item -LiteralPath $retiredComponentPath -Force
-        }
-      }
-    }
-    $variantLayoutPath = Join-Path $variantCuiOutputDirectory 'layout.xml'
-    Write-PaletteSelectedLayout `
-      -SourcePath $providerProbeLayoutSource `
-      -DestinationPath $variantLayoutPath `
-      -PaletteFileName $variantPaletteFileName
-    [xml]$variantLayout = Get-Content -LiteralPath $variantLayoutPath -Raw
-    if ([string]$variantLayout.venworksCUI.palette -ne $variantPaletteFileName) {
-      throw "$variantName layout must select '$variantPaletteFileName'; found '$([string]$variantLayout.venworksCUI.palette)'."
-    }
-    $normalizedVariantLayoutText = (Get-Content -LiteralPath $variantLayoutPath -Raw).Replace(
-      "palette=`"$variantPaletteFileName`"",
-      "palette=`"$defaultPaletteFileName`""
-    )
-    $defaultLayoutText = Get-Content -LiteralPath (Join-Path $cuiOutputDirectory 'layout.xml') -Raw
-    if ($normalizedVariantLayoutText -cne $defaultLayoutText) {
-      throw "$variantName layout must differ from the default layout only by its palette selector."
-    }
-    $relativeCuiPaths = @(
-      'components\contact-radar.xml',
-      'components\faction-display.xml',
-      'components\equipment-rail.xml',
-      'components\environmental-hazard-scanner.xml',
-      'components\helmet-awareness.xml',
-      'components\player-status-scanner.xml',
-      'components\quest-tracker.xml',
-      'components\scanner-overlay.xml',
-      'Assets\gallery-vector.svg',
-      'Assets\venworks-logo.svg',
-      'Assets\freestar-collective-logo.svg',
-      'Assets\crimson-fleet-logo.svg',
-      'Assets\trackers-alliance-logo.svg',
-      'Assets\gallery-invalid.svg'
-    )
-    $relativeCuiPaths += @($examplePaletteFileNames | ForEach-Object { "palettes\$_" })
-    foreach ($relativeCuiPath in $relativeCuiPaths) {
-      $primaryHash = (Get-FileHash -LiteralPath (Join-Path $cuiOutputDirectory $relativeCuiPath) -Algorithm SHA256).Hash
-      $variantHash = (Get-FileHash -LiteralPath (Join-Path $variantCuiOutputDirectory $relativeCuiPath) -Algorithm SHA256).Hash
-      if ($variantHash -ne $primaryHash) {
-        throw "Staged CUI payload mismatch for $relativeCuiPath in $variantCuiOutputDirectory."
-      }
-    }
-    Write-Host -ForegroundColor Green "Staged the persistent quest tracker, Goal 10 scanner overlay, accepted Goal 9 awareness surfaces, and production helmet HUD in $variantCuiOutputDirectory"
-  }
+  Write-Host -ForegroundColor Green "Built the shared validated CUI payload in $cuiOutputDirectory"
 }
 finally {
   if ($KeepWork) {
@@ -2811,7 +2809,7 @@ $overrideCompilerArguments = @{
   JavaPath = $script:ResolvedJavaPath
   JpexsJarPath = $script:ResolvedJpexsJarPath
   VanillaInterfacePath = $resolvedVanillaInterfacePath
-  OutputDirectory = $resolvedOutputDirectories
+  OutputDirectory = @($resolvedOutputDirectory)
   WorkDirectory = $resolvedWorkDirectory
   ReferenceCacheManifestPath = $resolvedReferenceCacheManifestPath
 }
