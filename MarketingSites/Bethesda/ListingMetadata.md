@@ -26,7 +26,7 @@
 
 ## Minimalist
 
-- Title: `Venworks Customizable HUD - Minimalist`
+- Title: `Venworks Customizable HUD - Minimalist Theme`
 - Tagline: `An experimental all-platform Starfield HUD with the faction panel removed, the contact radar restored to the upper-left, and external SVG, palette, and DDS content excluded.`
 - Description Markdown: `Minimalist.md`
 
