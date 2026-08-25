@@ -267,6 +267,22 @@ $archiveDefinitions = [ordered]@{
   "Textures_PS" = [pscustomobject]@{ FileSuffix = "Textures_PS.ba2"; Required = $false }
 }
 
+$releaseVariants = @($Global:ReleaseVariants)
+if ($releaseVariants.Count -eq 0) {
+  throw "ReleaseVariants must contain at least one canonical plugin stub."
+}
+$canonicalPluginVariant = $releaseVariants[0]
+$canonicalPluginStagingPath = Resolve-RequiredDirectory `
+  -Path (Join-Path $repositoryRoot ([string]$canonicalPluginVariant.StagingFolderPath)) `
+  -Description "$($canonicalPluginVariant.VariantName) canonical plugin staging folder"
+$canonicalPluginPath = Resolve-RequiredFile `
+  -Path (Join-Path $canonicalPluginStagingPath "$($canonicalPluginVariant.PackageBaseName).esm") `
+  -Description "$($canonicalPluginVariant.VariantName) canonical plugin stub"
+Assert-NotGitLfsPointer `
+  -Path $canonicalPluginPath `
+  -Description "$($canonicalPluginVariant.VariantName) canonical plugin stub"
+$canonicalPluginHash = Get-Sha256 -Path $canonicalPluginPath
+
 foreach ($variant in $variants) {
   $profilePath = Resolve-RequiredFile `
     -Path (Join-Path $repositoryRoot "Scaleform\variants\$($variant.VariantKey)\build.psd1") `
@@ -420,10 +436,14 @@ foreach ($variant in $variants) {
 
   $pluginPath = Join-Path $stagingPath "$($variant.PackageBaseName).esm"
   Assert-NotGitLfsPointer -Path $pluginPath -Description "$($variant.VariantName) plugin"
+  $pluginHash = Get-Sha256 -Path $pluginPath
+  if ($pluginHash -cne $canonicalPluginHash) {
+    throw "$($variant.VariantName) plugin is not byte-identical to the canonical $($canonicalPluginVariant.VariantName) stub."
+  }
   if (![string]::IsNullOrWhiteSpace([string]$profile.PluginSourcePath)) {
     $pluginSourcePath = Resolve-RequiredFile -Path (Resolve-RepositoryPath -RelativePath ([string]$profile.PluginSourcePath) -Description "$($variant.VariantName) plugin source") -Description "$($variant.VariantName) plugin source"
     Assert-NotGitLfsPointer -Path $pluginSourcePath -Description "$($variant.VariantName) plugin source"
-    if ((Get-Sha256 -Path $pluginSourcePath) -cne (Get-Sha256 -Path $pluginPath)) {
+    if ((Get-Sha256 -Path $pluginSourcePath) -cne $pluginHash) {
       throw "$($variant.VariantName) plugin is not byte-identical to its configured source stub."
     }
   }

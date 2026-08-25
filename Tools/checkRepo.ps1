@@ -23,7 +23,12 @@ Set-StrictMode -Version Latest
 
 if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction SilentlyContinue)) {
   Write-Host -ForegroundColor Green "Importing Shared Configuration"
-  . "$PSScriptRoot\sharedConfig.ps1"
+  if ($Committed) {
+    . "$PSScriptRoot\sharedConfig.ps1" -SkipEnvironment
+  }
+  else {
+    . "$PSScriptRoot\sharedConfig.ps1"
+  }
 }
 
 $repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))

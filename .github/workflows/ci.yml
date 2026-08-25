@@ -27,6 +27,23 @@ jobs:
         shell: pwsh
         run: ./Tools/verifyCommittedRelease.ps1
 
+      - name: Verify committed entry point without local environment
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $outputLines = @(& pwsh -NoProfile -File ./Tools/checkRepo.ps1 -Committed 2>&1)
+          $exitCode = $LASTEXITCODE
+          $outputLines | ForEach-Object { Write-Host $_ }
+          $outputText = $outputLines -join "`n"
+
+          if ($exitCode -ne 0) {
+            throw "Committed repository check exited with code $exitCode."
+          }
+          if ($outputText -notmatch 'Selected Variant Build Artifacts Are Valid') {
+            throw 'Committed repository check exited before reporting successful artifact validation.'
+          }
+
   package-release:
     name: Package Release Smoke Test
     needs: verify-committed-release

@@ -26,7 +26,7 @@ Current custom surfaces include:
 - a passive equipment rail for all 12 favorite slots plus live weapon,
   ammunition, explosive, and power information;
 - a scanner-only heading, pulse grid, and bounded forward-contact display;
-- a faction crest selected by the active palette; and
+- a faction crest selected by the active palette in all four themed variants; and
 - a localized vehicle-exit label with Bethesda's current keyboard or
   controller glyph.
 
@@ -35,11 +35,12 @@ detection presentation, hit and kill indicators, weapon reticles, crosshairs,
 and their associated lifecycle behavior. The custom HUD may read approved
 state from those systems for conditions, but it does not replace them.
 
-## Release themes
+## Release variants
 
-Four separately distributed variants select different default palettes. Every
-variant includes all five packaged palettes, so the active palette can be
-changed without reinstalling the HUD.
+Five separately distributed variants are available. The four themed variants
+include all five packaged palettes, so their active palette can be changed
+without reinstalling the HUD. Minimalist instead uses literal Starfield colors
+and ships without external palette or SVG files.
 
 | Public release name | Default palette |
 |---|---|
@@ -47,7 +48,11 @@ changed without reinstalling the HUD.
 | Venworks Customizable HUD - Trackers Alliance Theme | `trackers-alliance.xml` |
 | Venworks Customizable HUD - Freestar Collective Theme | `freestar-collective.xml` |
 | Venworks Customizable HUD - Crimson Fleet Theme | `crimson-fleet.xml` |
-| Additional included neutral option | `starfield.xml` |
+| Venworks Customizable HUD - Minimalist | Literal Starfield colors; no palette file |
+
+The four themed variants also include `starfield.xml` as a neutral palette
+option. Minimalist omits the faction crest along with all external palettes and
+SVG assets.
 
 Enable only one release variant at a time. The variants install the same HUD
 movie and configuration paths, so whichever package wins file conflicts also
@@ -55,7 +60,7 @@ determines the starting configuration.
 
 ## Installation
 
-Choose one theme and one PC package shape. The recommended Nexus PC - Normal
+Choose one variant and one PC package shape. The recommended Nexus PC - Normal
 package installs a root ESM, Windows BA2 archives, and one loose
 `Interface\VenworksCUI\layout.xml`. Enable the ESM and let the package win HUD
 conflicts. The loose layout remains directly editable while the compiled
@@ -69,7 +74,7 @@ either package shape.
 
 Bethesda Creations use separate ESM-and-BA2-only packages for PC, Xbox, and
 PS5. Install only the package supplied for the current platform and enable only
-one theme variant.
+one release variant.
 
 This release has no HONKCORE dependency. It is incompatible with any mod that
 replaces `hudmenu.gfx`, `hudmenu_lrg.gfx`, `hudmessagesmenu.gfx`, or
@@ -135,9 +140,8 @@ a separate loose override containing the additional changed files.
 - [Release history](CHANGELOG.md) preserves the earlier release changelog.
 
 Current product intent, delivery state, and acceptance criteria are maintained
-in the [Venworks Codecks workspace](https://venworks.codecks.io/). Repository
-documentation owns the technical configuration contract and verified runtime
-evidence.
+in Plane project `VWKSHUD`. Repository documentation owns the technical
+configuration contract and verified runtime evidence.
 
 Repository-specific automation requirements are documented in
 [`AGENT-REPO-CONTEXT.md`](AGENT-REPO-CONTEXT.md).
