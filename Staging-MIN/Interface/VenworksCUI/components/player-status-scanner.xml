@@ -2,105 +2,50 @@
 <venworksCUIFragment schemaVersion="1" runtimeVersion="1">
   <group id="root" x="0" y="0" width="360" height="236" opacity="1" visible="true"
          rotation="0" scaleX="1" scaleY="1" z="0">
-    <text id="title" x="12" y="6" width="156" height="22" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" value="PLAYER DATA"
-          font="$MAIN_Font_Bold" fontSize="13" color="#E8F0F4" bold="false" align="left" />
-    <text id="time.label" x="218" y="8" width="60" height="22" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" value="UNIVERSAL"
-          font="$MAIN_Font_Bold" fontSize="8" color="#C6D0D6" bold="false" align="right" />
-    <text id="time" x="282" y="6" width="72" height="22" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" source="player.universalTime" format="time24"
-          value="--:--" font="$MAIN_Font_Bold" fontSize="10" color="#FFFFFF" bold="false" align="right" />
-    <panel id="identity.panel" x="8" y="32" width="344" height="39" opacity="1" visible="true"
-           rotation="0" scaleX="1" scaleY="1" z="1"
-           fillColor="#0D1114" fillOpacity="0.58" strokeColor="#D9E3E8" strokeOpacity="0.35" strokeWidth="1" />
-    <text id="serial.label" x="14" y="35" width="42" height="20" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" value="SERIAL"
-          font="$MAIN_Font_Bold" fontSize="8" color="#C6D0D6" bold="false" align="left" />
-    <text id="serial" x="58" y="34" width="288" height="20" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" source="player.serial" format="raw"
-          value="-------- ---- ------" font="$MAIN_Font_Bold" fontSize="8" color="#FFFFFF" bold="false" align="left" />
-    <text id="credits" x="14" y="53" width="160" height="20" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" valueTemplate="CR {credits:integer}" value="CR --"
-          font="$MAIN_Font_Bold" fontSize="8" color="#9EADB5" bold="false" align="left" />
-    <text id="digipicks" x="176" y="53" width="170" height="20" opacity="1" visible="true"
-          visibleWhen="digipicksAvailable" rotation="0" scaleX="1" scaleY="1" z="2"
-          valueTemplate="DIGI {player.digipicks:integer}" value="DIGI --"
-          font="$MAIN_Font_Bold" fontSize="8" color="#FFFFFF" bold="false" align="right" />
+    <text id="title" x="12" y="6" width="156" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" value="PLAYER DATA" font="$MAIN_Font_Bold" fontSize="13" color="#E8F0F4" bold="false" align="left" />
+    <text id="time.label" x="218" y="8" width="60" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" value="UNIVERSAL" font="$MAIN_Font_Bold" fontSize="8" color="#C6D0D6" bold="false" align="right" />
+    <text id="time" x="282" y="6" width="72" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="player.universalTime" format="time24" value="--:--" font="$MAIN_Font_Bold" fontSize="10" color="#FFFFFF" bold="false" align="right" />
 
-    <divider id="xp.line" x="8" y="76" width="344" height="0" opacity="1" visible="true"
-             rotation="0" scaleX="1" scaleY="1" z="1" color="#D9E3E8" strokeOpacity="0.45" strokeWidth="1" />
-    <text id="xp.label" x="12" y="78" width="140" height="22" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" value="XP TO LEVEL"
-          font="$MAIN_Font_Bold" fontSize="10" color="#E8F0F4" bold="false" align="left" />
-    <text id="level" x="174" y="78" width="90" height="22" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" valueTemplate="LVL {player.level:integer}" value="LVL --"
-          font="$MAIN_Font_Bold" fontSize="8" color="#9EADB5" bold="false" align="right" />
-    <text id="xp.value" x="278" y="78" width="70" height="22" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" source="player.xpPercentage" format="percent"
-          value="--%" font="$MAIN_Font_Bold" fontSize="8" color="#FFFFFF" bold="false" align="right" />
-    <meter id="xp.meter" x="12" y="97" width="336" height="7" opacity="1" visible="true"
-           rotation="0" scaleX="1" scaleY="1" z="2" style="player.xp"
-           value="0" max="100" source="player.xpPercentage" />
+    <divider id="identity.corner.tl.h" x="8" y="32" width="38" height="0" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" color="#D9E3E8" strokeOpacity="0.45" strokeWidth="1" />
+    <divider id="identity.corner.tl.v" x="8" y="32" width="0" height="10" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" color="#D9E3E8" strokeOpacity="0.45" strokeWidth="1" />
+    <divider id="identity.corner.tr.h" x="314" y="32" width="38" height="0" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" color="#D9E3E8" strokeOpacity="0.45" strokeWidth="1" />
+    <divider id="identity.corner.tr.v" x="352" y="32" width="0" height="10" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" color="#D9E3E8" strokeOpacity="0.45" strokeWidth="1" />
+    <divider id="identity.corner.bl.h" x="8" y="71" width="38" height="0" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" color="#D9E3E8" strokeOpacity="0.45" strokeWidth="1" />
+    <divider id="identity.corner.bl.v" x="8" y="61" width="0" height="10" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" color="#D9E3E8" strokeOpacity="0.45" strokeWidth="1" />
+    <divider id="identity.corner.br.h" x="314" y="71" width="38" height="0" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" color="#D9E3E8" strokeOpacity="0.45" strokeWidth="1" />
+    <divider id="identity.corner.br.v" x="352" y="61" width="0" height="10" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" color="#D9E3E8" strokeOpacity="0.45" strokeWidth="1" />
+    <text id="serial.label" x="14" y="35" width="42" height="20" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" value="SERIAL" font="$MAIN_Font_Bold" fontSize="8" color="#C6D0D6" bold="false" align="left" />
+    <text id="serial" x="58" y="34" width="288" height="20" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="player.serial" format="raw" value="-------- ---- ------" font="$MAIN_Font_Bold" fontSize="8" color="#FFFFFF" bold="false" align="left" />
+    <text id="credits" x="14" y="53" width="160" height="20" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" valueTemplate="CR {credits:integer}" value="CR --" font="$MAIN_Font_Bold" fontSize="8" color="#9EADB5" bold="false" align="left" />
+    <text id="digipicks" x="176" y="53" width="170" height="20" opacity="1" visible="true" visibleWhen="digipicksAvailable" rotation="0" scaleX="1" scaleY="1" z="2" valueTemplate="DIGI {player.digipicks:integer}" value="DIGI --" font="$MAIN_Font_Bold" fontSize="8" color="#FFFFFF" bold="false" align="right" />
 
-    <divider id="health.line" x="8" y="107" width="344" height="0" opacity="1" visible="true"
-             rotation="0" scaleX="1" scaleY="1" z="1" color="#D9E3E8" strokeOpacity="0.45" strokeWidth="1" />
-    <text id="health.label" x="12" y="109" width="160" height="22" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" value="PLAYER HEALTH"
-          font="$MAIN_Font_Bold" fontSize="10" color="#D34A5B" bold="false" align="left" />
-    <text id="health.value" x="278" y="109" width="70" height="22" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" source="player.healthPercentage" format="percent"
-          value="--%" font="$MAIN_Font_Bold" fontSize="8" color="#FFFFFF" bold="false" align="right" />
-    <meter id="health.meter" x="12" y="128" width="336" height="7" opacity="1" visible="true"
-           rotation="0" scaleX="1" scaleY="1" z="2" style="player.health"
-           value="0" max="100" source="player.healthPercentage" />
+    <divider id="xp.line" x="8" y="76" width="344" height="0" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" color="#D9E3E8" strokeOpacity="0.45" strokeWidth="1" />
+    <text id="xp.label" x="12" y="78" width="140" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" value="XP TO LEVEL" font="$MAIN_Font_Bold" fontSize="10" color="#E8F0F4" bold="false" align="left" />
+    <text id="level" x="174" y="78" width="90" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" valueTemplate="LVL {player.level:integer}" value="LVL --" font="$MAIN_Font_Bold" fontSize="8" color="#9EADB5" bold="false" align="right" />
+    <text id="xp.value" x="278" y="78" width="70" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="player.xpPercentage" format="percent" value="--%" font="$MAIN_Font_Bold" fontSize="8" color="#FFFFFF" bold="false" align="right" />
+    <meter id="xp.meter" x="12" y="97" width="336" height="7" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" style="player.xp" value="0" max="100" source="player.xpPercentage" />
 
-    <divider id="oxygen.line" x="8" y="138" width="344" height="0" opacity="1" visible="true"
-             rotation="0" scaleX="1" scaleY="1" z="1" color="#D9E3E8" strokeOpacity="0.45" strokeWidth="1" />
-    <text id="oxygen.label" x="12" y="140" width="100" height="22" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" value="O2 / CO2"
-          font="$MAIN_Font_Bold" fontSize="10" color="#70CFE0" bold="false" align="left" />
-    <text id="oxygen.value" x="132" y="140" width="92" height="22" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2"
-          valueTemplate="O2 {player.oxygenPercentage:percent}" value="O2 --%"
-          font="$MAIN_Font_Bold" fontSize="8" color="#FFFFFF" bold="false" align="right" />
-    <text id="carbondioxide.value" x="226" y="140" width="122" height="22" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2"
-          valueTemplate="CO2 {player.carbonDioxidePercentage:percent}" value="CO2 --%"
-          font="$MAIN_Font_Bold" fontSize="8" color="#FFFFFF" bold="false" align="right" />
-    <meter id="oxygen.meter" x="12" y="159" width="336" height="7" opacity="1" visible="true"
-           rotation="0" scaleX="1" scaleY="1" z="2" style="player.oxygen"
-           value="0" max="100" source="player.oxygenPercentage" />
-    <meter id="carbondioxide.meter" x="12" y="159" width="336" height="7" opacity="1" visible="true"
-           rotation="0" scaleX="1" scaleY="1" z="3" style="player.carbondioxide"
-           value="0" max="100" source="player.carbonDioxidePercentage" />
+    <divider id="health.line" x="8" y="107" width="344" height="0" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" color="#D9E3E8" strokeOpacity="0.45" strokeWidth="1" />
+    <text id="health.label" x="12" y="109" width="160" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" value="PLAYER HEALTH" font="$MAIN_Font_Bold" fontSize="10" color="#D34A5B" bold="false" align="left" />
+    <text id="health.value" x="278" y="109" width="70" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="player.healthPercentage" format="percent" value="--%" font="$MAIN_Font_Bold" fontSize="8" color="#FFFFFF" bold="false" align="right" />
+    <meter id="health.meter" x="12" y="128" width="336" height="7" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" style="player.health" value="0" max="100" source="player.healthPercentage" />
 
-    <divider id="boost.line" x="8" y="169" width="344" height="0" opacity="1" visible="true"
-             rotation="0" scaleX="1" scaleY="1" z="1" color="#D9E3E8" strokeOpacity="0.45" strokeWidth="1" />
-    <text id="boost.label" x="12" y="171" width="160" height="22" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" value="BOOST CHARGE"
-          font="$MAIN_Font_Bold" fontSize="10" color="#A69AD8" bold="false" align="left" />
-    <text id="boost.value" x="278" y="171" width="70" height="22" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" source="boost.percentage" format="percent"
-          value="--%" font="$MAIN_Font_Bold" fontSize="8" color="#FFFFFF" bold="false" align="right" />
-    <meter id="boost.meter" x="12" y="190" width="336" height="7" opacity="1" visible="true"
-           rotation="0" scaleX="1" scaleY="1" z="2" style="player.boost"
-           value="0" max="100" source="boost.percentage" />
+    <divider id="oxygen.line" x="8" y="138" width="344" height="0" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" color="#D9E3E8" strokeOpacity="0.45" strokeWidth="1" />
+    <text id="oxygen.label" x="12" y="140" width="100" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" value="O2 / CO2" font="$MAIN_Font_Bold" fontSize="10" color="#70CFE0" bold="false" align="left" />
+    <text id="oxygen.value" x="132" y="140" width="92" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" valueTemplate="O2 {player.oxygenPercentage:percent}" value="O2 --%" font="$MAIN_Font_Bold" fontSize="8" color="#FFFFFF" bold="false" align="right" />
+    <text id="carbondioxide.value" x="226" y="140" width="122" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" valueTemplate="CO2 {player.carbonDioxidePercentage:percent}" value="CO2 --%" font="$MAIN_Font_Bold" fontSize="8" color="#FFFFFF" bold="false" align="right" />
+    <meter id="oxygen.meter" x="12" y="159" width="336" height="7" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" style="player.oxygen" value="0" max="100" source="player.oxygenPercentage" />
+    <meter id="carbondioxide.meter" x="12" y="159" width="336" height="7" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="3" style="player.carbondioxide" value="0" max="100" source="player.carbonDioxidePercentage" />
 
-    <divider id="encumbrance.line" x="8" y="200" width="344" height="0" opacity="1" visible="true"
-             rotation="0" scaleX="1" scaleY="1" z="1" color="#D9E3E8" strokeOpacity="0.45" strokeWidth="1" />
-    <text id="encumbrance.label" x="12" y="202" width="112" height="22" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" value="ENCUMBRANCE"
-          font="$MAIN_Font_Bold" fontSize="10" color="#64E572" bold="false" align="left" />
-    <text id="mass" x="126" y="202" width="146" height="22" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2"
-          valueTemplate="MASS {carry.current:integer}/{carry.maximum:integer} KG" value="MASS --/-- KG"
-          font="$MAIN_Font_Bold" fontSize="8" color="#FFFFFF" bold="false" align="center" />
-    <text id="encumbrance.value" x="278" y="202" width="70" height="22" opacity="1" visible="true"
-          rotation="0" scaleX="1" scaleY="1" z="2" source="carry.percentage" format="percent"
-          value="--%" font="$MAIN_Font_Bold" fontSize="8" color="#FFFFFF" bold="false" align="right" />
-    <meter id="encumbrance.meter" x="12" y="221" width="336" height="7" opacity="1" visible="true"
-           rotation="0" scaleX="1" scaleY="1" z="2" style="player.encumbrance"
-           value="0" max="100" source="carry.percentage" />
+    <divider id="boost.line" x="8" y="169" width="344" height="0" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" color="#D9E3E8" strokeOpacity="0.45" strokeWidth="1" />
+    <text id="boost.label" x="12" y="171" width="160" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" value="BOOST CHARGE" font="$MAIN_Font_Bold" fontSize="10" color="#A69AD8" bold="false" align="left" />
+    <text id="boost.value" x="278" y="171" width="70" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="boost.percentage" format="percent" value="--%" font="$MAIN_Font_Bold" fontSize="8" color="#FFFFFF" bold="false" align="right" />
+    <meter id="boost.meter" x="12" y="190" width="336" height="7" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" style="player.boost" value="0" max="100" source="boost.percentage" />
+
+    <divider id="encumbrance.line" x="8" y="200" width="344" height="0" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="1" color="#D9E3E8" strokeOpacity="0.45" strokeWidth="1" />
+    <text id="encumbrance.label" x="12" y="202" width="112" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" value="ENCUMBRANCE" font="$MAIN_Font_Bold" fontSize="10" color="#64E572" bold="false" align="left" />
+    <text id="mass" x="126" y="202" width="146" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" valueTemplate="MASS {carry.current:integer}/{carry.maximum:integer} KG" value="MASS --/-- KG" font="$MAIN_Font_Bold" fontSize="8" color="#FFFFFF" bold="false" align="center" />
+    <text id="encumbrance.value" x="278" y="202" width="70" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="carry.percentage" format="percent" value="--%" font="$MAIN_Font_Bold" fontSize="8" color="#FFFFFF" bold="false" align="right" />
+    <meter id="encumbrance.meter" x="12" y="221" width="336" height="7" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" style="player.encumbrance" value="0" max="100" source="carry.percentage" />
   </group>
 </venworksCUIFragment>

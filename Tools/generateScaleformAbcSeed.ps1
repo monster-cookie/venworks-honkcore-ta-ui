@@ -14,7 +14,9 @@ param(
 
   [string]$ActionScriptSourcePath = (Join-Path $PSScriptRoot '..\Scaleform\shared\actionscript'),
 
-  [string]$OutputPath = (Join-Path $PSScriptRoot '..\Scaleform\shared\patches\cui-component-abc-seed.xml')
+  [string]$OutputPath = (Join-Path $PSScriptRoot '..\Scaleform\shared\patches\cui-component-abc-seed.xml'),
+
+  [string]$BuildManifestPath
 )
 
 $ErrorActionPreference = 'Stop'
@@ -37,6 +39,30 @@ function Resolve-RequiredDirectory {
   return $resolved.Path
 }
 
+$sourceProfile = $null
+if (![string]::IsNullOrWhiteSpace($BuildManifestPath)) {
+  $profileHelperPath = Resolve-RequiredFile `
+    -Path (Join-Path $PSScriptRoot 'sharedScaleformProfiles.ps1') `
+    -Description 'Scaleform movie-profile helper'
+  . $profileHelperPath
+
+  $resolvedBuildManifestPath = Resolve-RequiredFile -Path $BuildManifestPath -Description 'Scaleform build manifest'
+  [xml]$buildManifest = Get-Content -LiteralPath $resolvedBuildManifestPath -Raw
+  $build = $buildManifest.scaleformBuild
+  if (!$build -or [string]::IsNullOrWhiteSpace([string]$build.actionScriptSource) -or
+      [string]::IsNullOrWhiteSpace([string]$build.abcSeedPatch)) {
+    throw "Scaleform build manifest does not define ActionScript source and ABC seed paths: $resolvedBuildManifestPath"
+  }
+  $manifestDirectory = Split-Path -Parent $resolvedBuildManifestPath
+  if (!$PSBoundParameters.ContainsKey('ActionScriptSourcePath')) {
+    $ActionScriptSourcePath = Join-Path $manifestDirectory ([string]$build.actionScriptSource)
+  }
+  if (!$PSBoundParameters.ContainsKey('OutputPath')) {
+    $OutputPath = Join-Path $manifestDirectory ([string]$build.abcSeedPatch)
+  }
+  $sourceProfile = Get-ScaleformSourceProfile -ManifestPath $resolvedBuildManifestPath
+}
+
 $resolvedFlexSdkPath = Resolve-RequiredDirectory -Path $FlexSdkPath -Description 'Apache Flex SDK directory'
 $resolvedPlayerGlobalPath = Resolve-RequiredFile -Path $PlayerGlobalPath -Description 'playerglobal.swc'
 $resolvedJavaPath = Resolve-RequiredFile -Path $JavaPath -Description 'Java executable'
@@ -45,8 +71,23 @@ $resolvedActionScriptSourcePath = Resolve-RequiredDirectory -Path $ActionScriptS
 $mxmlcJarPath = Resolve-RequiredFile -Path (Join-Path $resolvedFlexSdkPath 'lib\mxmlc.jar') -Description 'Apache Flex mxmlc compiler'
 $flexConfigPath = Resolve-RequiredFile -Path (Join-Path $resolvedFlexSdkPath 'frameworks\flex-config.xml') -Description 'Apache Flex compiler configuration'
 
+$excludedActionScriptPaths = if ($null -eq $sourceProfile) {
+  @()
+}
+else {
+  @($sourceProfile.ExcludedActionScriptPaths | ForEach-Object {
+    $_.Replace([System.IO.Path]::AltDirectorySeparatorChar, [System.IO.Path]::DirectorySeparatorChar)
+  })
+}
 $classes = @()
 foreach ($sourceFile in Get-ChildItem -LiteralPath $resolvedActionScriptSourcePath -Recurse -File -Filter '*.as') {
+  $relativeSourcePath = $sourceFile.FullName.Substring($resolvedActionScriptSourcePath.Length).TrimStart(
+    [System.IO.Path]::DirectorySeparatorChar,
+    [System.IO.Path]::AltDirectorySeparatorChar
+  )
+  if ($relativeSourcePath -in $excludedActionScriptPaths) {
+    continue
+  }
   $sourceText = Get-Content -LiteralPath $sourceFile.FullName -Raw
   $packageMatch = [regex]::Match($sourceText, '(?m)^package\s+([A-Za-z_][A-Za-z0-9_.]*)\s*$')
   $classMatch = [regex]::Match($sourceText, '(?m)^\s*public\s+(?:final\s+)?class\s+([A-Za-z_][A-Za-z0-9_]*)\b')
@@ -62,6 +103,11 @@ foreach ($sourceFile in Get-ChildItem -LiteralPath $resolvedActionScriptSourcePa
 $classes = @($classes | Sort-Object QualifiedName -Unique)
 if ($classes.Count -eq 0) {
   throw 'No authored ActionScript classes were discovered.'
+}
+foreach ($excludedActionScriptPath in $excludedActionScriptPaths) {
+  if (!(Test-Path -LiteralPath (Join-Path $resolvedActionScriptSourcePath $excludedActionScriptPath) -PathType Leaf)) {
+    throw "The selected Scaleform profile excludes an unknown ActionScript class: $excludedActionScriptPath"
+  }
 }
 $duplicateClassNames = @($classes | Group-Object Name | Where-Object Count -gt 1)
 if ($duplicateClassNames.Count -gt 0) {

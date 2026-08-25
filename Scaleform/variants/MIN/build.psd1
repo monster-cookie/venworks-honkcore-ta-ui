@@ -1,10 +1,13 @@
 @{
-  MovieProfile = 'shared'
+  MovieProfile = 'minimalist-no-svg'
+  MovieManifestPaths = @(
+    'Scaleform/variants/MIN/movies/hudmenu.build.xml'
+    'Scaleform/variants/MIN/movies/hudmenu_lrg.build.xml'
+  )
   LayoutSource = 'Scaleform/variants/MIN/layout.xml'
-  ComponentSourceDirectory = 'Scaleform/shared/fixtures/components'
+  ComponentSourceDirectory = 'Scaleform/variants/MIN/components'
   ComponentFileNames = @(
     'contact-radar.xml'
-    'equipment-rail.xml'
     'environmental-hazard-scanner.xml'
     'helmet-awareness.xml'
     'player-status-scanner.xml'

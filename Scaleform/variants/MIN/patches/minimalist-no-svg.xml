@@ -1,0 +1,566 @@
+<?xml version="1.0" encoding="utf-8"?>
+<actionScriptProfilePatch name="minimalist-no-svg" version="1">
+  <source path="venworks/cui/CUIRuntime.as">
+    <replace>
+      <find><![CDATA[   import venworks.cui.components.CUIIcon;
+   import venworks.cui.components.CUIImage;
+   import venworks.cui.components.CUIMask;
+   import venworks.cui.components.CUIMeter;
+   import venworks.cui.components.CUIPanel;
+   import venworks.cui.components.CUIProviderSymbol;]]></find>
+      <with><![CDATA[   import venworks.cui.components.CUIImage;
+   import venworks.cui.components.CUIMeter;]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[   import venworks.cui.components.CUIStatusEffectBar;
+   import venworks.cui.components.CUISvg;
+   import venworks.cui.components.CUISvgPath;
+   import venworks.cui.components.CUISymbol;]]></find>
+      <with><![CDATA[   import venworks.cui.components.CUIStatusEffectBar;
+   import venworks.cui.components.CUISymbol;]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[      private var layoutConfig:XML;
+      private var assetManager:CUIAssetManager;
+      private var parser:CUILayoutParser;]]></find>
+      <with><![CDATA[      private var layoutConfig:XML;
+      private var parser:CUILayoutParser;]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[            layoutConfig = config;
+            this.setDiagnosticContext("ASSET MANAGER INITIALIZATION",null,"CONSTRUCTOR");
+            assetManager = new CUIAssetManager(paletteResolver);
+            assetManager.addEventListener(Event.COMPLETE,this.onAssetsLoaded);
+            assetManager.addEventListener(Event.CANCEL,this.onAssetFailed);
+            this.setDiagnosticContext("ASSET COLLECTION",null,"COLLECTION AND REQUEST START");
+            assetManager.load(parser.components);]]></find>
+      <with><![CDATA[            layoutConfig = config;
+            this.onAssetsLoaded(null);]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[      private function onAssetsLoaded(param1:Event) : void
+      {
+         this.clearAssetListeners();
+         try]]></find>
+      <with><![CDATA[      private function onAssetsLoaded(param1:Event) : void
+      {
+         try]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[
+      private function onAssetFailed(param1:Event) : void
+      {
+         this.clearAssetListeners();
+         this.clearComponentLayer();
+         diagnostics.showError("CUI ASSET LOAD ERROR","PHASE: ASSET LOADING\n" + assetManager.errorMessage);
+      }
+]]></find>
+      <with><![CDATA[
+]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[
+      private function clearAssetListeners() : void
+      {
+         if(assetManager != null)
+         {
+            assetManager.removeEventListener(Event.COMPLETE,this.onAssetsLoaded);
+            assetManager.removeEventListener(Event.CANCEL,this.onAssetFailed);
+         }
+      }
+]]></find>
+      <with><![CDATA[
+]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[            if(String(node.name()) == "group")
+            {
+               this.renderChildren(node,component,node);
+            }
+            else if(String(node.name()) == "mask")
+            {
+               this.renderChildren(node,CUIMask(component).content,node);
+            }]]></find>
+      <with><![CDATA[            if(String(node.name()) == "group")
+            {
+               this.renderChildren(node,component,node);
+            }]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[         if(type == "panel")
+         {
+            return new CUIPanel(param1,paletteResolver);
+         }
+]]></find>
+      <with><![CDATA[]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[         if(type == "svg")
+         {
+            return new CUISvg(param1,assetManager.getSvg(String(param1.@id)),paletteResolver);
+         }
+         if(type == "path")
+         {
+            return new CUISvgPath(param1,paletteResolver);
+         }
+         if(type == "mask")
+         {
+            return new CUIMask(param1,paletteResolver);
+         }
+         if(type == "icon")
+         {
+            return new CUIIcon(param1,paletteResolver);
+         }
+         if(type == "providerSymbol")
+         {
+            return new CUIProviderSymbol(param1,paletteResolver);
+         }
+]]></find>
+      <with><![CDATA[]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[         this.clearListeners();
+         this.clearPaletteListeners();
+         this.clearAssetListeners();
+         this.clearComponentLayer();]]></find>
+      <with><![CDATA[         this.clearListeners();
+         this.clearPaletteListeners();
+         this.clearComponentLayer();]]></with>
+    </replace>
+  </source>
+  <source path="venworks/cui/CUICompositionResolver.as">
+    <replace>
+      <find><![CDATA[      private var templates:Object;
+      private var resolvedComponentCount:int;
+      private var compositeResolver:CUICompositeResolver;]]></find>
+      <with><![CDATA[      private var templates:Object;
+      private var resolvedComponentCount:int;]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[         templates = param1;
+         compositeResolver = new CUICompositeResolver(param2);]]></find>
+      <with><![CDATA[         templates = param1;]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[         if(compositeResolver.isComposite(type))
+         {
+            this.resolveNode(compositeResolver.resolve(param1),param2);
+            return;
+         }
+         if(type == "group" || type == "mask")]]></find>
+      <with><![CDATA[         if(type == "group")]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[         if(type == "text" || type == "panel" || type == "shape" || type == "divider" || type == "contactRadar" ||
+            type == "compassTape" || type == "scannerOverlay" || type == "threatAlert" ||
+            type == "statusEffectBar" || type == "meter" ||
+            type == "svg" || type == "path" || type == "icon" || type == "providerSymbol" || type == "symbol")]]></find>
+      <with><![CDATA[         if(type == "text" || type == "shape" || type == "divider" || type == "contactRadar" ||
+            type == "compassTape" || type == "scannerOverlay" || type == "threatAlert" ||
+            type == "statusEffectBar" || type == "meter" || type == "symbol")]]></with>
+    </replace>
+  </source>
+  <source path="venworks/cui/CUILayoutParser.as">
+    <replace>
+      <find><![CDATA[         else if(type == "panel")
+         {
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","fillColor","fillOpacity","strokeColor","strokeOpacity","strokeWidth"]);
+            this.requireColor(param1,"fillColor");
+            this.requireColor(param1,"strokeColor");
+            this.requireUnitInterval(param1,"fillOpacity");
+            this.requireUnitInterval(param1,"strokeOpacity");
+            this.requireFiniteNonNegative(param1,"strokeWidth");
+         }
+]]></find>
+      <with><![CDATA[]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[         else if(type == "svg")
+         {
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","src","fit","alignX","alignY"]);
+            this.requirePositiveBounds(param1);
+            this.requireAssetPath(param1);
+            this.requireAssetFit(param1);
+         }
+         else if(type == "path")
+         {
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","data","viewBoxX","viewBoxY","viewBoxWidth","viewBoxHeight","fillColor","fillOpacity","strokeColor","strokeOpacity","strokeWidth"]);
+            this.requirePositiveBounds(param1);
+            this.requirePathGeometry(param1);
+            this.requireColor(param1,"fillColor");
+            this.requireUnitInterval(param1,"fillOpacity");
+            this.requireColor(param1,"strokeColor");
+            this.requireUnitInterval(param1,"strokeOpacity");
+            this.requireFiniteNonNegative(param1,"strokeWidth");
+         }
+         else if(type == "mask")
+         {
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","shape","data","viewBoxX","viewBoxY","viewBoxWidth","viewBoxHeight"]);
+            this.requirePositiveBounds(param1);
+            if(String(param1.@shape) != "rectangle" && String(param1.@shape) != "ellipse" && String(param1.@shape) != "path")
+            {
+               throw new Error("INVALID|Unsupported mask shape: " + String(param1.@shape));
+            }
+            if(String(param1.@shape) == "path")
+            {
+               this.requirePathGeometry(param1);
+            }
+            else if(param1.@data.length() != 0 || param1.@viewBoxX.length() != 0 || param1.@viewBoxY.length() != 0 ||
+                    param1.@viewBoxWidth.length() != 0 || param1.@viewBoxHeight.length() != 0)
+            {
+               throw new Error("INVALID|Path geometry applies only to path masks: " + String(param1.@id));
+            }
+            this.validateChildren(param1);
+         }
+         else if(type == "icon")
+         {
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","name","color","fit","alignX","alignY"]);
+            this.requirePositiveBounds(param1);
+            this.requireSymbolKey(param1,"name");
+            if(!CUIIconLibrary.isAllowlisted(this.resolveAttributeValue(param1,"name")))
+            {
+               throw new Error("INVALID|Built-in icon is not allowlisted: " + this.resolveAttributeValue(param1,"name"));
+            }
+            if(param1.@color.length() == 1)
+            {
+               this.requireColor(param1,"color");
+            }
+            this.requireAssetFit(param1);
+         }
+         else if(type == "providerSymbol")
+         {
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","source","color","fit","alignX","alignY"]);
+            this.requirePositiveBounds(param1);
+            CUIValueBinding.validateProviderSymbol(param1);
+            if(param1.@color.length() == 1)
+            {
+               this.requireColor(param1,"color");
+            }
+            this.requireAssetFit(param1);
+         }
+]]></find>
+      <with><![CDATA[]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[      private function requireAssetPath(param1:XML) : void
+      {
+         var value:String = this.resolveAttributeValue(param1,"src");
+         var lowerValue:String = value.toLowerCase();
+         var rootDescription:String = "Interface/VenworksCUI/Assets";
+         var segments:Array = null;
+         var segment:String = null;
+         if(param1.@src.length() != 1 || value.length < 5 || value.length > 128 ||
+            !/^[A-Za-z0-9][A-Za-z0-9._\/-]*$/.test(value) || value.indexOf("//") >= 0 ||
+            value.indexOf(":") >= 0 || value.indexOf("\\") >= 0 || value.charAt(0) == "/")
+         {
+            throw new Error("INVALID|Asset path must be a relative path below " + rootDescription + ".");
+         }
+         segments = value.split("/");
+         for each(segment in segments)
+         {
+            if(segment == "" || segment == "." || segment == "..")
+            {
+               throw new Error("INVALID|Asset path traversal is prohibited: " + value);
+            }
+         }
+         if(lowerValue.substr(-4) != ".svg")
+         {
+            throw new Error("INVALID|SVG assets must use .svg: " + value);
+         }
+      }
+
+]]></find>
+      <with><![CDATA[]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[      private function requirePathGeometry(param1:XML) : void
+      {
+         this.requireNonEmpty(param1,"data");
+         if(String(param1.@data).length > 8192)
+         {
+            throw new Error("INVALID|SVG path data exceeds the 8192-character limit.");
+         }
+         this.requireFinite(param1,"viewBoxX");
+         this.requireFinite(param1,"viewBoxY");
+         this.requirePositive(param1,"viewBoxWidth");
+         this.requirePositive(param1,"viewBoxHeight");
+         CUISvgPathParser.validate(String(param1.@data));
+      }
+
+]]></find>
+      <with><![CDATA[]]></with>
+    </replace>
+  </source>
+  <source path="venworks/cui/CUIPaletteResolver.as">
+    <replace>
+      <find><![CDATA[   import venworks.cui.components.CUISymbol;
+
+]]></find>
+      <with><![CDATA[]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[      private static const REQUIRED_STROKES:Array = ["panel"];
+      private static const REQUIRED_ASSETS:Array = ["faction.logo"];
+]]></find>
+      <with><![CDATA[      private static const REQUIRED_STROKES:Array = ["panel"];
+]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[      private var strokes:Object;
+      private var assets:Object;]]></find>
+      <with><![CDATA[      private var strokes:Object;]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[         var expectedSections:Array = ["colors","typography","opacities","strokes","assets"];]]></find>
+      <with><![CDATA[         var expectedSections:Array = ["colors","typography","opacities","strokes"];]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[            throw new Error("INVALID|Palette sections must be colors, typography, opacities, strokes, and assets.");]]></find>
+      <with><![CDATA[            throw new Error("INVALID|Palette sections must be colors, typography, opacities, and strokes.");]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[               throw new Error("INVALID|Palette sections must appear in colors, typography, opacities, strokes, assets order.");]]></find>
+      <with><![CDATA[               throw new Error("INVALID|Palette sections must appear in colors, typography, opacities, strokes order.");]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[         strokes = this.parseStrokes(param1.strokes[0]);
+         assets = this.parseAssets(param1.assets[0]);
+         this.requireRoles(colors,REQUIRED_COLORS,"color");]]></find>
+      <with><![CDATA[         strokes = this.parseStrokes(param1.strokes[0]);
+         this.requireRoles(colors,REQUIRED_COLORS,"color");]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[         this.requireRoles(strokes,REQUIRED_STROKES,"stroke");
+         this.requireRoles(assets,REQUIRED_ASSETS,"asset");]]></find>
+      <with><![CDATA[         this.requireRoles(strokes,REQUIRED_STROKES,"stroke");]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[      private function parseAssets(param1:XML) : Object
+      {
+         var result:Object = {};
+         var node:XML = null;
+         var role:String = null;
+         var kind:String = null;
+         var value:String = null;
+         this.requireEntryCount(param1,1,32,"assets");
+         for each(node in param1.children())
+         {
+            this.requireName(node,"asset");
+            this.requireAttributes(node,["role","kind","value"]);
+            this.requireEmpty(node,"asset");
+            role = this.requireRole(node);
+            this.requireUnique(result,role,"asset");
+            kind = String(node.@kind);
+            value = String(node.@value);
+            if(kind == "svg")
+            {
+               if(!/^[A-Za-z0-9][A-Za-z0-9._-]{0,59}\.svg$/.test(value) || value.indexOf("..") >= 0)
+               {
+                  throw new Error("SECURITY|Palette SVG assets must name one packaged file: " + role);
+               }
+            }
+            else if(kind == "icon")
+            {
+               if(!CUIIconLibrary.isAllowlisted(value))
+               {
+                  throw new Error("INVALID|Palette icon asset is not allowlisted: " + value);
+               }
+            }
+            else if(kind == "symbol")
+            {
+               if(!CUISymbol.isAllowlisted(value))
+               {
+                  throw new Error("INVALID|Palette embedded symbol is not allowlisted: " + value);
+               }
+            }
+            else
+            {
+               throw new Error("INVALID|Palette asset kind must be svg, icon, or symbol: " + role);
+            }
+            result[role] = { kind:kind,value:value };
+         }
+         return result;
+      }
+
+]]></find>
+      <with><![CDATA[]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[         if(param1.indexOf("@palette.assets.") == 0)
+         {
+            return this.resolveAsset(param1.substring(16),param2,param3);
+         }
+]]></find>
+      <with><![CDATA[]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[      private function resolveAsset(param1:String, param2:XML, param3:String) : String
+      {
+         var entry:Object = null;
+         var elementName:String = String(param2.name());
+         if(!assets.hasOwnProperty(param1))
+         {
+            throw new Error("INVALID|Unknown palette asset role: " + param1);
+         }
+         entry = assets[param1];
+         if(entry.kind == "svg" && (elementName != "svg" || param3 != "src") ||
+            entry.kind == "icon" && (elementName != "icon" || param3 != "name") ||
+            entry.kind == "symbol" && (elementName != "symbol" || param3 != "name"))
+         {
+            throw new Error("INVALID|Palette " + entry.kind + " asset is incompatible with " + elementName + ".@" + param3 + ".");
+         }
+         return String(entry.value);
+      }
+
+]]></find>
+      <with><![CDATA[]]></with>
+    </replace>
+  </source>
+  <source path="venworks/cui/CUIValueBinding.as">
+    <replace>
+      <find><![CDATA[   import venworks.cui.components.CUIProviderSymbol;
+]]></find>
+      <with><![CDATA[]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[      public static function validateProviderSymbol(param1:XML) : void
+      {
+         var normalizedSource:String = CUIPlayerHudDataContext.normalizeSource(String(param1.@source));
+         if(normalizedSource != "weapon.icon")
+         {
+            throw new Error("INVALID|Provider symbol source is not allowlisted: " + String(param1.@source));
+         }
+         if(validateSource(String(param1.@source)) != "string")
+         {
+            throw new Error("INVALID|Provider symbol source must be a string: " + String(param1.@source));
+         }
+      }
+
+]]></find>
+      <with><![CDATA[]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[         else if(target is CUIProviderSymbol)
+         {
+            CUIProviderSymbol(target).setSymbol(Boolean(resolved.known) ? String(resolved.value) : "");
+         }
+]]></find>
+      <with><![CDATA[]]></with>
+    </replace>
+  </source>
+  <source path="venworks/cui/CUIConditionContext.as">
+    <replace>
+      <find><![CDATA[            this.subscribeProvider("WeaponData",this.onWeaponData);
+            this.subscribeProvider("HUDStarbornPowersData",this.onStarbornPowersData);
+            this.subscribeProvider("FavoritesData",this.onFavoritesData);
+]]></find>
+      <with><![CDATA[]]></with>
+    </replace>
+  </source>
+  <source path="venworks/cui/CUIPlayerHudDataContext.as">
+    <replace>
+      <find><![CDATA[            this.subscribeProvider("WeaponData",this.onWeaponData);
+]]></find>
+      <with><![CDATA[]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[            this.subscribeProvider("HUDStarbornPowersData",this.onStarbornPowersData);
+            this.subscribeProvider("FavoritesData",this.onFavoritesData);
+            this.subscribeProvider("ControlMapData",this.onControlMapData);
+]]></find>
+      <with><![CDATA[]]></with>
+    </replace>
+  </source>
+  <source path="venworks/cui/components/CUIThreatAlert.as">
+    <replace>
+      <find><![CDATA[         background = new Shape();
+         background.graphics.beginFill(backgroundColor,0.76);
+         background.graphics.drawRect(0,0,componentWidth,componentHeight);
+         background.graphics.endFill();
+         addChild(background);]]></find>
+      <with><![CDATA[         background = new Shape();
+         background.graphics.lineStyle(1,clearColor,0.58);
+         background.graphics.moveTo(0,8);
+         background.graphics.lineTo(0,0);
+         background.graphics.lineTo(32,0);
+         background.graphics.moveTo(componentWidth - 32,0);
+         background.graphics.lineTo(componentWidth,0);
+         background.graphics.lineTo(componentWidth,8);
+         background.graphics.moveTo(0,componentHeight - 8);
+         background.graphics.lineTo(0,componentHeight);
+         background.graphics.lineTo(32,componentHeight);
+         background.graphics.moveTo(componentWidth - 32,componentHeight);
+         background.graphics.lineTo(componentWidth,componentHeight);
+         background.graphics.lineTo(componentWidth,componentHeight - 8);
+         addChild(background);]]></with>
+    </replace>
+  </source>
+  <source path="venworks/cui/components/CUIStatusEffectBar.as">
+    <replace>
+      <find><![CDATA[         param1.graphics.clear();
+         param1.graphics.lineStyle(1,param4,0.54);
+         param1.graphics.beginFill(backgroundColor,0.68);
+         param1.graphics.drawRect(1,1,Math.max(0,param2 - 2),Math.max(0,param3 - 2));
+         param1.graphics.endFill();]]></find>
+      <with><![CDATA[         var corner:Number = Math.min(6,Math.max(2,param2 / 5));
+         var right:Number = Math.max(1,param2 - 1);
+         var bottom:Number = Math.max(1,param3 - 1);
+         param1.graphics.clear();
+         param1.graphics.lineStyle(1,param4,0.54);
+         param1.graphics.moveTo(1,corner);
+         param1.graphics.lineTo(1,1);
+         param1.graphics.lineTo(corner,1);
+         param1.graphics.moveTo(right - corner,1);
+         param1.graphics.lineTo(right,1);
+         param1.graphics.lineTo(right,corner);
+         param1.graphics.moveTo(1,bottom - corner);
+         param1.graphics.lineTo(1,bottom);
+         param1.graphics.lineTo(corner,bottom);
+         param1.graphics.moveTo(right - corner,bottom);
+         param1.graphics.lineTo(right,bottom);
+         param1.graphics.lineTo(right,bottom - corner);]]></with>
+    </replace>
+  </source>
+  <source path="venworks/cui/components/CUIScannerOverlay.as">
+    <replace>
+      <find><![CDATA[         var panelShape:Shape = new Shape();
+         panelShape.graphics.lineStyle(1,scanningColor,0.86);
+         panelShape.graphics.beginFill(backgroundColor,0.76);
+         panelShape.graphics.drawRect(componentWidth / 2 - 112,0,224,26);
+         panelShape.graphics.endFill();
+         panelShape.graphics.lineStyle(1,contactColor,0.64);
+         panelShape.graphics.beginFill(backgroundColor,0.72);
+         panelShape.graphics.drawRect(componentWidth - 270,156,260,146);
+         panelShape.graphics.endFill();
+         addChild(panelShape);]]></find>
+      <with><![CDATA[         var panelShape:Shape = new Shape();
+         this.drawCorners(panelShape,componentWidth / 2 - 112,0,224,26,scanningColor,0.86,18,7);
+         this.drawCorners(panelShape,componentWidth - 270,156,260,146,contactColor,0.64,22,12);
+         addChild(panelShape);]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[      private function createContactFields() : void]]></find>
+      <with><![CDATA[      private function drawCorners(param1:Shape, param2:Number, param3:Number, param4:Number, param5:Number,
+         param6:uint, param7:Number, param8:Number, param9:Number) : void
+      {
+         var right:Number = param2 + param4;
+         var bottom:Number = param3 + param5;
+         param1.graphics.lineStyle(1,param6,param7);
+         param1.graphics.moveTo(param2,param3 + param9);
+         param1.graphics.lineTo(param2,param3);
+         param1.graphics.lineTo(param2 + param8,param3);
+         param1.graphics.moveTo(right - param8,param3);
+         param1.graphics.lineTo(right,param3);
+         param1.graphics.lineTo(right,param3 + param9);
+         param1.graphics.moveTo(param2,bottom - param9);
+         param1.graphics.lineTo(param2,bottom);
+         param1.graphics.lineTo(param2 + param8,bottom);
+         param1.graphics.moveTo(right - param8,bottom);
+         param1.graphics.lineTo(right,bottom);
+         param1.graphics.lineTo(right,bottom - param9);
+      }
+
+      private function createContactFields() : void]]></with>
+    </replace>
+  </source>
+</actionScriptProfilePatch>
