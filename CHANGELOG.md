@@ -4,10 +4,7 @@
 
 - Minimalist: Removed all SVG support from the movies and actionscript.
 - Minimalist: Removed helmet cutout paths and complete equipment rail.
-- Minimalist: Replaced HUD with fitted holographic readouts using
-  dark, pale-blue translucent native rectangle and ellipse backings behind the
-  active content, while preserving its corner brackets, dividers, meters,
-  radar, compass, markers, and sunrise/sunset countdown.
+- Minimalist: Replaced HUD with fitted holographic readouts using dark, pale-blue translucent native rectangle and ellipse backings behind the active content, while preserving its corner brackets, dividers, meters, radar, compass, markers, and sunrise/sunset countdown.
 
 ## Version 2.0.3 (August 24, 2026)
 
