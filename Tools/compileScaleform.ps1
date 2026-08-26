@@ -142,8 +142,9 @@ function Get-XmlSchemaErrors {
   $document.Schemas = $schemas
   $errors = [System.Collections.Generic.List[string]]::new()
   $handler = [System.Xml.Schema.ValidationEventHandler]{
-    param($sender, $eventArgs)
-    $errors.Add($eventArgs.Message)
+    param($validationSender, $validationEventArgs)
+    $null = $validationSender
+    $errors.Add($validationEventArgs.Message)
   }
   $document.Validate($handler)
   return @($errors)

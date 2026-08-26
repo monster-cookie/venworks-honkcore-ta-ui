@@ -95,9 +95,9 @@ foreach ($variant in $releaseVariants) {
   if (!(Test-Path -LiteralPath $profilePath -PathType Leaf)) {
     throw "Variant '$($variant.VariantKey)' is missing its build profile: $profilePath"
   }
-  $profile = Import-PowerShellDataFile -LiteralPath $profilePath
+  $variantBuildProfile = Import-PowerShellDataFile -LiteralPath $profilePath
   foreach ($forbiddenProperty in $forbiddenProfileProperties) {
-    if ($profile.ContainsKey($forbiddenProperty)) {
+    if ($variantBuildProfile.ContainsKey($forbiddenProperty)) {
       throw "Variant '$($variant.VariantKey)' build profile duplicates shared property '$forbiddenProperty'."
     }
   }

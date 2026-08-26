@@ -177,13 +177,13 @@ function Global:Get-ModuleVariants {
   }
 
   $selectedVariants = foreach ($normalizedKey in $normalizedKeys) {
-    $matches = @($Global:ReleaseVariants | Where-Object {
+    $matchingVariants = @($Global:ReleaseVariants | Where-Object {
       [string]$_.VariantKey -eq $normalizedKey
     })
-    if ($matches.Count -ne 1) {
+    if ($matchingVariants.Count -ne 1) {
       throw "Unknown module variant key '$normalizedKey'."
     }
-    $matches[0]
+    $matchingVariants[0]
   }
 
   return @($selectedVariants)

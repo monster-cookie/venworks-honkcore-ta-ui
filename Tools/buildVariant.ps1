@@ -249,11 +249,11 @@ foreach ($variant in $variants) {
   $profilePath = Resolve-RequiredFile `
     -Path (Join-Path $repositoryRoot "Scaleform\variants\$($variant.VariantKey)\build.psd1") `
     -Description "$($variant.VariantName) build profile"
-  $profile = Import-PowerShellDataFile -LiteralPath $profilePath
+  $variantBuildProfile = Import-PowerShellDataFile -LiteralPath $profilePath
   $movieProfile = Get-VariantScaleformMovieProfile `
     -RepositoryRoot $repositoryRoot `
-    -VariantBuildProfile $profile
-  $variantBuildProfiles[[string]$variant.VariantKey] = $profile
+    -VariantBuildProfile $variantBuildProfile
+  $variantBuildProfiles[[string]$variant.VariantKey] = $variantBuildProfile
   if ($movieProfiles.ContainsKey($movieProfile.Name)) {
     $existingManifestPaths = @($movieProfiles[$movieProfile.Name].ManifestPaths)
     if (($existingManifestPaths -join "|") -cne (@($movieProfile.ManifestPaths) -join "|")) {
@@ -303,19 +303,19 @@ try {
   }
 
   foreach ($variant in $variants) {
-    $profile = $variantBuildProfiles[[string]$variant.VariantKey]
-    $movieProfileDirectory = $movieProfileDirectories[[string]$profile.MovieProfile]
+    $variantBuildProfile = $variantBuildProfiles[[string]$variant.VariantKey]
+    $movieProfileDirectory = $movieProfileDirectories[[string]$variantBuildProfile.MovieProfile]
 
-    Assert-UniqueSafeFileNames -FileNames @($profile.ComponentFileNames) -Context "$($variant.VariantName) component profile"
-    Assert-UniqueSafeFileNames -FileNames @($profile.AssetFileNames) -Context "$($variant.VariantName) asset profile"
-    Assert-UniqueSafeFileNames -FileNames @($profile.PaletteFileNames) -Context "$($variant.VariantName) palette profile"
+    Assert-UniqueSafeFileNames -FileNames @($variantBuildProfile.ComponentFileNames) -Context "$($variant.VariantName) component profile"
+    Assert-UniqueSafeFileNames -FileNames @($variantBuildProfile.AssetFileNames) -Context "$($variant.VariantName) asset profile"
+    Assert-UniqueSafeFileNames -FileNames @($variantBuildProfile.PaletteFileNames) -Context "$($variant.VariantName) palette profile"
     Assert-UniqueSafeFileNames -FileNames @([string]$variant.PaletteFileName) -Context "$($variant.VariantName) selected palette"
 
     $layoutSourcePath = Resolve-RequiredFile `
-      -Path (Resolve-RepositoryPath -RelativePath ([string]$profile.LayoutSource) -Description "$($variant.VariantName) layout source") `
+      -Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.LayoutSource) -Description "$($variant.VariantName) layout source") `
       -Description "$($variant.VariantName) layout source"
     $componentSourceDirectory = Resolve-RequiredDirectory `
-      -Path (Resolve-RepositoryPath -RelativePath ([string]$profile.ComponentSourceDirectory) -Description "$($variant.VariantName) component source") `
+      -Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.ComponentSourceDirectory) -Description "$($variant.VariantName) component source") `
       -Description "$($variant.VariantName) component source directory"
 
     $stagingFolderPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot $variant.StagingFolderPath))
@@ -356,12 +356,12 @@ try {
     $componentOutputDirectory = Join-Path $cuiOutputDirectory "components"
     New-Item -ItemType Directory -Force -Path $componentOutputDirectory | Out-Null
 
-    $paletteMode = [string]$profile.PaletteMode
+    $paletteMode = [string]$variantBuildProfile.PaletteMode
     $selectedPaletteFileName = [string]$variant.PaletteFileName
     $layoutText = [System.IO.File]::ReadAllText($layoutSourcePath)
     $literalColors = $null
     if ($paletteMode -ceq "External") {
-      if (@($profile.PaletteFileNames | Where-Object { [string]$_ -ceq $selectedPaletteFileName }).Count -ne 1) {
+      if (@($variantBuildProfile.PaletteFileNames | Where-Object { [string]$_ -ceq $selectedPaletteFileName }).Count -ne 1) {
         throw "$($variant.VariantName) selected palette '$selectedPaletteFileName' is not present exactly once in its payload profile."
       }
       $paletteMatches = @([regex]::Matches($layoutText, '\bpalette="[^"]+"'))
@@ -380,7 +380,7 @@ try {
         throw "$($variant.VariantName) literal-palette layout must already contain literal values and no palette selector."
       }
       $literalPalettePath = Resolve-RequiredFile `
-        -Path (Join-Path (Resolve-RepositoryPath -RelativePath ([string]$profile.PaletteSourceDirectory) -Description "$($variant.VariantName) palette source") $selectedPaletteFileName) `
+        -Path (Join-Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.PaletteSourceDirectory) -Description "$($variant.VariantName) palette source") $selectedPaletteFileName) `
         -Description "$($variant.VariantName) literal palette"
       $literalColors = Get-LiteralPaletteColors -PalettePath $literalPalettePath
     }
@@ -389,7 +389,7 @@ try {
     }
     Write-Utf8WithoutBom -Path (Join-Path $cuiOutputDirectory "layout.xml") -Text $layoutText
 
-    foreach ($componentFileName in @($profile.ComponentFileNames)) {
+    foreach ($componentFileName in @($variantBuildProfile.ComponentFileNames)) {
       $componentSourcePath = Resolve-RequiredFile `
         -Path (Join-Path $componentSourceDirectory ([string]$componentFileName)) `
         -Description "$($variant.VariantName) component '$componentFileName'"
@@ -407,13 +407,13 @@ try {
       }
     }
 
-    if (@($profile.AssetFileNames).Count -ne 0) {
+    if (@($variantBuildProfile.AssetFileNames).Count -ne 0) {
       $assetSourceDirectory = Resolve-RequiredDirectory `
-        -Path (Resolve-RepositoryPath -RelativePath ([string]$profile.AssetSourceDirectory) -Description "$($variant.VariantName) asset source") `
+        -Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.AssetSourceDirectory) -Description "$($variant.VariantName) asset source") `
         -Description "$($variant.VariantName) asset source directory"
       $assetOutputDirectory = Join-Path $cuiOutputDirectory "Assets"
       New-Item -ItemType Directory -Force -Path $assetOutputDirectory | Out-Null
-      foreach ($assetFileName in @($profile.AssetFileNames)) {
+      foreach ($assetFileName in @($variantBuildProfile.AssetFileNames)) {
         Copy-Item `
           -LiteralPath (Resolve-RequiredFile -Path (Join-Path $assetSourceDirectory ([string]$assetFileName)) -Description "$($variant.VariantName) asset '$assetFileName'") `
           -Destination (Join-Path $assetOutputDirectory ([string]$assetFileName)) `
@@ -421,13 +421,13 @@ try {
       }
     }
 
-    if (@($profile.PaletteFileNames).Count -ne 0) {
+    if (@($variantBuildProfile.PaletteFileNames).Count -ne 0) {
       $paletteSourceDirectory = Resolve-RequiredDirectory `
-        -Path (Resolve-RepositoryPath -RelativePath ([string]$profile.PaletteSourceDirectory) -Description "$($variant.VariantName) palette source") `
+        -Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.PaletteSourceDirectory) -Description "$($variant.VariantName) palette source") `
         -Description "$($variant.VariantName) palette source directory"
       $paletteOutputDirectory = Join-Path $cuiOutputDirectory "palettes"
       New-Item -ItemType Directory -Force -Path $paletteOutputDirectory | Out-Null
-      foreach ($paletteFileName in @($profile.PaletteFileNames)) {
+      foreach ($paletteFileName in @($variantBuildProfile.PaletteFileNames)) {
         Copy-Item `
           -LiteralPath (Resolve-RequiredFile -Path (Join-Path $paletteSourceDirectory ([string]$paletteFileName)) -Description "$($variant.VariantName) palette '$paletteFileName'") `
           -Destination (Join-Path $paletteOutputDirectory ([string]$paletteFileName)) `
@@ -439,7 +439,7 @@ try {
     $includedComponentFileNames = @($stagedLayout.SelectNodes('/venworksCUI/includes/include') | ForEach-Object {
       [string]$_.src
     } | Sort-Object)
-    $profileComponentFileNames = @($profile.ComponentFileNames | ForEach-Object { [string]$_ } | Sort-Object)
+    $profileComponentFileNames = @($variantBuildProfile.ComponentFileNames | ForEach-Object { [string]$_ } | Sort-Object)
     if ($includedComponentFileNames.Count -ne $profileComponentFileNames.Count) {
       throw "$($variant.VariantName) layout includes $($includedComponentFileNames.Count) component files; its profile declares $($profileComponentFileNames.Count)."
     }
@@ -462,9 +462,9 @@ try {
       }
     }
 
-    if (![string]::IsNullOrWhiteSpace([string]$profile.PluginSourcePath)) {
+    if (![string]::IsNullOrWhiteSpace([string]$variantBuildProfile.PluginSourcePath)) {
       $pluginSourcePath = Resolve-RequiredFile `
-        -Path (Resolve-RepositoryPath -RelativePath ([string]$profile.PluginSourcePath) -Description "$($variant.VariantName) plugin source") `
+        -Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.PluginSourcePath) -Description "$($variant.VariantName) plugin source") `
         -Description "$($variant.VariantName) plugin source"
       $pluginOutputPath = Join-Path $resolvedStagingPath "$($variant.PackageBaseName).esm"
       Copy-Item -LiteralPath $pluginSourcePath -Destination $pluginOutputPath -Force

@@ -90,42 +90,42 @@ function Get-ScaleformSourceProfile {
     }
   }
 
-  $profile = Import-PowerShellDataFile -LiteralPath $definition.SourceProfilePath
-  if ([string]::IsNullOrWhiteSpace([string]$profile.Name)) {
+  $scaleformProfile = Import-PowerShellDataFile -LiteralPath $definition.SourceProfilePath
+  if ([string]::IsNullOrWhiteSpace([string]$scaleformProfile.Name)) {
     throw "Scaleform ActionScript profile is missing Name: $($definition.SourceProfilePath)"
   }
 
   $profileDirectory = Split-Path -Parent $definition.SourceProfilePath
-  $excludedPaths = @($profile.ExcludedActionScriptPaths | ForEach-Object {
+  $excludedPaths = @($scaleformProfile.ExcludedActionScriptPaths | ForEach-Object {
     $path = [string]$_
     if ([string]::IsNullOrWhiteSpace($path) -or
         [System.IO.Path]::IsPathRooted($path) -or
         $path -match '(^|[\\/])\.\.([\\/]|$)' -or
         $path -notmatch '\.as$') {
-      throw "Scaleform profile '$($profile.Name)' contains an unsafe ActionScript exclusion: $path"
+      throw "Scaleform profile '$($scaleformProfile.Name)' contains an unsafe ActionScript exclusion: $path"
     }
     $path.Replace([System.IO.Path]::AltDirectorySeparatorChar, [System.IO.Path]::DirectorySeparatorChar)
   })
   if (@($excludedPaths | Select-Object -Unique).Count -ne $excludedPaths.Count) {
-    throw "Scaleform profile '$($profile.Name)' contains duplicate ActionScript exclusions."
+    throw "Scaleform profile '$($scaleformProfile.Name)' contains duplicate ActionScript exclusions."
   }
 
   $patchPath = $null
-  if (![string]::IsNullOrWhiteSpace([string]$profile.ActionScriptPatchPath)) {
-    $patchPath = [System.IO.Path]::GetFullPath((Join-Path $profileDirectory ([string]$profile.ActionScriptPatchPath)))
+  if (![string]::IsNullOrWhiteSpace([string]$scaleformProfile.ActionScriptPatchPath)) {
+    $patchPath = [System.IO.Path]::GetFullPath((Join-Path $profileDirectory ([string]$scaleformProfile.ActionScriptPatchPath)))
     if (!(Test-Path -LiteralPath $patchPath -PathType Leaf)) {
-      throw "Scaleform profile '$($profile.Name)' patch does not exist: $patchPath"
+      throw "Scaleform profile '$($scaleformProfile.Name)' patch does not exist: $patchPath"
     }
   }
 
   return [pscustomobject]@{
-    Name = [string]$profile.Name
+    Name = [string]$scaleformProfile.Name
     ExcludedActionScriptPaths = $excludedPaths
     ActionScriptPatchPath = $patchPath
-    ForbiddenBytecodeTokens = @($profile.ForbiddenBytecodeTokens | ForEach-Object { [string]$_ })
-    ValueProviders = @($profile.ValueProviders | ForEach-Object { [string]$_ })
-    ConditionProviders = @($profile.ConditionProviders | ForEach-Object { [string]$_ })
-    CrossContextProviderCount = [int]$profile.CrossContextProviderCount
+    ForbiddenBytecodeTokens = @($scaleformProfile.ForbiddenBytecodeTokens | ForEach-Object { [string]$_ })
+    ValueProviders = @($scaleformProfile.ValueProviders | ForEach-Object { [string]$_ })
+    ConditionProviders = @($scaleformProfile.ConditionProviders | ForEach-Object { [string]$_ })
+    CrossContextProviderCount = [int]$scaleformProfile.CrossContextProviderCount
   }
 }
 
