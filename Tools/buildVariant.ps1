@@ -231,6 +231,9 @@ if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction Si
     . "$PSScriptRoot\sharedConfig.ps1"
   }
 }
+. (Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "sharedScaleformProfiles.ps1") `
+  -Description "Scaleform movie-profile helper")
 
 $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
 if ($variants.Count -eq 0) {
@@ -240,47 +243,68 @@ if ($variants.Count -eq 0) {
 $resolvedWorkDirectory = [System.IO.Path]::GetFullPath($WorkDirectory)
 New-Item -ItemType Directory -Force -Path $resolvedWorkDirectory | Out-Null
 $buildDirectory = Join-Path $resolvedWorkDirectory ([guid]::NewGuid().ToString("N"))
-$sharedInterfaceDirectory = Join-Path $buildDirectory "Interface"
-New-Item -ItemType Directory -Force -Path $sharedInterfaceDirectory | Out-Null
+$variantBuildProfiles = @{}
+$movieProfiles = @{}
+foreach ($variant in $variants) {
+  $profilePath = Resolve-RequiredFile `
+    -Path (Join-Path $repositoryRoot "Scaleform\variants\$($variant.VariantKey)\build.psd1") `
+    -Description "$($variant.VariantName) build profile"
+  $profile = Import-PowerShellDataFile -LiteralPath $profilePath
+  $movieProfile = Get-VariantScaleformMovieProfile `
+    -RepositoryRoot $repositoryRoot `
+    -VariantBuildProfile $profile
+  $variantBuildProfiles[[string]$variant.VariantKey] = $profile
+  if ($movieProfiles.ContainsKey($movieProfile.Name)) {
+    $existingManifestPaths = @($movieProfiles[$movieProfile.Name].ManifestPaths)
+    if (($existingManifestPaths -join "|") -cne (@($movieProfile.ManifestPaths) -join "|")) {
+      throw "Scaleform movie profile '$($movieProfile.Name)' resolves to conflicting build manifests."
+    }
+  }
+  else {
+    $movieProfiles[$movieProfile.Name] = $movieProfile
+  }
+}
 
 try {
-  $compileArguments = @{
-    JavaPath = $JavaPath
-    JpexsJarPath = $JpexsJarPath
-    VanillaInterfacePath = $VanillaInterfacePath
-    OutputDirectory = $sharedInterfaceDirectory
-    WorkDirectory = $resolvedWorkDirectory
-  }
-  if ($KeepWork) {
-    $compileArguments.KeepWork = $true
-  }
-  if ($UpdateExpectedHashes) {
-    $compileArguments.UpdateExpectedHashes = $true
-  }
-
-  Write-Host -ForegroundColor Green "Compiling the shared validated Scaleform movies"
-  & (Join-Path $PSScriptRoot "compileScaleform.ps1") @compileArguments
-
-  $sharedMovieNames = @(
+  $movieProfileDirectories = @{}
+  $movieNames = @(
     "hudmenu.gfx",
     "hudmenu_lrg.gfx",
     "hudmessagesmenu.gfx",
     "hudmessagesmenu_lrg.gfx"
   )
-  foreach ($movieName in $sharedMovieNames) {
-    [void](Resolve-RequiredFile `
-      -Path (Join-Path $sharedInterfaceDirectory $movieName) `
-      -Description "Shared compiled movie '$movieName'")
+  foreach ($movieProfileName in @($movieProfiles.Keys | Sort-Object)) {
+    $movieProfile = $movieProfiles[$movieProfileName]
+    $movieProfileDirectory = Join-Path (Join-Path $buildDirectory "movies") $movieProfileName
+    New-Item -ItemType Directory -Force -Path $movieProfileDirectory | Out-Null
+    $movieProfileDirectories[$movieProfileName] = $movieProfileDirectory
+    $compileArguments = @{
+      JavaPath = $JavaPath
+      JpexsJarPath = $JpexsJarPath
+      VanillaInterfacePath = $VanillaInterfacePath
+      OutputDirectory = $movieProfileDirectory
+      WorkDirectory = $resolvedWorkDirectory
+      ManifestPath = @($movieProfile.ManifestPaths)
+    }
+    if ($KeepWork) {
+      $compileArguments.KeepWork = $true
+    }
+    if ($UpdateExpectedHashes) {
+      $compileArguments.UpdateExpectedHashes = $true
+    }
+
+    Write-Host -ForegroundColor Green "Compiling the '$movieProfileName' validated Scaleform movies"
+    & (Join-Path $PSScriptRoot "compileScaleform.ps1") @compileArguments
+    foreach ($movieName in $movieNames) {
+      [void](Resolve-RequiredFile `
+        -Path (Join-Path $movieProfileDirectory $movieName) `
+        -Description "$movieProfileName compiled movie '$movieName'")
+    }
   }
 
   foreach ($variant in $variants) {
-    $profilePath = Resolve-RequiredFile `
-      -Path (Join-Path $repositoryRoot "Scaleform\variants\$($variant.VariantKey)\build.psd1") `
-      -Description "$($variant.VariantName) build profile"
-    $profile = Import-PowerShellDataFile -LiteralPath $profilePath
-    if ([string]$profile.MovieProfile -cne "shared") {
-      throw "$($variant.VariantName) selects unsupported movie profile '$($profile.MovieProfile)'."
-    }
+    $profile = $variantBuildProfiles[[string]$variant.VariantKey]
+    $movieProfileDirectory = $movieProfileDirectories[[string]$profile.MovieProfile]
 
     Assert-UniqueSafeFileNames -FileNames @($profile.ComponentFileNames) -Context "$($variant.VariantName) component profile"
     Assert-UniqueSafeFileNames -FileNames @($profile.AssetFileNames) -Context "$($variant.VariantName) asset profile"
@@ -321,9 +345,9 @@ try {
     $interfaceOutputDirectory = Join-Path $resolvedStagingPath "Interface"
     Remove-OwnedDirectory -Path $interfaceOutputDirectory -OwnerPath $resolvedStagingPath
     New-Item -ItemType Directory -Force -Path $interfaceOutputDirectory | Out-Null
-    foreach ($movieName in $sharedMovieNames) {
+    foreach ($movieName in $movieNames) {
       Copy-Item `
-        -LiteralPath (Join-Path $sharedInterfaceDirectory $movieName) `
+        -LiteralPath (Join-Path $movieProfileDirectory $movieName) `
         -Destination (Join-Path $interfaceOutputDirectory $movieName) `
         -Force
     }

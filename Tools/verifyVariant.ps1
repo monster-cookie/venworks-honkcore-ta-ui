@@ -250,14 +250,11 @@ if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction Si
     . "$PSScriptRoot\sharedConfig.ps1"
   }
 }
+. (Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "sharedScaleformProfiles.ps1") `
+  -Description "Scaleform movie-profile helper")
 
 $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
-$movieDefinitions = @(
-  [pscustomobject]@{ FileName = "hudmenu.gfx"; ExpectedHashPath = "Scaleform\hudmenu\validation\expected.sha256" },
-  [pscustomobject]@{ FileName = "hudmenu_lrg.gfx"; ExpectedHashPath = "Scaleform\hudmenu_lrg\validation\expected.sha256" },
-  [pscustomobject]@{ FileName = "hudmessagesmenu.gfx"; ExpectedHashPath = "Scaleform\hudmessagesmenu\validation\expected.sha256" },
-  [pscustomobject]@{ FileName = "hudmessagesmenu_lrg.gfx"; ExpectedHashPath = "Scaleform\hudmessagesmenu_lrg\validation\expected.sha256" }
-)
 $archiveDefinitions = [ordered]@{
   "Main" = [pscustomobject]@{ FileSuffix = "Main.ba2"; Required = $true }
   "Textures" = [pscustomobject]@{ FileSuffix = "Textures.ba2"; Required = $false }
@@ -288,9 +285,9 @@ foreach ($variant in $variants) {
     -Path (Join-Path $repositoryRoot "Scaleform\variants\$($variant.VariantKey)\build.psd1") `
     -Description "$($variant.VariantName) build profile"
   $profile = Import-PowerShellDataFile -LiteralPath $profilePath
-  if ([string]$profile.MovieProfile -cne "shared") {
-    throw "$($variant.VariantName) build profile movie selection is invalid."
-  }
+  $movieProfile = Get-VariantScaleformMovieProfile `
+    -RepositoryRoot $repositoryRoot `
+    -VariantBuildProfile $profile
 
   $stagingPath = Resolve-RequiredDirectory `
     -Path (Join-Path $repositoryRoot ([string]$variant.StagingFolderPath)) `
@@ -320,9 +317,9 @@ foreach ($variant in $variants) {
   $expectedCuiInventory += @($profile.PaletteFileNames | ForEach-Object { "palettes/$_" })
   Assert-Inventory -RootPath $cuiPath -ExpectedPaths $expectedCuiInventory -Description "$($variant.VariantName) CUI payload"
 
-  foreach ($movie in $movieDefinitions) {
+  foreach ($movie in @($movieProfile.MovieDefinitions)) {
     $moviePath = Resolve-RequiredFile -Path (Join-Path $interfacePath $movie.FileName) -Description "$($variant.VariantName) $($movie.FileName)"
-    $expectedHash = Read-ExpectedSha256 -Path (Join-Path $repositoryRoot $movie.ExpectedHashPath)
+    $expectedHash = Read-ExpectedSha256 -Path $movie.ExpectedHashPath
     $actualHash = Get-Sha256 -Path $moviePath
     if ($actualHash -cne $expectedHash) {
       throw "$($variant.VariantName) $($movie.FileName) hash mismatch. Expected $expectedHash; found $actualHash."
@@ -421,16 +418,188 @@ foreach ($variant in $variants) {
     $scannerText = [System.IO.File]::ReadAllText((Join-Path $cuiPath "components\environmental-hazard-scanner.xml"))
     if ($scannerText -notmatch 'id="planet\.solar-transition" x="14" y="52" width="332" height="22"' -or
         $scannerText -notmatch 'source="environment\.solarTransitionCountdown" format="raw"' -or
-        $scannerText -notmatch 'id="planet\.panel" x="8" y="32" width="344" height="60"') {
+        $scannerText -match '<panel\b') {
       throw "Minimalist does not preserve the accepted dedicated solar-transition row."
     }
     $configurationText = @(
       Get-ChildItem -LiteralPath $cuiPath -Recurse -File -Filter "*.xml" |
         ForEach-Object { [System.IO.File]::ReadAllText($_.FullName) }
     ) -join "`n"
-    if ($configurationText -match '(?i)<svg\b|\.svg\b|@palette\.|\bpalette="' -or
-        @(Get-ChildItem -LiteralPath $interfacePath -Recurse -File -Include "*.svg","*.dds").Count -ne 0) {
-      throw "Minimalist contains external SVG, palette, or DDS content."
+    if ($configurationText -match '(?i)<(?:svg|path|mask|icon|panel|providerSymbol)\b|\.svg\b|@palette\.|\bpalette="' -or
+        $configurationText -match '(?i)equipment-rail' -or
+        (Test-Path -LiteralPath (Join-Path $cuiPath "components\equipment-rail.xml")) -or
+        @(Get-ChildItem -LiteralPath $interfacePath -Recurse -File -Include "*.svg","*.dds","*.png","*.jpg","*.jpeg").Count -ne 0) {
+      throw "Minimalist contains a disabled XML capability, equipment rail, external palette, or image asset."
+    }
+
+    $fittedBackingDefinitions = @(
+      [pscustomobject]@{ RelativePath = "layout.xml"; Id = "critical-health"; X = "0"; Y = "0"; Width = "320"; Height = "70"; Shape = "rectangle" }
+      [pscustomobject]@{ RelativePath = "layout.xml"; Id = "vehicle-exit"; X = "0"; Y = "0"; Width = "184"; Height = "36"; Shape = "rectangle" }
+      [pscustomobject]@{ RelativePath = "components\contact-radar.xml"; Id = "contact-radar"; X = "22"; Y = "21"; Width = "184"; Height = "184"; Shape = "ellipse" }
+      [pscustomobject]@{ RelativePath = "components\environmental-hazard-scanner.xml"; Id = "environmental-hazard"; X = "0"; Y = "0"; Width = "360"; Height = "254"; Shape = "rectangle" }
+      [pscustomobject]@{ RelativePath = "components\helmet-awareness.xml"; Id = "helmet.compass"; X = "0"; Y = "-58"; Width = "826"; Height = "48"; Shape = "rectangle" }
+      [pscustomobject]@{ RelativePath = "components\helmet-awareness.xml"; Id = "helmet.threat"; X = "253"; Y = "12"; Width = "320"; Height = "24"; Shape = "rectangle" }
+      [pscustomobject]@{ RelativePath = "components\player-status-scanner.xml"; Id = "player-status"; X = "0"; Y = "0"; Width = "360"; Height = "236"; Shape = "rectangle" }
+      [pscustomobject]@{ RelativePath = "components\quest-tracker.xml"; Id = "quest-tracker"; X = "0"; Y = "0"; Width = "447"; Height = "90"; Shape = "rectangle" }
+    )
+    $fittedBackingDocuments = @{}
+    $fittedBackingNodeCount = 0
+    foreach ($relativePath in @($fittedBackingDefinitions.RelativePath | Sort-Object -Unique)) {
+      [xml]$backingDocument = Get-Content -LiteralPath (Join-Path $cuiPath $relativePath) -Raw
+      $fittedBackingDocuments[$relativePath] = $backingDocument
+      $fittedBackingNodeCount += @($backingDocument.SelectNodes('//shape[contains(@id,".backing.")]')).Count
+    }
+    if ($fittedBackingNodeCount -ne ($fittedBackingDefinitions.Count * 2)) {
+      throw "Minimalist must contain exactly two fitted backing layers for each approved readout footprint."
+    }
+    foreach ($backing in $fittedBackingDefinitions) {
+      $backingDocument = $fittedBackingDocuments[[string]$backing.RelativePath]
+      foreach ($layer in @(
+        [pscustomobject]@{ Name = "base"; Z = "-2"; FillColor = "#0D1114"; FillOpacity = "0.28" },
+        [pscustomobject]@{ Name = "tint"; Z = "-1"; FillColor = "#70CFE0"; FillOpacity = "0.10" }
+      )) {
+        $backingId = "$($backing.Id).backing.$($layer.Name)"
+        $backingNodes = @($backingDocument.SelectNodes("//shape[@id='$backingId']"))
+        if ($backingNodes.Count -ne 1) {
+          throw "Minimalist fitted backing '$backingId' must appear exactly once in $($backing.RelativePath)."
+        }
+        $backingNode = $backingNodes[0]
+        $expectedAttributes = @{
+          x = [string]$backing.X
+          y = [string]$backing.Y
+          width = [string]$backing.Width
+          height = [string]$backing.Height
+          z = [string]$layer.Z
+          shape = [string]$backing.Shape
+          fillColor = [string]$layer.FillColor
+          fillOpacity = [string]$layer.FillOpacity
+          strokeColor = "#D9E3E8"
+          strokeOpacity = "0"
+          strokeWidth = "0"
+        }
+        foreach ($attributeName in $expectedAttributes.Keys) {
+          if ([string]$backingNode.GetAttribute($attributeName) -cne [string]$expectedAttributes[$attributeName]) {
+            throw "Minimalist fitted backing '$backingId' has an unexpected '$attributeName' value."
+          }
+        }
+      }
+    }
+
+    $sharedHudHash = Read-ExpectedSha256 -Path (Join-Path $repositoryRoot "Scaleform\hudmenu\validation\expected.sha256")
+    $sharedLargeHudHash = Read-ExpectedSha256 -Path (Join-Path $repositoryRoot "Scaleform\hudmenu_lrg\validation\expected.sha256")
+    if ((Get-Sha256 -Path (Join-Path $interfacePath "hudmenu.gfx")) -ceq $sharedHudHash -or
+        (Get-Sha256 -Path (Join-Path $interfacePath "hudmenu_lrg.gfx")) -ceq $sharedLargeHudHash) {
+      throw "Minimalist HUD movies must be profile-specific and differ from the shared themed movies."
+    }
+
+    $sourceProfile = Get-ScaleformSourceProfile -ManifestPath $movieProfile.ManifestPaths[0]
+    $expectedExcludedClasses = @(
+      'venworks/cui/CUIAssetManager.as',
+      'venworks/cui/CUICompositeResolver.as',
+      'venworks/cui/CUIIconLibrary.as',
+      'venworks/cui/CUISvgParser.as',
+      'venworks/cui/CUISvgPathParser.as',
+      'venworks/cui/components/CUIIcon.as',
+      'venworks/cui/components/CUIMask.as',
+      'venworks/cui/components/CUIPanel.as',
+      'venworks/cui/components/CUIProviderSymbol.as',
+      'venworks/cui/components/CUISvg.as',
+      'venworks/cui/components/CUISvgPath.as'
+    ) | ForEach-Object {
+      $_.Replace('/', [System.IO.Path]::DirectorySeparatorChar)
+    }
+    $actualExcludedClasses = @($sourceProfile.ExcludedActionScriptPaths | Sort-Object)
+    $expectedExcludedClasses = @($expectedExcludedClasses | Sort-Object)
+    if ($actualExcludedClasses.Count -ne $expectedExcludedClasses.Count -or
+        [string]::Join("`n", $actualExcludedClasses) -cne [string]::Join("`n", $expectedExcludedClasses)) {
+      throw "Minimalist ActionScript exclusions do not match the approved SVG, panel, icon, mask, composite, and equipment class inventory."
+    }
+    if ($sourceProfile.ValueProviders.Count -ne 10 -or
+        $sourceProfile.ConditionProviders.Count -ne 7 -or
+        $sourceProfile.CrossContextProviderCount -ne 3 -or
+        @($sourceProfile.ValueProviders | Where-Object { $_ -in $sourceProfile.ConditionProviders }).Count -ne 3) {
+      throw "Minimalist provider profile must retain exactly ten value, seven condition, and three cross-context registrations."
+    }
+
+    [xml]$minimalistManifest = Get-Content -LiteralPath $movieProfile.ManifestPaths[0] -Raw
+    $minimalistManifestDirectory = Split-Path -Parent $movieProfile.ManifestPaths[0]
+    $minimalistSourceRoot = Resolve-RequiredDirectory `
+      -Path (Join-Path $minimalistManifestDirectory ([string]$minimalistManifest.scaleformBuild.actionScriptSource)) `
+      -Description "Minimalist ActionScript source directory"
+    $excludedLookup = @($sourceProfile.ExcludedActionScriptPaths)
+    $transformedSource = @(
+      Get-ChildItem -LiteralPath $minimalistSourceRoot -Recurse -File -Filter "*.as" |
+        ForEach-Object {
+          $relativeSourcePath = $_.FullName.Substring($minimalistSourceRoot.Length).TrimStart(
+            [System.IO.Path]::DirectorySeparatorChar,
+            [System.IO.Path]::AltDirectorySeparatorChar
+          )
+          if ($relativeSourcePath -notin $excludedLookup) {
+            Get-ScaleformPatchedActionScript `
+              -SourcePath $_.FullName `
+              -RelativePath $relativeSourcePath `
+              -PatchPath $sourceProfile.ActionScriptPatchPath
+          }
+        }
+    ) -join "`n"
+    foreach ($forbiddenToken in @($sourceProfile.ForbiddenBytecodeTokens)) {
+      if ($transformedSource.Contains($forbiddenToken)) {
+        throw "Minimalist transformed ActionScript retains forbidden token '$forbiddenToken'."
+      }
+    }
+    if ([regex]::Matches($transformedSource, 'this\.subscribeProvider\s*\(\s*"').Count -ne 17) {
+      throw "Minimalist transformed ActionScript does not contain the expected seventeen independent provider registrations."
+    }
+
+    $statusEffectRelativePath = "venworks/cui/components/CUIStatusEffectBar.as"
+    $statusEffectSourcePath = Join-Path $minimalistSourceRoot $statusEffectRelativePath
+    $statusEffectSource = Get-ScaleformPatchedActionScript `
+      -SourcePath $statusEffectSourcePath `
+      -RelativePath $statusEffectRelativePath `
+      -PatchPath $sourceProfile.ActionScriptPatchPath
+    $statusBackgroundMethod = [regex]::Match(
+      $statusEffectSource,
+      '(?s)private function drawSlotBackground.*?(?=\s+private function drawFallbackIcon)'
+    )
+    if (!$statusBackgroundMethod.Success -or
+        !$statusBackgroundMethod.Value.Contains('param1.graphics.beginFill(0x0D1114,0.28);') -or
+        !$statusBackgroundMethod.Value.Contains('param1.graphics.beginFill(0x70CFE0,0.10);') -or
+        [regex]::Matches($statusBackgroundMethod.Value, 'param1\.graphics\.drawRect\(').Count -ne 2 -or
+        $statusBackgroundMethod.Value -match '(?i)drawPath|GraphicsPath|CUISvg|pathData') {
+      throw "Minimalist active status-effect tiles must use only the approved two-layer native rectangle backing."
+    }
+
+    $scannerRelativePath = "venworks/cui/components/CUIScannerOverlay.as"
+    $scannerSourcePath = Join-Path $minimalistSourceRoot $scannerRelativePath
+    $scannerSource = Get-ScaleformPatchedActionScript `
+      -SourcePath $scannerSourcePath `
+      -RelativePath $scannerRelativePath `
+      -PatchPath $sourceProfile.ActionScriptPatchPath
+    $scannerOverlayMethod = [regex]::Match(
+      $scannerSource,
+      '(?s)private function createOverlay.*?(?=\s+private function drawCorners)'
+    )
+    $scannerThreatBacking = 'panelShape.graphics.drawRect(componentWidth / 2 - 112,0,224,26);'
+    $scannerContactsBacking = 'panelShape.graphics.drawRect(componentWidth - 270,156,260,146);'
+    if (!$scannerOverlayMethod.Success -or
+        !$scannerOverlayMethod.Value.Contains('panelShape.graphics.beginFill(0x0D1114,0.28);') -or
+        !$scannerOverlayMethod.Value.Contains('panelShape.graphics.beginFill(0x70CFE0,0.10);') -or
+        $scannerOverlayMethod.Value.Split($scannerThreatBacking).Count -ne 3 -or
+        $scannerOverlayMethod.Value.Split($scannerContactsBacking).Count -ne 3 -or
+        [regex]::Matches($scannerOverlayMethod.Value, 'panelShape\.graphics\.drawRect\(').Count -ne 4 -or
+        $scannerOverlayMethod.Value -match '(?i)drawPath|GraphicsPath|CUISvg|pathData') {
+      throw "Minimalist scanner readouts must use only the approved dynamically positioned two-layer native rectangle backings."
+    }
+
+    $seedPath = Resolve-RequiredFile `
+      -Path (Join-Path $minimalistManifestDirectory ([string]$minimalistManifest.scaleformBuild.abcSeedPatch)) `
+      -Description "Minimalist ABC seed"
+    $seedText = [System.IO.File]::ReadAllText($seedPath)
+    foreach ($excludedClass in $expectedExcludedClasses) {
+      $excludedClassName = [System.IO.Path]::GetFileNameWithoutExtension($excludedClass)
+      if ($seedText.Contains($excludedClassName)) {
+        throw "Minimalist ABC seed retains excluded class '$excludedClassName'."
+      }
     }
   }
 

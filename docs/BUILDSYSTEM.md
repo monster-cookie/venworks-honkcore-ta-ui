@@ -8,8 +8,9 @@ the workflow. Before committing a release build, run these steps from the
 repository root:
 
 1. Run `Tools/buildVariant.ps1` with the validated Java, JPEXS, and vanilla
-   Interface inputs. It compiles the common GFX once, then stages every release
-   variant's independent configuration profile unless a subset is selected.
+   Interface inputs. It compiles each selected movie profile once, then stages
+   every release variant's independent configuration profile unless a subset
+   is selected.
 2. Run `Tools/createPackages.ps1` with the same optional variant selection. The
    script reads `TOOL_PATH_ARCHIVER` from `.env`, validates each variant's root
    ESM, and runs only that variant's configured platform archive targets.
@@ -69,19 +70,22 @@ archive is deferred until the generated console archives can be tested.
 
 ## Variant build profiles
 
-`Tools/compileScaleform.ps1` is the lower-level common movie compiler. It
-validates and writes one set of normal/large HUD and HUD-messages movies; it does
-not select palettes, mirror configuration payloads, or invoke Archive2.
-`Tools/buildVariant.ps1` consumes that common output and stages each selected
-profile from `Scaleform/variants/<KEY>/build.psd1` independently. A profile owns
-its layout source, component inventory, assets, palettes, palette mode, and
-optional stub-ESM source. Adding or removing one component in one profile does
-not require making the other profiles match.
+`Tools/compileScaleform.ps1` is the lower-level movie compiler. It validates and
+writes the normal/large HUD movies declared by a build manifest plus the shared
+HUD-message movies; it does not select palettes, mirror configuration payloads,
+or invoke Archive2. `Tools/sharedScaleformProfiles.ps1` resolves those manifests
+and their ActionScript source profiles. `Tools/buildVariant.ps1` compiles each
+unique selected movie profile once and stages each selected profile from
+`Scaleform/variants/<KEY>/build.psd1` independently. A variant profile owns its
+movie profile, layout source, component inventory, assets, palettes, palette
+mode, and optional stub-ESM source. Adding or removing one component or movie
+capability in one profile does not require making the other profiles match.
 
 The four themed profiles currently share the production layout, eight component
-fragments, six SVG assets, and five external palettes. Minimalist independently
-declares seven component fragments and its own layout, omitting only the faction
-display while moving the contact radar into the former upper-left slot.
+fragments, six SVG assets, five external palettes, and the full shared HUD movie
+profile. Minimalist independently declares six component fragments, its own
+layout, and the `minimalist-no-svg` HUD movie profile. The HUD-message movies
+remain shared across all five variants.
 
 ## Minimalist release
 
@@ -108,29 +112,43 @@ Create only its staging Junction and build only its artifacts with:
   -OutputDirectory ".work/release-packages"
 ```
 
-The common movie compiler validates the independent 10-provider condition
+The shared themed movie profile validates the independent 10-provider condition
 context and 14-provider value context before and after compilation, including
 the six intentionally duplicated provider names, transactional startup,
-callback containment, deferred teardown, and bootstrap diagnostics. It does
-not combine providers into a shared subscription or broker. All five variants
-therefore use the same hardened movie hashes. If a later PS5 investigation must
-compile out SVG-capable ActionScript, that experiment must remain separate from
-the release matrix because every release variant intentionally uses identical
-compiled GFX.
+callback containment, deferred teardown, and bootstrap diagnostics. Minimalist
+retains those lifecycle protections but compiles out the equipment-only
+registrations, leaving seven condition providers, ten value providers, and
+three intentionally duplicated provider names. Neither profile combines
+providers into a shared subscription or broker.
 
-The Minimalist profile uses the common production HUD movies, resolves the
-`starfield.xml` color roles to literal XML colors, removes the palette selector
-and faction display, and moves the contact radar to the former faction-display
-position. It then removes the `Assets` and `palettes` directories. The result
-contains the renamed stub ESM, four GFX files, the reduced loose CUI
-configuration, and the Windows, Xbox, and PS5 Main BA2s.
+The Minimalist profile generates its one-domain seed and imports ActionScript
+from the shared source tree through a strict exclusion and source-transform
+manifest. Its normal and large HUD movies contain no SVG loader/parser, SVG
+path, mask, panel, built-in icon, composite resolver, asset-manager, or
+equipment-provider-symbol classes. The build rejects those class names and
+runtime strings after JPEXS reopens each movie. The four themed variants retain
+the shared production HUD hashes; only Minimalist's `hudmenu.gfx` and
+`hudmenu_lrg.gfx` are profile-specific.
+
+Minimalist resolves the `starfield.xml` color roles to literal XML colors,
+removes the palette selector, faction display, helmet cutout paths, and complete
+equipment rail, and keeps the contact radar in the former faction-display
+position. Its six fragments use fitted native rectangle and ellipse backings
+with a 28-percent dark base and 10-percent pale-blue tint beneath the existing
+corner brackets and divider strokes. The build rejects `svg`, `path`, `mask`,
+`icon`, `panel`, and `providerSymbol` nodes, then removes the `Assets` and
+`palettes` directories. The result contains the renamed stub ESM, four GFX
+files, the reduced loose CUI configuration, and the Windows, Xbox, and PS5 Main
+BA2s.
 The selected release-package command creates all five normal package shapes for
 Minimalist. Omitting `-VariantKeys` selects all five release variants.
 
-The shared GFX still contains unused SVG-capable runtime code. A successful PS5
-test therefore narrows the crash investigation to external SVG or palette/faction
-loading; it does not independently prove which removed behavior caused the
-crash. DDS substitution remains a separate follow-up experiment.
+The Minimalist HUD movies intentionally remove several capabilities together.
+A successful PS5 test therefore narrows the crash investigation but does not
+independently prove whether SVG runtime code, the panel runtime, helmet paths,
+or equipment-provider registrations caused the crash. Native rectangle and
+ellipse fills remain available for the fitted holographic backings. DDS
+substitution remains a separate follow-up experiment.
 
 The release workflow produces five ZIP shapes for each of the five variants:
 
@@ -145,10 +163,10 @@ The release workflow produces five ZIP shapes for each of the five variants:
 Minimalist's platform packages contain its ESM and the matching Main BA2, with
 no texture archive. The complete release matrix contains 25 ZIPs. The normal
 Nexus package leaves only `layout.xml` loose so the compiled HUD movies remain
-protected by the BA2. Users who need to
-edit component fragments, palettes, or SVG assets must use the fully loose
-package or provide a separate loose override. Do not install the normal and
-fully loose packages together.
+protected by the BA2. Users who need to edit component fragments, or palettes
+and SVG assets in a themed variant, must use the fully loose package or provide
+a separate loose override. Do not install the normal and fully loose packages
+together.
 
 ## Persistent BGS reference cache
 
@@ -243,8 +261,9 @@ matching deployment hashes are not substitutes for the one-domain assertion.
 `Tools/compileScaleform.ps1` imports the authored CUI ActionScript into Bethesda's
 HUD movies with JPEXS. JPEXS can replace classes represented by an AVM2 seed but
 does not grow the seed reliably during `-importScript`. The repository therefore
-stores a generated seed at
-`Scaleform/shared/patches/cui-component-abc-seed.xml`.
+stores a generated shared seed at
+`Scaleform/shared/patches/cui-component-abc-seed.xml` and a profile-specific
+Minimalist seed at `Scaleform/variants/MIN/patches/cui-component-abc-seed.xml`.
 
 The former build asserted exactly 38 authored CUI files and exactly 205 total
 classes. Those numbers were repository implementation details, not Starfield,
@@ -255,7 +274,7 @@ concerns. The build now discovers the authored inventory dynamically, requires
 every authored class after reopening each movie, and requires the complete class
 inventory to remain stable across import.
 
-Regenerate the seed whenever an authored `.as` class is added or removed:
+Regenerate the shared seed whenever an authored `.as` class is added or removed:
 
 ```powershell
 .\Tools\generateScaleformAbcSeed.ps1 `
@@ -265,13 +284,25 @@ Regenerate the seed whenever an authored `.as` class is added or removed:
   -JpexsJarPath "<ffdec.jar-path>"
 ```
 
+Pass a movie build manifest to regenerate a profile-specific seed with the same
+source inventory and exclusions used by the movie compiler:
+
+```powershell
+.\Tools\generateScaleformAbcSeed.ps1 `
+  -FlexSdkPath "<apache-flex-sdk-path>" `
+  -PlayerGlobalPath "<playerglobal.swc-path>" `
+  -JavaPath "<java.exe-path>" `
+  -JpexsJarPath "<ffdec.jar-path>" `
+  -BuildManifestPath "Scaleform/variants/MIN/movies/hudmenu.build.xml"
+```
+
 The generator inventories public classes beneath
-`Scaleform/shared/actionscript`, creates temporary empty stubs with the same
-qualified names, and creates a synthetic root that references every discovered
-class. Apache Flex `mxmlc` compiles that root and all stubs into one SWF ABC.
-JPEXS exports that single `DoABC2Tag`, and the generator replaces the checked-in
-seed only after confirming that every authored class is present in the same
-ABC.
+the selected manifest source root, removes its declared exclusions, creates
+temporary empty stubs with the same qualified names, and creates a synthetic
+root that references every retained class. Apache Flex `mxmlc` compiles that
+root and all stubs into one SWF ABC. JPEXS exports that single `DoABC2Tag`, and
+the generator replaces the selected checked-in seed only after confirming that
+every retained authored class is present in the same ABC.
 Temporary compiler inputs are created under the operating-system temporary
 directory and removed in a `finally` block. Dependencies must remain outside the
 repository and `Scaleform/.work`; do not commit SDKs, JARs, SWCs, or machine paths.

@@ -126,6 +126,14 @@ surface.
 | State container | Implemented | Select one fixed configuration state without allowing arbitrary expressions or method calls. |
 | Mask/clip | Complete | Bound one or more children to rectangle, ellipse, or approved path geometry, including nested masks. |
 
+The four themed variants expose the complete component catalog above.
+Minimalist uses a reduced movie profile: `panel`, `mask`, `svg`, `path`, `icon`,
+and `providerSymbol` are unavailable, and their runtime classes are not present
+in its normal or large HUD movie. Minimalist composes fitted holographic
+surfaces from groups, text, translucent native rectangle and ellipse shapes,
+dividers, meters, radar rings, markers, and the remaining specialized
+components.
+
 ## Meter and bar family
 
 All meter renderers share one contract: `value`, `max`, bounds, style reference,
@@ -165,6 +173,11 @@ vanilla owner and provider contract.
 | Direct raster/DDS image | Unsupported | PNG, JPEG, and DDS probes were found at their loose paths but rejected by Starfield Scaleform; use loose SVG or a built-in icon. |
 | Curated Font Awesome icon | Complete | Generate only the approved 21-icon subset into committed ActionScript; Font Awesome source SVGs remain developer inputs and are not committed. |
 
+The vector and built-in icon capabilities in this section are available only
+in the four themed movie variants. Minimalist contains neither their XML nodes
+nor their ActionScript loader, parser, renderer, library, or asset-manager
+classes.
+
 The icon generator receives the local Font Awesome Pro root through an explicit
 parameter. Its machine-specific path is never recorded. It converts source arcs
 to cubic paths and writes a deterministic same-domain library containing only
@@ -190,8 +203,11 @@ gamer-facing configuration surface.
 | Scanner overlay | Implemented | Scanner-only heading banner, 5-by-5 square-to-dot radial pulse, and up to five validated forward contacts. Its pulse timer runs only while the component and every display-list ancestor are visible. It preserves Bethesda's reticle/crosshair and uses deterministic type/handle codenames instead of names or random data. |
 | Reticle/crosshair | Vanilla-owned; not configurable | Bethesda retains the complete visual and lifecycle owner; proven crosshair data remains condition input only. |
 
-The Goal 7 equipment rail is intentionally passive. Favorites Menu remains the
-only owner of favorite assignment and input. Contacts 1-12 preserve the latest
+The Goal 7 equipment rail is intentionally passive and is available only in the
+four themed variants. Minimalist removes the rail, all fifteen contacts, their
+icons, and the rail-only weapon, power, favorites, and control-map provider
+registrations. In the themed variants, Favorites Menu remains the only owner of
+favorite assignment and input. Contacts 1-12 preserve the latest
 twelve-entry snapshot and resolve `Quickkey1..12` through Bethesda's
 `ButtonKeyHelper`, while contacts 13-15 remain independently live. Exact
 weapon/power name matches may accent a favorite contact; menu cursor state and

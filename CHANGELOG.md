@@ -1,5 +1,18 @@
 # Venworks - Customizable HUD and Themes
 
+## Unreleased
+
+- Gave Minimalist profile-specific normal and large HUD movies with the SVG,
+  path, mask, panel, built-in icon, and equipment-rail runtime removed while
+  retaining the shared HUD-message movies.
+- Removed Minimalist's helmet cutout paths and complete equipment rail,
+  including its favorite, weapon, explosive, power, and control-map provider
+  registrations.
+- Replaced Minimalist's panel runtime with fitted holographic readouts using
+  dark, pale-blue translucent native rectangle and ellipse backings behind the
+  active content, while preserving its corner brackets, dividers, meters,
+  radar, compass, markers, and sunrise/sunset countdown.
+
 ## Version 2.0.3 (August 24, 2026)
 
 - Added a local-time countdown to the next 06:00 sunrise or 18:00 sunset in the Planet Data panel.

@@ -27,6 +27,10 @@ jobs:
         shell: pwsh
         run: ./Tools/verifyCommittedRelease.ps1
 
+      - name: Verify Minimalist movie profile contract
+        shell: pwsh
+        run: ./Tools/verifyVariant.ps1 -VariantKeys MIN -Committed
+
       - name: Verify committed entry point without local environment
         shell: pwsh
         run: |

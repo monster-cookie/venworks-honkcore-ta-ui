@@ -14,6 +14,22 @@ For common player changes, start with the
 references are documented separately in the
 [palette configuration reference](PALETTE_CONFIGURATION_REFERENCE.md).
 
+## Movie-profile availability
+
+The four themed variants use the full layout runtime documented by this
+reference. Minimalist uses a reduced `minimalist-no-svg` movie profile. Its
+normal and large HUD movies do not contain support for `panel`, `svg`, `path`,
+`mask`, `icon`, or `providerSymbol`; any of those nodes is invalid in a
+Minimalist layout or imported fragment. Minimalist also has no external palette
+or asset directory and does not include the equipment rail.
+
+Minimalist retains groups, text, shapes, dividers, meters, repeaters, states,
+templates, embedded Bethesda symbols, radar, compass, scanner, threat,
+status-effect, and other nonexcluded components. Its staged layout payload uses
+literal Starfield colors, fitted translucent rectangle and ellipse backings,
+and open corner/divider geometry. The element and SVG sections below describe
+the full themed profile unless they explicitly say otherwise.
+
 ## Fixed runtime paths
 
 All paths below are relative to Starfield's `Data\Interface` directory.
@@ -24,6 +40,9 @@ All paths below are relative to Starfield's `Data\Interface` directory.
 | Imported fragments | `VenworksCUI\components\<filename>.xml` |
 | Selected palette | `VenworksCUI\palettes\<filename>.xml` |
 | Local SVG assets | `VenworksCUI\Assets\<relative-path>.svg` |
+
+The selected palette and local SVG paths apply only to the four themed
+variants. Minimalist does not load either path.
 
 The runtime does not load a user-selected layout from any other root, execute
 scripts from XML, call arbitrary game methods, subscribe to arbitrary data
@@ -43,7 +62,7 @@ The runtime processes an authored layout as one atomic configuration:
    `@palette.*` attributes.
 7. Validate the fully resolved component tree, conditions, live-value sources,
    and references.
-8. Preload and validate every referenced local SVG.
+8. In the themed profile, preload and validate every referenced local SVG.
 9. Create the display layer and subscribe only to the hardcoded HUD providers.
 
 Any failure prevents the complete configurable layer from rendering and shows

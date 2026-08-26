@@ -23,8 +23,8 @@ Current custom surfaces include:
   credits, digipicks, universal time, and a deterministic player serial;
 - environmental status for location, local time, oxygen, temperature, gravity,
   suit protection, and exposure categories;
-- a passive equipment rail for all 12 favorite slots plus live weapon,
-  ammunition, explosive, and power information;
+- a passive equipment rail in the four themed variants for all 12 favorite
+  slots plus live weapon, ammunition, explosive, and power information;
 - a scanner-only heading, pulse grid, and bounded forward-contact display;
 - a faction crest selected by the active palette in all four themed variants; and
 - a localized vehicle-exit label with Bethesda's current keyboard or
@@ -38,9 +38,12 @@ state from those systems for conditions, but it does not replace them.
 ## Release variants
 
 Five separately distributed variants are available. The four themed variants
-include all five packaged palettes, so their active palette can be changed
-without reinstalling the HUD. Minimalist instead uses literal Starfield colors
-and ships without external palette or SVG files.
+share the full configurable HUD movies and include all five packaged palettes,
+so their active palette can be changed without reinstalling the HUD. Minimalist
+uses profile-specific HUD movies, literal Starfield colors, and fitted
+holographic readouts with pale-blue translucent native-shape backings. It has no
+external palettes, SVG assets, SVG paths, panel runtime, built-in icons, masks,
+or equipment rail.
 
 | Public release name | Default palette |
 |---|---|
@@ -51,8 +54,9 @@ and ships without external palette or SVG files.
 | Venworks Customizable HUD - Minimalist | Literal Starfield colors; no palette file |
 
 The four themed variants also include `starfield.xml` as a neutral palette
-option. Minimalist omits the faction crest along with all external palettes and
-SVG assets.
+option. The faction crest and equipment rail are available only in those four
+variants. Minimalist omits both and accepts no `svg`, `path`, `mask`, `icon`,
+`panel`, or `providerSymbol` configuration elements.
 
 Enable only one release variant at a time. The variants install the same HUD
 movie and configuration paths, so whichever package wins file conflicts also
@@ -67,10 +71,10 @@ conflicts. The loose layout remains directly editable while the compiled
 `hudmenu*` and `hudmessagesmenu*` files stay protected inside the Main BA2.
 
 The Nexus PC - Fully Loose Files package installs the complete `Interface`
-tree without an ESM or BA2. Use it only when component fragments, palettes, or
-SVG assets must also remain loose. Do not install the normal and fully loose
-packages together. A Starfield-capable mod manager is strongly recommended for
-either package shape.
+tree without an ESM or BA2. Use it only when component fragments, or palettes
+and SVG assets in a themed variant, must also remain loose. Do not install the
+normal and fully loose packages together. A Starfield-capable mod manager is
+strongly recommended for either package shape.
 
 Bethesda Creations use separate ESM-and-BA2-only packages for PC, Xbox, and
 PS5. Install only the package supplied for the current platform and enable only
@@ -100,12 +104,13 @@ Configuration authors can use the complete references:
   `@palette.*` references.
 
 Configuration files are loaded when the HUD movie starts. There is no live
-reload command; fully exit and restart Starfield after changing XML or SVG
-files.
+reload command; fully exit and restart Starfield after changing XML or, in a
+themed variant, SVG files.
 
 The normal Nexus package exposes only `layout.xml` as a loose file. Advanced
-component, palette, and SVG customization requires the fully loose package or
-a separate loose override containing the additional changed files.
+component customization, plus palette and SVG customization for a themed
+variant, requires the fully loose package or a separate loose override
+containing the additional changed files.
 
 ## Current limitations and validation status
 
@@ -115,9 +120,12 @@ a separate loose override containing the additional changed files.
   layout, fragment, palette, or SVG prevents the custom layer from loading and
   displays a categorized diagnostic.
 - Direct PNG, JPEG, and DDS assets are unsupported by the Starfield Scaleform
-  runtime. Custom loose artwork must use the supported local SVG subset.
+  runtime. The themed variants support the documented local SVG subset;
+  Minimalist deliberately compiles out SVG, path, icon, mask, panel, and
+  equipment capabilities.
 - Palette changes require a new HUD load; live switching is unsupported.
-- Active-power highlighting for favorite slots currently compares Bethesda's
+- In the four themed variants, active-power highlighting for favorite slots
+  currently compares Bethesda's
   localized favorite name with an English name mapped from the live HUD power
   key. It is therefore reliable only in English until HUDMenu exposes a stable
   language-independent favorite-power identifier.

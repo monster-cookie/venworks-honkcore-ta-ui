@@ -246,7 +246,11 @@ function Assert-GuardedProviderLifecycle {
 }
 
 function Assert-PlayerHudDataContextLifecycle {
-  param([string]$Source, [string]$Context)
+  param(
+    [string]$Source,
+    [string]$Context,
+    [string[]]$ProviderNames
+  )
   $providerSubscriptions = @(
     @{ Provider = 'LocalEnvironmentData'; Handler = 'onLocalEnvironmentData'; AllowNullData = $true },
     @{ Provider = 'LocalEnvData_Frequent'; Handler = 'onLocalEnvironmentFrequentData'; AllowNullData = $true },
@@ -263,6 +267,17 @@ function Assert-PlayerHudDataContextLifecycle {
     @{ Provider = 'StarmapSystemBodyInfoProvider'; Handler = 'onStarmapSystemBodyInfoData' },
     @{ Provider = 'HudCompassData'; Handler = 'onRadarCompassData' }
   )
+  if ($null -ne $ProviderNames -and $ProviderNames.Count -ne 0) {
+    $unknownProviderNames = @($ProviderNames | Where-Object {
+      $_ -notin @($providerSubscriptions | ForEach-Object { [string]$_.Provider })
+    })
+    if ($unknownProviderNames.Count -ne 0) {
+      throw "$Context selects unknown value providers: $($unknownProviderNames -join ', ')."
+    }
+    $providerSubscriptions = @($providerSubscriptions | Where-Object {
+      [string]$_.Provider -in $ProviderNames
+    })
+  }
   Assert-GuardedProviderLifecycle -Source $Source -Context $Context `
     -ProviderSubscriptions $providerSubscriptions -Consumer 'VALUE'
   foreach ($timerMethodName in @('onExposureTimer','updateExposureTimerState')) {
@@ -289,7 +304,11 @@ function Assert-PlayerHudDataContextLifecycle {
 }
 
 function Assert-ConditionContextLifecycle {
-  param([string]$Source, [string]$Context)
+  param(
+    [string]$Source,
+    [string]$Context,
+    [string[]]$ProviderNames
+  )
   $providerSubscriptions = @(
     @{ Provider = 'HudCrosshairData'; Handler = 'onCrosshairData' },
     @{ Provider = 'HUDStealthData'; Handler = 'onStealthData' },
@@ -302,6 +321,17 @@ function Assert-ConditionContextLifecycle {
     @{ Provider = 'HudJetpackData'; Handler = 'onJetpackData' },
     @{ Provider = 'PlayerInventoryData'; Handler = 'onPlayerInventoryData' }
   )
+  if ($null -ne $ProviderNames -and $ProviderNames.Count -ne 0) {
+    $unknownProviderNames = @($ProviderNames | Where-Object {
+      $_ -notin @($providerSubscriptions | ForEach-Object { [string]$_.Provider })
+    })
+    if ($unknownProviderNames.Count -ne 0) {
+      throw "$Context selects unknown condition providers: $($unknownProviderNames -join ', ')."
+    }
+    $providerSubscriptions = @($providerSubscriptions | Where-Object {
+      [string]$_.Provider -in $ProviderNames
+    })
+  }
   Assert-GuardedProviderLifecycle -Source $Source -Context $Context `
     -ProviderSubscriptions $providerSubscriptions -Consumer 'CONDITION'
 }
@@ -434,6 +464,10 @@ $referenceCacheHelperPath = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "sharedScaleformReferenceCache.ps1") `
   -Description "Scaleform reference-cache helper"
 . $referenceCacheHelperPath
+$scaleformProfileHelperPath = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "sharedScaleformProfiles.ps1") `
+  -Description "Scaleform movie-profile helper"
+. $scaleformProfileHelperPath
 $resolvedReferenceCacheManifestPath = Resolve-RequiredFile `
   -Path $ReferenceCacheManifestPath `
   -Description "Scaleform reference-cache manifest"
@@ -1164,6 +1198,7 @@ try {
     $manifestDirectory = Split-Path -Parent $resolvedManifestPath
     [xml]$manifest = Get-Content -LiteralPath $resolvedManifestPath -Raw
     $build = $manifest.scaleformBuild
+    $sourceProfile = Get-ScaleformSourceProfile -ManifestPath $resolvedManifestPath
 
     if (!$build -or !$build.name -or !$build.inputFile -or !$build.outputFile) {
       throw "Invalid Scaleform build manifest: $resolvedManifestPath"
@@ -1319,9 +1354,25 @@ try {
       -PatchPath $actionScriptPatchPath `
       -OutputPath $patchedScriptPath
 
-    $authoredScripts = @(Get-ChildItem -LiteralPath $actionScriptSourcePath -Recurse -File -Filter "*.as")
+    $allAuthoredScripts = @(Get-ChildItem -LiteralPath $actionScriptSourcePath -Recurse -File -Filter "*.as")
+    $excludedActionScriptPaths = @($sourceProfile.ExcludedActionScriptPaths | ForEach-Object {
+      $_.Replace([System.IO.Path]::AltDirectorySeparatorChar, [System.IO.Path]::DirectorySeparatorChar)
+    })
+    $authoredScripts = @($allAuthoredScripts | Where-Object {
+      $relativePath = $_.FullName.Substring($actionScriptSourcePath.Length).TrimStart(
+        [System.IO.Path]::DirectorySeparatorChar,
+        [System.IO.Path]::AltDirectorySeparatorChar
+      )
+      $relativePath -notin $excludedActionScriptPaths
+    })
     if ($authoredScripts.Count -eq 0) {
       throw "No authored CUI classes were found in $actionScriptSourcePath."
+    }
+    foreach ($excludedActionScriptPath in $excludedActionScriptPaths) {
+      $excludedSourcePath = Join-Path $actionScriptSourcePath $excludedActionScriptPath
+      if (!(Test-Path -LiteralPath $excludedSourcePath -PathType Leaf)) {
+        throw "Scaleform profile '$($sourceProfile.Name)' excludes an unknown ActionScript class: $excludedActionScriptPath"
+      }
     }
 
     foreach ($authoredScript in $authoredScripts) {
@@ -1332,7 +1383,20 @@ try {
       $importScriptPath = Join-Path $importScriptsDirectory $relativeScriptPath
       $importScriptParent = Split-Path -Parent $importScriptPath
       New-Item -ItemType Directory -Force -Path $importScriptParent | Out-Null
-      Copy-Item -LiteralPath $authoredScript.FullName -Destination $importScriptPath
+      if ($null -ne $sourceProfile.ActionScriptPatchPath) {
+        $patchedSource = Get-ScaleformPatchedActionScript `
+          -SourcePath $authoredScript.FullName `
+          -RelativePath $relativeScriptPath `
+          -PatchPath $sourceProfile.ActionScriptPatchPath
+        [System.IO.File]::WriteAllText(
+          $importScriptPath,
+          $patchedSource,
+          [System.Text.UTF8Encoding]::new($false)
+        )
+      }
+      else {
+        Copy-Item -LiteralPath $authoredScript.FullName -Destination $importScriptPath
+      }
     }
 
     Invoke-Jpexs `
@@ -1409,6 +1473,70 @@ try {
       if (!(Test-Path -LiteralPath $reopenedAuthoredPath -PathType Leaf)) {
         throw "Generated output is missing authored class: $relativeAuthoredPath"
       }
+    }
+
+    if ($sourceProfile.Name -cne "shared") {
+      $validationScriptRoot = Join-Path $validationScriptsDirectory "scripts"
+      foreach ($excludedActionScriptPath in $excludedActionScriptPaths) {
+        if (Test-Path -LiteralPath (Join-Path $validationScriptRoot $excludedActionScriptPath) -PathType Leaf) {
+          throw "Generated $($sourceProfile.Name) movie retains excluded class: $excludedActionScriptPath"
+        }
+      }
+
+      $profileValidationSource = @(
+        Get-ChildItem -LiteralPath $validationScriptRoot -Recurse -File -Filter "*.as" |
+          ForEach-Object { [System.IO.File]::ReadAllText($_.FullName) }
+      ) -join "`n"
+      foreach ($forbiddenToken in @($sourceProfile.ForbiddenBytecodeTokens)) {
+        if ($profileValidationSource.Contains($forbiddenToken)) {
+          throw "Generated $($sourceProfile.Name) movie retains forbidden bytecode token '$forbiddenToken'."
+        }
+      }
+
+      $profilePlayerContextPath = Join-Path $validationScriptRoot "venworks\cui\CUIPlayerHudDataContext.as"
+      $profileConditionContextPath = Join-Path $validationScriptRoot "venworks\cui\CUIConditionContext.as"
+      $profileRuntimePath = Join-Path $validationScriptRoot "venworks\cui\CUIRuntime.as"
+      $profilePlayerContextSource = Get-Content -LiteralPath $profilePlayerContextPath -Raw
+      $profileConditionContextSource = Get-Content -LiteralPath $profileConditionContextPath -Raw
+      $profileRuntimeSource = Get-Content -LiteralPath $profileRuntimePath -Raw
+      Assert-PlayerHudDataContextLifecycle `
+        -Source $profilePlayerContextSource `
+        -Context "$($sourceProfile.Name) reopened player HUD data context" `
+        -ProviderNames @($sourceProfile.ValueProviders)
+      Assert-ConditionContextLifecycle `
+        -Source $profileConditionContextSource `
+        -Context "$($sourceProfile.Name) reopened condition context" `
+        -ProviderNames @($sourceProfile.ConditionProviders)
+      Assert-SolarTransitionCountdown `
+        -Source $profilePlayerContextSource `
+        -Context "$($sourceProfile.Name) reopened player HUD data context"
+
+      $crossContextProviders = @($sourceProfile.ValueProviders | Where-Object {
+        $_ -in @($sourceProfile.ConditionProviders)
+      })
+      if ($crossContextProviders.Count -ne $sourceProfile.CrossContextProviderCount) {
+        throw "Generated $($sourceProfile.Name) movie has $($crossContextProviders.Count) cross-context provider overlaps; expected $($sourceProfile.CrossContextProviderCount)."
+      }
+      if ($profileRuntimeSource -match 'ASSET MANAGER|ASSET COLLECTION|ASSET LOADING') {
+        throw "Generated $($sourceProfile.Name) runtime retains the external asset-loading phase."
+      }
+
+      $actualOutputHash = (Get-FileHash -LiteralPath $generatedGfxPath -Algorithm SHA256).Hash
+      if ($UpdateExpectedHashes) {
+        Write-Sha256File `
+          -Path $expectedHashPath `
+          -Hash $actualOutputHash `
+          -FileName ([string]$build.outputFile)
+      }
+      $expectedOutputHash = Read-Sha256File -Path $expectedHashPath
+      if ($actualOutputHash -ne $expectedOutputHash) {
+        throw "Generated hash mismatch for $($build.outputFile). Expected $expectedOutputHash; found $actualOutputHash."
+      }
+
+      $destinationPath = Join-Path $resolvedOutputDirectory ([string]$build.outputFile)
+      Copy-Item -LiteralPath $generatedGfxPath -Destination $destinationPath -Force
+      Write-Host -ForegroundColor Green "Built and validated $destinationPath ($actualOutputHash)"
+      continue
     }
 
     $reopenedCompositionResolverPath = Join-Path `

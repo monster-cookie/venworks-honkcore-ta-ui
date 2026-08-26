@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUIFragment schemaVersion="1" runtimeVersion="1">
+  <group id="quest-tracker.cluster" x="0" y="0" width="447" height="90" opacity="1" visible="true"
+         rotation="0" scaleX="1" scaleY="1" z="0">
+    <shape id="quest-tracker.backing.base" x="0" y="0" width="447" height="90" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="-2"
+           shape="rectangle" fillColor="@palette.colors.panel.background" fillOpacity="0.28" strokeColor="@palette.colors.panel.border" strokeOpacity="0" strokeWidth="0" />
+    <shape id="quest-tracker.backing.tint" x="0" y="0" width="447" height="90" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="-1"
+           shape="rectangle" fillColor="@palette.colors.meter.oxygen" fillOpacity="0.10" strokeColor="@palette.colors.panel.border" strokeOpacity="0" strokeWidth="0" />
+    <divider id="quest.corner.tl.h" x="0" y="0" width="54" height="0" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" color="@palette.colors.panel.border" strokeOpacity="0.70" strokeWidth="2" />
+    <divider id="quest.corner.tl.v" x="0" y="0" width="0" height="18" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" color="@palette.colors.panel.border" strokeOpacity="0.70" strokeWidth="2" />
+    <divider id="quest.corner.tr.h" x="393" y="0" width="54" height="0" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" color="@palette.colors.panel.border" strokeOpacity="0.70" strokeWidth="2" />
+    <divider id="quest.corner.tr.v" x="447" y="0" width="0" height="18" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" color="@palette.colors.panel.border" strokeOpacity="0.70" strokeWidth="2" />
+    <divider id="quest.corner.bl.h" x="0" y="90" width="54" height="0" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" color="@palette.colors.panel.border" strokeOpacity="0.70" strokeWidth="2" />
+    <divider id="quest.corner.bl.v" x="0" y="72" width="0" height="18" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" color="@palette.colors.panel.border" strokeOpacity="0.70" strokeWidth="2" />
+    <divider id="quest.corner.br.h" x="393" y="90" width="54" height="0" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" color="@palette.colors.panel.border" strokeOpacity="0.70" strokeWidth="2" />
+    <divider id="quest.corner.br.v" x="447" y="72" width="0" height="18" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" color="@palette.colors.panel.border" strokeOpacity="0.70" strokeWidth="2" />
+    <text id="quest-tracker.objective" x="18" y="12" width="411" height="66" opacity="1" visible="true"
+          rotation="0" scaleX="1" scaleY="1" z="1" source="quest.objective" value=""
+          font="$MAIN_Font_Bold" fontSize="16" color="@palette.colors.foreground.primary" bold="false" multiline="true" wordWrap="true" align="left" />
+  </group>
+</venworksCUIFragment>
