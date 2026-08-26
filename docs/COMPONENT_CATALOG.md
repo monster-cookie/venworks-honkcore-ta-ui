@@ -126,8 +126,12 @@ surface.
 | State container | Implemented | Select one fixed configuration state without allowing arbitrary expressions or method calls. |
 | Mask/clip | Complete | Bound one or more children to rectangle, ellipse, or approved path geometry, including nested masks. |
 
-The four themed variants expose the complete component catalog above.
-Minimalist uses a reduced movie profile: `panel`, `mask`, `svg`, `path`, `icon`, and `providerSymbol` are unavailable, and their runtime classes are not present in its normal or large HUD movie. Its layout and six source fragments are resolved and embedded at build time, so its movies also omit the runtime layout and palette loader classes. Minimalist composes fitted holographic surfaces from groups, text, translucent native rectangle and ellipse shapes, dividers, meters, radar rings, markers, and the remaining specialized components.
+All five movie profiles expose the complete component catalog above. The
+shipped Minimalist layout does not instantiate `panel`, `mask`, `svg`, `path`,
+`icon`, or `providerSymbol`, but their runtime classes remain present. Its loose
+layout and six component fragments compose fitted holographic surfaces from
+groups, text, translucent native rectangle and ellipse shapes, dividers,
+meters, radar rings, markers, and the remaining specialized components.
 
 ## Meter and bar family
 
@@ -168,10 +172,10 @@ vanilla owner and provider contract.
 | Direct raster/DDS image | Unsupported | PNG, JPEG, and DDS probes were found at their loose paths but rejected by Starfield Scaleform; use loose SVG or a built-in icon. |
 | Curated Font Awesome icon | Complete | Generate only the approved 21-icon subset into committed ActionScript; Font Awesome source SVGs remain developer inputs and are not committed. |
 
-The vector and built-in icon capabilities in this section are available only
-in the four themed movie variants. Minimalist contains neither their XML nodes
-nor their ActionScript loader, parser, renderer, library, or asset-manager
-classes.
+The vector and built-in icon capabilities in this section are available in all
+five movie profiles. Minimalist currently ships no matching XML nodes or asset
+files, but its loader, parser, renderer, library, and asset-manager classes are
+present for configuration compatibility.
 
 The icon generator receives the local Font Awesome Pro root through an explicit
 parameter. Its machine-specific path is never recorded. It converts source arcs
@@ -199,9 +203,10 @@ gamer-facing configuration surface.
 | Reticle/crosshair | Vanilla-owned; not configurable | Bethesda retains the complete visual and lifecycle owner; proven crosshair data remains condition input only. |
 
 The Goal 7 equipment rail is intentionally passive and is available only in the
-four themed variants. Minimalist removes the rail, all fifteen contacts, their
-icons, and the rail-only weapon, power, favorites, and control-map provider
-registrations. In the themed variants, Favorites Menu remains the only owner of
+four themed variants. Minimalist removes the rail, all fifteen contacts, and
+their icons. Its current diagnostic movie profile also removes every live game
+provider registration, not only the former rail-only registrations. In the
+themed variants, Favorites Menu remains the only owner of
 favorite assignment and input. Contacts 1-12 preserve the latest
 twelve-entry snapshot and resolve `Quickkey1..12` through Bethesda's
 `ButtonKeyHelper`, while contacts 13-15 remain independently live. Exact
