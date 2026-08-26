@@ -1,5 +1,22 @@
 # Build system
 
+## PowerShell static analysis
+
+GitHub Actions runs PSScriptAnalyzer 1.25.0 against the PowerShell sources under
+`Tools/`. Install the same pinned module version and run the analyzer from the
+repository root to reproduce the check locally:
+
+```powershell
+Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.25.0 -Repository PSGallery -Scope CurrentUser -Force
+Import-Module PSScriptAnalyzer -RequiredVersion 1.25.0 -Force
+Invoke-ScriptAnalyzer -Path ./Tools -Recurse -Settings ./PSScriptAnalyzerSettings.psd1
+```
+
+A clean analysis produces no findings. CI reports each finding's rule, severity,
+script, line, and message, then fails when the configured Error or Warning
+severities are present. `PSScriptAnalyzerSettings.psd1` documents the
+repository-specific reasons for each intentional baseline exclusion.
+
 ## Release artifact pipeline
 
 The complete release build is a local Windows process followed by platform-neutral
