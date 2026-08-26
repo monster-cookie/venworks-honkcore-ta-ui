@@ -551,10 +551,11 @@ foreach ($variant in $variants) {
       throw "Minimalist transformed ActionScript does not contain the expected seventeen independent provider registrations."
     }
 
-    $statusEffectSourcePath = Join-Path $minimalistSourceRoot "venworks\cui\components\CUIStatusEffectBar.as"
+    $statusEffectRelativePath = "venworks/cui/components/CUIStatusEffectBar.as"
+    $statusEffectSourcePath = Join-Path $minimalistSourceRoot $statusEffectRelativePath
     $statusEffectSource = Get-ScaleformPatchedActionScript `
       -SourcePath $statusEffectSourcePath `
-      -RelativePath "venworks\cui\components\CUIStatusEffectBar.as" `
+      -RelativePath $statusEffectRelativePath `
       -PatchPath $sourceProfile.ActionScriptPatchPath
     $statusBackgroundMethod = [regex]::Match(
       $statusEffectSource,
@@ -568,10 +569,11 @@ foreach ($variant in $variants) {
       throw "Minimalist active status-effect tiles must use only the approved two-layer native rectangle backing."
     }
 
-    $scannerSourcePath = Join-Path $minimalistSourceRoot "venworks\cui\components\CUIScannerOverlay.as"
+    $scannerRelativePath = "venworks/cui/components/CUIScannerOverlay.as"
+    $scannerSourcePath = Join-Path $minimalistSourceRoot $scannerRelativePath
     $scannerSource = Get-ScaleformPatchedActionScript `
       -SourcePath $scannerSourcePath `
-      -RelativePath "venworks\cui\components\CUIScannerOverlay.as" `
+      -RelativePath $scannerRelativePath `
       -PatchPath $sourceProfile.ActionScriptPatchPath
     $scannerOverlayMethod = [regex]::Match(
       $scannerSource,
