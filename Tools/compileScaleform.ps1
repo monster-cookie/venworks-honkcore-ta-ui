@@ -20,6 +20,8 @@ param(
     (Join-Path $PSScriptRoot "..\Scaleform\hudmenu_lrg\build.xml")
   ),
 
+  [string]$EmbeddedLayoutPath,
+
   [switch]$KeepWork,
 
   [switch]$UpdateExpectedHashes
@@ -469,6 +471,16 @@ $scaleformProfileHelperPath = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "sharedScaleformProfiles.ps1") `
   -Description "Scaleform movie-profile helper"
 . $scaleformProfileHelperPath
+$embeddedLayoutHelperPath = Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "sharedEmbeddedScaleformLayout.ps1") `
+  -Description "embedded Scaleform layout helper"
+. $embeddedLayoutHelperPath
+$resolvedEmbeddedLayoutPath = if ([string]::IsNullOrWhiteSpace($EmbeddedLayoutPath)) {
+  $null
+}
+else {
+  Resolve-RequiredFile -Path $EmbeddedLayoutPath -Description "embedded Scaleform layout"
+}
 $resolvedReferenceCacheManifestPath = Resolve-RequiredFile `
   -Path $ReferenceCacheManifestPath `
   -Description "Scaleform reference-cache manifest"
@@ -1240,6 +1252,21 @@ try {
     $exportedScriptsDirectory = Join-Path $movieWorkDirectory "exported-scripts"
     $importScriptsDirectory = Join-Path $movieWorkDirectory "import-scripts"
     $validationScriptsDirectory = Join-Path $movieWorkDirectory "validation-scripts"
+    $effectiveSourceProfilePatchPath = $sourceProfile.ActionScriptPatchPath
+    if ($null -ne $effectiveSourceProfilePatchPath -and
+        [System.IO.File]::ReadAllText($effectiveSourceProfilePatchPath).Contains('__VENWORKS_EMBEDDED_LAYOUT__') -and
+        $null -eq $resolvedEmbeddedLayoutPath) {
+      throw "Scaleform profile '$($sourceProfile.Name)' requires -EmbeddedLayoutPath."
+    }
+    if ($null -ne $resolvedEmbeddedLayoutPath) {
+      if ($sourceProfile.Name -ceq "shared" -or $null -eq $effectiveSourceProfilePatchPath) {
+        throw "Embedded Scaleform layout requires a non-shared ActionScript profile with a patch."
+      }
+      $effectiveSourceProfilePatchPath = New-VenworksEmbeddedScaleformPatch `
+        -SourcePatchPath $effectiveSourceProfilePatchPath `
+        -EmbeddedLayoutPath $resolvedEmbeddedLayoutPath `
+        -OutputPath (Join-Path $movieWorkDirectory "materialized-source-profile.xml")
+    }
 
     $vanillaReference = Get-ScaleformReferenceMovie `
       -Context $referenceCacheContext `
@@ -1384,11 +1411,11 @@ try {
       $importScriptPath = Join-Path $importScriptsDirectory $relativeScriptPath
       $importScriptParent = Split-Path -Parent $importScriptPath
       New-Item -ItemType Directory -Force -Path $importScriptParent | Out-Null
-      if ($null -ne $sourceProfile.ActionScriptPatchPath) {
+      if ($null -ne $effectiveSourceProfilePatchPath) {
         $patchedSource = Get-ScaleformPatchedActionScript `
           -SourcePath $authoredScript.FullName `
           -RelativePath $relativeScriptPath `
-          -PatchPath $sourceProfile.ActionScriptPatchPath
+          -PatchPath $effectiveSourceProfilePatchPath
         [System.IO.File]::WriteAllText(
           $importScriptPath,
           $patchedSource,
@@ -1520,6 +1547,20 @@ try {
       }
       if ($profileRuntimeSource -match 'ASSET MANAGER|ASSET COLLECTION|ASSET LOADING') {
         throw "Generated $($sourceProfile.Name) runtime retains the external asset-loading phase."
+      }
+      if ($null -ne $resolvedEmbeddedLayoutPath) {
+        $venworksValidationRoot = Join-Path $validationScriptRoot "venworks\cui"
+        $venworksValidationSource = @(
+          Get-ChildItem -LiteralPath $venworksValidationRoot -Recurse -File -Filter "*.as" |
+            ForEach-Object { [System.IO.File]::ReadAllText($_.FullName) }
+        ) -join "`n"
+        if ($profileRuntimeSource -notmatch '<venworksCUI\b' -or
+            $profileRuntimeSource -match '__VENWORKS_EMBEDDED_LAYOUT__|CUILayoutImportLoader|CUIPaletteLoader|URLLoader|URLRequest|VenworksCUI/layout\.xml|VenworksCUI/components/') {
+          throw "Generated $($sourceProfile.Name) runtime does not contain exactly the embedded, loader-free configuration path."
+        }
+        if ($venworksValidationSource -match 'import\s+flash\.net\.(?:URLLoader|URLRequest)|new\s+URL(?:Loader|Request)\s*\(') {
+          throw "Generated $($sourceProfile.Name) authored bytecode retains a URL loader or request."
+        }
       }
 
       $actualOutputHash = (Get-FileHash -LiteralPath $generatedGfxPath -Algorithm SHA256).Hash

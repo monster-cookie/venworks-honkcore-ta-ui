@@ -13,6 +13,8 @@ permissions: {}
 # Keep UPLOAD_TO_NEXUSMODS set to false until the new Nexus group/file IDs are configured. When false, Nexus
 # configuration validation and uploads are skipped even if legacy file IDs and the API key remain configured.
 # Re-enable Nexus uploads by configuring the new IDs and changing UPLOAD_TO_NEXUSMODS to true.
+# UPLOAD_MINIMALIST_TO_NEXUSMODS independently suppresses the experimental Minimalist packages while leaving
+# the other Nexus variants enabled. Set it to true only after the Minimalist build is ready for Nexus publication.
 #
 # Store the API key as a repository Actions secret. Store file IDs as repository Actions variables because they are not sensitive.
 #
@@ -26,6 +28,7 @@ permissions: {}
 ###############################################################################
 env:
   UPLOAD_TO_NEXUSMODS: true
+  UPLOAD_MINIMALIST_TO_NEXUSMODS: false
   NEXUSMODS_CATEGORY: main
   NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
 
@@ -344,8 +347,12 @@ jobs:
           check_upload "$NEXUSMODS_FILE_ID_TA_LOOSE" "$NEXUS_DISPLAY_NAME_TA_LOOSE" "NEXUSMODS_FILE_ID_TA_LOOSE"
           check_upload "$NEXUSMODS_FILE_ID_VWKS_NORMAL" "$NEXUS_DISPLAY_NAME_VWKS_NORMAL" "NEXUSMODS_FILE_ID_VWKS_NORMAL"
           check_upload "$NEXUSMODS_FILE_ID_VWKS_LOOSE" "$NEXUS_DISPLAY_NAME_VWKS_LOOSE" "NEXUSMODS_FILE_ID_VWKS_LOOSE"
-          check_upload "$NEXUSMODS_FILE_ID_MIN_NORMAL" "$NEXUS_DISPLAY_NAME_MIN_NORMAL" "NEXUSMODS_FILE_ID_MIN_NORMAL"
-          check_upload "$NEXUSMODS_FILE_ID_MIN_LOOSE" "$NEXUS_DISPLAY_NAME_MIN_LOOSE" "NEXUSMODS_FILE_ID_MIN_LOOSE"
+          if [ "$UPLOAD_MINIMALIST_TO_NEXUSMODS" = "true" ]; then
+            check_upload "$NEXUSMODS_FILE_ID_MIN_NORMAL" "$NEXUS_DISPLAY_NAME_MIN_NORMAL" "NEXUSMODS_FILE_ID_MIN_NORMAL"
+            check_upload "$NEXUSMODS_FILE_ID_MIN_LOOSE" "$NEXUS_DISPLAY_NAME_MIN_LOOSE" "NEXUSMODS_FILE_ID_MIN_LOOSE"
+          else
+            echo "::notice::Skipping Minimalist Nexus Mods uploads because UPLOAD_MINIMALIST_TO_NEXUSMODS is false."
+          fi
 
           if [ "$configured_uploads" -gt 0 ] && [ -z "$NEXUSMODS_API_KEY" ]; then
             echo "NEXUSMODS_API_KEY is required for Nexus Mods uploads."
@@ -475,7 +482,7 @@ jobs:
           description: ${{ steps.release-notes.outputs.nexus_description }}
 
       - name: Upload Minimalist normal release to Nexus Mods
-        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_MIN_NORMAL != '' }}
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && fromJSON(env.UPLOAD_MINIMALIST_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_MIN_NORMAL != '' }}
         uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
@@ -490,7 +497,7 @@ jobs:
           description: ${{ steps.release-notes.outputs.nexus_description }}
 
       - name: Upload Minimalist fully loose release to Nexus Mods
-        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_MIN_LOOSE != '' }}
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && fromJSON(env.UPLOAD_MINIMALIST_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_MIN_LOOSE != '' }}
         uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}

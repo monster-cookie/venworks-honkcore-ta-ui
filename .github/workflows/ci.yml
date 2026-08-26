@@ -144,7 +144,6 @@ jobs:
             'Nexus PC - Normal' = @(
               "$minimalistBase - Main.ba2"
               "$minimalistBase.esm"
-              'Interface/VenworksCUI/layout.xml'
             )
             'Nexus PC - Fully Loose Files' = $minimalistLooseEntries
             'Bethesda PC' = @("$minimalistBase - Main.ba2", "$minimalistBase.esm")

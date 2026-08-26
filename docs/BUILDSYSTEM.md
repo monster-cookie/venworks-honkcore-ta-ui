@@ -106,14 +106,18 @@ and their ActionScript source profiles. `Tools/buildVariant.ps1` compiles each
 unique selected movie profile once and stages each selected profile from
 `Scaleform/variants/<KEY>/build.psd1` independently. A variant profile owns its
 movie profile, layout source, component inventory, assets, palettes, palette
-mode, and optional stub-ESM source. Adding or removing one component or movie
-capability in one profile does not require making the other profiles match.
+mode, configuration delivery mode, and optional stub-ESM source. Adding or
+removing one component or movie capability in one profile does not require
+making the other profiles match.
 
 The four themed profiles currently share the production layout, eight component
 fragments, six SVG assets, five external palettes, and the full shared HUD movie
 profile. Minimalist independently declares six component fragments, its own
 layout, and the `minimalist-no-svg` HUD movie profile. The HUD-message movies
-remain shared across all five variants.
+remain shared across all five variants. Its `Embedded` configuration mode
+resolves that authored layout and its fragments into each Minimalist HUD movie;
+the default `External` mode preserves runtime XML loading for the themed
+profiles.
 
 ## Minimalist release
 
@@ -153,10 +157,11 @@ The Minimalist profile generates its one-domain seed and imports ActionScript
 from the shared source tree through a strict exclusion and source-transform
 manifest. Its normal and large HUD movies contain no SVG loader/parser, SVG
 path, mask, panel, built-in icon, composite resolver, asset-manager, or
-equipment-provider-symbol classes. The build rejects those class names and
-runtime strings after JPEXS reopens each movie. The four themed variants retain
-the shared production HUD hashes; only Minimalist's `hudmenu.gfx` and
-`hudmenu_lrg.gfx` are profile-specific.
+equipment-provider-symbol classes. It also excludes the layout and palette
+loader classes plus Venworks uses of `URLLoader` and `URLRequest`. The build
+rejects those class names and runtime strings after JPEXS reopens each movie.
+The four themed variants retain the shared production HUD hashes; only
+Minimalist's `hudmenu.gfx` and `hudmenu_lrg.gfx` are profile-specific.
 
 Minimalist resolves the `starfield.xml` color roles to literal XML colors,
 removes the palette selector, faction display, helmet cutout paths, and complete
@@ -165,9 +170,10 @@ position. Its six fragments use fitted native rectangle and ellipse backings
 with a 28-percent dark base and 10-percent pale-blue tint beneath the existing
 corner brackets and divider strokes. The build rejects `svg`, `path`, `mask`,
 `icon`, `panel`, and `providerSymbol` nodes, then removes the `Assets` and
-`palettes` directories. The result contains the renamed stub ESM, four GFX
-files, the reduced loose CUI configuration, and the Windows, Xbox, and PS5 Main
-BA2s.
+`palettes` directories. It resolves all six imports at build time, embeds the
+complete literal-color layout in each HUD movie, and stages no
+`Interface\VenworksCUI` directory. The result contains the renamed stub ESM,
+four GFX files, and the Windows, Xbox, and PS5 Main BA2s.
 The selected release-package command creates all five normal package shapes for
 Minimalist. Omitting `-VariantKeys` selects all five release variants.
 
@@ -182,18 +188,19 @@ The release workflow produces five ZIP shapes for each of the five variants:
 
 | Package | Contents |
 |---|---|
-| Nexus PC - Normal | Root ESM, Windows Main BA2, any generated Windows Textures BA2, and loose `Interface\VenworksCUI\layout.xml` |
+| Nexus PC - Normal | Root ESM, Windows Main BA2, any generated Windows Textures BA2, plus loose `Interface\VenworksCUI\layout.xml` only for an external-configuration profile |
 | Nexus PC - Fully Loose Files | Complete loose `Interface` tree, with no ESM or BA2 |
 | Bethesda PC | Root ESM, Windows Main BA2, and any generated Windows Textures BA2 only |
 | Bethesda Xbox | Root ESM, Xbox Main BA2, and any generated Xbox Textures BA2 only |
 | Bethesda PS5 | Root ESM, PS5 Main BA2, and any generated PS5 Textures BA2 only |
 
 Minimalist's platform packages contain its ESM and the matching Main BA2, with
-no texture archive. The complete release matrix contains 25 ZIPs. The normal
-Nexus package leaves only `layout.xml` loose so the compiled HUD movies remain
-protected by the BA2. Users who need to edit component fragments, or palettes
-and SVG assets in a themed variant, must use the fully loose package or provide
-a separate loose override. Do not install the normal and fully loose packages
+no texture archive or loose XML. Its fully loose Nexus package contains only
+the four GFX files. The complete release matrix contains 25 ZIPs. A themed
+normal Nexus package leaves only `layout.xml` loose so the compiled HUD movies
+remain protected by the BA2. Users who need to edit themed component fragments,
+palettes, or SVG assets must use the themed fully loose package or provide a
+separate loose override. Do not install a normal and fully loose package
 together.
 
 ## Persistent BGS reference cache

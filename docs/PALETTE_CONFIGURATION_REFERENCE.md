@@ -14,9 +14,11 @@ for all other XML elements.
 
 ## Packaged palettes and public themes
 
-Every release variant packages all five palette XML files under
-`Interface\VenworksCUI\palettes`. The variant controls only the initial
-`palette` attribute in `layout.xml`.
+Each of the four themed release variants packages all five palette XML files
+under `Interface\VenworksCUI\palettes`. The themed variant controls only the
+initial `palette` attribute in `layout.xml`. Minimalist packages no palette
+files; its build resolves the `starfield.xml` color roles to literals before
+embedding its layout in the HUD movies.
 
 | Public appearance | Palette filename |
 |---|---|
