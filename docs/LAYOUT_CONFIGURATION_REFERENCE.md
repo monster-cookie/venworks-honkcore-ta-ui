@@ -23,12 +23,7 @@ normal and large HUD movies do not contain support for `panel`, `svg`, `path`,
 Minimalist layout or imported fragment. Minimalist also has no external palette
 or asset directory and does not include the equipment rail.
 
-Minimalist retains groups, text, shapes, dividers, meters, repeaters, states,
-templates, embedded Bethesda symbols, radar, compass, scanner, threat,
-status-effect, and other nonexcluded components. Its staged layout payload uses
-literal Starfield colors, fitted translucent rectangle and ellipse backings,
-and open corner/divider geometry. The element and SVG sections below describe
-the full themed profile unless they explicitly say otherwise.
+Minimalist retains groups, text, shapes, dividers, meters, repeaters, states, templates, embedded Bethesda symbols, radar, compass, scanner, threat, status-effect, and other nonexcluded components. Its build resolves the authored layout and six fragments to literal Starfield colors, embeds that final tree in both HUD movies, and stages no loose XML. The embedded layout uses fitted translucent rectangle and ellipse backings plus open corner/divider geometry. The element and SVG sections below describe the full themed profile unless they explicitly say otherwise.
 
 ## Fixed runtime paths
 
@@ -41,8 +36,7 @@ All paths below are relative to Starfield's `Data\Interface` directory.
 | Selected palette | `VenworksCUI\palettes\<filename>.xml` |
 | Local SVG assets | `VenworksCUI\Assets\<relative-path>.svg` |
 
-The selected palette and local SVG paths apply only to the four themed
-variants. Minimalist does not load either path.
+All four runtime paths apply only to the themed variants. Minimalist loads no external layout, fragment, palette, or SVG path.
 
 The runtime does not load a user-selected layout from any other root, execute
 scripts from XML, call arbitrary game methods, subscribe to arbitrary data
@@ -50,7 +44,7 @@ providers, or fetch network resources.
 
 ## Load and validation order
 
-The runtime processes an authored layout as one atomic configuration:
+The themed runtime processes an authored layout as one atomic configuration:
 
 1. Load and parse `layout.xml`.
 2. Validate no more than 16 `<include>` declarations and load their fragments.
@@ -67,6 +61,8 @@ The runtime processes an authored layout as one atomic configuration:
 
 Any failure prevents the complete configurable layer from rendering and shows
 a categorized diagnostic. No invalid subtree is skipped or partially accepted.
+
+The Minimalist build performs include placement, ID prefixing, and literal color resolution before compiling the resolved XML literal into `hudmenu.gfx` and `hudmenu_lrg.gfx`. Its runtime still performs composite lowering and final parser validation on that embedded tree. Minimalist therefore has no runtime file-loading phase and cannot be customized by deploying loose XML.
 
 ## Root layout document
 

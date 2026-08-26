@@ -1,5 +1,9 @@
 # Venworks - Customizable HUD and Themes
 
+## Unreleased
+
+- Minimalist: Resolved the authored layout and six component fragments during the build, embedded the final literal-color configuration in both HUD movies, and removed runtime XML/palette loaders and loose XML from every package for PS5 startup isolation.
+
 ## Version 2.0.4 (August 25, 2026)
 
 - Minimalist: Removed all SVG support from the movies and actionscript.

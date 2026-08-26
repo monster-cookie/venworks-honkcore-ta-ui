@@ -11,13 +11,9 @@ complete palette contract and custom-theme workflow, use the
 
 ## Before editing
 
-1. Enable only one of the five Venworks Customizable HUD release variants. All
-   variants install the same HUD and configuration paths, so they must never be
-   enabled together.
+1. Enable only one of the five Venworks Customizable HUD release variants. All variants install the same HUD movie paths, so they must never be enabled together.
 2. Fully exit Starfield.
-3. Back up the loose `Interface\VenworksCUI\layout.xml` from the normal package.
-   If you use the fully loose package or an advanced override, back up the
-   complete `Interface\VenworksCUI` directory.
+3. For a themed variant, back up the loose `Interface\VenworksCUI\layout.xml` from the normal package. If you use the fully loose package or an advanced override, back up the complete `Interface\VenworksCUI` directory.
 4. Use a plain-text or XML editor that preserves UTF-8 text and straight ASCII
    quotation marks.
 5. Keep a copy of every customized file outside the downloaded mod package.
@@ -59,15 +55,9 @@ The important files are:
 | `Interface\VenworksCUI\palettes\*.xml` | Defines semantic colors, typography, opacity, strokes, and the faction crest. |
 | `Interface\VenworksCUI\Assets\*.svg` | Contains supported local vector artwork used by the layout or palettes. |
 
-Minimalist intentionally omits the external `Assets` and `palettes` directories,
-uses literal Starfield colors, and does not include the faction-display
-fragment. Its normal Nexus package exposes the reduced `layout.xml` loose, and
-its fully loose Nexus package exposes the complete reduced interface tree.
+Minimalist intentionally omits the complete `Interface\VenworksCUI` directory. Its build resolves the source layout and fragments to literal Starfield colors and embeds the final configuration in both HUD movies. Its normal Nexus package contains the ESM and Main BA2; its fully loose Nexus package contains only four GFX files. Loose XML does not customize Minimalist.
 
-The Nexus PC - Normal package exposes only `layout.xml` from this tree as a
-loose file. The runtime resolves the referenced component fragments, palettes,
-and SVG assets from the package's BA2. Do not install the normal and fully loose
-packages together.
+A themed Nexus PC - Normal package exposes only `layout.xml` from this tree as a loose file. The themed runtime resolves the referenced component fragments, palettes, and SVG assets from the package's BA2. Do not install the normal and fully loose packages together.
 
 When using a mod manager, open the active mod's own file directory rather than
 assuming the deployed `Data` copy is the authoritative source. The exact
@@ -75,7 +65,7 @@ manager-specific staging location is intentionally not fixed by this project.
 
 ## How configuration loading works
 
-At HUD startup, the runtime:
+At HUD startup, a themed runtime:
 
 1. loads `layout.xml`;
 2. loads and places every declared component fragment;
@@ -88,6 +78,8 @@ At HUD startup, the runtime:
 The process is atomic. One invalid file prevents the configurable layer from
 partially rendering. A diagnostic panel identifies the failure category and,
 when available, the phase, checkpoint, component type, and component ID.
+
+The Minimalist build performs file acquisition, fragment placement, ID prefixing, and literal color resolution, then embeds the resolved XML tree in each HUD movie. Its runtime starts directly from that tree and retains the normal composite and parser validation phases. It does not invoke a layout loader, palette loader, `URLLoader`, or `URLRequest`.
 
 There is no live reload command. After every XML or SVG change, fully exit and
 restart Starfield. Merely closing the scanner or opening a menu is not a

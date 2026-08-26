@@ -2,6 +2,138 @@
 <actionScriptProfilePatch name="minimalist-no-svg" version="1">
   <source path="venworks/cui/CUIRuntime.as">
     <replace>
+      <find><![CDATA[      private var diagnostics:CUIDiagnosticsPanel;
+      private var loader:CUILayoutImportLoader;
+      private var paletteLoader:CUIPaletteLoader;
+      private var layoutConfig:XML;]]></find>
+      <with><![CDATA[      private var diagnostics:CUIDiagnosticsPanel;
+      private var layoutConfig:XML;]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[      public function load() : void
+      {
+         if(this.disposed || loader != null)
+         {
+            return;
+         }
+         try
+         {
+            loader = new CUILayoutImportLoader();
+            loader.addEventListener(Event.COMPLETE,this.onLoaded);
+            loader.addEventListener(Event.CANCEL,this.onLoadFailed);
+            loader.load();
+         }
+         catch(param1:Error)
+         {
+            this.setDiagnosticContext("CUI BOOTSTRAP",null,"LAYOUT LOADER START");
+            this.showRuntimeError(param1);
+         }
+      }]]></find>
+      <with><![CDATA[      public function load() : void
+      {
+         var config:XML = null;
+         if(this.disposed || layoutConfig != null)
+         {
+            return;
+         }
+         try
+         {
+            this.setDiagnosticContext("EMBEDDED LAYOUT INITIALIZATION",null,"LAYOUT MATERIALIZATION");
+            config = __VENWORKS_EMBEDDED_LAYOUT__;
+            this.setDiagnosticContext("PRE-PALETTE COMPOSITION",null,"COMPOSITE LOWERING");
+            parser = new CUILayoutParser();
+            config = parser.prepareForPalette(config);
+            valueContext = new CUIPlayerHudDataContext();
+            valueContext.addEventListener(CUIPlayerHudDataContext.PROVIDER_ERROR,this.onProviderError);
+            this.setDiagnosticContext("VALUE PROVIDER REGISTRATION",null,"TRANSACTIONAL START");
+            valueContext.start();
+            this.setDiagnosticContext("EMBEDDED LAYOUT VALIDATION",null,"PARSER INITIALIZATION");
+            parser.parse(config);
+            paletteResolver = parser.palette;
+            layoutConfig = config;
+            this.onAssetsLoaded(null);
+         }
+         catch(param1:Error)
+         {
+            if(diagnosticPhase == "EMBEDDED LAYOUT VALIDATION" && parser != null)
+            {
+               diagnosticNode = parser.lastDiagnosticNode;
+               diagnosticCheckpoint = parser.lastDiagnosticCheckpoint;
+            }
+            this.showRuntimeError(param1);
+         }
+      }]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[      private function onLoaded(param1:Event) : void
+      {
+         var config:XML = loader.layout;
+         this.clearListeners();
+         try
+         {
+            this.setDiagnosticContext("PRE-PALETTE COMPOSITION",null,"COMPOSITE LOWERING");
+            parser = new CUILayoutParser();
+            config = parser.prepareForPalette(config);
+            valueContext = new CUIPlayerHudDataContext();
+            valueContext.addEventListener(CUIPlayerHudDataContext.PROVIDER_ERROR,this.onProviderError);
+            this.setDiagnosticContext("VALUE PROVIDER REGISTRATION",null,"TRANSACTIONAL START");
+            valueContext.start();
+            paletteLoader = new CUIPaletteLoader();
+            paletteLoader.addEventListener(Event.COMPLETE,this.onPaletteLoaded);
+            paletteLoader.addEventListener(Event.CANCEL,this.onPaletteFailed);
+            paletteLoader.load(config);
+         }
+         catch(param2:Error)
+         {
+            this.showRuntimeError(param2);
+         }
+      }
+
+      private function onPaletteLoaded(param1:Event) : void
+      {
+         var config:XML = paletteLoader.layout;
+         this.clearPaletteListeners();
+         try
+         {
+            this.setDiagnosticContext("PALETTE-RESOLVED LAYOUT VALIDATION",null,"PARSER INITIALIZATION");
+            parser.parse(config);
+            paletteResolver = parser.palette;
+            layoutConfig = config;
+            this.setDiagnosticContext("ASSET MANAGER INITIALIZATION",null,"CONSTRUCTOR");
+            assetManager = new CUIAssetManager(paletteResolver);
+            assetManager.addEventListener(Event.COMPLETE,this.onAssetsLoaded);
+            assetManager.addEventListener(Event.CANCEL,this.onAssetFailed);
+            this.setDiagnosticContext("ASSET COLLECTION",null,"COLLECTION AND REQUEST START");
+            assetManager.load(parser.components);
+         }
+         catch(param2:Error)
+         {
+            if(diagnosticPhase == "PALETTE-RESOLVED LAYOUT VALIDATION" && parser != null)
+            {
+               diagnosticNode = parser.lastDiagnosticNode;
+               diagnosticCheckpoint = parser.lastDiagnosticCheckpoint;
+            }
+            this.showRuntimeError(param2);
+         }
+      }
+
+      private function onPaletteFailed(param1:Event) : void
+      {
+         this.clearPaletteListeners();
+         this.clearComponentLayer();
+         diagnostics.showError(paletteLoader.errorTitle,paletteLoader.errorMessage);
+      }
+
+      private function onLoadFailed(param1:Event) : void
+      {
+         this.clearListeners();
+         this.clearComponentLayer();
+         diagnostics.showError(loader.errorTitle,loader.errorMessage);
+      }
+]]></find>
+      <with><![CDATA[]]></with>
+    </replace>
+    <replace>
       <find><![CDATA[   import venworks.cui.components.CUIIcon;
    import venworks.cui.components.CUIImage;
    import venworks.cui.components.CUIMask;
@@ -25,17 +157,6 @@
       private var parser:CUILayoutParser;]]></find>
       <with><![CDATA[      private var layoutConfig:XML;
       private var parser:CUILayoutParser;]]></with>
-    </replace>
-    <replace>
-      <find><![CDATA[            layoutConfig = config;
-            this.setDiagnosticContext("ASSET MANAGER INITIALIZATION",null,"CONSTRUCTOR");
-            assetManager = new CUIAssetManager(paletteResolver);
-            assetManager.addEventListener(Event.COMPLETE,this.onAssetsLoaded);
-            assetManager.addEventListener(Event.CANCEL,this.onAssetFailed);
-            this.setDiagnosticContext("ASSET COLLECTION",null,"COLLECTION AND REQUEST START");
-            assetManager.load(parser.components);]]></find>
-      <with><![CDATA[            layoutConfig = config;
-            this.onAssetsLoaded(null);]]></with>
     </replace>
     <replace>
       <find><![CDATA[      private function onAssetsLoaded(param1:Event) : void
@@ -66,6 +187,34 @@
          {
             assetManager.removeEventListener(Event.COMPLETE,this.onAssetsLoaded);
             assetManager.removeEventListener(Event.CANCEL,this.onAssetFailed);
+         }
+      }
+]]></find>
+      <with><![CDATA[
+]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[
+      private function clearPaletteListeners() : void
+      {
+         if(paletteLoader != null)
+         {
+            paletteLoader.removeEventListener(Event.COMPLETE,this.onPaletteLoaded);
+            paletteLoader.removeEventListener(Event.CANCEL,this.onPaletteFailed);
+         }
+      }
+]]></find>
+      <with><![CDATA[
+]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[
+      private function clearListeners() : void
+      {
+         if(loader != null)
+         {
+            loader.removeEventListener(Event.COMPLETE,this.onLoaded);
+            loader.removeEventListener(Event.CANCEL,this.onLoadFailed);
          }
       }
 ]]></find>
@@ -123,9 +272,7 @@
          this.clearPaletteListeners();
          this.clearAssetListeners();
          this.clearComponentLayer();]]></find>
-      <with><![CDATA[         this.clearListeners();
-         this.clearPaletteListeners();
-         this.clearComponentLayer();]]></with>
+      <with><![CDATA[         this.clearComponentLayer();]]></with>
     </replace>
   </source>
   <source path="venworks/cui/CUICompositionResolver.as">

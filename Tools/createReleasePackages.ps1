@@ -21,6 +21,7 @@ if (!(Test-Path Variable:Global:SharedConfigurationLoaded) -or !$Global:SharedCo
   Write-Host -ForegroundColor Green "Importing release variant configuration"
   . "$PSScriptRoot/sharedConfig.ps1" -SkipEnvironment
 }
+. "$PSScriptRoot/sharedScaleformProfiles.ps1"
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
@@ -193,6 +194,13 @@ New-Item -ItemType Directory -Force -Path $resolvedOutputDirectory | Out-Null
 $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
 
 foreach ($variant in $variants) {
+  $variantBuildProfilePath = Resolve-RequiredFile `
+    -Path (Join-Path $PSScriptRoot "..\Scaleform\variants\$($variant.VariantKey)\build.psd1") `
+    -Description "$($variant.VariantName) build profile"
+  $variantBuildProfile = Import-PowerShellDataFile -LiteralPath $variantBuildProfilePath
+  $movieProfile = Get-VariantScaleformMovieProfile `
+    -RepositoryRoot ([System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))) `
+    -VariantBuildProfile $variantBuildProfile
   $stagingPath = (Resolve-Path -LiteralPath $variant.StagingFolderPath).Path
   $interfacePath = Join-Path $stagingPath "Interface"
   if (!(Test-Path -LiteralPath $interfacePath -PathType Container)) {
@@ -214,10 +222,13 @@ foreach ($variant in $variants) {
   $texturesXboxPath = Resolve-OptionalFile -Path (Join-Path $stagingPath $texturesXboxName) -Description "$($variant.VariantName) Xbox Textures archive"
   $mainPsPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $mainPsName) -Description "$($variant.VariantName) PS5 Main archive"
   $texturesPsPath = Resolve-OptionalFile -Path (Join-Path $stagingPath $texturesPsName) -Description "$($variant.VariantName) PS5 Textures archive"
-  $layoutPath = Resolve-RequiredFile -Path (Join-Path (Join-Path $interfacePath "VenworksCUI") "layout.xml") -Description "$($variant.VariantName) loose layout"
 
   $pluginFile = New-PackageFile -SourcePath $pluginPath -EntryName $pluginName
-  $layoutFile = New-PackageFile -SourcePath $layoutPath -EntryName "Interface/VenworksCUI/layout.xml"
+  $normalPackageFiles = @($pluginFile)
+  if ($movieProfile.ConfigurationMode -ceq "External") {
+    $layoutPath = Resolve-RequiredFile -Path (Join-Path (Join-Path $interfacePath "VenworksCUI") "layout.xml") -Description "$($variant.VariantName) loose layout"
+    $normalPackageFiles += New-PackageFile -SourcePath $layoutPath -EntryName "Interface/VenworksCUI/layout.xml"
+  }
   $windowsMainFile = New-PackageFile -SourcePath $mainPath -EntryName $mainName
   $xboxMainFile = New-PackageFile -SourcePath $mainXboxPath -EntryName $mainXboxName
   $psMainFile = New-PackageFile -SourcePath $mainPsPath -EntryName $mainPsName
@@ -246,7 +257,7 @@ foreach ($variant in $variants) {
   $packages = @(
     [pscustomobject]@{
       Suffix = "Nexus PC - Normal"
-      Files = @($pluginFile) + $windowsArchiveFiles + @($layoutFile)
+      Files = $normalPackageFiles + $windowsArchiveFiles
     },
     [pscustomobject]@{
       Suffix = "Nexus PC - Fully Loose Files"

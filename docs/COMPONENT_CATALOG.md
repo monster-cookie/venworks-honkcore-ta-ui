@@ -127,12 +127,7 @@ surface.
 | Mask/clip | Complete | Bound one or more children to rectangle, ellipse, or approved path geometry, including nested masks. |
 
 The four themed variants expose the complete component catalog above.
-Minimalist uses a reduced movie profile: `panel`, `mask`, `svg`, `path`, `icon`,
-and `providerSymbol` are unavailable, and their runtime classes are not present
-in its normal or large HUD movie. Minimalist composes fitted holographic
-surfaces from groups, text, translucent native rectangle and ellipse shapes,
-dividers, meters, radar rings, markers, and the remaining specialized
-components.
+Minimalist uses a reduced movie profile: `panel`, `mask`, `svg`, `path`, `icon`, and `providerSymbol` are unavailable, and their runtime classes are not present in its normal or large HUD movie. Its layout and six source fragments are resolved and embedded at build time, so its movies also omit the runtime layout and palette loader classes. Minimalist composes fitted holographic surfaces from groups, text, translucent native rectangle and ellipse shapes, dividers, meters, radar rings, markers, and the remaining specialized components.
 
 ## Meter and bar family
 

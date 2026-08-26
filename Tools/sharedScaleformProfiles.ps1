@@ -143,6 +143,16 @@ function Get-VariantScaleformMovieProfile {
     throw "Variant build profile is missing MovieProfile."
   }
 
+  $configurationMode = if ($VariantBuildProfile.ContainsKey("ConfigurationMode")) {
+    [string]$VariantBuildProfile.ConfigurationMode
+  }
+  else {
+    "External"
+  }
+  if ($configurationMode -cne "External" -and $configurationMode -cne "Embedded") {
+    throw "Scaleform movie profile '$name' selects unsupported configuration mode '$configurationMode'."
+  }
+
   $manifestRelativePaths = if ($VariantBuildProfile.ContainsKey("MovieManifestPaths")) {
     @($VariantBuildProfile.MovieManifestPaths | ForEach-Object { [string]$_ })
   }
@@ -194,6 +204,7 @@ function Get-VariantScaleformMovieProfile {
 
   return [pscustomobject]@{
     Name = $name
+    ConfigurationMode = $configurationMode
     ManifestPaths = @($manifestDefinitions | ForEach-Object { $_.ManifestPath })
     MovieDefinitions = $movieDefinitions
   }
