@@ -27,11 +27,11 @@ permissions: {}
 #
 ###############################################################################
 env:
-  UPLOAD_TO_NEXUSMODS: true
-  UPLOAD_FC_TO_NEXUSMODS: true
-  UPLOAD_CF_TO_NEXUSMODS: true
-  UPLOAD_TA_TO_NEXUSMODS: true
-  UPLOAD_VWKS_TO_NEXUSMODS: true
+  UPLOAD_TO_NEXUSMODS: false
+  UPLOAD_FC_TO_NEXUSMODS: false
+  UPLOAD_CF_TO_NEXUSMODS: false
+  UPLOAD_TA_TO_NEXUSMODS: false
+  UPLOAD_VWKS_TO_NEXUSMODS: false
   UPLOAD_MIN_TO_NEXUSMODS: false
   NEXUSMODS_CATEGORY: main
   NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
