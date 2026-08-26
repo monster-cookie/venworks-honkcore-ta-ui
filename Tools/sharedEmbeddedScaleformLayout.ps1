@@ -223,6 +223,37 @@ function Get-VenworksEmbeddedLayoutText {
   return $resolvedText
 }
 
+function Assert-VenworksEmbeddedLayoutInMovie {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$MoviePath,
+
+    [Parameter(Mandatory = $true)]
+    [AllowEmptyString()]
+    [string]$EmbeddedLayoutText,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Description
+  )
+
+  if (!(Test-Path -LiteralPath $MoviePath -PathType Leaf)) {
+    throw "$Description does not exist: $MoviePath"
+  }
+  $resolvedLayoutText = $EmbeddedLayoutText.Trim()
+  if ([string]::IsNullOrWhiteSpace($resolvedLayoutText) -or $resolvedLayoutText -match '<\?xml') {
+    throw "$Description cannot be checked against an empty or declaration-bearing embedded layout."
+  }
+
+  $bytePreservingEncoding = [System.Text.Encoding]::GetEncoding(28591)
+  $movieByteText = $bytePreservingEncoding.GetString([System.IO.File]::ReadAllBytes($MoviePath))
+  $layoutByteText = $bytePreservingEncoding.GetString(
+    [System.Text.Encoding]::UTF8.GetBytes($resolvedLayoutText)
+  )
+  if ($movieByteText.IndexOf($layoutByteText, [System.StringComparison]::Ordinal) -lt 0) {
+    throw "$Description does not contain the exact current resolved embedded layout. Rebuild the movie."
+  }
+}
+
 function New-VenworksEmbeddedScaleformPatch {
   param(
     [Parameter(Mandatory = $true)]

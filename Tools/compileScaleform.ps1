@@ -481,6 +481,12 @@ $resolvedEmbeddedLayoutPath = if ([string]::IsNullOrWhiteSpace($EmbeddedLayoutPa
 else {
   Resolve-RequiredFile -Path $EmbeddedLayoutPath -Description "embedded Scaleform layout"
 }
+$resolvedEmbeddedLayoutText = if ($null -eq $resolvedEmbeddedLayoutPath) {
+  $null
+}
+else {
+  [System.IO.File]::ReadAllText($resolvedEmbeddedLayoutPath).Trim()
+}
 $resolvedReferenceCacheManifestPath = Resolve-RequiredFile `
   -Path $ReferenceCacheManifestPath `
   -Description "Scaleform reference-cache manifest"
@@ -1438,6 +1444,12 @@ try {
     $generatedBytes = [System.IO.File]::ReadAllBytes($generatedGfxPath)
     if ($generatedBytes.Length -lt 3 -or [System.Text.Encoding]::ASCII.GetString($generatedBytes, 0, 3) -ne 'GFX') {
       throw "Generated output does not have a GFX signature: $generatedGfxPath"
+    }
+    if ($null -ne $resolvedEmbeddedLayoutText) {
+      Assert-VenworksEmbeddedLayoutInMovie `
+        -MoviePath $generatedGfxPath `
+        -EmbeddedLayoutText $resolvedEmbeddedLayoutText `
+        -Description "Generated $($build.name) movie"
     }
 
     [xml]$reopened = Get-Content -LiteralPath $reopenedXmlPath -Raw

@@ -331,6 +331,7 @@ foreach ($variant in $variants) {
     }
   }
 
+  $verifiedMoviePaths = @{}
   foreach ($movie in @($movieProfile.MovieDefinitions)) {
     $moviePath = Resolve-RequiredFile -Path (Join-Path $interfacePath $movie.FileName) -Description "$($variant.VariantName) $($movie.FileName)"
     $expectedHash = Read-ExpectedSha256 -Path $movie.ExpectedHashPath
@@ -338,6 +339,7 @@ foreach ($variant in $variants) {
     if ($actualHash -cne $expectedHash) {
       throw "$($variant.VariantName) $($movie.FileName) hash mismatch. Expected $expectedHash; found $actualHash."
     }
+    $verifiedMoviePaths[[string]$movie.FileName] = $moviePath
   }
 
   $layoutSourcePath = Resolve-RequiredFile `
@@ -352,6 +354,14 @@ foreach ($variant in $variants) {
     if (@($resolvedEmbeddedLayout.SelectNodes('//include|//includes')).Count -ne 0 -or
         @($resolvedEmbeddedLayout.SelectNodes('/venworksCUI/components/group')).Count -ne 8) {
       throw "$($variant.VariantName) embedded layout did not resolve all six component imports into the two root components."
+    }
+    foreach ($movie in @($movieProfile.MovieDefinitions | Where-Object {
+      [string]$_.FileName -in @('hudmenu.gfx', 'hudmenu_lrg.gfx')
+    })) {
+      Assert-VenworksEmbeddedLayoutInMovie `
+        -MoviePath $verifiedMoviePaths[[string]$movie.FileName] `
+        -EmbeddedLayoutText $resolvedEmbeddedLayoutText `
+        -Description "$($variant.VariantName) $($movie.FileName)"
     }
     $cuiPath = Split-Path -Parent $layoutSourcePath
   }

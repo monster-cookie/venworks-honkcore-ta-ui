@@ -13,8 +13,8 @@ permissions: {}
 # Keep UPLOAD_TO_NEXUSMODS set to false until the new Nexus group/file IDs are configured. When false, Nexus
 # configuration validation and uploads are skipped even if legacy file IDs and the API key remain configured.
 # Re-enable Nexus uploads by configuring the new IDs and changing UPLOAD_TO_NEXUSMODS to true.
-# UPLOAD_MINIMALIST_TO_NEXUSMODS independently suppresses the experimental Minimalist packages while leaving
-# the other Nexus variants enabled. Set it to true only after the Minimalist build is ready for Nexus publication.
+# Each UPLOAD_<KEY>_TO_NEXUSMODS switch independently controls one variant. Keep the Minimalist switch false until
+# that experimental build is ready for Nexus publication.
 #
 # Store the API key as a repository Actions secret. Store file IDs as repository Actions variables because they are not sensitive.
 #
@@ -28,7 +28,11 @@ permissions: {}
 ###############################################################################
 env:
   UPLOAD_TO_NEXUSMODS: true
-  UPLOAD_MINIMALIST_TO_NEXUSMODS: false
+  UPLOAD_FC_TO_NEXUSMODS: true
+  UPLOAD_CF_TO_NEXUSMODS: true
+  UPLOAD_TA_TO_NEXUSMODS: true
+  UPLOAD_VWKS_TO_NEXUSMODS: true
+  UPLOAD_MIN_TO_NEXUSMODS: false
   NEXUSMODS_CATEGORY: main
   NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
 
@@ -339,20 +343,27 @@ jobs:
             fi
           }
 
-          check_upload "$NEXUSMODS_FILE_ID_FC_NORMAL" "$NEXUS_DISPLAY_NAME_FC_NORMAL" "NEXUSMODS_FILE_ID_FC_NORMAL"
-          check_upload "$NEXUSMODS_FILE_ID_FC_LOOSE" "$NEXUS_DISPLAY_NAME_FC_LOOSE" "NEXUSMODS_FILE_ID_FC_LOOSE"
-          check_upload "$NEXUSMODS_FILE_ID_CF_NORMAL" "$NEXUS_DISPLAY_NAME_CF_NORMAL" "NEXUSMODS_FILE_ID_CF_NORMAL"
-          check_upload "$NEXUSMODS_FILE_ID_CF_LOOSE" "$NEXUS_DISPLAY_NAME_CF_LOOSE" "NEXUSMODS_FILE_ID_CF_LOOSE"
-          check_upload "$NEXUSMODS_FILE_ID_TA_NORMAL" "$NEXUS_DISPLAY_NAME_TA_NORMAL" "NEXUSMODS_FILE_ID_TA_NORMAL"
-          check_upload "$NEXUSMODS_FILE_ID_TA_LOOSE" "$NEXUS_DISPLAY_NAME_TA_LOOSE" "NEXUSMODS_FILE_ID_TA_LOOSE"
-          check_upload "$NEXUSMODS_FILE_ID_VWKS_NORMAL" "$NEXUS_DISPLAY_NAME_VWKS_NORMAL" "NEXUSMODS_FILE_ID_VWKS_NORMAL"
-          check_upload "$NEXUSMODS_FILE_ID_VWKS_LOOSE" "$NEXUS_DISPLAY_NAME_VWKS_LOOSE" "NEXUSMODS_FILE_ID_VWKS_LOOSE"
-          if [ "$UPLOAD_MINIMALIST_TO_NEXUSMODS" = "true" ]; then
-            check_upload "$NEXUSMODS_FILE_ID_MIN_NORMAL" "$NEXUS_DISPLAY_NAME_MIN_NORMAL" "NEXUSMODS_FILE_ID_MIN_NORMAL"
-            check_upload "$NEXUSMODS_FILE_ID_MIN_LOOSE" "$NEXUS_DISPLAY_NAME_MIN_LOOSE" "NEXUSMODS_FILE_ID_MIN_LOOSE"
-          else
-            echo "::notice::Skipping Minimalist Nexus Mods uploads because UPLOAD_MINIMALIST_TO_NEXUSMODS is false."
-          fi
+          check_variant_uploads() {
+            case "$1" in
+              true)
+                check_upload "$3" "$4" "$5"
+                check_upload "$6" "$7" "$8"
+                ;;
+              false)
+                echo "::notice::Skipping $2 Nexus Mods uploads because its variant upload switch is false."
+                ;;
+              *)
+                echo "::error::Nexus Mods upload switch for $2 must be true or false; found '$1'."
+                exit 1
+                ;;
+            esac
+          }
+
+          check_variant_uploads "$UPLOAD_FC_TO_NEXUSMODS" "Freestar Collective" "$NEXUSMODS_FILE_ID_FC_NORMAL" "$NEXUS_DISPLAY_NAME_FC_NORMAL" "NEXUSMODS_FILE_ID_FC_NORMAL" "$NEXUSMODS_FILE_ID_FC_LOOSE" "$NEXUS_DISPLAY_NAME_FC_LOOSE" "NEXUSMODS_FILE_ID_FC_LOOSE"
+          check_variant_uploads "$UPLOAD_CF_TO_NEXUSMODS" "Crimson Fleet" "$NEXUSMODS_FILE_ID_CF_NORMAL" "$NEXUS_DISPLAY_NAME_CF_NORMAL" "NEXUSMODS_FILE_ID_CF_NORMAL" "$NEXUSMODS_FILE_ID_CF_LOOSE" "$NEXUS_DISPLAY_NAME_CF_LOOSE" "NEXUSMODS_FILE_ID_CF_LOOSE"
+          check_variant_uploads "$UPLOAD_TA_TO_NEXUSMODS" "Trackers Alliance" "$NEXUSMODS_FILE_ID_TA_NORMAL" "$NEXUS_DISPLAY_NAME_TA_NORMAL" "NEXUSMODS_FILE_ID_TA_NORMAL" "$NEXUSMODS_FILE_ID_TA_LOOSE" "$NEXUS_DISPLAY_NAME_TA_LOOSE" "NEXUSMODS_FILE_ID_TA_LOOSE"
+          check_variant_uploads "$UPLOAD_VWKS_TO_NEXUSMODS" "Venworks" "$NEXUSMODS_FILE_ID_VWKS_NORMAL" "$NEXUS_DISPLAY_NAME_VWKS_NORMAL" "NEXUSMODS_FILE_ID_VWKS_NORMAL" "$NEXUSMODS_FILE_ID_VWKS_LOOSE" "$NEXUS_DISPLAY_NAME_VWKS_LOOSE" "NEXUSMODS_FILE_ID_VWKS_LOOSE"
+          check_variant_uploads "$UPLOAD_MIN_TO_NEXUSMODS" "Minimalist" "$NEXUSMODS_FILE_ID_MIN_NORMAL" "$NEXUS_DISPLAY_NAME_MIN_NORMAL" "NEXUSMODS_FILE_ID_MIN_NORMAL" "$NEXUSMODS_FILE_ID_MIN_LOOSE" "$NEXUS_DISPLAY_NAME_MIN_LOOSE" "NEXUSMODS_FILE_ID_MIN_LOOSE"
 
           if [ "$configured_uploads" -gt 0 ] && [ -z "$NEXUSMODS_API_KEY" ]; then
             echo "NEXUSMODS_API_KEY is required for Nexus Mods uploads."
@@ -362,7 +373,7 @@ jobs:
           echo "$configured_uploads Nexus Mods upload(s) configured."
 
       - name: Upload Freestar Collective normal release to Nexus Mods
-        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_FC_NORMAL != '' }}
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && fromJSON(env.UPLOAD_FC_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_FC_NORMAL != '' }}
         uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
@@ -377,7 +388,7 @@ jobs:
           description: ${{ steps.release-notes.outputs.nexus_description }}
 
       - name: Upload Freestar Collective fully loose release to Nexus Mods
-        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_FC_LOOSE != '' }}
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && fromJSON(env.UPLOAD_FC_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_FC_LOOSE != '' }}
         uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
@@ -392,7 +403,7 @@ jobs:
           description: ${{ steps.release-notes.outputs.nexus_description }}
 
       - name: Upload Crimson Fleet normal release to Nexus Mods
-        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_CF_NORMAL != '' }}
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && fromJSON(env.UPLOAD_CF_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_CF_NORMAL != '' }}
         uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
@@ -407,7 +418,7 @@ jobs:
           description: ${{ steps.release-notes.outputs.nexus_description }}
 
       - name: Upload Crimson Fleet fully loose release to Nexus Mods
-        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_CF_LOOSE != '' }}
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && fromJSON(env.UPLOAD_CF_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_CF_LOOSE != '' }}
         uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
@@ -422,7 +433,7 @@ jobs:
           description: ${{ steps.release-notes.outputs.nexus_description }}
 
       - name: Upload Trackers Alliance normal release to Nexus Mods
-        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_TA_NORMAL != '' }}
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && fromJSON(env.UPLOAD_TA_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_TA_NORMAL != '' }}
         uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
@@ -437,7 +448,7 @@ jobs:
           description: ${{ steps.release-notes.outputs.nexus_description }}
 
       - name: Upload Trackers Alliance fully loose release to Nexus Mods
-        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_TA_LOOSE != '' }}
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && fromJSON(env.UPLOAD_TA_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_TA_LOOSE != '' }}
         uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
@@ -452,7 +463,7 @@ jobs:
           description: ${{ steps.release-notes.outputs.nexus_description }}
 
       - name: Upload Venworks normal release to Nexus Mods
-        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_VWKS_NORMAL != '' }}
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && fromJSON(env.UPLOAD_VWKS_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_VWKS_NORMAL != '' }}
         uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
@@ -467,7 +478,7 @@ jobs:
           description: ${{ steps.release-notes.outputs.nexus_description }}
 
       - name: Upload Venworks fully loose release to Nexus Mods
-        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_VWKS_LOOSE != '' }}
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && fromJSON(env.UPLOAD_VWKS_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_VWKS_LOOSE != '' }}
         uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
@@ -482,7 +493,7 @@ jobs:
           description: ${{ steps.release-notes.outputs.nexus_description }}
 
       - name: Upload Minimalist normal release to Nexus Mods
-        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && fromJSON(env.UPLOAD_MINIMALIST_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_MIN_NORMAL != '' }}
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && fromJSON(env.UPLOAD_MIN_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_MIN_NORMAL != '' }}
         uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
@@ -497,7 +508,7 @@ jobs:
           description: ${{ steps.release-notes.outputs.nexus_description }}
 
       - name: Upload Minimalist fully loose release to Nexus Mods
-        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && fromJSON(env.UPLOAD_MINIMALIST_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_MIN_LOOSE != '' }}
+        if: ${{ fromJSON(env.UPLOAD_TO_NEXUSMODS) == true && fromJSON(env.UPLOAD_MIN_TO_NEXUSMODS) == true && env.NEXUSMODS_FILE_ID_MIN_LOOSE != '' }}
         uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}

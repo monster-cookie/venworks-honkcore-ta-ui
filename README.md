@@ -4,12 +4,7 @@ Venworks Customizable HUD is my own customizable Starfield HUD, written from
 the ground up in Scaleform and ActionScript 3. It does not depend on HONKCORE
 and does not reuse HONKCORE code, bytecode, or configuration formats.
 
-The four themed HUDs are driven by versioned XML files that control layout,
-visibility, colors, typography, meters, icons, and reusable component
-fragments. The runtime validates that configuration before displaying it and
-reports an on-screen diagnostic instead of partially applying an invalid
-layout. Minimalist resolves its authored XML during the build and embeds the
-complete resolved layout in its profile-specific HUD movies.
+The four themed HUDs are driven by versioned XML files that control layout, visibility, colors, typography, meters, icons, and reusable component fragments. The runtime validates that configuration before displaying it and reports an on-screen diagnostic instead of partially applying an invalid layout. Minimalist resolves its authored XML during the build and embeds the complete resolved layout in its profile-specific HUD movies.
 
 ## Current release
 
@@ -39,13 +34,7 @@ state from those systems for conditions, but it does not replace them.
 
 ## Release variants
 
-Five separately distributed variants are available. The four themed variants
-share the full configurable HUD movies and include all five packaged palettes,
-so their active palette can be changed without reinstalling the HUD. Minimalist
-uses profile-specific HUD movies, literal Starfield colors, and fitted
-holographic readouts with pale-blue translucent native-shape backings. It has no
-external palettes, SVG assets, SVG paths, panel runtime, built-in icons, masks,
-equipment rail, or runtime XML loading.
+Five separately distributed variants are available. The four themed variants share the full configurable HUD movies and include all five packaged palettes, so their active palette can be changed without reinstalling the HUD. Minimalist uses profile-specific HUD movies, literal Starfield colors, and fitted holographic readouts with pale-blue translucent native-shape backings. It has no external palettes, SVG assets, SVG paths, panel runtime, built-in icons, masks, equipment rail, or runtime XML loading.
 
 | Public release name | Default palette |
 |---|---|
@@ -55,10 +44,7 @@ equipment rail, or runtime XML loading.
 | Venworks Customizable HUD - Crimson Fleet Theme | `crimson-fleet.xml` |
 | Venworks Customizable HUD - Minimalist | Literal Starfield colors; no palette file |
 
-The four themed variants also include `starfield.xml` as a neutral palette
-option. The faction crest and equipment rail are available only in those four
-variants. Minimalist omits both, accepts no `svg`, `path`, `mask`, `icon`,
-`panel`, or `providerSymbol` configuration elements, and ships no loose XML.
+The four themed variants also include `starfield.xml` as a neutral palette option. The faction crest and equipment rail are available only in those four variants. Minimalist omits both, accepts no `svg`, `path`, `mask`, `icon`, `panel`, or `providerSymbol` configuration elements, and ships no loose XML.
 
 Enable only one release variant at a time. The variants install the same HUD
 movie and configuration paths, so whichever package wins file conflicts also
@@ -66,12 +52,7 @@ determines the starting configuration.
 
 ## Installation
 
-Choose one variant and one PC package shape. For a themed variant, the
-recommended Nexus PC - Normal package installs a root ESM, Windows BA2 archives,
-and one loose `Interface\VenworksCUI\layout.xml`. Minimalist's normal package
-contains only its root ESM and Windows Main BA2 because its layout is embedded
-in the compiled `hudmenu*` movies. Enable the ESM and let the package win HUD
-conflicts.
+Choose one variant and one PC package shape. For a themed variant, the recommended Nexus PC - Normal package installs a root ESM, Windows BA2 archives, and one loose `Interface\VenworksCUI\layout.xml`. Minimalist's normal package contains only its root ESM and Windows Main BA2 because its layout is embedded in the compiled `hudmenu*` movies. Enable the ESM and let the package win HUD conflicts.
 
 The Nexus PC - Fully Loose Files package installs the complete `Interface`
 tree without an ESM or BA2. Use it only when component fragments, or palettes
@@ -106,14 +87,9 @@ Configuration authors can use the complete references:
   covers packaged themes, required semantic roles, custom palettes, and
   `@palette.*` references.
 
-Configuration files are loaded when the HUD movie starts. There is no live
-reload command; fully exit and restart Starfield after changing XML or, in a
-themed variant, SVG files.
+The four themed variants load their configuration files when the HUD movie starts. There is no live reload command; fully exit and restart Starfield after changing themed XML or SVG files. Minimalist does not load loose configuration, so changing it requires rebuilding its profile-specific HUD movies.
 
-The normal Nexus package exposes only `layout.xml` as a loose file. Advanced
-component customization, plus palette and SVG customization for a themed
-variant, requires the fully loose package or a separate loose override
-containing the additional changed files.
+A themed normal Nexus package exposes only `layout.xml` as a loose file. Advanced themed component, palette, and SVG customization requires the fully loose package or a separate loose override containing the additional changed files. Minimalist packages contain no runtime XML definitions and ignore loose Venworks CUI configuration.
 
 ## Current limitations and validation status
 
