@@ -32,6 +32,14 @@ These rules apply throughout the repository.
 - If validation cannot run, report the exact command, the failure or blocker, and whether it appears environmental.
 - Do not add secrets, credentials, tokens, connection strings, private keys, personal paths, or machine-specific data to source files, documentation, test fixtures, logs, generated output, or workflow files.
 
+## Markdown line wrapping
+
+- Never hard-wrap Markdown prose at a fixed column width.
+- Keep each paragraph and list item on one physical line, regardless of length.
+- Let Markdown renderers wrap text responsively.
+- Use line breaks only for semantic structure, such as headings, separate paragraphs, lists, tables, and code blocks.
+- Do not reflow existing Markdown unless explicitly requested.
+
 ## Git and GitHub boundaries
 
 ### Read-only inspection
