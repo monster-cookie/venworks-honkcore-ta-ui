@@ -68,6 +68,10 @@
   <components>
     <group id="player.critical-health" x="0" y="166" width="320" height="70" opacity="1" visible="true"
            visibleWhen="criticalHealth" anchor="top-center" rotation="0" scaleX="1" scaleY="1" z="120">
+      <shape id="critical-health.backing.base" x="0" y="0" width="320" height="70" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="-2"
+             shape="rectangle" fillColor="#0D1114" fillOpacity="0.28" strokeColor="#D9E3E8" strokeOpacity="0" strokeWidth="0" />
+      <shape id="critical-health.backing.tint" x="0" y="0" width="320" height="70" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="-1"
+             shape="rectangle" fillColor="#70CFE0" fillOpacity="0.10" strokeColor="#D9E3E8" strokeOpacity="0" strokeWidth="0" />
       <divider id="critical.corner.tl.h" x="0" y="0" width="46" height="0" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" color="#FF3C54" strokeOpacity="1" strokeWidth="2" />
       <divider id="critical.corner.tl.v" x="0" y="0" width="0" height="15" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" color="#FF3C54" strokeOpacity="1" strokeWidth="2" />
       <divider id="critical.corner.tr.h" x="274" y="0" width="46" height="0" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" color="#FF3C54" strokeOpacity="1" strokeWidth="2" />
@@ -86,6 +90,10 @@
     </group>
     <group id="helmet.vehicle-exit" x="0" y="36" width="184" height="36" opacity="1" visible="true"
            visibleWhen="inVehicle" anchor="bottom-center" rotation="0" scaleX="1" scaleY="1" z="103">
+      <shape id="vehicle-exit.backing.base" x="0" y="0" width="184" height="36" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="-2"
+             shape="rectangle" fillColor="#0D1114" fillOpacity="0.28" strokeColor="#D9E3E8" strokeOpacity="0" strokeWidth="0" />
+      <shape id="vehicle-exit.backing.tint" x="0" y="0" width="184" height="36" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="-1"
+             shape="rectangle" fillColor="#70CFE0" fillOpacity="0.10" strokeColor="#D9E3E8" strokeOpacity="0" strokeWidth="0" />
       <text id="vehicle.exit.label" x="0" y="4" width="138" height="28" opacity="1" visible="true"
             rotation="0" scaleX="1" scaleY="1" z="0" value="$EXIT HOLD"
             font="$MAIN_Font_Bold" fontSize="11" color="#FFFFFF" bold="false" align="right" />

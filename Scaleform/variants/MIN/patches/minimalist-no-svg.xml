@@ -506,6 +506,12 @@
          var right:Number = Math.max(1,param2 - 1);
          var bottom:Number = Math.max(1,param3 - 1);
          param1.graphics.clear();
+         param1.graphics.beginFill(0x0D1114,0.28);
+         param1.graphics.drawRect(1,1,Math.max(0,param2 - 2),Math.max(0,param3 - 2));
+         param1.graphics.endFill();
+         param1.graphics.beginFill(0x70CFE0,0.10);
+         param1.graphics.drawRect(1,1,Math.max(0,param2 - 2),Math.max(0,param3 - 2));
+         param1.graphics.endFill();
          param1.graphics.lineStyle(1,param4,0.54);
          param1.graphics.moveTo(1,corner);
          param1.graphics.lineTo(1,1);
@@ -534,6 +540,14 @@
          panelShape.graphics.endFill();
          addChild(panelShape);]]></find>
       <with><![CDATA[         var panelShape:Shape = new Shape();
+         panelShape.graphics.beginFill(0x0D1114,0.28);
+         panelShape.graphics.drawRect(componentWidth / 2 - 112,0,224,26);
+         panelShape.graphics.drawRect(componentWidth - 270,156,260,146);
+         panelShape.graphics.endFill();
+         panelShape.graphics.beginFill(0x70CFE0,0.10);
+         panelShape.graphics.drawRect(componentWidth / 2 - 112,0,224,26);
+         panelShape.graphics.drawRect(componentWidth - 270,156,260,146);
+         panelShape.graphics.endFill();
          this.drawCorners(panelShape,componentWidth / 2 - 112,0,224,26,scanningColor,0.86,18,7);
          this.drawCorners(panelShape,componentWidth - 270,156,260,146,contactColor,0.64,22,12);
          addChild(panelShape);]]></with>

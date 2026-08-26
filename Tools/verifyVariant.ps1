@@ -432,6 +432,59 @@ foreach ($variant in $variants) {
       throw "Minimalist contains a disabled XML capability, equipment rail, external palette, or image asset."
     }
 
+    $fittedBackingDefinitions = @(
+      [pscustomobject]@{ RelativePath = "layout.xml"; Id = "critical-health"; X = "0"; Y = "0"; Width = "320"; Height = "70"; Shape = "rectangle" }
+      [pscustomobject]@{ RelativePath = "layout.xml"; Id = "vehicle-exit"; X = "0"; Y = "0"; Width = "184"; Height = "36"; Shape = "rectangle" }
+      [pscustomobject]@{ RelativePath = "components\contact-radar.xml"; Id = "contact-radar"; X = "22"; Y = "21"; Width = "184"; Height = "184"; Shape = "ellipse" }
+      [pscustomobject]@{ RelativePath = "components\environmental-hazard-scanner.xml"; Id = "environmental-hazard"; X = "0"; Y = "0"; Width = "360"; Height = "254"; Shape = "rectangle" }
+      [pscustomobject]@{ RelativePath = "components\helmet-awareness.xml"; Id = "helmet.compass"; X = "0"; Y = "-58"; Width = "826"; Height = "48"; Shape = "rectangle" }
+      [pscustomobject]@{ RelativePath = "components\helmet-awareness.xml"; Id = "helmet.threat"; X = "253"; Y = "12"; Width = "320"; Height = "24"; Shape = "rectangle" }
+      [pscustomobject]@{ RelativePath = "components\player-status-scanner.xml"; Id = "player-status"; X = "0"; Y = "0"; Width = "360"; Height = "236"; Shape = "rectangle" }
+      [pscustomobject]@{ RelativePath = "components\quest-tracker.xml"; Id = "quest-tracker"; X = "0"; Y = "0"; Width = "447"; Height = "90"; Shape = "rectangle" }
+    )
+    $fittedBackingDocuments = @{}
+    $fittedBackingNodeCount = 0
+    foreach ($relativePath in @($fittedBackingDefinitions.RelativePath | Sort-Object -Unique)) {
+      [xml]$backingDocument = Get-Content -LiteralPath (Join-Path $cuiPath $relativePath) -Raw
+      $fittedBackingDocuments[$relativePath] = $backingDocument
+      $fittedBackingNodeCount += @($backingDocument.SelectNodes('//shape[contains(@id,".backing.")]')).Count
+    }
+    if ($fittedBackingNodeCount -ne ($fittedBackingDefinitions.Count * 2)) {
+      throw "Minimalist must contain exactly two fitted backing layers for each approved readout footprint."
+    }
+    foreach ($backing in $fittedBackingDefinitions) {
+      $backingDocument = $fittedBackingDocuments[[string]$backing.RelativePath]
+      foreach ($layer in @(
+        [pscustomobject]@{ Name = "base"; Z = "-2"; FillColor = "#0D1114"; FillOpacity = "0.28" },
+        [pscustomobject]@{ Name = "tint"; Z = "-1"; FillColor = "#70CFE0"; FillOpacity = "0.10" }
+      )) {
+        $backingId = "$($backing.Id).backing.$($layer.Name)"
+        $backingNodes = @($backingDocument.SelectNodes("//shape[@id='$backingId']"))
+        if ($backingNodes.Count -ne 1) {
+          throw "Minimalist fitted backing '$backingId' must appear exactly once in $($backing.RelativePath)."
+        }
+        $backingNode = $backingNodes[0]
+        $expectedAttributes = @{
+          x = [string]$backing.X
+          y = [string]$backing.Y
+          width = [string]$backing.Width
+          height = [string]$backing.Height
+          z = [string]$layer.Z
+          shape = [string]$backing.Shape
+          fillColor = [string]$layer.FillColor
+          fillOpacity = [string]$layer.FillOpacity
+          strokeColor = "#D9E3E8"
+          strokeOpacity = "0"
+          strokeWidth = "0"
+        }
+        foreach ($attributeName in $expectedAttributes.Keys) {
+          if ([string]$backingNode.GetAttribute($attributeName) -cne [string]$expectedAttributes[$attributeName]) {
+            throw "Minimalist fitted backing '$backingId' has an unexpected '$attributeName' value."
+          }
+        }
+      }
+    }
+
     $sharedHudHash = Read-ExpectedSha256 -Path (Join-Path $repositoryRoot "Scaleform\hudmenu\validation\expected.sha256")
     $sharedLargeHudHash = Read-ExpectedSha256 -Path (Join-Path $repositoryRoot "Scaleform\hudmenu_lrg\validation\expected.sha256")
     if ((Get-Sha256 -Path (Join-Path $interfacePath "hudmenu.gfx")) -ceq $sharedHudHash -or
@@ -496,6 +549,44 @@ foreach ($variant in $variants) {
     }
     if ([regex]::Matches($transformedSource, 'this\.subscribeProvider\s*\(\s*"').Count -ne 17) {
       throw "Minimalist transformed ActionScript does not contain the expected seventeen independent provider registrations."
+    }
+
+    $statusEffectSourcePath = Join-Path $minimalistSourceRoot "venworks\cui\components\CUIStatusEffectBar.as"
+    $statusEffectSource = Get-ScaleformPatchedActionScript `
+      -SourcePath $statusEffectSourcePath `
+      -RelativePath "venworks\cui\components\CUIStatusEffectBar.as" `
+      -PatchPath $sourceProfile.ActionScriptPatchPath
+    $statusBackgroundMethod = [regex]::Match(
+      $statusEffectSource,
+      '(?s)private function drawSlotBackground.*?(?=\s+private function drawFallbackIcon)'
+    )
+    if (!$statusBackgroundMethod.Success -or
+        !$statusBackgroundMethod.Value.Contains('param1.graphics.beginFill(0x0D1114,0.28);') -or
+        !$statusBackgroundMethod.Value.Contains('param1.graphics.beginFill(0x70CFE0,0.10);') -or
+        [regex]::Matches($statusBackgroundMethod.Value, 'param1\.graphics\.drawRect\(').Count -ne 2 -or
+        $statusBackgroundMethod.Value -match '(?i)drawPath|GraphicsPath|CUISvg|pathData') {
+      throw "Minimalist active status-effect tiles must use only the approved two-layer native rectangle backing."
+    }
+
+    $scannerSourcePath = Join-Path $minimalistSourceRoot "venworks\cui\components\CUIScannerOverlay.as"
+    $scannerSource = Get-ScaleformPatchedActionScript `
+      -SourcePath $scannerSourcePath `
+      -RelativePath "venworks\cui\components\CUIScannerOverlay.as" `
+      -PatchPath $sourceProfile.ActionScriptPatchPath
+    $scannerOverlayMethod = [regex]::Match(
+      $scannerSource,
+      '(?s)private function createOverlay.*?(?=\s+private function drawCorners)'
+    )
+    $scannerThreatBacking = 'panelShape.graphics.drawRect(componentWidth / 2 - 112,0,224,26);'
+    $scannerContactsBacking = 'panelShape.graphics.drawRect(componentWidth - 270,156,260,146);'
+    if (!$scannerOverlayMethod.Success -or
+        !$scannerOverlayMethod.Value.Contains('panelShape.graphics.beginFill(0x0D1114,0.28);') -or
+        !$scannerOverlayMethod.Value.Contains('panelShape.graphics.beginFill(0x70CFE0,0.10);') -or
+        $scannerOverlayMethod.Value.Split($scannerThreatBacking).Count -ne 3 -or
+        $scannerOverlayMethod.Value.Split($scannerContactsBacking).Count -ne 3 -or
+        [regex]::Matches($scannerOverlayMethod.Value, 'panelShape\.graphics\.drawRect\(').Count -ne 4 -or
+        $scannerOverlayMethod.Value -match '(?i)drawPath|GraphicsPath|CUISvg|pathData') {
+      throw "Minimalist scanner readouts must use only the approved dynamically positioned two-layer native rectangle backings."
     }
 
     $seedPath = Resolve-RequiredFile `

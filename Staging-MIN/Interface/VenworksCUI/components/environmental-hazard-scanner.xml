@@ -2,6 +2,10 @@
 <venworksCUIFragment schemaVersion="1" runtimeVersion="1">
   <group id="root" x="0" y="0" width="360" height="254" opacity="1" visible="true"
          rotation="0" scaleX="1" scaleY="1" z="0">
+    <shape id="environmental-hazard.backing.base" x="0" y="0" width="360" height="254" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="-2"
+           shape="rectangle" fillColor="#0D1114" fillOpacity="0.28" strokeColor="#D9E3E8" strokeOpacity="0" strokeWidth="0" />
+    <shape id="environmental-hazard.backing.tint" x="0" y="0" width="360" height="254" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="-1"
+           shape="rectangle" fillColor="#70CFE0" fillOpacity="0.10" strokeColor="#D9E3E8" strokeOpacity="0" strokeWidth="0" />
     <text id="planet.title" x="12" y="6" width="156" height="22" opacity="1" visible="true"
           rotation="0" scaleX="1" scaleY="1" z="2" value="PLANET DATA"
           font="$MAIN_Font_Bold" fontSize="13" color="#E8F0F4" bold="false" align="left" />

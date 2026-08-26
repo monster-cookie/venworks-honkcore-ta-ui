@@ -8,9 +8,10 @@
 - Removed Minimalist's helmet cutout paths and complete equipment rail,
   including its favorite, weapon, explosive, power, and control-map provider
   registrations.
-- Replaced Minimalist's filled HUD panels with open holographic corner brackets
-  and divider strokes while preserving its functional meters, radar, compass,
-  markers, and sunrise/sunset countdown.
+- Replaced Minimalist's panel runtime with fitted holographic readouts using
+  dark, pale-blue translucent native rectangle and ellipse backings behind the
+  active content, while preserving its corner brackets, dividers, meters,
+  radar, compass, markers, and sunrise/sunset countdown.
 
 ## Version 2.0.3 (August 24, 2026)
 

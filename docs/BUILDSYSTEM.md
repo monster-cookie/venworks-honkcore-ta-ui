@@ -133,19 +133,22 @@ the shared production HUD hashes; only Minimalist's `hudmenu.gfx` and
 Minimalist resolves the `starfield.xml` color roles to literal XML colors,
 removes the palette selector, faction display, helmet cutout paths, and complete
 equipment rail, and keeps the contact radar in the former faction-display
-position. Its six fragments use open corner brackets and divider strokes rather
-than filled panel backgrounds. The build rejects `svg`, `path`, `mask`, `icon`,
-`panel`, and `providerSymbol` nodes, then removes the `Assets` and `palettes`
-directories. The result contains the renamed stub ESM, four GFX files, the
-reduced loose CUI configuration, and the Windows, Xbox, and PS5 Main BA2s.
+position. Its six fragments use fitted native rectangle and ellipse backings
+with a 28-percent dark base and 10-percent pale-blue tint beneath the existing
+corner brackets and divider strokes. The build rejects `svg`, `path`, `mask`,
+`icon`, `panel`, and `providerSymbol` nodes, then removes the `Assets` and
+`palettes` directories. The result contains the renamed stub ESM, four GFX
+files, the reduced loose CUI configuration, and the Windows, Xbox, and PS5 Main
+BA2s.
 The selected release-package command creates all five normal package shapes for
 Minimalist. Omitting `-VariantKeys` selects all five release variants.
 
 The Minimalist HUD movies intentionally remove several capabilities together.
 A successful PS5 test therefore narrows the crash investigation but does not
-independently prove whether SVG runtime code, filled panels, helmet paths, or
-equipment-provider registrations caused the crash. DDS substitution remains a
-separate follow-up experiment.
+independently prove whether SVG runtime code, the panel runtime, helmet paths,
+or equipment-provider registrations caused the crash. Native rectangle and
+ellipse fills remain available for the fitted holographic backings. DDS
+substitution remains a separate follow-up experiment.
 
 The release workflow produces five ZIP shapes for each of the five variants:
 

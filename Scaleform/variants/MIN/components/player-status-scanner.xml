@@ -2,6 +2,10 @@
 <venworksCUIFragment schemaVersion="1" runtimeVersion="1">
   <group id="root" x="0" y="0" width="360" height="236" opacity="1" visible="true"
          rotation="0" scaleX="1" scaleY="1" z="0">
+    <shape id="player-status.backing.base" x="0" y="0" width="360" height="236" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="-2"
+           shape="rectangle" fillColor="@palette.colors.panel.background" fillOpacity="0.28" strokeColor="@palette.colors.panel.border" strokeOpacity="0" strokeWidth="0" />
+    <shape id="player-status.backing.tint" x="0" y="0" width="360" height="236" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="-1"
+           shape="rectangle" fillColor="@palette.colors.meter.oxygen" fillOpacity="0.10" strokeColor="@palette.colors.panel.border" strokeOpacity="0" strokeWidth="0" />
     <text id="title" x="12" y="6" width="156" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" value="PLAYER DATA" font="$MAIN_Font_Bold" fontSize="13" color="@palette.colors.accent.primary" bold="false" align="left" />
     <text id="time.label" x="218" y="8" width="60" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" value="UNIVERSAL" font="$MAIN_Font_Bold" fontSize="8" color="@palette.colors.foreground.muted" bold="false" align="right" />
     <text id="time" x="282" y="6" width="72" height="22" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="2" source="player.universalTime" format="time24" value="--:--" font="$MAIN_Font_Bold" fontSize="10" color="@palette.colors.foreground.primary" bold="false" align="right" />

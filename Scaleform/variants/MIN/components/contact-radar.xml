@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <venworksCUIFragment schemaVersion="1" runtimeVersion="1">
   <group id="contact-radar.cluster" x="0" y="0" width="228" height="226" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0">
+    <shape id="contact-radar.backing.base" x="22" y="21" width="184" height="184" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="-2"
+           shape="ellipse" fillColor="@palette.colors.panel.background" fillOpacity="0.28" strokeColor="@palette.colors.panel.border" strokeOpacity="0" strokeWidth="0" />
+    <shape id="contact-radar.backing.tint" x="22" y="21" width="184" height="184" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="-1"
+           shape="ellipse" fillColor="@palette.colors.meter.oxygen" fillOpacity="0.10" strokeColor="@palette.colors.panel.border" strokeOpacity="0" strokeWidth="0" />
     <divider id="contact-radar.corner.tl.h" x="0" y="0" width="36" height="0" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" color="@palette.colors.panel.border" strokeOpacity="0.70" strokeWidth="2" />
     <divider id="contact-radar.corner.tl.v" x="0" y="0" width="0" height="36" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" color="@palette.colors.panel.border" strokeOpacity="0.70" strokeWidth="2" />
     <divider id="contact-radar.corner.tr.h" x="192" y="0" width="36" height="0" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" color="@palette.colors.panel.border" strokeOpacity="0.70" strokeWidth="2" />

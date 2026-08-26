@@ -26,9 +26,9 @@ or asset directory and does not include the equipment rail.
 Minimalist retains groups, text, shapes, dividers, meters, repeaters, states,
 templates, embedded Bethesda symbols, radar, compass, scanner, threat,
 status-effect, and other nonexcluded components. Its staged layout payload uses
-literal Starfield colors and open corner/divider geometry. The element and SVG
-sections below describe the full themed profile unless they explicitly say
-otherwise.
+literal Starfield colors, fitted translucent rectangle and ellipse backings,
+and open corner/divider geometry. The element and SVG sections below describe
+the full themed profile unless they explicitly say otherwise.
 
 ## Fixed runtime paths
 

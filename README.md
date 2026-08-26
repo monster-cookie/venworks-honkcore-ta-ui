@@ -40,9 +40,10 @@ state from those systems for conditions, but it does not replace them.
 Five separately distributed variants are available. The four themed variants
 share the full configurable HUD movies and include all five packaged palettes,
 so their active palette can be changed without reinstalling the HUD. Minimalist
-uses profile-specific HUD movies, literal Starfield colors, and an open
-holographic presentation without external palettes, SVG assets, SVG paths,
-filled panels, built-in icons, masks, or the equipment rail.
+uses profile-specific HUD movies, literal Starfield colors, and fitted
+holographic readouts with pale-blue translucent native-shape backings. It has no
+external palettes, SVG assets, SVG paths, panel runtime, built-in icons, masks,
+or equipment rail.
 
 | Public release name | Default palette |
 |---|---|
