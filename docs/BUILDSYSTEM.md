@@ -7,9 +7,20 @@ GitHub Actions runs PSScriptAnalyzer 1.25.0 against the PowerShell sources under
 repository root to reproduce the check locally:
 
 ```powershell
+$ErrorActionPreference = 'Stop'
+
 Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.25.0 -Repository PSGallery -Scope CurrentUser -Force
 Import-Module PSScriptAnalyzer -RequiredVersion 1.25.0 -Force
-Invoke-ScriptAnalyzer -Path ./Tools -Recurse -Settings ./PSScriptAnalyzerSettings.psd1
+$findings = @(
+  Invoke-ScriptAnalyzer `
+    -Path ./Tools `
+    -Recurse `
+    -Settings ./PSScriptAnalyzerSettings.psd1
+)
+if ($findings.Count -ne 0) {
+  $findings | Format-Table RuleName, Severity, ScriptName, Line, Message -Wrap
+  throw "PSScriptAnalyzer reported $($findings.Count) finding(s)."
+}
 ```
 
 A clean analysis produces no findings. CI reports each finding's rule, severity,
