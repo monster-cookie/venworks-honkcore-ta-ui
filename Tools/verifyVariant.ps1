@@ -272,8 +272,20 @@ function Assert-MatchingText {
     [string]$Description
   )
 
-  $actualText = [System.IO.File]::ReadAllText((Resolve-RequiredFile -Path $ActualPath -Description $Description))
-  if ($actualText -cne $ExpectedText) {
+  $resolvedActualPath = Resolve-RequiredFile -Path $ActualPath -Description $Description
+  $actualBytes = [System.IO.File]::ReadAllBytes($resolvedActualPath)
+  if ($actualBytes.Length -ge 3 -and
+      $actualBytes[0] -eq 0xEF -and
+      $actualBytes[1] -eq 0xBB -and
+      $actualBytes[2] -eq 0xBF) {
+    throw "$Description must use UTF-8 without a byte-order mark."
+  }
+  $actualText = [System.Text.UTF8Encoding]::new($false, $true).GetString($actualBytes)
+  if ($actualText.Contains("`r")) {
+    throw "$Description must use canonical LF line endings."
+  }
+  $canonicalExpectedText = $ExpectedText.Replace("`r`n", "`n").Replace("`r", "`n")
+  if ($actualText -cne $canonicalExpectedText) {
     throw "$Description differs from its profile-derived expected content."
   }
 }
@@ -523,16 +535,18 @@ foreach ($variant in $variants) {
   foreach ($assetFileName in @($variantBuildProfile.AssetFileNames)) {
     $sourcePath = Resolve-RequiredFile -Path (Join-Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.AssetSourceDirectory) -Description "$($variant.VariantName) asset source") ([string]$assetFileName)) -Description "$($variant.VariantName) asset source '$assetFileName'"
     $stagedPath = Resolve-RequiredFile -Path (Join-Path (Join-Path $cuiPath "Assets") ([string]$assetFileName)) -Description "$($variant.VariantName) asset '$assetFileName'"
-    if ((Get-Sha256 -Path $sourcePath) -cne (Get-Sha256 -Path $stagedPath)) {
-      throw "$($variant.VariantName) asset '$assetFileName' differs from its source."
-    }
+    Assert-MatchingText `
+      -ExpectedText ([System.IO.File]::ReadAllText($sourcePath)) `
+      -ActualPath $stagedPath `
+      -Description "$($variant.VariantName) asset '$assetFileName'"
   }
   foreach ($paletteFileName in @($variantBuildProfile.PaletteFileNames)) {
     $sourcePath = Resolve-RequiredFile -Path (Join-Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.PaletteSourceDirectory) -Description "$($variant.VariantName) palette source") ([string]$paletteFileName)) -Description "$($variant.VariantName) palette source '$paletteFileName'"
     $stagedPath = Resolve-RequiredFile -Path (Join-Path (Join-Path $cuiPath "palettes") ([string]$paletteFileName)) -Description "$($variant.VariantName) palette '$paletteFileName'"
-    if ((Get-Sha256 -Path $sourcePath) -cne (Get-Sha256 -Path $stagedPath)) {
-      throw "$($variant.VariantName) palette '$paletteFileName' differs from its source."
-    }
+    Assert-MatchingText `
+      -ExpectedText ([System.IO.File]::ReadAllText($sourcePath)) `
+      -ActualPath $stagedPath `
+      -Description "$($variant.VariantName) palette '$paletteFileName'"
   }
 
   [xml]$layout = Get-Content -LiteralPath $layoutPath -Raw

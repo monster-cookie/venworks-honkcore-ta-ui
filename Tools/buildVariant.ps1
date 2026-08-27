@@ -106,11 +106,32 @@ function Write-Utf8WithoutBom {
     [string]$Text
   )
 
+  $canonicalText = $Text.Replace("`r`n", "`n").Replace("`r", "`n")
   [System.IO.File]::WriteAllText(
     $Path,
-    $Text,
+    $canonicalText,
     [System.Text.UTF8Encoding]::new($false)
   )
+}
+
+function Copy-ProfilePayloadFile {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$SourcePath,
+
+    [Parameter(Mandatory = $true)]
+    [string]$DestinationPath
+  )
+
+  $extension = [System.IO.Path]::GetExtension($SourcePath)
+  if ($extension -in @(".xml", ".svg")) {
+    Write-Utf8WithoutBom `
+      -Path $DestinationPath `
+      -Text ([System.IO.File]::ReadAllText($SourcePath))
+  }
+  else {
+    Copy-Item -LiteralPath $SourcePath -Destination $DestinationPath -Force
+  }
 }
 
 function Remove-OwnedDirectory {
@@ -439,7 +460,9 @@ try {
         Write-Utf8WithoutBom -Path $componentOutputPath -Text $componentText
       }
       else {
-        Copy-Item -LiteralPath $componentSourcePath -Destination $componentOutputPath -Force
+        Copy-ProfilePayloadFile `
+          -SourcePath $componentSourcePath `
+          -DestinationPath $componentOutputPath
       }
     }
 
@@ -450,10 +473,9 @@ try {
       $assetOutputDirectory = Join-Path $cuiOutputDirectory "Assets"
       New-Item -ItemType Directory -Force -Path $assetOutputDirectory | Out-Null
       foreach ($assetFileName in @($variantBuildProfile.AssetFileNames)) {
-        Copy-Item `
-          -LiteralPath (Resolve-RequiredFile -Path (Join-Path $assetSourceDirectory ([string]$assetFileName)) -Description "$($variant.VariantName) asset '$assetFileName'") `
-          -Destination (Join-Path $assetOutputDirectory ([string]$assetFileName)) `
-          -Force
+        Copy-ProfilePayloadFile `
+          -SourcePath (Resolve-RequiredFile -Path (Join-Path $assetSourceDirectory ([string]$assetFileName)) -Description "$($variant.VariantName) asset '$assetFileName'") `
+          -DestinationPath (Join-Path $assetOutputDirectory ([string]$assetFileName))
       }
     }
 
@@ -464,10 +486,9 @@ try {
       $paletteOutputDirectory = Join-Path $cuiOutputDirectory "palettes"
       New-Item -ItemType Directory -Force -Path $paletteOutputDirectory | Out-Null
       foreach ($paletteFileName in @($variantBuildProfile.PaletteFileNames)) {
-        Copy-Item `
-          -LiteralPath (Resolve-RequiredFile -Path (Join-Path $paletteSourceDirectory ([string]$paletteFileName)) -Description "$($variant.VariantName) palette '$paletteFileName'") `
-          -Destination (Join-Path $paletteOutputDirectory ([string]$paletteFileName)) `
-          -Force
+        Copy-ProfilePayloadFile `
+          -SourcePath (Resolve-RequiredFile -Path (Join-Path $paletteSourceDirectory ([string]$paletteFileName)) -Description "$($variant.VariantName) palette '$paletteFileName'") `
+          -DestinationPath (Join-Path $paletteOutputDirectory ([string]$paletteFileName))
       }
     }
 

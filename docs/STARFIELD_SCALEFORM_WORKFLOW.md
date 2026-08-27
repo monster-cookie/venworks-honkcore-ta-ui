@@ -141,7 +141,10 @@ The normal and large HUD pairs may have profile-specific hashes. The HUD-message
 pairs are shared while their source profile remains common. Do not create an
 SWF by changing a GFX extension, changing only its signature, or compressing a
 generated GFX payload. That produces a different artifact than rebuilding from
-the clean Bethesda CWS source.
+the clean Bethesda CWS source. The builder writes generated XML and SVG payloads
+as UTF-8 without a byte-order mark with canonical LF line endings. This keeps
+the loose staging bytes and BA2 entries deterministic across Windows and Linux
+checkouts.
 
 ## 7. Build platform archives and release packages
 
@@ -201,6 +204,8 @@ record both positive and negative results.
 - Never infer movie encoding from the extension alone; validate the signature.
 - Never ship CWS bytes under a `.gfx` name or GFX bytes under a `.swf` name.
 - Never synthesize one release format by renaming or wrapping the other.
+- Always package the canonical generated XML/SVG bytes; do not rebuild archives
+  from platform-converted text files.
 - Never edit or commit Bethesda's full decompiled source.
 - Never split cooperating Venworks classes across multiple ABC domains.
 - Never treat JPEXS reopen, hash equality, PC acceptance, or archive creation as

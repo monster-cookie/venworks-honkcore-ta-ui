@@ -175,7 +175,10 @@ therefore use the same source inventory and archive contract; there is no
 Minimalist-only or PlayStation-only movie rewrite. Minimalist's platform
 packages contain its ESM and matching Main BA2 with no texture archive, while
 its fully loose Nexus package contains the eight movies plus the reduced
-external XML tree. The complete release matrix contains 25 ZIPs. Every normal
+external XML tree. Generated XML and SVG payloads use UTF-8 without a byte-order
+mark and canonical LF line endings so committed BA2 contents remain
+byte-identical to clean checkouts on Windows and Linux. The complete release
+matrix contains 25 ZIPs. Every normal
 Nexus package leaves only `layout.xml` loose so the compiled HUD movies remain
 protected by the BA2. Users who need to edit component fragments, palettes, or
 SVG assets must use a fully loose package or provide a separate loose override.
