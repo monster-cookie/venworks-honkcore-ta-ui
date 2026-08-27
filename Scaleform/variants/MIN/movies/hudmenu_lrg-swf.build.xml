@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scaleformBuild name="hudmenu-lrg-swf-minimalist-live"
+                inputFile="hudmenu_lrg.swf"
+                outputFile="hudmenu_lrg.swf"
+                vanillaHashFile="../../../hudmenu_lrg/vanilla-swf.sha256"
+                expectedHashFile="hudmenu_lrg-swf.expected.sha256"
+                abcSeedPatch="../../../shared/patches/cui-component-abc-seed.xml"
+                actionScriptSource="../../../shared/actionscript"
+                actionScriptPatch="../../../shared/patches/cui-probe-loader.xml"
+                actionScriptProfile="minimalist-live.psd1" />

@@ -5,6 +5,7 @@ $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
 $repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
+. (Join-Path $PSScriptRoot "sharedScaleformMovies.ps1")
 
 function Resolve-RequiredFile {
   param(
@@ -77,10 +78,20 @@ function Assert-MatchingFile {
 
   $resolvedExpectedPath = Resolve-RequiredFile -Path $ExpectedPath -Description "$Description source"
   $resolvedActualPath = Resolve-RequiredFile -Path $ActualPath -Description "$Description staged file"
-  $expectedHash = Get-Sha256 -Path $resolvedExpectedPath
-  $actualHash = Get-Sha256 -Path $resolvedActualPath
-  if ($actualHash -cne $expectedHash) {
-    throw "$Description hash mismatch. Expected $expectedHash from $resolvedExpectedPath; found $actualHash at $resolvedActualPath."
+  $expectedText = [System.IO.File]::ReadAllText($resolvedExpectedPath).Replace("`r`n", "`n").Replace("`r", "`n")
+  $actualBytes = [System.IO.File]::ReadAllBytes($resolvedActualPath)
+  if ($actualBytes.Length -ge 3 -and
+      $actualBytes[0] -eq 0xEF -and
+      $actualBytes[1] -eq 0xBB -and
+      $actualBytes[2] -eq 0xBF) {
+    throw "$Description must use UTF-8 without a byte-order mark."
+  }
+  $actualText = [System.Text.UTF8Encoding]::new($false, $true).GetString($actualBytes)
+  if ($actualText.Contains("`r")) {
+    throw "$Description must use canonical LF line endings."
+  }
+  if ($actualText -cne $expectedText) {
+    throw "$Description differs from its source after canonical text normalization."
   }
 }
 
@@ -145,7 +156,7 @@ function Assert-ExpectedLayout {
 
   $resolvedSourcePath = Resolve-RequiredFile -Path $SourcePath -Description "Production layout source"
   $resolvedStagedPath = Resolve-RequiredFile -Path $StagedPath -Description "$VariantName staged layout"
-  $sourceText = [System.IO.File]::ReadAllText($resolvedSourcePath)
+  $sourceText = [System.IO.File]::ReadAllText($resolvedSourcePath).Replace("`r`n", "`n").Replace("`r", "`n")
   $paletteMatches = [regex]::Matches($sourceText, '\bpalette="[^"]+"')
   if ($paletteMatches.Count -ne 1) {
     throw "Expected exactly one palette selector in $resolvedSourcePath; found $($paletteMatches.Count)."
@@ -233,16 +244,32 @@ $movies = @(
     ExpectedHashPath = 'Scaleform/hudmenu/validation/expected.sha256'
   },
   [pscustomobject]@{
+    FileName = 'hudmenu.swf'
+    ExpectedHashPath = 'Scaleform/hudmenu/validation/expected-swf.sha256'
+  },
+  [pscustomobject]@{
     FileName = 'hudmenu_lrg.gfx'
     ExpectedHashPath = 'Scaleform/hudmenu_lrg/validation/expected.sha256'
+  },
+  [pscustomobject]@{
+    FileName = 'hudmenu_lrg.swf'
+    ExpectedHashPath = 'Scaleform/hudmenu_lrg/validation/expected-swf.sha256'
   },
   [pscustomobject]@{
     FileName = 'hudmessagesmenu.gfx'
     ExpectedHashPath = 'Scaleform/hudmessagesmenu/validation/expected.sha256'
   },
   [pscustomobject]@{
+    FileName = 'hudmessagesmenu.swf'
+    ExpectedHashPath = 'Scaleform/hudmessagesmenu/validation/expected-swf.sha256'
+  },
+  [pscustomobject]@{
     FileName = 'hudmessagesmenu_lrg.gfx'
     ExpectedHashPath = 'Scaleform/hudmessagesmenu_lrg/validation/expected.sha256'
+  },
+  [pscustomobject]@{
+    FileName = 'hudmessagesmenu_lrg.swf'
+    ExpectedHashPath = 'Scaleform/hudmessagesmenu_lrg/validation/expected-swf.sha256'
   }
 )
 
@@ -278,6 +305,9 @@ foreach ($variant in $variants) {
     if ($actualHash -cne $expectedHash) {
       throw "$($variant.Name) $($movie.FileName) hash mismatch. Expected $expectedHash; found $actualHash."
     }
+    Assert-ScaleformMovieEncoding `
+      -Path $moviePath `
+      -Context "$($variant.Name) $($movie.FileName)"
     $movieHashes[$movie.FileName].Add($actualHash)
   }
 

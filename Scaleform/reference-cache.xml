@@ -2,9 +2,13 @@
 <scaleformReferenceCache version="1">
   <movies>
     <movie group="on-foot-hud" inputFile="hudmenu.gfx" />
+    <movie group="on-foot-hud" inputFile="hudmenu.swf" />
     <movie group="on-foot-hud" inputFile="hudmenu_lrg.gfx" />
+    <movie group="on-foot-hud" inputFile="hudmenu_lrg.swf" />
     <movie group="on-foot-hud" inputFile="hudmessagesmenu.gfx" />
+    <movie group="on-foot-hud" inputFile="hudmessagesmenu.swf" />
     <movie group="on-foot-hud" inputFile="hudmessagesmenu_lrg.gfx" />
+    <movie group="on-foot-hud" inputFile="hudmessagesmenu_lrg.swf" />
     <movie group="on-foot-hud" inputFile="mapicons.gfx" />
     <movie group="on-foot-hud" inputFile="playerhudcomponents.gfx" />
     <movie group="on-foot-hud" inputFile="playerhudcomponents_lrg.gfx" />

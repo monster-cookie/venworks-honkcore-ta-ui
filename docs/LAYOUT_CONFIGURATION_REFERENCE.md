@@ -16,13 +16,7 @@ references are documented separately in the
 
 ## Movie-profile availability
 
-All five variants use the complete layout runtime documented by this reference.
-Minimalist's `minimalist-static` movie profile retains `panel`, `svg`, `path`,
-`mask`, `icon`, `providerSymbol`, palette, asset, and imported-fragment support.
-Its shipped layout deliberately omits those optional elements, external palette
-and asset files, the faction display, helmet cutout paths, and equipment rail.
-The reduced loose XML instead uses literal Starfield colors, fitted translucent
-rectangle and ellipse backings, and open corner/divider geometry.
+All five variants use the complete layout runtime documented by this reference. Minimalist's `minimalist-live` movie profile retains `panel`, `svg`, `path`, `mask`, `icon`, `providerSymbol`, palette, asset, and imported-fragment support. Its shipped layout deliberately omits those optional elements, external palette and asset files, the faction display, helmet cutout paths, and equipment rail. The reduced loose XML instead uses literal Starfield colors, fitted translucent rectangle and ellipse backings, and open corner/divider geometry.
 
 ## Fixed runtime paths
 
@@ -63,11 +57,7 @@ The runtime processes an authored layout as one atomic configuration:
 Any failure prevents the complete configurable layer from rendering and shows
 a categorized diagnostic. No invalid subtree is skipped or partially accepted.
 
-Minimalist currently uses static data contexts for PS5 crash isolation. Its XML
-source and condition vocabulary remains valid, but live-value lookups stay
-unknown and therefore render authored fallback values; only `always` evaluates
-true while other runtime conditions fail hidden. The static profile makes no
-game-provider subscriptions or provider-driven CUI events.
+Minimalist uses live data contexts with ten value registrations, seven condition registrations, and three intentional cross-context overlaps. It omits only `WeaponData`, `HUDStarbornPowersData`, `FavoritesData`, and `ControlMapData`, which are used by the equipment rail that Minimalist does not ship. Its remaining conditions and live-value bindings behave like the themed variants and retain the same guarded subscription, callback, and teardown lifecycle.
 
 ## Root layout document
 
@@ -547,13 +537,9 @@ environment.protectionLevel
 environment.protectionPercentage
 ```
 
-An allowlisted source can still be unknown until its Bethesda provider publishes
-usable data. Text and meter components use their authored fallback while data is
-unknown.
+An allowlisted source can still be unknown until its Bethesda provider publishes usable data. Text and meter components use their authored fallback while data is unknown.
 
-In the current Minimalist diagnostic profile, every live source remains unknown
-by design because both data contexts are static. The four themed variants retain
-their normal live provider behavior.
+Minimalist's retained live providers publish their supported sources normally. Sources owned only by the removed equipment rail are unavailable because Minimalist omits `WeaponData`, `HUDStarbornPowersData`, `FavoritesData`, and `ControlMapData`; the four themed variants retain those providers.
 
 ## Text formats and value templates
 

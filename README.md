@@ -37,14 +37,7 @@ state from those systems for conditions, but it does not replace them.
 
 ## Release variants
 
-Five separately distributed variants are available. The four themed variants
-share the production HUD movies and include all five packaged palettes, so
-their active palette can be changed without reinstalling the HUD. Minimalist
-uses profile-specific diagnostic HUD movies, literal Starfield colors, fitted
-holographic readouts with pale-blue translucent native-shape backings, and the
-same complete XML, palette, SVG, path, panel, icon, and mask runtime. Its static
-profile deliberately makes no live game-provider subscriptions while the PS5
-startup crash is isolated.
+Five separately distributed variants are available. The four themed variants share the production HUD movies and include all five packaged palettes, so their active palette can be changed without reinstalling the HUD. Minimalist uses profile-specific HUD movies, literal Starfield colors, fitted holographic readouts with pale-blue translucent native-shape backings, and the same complete XML, palette, SVG, path, panel, icon, and mask runtime. Its live profile retains the ten required value registrations, seven required condition registrations, and three intentional cross-context overlaps while omitting the providers used only by the removed equipment rail.
 
 | Public release name | Default palette |
 |---|---|
@@ -67,11 +60,7 @@ determines the starting configuration.
 
 ## Installation
 
-Choose one variant and one PC package shape. The recommended Nexus PC - Normal
-package installs a root ESM, Windows BA2 archives, and one loose
-`Interface\VenworksCUI\layout.xml`. Enable the ESM and let the package win HUD
-conflicts. Minimalist remains excluded from Nexus publishing while its PS5
-startup investigation is active.
+Choose one variant and one PC package shape. The recommended Nexus PC - Normal package installs a root ESM, Windows BA2 archives, and one loose `Interface\VenworksCUI\layout.xml`. Enable the ESM and let the package win HUD conflicts. All five variants, including Minimalist, are published through the same Nexus package matrix.
 
 The Nexus PC - Fully Loose Files package installs the complete `Interface`
 tree without an ESM or BA2. Use it only when component fragments, or palettes
@@ -124,8 +113,7 @@ separate loose override containing the additional changed files.
 - Direct PNG, JPEG, and DDS assets are unsupported by the Starfield Scaleform
   runtime. All movie profiles support the documented local SVG subset;
   Minimalist's shipped configuration simply does not use it.
-- Minimalist is currently a static PS5 diagnostic build. It displays authored
-  fallbacks but does not subscribe to live Starfield HUD data providers.
+- Every platform package contains independently compiled Bethesda-format movie pairs: native `GFX` files at the `.gfx` paths and ZLIB-compressed `CWS` files at the matching `.swf` paths. Files are never renamed or signature-wrapped between formats.
 - Palette changes require a new HUD load; live switching is unsupported.
 - In the four themed variants, active-power highlighting for favorite slots
   currently compares Bethesda's
@@ -144,6 +132,7 @@ separate loose override containing the additional changed files.
   behavior.
 - The [build system](docs/BUILDSYSTEM.md) documents the Scaleform build and
   staging pipeline.
+- The [Starfield Scaleform workflow](docs/STARFIELD_SCALEFORM_WORKFLOW.md) documents clean extraction, decompilation, modification, independent GFX/CWS recompilation, staging, packaging, and cross-platform validation.
 - The [Scaleform source guide](Scaleform/README.md) covers local build
   requirements and authored source structure.
 - [Visual references](docs/reference/) preserve clean-room behavioral and

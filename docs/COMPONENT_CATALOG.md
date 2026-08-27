@@ -202,18 +202,7 @@ gamer-facing configuration surface.
 | Scanner overlay | Implemented | Scanner-only heading banner, 5-by-5 square-to-dot radial pulse, and up to five validated forward contacts. Its pulse timer runs only while the component and every display-list ancestor are visible. It preserves Bethesda's reticle/crosshair and uses deterministic type/handle codenames instead of names or random data. |
 | Reticle/crosshair | Vanilla-owned; not configurable | Bethesda retains the complete visual and lifecycle owner; proven crosshair data remains condition input only. |
 
-The Goal 7 equipment rail is intentionally passive and is available only in the
-four themed variants. Minimalist removes the rail, all fifteen contacts, and
-their icons. Its current diagnostic movie profile also removes every live game
-provider registration, not only the former rail-only registrations. In the
-themed variants, Favorites Menu remains the only owner of
-favorite assignment and input. Contacts 1-12 preserve the latest
-twelve-entry snapshot and resolve `Quickkey1..12` through Bethesda's
-`ButtonKeyHelper`, while contacts 13-15 remain independently live. Exact
-weapon/power name matches may accent a favorite contact; menu cursor state and
-stale equipped flags are not treated as active state. The live explosive
-provider supplies only generic category and count, so exact favorite
-grenade/mine highlighting is unsupported rather than heuristically inferred.
+The Goal 7 equipment rail is intentionally passive and is available only in the four themed variants. Minimalist removes the rail, all fifteen contacts, and their icons. Its live movie profile retains ten value registrations, seven condition registrations, and three intentional cross-context overlaps while omitting only the rail-specific `WeaponData`, `HUDStarbornPowersData`, `FavoritesData`, and `ControlMapData` providers. In the themed variants, Favorites Menu remains the only owner of favorite assignment and input. Contacts 1-12 preserve the latest twelve-entry snapshot and resolve `Quickkey1..12` through Bethesda's `ButtonKeyHelper`, while contacts 13-15 remain independently live. Exact weapon/power name matches may accent a favorite contact; menu cursor state and stale equipped flags are not treated as active state. The live explosive provider supplies only generic category and count, so exact favorite grenade/mine highlighting is unsupported rather than heuristically inferred.
 
 ## Player HUD coverage targets
 

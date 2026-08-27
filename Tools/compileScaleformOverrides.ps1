@@ -22,7 +22,9 @@ param(
 
   [string[]]$ManifestPath = @(
     (Join-Path $PSScriptRoot "..\Scaleform\hudmessagesmenu\build.xml"),
-    (Join-Path $PSScriptRoot "..\Scaleform\hudmessagesmenu_lrg\build.xml")
+    (Join-Path $PSScriptRoot "..\Scaleform\hudmessagesmenu\build-swf.xml"),
+    (Join-Path $PSScriptRoot "..\Scaleform\hudmessagesmenu_lrg\build.xml"),
+    (Join-Path $PSScriptRoot "..\Scaleform\hudmessagesmenu_lrg\build-swf.xml")
   ),
 
   [switch]$KeepWork,
@@ -33,6 +35,7 @@ param(
 $PSNativeCommandUseErrorActionPreference = $true
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
+. (Join-Path $PSScriptRoot "sharedScaleformMovies.ps1")
 
 function Resolve-RequiredFile {
   param(
@@ -184,20 +187,6 @@ function Get-RelativeChildPath {
   )
 }
 
-function Get-MovieSignature {
-  param(
-    [Parameter(Mandatory = $true)]
-    [string]$Path
-  )
-
-  $bytes = [System.IO.File]::ReadAllBytes($Path)
-  if ($bytes.Length -lt 3) {
-    throw "Scaleform movie is too short to contain a signature: $Path"
-  }
-
-  return [System.Text.Encoding]::ASCII.GetString($bytes,0,3)
-}
-
 $script:ResolvedJavaPath = Resolve-RequiredFile -Path $JavaPath -Description "Java executable"
 $script:ResolvedJpexsJarPath = Resolve-RequiredFile -Path $JpexsJarPath -Description "JPEXS JAR"
 $resolvedVanillaInterfacePath = Resolve-RequiredDirectory -Path $VanillaInterfacePath -Description "Vanilla interface directory"
@@ -244,6 +233,7 @@ try {
     $inputPath = Resolve-RequiredFile `
       -Path (Join-Path $resolvedVanillaInterfacePath ([string]$build.inputFile)) `
       -Description "Vanilla Scaleform input"
+    Assert-ScaleformMovieEncoding -Path $inputPath -Context "Vanilla $($build.inputFile)"
     $vanillaHashPath = Resolve-RequiredFile `
       -Path (Join-Path $manifestDirectory ([string]$build.vanillaHashFile)) `
       -Description "Vanilla hash file"
@@ -293,8 +283,9 @@ try {
       -Path (Join-Path $validationScriptsDirectory 'scripts') `
       -Description "Reopened $($build.name) ActionScript directory"
 
-    $sourceSignature = Get-MovieSignature -Path $inputPath
-    $generatedSignature = Get-MovieSignature -Path $generatedMoviePath
+    Assert-ScaleformMovieEncoding -Path $generatedMoviePath -Context "Generated $($build.outputFile)"
+    $sourceSignature = Get-ScaleformMovieSignature -Path $inputPath
+    $generatedSignature = Get-ScaleformMovieSignature -Path $generatedMoviePath
     if ($generatedSignature -cne $sourceSignature) {
       throw "Generated $($build.outputFile) signature changed from $sourceSignature to $generatedSignature."
     }

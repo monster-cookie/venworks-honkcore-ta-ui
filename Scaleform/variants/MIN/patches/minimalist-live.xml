@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<actionScriptProfilePatch name="minimalist-live" version="1">
+  <source path="venworks/cui/CUIConditionContext.as">
+    <replace>
+      <find><![CDATA[            this.subscribeProvider("WeaponData",this.onWeaponData);
+            this.subscribeProvider("HUDStarbornPowersData",this.onStarbornPowersData);
+            this.subscribeProvider("FavoritesData",this.onFavoritesData);
+]]></find>
+      <with><![CDATA[]]></with>
+    </replace>
+  </source>
+  <source path="venworks/cui/CUIPlayerHudDataContext.as">
+    <replace>
+      <find><![CDATA[            this.subscribeProvider("WeaponData",this.onWeaponData);
+]]></find>
+      <with><![CDATA[]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[            this.subscribeProvider("HUDStarbornPowersData",this.onStarbornPowersData);
+            this.subscribeProvider("FavoritesData",this.onFavoritesData);
+            this.subscribeProvider("ControlMapData",this.onControlMapData);
+]]></find>
+      <with><![CDATA[]]></with>
+    </replace>
+  </source>
+  <source path="venworks/cui/components/CUIThreatAlert.as">
+    <replace>
+      <find><![CDATA[         background = new Shape();
+         background.graphics.beginFill(backgroundColor,0.76);
+         background.graphics.drawRect(0,0,componentWidth,componentHeight);
+         background.graphics.endFill();
+         addChild(background);]]></find>
+      <with><![CDATA[         background = new Shape();
+         background.graphics.lineStyle(1,clearColor,0.58);
+         background.graphics.moveTo(0,8);
+         background.graphics.lineTo(0,0);
+         background.graphics.lineTo(32,0);
+         background.graphics.moveTo(componentWidth - 32,0);
+         background.graphics.lineTo(componentWidth,0);
+         background.graphics.lineTo(componentWidth,8);
+         background.graphics.moveTo(0,componentHeight - 8);
+         background.graphics.lineTo(0,componentHeight);
+         background.graphics.lineTo(32,componentHeight);
+         background.graphics.moveTo(componentWidth - 32,componentHeight);
+         background.graphics.lineTo(componentWidth,componentHeight);
+         background.graphics.lineTo(componentWidth,componentHeight - 8);
+         addChild(background);]]></with>
+    </replace>
+  </source>
+  <source path="venworks/cui/components/CUIStatusEffectBar.as">
+    <replace>
+      <find><![CDATA[         param1.graphics.clear();
+         param1.graphics.lineStyle(1,param4,0.54);
+         param1.graphics.beginFill(backgroundColor,0.68);
+         param1.graphics.drawRect(1,1,Math.max(0,param2 - 2),Math.max(0,param3 - 2));
+         param1.graphics.endFill();]]></find>
+      <with><![CDATA[         var corner:Number = Math.min(6,Math.max(2,param2 / 5));
+         var right:Number = Math.max(1,param2 - 1);
+         var bottom:Number = Math.max(1,param3 - 1);
+         param1.graphics.clear();
+         param1.graphics.beginFill(0x0D1114,0.28);
+         param1.graphics.drawRect(1,1,Math.max(0,param2 - 2),Math.max(0,param3 - 2));
+         param1.graphics.endFill();
+         param1.graphics.beginFill(0x70CFE0,0.10);
+         param1.graphics.drawRect(1,1,Math.max(0,param2 - 2),Math.max(0,param3 - 2));
+         param1.graphics.endFill();
+         param1.graphics.lineStyle(1,param4,0.54);
+         param1.graphics.moveTo(1,corner);
+         param1.graphics.lineTo(1,1);
+         param1.graphics.lineTo(corner,1);
+         param1.graphics.moveTo(right - corner,1);
+         param1.graphics.lineTo(right,1);
+         param1.graphics.lineTo(right,corner);
+         param1.graphics.moveTo(1,bottom - corner);
+         param1.graphics.lineTo(1,bottom);
+         param1.graphics.lineTo(corner,bottom);
+         param1.graphics.moveTo(right - corner,bottom);
+         param1.graphics.lineTo(right,bottom);
+         param1.graphics.lineTo(right,bottom - corner);]]></with>
+    </replace>
+  </source>
+  <source path="venworks/cui/components/CUIScannerOverlay.as">
+    <replace>
+      <find><![CDATA[         var panelShape:Shape = new Shape();
+         panelShape.graphics.lineStyle(1,scanningColor,0.86);
+         panelShape.graphics.beginFill(backgroundColor,0.76);
+         panelShape.graphics.drawRect(componentWidth / 2 - 112,0,224,26);
+         panelShape.graphics.endFill();
+         panelShape.graphics.lineStyle(1,contactColor,0.64);
+         panelShape.graphics.beginFill(backgroundColor,0.72);
+         panelShape.graphics.drawRect(componentWidth - 270,156,260,146);
+         panelShape.graphics.endFill();
+         addChild(panelShape);]]></find>
+      <with><![CDATA[         var panelShape:Shape = new Shape();
+         panelShape.graphics.beginFill(0x0D1114,0.28);
+         panelShape.graphics.drawRect(componentWidth / 2 - 112,0,224,26);
+         panelShape.graphics.drawRect(componentWidth - 270,156,260,146);
+         panelShape.graphics.endFill();
+         panelShape.graphics.beginFill(0x70CFE0,0.10);
+         panelShape.graphics.drawRect(componentWidth / 2 - 112,0,224,26);
+         panelShape.graphics.drawRect(componentWidth - 270,156,260,146);
+         panelShape.graphics.endFill();
+         this.drawCorners(panelShape,componentWidth / 2 - 112,0,224,26,scanningColor,0.86,18,7);
+         this.drawCorners(panelShape,componentWidth - 270,156,260,146,contactColor,0.64,22,12);
+         addChild(panelShape);]]></with>
+    </replace>
+    <replace>
+      <find><![CDATA[      private function createContactFields() : void]]></find>
+      <with><![CDATA[      private function drawCorners(param1:Shape, param2:Number, param3:Number, param4:Number, param5:Number,
+         param6:uint, param7:Number, param8:Number, param9:Number) : void
+      {
+         var right:Number = param2 + param4;
+         var bottom:Number = param3 + param5;
+         param1.graphics.lineStyle(1,param6,param7);
+         param1.graphics.moveTo(param2,param3 + param9);
+         param1.graphics.lineTo(param2,param3);
+         param1.graphics.lineTo(param2 + param8,param3);
+         param1.graphics.moveTo(right - param8,param3);
+         param1.graphics.lineTo(right,param3);
+         param1.graphics.lineTo(right,param3 + param9);
+         param1.graphics.moveTo(param2,bottom - param9);
+         param1.graphics.lineTo(param2,bottom);
+         param1.graphics.lineTo(param2 + param8,bottom);
+         param1.graphics.moveTo(right - param8,bottom);
+         param1.graphics.lineTo(right,bottom);
+         param1.graphics.lineTo(right,bottom - param9);
+      }
+
+      private function createContactFields() : void]]></with>
+    </replace>
+  </source>
+</actionScriptProfilePatch>

@@ -177,15 +177,23 @@ function Get-VariantScaleformMovieProfile {
     throw "Variant build profile is missing MovieProfile."
   }
 
-  $manifestRelativePaths = if ($VariantBuildProfile.ContainsKey("MovieManifestPaths")) {
+  $gfxManifestRelativePaths = if ($VariantBuildProfile.ContainsKey("MovieManifestPaths")) {
     @($VariantBuildProfile.MovieManifestPaths | ForEach-Object { [string]$_ })
   }
   else {
     @("Scaleform/hudmenu/build.xml", "Scaleform/hudmenu_lrg/build.xml")
   }
-  if ($manifestRelativePaths.Count -ne 2 -or
-      @($manifestRelativePaths | Select-Object -Unique).Count -ne 2) {
-    throw "Scaleform movie profile '$name' must declare exactly two unique HUD build manifests."
+  $swfManifestRelativePaths = if ($VariantBuildProfile.ContainsKey("SwfMovieManifestPaths")) {
+    @($VariantBuildProfile.SwfMovieManifestPaths | ForEach-Object { [string]$_ })
+  }
+  else {
+    @("Scaleform/hudmenu/build-swf.xml", "Scaleform/hudmenu_lrg/build-swf.xml")
+  }
+  $manifestRelativePaths = @($gfxManifestRelativePaths) + @($swfManifestRelativePaths)
+  if ($gfxManifestRelativePaths.Count -ne 2 -or
+      $swfManifestRelativePaths.Count -ne 2 -or
+      @($manifestRelativePaths | Select-Object -Unique).Count -ne 4) {
+    throw "Scaleform movie profile '$name' must declare exactly two unique GFX and two unique SWF HUD build manifests."
   }
 
   $manifestDefinitions = @($manifestRelativePaths | ForEach-Object {
@@ -196,10 +204,10 @@ function Get-VariantScaleformMovieProfile {
     Get-ScaleformManifestDefinition -ManifestPath $manifestPath
   })
   $movieNames = @($manifestDefinitions | ForEach-Object { $_.FileName })
-  $requiredMovieNames = @("hudmenu.gfx", "hudmenu_lrg.gfx")
+  $requiredMovieNames = @("hudmenu.gfx", "hudmenu.swf", "hudmenu_lrg.gfx", "hudmenu_lrg.swf")
   if ($movieNames.Count -ne $requiredMovieNames.Count -or
       @($requiredMovieNames | Where-Object { $_ -notin $movieNames }).Count -ne 0) {
-    throw "Scaleform movie profile '$name' must build hudmenu.gfx and hudmenu_lrg.gfx exactly once."
+    throw "Scaleform movie profile '$name' must build the normal and large HUD GFX/SWF movies exactly once."
   }
 
   $sourceProfileNames = @($manifestDefinitions | ForEach-Object {
@@ -221,8 +229,16 @@ function Get-VariantScaleformMovieProfile {
       ExpectedHashPath = (Join-Path $RepositoryRoot "Scaleform\hudmessagesmenu\validation\expected.sha256")
     },
     [pscustomobject]@{
+      FileName = "hudmessagesmenu.swf"
+      ExpectedHashPath = (Join-Path $RepositoryRoot "Scaleform\hudmessagesmenu\validation\expected-swf.sha256")
+    },
+    [pscustomobject]@{
       FileName = "hudmessagesmenu_lrg.gfx"
       ExpectedHashPath = (Join-Path $RepositoryRoot "Scaleform\hudmessagesmenu_lrg\validation\expected.sha256")
+    },
+    [pscustomobject]@{
+      FileName = "hudmessagesmenu_lrg.swf"
+      ExpectedHashPath = (Join-Path $RepositoryRoot "Scaleform\hudmessagesmenu_lrg\validation\expected-swf.sha256")
     }
   )
 

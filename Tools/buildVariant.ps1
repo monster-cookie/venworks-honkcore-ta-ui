@@ -106,11 +106,32 @@ function Write-Utf8WithoutBom {
     [string]$Text
   )
 
+  $canonicalText = $Text.Replace("`r`n", "`n").Replace("`r", "`n")
   [System.IO.File]::WriteAllText(
     $Path,
-    $Text,
+    $canonicalText,
     [System.Text.UTF8Encoding]::new($false)
   )
+}
+
+function Copy-ProfilePayloadFile {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$SourcePath,
+
+    [Parameter(Mandatory = $true)]
+    [string]$DestinationPath
+  )
+
+  $extension = [System.IO.Path]::GetExtension($SourcePath)
+  if ($extension -in @(".xml", ".svg")) {
+    Write-Utf8WithoutBom `
+      -Path $DestinationPath `
+      -Text ([System.IO.File]::ReadAllText($SourcePath))
+  }
+  else {
+    Copy-Item -LiteralPath $SourcePath -Destination $DestinationPath -Force
+  }
 }
 
 function Remove-OwnedDirectory {
@@ -267,11 +288,17 @@ foreach ($variant in $variants) {
 
 try {
   $movieProfileDirectories = @{}
-  $movieNames = @(
+  $profileMovieNames = @(
     "hudmenu.gfx",
+    "hudmenu.swf",
     "hudmenu_lrg.gfx",
+    "hudmenu_lrg.swf"
+  )
+  $sharedMovieNames = @(
     "hudmessagesmenu.gfx",
-    "hudmessagesmenu_lrg.gfx"
+    "hudmessagesmenu.swf",
+    "hudmessagesmenu_lrg.gfx",
+    "hudmessagesmenu_lrg.swf"
   )
   foreach ($movieProfileName in @($movieProfiles.Keys | Sort-Object)) {
     $movieProfile = $movieProfiles[$movieProfileName]
@@ -285,6 +312,7 @@ try {
       OutputDirectory = $movieProfileDirectory
       WorkDirectory = $resolvedWorkDirectory
       ManifestPath = @($movieProfile.ManifestPaths)
+      SkipOverrides = $true
     }
     if ($KeepWork) {
       $compileArguments.KeepWork = $true
@@ -295,11 +323,34 @@ try {
 
     Write-Host -ForegroundColor Green "Compiling the '$movieProfileName' validated Scaleform movies"
     & (Join-Path $PSScriptRoot "compileScaleform.ps1") @compileArguments
-    foreach ($movieName in $movieNames) {
+    foreach ($movieName in $profileMovieNames) {
       [void](Resolve-RequiredFile `
         -Path (Join-Path $movieProfileDirectory $movieName) `
         -Description "$movieProfileName compiled movie '$movieName'")
     }
+  }
+
+  $sharedMovieDirectory = Join-Path (Join-Path $buildDirectory "movies") "shared-overrides"
+  New-Item -ItemType Directory -Force -Path $sharedMovieDirectory | Out-Null
+  $overrideCompileArguments = @{
+    JavaPath = $JavaPath
+    JpexsJarPath = $JpexsJarPath
+    VanillaInterfacePath = $VanillaInterfacePath
+    OutputDirectory = @($sharedMovieDirectory)
+    WorkDirectory = $resolvedWorkDirectory
+  }
+  if ($KeepWork) {
+    $overrideCompileArguments.KeepWork = $true
+  }
+  if ($UpdateExpectedHashes) {
+    $overrideCompileArguments.UpdateExpectedHashes = $true
+  }
+  Write-Host -ForegroundColor Green "Compiling the shared validated HUD-message GFX/SWF movies"
+  & (Join-Path $PSScriptRoot "compileScaleformOverrides.ps1") @overrideCompileArguments
+  foreach ($movieName in $sharedMovieNames) {
+    [void](Resolve-RequiredFile `
+      -Path (Join-Path $sharedMovieDirectory $movieName) `
+      -Description "shared compiled movie '$movieName'")
   }
 
   foreach ($variant in $variants) {
@@ -345,9 +396,15 @@ try {
     $interfaceOutputDirectory = Join-Path $resolvedStagingPath "Interface"
     Remove-OwnedDirectory -Path $interfaceOutputDirectory -OwnerPath $resolvedStagingPath
     New-Item -ItemType Directory -Force -Path $interfaceOutputDirectory | Out-Null
-    foreach ($movieName in $movieNames) {
+    foreach ($movieName in $profileMovieNames) {
       Copy-Item `
         -LiteralPath (Join-Path $movieProfileDirectory $movieName) `
+        -Destination (Join-Path $interfaceOutputDirectory $movieName) `
+        -Force
+    }
+    foreach ($movieName in $sharedMovieNames) {
+      Copy-Item `
+        -LiteralPath (Join-Path $sharedMovieDirectory $movieName) `
         -Destination (Join-Path $interfaceOutputDirectory $movieName) `
         -Force
     }
@@ -403,7 +460,9 @@ try {
         Write-Utf8WithoutBom -Path $componentOutputPath -Text $componentText
       }
       else {
-        Copy-Item -LiteralPath $componentSourcePath -Destination $componentOutputPath -Force
+        Copy-ProfilePayloadFile `
+          -SourcePath $componentSourcePath `
+          -DestinationPath $componentOutputPath
       }
     }
 
@@ -414,10 +473,9 @@ try {
       $assetOutputDirectory = Join-Path $cuiOutputDirectory "Assets"
       New-Item -ItemType Directory -Force -Path $assetOutputDirectory | Out-Null
       foreach ($assetFileName in @($variantBuildProfile.AssetFileNames)) {
-        Copy-Item `
-          -LiteralPath (Resolve-RequiredFile -Path (Join-Path $assetSourceDirectory ([string]$assetFileName)) -Description "$($variant.VariantName) asset '$assetFileName'") `
-          -Destination (Join-Path $assetOutputDirectory ([string]$assetFileName)) `
-          -Force
+        Copy-ProfilePayloadFile `
+          -SourcePath (Resolve-RequiredFile -Path (Join-Path $assetSourceDirectory ([string]$assetFileName)) -Description "$($variant.VariantName) asset '$assetFileName'") `
+          -DestinationPath (Join-Path $assetOutputDirectory ([string]$assetFileName))
       }
     }
 
@@ -428,10 +486,9 @@ try {
       $paletteOutputDirectory = Join-Path $cuiOutputDirectory "palettes"
       New-Item -ItemType Directory -Force -Path $paletteOutputDirectory | Out-Null
       foreach ($paletteFileName in @($variantBuildProfile.PaletteFileNames)) {
-        Copy-Item `
-          -LiteralPath (Resolve-RequiredFile -Path (Join-Path $paletteSourceDirectory ([string]$paletteFileName)) -Description "$($variant.VariantName) palette '$paletteFileName'") `
-          -Destination (Join-Path $paletteOutputDirectory ([string]$paletteFileName)) `
-          -Force
+        Copy-ProfilePayloadFile `
+          -SourcePath (Resolve-RequiredFile -Path (Join-Path $paletteSourceDirectory ([string]$paletteFileName)) -Description "$($variant.VariantName) palette '$paletteFileName'") `
+          -DestinationPath (Join-Path $paletteOutputDirectory ([string]$paletteFileName))
       }
     }
 

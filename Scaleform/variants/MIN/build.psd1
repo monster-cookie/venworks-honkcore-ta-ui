@@ -1,8 +1,12 @@
 @{
-  MovieProfile = 'minimalist-static'
+  MovieProfile = 'minimalist-live'
   MovieManifestPaths = @(
     'Scaleform/variants/MIN/movies/hudmenu.build.xml'
     'Scaleform/variants/MIN/movies/hudmenu_lrg.build.xml'
+  )
+  SwfMovieManifestPaths = @(
+    'Scaleform/variants/MIN/movies/hudmenu-swf.build.xml'
+    'Scaleform/variants/MIN/movies/hudmenu_lrg-swf.build.xml'
   )
   LayoutSource = 'Scaleform/variants/MIN/layout.xml'
   ComponentSourceDirectory = 'Scaleform/variants/MIN/components'
