@@ -1,5 +1,12 @@
 # Venworks - Customizable HUD and Themes
 
+- https://www.nexusmods.com/starfield/mods/17104
+- https://creations.bethesda.net/en/starfield/details/e8a7bdfa-7d88-4cf5-bba4-a5c4cad0d97f/Venworks_Customizable_HUD___Minimalist_Theme
+- https://creations.bethesda.net/en/starfield/details/1d693691-1b23-48fe-9cc9-06be4fe63ad8/Venworks_Customizable_HUD___Venworks_Theme
+- https://creations.bethesda.net/en/starfield/details/80994b40-c426-4f3c-b157-7beaee0aa473/Venworks_Customizable_HUD___Trackers_Alliance_Them
+- https://creations.bethesda.net/en/starfield/details/03b616a3-1902-4b83-a109-fc176f658a69/Venworks_Customizable_HUD___Crimson_Fleet_Theme
+- https://creations.bethesda.net/en/starfield/details/9b635bf7-8c6b-4530-bdbd-0912903b336b/Venworks_Customizable_HUD___Freestar_Collective_Th
+
 ## Version 2.0.6 (September 26, 2026)
 
 - Minimalist: Restored loose XML configuration as it produced no change in the PS5 startup crash.
