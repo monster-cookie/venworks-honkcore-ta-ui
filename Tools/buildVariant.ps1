@@ -234,9 +234,6 @@ if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction Si
 . (Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "sharedScaleformProfiles.ps1") `
   -Description "Scaleform movie-profile helper")
-. (Resolve-RequiredFile `
-  -Path (Join-Path $PSScriptRoot "sharedEmbeddedScaleformLayout.ps1") `
-  -Description "embedded Scaleform layout helper")
 
 $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
 if ($variants.Count -eq 0) {
@@ -248,7 +245,6 @@ New-Item -ItemType Directory -Force -Path $resolvedWorkDirectory | Out-Null
 $buildDirectory = Join-Path $resolvedWorkDirectory ([guid]::NewGuid().ToString("N"))
 $variantBuildProfiles = @{}
 $movieProfiles = @{}
-$embeddedLayoutTexts = @{}
 foreach ($variant in $variants) {
   $profilePath = Resolve-RequiredFile `
     -Path (Join-Path $repositoryRoot "Scaleform\variants\$($variant.VariantKey)\build.psd1") `
@@ -258,21 +254,9 @@ foreach ($variant in $variants) {
     -RepositoryRoot $repositoryRoot `
     -VariantBuildProfile $variantBuildProfile
   $variantBuildProfiles[[string]$variant.VariantKey] = $variantBuildProfile
-  if ($movieProfile.ConfigurationMode -ceq "Embedded") {
-    $embeddedLayoutText = Get-VenworksEmbeddedLayoutText `
-      -RepositoryRoot $repositoryRoot `
-      -Variant $variant `
-      -VariantBuildProfile $variantBuildProfile
-    if ($embeddedLayoutTexts.ContainsKey($movieProfile.Name) -and
-        [string]$embeddedLayoutTexts[$movieProfile.Name] -cne $embeddedLayoutText) {
-      throw "Scaleform movie profile '$($movieProfile.Name)' resolves to conflicting embedded layouts."
-    }
-    $embeddedLayoutTexts[$movieProfile.Name] = $embeddedLayoutText
-  }
   if ($movieProfiles.ContainsKey($movieProfile.Name)) {
     $existingManifestPaths = @($movieProfiles[$movieProfile.Name].ManifestPaths)
-    if (($existingManifestPaths -join "|") -cne (@($movieProfile.ManifestPaths) -join "|") -or
-        [string]$movieProfiles[$movieProfile.Name].ConfigurationMode -cne [string]$movieProfile.ConfigurationMode) {
+    if (($existingManifestPaths -join "|") -cne (@($movieProfile.ManifestPaths) -join "|")) {
       throw "Scaleform movie profile '$($movieProfile.Name)' resolves to conflicting build manifests."
     }
   }
@@ -302,11 +286,6 @@ try {
       WorkDirectory = $resolvedWorkDirectory
       ManifestPath = @($movieProfile.ManifestPaths)
     }
-    if ($movieProfile.ConfigurationMode -ceq "Embedded") {
-      $embeddedLayoutPath = Join-Path $movieProfileDirectory "embedded-layout.xml"
-      Write-Utf8WithoutBom -Path $embeddedLayoutPath -Text ([string]$embeddedLayoutTexts[$movieProfileName])
-      $compileArguments.EmbeddedLayoutPath = $embeddedLayoutPath
-    }
     if ($KeepWork) {
       $compileArguments.KeepWork = $true
     }
@@ -325,8 +304,7 @@ try {
 
   foreach ($variant in $variants) {
     $variantBuildProfile = $variantBuildProfiles[[string]$variant.VariantKey]
-    $movieProfile = $movieProfiles[[string]$variantBuildProfile.MovieProfile]
-    $movieProfileDirectory = $movieProfileDirectories[$movieProfile.Name]
+    $movieProfileDirectory = $movieProfileDirectories[[string]$variantBuildProfile.MovieProfile]
 
     Assert-UniqueSafeFileNames -FileNames @($variantBuildProfile.ComponentFileNames) -Context "$($variant.VariantName) component profile"
     Assert-UniqueSafeFileNames -FileNames @($variantBuildProfile.AssetFileNames) -Context "$($variant.VariantName) asset profile"
@@ -374,15 +352,6 @@ try {
         -Force
     }
 
-    if ($movieProfile.ConfigurationMode -ceq "Embedded") {
-      if (Test-Path -LiteralPath (Join-Path $interfaceOutputDirectory "VenworksCUI")) {
-        throw "$($variant.VariantName) embedded payload unexpectedly contains a VenworksCUI directory."
-      }
-      if (@(Get-ChildItem -LiteralPath $interfaceOutputDirectory -Recurse -File -Filter "*.xml").Count -ne 0) {
-        throw "$($variant.VariantName) embedded payload unexpectedly contains loose XML configuration."
-      }
-    }
-    else {
     $cuiOutputDirectory = Join-Path $interfaceOutputDirectory "VenworksCUI"
     $componentOutputDirectory = Join-Path $cuiOutputDirectory "components"
     New-Item -ItemType Directory -Force -Path $componentOutputDirectory | Out-Null
@@ -491,7 +460,6 @@ try {
           @(Get-ChildItem -LiteralPath $interfaceOutputDirectory -Recurse -File -Include "*.svg","*.dds").Count -ne 0) {
         throw "$($variant.VariantName) literal payload retains external SVG, palette, or DDS content."
       }
-    }
     }
 
     if (![string]::IsNullOrWhiteSpace([string]$variantBuildProfile.PluginSourcePath)) {

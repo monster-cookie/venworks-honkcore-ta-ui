@@ -16,14 +16,13 @@ references are documented separately in the
 
 ## Movie-profile availability
 
-The four themed variants use the full layout runtime documented by this
-reference. Minimalist uses a reduced `minimalist-no-svg` movie profile. Its
-normal and large HUD movies do not contain support for `panel`, `svg`, `path`,
-`mask`, `icon`, or `providerSymbol`; any of those nodes is invalid in a
-Minimalist layout or imported fragment. Minimalist also has no external palette
-or asset directory and does not include the equipment rail.
-
-Minimalist retains groups, text, shapes, dividers, meters, repeaters, states, templates, embedded Bethesda symbols, radar, compass, scanner, threat, status-effect, and other nonexcluded components. Its build resolves the authored layout and six fragments to literal Starfield colors, embeds that final tree in both HUD movies, and stages no loose XML. The embedded layout uses fitted translucent rectangle and ellipse backings plus open corner/divider geometry. The element and SVG sections below describe the full themed profile unless they explicitly say otherwise.
+All five variants use the complete layout runtime documented by this reference.
+Minimalist's `minimalist-static` movie profile retains `panel`, `svg`, `path`,
+`mask`, `icon`, `providerSymbol`, palette, asset, and imported-fragment support.
+Its shipped layout deliberately omits those optional elements, external palette
+and asset files, the faction display, helmet cutout paths, and equipment rail.
+The reduced loose XML instead uses literal Starfield colors, fitted translucent
+rectangle and ellipse backings, and open corner/divider geometry.
 
 ## Fixed runtime paths
 
@@ -36,7 +35,9 @@ All paths below are relative to Starfield's `Data\Interface` directory.
 | Selected palette | `VenworksCUI\palettes\<filename>.xml` |
 | Local SVG assets | `VenworksCUI\Assets\<relative-path>.svg` |
 
-All four runtime paths apply only to the themed variants. Minimalist loads no external layout, fragment, palette, or SVG path.
+The root layout and imported-fragment paths apply to all five variants.
+Minimalist ships no selected palette or local SVG asset, although its restored
+runtime supports both paths when a complete valid configuration supplies them.
 
 The runtime does not load a user-selected layout from any other root, execute
 scripts from XML, call arbitrary game methods, subscribe to arbitrary data
@@ -44,7 +45,7 @@ providers, or fetch network resources.
 
 ## Load and validation order
 
-The themed runtime processes an authored layout as one atomic configuration:
+The runtime processes an authored layout as one atomic configuration:
 
 1. Load and parse `layout.xml`.
 2. Validate no more than 16 `<include>` declarations and load their fragments.
@@ -56,13 +57,17 @@ The themed runtime processes an authored layout as one atomic configuration:
    `@palette.*` attributes.
 7. Validate the fully resolved component tree, conditions, live-value sources,
    and references.
-8. In the themed profile, preload and validate every referenced local SVG.
+8. Preload and validate every referenced local SVG.
 9. Create the display layer and subscribe only to the hardcoded HUD providers.
 
 Any failure prevents the complete configurable layer from rendering and shows
 a categorized diagnostic. No invalid subtree is skipped or partially accepted.
 
-The Minimalist build performs include placement, ID prefixing, and literal color resolution before compiling the resolved XML literal into `hudmenu.gfx` and `hudmenu_lrg.gfx`. Its runtime still performs composite lowering and final parser validation on that embedded tree. Minimalist therefore has no runtime file-loading phase and cannot be customized by deploying loose XML.
+Minimalist currently uses static data contexts for PS5 crash isolation. Its XML
+source and condition vocabulary remains valid, but live-value lookups stay
+unknown and therefore render authored fallback values; only `always` evaluates
+true while other runtime conditions fail hidden. The static profile makes no
+game-provider subscriptions or provider-driven CUI events.
 
 ## Root layout document
 
@@ -545,6 +550,10 @@ environment.protectionPercentage
 An allowlisted source can still be unknown until its Bethesda provider publishes
 usable data. Text and meter components use their authored fallback while data is
 unknown.
+
+In the current Minimalist diagnostic profile, every live source remains unknown
+by design because both data contexts are static. The four themed variants retain
+their normal live provider behavior.
 
 ## Text formats and value templates
 

@@ -98,9 +98,9 @@ archive is deferred until the generated console archives can be tested.
 
 ## Variant build profiles
 
-`Tools/compileScaleform.ps1` is the lower-level movie compiler. It validates and writes the normal/large HUD movies declared by a build manifest plus the shared HUD-message movies; it does not select palettes, mirror configuration payloads, or invoke Archive2. `Tools/sharedScaleformProfiles.ps1` resolves those manifests and their ActionScript source profiles. `Tools/buildVariant.ps1` compiles each unique selected movie profile once and stages each selected profile from `Scaleform/variants/<KEY>/build.psd1` independently. A variant profile owns its movie profile, layout source, component inventory, assets, palettes, palette mode, configuration delivery mode, and optional stub-ESM source. Adding or removing one component or movie capability in one profile does not require making the other profiles match.
+`Tools/compileScaleform.ps1` is the lower-level movie compiler. It validates and writes the normal/large HUD movies declared by a build manifest plus the shared HUD-message movies; it does not select palettes, mirror configuration payloads, or invoke Archive2. `Tools/sharedScaleformProfiles.ps1` resolves those manifests and their ActionScript source profiles. `Tools/buildVariant.ps1` compiles each unique selected movie profile once and stages each selected profile from `Scaleform/variants/<KEY>/build.psd1` independently. A variant profile owns its movie profile, layout source, component inventory, assets, palettes, palette mode, and optional stub-ESM source. Adding or removing one component or movie behavior in one profile does not require making the other profiles match.
 
-The four themed profiles currently share the production layout, eight component fragments, six SVG assets, five external palettes, and the full shared HUD movie profile. Minimalist independently declares six component fragments, its own layout, and the `minimalist-no-svg` HUD movie profile. The HUD-message movies remain shared across all five variants. Its `Embedded` configuration mode resolves that authored layout and its fragments into each Minimalist HUD movie; the default `External` mode preserves runtime XML loading for the themed profiles.
+The four themed profiles currently share the production layout, eight component fragments, six SVG assets, five external palettes, and the shared live-data HUD movie profile. Minimalist independently declares six component fragments, its own layout, and the `minimalist-static` HUD movie profile. The HUD-message movies remain shared across all five variants. Every variant stages and loads external XML through the same complete layout runtime; Minimalist differs only in its static data-context replacements and visual source patches.
 
 ## Minimalist release
 
@@ -130,24 +130,23 @@ Create only its staging Junction and build only its artifacts with:
 The shared themed movie profile validates the independent 10-provider condition
 context and 14-provider value context before and after compilation, including
 the six intentionally duplicated provider names, transactional startup,
-callback containment, deferred teardown, and bootstrap diagnostics. Minimalist
-retains those lifecycle protections but compiles out the equipment-only
-registrations, leaving seven condition providers, ten value providers, and
-three intentionally duplicated provider names. Neither profile combines
-providers into a shared subscription or broker.
+callback containment, deferred teardown, and bootstrap diagnostics. The
+Minimalist diagnostic profile replaces both contexts with inert static
+implementations and therefore contains zero condition, value, or cross-context
+provider registrations. It retains the XML binding vocabulary and renders
+authored fallback values without wiring provider-driven runtime events.
 
-The Minimalist profile generates its one-domain seed and imports ActionScript from the shared source tree through a strict exclusion and source-transform manifest. Its normal and large HUD movies contain no SVG loader/parser, SVG path, mask, panel, built-in icon, composite resolver, asset-manager, or equipment-provider-symbol classes. It also excludes the layout and palette loader classes plus Venworks uses of `URLLoader` and `URLRequest`. The build rejects those class names and runtime strings after JPEXS reopens each movie. The four themed variants retain the shared production HUD hashes; only Minimalist's `hudmenu.gfx` and `hudmenu_lrg.gfx` are profile-specific.
+The Minimalist profile generates its one-domain seed and imports the complete shared ActionScript tree. Its profile manifest replaces only `CUIConditionContext` and `CUIPlayerHudDataContext`, then applies Minimalist-specific runtime and visual patches. The compiler verifies that replacement targets exist, preserve their package and public class names, expose inert lifecycle methods, and contain no `BSUIDataManager`, provider event, callback, or timer APIs. After JPEXS reopens each movie, the build also requires the full layout, palette, asset, SVG, path, mask, panel, icon, provider-symbol, and composite class inventory. The four themed variants retain the shared production HUD hashes; only Minimalist's `hudmenu.gfx` and `hudmenu_lrg.gfx` are profile-specific.
 
-Minimalist resolves the `starfield.xml` color roles to literal XML colors, removes the palette selector, faction display, helmet cutout paths, and complete equipment rail, and keeps the contact radar in the former faction-display position. Its six fragments use fitted native rectangle and ellipse backings with a 28-percent dark base and 10-percent pale-blue tint beneath the existing corner brackets and divider strokes. The build rejects `svg`, `path`, `mask`, `icon`, `panel`, and `providerSymbol` nodes, then removes the `Assets` and `palettes` directories. It resolves all six imports at build time, embeds the complete literal-color layout in each HUD movie, and stages no `Interface\VenworksCUI` directory. The result contains the renamed stub ESM, four GFX files, and the Windows, Xbox, and PS5 Main BA2s.
+Minimalist resolves the `starfield.xml` color roles to literal XML colors, removes the palette selector, faction display, helmet cutout paths, and complete equipment rail, and keeps the contact radar in the former faction-display position. Its six fragments use fitted native rectangle and ellipse backings with a 28-percent dark base and 10-percent pale-blue tint beneath the existing corner brackets and divider strokes. The shipped XML contains no `svg`, `path`, `mask`, `icon`, `panel`, or `providerSymbol` nodes, and the build removes the `Assets` and `palettes` directories. It stages the literal-color `layout.xml` and all six component fragments under `Interface\VenworksCUI`, alongside four GFX files, the renamed stub ESM, and the Windows, Xbox, and PS5 Main BA2s.
 The selected release-package command creates all five normal package shapes for
 Minimalist. Omitting `-VariantKeys` selects all five release variants.
 
-The Minimalist HUD movies intentionally remove several capabilities together.
-A successful PS5 test therefore narrows the crash investigation but does not
-independently prove whether SVG runtime code, the panel runtime, helmet paths,
-or equipment-provider registrations caused the crash. Native rectangle and
-ellipse fills remain available for the fitted holographic backings. DDS
-substitution remains a separate follow-up experiment.
+The Minimalist HUD movies now isolate one major boundary: all shared XML and SVG
+capabilities are present, but the movies create no game-provider subscriptions
+or provider-driven CUI events. A successful PS5 test would implicate that live
+data boundary; another identical crash would rule it out as the sole cause.
+Native rectangle and ellipse fills remain in the fitted holographic backings.
 
 The release workflow produces five ZIP shapes for each of the five variants:
 
@@ -159,7 +158,7 @@ The release workflow produces five ZIP shapes for each of the five variants:
 | Bethesda Xbox | Root ESM, Xbox Main BA2, and any generated Xbox Textures BA2 only |
 | Bethesda PS5 | Root ESM, PS5 Main BA2, and any generated PS5 Textures BA2 only |
 
-Minimalist's platform packages contain its ESM and the matching Main BA2, with no texture archive or loose XML. Its fully loose Nexus package contains only the four GFX files. The complete release matrix contains 25 ZIPs. A themed normal Nexus package leaves only `layout.xml` loose so the compiled HUD movies remain protected by the BA2. Users who need to edit themed component fragments, palettes, or SVG assets must use the themed fully loose package or provide a separate loose override. Do not install a normal and fully loose package together.
+Minimalist's platform packages contain its ESM and the matching Main BA2, with no texture archive. Its fully loose Nexus package contains the four GFX files plus the reduced external XML tree. The complete release matrix contains 25 ZIPs. Every normal Nexus package leaves only `layout.xml` loose so the compiled HUD movies remain protected by the BA2. Users who need to edit component fragments, palettes, or SVG assets must use a fully loose package or provide a separate loose override. Minimalist remains disabled for Nexus publication while the PS5 diagnostic build is evaluated. Do not install a normal and fully loose package together.
 
 ## Persistent BGS reference cache
 
@@ -254,9 +253,10 @@ matching deployment hashes are not substitutes for the one-domain assertion.
 `Tools/compileScaleform.ps1` imports the authored CUI ActionScript into Bethesda's
 HUD movies with JPEXS. JPEXS can replace classes represented by an AVM2 seed but
 does not grow the seed reliably during `-importScript`. The repository therefore
-stores a generated shared seed at
-`Scaleform/shared/patches/cui-component-abc-seed.xml` and a profile-specific
-Minimalist seed at `Scaleform/variants/MIN/patches/cui-component-abc-seed.xml`.
+stores one generated full-inventory seed at
+`Scaleform/shared/patches/cui-component-abc-seed.xml`. Both the shared and
+Minimalist profiles use it because they expose the same public class inventory;
+Minimalist replaces only the implementations of two existing classes.
 
 The former build asserted exactly 38 authored CUI files and exactly 205 total
 classes. Those numbers were repository implementation details, not Starfield,
@@ -277,8 +277,9 @@ Regenerate the shared seed whenever an authored `.as` class is added or removed:
   -JpexsJarPath "<ffdec.jar-path>"
 ```
 
-Pass a movie build manifest to regenerate a profile-specific seed with the same
-source inventory and exclusions used by the movie compiler:
+Pass a movie build manifest when a profile intentionally changes the public
+class inventory and needs a profile-specific seed with the same exclusions used
+by the movie compiler:
 
 ```powershell
 .\Tools\generateScaleformAbcSeed.ps1 `

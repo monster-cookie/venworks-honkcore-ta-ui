@@ -82,8 +82,10 @@ function Get-ScaleformSourceProfile {
     return [pscustomobject]@{
       Name = "shared"
       ExcludedActionScriptPaths = @()
+      ActionScriptReplacementPaths = @{}
       ActionScriptPatchPath = $null
       ForbiddenBytecodeTokens = @()
+      RequiredBytecodeTokens = @()
       ValueProviders = @()
       ConditionProviders = @()
       CrossContextProviderCount = 6
@@ -110,6 +112,36 @@ function Get-ScaleformSourceProfile {
     throw "Scaleform profile '$($scaleformProfile.Name)' contains duplicate ActionScript exclusions."
   }
 
+  $replacementPaths = @{}
+  if ($scaleformProfile.ContainsKey("ActionScriptReplacementPaths")) {
+    foreach ($replacementEntry in $scaleformProfile.ActionScriptReplacementPaths.GetEnumerator()) {
+      $sourcePath = [string]$replacementEntry.Key
+      if ([string]::IsNullOrWhiteSpace($sourcePath) -or
+          [System.IO.Path]::IsPathRooted($sourcePath) -or
+          $sourcePath -match '(^|[\\/])\.\.([\\/]|$)' -or
+          $sourcePath -notmatch '\.as$') {
+        throw "Scaleform profile '$($scaleformProfile.Name)' contains an unsafe ActionScript replacement target: $sourcePath"
+      }
+      $normalizedSourcePath = $sourcePath.Replace(
+        [System.IO.Path]::AltDirectorySeparatorChar,
+        [System.IO.Path]::DirectorySeparatorChar
+      )
+      if ($replacementPaths.ContainsKey($normalizedSourcePath)) {
+        throw "Scaleform profile '$($scaleformProfile.Name)' repeats ActionScript replacement target '$sourcePath'."
+      }
+      if ($normalizedSourcePath -in $excludedPaths) {
+        throw "Scaleform profile '$($scaleformProfile.Name)' cannot replace and exclude '$sourcePath'."
+      }
+
+      $replacementPath = [System.IO.Path]::GetFullPath((Join-Path $profileDirectory ([string]$replacementEntry.Value)))
+      if (!(Test-Path -LiteralPath $replacementPath -PathType Leaf) -or
+          [System.IO.Path]::GetExtension($replacementPath) -cne ".as") {
+        throw "Scaleform profile '$($scaleformProfile.Name)' replacement does not exist or is not ActionScript: $replacementPath"
+      }
+      $replacementPaths[$normalizedSourcePath] = $replacementPath
+    }
+  }
+
   $patchPath = $null
   if (![string]::IsNullOrWhiteSpace([string]$scaleformProfile.ActionScriptPatchPath)) {
     $patchPath = [System.IO.Path]::GetFullPath((Join-Path $profileDirectory ([string]$scaleformProfile.ActionScriptPatchPath)))
@@ -121,8 +153,10 @@ function Get-ScaleformSourceProfile {
   return [pscustomobject]@{
     Name = [string]$scaleformProfile.Name
     ExcludedActionScriptPaths = $excludedPaths
+    ActionScriptReplacementPaths = $replacementPaths
     ActionScriptPatchPath = $patchPath
     ForbiddenBytecodeTokens = @($scaleformProfile.ForbiddenBytecodeTokens | ForEach-Object { [string]$_ })
+    RequiredBytecodeTokens = @($scaleformProfile.RequiredBytecodeTokens | ForEach-Object { [string]$_ })
     ValueProviders = @($scaleformProfile.ValueProviders | ForEach-Object { [string]$_ })
     ConditionProviders = @($scaleformProfile.ConditionProviders | ForEach-Object { [string]$_ })
     CrossContextProviderCount = [int]$scaleformProfile.CrossContextProviderCount
@@ -141,16 +175,6 @@ function Get-VariantScaleformMovieProfile {
   $name = [string]$VariantBuildProfile.MovieProfile
   if ([string]::IsNullOrWhiteSpace($name)) {
     throw "Variant build profile is missing MovieProfile."
-  }
-
-  $configurationMode = if ($VariantBuildProfile.ContainsKey("ConfigurationMode")) {
-    [string]$VariantBuildProfile.ConfigurationMode
-  }
-  else {
-    "External"
-  }
-  if ($configurationMode -cne "External" -and $configurationMode -cne "Embedded") {
-    throw "Scaleform movie profile '$name' selects unsupported configuration mode '$configurationMode'."
   }
 
   $manifestRelativePaths = if ($VariantBuildProfile.ContainsKey("MovieManifestPaths")) {
@@ -204,10 +228,31 @@ function Get-VariantScaleformMovieProfile {
 
   return [pscustomobject]@{
     Name = $name
-    ConfigurationMode = $configurationMode
     ManifestPaths = @($manifestDefinitions | ForEach-Object { $_.ManifestPath })
     MovieDefinitions = $movieDefinitions
   }
+}
+
+function Get-ScaleformProfileActionScriptPath {
+  param(
+    [Parameter(Mandatory = $true)]
+    [pscustomobject]$SourceProfile,
+
+    [Parameter(Mandatory = $true)]
+    [string]$SourcePath,
+
+    [Parameter(Mandatory = $true)]
+    [string]$RelativePath
+  )
+
+  $normalizedRelativePath = $RelativePath.Replace(
+    [System.IO.Path]::AltDirectorySeparatorChar,
+    [System.IO.Path]::DirectorySeparatorChar
+  )
+  if ($SourceProfile.ActionScriptReplacementPaths.ContainsKey($normalizedRelativePath)) {
+    return [string]$SourceProfile.ActionScriptReplacementPaths[$normalizedRelativePath]
+  }
+  return $SourcePath
 }
 
 function Get-ScaleformPatchedActionScript {

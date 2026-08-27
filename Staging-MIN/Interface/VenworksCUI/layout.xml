@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1" designWidth="1920" designHeight="1080"
+             safeLeft="64" safeTop="36" safeRight="64" safeBottom="36">
+  <definitions>
+    <meterStyle id="player.xp" renderer="segments"
+                fillColor="#E8F0F4" emptyColor="#0D1114"
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="16" gap="2"
+                direction="right" partialSegments="true" />
+    <meterStyle id="player.health" renderer="segments"
+                fillColor="#D34A5B" emptyColor="#0D1114"
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="16" gap="2"
+                direction="right" partialSegments="true" />
+    <meterStyle id="player.oxygen" renderer="segments"
+                fillColor="#70CFE0" emptyColor="#0D1114"
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="16" gap="2"
+                direction="right" partialSegments="true" />
+    <meterStyle id="player.carbondioxide" renderer="segments"
+                fillColor="#E0A85B" emptyColor="#0D1114"
+                fillOpacity="1" emptyOpacity="0" segmentCount="16" gap="2"
+                direction="right" partialSegments="true" />
+    <meterStyle id="player.boost" renderer="segments"
+                fillColor="#A69AD8" emptyColor="#0D1114"
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="16" gap="2"
+                direction="right" partialSegments="true" />
+    <meterStyle id="player.encumbrance" renderer="segments"
+                fillColor="#64E572" emptyColor="#0D1114"
+                fillOpacity="1" emptyOpacity="0.7" segmentCount="16" gap="2"
+                direction="right" partialSegments="true" />
+    <meterStyle id="environment.air" renderer="segments"
+                fillColor="#E8F0F4" emptyColor="#0D1114"
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="8" gap="2"
+                direction="up" partialSegments="true" />
+    <meterStyle id="environment.thermal" renderer="segments"
+                fillColor="#FFD800" emptyColor="#0D1114"
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="8" gap="2"
+                direction="up" partialSegments="true" />
+    <meterStyle id="environment.corrosive" renderer="segments"
+                fillColor="#FFD800" emptyColor="#0D1114"
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="8" gap="2"
+                direction="up" partialSegments="true" />
+    <meterStyle id="environment.radiation" renderer="segments"
+                fillColor="#FF3C54" emptyColor="#0D1114"
+                fillOpacity="1" emptyOpacity="0.72" segmentCount="8" gap="2"
+                direction="up" partialSegments="true" />
+    <meterStyle id="environment.protection" renderer="segments"
+                fillColor="#E8F0F4" emptyColor="#0D1114"
+                fillOpacity="1" emptyOpacity="0.78" segmentCount="16" gap="2"
+                direction="right" partialSegments="true" />
+  </definitions>
+  <vanillaVisibility>
+    <target id="bottomLeft" visibleWhen="never" />
+    <target id="rightMeters" visibleWhen="never" />
+  </vanillaVisibility>
+  <includes>
+    <include id="contact-radar" src="contact-radar.xml"
+             x="-64" y="-36" anchor="top-left" visible="true" visibleWhen="always" z="104" />
+    <include id="quest-tracker" src="quest-tracker.xml"
+             x="-64" y="190" anchor="top-left" visible="true" visibleWhen="always" z="102" />
+    <include id="environmental-hazard-scanner" src="environmental-hazard-scanner.xml"
+             x="39" y="29" anchor="bottom-right" visible="true" visibleWhen="always" z="90" />
+    <include id="player-status-scanner" src="player-status-scanner.xml"
+             x="-39" y="11" anchor="bottom-left" visible="true" visibleWhen="always" z="100" />
+    <include id="helmet-awareness" src="helmet-awareness.xml"
+             x="0" y="22" anchor="top-center" visible="true" visibleWhen="always" z="110" />
+    <include id="scanner-overlay" src="scanner-overlay.xml"
+             x="0" y="0" anchor="center" visible="true" visibleWhen="inScanner" z="109" />
+  </includes>
+  <components>
+    <group id="player.critical-health" x="0" y="166" width="320" height="70" opacity="1" visible="true"
+           visibleWhen="criticalHealth" anchor="top-center" rotation="0" scaleX="1" scaleY="1" z="120">
+      <shape id="critical-health.backing.base" x="0" y="0" width="320" height="70" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="-2"
+             shape="rectangle" fillColor="#0D1114" fillOpacity="0.28" strokeColor="#D9E3E8" strokeOpacity="0" strokeWidth="0" />
+      <shape id="critical-health.backing.tint" x="0" y="0" width="320" height="70" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="-1"
+             shape="rectangle" fillColor="#70CFE0" fillOpacity="0.10" strokeColor="#D9E3E8" strokeOpacity="0" strokeWidth="0" />
+      <divider id="critical.corner.tl.h" x="0" y="0" width="46" height="0" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" color="#FF3C54" strokeOpacity="1" strokeWidth="2" />
+      <divider id="critical.corner.tl.v" x="0" y="0" width="0" height="15" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" color="#FF3C54" strokeOpacity="1" strokeWidth="2" />
+      <divider id="critical.corner.tr.h" x="274" y="0" width="46" height="0" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" color="#FF3C54" strokeOpacity="1" strokeWidth="2" />
+      <divider id="critical.corner.tr.v" x="320" y="0" width="0" height="15" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" color="#FF3C54" strokeOpacity="1" strokeWidth="2" />
+      <divider id="critical.corner.bl.h" x="0" y="70" width="46" height="0" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" color="#FF3C54" strokeOpacity="1" strokeWidth="2" />
+      <divider id="critical.corner.bl.v" x="0" y="55" width="0" height="15" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" color="#FF3C54" strokeOpacity="1" strokeWidth="2" />
+      <divider id="critical.corner.br.h" x="274" y="70" width="46" height="0" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" color="#FF3C54" strokeOpacity="1" strokeWidth="2" />
+      <divider id="critical.corner.br.v" x="320" y="55" width="0" height="15" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="0" color="#FF3C54" strokeOpacity="1" strokeWidth="2" />
+      <text id="player.critical-health.title" x="12" y="7" width="296" height="24" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="1" value="CRITICAL HEALTH"
+            font="$MAIN_Font_Bold" fontSize="12" color="#FF3C54" bold="false" align="center" />
+      <text id="player.critical-health.value" x="12" y="32" width="296" height="28" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="1"
+            valueTemplate="HEALTH {player.health:integer}/{player.maxHealth:integer}" value="HEALTH --/--"
+            font="$MAIN_Font_Bold" fontSize="15" color="#FFFFFF" bold="false" align="center" />
+    </group>
+    <group id="helmet.vehicle-exit" x="0" y="36" width="184" height="36" opacity="1" visible="true"
+           visibleWhen="inVehicle" anchor="bottom-center" rotation="0" scaleX="1" scaleY="1" z="103">
+      <shape id="vehicle-exit.backing.base" x="0" y="0" width="184" height="36" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="-2"
+             shape="rectangle" fillColor="#0D1114" fillOpacity="0.28" strokeColor="#D9E3E8" strokeOpacity="0" strokeWidth="0" />
+      <shape id="vehicle-exit.backing.tint" x="0" y="0" width="184" height="36" opacity="1" visible="true" rotation="0" scaleX="1" scaleY="1" z="-1"
+             shape="rectangle" fillColor="#70CFE0" fillOpacity="0.10" strokeColor="#D9E3E8" strokeOpacity="0" strokeWidth="0" />
+      <text id="vehicle.exit.label" x="0" y="4" width="138" height="28" opacity="1" visible="true"
+            rotation="0" scaleX="1" scaleY="1" z="0" value="$EXIT HOLD"
+            font="$MAIN_Font_Bold" fontSize="11" color="#FFFFFF" bold="false" align="right" />
+      <symbol id="vehicle.exit.glyph" x="146" y="0" width="36" height="36" opacity="1" visible="true"
+              rotation="0" scaleX="1" scaleY="1" z="0" name="vehicle-exit-prompt"
+              fit="contain" alignX="left" alignY="center" />
+    </group>
+  </components>
+</venworksCUI>

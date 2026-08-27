@@ -1,6 +1,5 @@
 @{
-  MovieProfile = 'minimalist-no-svg'
-  ConfigurationMode = 'Embedded'
+  MovieProfile = 'minimalist-static'
   MovieManifestPaths = @(
     'Scaleform/variants/MIN/movies/hudmenu.build.xml'
     'Scaleform/variants/MIN/movies/hudmenu_lrg.build.xml'

@@ -20,8 +20,6 @@ param(
     (Join-Path $PSScriptRoot "..\Scaleform\hudmenu_lrg\build.xml")
   ),
 
-  [string]$EmbeddedLayoutPath,
-
   [switch]$KeepWork,
 
   [switch]$UpdateExpectedHashes
@@ -254,6 +252,10 @@ function Assert-PlayerHudDataContextLifecycle {
     [string]$Context,
     [string[]]$ProviderNames
   )
+  if ($null -ne $ProviderNames -and $ProviderNames.Count -eq 0) {
+    Assert-StaticScaleformDataContext -Source $Source -Context $Context -RequiredKind "value"
+    return
+  }
   $providerSubscriptions = @(
     @{ Provider = 'LocalEnvironmentData'; Handler = 'onLocalEnvironmentData'; AllowNullData = $true },
     @{ Provider = 'LocalEnvData_Frequent'; Handler = 'onLocalEnvironmentFrequentData'; AllowNullData = $true },
@@ -312,6 +314,10 @@ function Assert-ConditionContextLifecycle {
     [string]$Context,
     [string[]]$ProviderNames
   )
+  if ($null -ne $ProviderNames -and $ProviderNames.Count -eq 0) {
+    Assert-StaticScaleformDataContext -Source $Source -Context $Context -RequiredKind "condition"
+    return
+  }
   $providerSubscriptions = @(
     @{ Provider = 'HudCrosshairData'; Handler = 'onCrosshairData' },
     @{ Provider = 'HUDStealthData'; Handler = 'onStealthData' },
@@ -337,6 +343,39 @@ function Assert-ConditionContextLifecycle {
   }
   Assert-GuardedProviderLifecycle -Source $Source -Context $Context `
     -ProviderSubscriptions $providerSubscriptions -Consumer 'CONDITION'
+}
+
+function Assert-StaticScaleformDataContext {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Source,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Context,
+
+    [Parameter(Mandatory = $true)]
+    [ValidateSet("value", "condition")]
+    [string]$RequiredKind
+  )
+
+  if ($Source -match 'BSUIDataManager|FromClientDataEvent|CustomEvent|TimerEvent|flash\.utils\.Timer|\.Subscribe\s*\(|\.Unsubscribe\s*\(|addEventListener\s*\(|removeEventListener\s*\(|dispatchEvent\s*\(') {
+    throw "$Context retains a provider, game-data event, or timer API."
+  }
+  if ($Source -notmatch 'public\s+function\s+start\s*\(\s*\)\s*:\s*void\s*\{\s*\}' -or
+      $Source -notmatch 'public\s+function\s+dispose\s*\(\s*\)\s*:\s*void\s*\{\s*\}') {
+    throw "$Context does not expose inert static start and disposal methods."
+  }
+  if ($RequiredKind -ceq "value" -and
+      ($Source -notmatch 'public\s+static\s+function\s+getKind' -or
+       $Source -notmatch 'public\s+function\s+getValue')) {
+    throw "$Context does not retain static XML value-binding validation and placeholder lookup."
+  }
+  if ($RequiredKind -ceq "condition" -and
+      ($Source -notmatch 'public\s+static\s+function\s+getKind' -or
+       $Source -notmatch 'name\s*==\s*"always"' -or
+       $Source -notmatch 'name\s*==\s*"never"')) {
+    throw "$Context does not retain deterministic static condition evaluation."
+  }
 }
 
 function Assert-SolarTransitionCountdown {
@@ -471,22 +510,6 @@ $scaleformProfileHelperPath = Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "sharedScaleformProfiles.ps1") `
   -Description "Scaleform movie-profile helper"
 . $scaleformProfileHelperPath
-$embeddedLayoutHelperPath = Resolve-RequiredFile `
-  -Path (Join-Path $PSScriptRoot "sharedEmbeddedScaleformLayout.ps1") `
-  -Description "embedded Scaleform layout helper"
-. $embeddedLayoutHelperPath
-$resolvedEmbeddedLayoutPath = if ([string]::IsNullOrWhiteSpace($EmbeddedLayoutPath)) {
-  $null
-}
-else {
-  Resolve-RequiredFile -Path $EmbeddedLayoutPath -Description "embedded Scaleform layout"
-}
-$resolvedEmbeddedLayoutText = if ($null -eq $resolvedEmbeddedLayoutPath) {
-  $null
-}
-else {
-  [System.IO.File]::ReadAllText($resolvedEmbeddedLayoutPath).Trim()
-}
 $resolvedReferenceCacheManifestPath = Resolve-RequiredFile `
   -Path $ReferenceCacheManifestPath `
   -Description "Scaleform reference-cache manifest"
@@ -1258,22 +1281,6 @@ try {
     $exportedScriptsDirectory = Join-Path $movieWorkDirectory "exported-scripts"
     $importScriptsDirectory = Join-Path $movieWorkDirectory "import-scripts"
     $validationScriptsDirectory = Join-Path $movieWorkDirectory "validation-scripts"
-    $effectiveSourceProfilePatchPath = $sourceProfile.ActionScriptPatchPath
-    if ($null -ne $effectiveSourceProfilePatchPath -and
-        [System.IO.File]::ReadAllText($effectiveSourceProfilePatchPath).Contains('__VENWORKS_EMBEDDED_LAYOUT__') -and
-        $null -eq $resolvedEmbeddedLayoutPath) {
-      throw "Scaleform profile '$($sourceProfile.Name)' requires -EmbeddedLayoutPath."
-    }
-    if ($null -ne $resolvedEmbeddedLayoutPath) {
-      if ($sourceProfile.Name -ceq "shared" -or $null -eq $effectiveSourceProfilePatchPath) {
-        throw "Embedded Scaleform layout requires a non-shared ActionScript profile with a patch."
-      }
-      $effectiveSourceProfilePatchPath = New-VenworksEmbeddedScaleformPatch `
-        -SourcePatchPath $effectiveSourceProfilePatchPath `
-        -EmbeddedLayoutPath $resolvedEmbeddedLayoutPath `
-        -OutputPath (Join-Path $movieWorkDirectory "materialized-source-profile.xml")
-    }
-
     $vanillaReference = Get-ScaleformReferenceMovie `
       -Context $referenceCacheContext `
       -InputFile ([string]$build.inputFile)
@@ -1408,20 +1415,45 @@ try {
         throw "Scaleform profile '$($sourceProfile.Name)' excludes an unknown ActionScript class: $excludedActionScriptPath"
       }
     }
+    $authoredActionScriptPaths = @($allAuthoredScripts | ForEach-Object {
+      $_.FullName.Substring($actionScriptSourcePath.Length).TrimStart(
+        [System.IO.Path]::DirectorySeparatorChar,
+        [System.IO.Path]::AltDirectorySeparatorChar
+      )
+    })
+    foreach ($replacementEntry in $sourceProfile.ActionScriptReplacementPaths.GetEnumerator()) {
+      $replacementTargetPath = [string]$replacementEntry.Key
+      if ($replacementTargetPath -notin $authoredActionScriptPaths) {
+        throw "Scaleform profile '$($sourceProfile.Name)' replaces an unknown ActionScript class: $replacementTargetPath"
+      }
+      $replacementClassName = [System.IO.Path]::GetFileNameWithoutExtension($replacementTargetPath)
+      $replacementPackageName = [System.IO.Path]::GetDirectoryName($replacementTargetPath).Replace(
+        [System.IO.Path]::DirectorySeparatorChar,
+        '.'
+      )
+      $replacementSource = [System.IO.File]::ReadAllText([string]$replacementEntry.Value)
+      if ($replacementSource -notmatch "(?s)package\s+$([regex]::Escape($replacementPackageName))\s*\{.*?public\s+(?:final\s+)?class\s+$([regex]::Escape($replacementClassName))\b") {
+        throw "Scaleform profile '$($sourceProfile.Name)' replacement for '$replacementTargetPath' does not preserve its package and public class name."
+      }
+    }
 
     foreach ($authoredScript in $authoredScripts) {
       $relativeScriptPath = $authoredScript.FullName.Substring($actionScriptSourcePath.Length).TrimStart(
         [System.IO.Path]::DirectorySeparatorChar,
         [System.IO.Path]::AltDirectorySeparatorChar
       )
+      $profileScriptPath = Get-ScaleformProfileActionScriptPath `
+        -SourceProfile $sourceProfile `
+        -SourcePath $authoredScript.FullName `
+        -RelativePath $relativeScriptPath
       $importScriptPath = Join-Path $importScriptsDirectory $relativeScriptPath
       $importScriptParent = Split-Path -Parent $importScriptPath
       New-Item -ItemType Directory -Force -Path $importScriptParent | Out-Null
-      if ($null -ne $effectiveSourceProfilePatchPath) {
+      if ($null -ne $sourceProfile.ActionScriptPatchPath) {
         $patchedSource = Get-ScaleformPatchedActionScript `
-          -SourcePath $authoredScript.FullName `
+          -SourcePath $profileScriptPath `
           -RelativePath $relativeScriptPath `
-          -PatchPath $effectiveSourceProfilePatchPath
+          -PatchPath $sourceProfile.ActionScriptPatchPath
         [System.IO.File]::WriteAllText(
           $importScriptPath,
           $patchedSource,
@@ -1429,7 +1461,7 @@ try {
         )
       }
       else {
-        Copy-Item -LiteralPath $authoredScript.FullName -Destination $importScriptPath
+        Copy-Item -LiteralPath $profileScriptPath -Destination $importScriptPath
       }
     }
 
@@ -1445,13 +1477,6 @@ try {
     if ($generatedBytes.Length -lt 3 -or [System.Text.Encoding]::ASCII.GetString($generatedBytes, 0, 3) -ne 'GFX') {
       throw "Generated output does not have a GFX signature: $generatedGfxPath"
     }
-    if ($null -ne $resolvedEmbeddedLayoutText) {
-      Assert-VenworksEmbeddedLayoutInMovie `
-        -MoviePath $generatedGfxPath `
-        -EmbeddedLayoutText $resolvedEmbeddedLayoutText `
-        -Description "Generated $($build.name) movie"
-    }
-
     [xml]$reopened = Get-Content -LiteralPath $reopenedXmlPath -Raw
     $reopenedSeedTags = @($reopened.SelectNodes('/swf/tags/item[@type="DoABC2Tag" and starts-with(@name,"venworks.cui.components.seed.")]'))
     if ($reopenedSeedTags.Count -ne 1 -or
@@ -1524,12 +1549,17 @@ try {
       }
 
       $profileValidationSource = @(
-        Get-ChildItem -LiteralPath $validationScriptRoot -Recurse -File -Filter "*.as" |
+        Get-ChildItem -LiteralPath (Join-Path $validationScriptRoot "venworks\cui") -Recurse -File -Filter "*.as" |
           ForEach-Object { [System.IO.File]::ReadAllText($_.FullName) }
       ) -join "`n"
       foreach ($forbiddenToken in @($sourceProfile.ForbiddenBytecodeTokens)) {
         if ($profileValidationSource.Contains($forbiddenToken)) {
           throw "Generated $($sourceProfile.Name) movie retains forbidden bytecode token '$forbiddenToken'."
+        }
+      }
+      foreach ($requiredToken in @($sourceProfile.RequiredBytecodeTokens)) {
+        if (!$profileValidationSource.Contains($requiredToken)) {
+          throw "Generated $($sourceProfile.Name) movie is missing required bytecode token '$requiredToken'."
         }
       }
 
@@ -1547,9 +1577,11 @@ try {
         -Source $profileConditionContextSource `
         -Context "$($sourceProfile.Name) reopened condition context" `
         -ProviderNames @($sourceProfile.ConditionProviders)
-      Assert-SolarTransitionCountdown `
-        -Source $profilePlayerContextSource `
-        -Context "$($sourceProfile.Name) reopened player HUD data context"
+      if ($sourceProfile.ValueProviders.Count -ne 0) {
+        Assert-SolarTransitionCountdown `
+          -Source $profilePlayerContextSource `
+          -Context "$($sourceProfile.Name) reopened player HUD data context"
+      }
 
       $crossContextProviders = @($sourceProfile.ValueProviders | Where-Object {
         $_ -in @($sourceProfile.ConditionProviders)
@@ -1557,24 +1589,14 @@ try {
       if ($crossContextProviders.Count -ne $sourceProfile.CrossContextProviderCount) {
         throw "Generated $($sourceProfile.Name) movie has $($crossContextProviders.Count) cross-context provider overlaps; expected $($sourceProfile.CrossContextProviderCount)."
       }
-      if ($profileRuntimeSource -match 'ASSET MANAGER|ASSET COLLECTION|ASSET LOADING') {
-        throw "Generated $($sourceProfile.Name) runtime retains the external asset-loading phase."
+      if ($sourceProfile.Name -ceq "minimalist-static" -and
+          ($profileRuntimeSource -notmatch 'CUILayoutImportLoader' -or
+           $profileRuntimeSource -notmatch 'CUIPaletteLoader' -or
+           $profileRuntimeSource -notmatch 'CUIAssetManager' -or
+           $profileRuntimeSource -match 'CUIPlayerHudDataContext\.(?:PROVIDER_ERROR|VALUE_CHANGE|COMPASS_CHANGE|TACTICAL_AWARENESS_CHANGE)' -or
+           $profileRuntimeSource -match 'CUIConditionContext\.(?:PROVIDER_ERROR|CONDITION_CHANGE)')) {
+        throw "Generated Minimalist static runtime does not preserve loaders or still wires provider-driven events."
       }
-      if ($null -ne $resolvedEmbeddedLayoutPath) {
-        $venworksValidationRoot = Join-Path $validationScriptRoot "venworks\cui"
-        $venworksValidationSource = @(
-          Get-ChildItem -LiteralPath $venworksValidationRoot -Recurse -File -Filter "*.as" |
-            ForEach-Object { [System.IO.File]::ReadAllText($_.FullName) }
-        ) -join "`n"
-        if ($profileRuntimeSource -notmatch '<venworksCUI\b' -or
-            $profileRuntimeSource -match '__VENWORKS_EMBEDDED_LAYOUT__|CUILayoutImportLoader|CUIPaletteLoader|URLLoader|URLRequest|VenworksCUI/layout\.xml|VenworksCUI/components/') {
-          throw "Generated $($sourceProfile.Name) runtime does not contain exactly the embedded, loader-free configuration path."
-        }
-        if ($venworksValidationSource -match 'import\s+flash\.net\.(?:URLLoader|URLRequest)|new\s+URL(?:Loader|Request)\s*\(') {
-          throw "Generated $($sourceProfile.Name) authored bytecode retains a URL loader or request."
-        }
-      }
-
       $actualOutputHash = (Get-FileHash -LiteralPath $generatedGfxPath -Algorithm SHA256).Hash
       if ($UpdateExpectedHashes) {
         Write-Sha256File `

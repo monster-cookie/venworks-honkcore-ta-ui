@@ -1,5 +1,10 @@
 # Venworks - Customizable HUD and Themes
 
+## Unreleased
+
+- Minimalist: Restored loose XML configuration and the complete shared XML, palette, SVG, path, panel, icon, mask, and composite runtime after the embedded-layout and SVG-removal experiments produced no change in the PS5 startup crash.
+- Minimalist: Replaced both live data contexts with static implementations and removed all game-provider registrations and provider-driven runtime events for the next PS5 isolation test. Nexus publishing remains disabled while this diagnostic build is evaluated.
+
 ## Version 2.0.5 (September 26, 2026)
 
 - Minimalist: Remove XML support and baked in the components into the movies for PS5 startup crash isolation. Hopefully this doesn't fix anything cause it kills the customization part lol. 
