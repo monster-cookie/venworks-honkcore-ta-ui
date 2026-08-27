@@ -59,10 +59,7 @@ The important files are:
 | `Interface\VenworksCUI\palettes\*.xml` | Defines semantic colors, typography, opacity, strokes, and the faction crest. |
 | `Interface\VenworksCUI\Assets\*.svg` | Contains supported local vector artwork used by the layout or palettes. |
 
-Minimalist includes `layout.xml` and six component fragments, but intentionally
-omits the `Assets` and `palettes` directories. Its build resolves the shipped
-Starfield color roles to literals. The normal package exposes its layout loose;
-the fully loose package exposes the reduced XML tree and four GFX files.
+Minimalist includes `layout.xml` and six component fragments, but intentionally omits the `Assets` and `palettes` directories. Its build resolves the shipped Starfield color roles to literals. The normal package exposes its layout loose; the fully loose package exposes the reduced XML tree and eight movies: four native GFX files and four independently compiled CWS files at the matching `.swf` paths.
 
 The Nexus PC - Normal package exposes only `layout.xml` from this tree as a
 loose file. The runtime resolves referenced component fragments and, when
@@ -89,11 +86,7 @@ The process is atomic. One invalid file prevents the configurable layer from
 partially rendering. A diagnostic panel identifies the failure category and,
 when available, the phase, checkpoint, component type, and component ID.
 
-Minimalist follows the same external loading path and uses live data contexts.
-It omits only the four providers used exclusively by its removed equipment
-rail; all remaining conditions and live-value bindings stay active. The
-experimental PS5 package changes the movie container and archive aliases, not
-the XML loading or configuration behavior documented here.
+Minimalist follows the same external loading path and uses live data contexts. It omits only the four providers used exclusively by its removed equipment rail; all remaining conditions and live-value bindings stay active. Every variant uses the same eight-path movie inventory in its fully loose package and in each platform's Main archive: four native GFX files and four independently compiled CWS files at the matching `.swf` paths. Minimalist's normal and large HUD movie pairs remain profile-specific, while its HUD-message pairs remain shared with the themed variants.
 
 There is no live reload command. After every XML or SVG change, fully exit and
 restart Starfield. Merely closing the scanner or opening a menu is not a

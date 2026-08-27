@@ -127,36 +127,13 @@ Create only its staging Junction and build only its artifacts with:
   -OutputDirectory ".work/release-packages"
 ```
 
-The shared themed movie profile validates the independent 10-provider condition
-context and 14-provider value context before and after compilation, including
-the six intentionally duplicated provider names, transactional startup,
-callback containment, deferred teardown, and bootstrap diagnostics. The
-Minimalist live profile retains the same guarded lifecycle with exactly seven
-condition registrations, ten value registrations, and three intentionally
-duplicated provider names. It removes only `WeaponData`,
-`HUDStarbornPowersData`, `FavoritesData`, and `ControlMapData`, which serve the
-equipment rail that Minimalist does not ship.
+The shared themed movie profile validates the independent 10-provider condition context and 14-provider value context before and after compilation, including the six intentionally duplicated provider names, transactional startup, callback containment, deferred teardown, and bootstrap diagnostics. The Minimalist live profile retains the same guarded lifecycle with exactly seven condition registrations, ten value registrations, and three intentionally duplicated provider names. It removes only `WeaponData`, `HUDStarbornPowersData`, `FavoritesData`, and `ControlMapData`, which serve the equipment rail that Minimalist does not ship.
 
-The Minimalist profile generates its one-domain seed and imports the complete
-shared ActionScript tree. It does not replace either data context. Its patch
-removes only the rail-specific subscription statements and applies the
-Minimalist-specific visual changes. The compiler verifies the exact provider
-inventory and the full layout, palette, asset, SVG, path, mask, panel, icon,
-provider-symbol, and composite class inventory after JPEXS reopens each movie.
-The four themed variants retain the shared production HUD hashes; only
-Minimalist's normal and large `hudmenu` GFX/SWF pairs are profile-specific.
+The Minimalist profile generates its one-domain seed and imports the complete shared ActionScript tree. It does not replace either data context. Its patch removes only the rail-specific subscription statements and applies the Minimalist-specific visual changes. The compiler verifies the exact provider inventory and the full layout, palette, asset, SVG, path, mask, panel, icon, provider-symbol, and composite class inventory after JPEXS reopens each movie. The four themed variants retain the shared production HUD hashes; only Minimalist's normal and large `hudmenu` GFX/SWF pairs are profile-specific.
 
-Minimalist resolves the `starfield.xml` color roles to literal XML colors, removes the palette selector, faction display, helmet cutout paths, and complete equipment rail, and keeps the contact radar in the former faction-display position. Its six fragments use fitted native rectangle and ellipse backings with a 28-percent dark base and 10-percent pale-blue tint beneath the existing corner brackets and divider strokes. The shipped XML contains no `svg`, `path`, `mask`, `icon`, `panel`, or `providerSymbol` nodes, and the build removes the `Assets` and `palettes` directories. It stages the literal-color `layout.xml` and all six component fragments under `Interface\VenworksCUI`, alongside eight independently compiled GFX/SWF movies, the renamed stub ESM, and the Windows, Xbox, and PS5 Main BA2s.
-The selected release-package command creates all five normal package shapes for
-Minimalist. Omitting `-VariantKeys` selects all five release variants.
+Minimalist resolves the `starfield.xml` color roles to literal XML colors, removes the palette selector, faction display, helmet cutout paths, and complete equipment rail, and keeps the contact radar in the former faction-display position. Its six fragments use fitted native rectangle and ellipse backings with a 28-percent dark base and 10-percent pale-blue tint beneath the existing corner brackets and divider strokes. The shipped XML contains no `svg`, `path`, `mask`, `icon`, `panel`, or `providerSymbol` nodes, and the build removes the `Assets` and `palettes` directories. It stages the literal-color `layout.xml` and all six component fragments under `Interface\VenworksCUI`, alongside eight independently compiled GFX/SWF movies, the renamed stub ESM, and the Windows, Xbox, and PS5 Main BA2s. The selected release-package command creates all five normal package shapes for Minimalist. Omitting `-VariantKeys` selects all five release variants.
 
-The provider-free v2.0.6 test produced no change in the reported PS5 crash, so
-Minimalist again retains its required live providers and provider-driven CUI
-events. Every movie is now built independently from the matching clean Bethesda
-container: native `.gfx` inputs produce native GFX outputs, and ZLIB-compressed
-`.swf` inputs produce CWS outputs. The build never renames, wraps, or converts a
-generated movie into the other format. Native rectangle and ellipse fills
-remain in the fitted holographic backings.
+The provider-free v2.0.6 test produced no change in the reported PS5 crash, so Minimalist again retains its required live providers and provider-driven CUI events. Every movie is now built independently from the matching clean Bethesda container: native `.gfx` inputs produce native GFX outputs, and ZLIB-compressed `.swf` inputs produce CWS outputs. The build never renames, wraps, or converts a generated movie into the other format. Native rectangle and ellipse fills remain in the fitted holographic backings.
 
 The release workflow produces five ZIP shapes for each of the five variants:
 
@@ -168,22 +145,7 @@ The release workflow produces five ZIP shapes for each of the five variants:
 | Bethesda Xbox | Root ESM, Xbox Main BA2, and any generated Xbox Textures BA2 only |
 | Bethesda PS5 | Root ESM, PS5 Main BA2, and any generated PS5 Textures BA2 only |
 
-Every platform Main archive packages the staged eight-movie inventory directly:
-native GFX and independently compiled CWS/SWF forms of the normal HUD, large
-HUD, normal HUD messages, and large HUD messages. Windows, Xbox, and PlayStation
-therefore use the same source inventory and archive contract; there is no
-Minimalist-only or PlayStation-only movie rewrite. Minimalist's platform
-packages contain its ESM and matching Main BA2 with no texture archive, while
-its fully loose Nexus package contains the eight movies plus the reduced
-external XML tree. Generated XML and SVG payloads use UTF-8 without a byte-order
-mark and canonical LF line endings so committed BA2 contents remain
-byte-identical to clean checkouts on Windows and Linux. The complete release
-matrix contains 25 ZIPs. Every normal
-Nexus package leaves only `layout.xml` loose so the compiled HUD movies remain
-protected by the BA2. Users who need to edit component fragments, palettes, or
-SVG assets must use a fully loose package or provide a separate loose override.
-All five variants are eligible for both Nexus package shapes. Do not install a
-normal and fully loose package together.
+Every platform Main archive packages the staged eight-movie inventory directly: native GFX and independently compiled CWS/SWF forms of the normal HUD, large HUD, normal HUD messages, and large HUD messages. Windows, Xbox, and PlayStation therefore use the same source inventory and archive contract; there is no Minimalist-only or PlayStation-only movie rewrite. Minimalist's platform packages contain its ESM and matching Main BA2 with no texture archive, while its fully loose Nexus package contains the eight movies plus the reduced external XML tree. Generated XML and SVG payloads use UTF-8 without a byte-order mark and canonical LF line endings so committed BA2 contents remain byte-identical to clean checkouts on Windows and Linux. The complete release matrix contains 25 ZIPs. Every normal Nexus package leaves only `layout.xml` loose so the compiled HUD movies remain protected by the BA2. Users who need to edit component fragments, palettes, or SVG assets must use a fully loose package or provide a separate loose override. All five variants are eligible for both Nexus package shapes. Do not install a normal and fully loose package together.
 
 ## Persistent BGS reference cache
 

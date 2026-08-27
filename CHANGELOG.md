@@ -9,20 +9,10 @@
 
 ## Unreleased
 
-- Minimalist: Restored the ten required value-provider registrations, seven
-  required condition-provider registrations, three intentional cross-context
-  overlaps, and their guarded runtime events after the provider-free v2.0.6
-  build produced no change in the reported PS5 startup crash.
-- All five variants now compile independent native GFX and ZLIB-compressed CWS
-  versions of all four HUD movies from their matching clean Bethesda source
-  files. Every Windows, Xbox, and PlayStation Main archive ships both `.gfx` and
-  `.swf` paths, matching Bethesda's observable dual-movie packaging shape
-  without renaming or signature-wrapping one format as the other.
-- Re-enabled all six Nexus publication switches, including both Minimalist
-  package shapes.
-- Added strict movie-signature, declared-length, hash, staging, and archive
-  inventory checks plus a documented cross-platform Starfield Scaleform
-  modification workflow.
+- Minimalist: Restored the ten required value-provider registrations, seven required condition-provider registrations, three intentional cross-context overlaps, and their guarded runtime events after the provider-free v2.0.6 build produced no change in the reported PS5 startup crash.
+- All five variants now compile independent native GFX and ZLIB-compressed CWS versions of all four HUD movies from their matching clean Bethesda source files. Every Windows, Xbox, and PlayStation Main archive ships both `.gfx` and `.swf` paths, matching Bethesda's observable dual-movie packaging shape without renaming or signature-wrapping one format as the other.
+- Re-enabled all six Nexus publication switches, including both Minimalist package shapes.
+- Added strict movie-signature, declared-length, hash, staging, and archive inventory checks plus a documented cross-platform Starfield Scaleform modification workflow.
 
 ## Version 2.0.6 (September 26, 2026)
 

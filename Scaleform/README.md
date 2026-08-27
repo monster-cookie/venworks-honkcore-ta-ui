@@ -14,8 +14,7 @@ output are written to `Scaleform/.work`.
 
 - Eclipse Temurin Java 21 (or a compatible Java 21 runtime)
 - JPEXS Free Flash Decompiler 26.2.1
-- Clean GFX and SWF copies of `hudmenu`, `hudmenu_lrg`, `hudmessagesmenu`, and
-  `hudmessagesmenu_lrg` extracted from `Starfield - Interface.ba2`
+- Clean GFX and SWF copies of `hudmenu`, `hudmenu_lrg`, `hudmessagesmenu`, and `hudmessagesmenu_lrg` extracted from `Starfield - Interface.ba2`
 - The complete reference-cache command additionally requires every movie and
   provider fixture listed in `reference-cache.xml` from the same vanilla
   Interface extraction
@@ -55,42 +54,9 @@ From the repository root:
   -VanillaInterfacePath "C:\path\to\extracted\interface"
 ```
 
-`buildVariant.ps1` independently compiles the normal and large HUD from clean
-GFX and SWF inputs for each unique selected movie profile. It compiles the
-shared HUD-message GFX/SWF pairs once, then stages all eight movies for each
-selected variant from `Scaleform/variants/<KEY>/build.psd1`. The four themed
-profiles currently share the production layout, components, SVG assets,
-external palettes, and movie hashes. Minimalist uses its own faction-free
-layout, seven-component inventory, literal Starfield colors, and profile-specific
-normal/large HUD hashes with no external SVG, palette, or DDS files. Omitting
-`-VariantKeys` selects all five release variants. Pass one key, such as
-`-VariantKeys MIN`, or an array, such as `-VariantKeys @("TA", "MIN")`, to
-select a subset. The singular `-VariantKey` name remains a compatibility alias.
-Use `-Committed` to regenerate tracked staging directories without Vortex
-Junctions.
+`buildVariant.ps1` independently compiles the normal and large HUD from clean GFX and SWF inputs for each unique selected movie profile. It compiles the shared HUD-message GFX/SWF pairs once, then stages all eight movies for each selected variant from `Scaleform/variants/<KEY>/build.psd1`. The four themed profiles currently share the production layout, components, SVG assets, external palettes, and movie hashes. Minimalist uses its own faction-free layout, seven-component inventory, literal Starfield colors, and profile-specific normal/large HUD hashes with no external SVG, palette, or DDS files. Omitting `-VariantKeys` selects all five release variants. Pass one key, such as `-VariantKeys MIN`, or an array, such as `-VariantKeys @("TA", "MIN")`, to select a subset. The singular `-VariantKey` name remains a compatibility alias. Use `-Committed` to regenerate tracked staging directories without Vortex Junctions.
 
-`compileScaleform.ps1` remains the lower-level movie compiler. Each invocation
-preserves the input container contract: `.gfx` inputs must carry a `GFX`
-signature and generate GFX outputs, while `.swf` inputs must carry a `CWS`
-signature and generate CWS outputs. It writes one validated output directory
-and never mirrors variant configuration or runs Archive2. Deploy each profile's
-generated `layout.xml` and component directory together.
-Component imports are relative filenames resolved only inside this fixed
-directory; nested imports and path traversal are unsupported. The production
-payload includes `quest-tracker.xml`, whose upper-left panel joins directly
-beneath the faction and contact-radar panels, binds the existing `HudCompassData`
-tracked-objective text, and remains independent of scanner and aiming state
-while leaving its text field blank when the objective is empty.
-The objective resolver is independent of floating-marker visibility. Vanilla
-quest markers, icons, arrows, distance labels, and temporary quest notifications
-remain under Bethesda ownership. `HUDMessagesMenu` is patched at its
-`MonocleMenu_Opened` handler so opening the on-foot scanner keeps only the
-always-up objective list hidden; ship-scanner behavior is unchanged.
-The HUDMenu-owned Watch/environment cluster is configured with
-`visibleWhen="never"`, which applies real display visibility without positional
-hiding. Bethesda's original Monocle movies retain scanner input, labels, and
-survey placement. No HUD-wide frame callback or cross-movie display lookup is
-used.
+`compileScaleform.ps1` remains the lower-level movie compiler. Each invocation preserves the input container contract: `.gfx` inputs must carry a `GFX` signature and generate GFX outputs, while `.swf` inputs must carry a `CWS` signature and generate CWS outputs. It writes one validated output directory and never mirrors variant configuration or runs Archive2. Deploy each profile's generated `layout.xml` and component directory together. Component imports are relative filenames resolved only inside this fixed directory; nested imports and path traversal are unsupported. The production payload includes `quest-tracker.xml`, whose upper-left panel joins directly beneath the faction and contact-radar panels, binds the existing `HudCompassData` tracked-objective text, and remains independent of scanner and aiming state while leaving its text field blank when the objective is empty. The objective resolver is independent of floating-marker visibility. Vanilla quest markers, icons, arrows, distance labels, and temporary quest notifications remain under Bethesda ownership. `HUDMessagesMenu` is patched at its `MonocleMenu_Opened` handler so opening the on-foot scanner keeps only the always-up objective list hidden; ship-scanner behavior is unchanged. The HUDMenu-owned Watch/environment cluster is configured with `visibleWhen="never"`, which applies real display visibility without positional hiding. Bethesda's original Monocle movies retain scanner input, labels, and survey placement. No HUD-wide frame callback or cross-movie display lookup is used.
 
 Regenerate the curated built-in icon definitions when their approved Font
 Awesome source subset changes:
