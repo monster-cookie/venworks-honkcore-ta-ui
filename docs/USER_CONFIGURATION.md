@@ -89,10 +89,11 @@ The process is atomic. One invalid file prevents the configurable layer from
 partially rendering. A diagnostic panel identifies the failure category and,
 when available, the phase, checkpoint, component type, and component ID.
 
-Minimalist follows the same external loading path. Its current PS5 diagnostic
-movies replace the live data contexts with static implementations, so authored
-fallbacks render without creating game-provider subscriptions or
-provider-driven CUI events.
+Minimalist follows the same external loading path and uses live data contexts.
+It omits only the four providers used exclusively by its removed equipment
+rail; all remaining conditions and live-value bindings stay active. The
+experimental PS5 package changes the movie container and archive aliases, not
+the XML loading or configuration behavior documented here.
 
 There is no live reload command. After every XML or SVG change, fully exit and
 restart Starfield. Merely closing the scanner or opening a menu is not a

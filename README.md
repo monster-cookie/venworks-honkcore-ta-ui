@@ -40,11 +40,12 @@ state from those systems for conditions, but it does not replace them.
 Five separately distributed variants are available. The four themed variants
 share the production HUD movies and include all five packaged palettes, so
 their active palette can be changed without reinstalling the HUD. Minimalist
-uses profile-specific diagnostic HUD movies, literal Starfield colors, fitted
-holographic readouts with pale-blue translucent native-shape backings, and the
-same complete XML, palette, SVG, path, panel, icon, and mask runtime. Its static
-profile deliberately makes no live game-provider subscriptions while the PS5
-startup crash is isolated.
+uses profile-specific HUD movies, literal Starfield colors, fitted holographic
+readouts with pale-blue translucent native-shape backings, and the same complete
+XML, palette, SVG, path, panel, icon, and mask runtime. Its live profile retains
+the ten required value registrations, seven required condition registrations,
+and three intentional cross-context overlaps while omitting the providers used
+only by the removed equipment rail.
 
 | Public release name | Default palette |
 |---|---|
@@ -124,8 +125,10 @@ separate loose override containing the additional changed files.
 - Direct PNG, JPEG, and DDS assets are unsupported by the Starfield Scaleform
   runtime. All movie profiles support the documented local SVG subset;
   Minimalist's shipped configuration simply does not use it.
-- Minimalist is currently a static PS5 diagnostic build. It displays authored
-  fallbacks but does not subscribe to live Starfield HUD data providers.
+- Minimalist's Windows and Xbox packages contain native GFX HUD movies. Its
+  experimental PS5 Main archive contains equivalent ZLIB-compressed CWS movie
+  bytes under both the `.gfx` and `.swf` names so PS5 compatibility can be
+  tested without changing the ActionScript, XML runtime, or other platforms.
 - Palette changes require a new HUD load; live switching is unsupported.
 - In the four themed variants, active-power highlighting for favorite slots
   currently compares Bethesda's

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<scaleformBuild name="hudmenu-minimalist-static"
+<scaleformBuild name="hudmenu-minimalist-live"
                 inputFile="hudmenu.gfx"
                 outputFile="hudmenu.gfx"
                 vanillaHashFile="../../../hudmenu/vanilla.sha256"
@@ -7,4 +7,4 @@
                 abcSeedPatch="../../../shared/patches/cui-component-abc-seed.xml"
                 actionScriptSource="../../../shared/actionscript"
                 actionScriptPatch="../../../shared/patches/cui-probe-loader.xml"
-                actionScriptProfile="minimalist-static.psd1" />
+                actionScriptProfile="minimalist-live.psd1" />

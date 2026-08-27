@@ -7,6 +7,19 @@
 - https://creations.bethesda.net/en/starfield/details/03b616a3-1902-4b83-a109-fc176f658a69/Venworks_Customizable_HUD___Crimson_Fleet_Theme
 - https://creations.bethesda.net/en/starfield/details/9b635bf7-8c6b-4530-bdbd-0912903b336b/Venworks_Customizable_HUD___Freestar_Collective_Th
 
+## Unreleased
+
+- Minimalist: Restored the ten required value-provider registrations, seven
+  required condition-provider registrations, three intentional cross-context
+  overlaps, and their guarded runtime events after the provider-free v2.0.6
+  build produced no change in the reported PS5 startup crash.
+- Minimalist: Changed only the PS5 Main archive to package equivalent
+  ZLIB-compressed CWS normal and large HUD movies under both `.gfx` and `.swf`
+  names. Windows, Xbox, loose files, XML behavior, and the movie bytecode remain
+  unchanged by this packaging probe.
+- Minimalist remains excluded from Nexus publishing while the PS5 probe is
+  evaluated.
+
 ## Version 2.0.6 (September 26, 2026)
 
 - Minimalist: Restored loose XML configuration as it produced no change in the PS5 startup crash.

@@ -103,6 +103,139 @@ function Read-ExpectedSha256 {
   return ([regex]::Match($hashLine, '[A-Fa-f0-9]{64}').Value).ToUpperInvariant()
 }
 
+function Get-ByteArraySha256 {
+  param(
+    [Parameter(Mandatory = $true)]
+    [byte[]]$Bytes
+  )
+
+  $sha256 = [System.Security.Cryptography.SHA256]::Create()
+  try {
+    return [System.BitConverter]::ToString($sha256.ComputeHash($Bytes)).Replace('-', '')
+  }
+  finally {
+    $sha256.Dispose()
+  }
+}
+
+function Get-GeneralBa2Entries {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Path
+  )
+
+  $stream = [System.IO.File]::OpenRead($Path)
+  $reader = [System.IO.BinaryReader]::new($stream, [System.Text.Encoding]::UTF8, $true)
+  try {
+    if ([System.Text.Encoding]::ASCII.GetString($reader.ReadBytes(4)) -cne 'BTDX') {
+      throw "Archive is missing the BTDX signature: $Path"
+    }
+    $version = $reader.ReadUInt32()
+    $archiveType = [System.Text.Encoding]::ASCII.GetString($reader.ReadBytes(4))
+    $fileCount = $reader.ReadUInt32()
+    $nameTableOffset = $reader.ReadUInt64()
+    if ($version -ne 2 -or $archiveType -cne 'GNRL' -or
+        $fileCount -gt 10000 -or $nameTableOffset -ge [uint64]$stream.Length) {
+      throw "Archive is not a supported version 2 General BA2: $Path"
+    }
+    [void]$reader.ReadUInt64()
+
+    $records = [System.Collections.Generic.List[object]]::new()
+    for ($index = 0; $index -lt $fileCount; $index++) {
+      [void]$reader.ReadUInt32()
+      [void]$reader.ReadBytes(4)
+      [void]$reader.ReadUInt32()
+      [void]$reader.ReadUInt32()
+      $offset = $reader.ReadUInt64()
+      $packedSize = $reader.ReadUInt32()
+      $unpackedSize = $reader.ReadUInt32()
+      [void]$reader.ReadUInt32()
+      $storedSize = if ($packedSize -eq 0) { $unpackedSize } else { $packedSize }
+      if ($offset -lt 32 + ($fileCount * 36) -or
+          $offset + $storedSize -gt $nameTableOffset) {
+        throw "Archive contains an invalid file record at index ${index}: $Path"
+      }
+      $records.Add([pscustomobject]@{
+        Offset = $offset
+        PackedSize = $packedSize
+        UnpackedSize = $unpackedSize
+      })
+    }
+
+    $stream.Position = [int64]$nameTableOffset
+    for ($index = 0; $index -lt $fileCount; $index++) {
+      $nameLength = $reader.ReadUInt16()
+      if ($nameLength -eq 0 -or $stream.Position + $nameLength -gt $stream.Length) {
+        throw "Archive contains an invalid name record at index ${index}: $Path"
+      }
+      $name = [System.Text.Encoding]::UTF8.GetString($reader.ReadBytes($nameLength)).Replace('\', '/')
+      $records[$index] | Add-Member -NotePropertyName Name -NotePropertyValue $name
+      $records[$index] | Add-Member -NotePropertyName ArchivePath -NotePropertyValue $Path
+    }
+
+    return @($records)
+  }
+  finally {
+    $reader.Dispose()
+    $stream.Dispose()
+  }
+}
+
+function Read-GeneralBa2EntryBytes {
+  param(
+    [Parameter(Mandatory = $true)]
+    [psobject]$Entry
+  )
+
+  $stream = [System.IO.File]::OpenRead([string]$Entry.ArchivePath)
+  try {
+    $stream.Position = [int64]$Entry.Offset
+    $storedSize = if ([uint32]$Entry.PackedSize -eq 0) {
+      [uint32]$Entry.UnpackedSize
+    }
+    else {
+      [uint32]$Entry.PackedSize
+    }
+    $storedBytes = [byte[]]::new([int]$storedSize)
+    $readCount = $stream.Read($storedBytes, 0, $storedBytes.Length)
+    if ($readCount -ne $storedBytes.Length) {
+      throw "Unable to read BA2 entry '$($Entry.Name)' from $($Entry.ArchivePath)."
+    }
+  }
+  finally {
+    $stream.Dispose()
+  }
+
+  if ([uint32]$Entry.PackedSize -eq 0) {
+    return $storedBytes
+  }
+  $compressedStream = [System.IO.MemoryStream]::new($storedBytes, $false)
+  $uncompressedStream = [System.IO.MemoryStream]::new()
+  try {
+    $zlibStream = [System.IO.Compression.ZLibStream]::new(
+      $compressedStream,
+      [System.IO.Compression.CompressionMode]::Decompress,
+      $true
+    )
+    try {
+      $zlibStream.CopyTo($uncompressedStream)
+    }
+    finally {
+      $zlibStream.Dispose()
+    }
+    $uncompressedBytes = $uncompressedStream.ToArray()
+  }
+  finally {
+    $compressedStream.Dispose()
+    $uncompressedStream.Dispose()
+  }
+  if ($uncompressedBytes.Length -ne [uint32]$Entry.UnpackedSize) {
+    throw "BA2 entry '$($Entry.Name)' has an unexpected uncompressed length."
+  }
+
+  return $uncompressedBytes
+}
+
 function Assert-NotGitLfsPointer {
   param(
     [Parameter(Mandatory = $true)]
@@ -253,6 +386,9 @@ if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction Si
 . (Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "sharedScaleformProfiles.ps1") `
   -Description "Scaleform movie-profile helper")
+. (Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "sharedScaleformCws.ps1") `
+  -Description "Scaleform CWS helper")
 
 $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
 $archiveDefinitions = [ordered]@{
@@ -326,6 +462,44 @@ foreach ($variant in $variants) {
       throw "$($variant.VariantName) $($movie.FileName) hash mismatch. Expected $expectedHash; found $actualHash."
     }
     $verifiedMoviePaths[[string]$movie.FileName] = $moviePath
+  }
+
+  $stagedSwfFiles = @(Get-ChildItem -LiteralPath $interfacePath -Recurse -File -Filter "*.swf")
+  if ($stagedSwfFiles.Count -ne 0) {
+    throw "$($variant.VariantName) loose payload must not contain PS5-only SWF movies."
+  }
+  $ps5CwsDefinitions = @(Get-Ps5CwsMovieDefinitions `
+    -VariantBuildProfile $variantBuildProfile `
+    -RepositoryRoot $repositoryRoot)
+  if ([string]$variant.VariantKey -cne "MIN" -and $ps5CwsDefinitions.Count -ne 0) {
+    throw "$($variant.VariantName) must not declare the Minimalist PS5 CWS probe."
+  }
+  if ([string]$variant.VariantKey -ceq "MIN") {
+    $expectedPs5CwsInputs = @("hudmenu.gfx", "hudmenu_lrg.gfx")
+    $actualPs5CwsInputs = @($ps5CwsDefinitions.InputFileName)
+    if ([string]::Join("`n", $actualPs5CwsInputs) -cne [string]::Join("`n", $expectedPs5CwsInputs)) {
+      throw "Minimalist PS5 CWS probe must declare exactly the normal and large HUD movies."
+    }
+    foreach ($ps5CwsDefinition in $ps5CwsDefinitions) {
+      $cwsSourcePath = Resolve-RequiredFile `
+        -Path $ps5CwsDefinition.SourcePath `
+        -Description "Minimalist PS5 CWS movie '$($ps5CwsDefinition.SwfFileName)'"
+      Assert-NotGitLfsPointer `
+        -Path $cwsSourcePath `
+        -Description "Minimalist PS5 CWS movie '$($ps5CwsDefinition.SwfFileName)'"
+      $expectedCwsHashPath = Resolve-RequiredFile `
+        -Path $ps5CwsDefinition.ExpectedHashPath `
+        -Description "Minimalist PS5 CWS expected hash '$($ps5CwsDefinition.SwfFileName)'"
+      $expectedCwsHash = Read-CwsExpectedHash -Path $expectedCwsHashPath
+      $actualCwsHash = Get-Sha256 -Path $cwsSourcePath
+      if ($actualCwsHash -cne $expectedCwsHash) {
+        throw "Minimalist PS5 CWS movie '$($ps5CwsDefinition.SwfFileName)' hash mismatch. Expected $expectedCwsHash; found $actualCwsHash."
+      }
+      Assert-CwsMovieEquivalent `
+        -GfxPath $verifiedMoviePaths[$ps5CwsDefinition.InputFileName] `
+        -CwsPath $cwsSourcePath `
+        -Context "Minimalist PS5 CWS movie '$($ps5CwsDefinition.SwfFileName)'"
+    }
   }
 
   $layoutSourcePath = Resolve-RequiredFile `
@@ -495,25 +669,38 @@ foreach ($variant in $variants) {
     }
 
     $sourceProfile = Get-ScaleformSourceProfile -ManifestPath $movieProfile.ManifestPaths[0]
-    if ($sourceProfile.Name -cne "minimalist-static" -or
+    if ($sourceProfile.Name -cne "minimalist-live" -or
         $sourceProfile.ExcludedActionScriptPaths.Count -ne 0) {
-      throw "Minimalist must use the full shared ActionScript inventory through the minimalist-static profile."
+      throw "Minimalist must use the full shared ActionScript inventory through the minimalist-live profile."
     }
-    $expectedReplacementPaths = @(
-      "venworks/cui/CUIConditionContext.as",
-      "venworks/cui/CUIPlayerHudDataContext.as"
-    ) | ForEach-Object {
-      $_.Replace('/', [System.IO.Path]::DirectorySeparatorChar)
-    } | Sort-Object
-    $actualReplacementPaths = @($sourceProfile.ActionScriptReplacementPaths.Keys | Sort-Object)
-    if ($actualReplacementPaths.Count -ne $expectedReplacementPaths.Count -or
-        [string]::Join("`n", $actualReplacementPaths) -cne [string]::Join("`n", $expectedReplacementPaths)) {
-      throw "Minimalist must replace only the condition and value data contexts with static implementations."
+    if ($sourceProfile.ActionScriptReplacementPaths.Count -ne 0) {
+      throw "Minimalist live provider profile must not replace either shared data context."
     }
-    if ($sourceProfile.ValueProviders.Count -ne 0 -or
-        $sourceProfile.ConditionProviders.Count -ne 0 -or
-        $sourceProfile.CrossContextProviderCount -ne 0) {
-      throw "Minimalist static provider profile must contain zero value, condition, and cross-context registrations."
+    $expectedValueProviders = @(
+      'LocalEnvironmentData',
+      'LocalEnvData_Frequent',
+      'PlayerData',
+      'PlayerFrequentData',
+      'PlayerInventoryData',
+      'HudJetpackData',
+      'EnvironmentEffectsData',
+      'PersonalEffectsData',
+      'StarmapSystemBodyInfoProvider',
+      'HudCompassData'
+    )
+    $expectedConditionProviders = @(
+      'HudCrosshairData',
+      'HUDStealthData',
+      'HudCompassData',
+      'HUDVehicleData',
+      'HUDOpacityData',
+      'HudJetpackData',
+      'PlayerInventoryData'
+    )
+    if ([string]::Join("`n", @($sourceProfile.ValueProviders)) -cne [string]::Join("`n", $expectedValueProviders) -or
+        [string]::Join("`n", @($sourceProfile.ConditionProviders)) -cne [string]::Join("`n", $expectedConditionProviders) -or
+        $sourceProfile.CrossContextProviderCount -ne 3) {
+      throw "Minimalist live provider profile must contain exactly 10 value, 7 condition, and 3 cross-context registrations."
     }
     $requiredRuntimeTokens = @(
       'CUILayoutImportLoader',
@@ -566,9 +753,44 @@ foreach ($variant in $variants) {
         throw "Minimalist transformed ActionScript is missing required runtime token '$requiredRuntimeToken'."
       }
     }
-    if ([regex]::Matches($transformedSource, 'BSUIDataManager\.(?:Subscribe|Unsubscribe)\s*\(').Count -ne 0 -or
-        [regex]::Matches($transformedSource, 'subscribeProvider\s*\(').Count -ne 0) {
-      throw "Minimalist transformed ActionScript retains a game-provider subscription API."
+    $playerContextRelativePath = "venworks/cui/CUIPlayerHudDataContext.as"
+    $conditionContextRelativePath = "venworks/cui/CUIConditionContext.as"
+    $playerContextSource = Get-ScaleformPatchedActionScript `
+      -SourcePath (Join-Path $minimalistSourceRoot $playerContextRelativePath) `
+      -RelativePath $playerContextRelativePath `
+      -PatchPath $sourceProfile.ActionScriptPatchPath
+    $conditionContextSource = Get-ScaleformPatchedActionScript `
+      -SourcePath (Join-Path $minimalistSourceRoot $conditionContextRelativePath) `
+      -RelativePath $conditionContextRelativePath `
+      -PatchPath $sourceProfile.ActionScriptPatchPath
+    $actualValueProviders = @(
+      [regex]::Matches($playerContextSource, 'subscribeProvider\("([^"]+)"') |
+        ForEach-Object { $_.Groups[1].Value }
+    )
+    $actualConditionProviders = @(
+      [regex]::Matches($conditionContextSource, 'subscribeProvider\("([^"]+)"') |
+        ForEach-Object { $_.Groups[1].Value }
+    )
+    if ([string]::Join("`n", $actualValueProviders) -cne [string]::Join("`n", $expectedValueProviders) -or
+        [string]::Join("`n", $actualConditionProviders) -cne [string]::Join("`n", $expectedConditionProviders)) {
+      throw "Minimalist transformed ActionScript does not preserve the exact live provider inventory."
+    }
+    foreach ($railOnlyProvider in @('WeaponData', 'HUDStarbornPowersData', 'FavoritesData', 'ControlMapData')) {
+      if ($railOnlyProvider -in $actualValueProviders -or $railOnlyProvider -in $actualConditionProviders) {
+        throw "Minimalist transformed ActionScript restores removed equipment provider '$railOnlyProvider'."
+      }
+    }
+    foreach ($requiredEventToken in @(
+      'CUIPlayerHudDataContext.PROVIDER_ERROR',
+      'CUIPlayerHudDataContext.VALUE_CHANGE',
+      'CUIPlayerHudDataContext.COMPASS_CHANGE',
+      'CUIPlayerHudDataContext.TACTICAL_AWARENESS_CHANGE',
+      'CUIConditionContext.PROVIDER_ERROR',
+      'CUIConditionContext.CONDITION_CHANGE'
+    )) {
+      if (!$transformedSource.Contains($requiredEventToken)) {
+        throw "Minimalist transformed ActionScript is missing required event wiring '$requiredEventToken'."
+      }
     }
 
     $statusEffectRelativePath = "venworks/cui/components/CUIStatusEffectBar.as"
@@ -662,6 +884,59 @@ foreach ($variant in $variants) {
   foreach ($archiveFile in $archiveFiles) {
     if (!$allowedArchiveNames.Contains($archiveFile.Name)) {
       throw "$($variant.VariantName) contains archive outside its configured targets: $($archiveFile.FullName)"
+    }
+  }
+
+  if ([string]$variant.VariantKey -ceq "MIN") {
+    $nativeArchiveEntries = @(
+      Get-RelativeFileInventory -RootPath $interfacePath |
+        ForEach-Object { "interface/$($_.ToLowerInvariant())" } |
+        Sort-Object
+    )
+    foreach ($archiveTarget in @("Main", "Main_XBox", "Main_PS")) {
+      $archiveDefinition = $archiveDefinitions[$archiveTarget]
+      $archivePath = Join-Path $stagingPath "$($variant.PackageBaseName) - $($archiveDefinition.FileSuffix)"
+      $entries = @(Get-GeneralBa2Entries -Path $archivePath)
+      $actualEntryNames = @($entries.Name | ForEach-Object { $_.ToLowerInvariant() } | Sort-Object)
+      $expectedEntryNames = @($nativeArchiveEntries)
+      if ($archiveTarget -ceq "Main_PS") {
+        $expectedEntryNames += @($ps5CwsDefinitions | ForEach-Object {
+          "interface/$($_.SwfFileName.ToLowerInvariant())"
+        })
+        $expectedEntryNames = @($expectedEntryNames | Sort-Object)
+      }
+      if ($actualEntryNames.Count -ne $expectedEntryNames.Count -or
+          [string]::Join("`n", $actualEntryNames) -cne [string]::Join("`n", $expectedEntryNames)) {
+        throw "$($variant.VariantName) $archiveTarget archive inventory does not match its platform contract."
+      }
+
+      foreach ($ps5CwsDefinition in $ps5CwsDefinitions) {
+        $gfxEntryName = "interface/$($ps5CwsDefinition.InputFileName.ToLowerInvariant())"
+        $gfxEntry = @($entries | Where-Object { $_.Name.ToLowerInvariant() -ceq $gfxEntryName })
+        if ($gfxEntry.Count -ne 1) {
+          throw "$($variant.VariantName) $archiveTarget archive must contain '$gfxEntryName' exactly once."
+        }
+        $gfxEntryBytes = Read-GeneralBa2EntryBytes -Entry $gfxEntry[0]
+        if ($archiveTarget -ceq "Main_PS") {
+          $swfEntryName = "interface/$($ps5CwsDefinition.SwfFileName.ToLowerInvariant())"
+          $swfEntry = @($entries | Where-Object { $_.Name.ToLowerInvariant() -ceq $swfEntryName })
+          if ($swfEntry.Count -ne 1) {
+            throw "$($variant.VariantName) Main_PS archive must contain '$swfEntryName' exactly once."
+          }
+          $swfEntryBytes = Read-GeneralBa2EntryBytes -Entry $swfEntry[0]
+          $expectedCwsHash = Read-CwsExpectedHash -Path $ps5CwsDefinition.ExpectedHashPath
+          if ((Get-ByteArraySha256 -Bytes $gfxEntryBytes) -cne $expectedCwsHash -or
+              (Get-ByteArraySha256 -Bytes $swfEntryBytes) -cne $expectedCwsHash) {
+            throw "$($variant.VariantName) Main_PS '$gfxEntryName' and '$swfEntryName' are not the expected identical CWS movie."
+          }
+        }
+        else {
+          $nativeMovieHash = Get-Sha256 -Path $verifiedMoviePaths[$ps5CwsDefinition.InputFileName]
+          if ((Get-ByteArraySha256 -Bytes $gfxEntryBytes) -cne $nativeMovieHash) {
+            throw "$($variant.VariantName) $archiveTarget '$gfxEntryName' is not the staged native GFX movie."
+          }
+        }
+      }
     }
   }
 

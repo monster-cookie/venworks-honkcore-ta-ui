@@ -234,6 +234,9 @@ if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction Si
 . (Resolve-RequiredFile `
   -Path (Join-Path $PSScriptRoot "sharedScaleformProfiles.ps1") `
   -Description "Scaleform movie-profile helper")
+. (Resolve-RequiredFile `
+  -Path (Join-Path $PSScriptRoot "sharedScaleformCws.ps1") `
+  -Description "Scaleform CWS helper")
 
 $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
 if ($variants.Count -eq 0) {
@@ -305,6 +308,52 @@ try {
   foreach ($variant in $variants) {
     $variantBuildProfile = $variantBuildProfiles[[string]$variant.VariantKey]
     $movieProfileDirectory = $movieProfileDirectories[[string]$variantBuildProfile.MovieProfile]
+
+    $ps5CwsDefinitions = @(Get-Ps5CwsMovieDefinitions `
+      -VariantBuildProfile $variantBuildProfile `
+      -RepositoryRoot $repositoryRoot)
+    foreach ($ps5CwsDefinition in $ps5CwsDefinitions) {
+      $nativeMoviePath = Resolve-RequiredFile `
+        -Path (Join-Path $movieProfileDirectory $ps5CwsDefinition.InputFileName) `
+        -Description "$($variant.VariantName) PS5 CWS source movie"
+      $generatedCwsPath = Join-Path `
+        (Join-Path (Join-Path $buildDirectory "ps5-cws") ([string]$variant.VariantKey)) `
+        $ps5CwsDefinition.SwfFileName
+      ConvertTo-CwsMovie `
+        -GfxPath $nativeMoviePath `
+        -CwsPath $generatedCwsPath `
+        -JavaPath $JavaPath `
+        -JpexsJarPath $JpexsJarPath `
+        -WorkDirectory (Join-Path $resolvedWorkDirectory "cws") `
+        -Context "$($variant.VariantName) $($ps5CwsDefinition.InputFileName)"
+
+      $generatedHash = (Get-FileHash -LiteralPath $generatedCwsPath -Algorithm SHA256).Hash.ToUpperInvariant()
+      if ($UpdateExpectedHashes) {
+        $sourceDirectory = Split-Path -Parent $ps5CwsDefinition.SourcePath
+        New-Item -ItemType Directory -Force -Path $sourceDirectory | Out-Null
+        Copy-Item -LiteralPath $generatedCwsPath -Destination $ps5CwsDefinition.SourcePath -Force
+        Write-CwsExpectedHash `
+          -Path $ps5CwsDefinition.ExpectedHashPath `
+          -Hash $generatedHash `
+          -FileName $ps5CwsDefinition.SwfFileName
+      }
+
+      $committedCwsPath = Resolve-RequiredFile `
+        -Path $ps5CwsDefinition.SourcePath `
+        -Description "$($variant.VariantName) committed PS5 CWS movie"
+      $expectedHashPath = Resolve-RequiredFile `
+        -Path $ps5CwsDefinition.ExpectedHashPath `
+        -Description "$($variant.VariantName) PS5 CWS expected hash"
+      $expectedHash = Read-CwsExpectedHash -Path $expectedHashPath
+      $committedHash = (Get-FileHash -LiteralPath $committedCwsPath -Algorithm SHA256).Hash.ToUpperInvariant()
+      if ($generatedHash -cne $expectedHash -or $committedHash -cne $expectedHash) {
+        throw "$($variant.VariantName) PS5 CWS movie '$($ps5CwsDefinition.SwfFileName)' does not match its generated and expected hashes."
+      }
+      Assert-CwsMovieEquivalent `
+        -GfxPath $nativeMoviePath `
+        -CwsPath $committedCwsPath `
+        -Context "$($variant.VariantName) committed $($ps5CwsDefinition.SwfFileName)"
+    }
 
     Assert-UniqueSafeFileNames -FileNames @($variantBuildProfile.ComponentFileNames) -Context "$($variant.VariantName) component profile"
     Assert-UniqueSafeFileNames -FileNames @($variantBuildProfile.AssetFileNames) -Context "$($variant.VariantName) asset profile"

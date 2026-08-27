@@ -1589,13 +1589,17 @@ try {
       if ($crossContextProviders.Count -ne $sourceProfile.CrossContextProviderCount) {
         throw "Generated $($sourceProfile.Name) movie has $($crossContextProviders.Count) cross-context provider overlaps; expected $($sourceProfile.CrossContextProviderCount)."
       }
-      if ($sourceProfile.Name -ceq "minimalist-static" -and
+      if ($sourceProfile.Name -ceq "minimalist-live" -and
           ($profileRuntimeSource -notmatch 'CUILayoutImportLoader' -or
            $profileRuntimeSource -notmatch 'CUIPaletteLoader' -or
            $profileRuntimeSource -notmatch 'CUIAssetManager' -or
-           $profileRuntimeSource -match 'CUIPlayerHudDataContext\.(?:PROVIDER_ERROR|VALUE_CHANGE|COMPASS_CHANGE|TACTICAL_AWARENESS_CHANGE)' -or
-           $profileRuntimeSource -match 'CUIConditionContext\.(?:PROVIDER_ERROR|CONDITION_CHANGE)')) {
-        throw "Generated Minimalist static runtime does not preserve loaders or still wires provider-driven events."
+           $profileRuntimeSource -notmatch 'CUIPlayerHudDataContext\.PROVIDER_ERROR' -or
+           $profileRuntimeSource -notmatch 'CUIPlayerHudDataContext\.VALUE_CHANGE' -or
+           $profileRuntimeSource -notmatch 'CUIPlayerHudDataContext\.COMPASS_CHANGE' -or
+           $profileRuntimeSource -notmatch 'CUIPlayerHudDataContext\.TACTICAL_AWARENESS_CHANGE' -or
+           $profileRuntimeSource -notmatch 'CUIConditionContext\.PROVIDER_ERROR' -or
+           $profileRuntimeSource -notmatch 'CUIConditionContext\.CONDITION_CHANGE')) {
+        throw "Generated Minimalist live runtime does not preserve loaders and provider-driven event wiring."
       }
       $actualOutputHash = (Get-FileHash -LiteralPath $generatedGfxPath -Algorithm SHA256).Hash
       if ($UpdateExpectedHashes) {
