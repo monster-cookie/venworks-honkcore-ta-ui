@@ -7,12 +7,11 @@
 - https://creations.bethesda.net/en/starfield/details/03b616a3-1902-4b83-a109-fc176f658a69/Venworks_Customizable_HUD___Crimson_Fleet_Theme
 - https://creations.bethesda.net/en/starfield/details/9b635bf7-8c6b-4530-bdbd-0912903b336b/Venworks_Customizable_HUD___Freestar_Collective_Th
 
-## Unreleased
+## Version 2.0.7 (September 27, 2026)
 
-- Minimalist: Restored the ten required value-provider registrations, seven required condition-provider registrations, three intentional cross-context overlaps, and their guarded runtime events after the provider-free v2.0.6 build produced no change in the reported PS5 startup crash.
-- All five variants now compile independent native GFX and ZLIB-compressed CWS versions of all four HUD movies from their matching clean Bethesda source files. Every Windows, Xbox, and PlayStation Main archive ships both `.gfx` and `.swf` paths, matching Bethesda's observable dual-movie packaging shape without renaming or signature-wrapping one format as the other.
-- Re-enabled all six Nexus publication switches, including both Minimalist package shapes.
-- Added strict movie-signature, declared-length, hash, staging, and archive inventory checks plus a documented cross-platform Starfield Scaleform modification workflow.
+- Minimalist: Restored the live data registrations.
+- All: All variants now compile independent native GFX and ZLIB-compressed CWS versions of all four HUD movies from their matching clean Bethesda source files. 
+- All: Every Windows, Xbox, and PlayStation Main archive ships both `.gfx` and `.swf` paths, matching Bethesda's dual-movie packaging.
 
 ## Version 2.0.6 (September 26, 2026)
 
