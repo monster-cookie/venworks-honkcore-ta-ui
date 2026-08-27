@@ -25,7 +25,6 @@ if (!$Global:SharedConfigurationLoaded) {
 }
 
 $repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
-. (Join-Path $PSScriptRoot "sharedScaleformCws.ps1")
 
 if ([string]::IsNullOrWhiteSpace($ENV:TOOL_PATH_ARCHIVER)) {
   throw "TOOL_PATH_ARCHIVER must name the directory containing Archive2.exe."
@@ -106,14 +105,6 @@ $archiveDefinitions = [ordered]@{
 $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
 
 foreach ($variant in $variants) {
-  $variantBuildProfilePath = Join-Path $repositoryRoot "Scaleform\variants\$($variant.VariantKey)\build.psd1"
-  if (!(Test-Path -LiteralPath $variantBuildProfilePath -PathType Leaf)) {
-    throw "$($variant.VariantName) build profile does not exist: $variantBuildProfilePath"
-  }
-  $variantBuildProfile = Import-PowerShellDataFile -LiteralPath $variantBuildProfilePath
-  $ps5CwsDefinitions = @(Get-Ps5CwsMovieDefinitions `
-    -VariantBuildProfile $variantBuildProfile `
-    -RepositoryRoot $repositoryRoot)
   $stagingFolderPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot $variant.StagingFolderPath))
   if (!(Test-Path -LiteralPath $stagingFolderPath -PathType Container)) {
     throw "$($variant.VariantName) staging folder does not exist: $stagingFolderPath"
@@ -148,11 +139,6 @@ foreach ($variant in $variants) {
   }
   Assert-NotGitLfsPointer -Path $pluginPath -Description "$($variant.VariantName) root plugin"
 
-  $stagedSwfFiles = @(Get-ChildItem -LiteralPath (Join-Path $stagingPath "Interface") -Recurse -File -Filter "*.swf")
-  if ($stagedSwfFiles.Count -ne 0) {
-    throw "$($variant.VariantName) staging payload must not contain PS5-only SWF movies."
-  }
-
   Write-Host -ForegroundColor Green "Creating $($variant.VariantName) archives from $stagingPath"
 
   $selectedArchiveTargets = @($variant.ArchiveTargets)
@@ -180,72 +166,16 @@ foreach ($variant in $variants) {
     $archiveDefinition = $archiveDefinitions[[string]$archiveTarget]
     $archiveName = "$($variant.PackageBaseName) - $($archiveDefinition.FileSuffix)"
     $archivePath = Join-Path $packageOutputPath $archiveName
-    $archiveInputPath = $stagingPath
-    $temporaryArchiveInputPath = $null
-    try {
-      if ([string]$archiveTarget -ceq "Main_PS" -and $ps5CwsDefinitions.Count -ne 0) {
-        $temporaryInputRoot = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot ".work\package-inputs"))
-        New-Item -ItemType Directory -Force -Path $temporaryInputRoot | Out-Null
-        $temporaryArchiveInputPath = Join-Path $temporaryInputRoot ([guid]::NewGuid().ToString("N"))
-        New-Item -ItemType Directory -Force -Path $temporaryArchiveInputPath | Out-Null
-        foreach ($stagedItem in @(Get-ChildItem -LiteralPath $stagingPath -Force)) {
-          Copy-Item -LiteralPath $stagedItem.FullName -Destination $temporaryArchiveInputPath -Recurse -Force
-        }
-
-        $temporaryInterfacePath = Join-Path $temporaryArchiveInputPath "Interface"
-        foreach ($ps5CwsDefinition in $ps5CwsDefinitions) {
-          $nativeMoviePath = Join-Path (Join-Path $stagingPath "Interface") $ps5CwsDefinition.InputFileName
-          if (!(Test-Path -LiteralPath $nativeMoviePath -PathType Leaf) -or
-              !(Test-Path -LiteralPath $ps5CwsDefinition.SourcePath -PathType Leaf) -or
-              !(Test-Path -LiteralPath $ps5CwsDefinition.ExpectedHashPath -PathType Leaf)) {
-            throw "$($variant.VariantName) is missing a native or committed PS5 CWS movie input."
-          }
-          $expectedCwsHash = Read-CwsExpectedHash -Path $ps5CwsDefinition.ExpectedHashPath
-          $actualCwsHash = (Get-FileHash -LiteralPath $ps5CwsDefinition.SourcePath -Algorithm SHA256).Hash.ToUpperInvariant()
-          if ($actualCwsHash -cne $expectedCwsHash) {
-            throw "$($variant.VariantName) PS5 CWS movie '$($ps5CwsDefinition.SwfFileName)' does not match its expected hash."
-          }
-          Assert-CwsMovieEquivalent `
-            -GfxPath $nativeMoviePath `
-            -CwsPath $ps5CwsDefinition.SourcePath `
-            -Context "$($variant.VariantName) PS5 archive $($ps5CwsDefinition.SwfFileName)"
-          Copy-Item `
-            -LiteralPath $ps5CwsDefinition.SourcePath `
-            -Destination (Join-Path $temporaryInterfacePath $ps5CwsDefinition.InputFileName) `
-            -Force
-          Copy-Item `
-            -LiteralPath $ps5CwsDefinition.SourcePath `
-            -Destination (Join-Path $temporaryInterfacePath $ps5CwsDefinition.SwfFileName) `
-            -Force
-        }
-        $archiveInputPath = $temporaryArchiveInputPath
-      }
-
-      $archiveArguments = @(
-        "$archiveInputPath\",
-        "-root=$archiveInputPath\",
-        "-create=$archivePath",
-        "-format=$($archiveDefinition.Format)",
-        "-compression=$($archiveDefinition.Compression)",
-        "-maxSizeMB=2048",
-        [string]$archiveDefinition.FilterArgument
-      )
-      & $archive2Path @archiveArguments
-    }
-    finally {
-      if ($null -ne $temporaryArchiveInputPath -and
-          (Test-Path -LiteralPath $temporaryArchiveInputPath -PathType Container)) {
-        $resolvedTemporaryPath = [System.IO.Path]::GetFullPath($temporaryArchiveInputPath)
-        $temporaryInputPrefix = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot ".work\package-inputs")).TrimEnd(
-          [System.IO.Path]::DirectorySeparatorChar,
-          [System.IO.Path]::AltDirectorySeparatorChar
-        ) + [System.IO.Path]::DirectorySeparatorChar
-        if (!$resolvedTemporaryPath.StartsWith($temporaryInputPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
-          throw "Refusing to remove a package input outside its owned root: $resolvedTemporaryPath"
-        }
-        Remove-Item -LiteralPath $resolvedTemporaryPath -Recurse -Force
-      }
-    }
+    $archiveArguments = @(
+      "$stagingPath\",
+      "-root=$stagingPath\",
+      "-create=$archivePath",
+      "-format=$($archiveDefinition.Format)",
+      "-compression=$($archiveDefinition.Compression)",
+      "-maxSizeMB=2048",
+      [string]$archiveDefinition.FilterArgument
+    )
+    & $archive2Path @archiveArguments
 
     if ($archiveDefinition.Required -and !(Test-Path -LiteralPath $archivePath -PathType Leaf)) {
       throw "Archive2 did not create the expected $($variant.VariantName) archive target '$archiveTarget': $archivePath"

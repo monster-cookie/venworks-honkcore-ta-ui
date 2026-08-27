@@ -14,8 +14,8 @@ output are written to `Scaleform/.work`.
 
 - Eclipse Temurin Java 21 (or a compatible Java 21 runtime)
 - JPEXS Free Flash Decompiler 26.2.1
-- Clean `hudmenu.gfx`, `hudmenu_lrg.gfx`, `hudmessagesmenu.gfx`, and
-  `hudmessagesmenu_lrg.gfx` files extracted from `Starfield - Interface.ba2`
+- Clean GFX and SWF copies of `hudmenu`, `hudmenu_lrg`, `hudmessagesmenu`, and
+  `hudmessagesmenu_lrg` extracted from `Starfield - Interface.ba2`
 - The complete reference-cache command additionally requires every movie and
   provider fixture listed in `reference-cache.xml` from the same vanilla
   Interface extraction
@@ -55,22 +55,26 @@ From the repository root:
   -VanillaInterfacePath "C:\path\to\extracted\interface"
 ```
 
-`buildVariant.ps1` compiles and validates the four common GFX movies once, then
-stages each selected variant's independent profile from
-`Scaleform/variants/<KEY>/build.psd1`. The four themed profiles currently share
-the production layout, components, SVG assets, and external palettes.
-Minimalist uses its own faction-free layout, seven-component inventory, and
-literal Starfield colors with no external SVG, palette, or DDS files. Omitting
+`buildVariant.ps1` independently compiles the normal and large HUD from clean
+GFX and SWF inputs for each unique selected movie profile. It compiles the
+shared HUD-message GFX/SWF pairs once, then stages all eight movies for each
+selected variant from `Scaleform/variants/<KEY>/build.psd1`. The four themed
+profiles currently share the production layout, components, SVG assets,
+external palettes, and movie hashes. Minimalist uses its own faction-free
+layout, seven-component inventory, literal Starfield colors, and profile-specific
+normal/large HUD hashes with no external SVG, palette, or DDS files. Omitting
 `-VariantKeys` selects all five release variants. Pass one key, such as
-`-VariantKeys MIN`, or an array, such as
-`-VariantKeys @("TA", "MIN")`, to select a subset. The singular
-`-VariantKey` name remains a compatibility alias. Use `-Committed` to
-regenerate tracked staging directories without Vortex Junctions.
+`-VariantKeys MIN`, or an array, such as `-VariantKeys @("TA", "MIN")`, to
+select a subset. The singular `-VariantKey` name remains a compatibility alias.
+Use `-Committed` to regenerate tracked staging directories without Vortex
+Junctions.
 
-`compileScaleform.ps1` remains the lower-level common movie compiler. It writes
-one validated output directory and never mirrors variant configuration or runs
-Archive2. Deploy each profile's generated `layout.xml` and component directory
-together.
+`compileScaleform.ps1` remains the lower-level movie compiler. Each invocation
+preserves the input container contract: `.gfx` inputs must carry a `GFX`
+signature and generate GFX outputs, while `.swf` inputs must carry a `CWS`
+signature and generate CWS outputs. It writes one validated output directory
+and never mirrors variant configuration or runs Archive2. Deploy each profile's
+generated `layout.xml` and component directory together.
 Component imports are relative filenames resolved only inside this fixed
 directory; nested imports and path traversal are unsupported. The production
 payload includes `quest-tracker.xml`, whose upper-left panel joins directly

@@ -71,9 +71,9 @@ jobs:
         shell: pwsh
         run: ./Tools/verifyCommittedRelease.ps1
 
-      - name: Verify Minimalist movie profile contract
+      - name: Verify all variant movie and archive contracts
         shell: pwsh
-        run: ./Tools/verifyVariant.ps1 -VariantKeys MIN -Committed
+        run: ./Tools/verifyVariant.ps1 -Committed
 
       - name: Verify committed entry point without local environment
         shell: pwsh

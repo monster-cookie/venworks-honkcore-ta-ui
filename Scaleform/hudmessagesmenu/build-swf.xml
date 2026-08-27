@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scaleformBuild name="hudmessagesmenu-swf"
+                inputFile="hudmessagesmenu.swf"
+                outputFile="hudmessagesmenu.swf"
+                vanillaHashFile="vanilla-swf.sha256"
+                expectedHashFile="validation/expected-swf.sha256"
+                actionScriptPatch="../shared/patches/cui-hudmessages-scanner-quest.xml" />

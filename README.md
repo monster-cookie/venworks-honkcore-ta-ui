@@ -71,8 +71,8 @@ determines the starting configuration.
 Choose one variant and one PC package shape. The recommended Nexus PC - Normal
 package installs a root ESM, Windows BA2 archives, and one loose
 `Interface\VenworksCUI\layout.xml`. Enable the ESM and let the package win HUD
-conflicts. Minimalist remains excluded from Nexus publishing while its PS5
-startup investigation is active.
+conflicts. All five variants, including Minimalist, are published through the
+same Nexus package matrix.
 
 The Nexus PC - Fully Loose Files package installs the complete `Interface`
 tree without an ESM or BA2. Use it only when component fragments, or palettes
@@ -125,10 +125,10 @@ separate loose override containing the additional changed files.
 - Direct PNG, JPEG, and DDS assets are unsupported by the Starfield Scaleform
   runtime. All movie profiles support the documented local SVG subset;
   Minimalist's shipped configuration simply does not use it.
-- Minimalist's Windows and Xbox packages contain native GFX HUD movies. Its
-  experimental PS5 Main archive contains equivalent ZLIB-compressed CWS movie
-  bytes under both the `.gfx` and `.swf` names so PS5 compatibility can be
-  tested without changing the ActionScript, XML runtime, or other platforms.
+- Every platform package contains independently compiled Bethesda-format movie
+  pairs: native `GFX` files at the `.gfx` paths and ZLIB-compressed `CWS` files
+  at the matching `.swf` paths. Files are never renamed or signature-wrapped
+  between formats.
 - Palette changes require a new HUD load; live switching is unsupported.
 - In the four themed variants, active-power highlighting for favorite slots
   currently compares Bethesda's
@@ -147,6 +147,9 @@ separate loose override containing the additional changed files.
   behavior.
 - The [build system](docs/BUILDSYSTEM.md) documents the Scaleform build and
   staging pipeline.
+- The [Starfield Scaleform workflow](docs/STARFIELD_SCALEFORM_WORKFLOW.md)
+  documents clean extraction, decompilation, modification, independent GFX/CWS
+  recompilation, staging, packaging, and cross-platform validation.
 - The [Scaleform source guide](Scaleform/README.md) covers local build
   requirements and authored source structure.
 - [Visual references](docs/reference/) preserve clean-room behavioral and

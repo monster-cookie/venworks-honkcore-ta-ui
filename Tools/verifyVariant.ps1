@@ -387,8 +387,8 @@ if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction Si
   -Path (Join-Path $PSScriptRoot "sharedScaleformProfiles.ps1") `
   -Description "Scaleform movie-profile helper")
 . (Resolve-RequiredFile `
-  -Path (Join-Path $PSScriptRoot "sharedScaleformCws.ps1") `
-  -Description "Scaleform CWS helper")
+  -Path (Join-Path $PSScriptRoot "sharedScaleformMovies.ps1") `
+  -Description "Scaleform movie-format helper")
 
 $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
 $archiveDefinitions = [ordered]@{
@@ -461,45 +461,10 @@ foreach ($variant in $variants) {
     if ($actualHash -cne $expectedHash) {
       throw "$($variant.VariantName) $($movie.FileName) hash mismatch. Expected $expectedHash; found $actualHash."
     }
+    Assert-ScaleformMovieEncoding `
+      -Path $moviePath `
+      -Context "$($variant.VariantName) $($movie.FileName)"
     $verifiedMoviePaths[[string]$movie.FileName] = $moviePath
-  }
-
-  $stagedSwfFiles = @(Get-ChildItem -LiteralPath $interfacePath -Recurse -File -Filter "*.swf")
-  if ($stagedSwfFiles.Count -ne 0) {
-    throw "$($variant.VariantName) loose payload must not contain PS5-only SWF movies."
-  }
-  $ps5CwsDefinitions = @(Get-Ps5CwsMovieDefinitions `
-    -VariantBuildProfile $variantBuildProfile `
-    -RepositoryRoot $repositoryRoot)
-  if ([string]$variant.VariantKey -cne "MIN" -and $ps5CwsDefinitions.Count -ne 0) {
-    throw "$($variant.VariantName) must not declare the Minimalist PS5 CWS probe."
-  }
-  if ([string]$variant.VariantKey -ceq "MIN") {
-    $expectedPs5CwsInputs = @("hudmenu.gfx", "hudmenu_lrg.gfx")
-    $actualPs5CwsInputs = @($ps5CwsDefinitions.InputFileName)
-    if ([string]::Join("`n", $actualPs5CwsInputs) -cne [string]::Join("`n", $expectedPs5CwsInputs)) {
-      throw "Minimalist PS5 CWS probe must declare exactly the normal and large HUD movies."
-    }
-    foreach ($ps5CwsDefinition in $ps5CwsDefinitions) {
-      $cwsSourcePath = Resolve-RequiredFile `
-        -Path $ps5CwsDefinition.SourcePath `
-        -Description "Minimalist PS5 CWS movie '$($ps5CwsDefinition.SwfFileName)'"
-      Assert-NotGitLfsPointer `
-        -Path $cwsSourcePath `
-        -Description "Minimalist PS5 CWS movie '$($ps5CwsDefinition.SwfFileName)'"
-      $expectedCwsHashPath = Resolve-RequiredFile `
-        -Path $ps5CwsDefinition.ExpectedHashPath `
-        -Description "Minimalist PS5 CWS expected hash '$($ps5CwsDefinition.SwfFileName)'"
-      $expectedCwsHash = Read-CwsExpectedHash -Path $expectedCwsHashPath
-      $actualCwsHash = Get-Sha256 -Path $cwsSourcePath
-      if ($actualCwsHash -cne $expectedCwsHash) {
-        throw "Minimalist PS5 CWS movie '$($ps5CwsDefinition.SwfFileName)' hash mismatch. Expected $expectedCwsHash; found $actualCwsHash."
-      }
-      Assert-CwsMovieEquivalent `
-        -GfxPath $verifiedMoviePaths[$ps5CwsDefinition.InputFileName] `
-        -CwsPath $cwsSourcePath `
-        -Context "Minimalist PS5 CWS movie '$($ps5CwsDefinition.SwfFileName)'"
-    }
   }
 
   $layoutSourcePath = Resolve-RequiredFile `
@@ -887,55 +852,34 @@ foreach ($variant in $variants) {
     }
   }
 
-  if ([string]$variant.VariantKey -ceq "MIN") {
-    $nativeArchiveEntries = @(
-      Get-RelativeFileInventory -RootPath $interfacePath |
-        ForEach-Object { "interface/$($_.ToLowerInvariant())" } |
-        Sort-Object
-    )
-    foreach ($archiveTarget in @("Main", "Main_XBox", "Main_PS")) {
-      $archiveDefinition = $archiveDefinitions[$archiveTarget]
-      $archivePath = Join-Path $stagingPath "$($variant.PackageBaseName) - $($archiveDefinition.FileSuffix)"
-      $entries = @(Get-GeneralBa2Entries -Path $archivePath)
-      $actualEntryNames = @($entries.Name | ForEach-Object { $_.ToLowerInvariant() } | Sort-Object)
-      $expectedEntryNames = @($nativeArchiveEntries)
-      if ($archiveTarget -ceq "Main_PS") {
-        $expectedEntryNames += @($ps5CwsDefinitions | ForEach-Object {
-          "interface/$($_.SwfFileName.ToLowerInvariant())"
-        })
-        $expectedEntryNames = @($expectedEntryNames | Sort-Object)
-      }
-      if ($actualEntryNames.Count -ne $expectedEntryNames.Count -or
-          [string]::Join("`n", $actualEntryNames) -cne [string]::Join("`n", $expectedEntryNames)) {
-        throw "$($variant.VariantName) $archiveTarget archive inventory does not match its platform contract."
-      }
+  $expectedMainEntries = @(
+    Get-RelativeFileInventory -RootPath $interfacePath |
+      ForEach-Object { "interface/$($_.ToLowerInvariant())" } |
+      Sort-Object
+  )
+  foreach ($archiveTarget in @($variant.ArchiveTargets | Where-Object { [string]$_ -match '^Main(?:_|$)' })) {
+    $archiveDefinition = $archiveDefinitions[[string]$archiveTarget]
+    $archivePath = Join-Path $stagingPath "$($variant.PackageBaseName) - $($archiveDefinition.FileSuffix)"
+    $entries = @(Get-GeneralBa2Entries -Path $archivePath)
+    $actualEntryNames = @($entries.Name | ForEach-Object { $_.ToLowerInvariant() } | Sort-Object)
+    if ($actualEntryNames.Count -ne $expectedMainEntries.Count -or
+        [string]::Join("`n", $actualEntryNames) -cne [string]::Join("`n", $expectedMainEntries)) {
+      throw "$($variant.VariantName) $archiveTarget archive inventory does not match its staged Interface payload."
+    }
 
-      foreach ($ps5CwsDefinition in $ps5CwsDefinitions) {
-        $gfxEntryName = "interface/$($ps5CwsDefinition.InputFileName.ToLowerInvariant())"
-        $gfxEntry = @($entries | Where-Object { $_.Name.ToLowerInvariant() -ceq $gfxEntryName })
-        if ($gfxEntry.Count -ne 1) {
-          throw "$($variant.VariantName) $archiveTarget archive must contain '$gfxEntryName' exactly once."
-        }
-        $gfxEntryBytes = Read-GeneralBa2EntryBytes -Entry $gfxEntry[0]
-        if ($archiveTarget -ceq "Main_PS") {
-          $swfEntryName = "interface/$($ps5CwsDefinition.SwfFileName.ToLowerInvariant())"
-          $swfEntry = @($entries | Where-Object { $_.Name.ToLowerInvariant() -ceq $swfEntryName })
-          if ($swfEntry.Count -ne 1) {
-            throw "$($variant.VariantName) Main_PS archive must contain '$swfEntryName' exactly once."
-          }
-          $swfEntryBytes = Read-GeneralBa2EntryBytes -Entry $swfEntry[0]
-          $expectedCwsHash = Read-CwsExpectedHash -Path $ps5CwsDefinition.ExpectedHashPath
-          if ((Get-ByteArraySha256 -Bytes $gfxEntryBytes) -cne $expectedCwsHash -or
-              (Get-ByteArraySha256 -Bytes $swfEntryBytes) -cne $expectedCwsHash) {
-            throw "$($variant.VariantName) Main_PS '$gfxEntryName' and '$swfEntryName' are not the expected identical CWS movie."
-          }
-        }
-        else {
-          $nativeMovieHash = Get-Sha256 -Path $verifiedMoviePaths[$ps5CwsDefinition.InputFileName]
-          if ((Get-ByteArraySha256 -Bytes $gfxEntryBytes) -cne $nativeMovieHash) {
-            throw "$($variant.VariantName) $archiveTarget '$gfxEntryName' is not the staged native GFX movie."
-          }
-        }
+    foreach ($entry in $entries) {
+      $entryName = $entry.Name.ToLowerInvariant()
+      if (!$entryName.StartsWith("interface/", [System.StringComparison]::Ordinal)) {
+        throw "$($variant.VariantName) $archiveTarget contains an unexpected non-Interface entry '$($entry.Name)'."
+      }
+      $relativePath = $entryName.Substring("interface/".Length).Replace('/', [System.IO.Path]::DirectorySeparatorChar)
+      $stagedEntryPath = Resolve-RequiredFile `
+        -Path (Join-Path $interfacePath $relativePath) `
+        -Description "$($variant.VariantName) staged archive source '$entryName'"
+      $archiveHash = Get-ByteArraySha256 -Bytes (Read-GeneralBa2EntryBytes -Entry $entry)
+      $stagedHash = Get-Sha256 -Path $stagedEntryPath
+      if ($archiveHash -cne $stagedHash) {
+        throw "$($variant.VariantName) $archiveTarget '$entryName' is not byte-identical to staging."
       }
     }
   }

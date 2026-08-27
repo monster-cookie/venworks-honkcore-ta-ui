@@ -22,12 +22,15 @@ param(
 
   [switch]$KeepWork,
 
-  [switch]$UpdateExpectedHashes
+  [switch]$UpdateExpectedHashes,
+
+  [switch]$SkipOverrides
 )
 
 $PSNativeCommandUseErrorActionPreference = $true
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
+. (Join-Path $PSScriptRoot "sharedScaleformMovies.ps1")
 
 function Resolve-RequiredFile {
   param(
@@ -1249,6 +1252,8 @@ try {
     $inputPath = Resolve-RequiredFile `
       -Path (Join-Path $resolvedVanillaInterfacePath ([string]$build.inputFile)) `
       -Description "Vanilla Scaleform input"
+    Assert-ScaleformMovieEncoding -Path $inputPath -Context "Vanilla $($build.inputFile)"
+    $sourceSignature = Get-ScaleformMovieSignature -Path $inputPath
     $vanillaHashPath = Resolve-RequiredFile `
       -Path (Join-Path $manifestDirectory ([string]$build.vanillaHashFile)) `
       -Description "Vanilla hash file"
@@ -1473,9 +1478,10 @@ try {
       -Arguments @('-format', 'script:as', '-export', 'script', $validationScriptsDirectory, $generatedGfxPath) `
       -Description "validating $($build.name) ActionScript"
 
-    $generatedBytes = [System.IO.File]::ReadAllBytes($generatedGfxPath)
-    if ($generatedBytes.Length -lt 3 -or [System.Text.Encoding]::ASCII.GetString($generatedBytes, 0, 3) -ne 'GFX') {
-      throw "Generated output does not have a GFX signature: $generatedGfxPath"
+    Assert-ScaleformMovieEncoding -Path $generatedGfxPath -Context "Generated $($build.outputFile)"
+    $generatedSignature = Get-ScaleformMovieSignature -Path $generatedGfxPath
+    if ($generatedSignature -cne $sourceSignature) {
+      throw "Generated $($build.outputFile) signature changed from $sourceSignature to $generatedSignature."
     }
     [xml]$reopened = Get-Content -LiteralPath $reopenedXmlPath -Raw
     $reopenedSeedTags = @($reopened.SelectNodes('/swf/tags/item[@type="DoABC2Tag" and starts-with(@name,"venworks.cui.components.seed.")]'))
@@ -3010,18 +3016,23 @@ finally {
   }
 }
 
-$overrideCompilerPath = Resolve-RequiredFile `
-  -Path (Join-Path $PSScriptRoot 'compileScaleformOverrides.ps1') `
-  -Description 'Bethesda owner-movie override compiler'
-$overrideCompilerArguments = @{
-  JavaPath = $script:ResolvedJavaPath
-  JpexsJarPath = $script:ResolvedJpexsJarPath
-  VanillaInterfacePath = $resolvedVanillaInterfacePath
-  OutputDirectory = @($resolvedOutputDirectory)
-  WorkDirectory = $resolvedWorkDirectory
-  ReferenceCacheManifestPath = $resolvedReferenceCacheManifestPath
+if (!$SkipOverrides) {
+  $overrideCompilerPath = Resolve-RequiredFile `
+    -Path (Join-Path $PSScriptRoot 'compileScaleformOverrides.ps1') `
+    -Description 'Bethesda owner-movie override compiler'
+  $overrideCompilerArguments = @{
+    JavaPath = $script:ResolvedJavaPath
+    JpexsJarPath = $script:ResolvedJpexsJarPath
+    VanillaInterfacePath = $resolvedVanillaInterfacePath
+    OutputDirectory = @($resolvedOutputDirectory)
+    WorkDirectory = $resolvedWorkDirectory
+    ReferenceCacheManifestPath = $resolvedReferenceCacheManifestPath
+  }
+  if ($KeepWork) {
+    $overrideCompilerArguments.KeepWork = $true
+  }
+  if ($UpdateExpectedHashes) {
+    $overrideCompilerArguments.UpdateExpectedHashes = $true
+  }
+  & $overrideCompilerPath @overrideCompilerArguments
 }
-if ($KeepWork) {
-  $overrideCompilerArguments.KeepWork = $true
-}
-& $overrideCompilerPath @overrideCompilerArguments

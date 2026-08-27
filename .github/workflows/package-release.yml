@@ -10,11 +10,8 @@ permissions: {}
 ###############################################################################
 # CONFIG: Update these for this creation.
 #
-# Keep UPLOAD_TO_NEXUSMODS set to false until the new Nexus group/file IDs are configured. When false, Nexus
-# configuration validation and uploads are skipped even if legacy file IDs and the API key remain configured.
-# Re-enable Nexus uploads by configuring the new IDs and changing UPLOAD_TO_NEXUSMODS to true.
-# Each UPLOAD_<KEY>_TO_NEXUSMODS switch independently controls one variant. Keep the Minimalist switch false until
-# that experimental build is ready for Nexus publication.
+# UPLOAD_TO_NEXUSMODS is the global upload gate. Each UPLOAD_<KEY>_TO_NEXUSMODS
+# switch independently controls one release variant.
 #
 # Store the API key as a repository Actions secret. Store file IDs as repository Actions variables because they are not sensitive.
 #
@@ -27,12 +24,12 @@ permissions: {}
 #
 ###############################################################################
 env:
-  UPLOAD_TO_NEXUSMODS: false
-  UPLOAD_FC_TO_NEXUSMODS: false
-  UPLOAD_CF_TO_NEXUSMODS: false
-  UPLOAD_TA_TO_NEXUSMODS: false
-  UPLOAD_VWKS_TO_NEXUSMODS: false
-  UPLOAD_MIN_TO_NEXUSMODS: false
+  UPLOAD_TO_NEXUSMODS: true
+  UPLOAD_FC_TO_NEXUSMODS: true
+  UPLOAD_CF_TO_NEXUSMODS: true
+  UPLOAD_TA_TO_NEXUSMODS: true
+  UPLOAD_VWKS_TO_NEXUSMODS: true
+  UPLOAD_MIN_TO_NEXUSMODS: true
   NEXUSMODS_CATEGORY: main
   NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
 

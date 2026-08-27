@@ -5,6 +5,7 @@ $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
 $repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
+. (Join-Path $PSScriptRoot "sharedScaleformMovies.ps1")
 
 function Resolve-RequiredFile {
   param(
@@ -233,16 +234,32 @@ $movies = @(
     ExpectedHashPath = 'Scaleform/hudmenu/validation/expected.sha256'
   },
   [pscustomobject]@{
+    FileName = 'hudmenu.swf'
+    ExpectedHashPath = 'Scaleform/hudmenu/validation/expected-swf.sha256'
+  },
+  [pscustomobject]@{
     FileName = 'hudmenu_lrg.gfx'
     ExpectedHashPath = 'Scaleform/hudmenu_lrg/validation/expected.sha256'
+  },
+  [pscustomobject]@{
+    FileName = 'hudmenu_lrg.swf'
+    ExpectedHashPath = 'Scaleform/hudmenu_lrg/validation/expected-swf.sha256'
   },
   [pscustomobject]@{
     FileName = 'hudmessagesmenu.gfx'
     ExpectedHashPath = 'Scaleform/hudmessagesmenu/validation/expected.sha256'
   },
   [pscustomobject]@{
+    FileName = 'hudmessagesmenu.swf'
+    ExpectedHashPath = 'Scaleform/hudmessagesmenu/validation/expected-swf.sha256'
+  },
+  [pscustomobject]@{
     FileName = 'hudmessagesmenu_lrg.gfx'
     ExpectedHashPath = 'Scaleform/hudmessagesmenu_lrg/validation/expected.sha256'
+  },
+  [pscustomobject]@{
+    FileName = 'hudmessagesmenu_lrg.swf'
+    ExpectedHashPath = 'Scaleform/hudmessagesmenu_lrg/validation/expected-swf.sha256'
   }
 )
 
@@ -278,6 +295,9 @@ foreach ($variant in $variants) {
     if ($actualHash -cne $expectedHash) {
       throw "$($variant.Name) $($movie.FileName) hash mismatch. Expected $expectedHash; found $actualHash."
     }
+    Assert-ScaleformMovieEncoding `
+      -Path $moviePath `
+      -Context "$($variant.Name) $($movie.FileName)"
     $movieHashes[$movie.FileName].Add($actualHash)
   }
 
