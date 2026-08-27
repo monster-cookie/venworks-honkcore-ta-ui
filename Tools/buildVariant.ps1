@@ -279,7 +279,6 @@ try {
     "hudmessagesmenu_lrg.gfx",
     "hudmessagesmenu_lrg.swf"
   )
-  $movieNames = @($profileMovieNames) + @($sharedMovieNames)
   foreach ($movieProfileName in @($movieProfiles.Keys | Sort-Object)) {
     $movieProfile = $movieProfiles[$movieProfileName]
     $movieProfileDirectory = Join-Path (Join-Path $buildDirectory "movies") $movieProfileName

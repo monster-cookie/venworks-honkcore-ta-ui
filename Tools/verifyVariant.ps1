@@ -852,9 +852,23 @@ foreach ($variant in $variants) {
     }
   }
 
+  $stagedMainEntryPaths = [System.Collections.Generic.Dictionary[string,string]]::new(
+    [System.StringComparer]::Ordinal
+  )
   $expectedMainEntries = @(
-    Get-RelativeFileInventory -RootPath $interfacePath |
-      ForEach-Object { "interface/$($_.ToLowerInvariant())" } |
+    Get-ChildItem -LiteralPath $interfacePath -Recurse -File |
+      ForEach-Object {
+        $relativePath = $_.FullName.Substring($interfacePath.Length + 1).Replace(
+          [System.IO.Path]::DirectorySeparatorChar,
+          [System.IO.Path]::AltDirectorySeparatorChar
+        )
+        $entryName = "interface/$($relativePath.ToLowerInvariant())"
+        if ($stagedMainEntryPaths.ContainsKey($entryName)) {
+          throw "$($variant.VariantName) staging contains a case-insensitive archive path collision: $entryName"
+        }
+        $stagedMainEntryPaths.Add($entryName, $_.FullName)
+        $entryName
+      } |
       Sort-Object
   )
   foreach ($archiveTarget in @($variant.ArchiveTargets | Where-Object { [string]$_ -match '^Main(?:_|$)' })) {
@@ -872,10 +886,10 @@ foreach ($variant in $variants) {
       if (!$entryName.StartsWith("interface/", [System.StringComparison]::Ordinal)) {
         throw "$($variant.VariantName) $archiveTarget contains an unexpected non-Interface entry '$($entry.Name)'."
       }
-      $relativePath = $entryName.Substring("interface/".Length).Replace('/', [System.IO.Path]::DirectorySeparatorChar)
-      $stagedEntryPath = Resolve-RequiredFile `
-        -Path (Join-Path $interfacePath $relativePath) `
-        -Description "$($variant.VariantName) staged archive source '$entryName'"
+      if (!$stagedMainEntryPaths.ContainsKey($entryName)) {
+        throw "$($variant.VariantName) $archiveTarget contains an archive entry not present in staging: '$entryName'."
+      }
+      $stagedEntryPath = $stagedMainEntryPaths[$entryName]
       $archiveHash = Get-ByteArraySha256 -Bytes (Read-GeneralBa2EntryBytes -Entry $entry)
       $stagedHash = Get-Sha256 -Path $stagedEntryPath
       if ($archiveHash -cne $stagedHash) {
