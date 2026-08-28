@@ -98,9 +98,9 @@ archive is deferred until the generated console archives can be tested.
 
 ## Variant build profiles
 
-`Tools/compileScaleform.ps1` is the lower-level movie compiler. It validates and writes one movie declared by a build manifest while preserving that input's GFX or CWS container; it does not select palettes, mirror configuration payloads, or invoke Archive2. `Tools/sharedScaleformProfiles.ps1` resolves the two GFX and two SWF normal/large manifests and their ActionScript source profiles. `Tools/buildVariant.ps1` compiles each unique selected movie profile once, compiles the four shared GFX/SWF HUD-message movies once, and stages each selected profile from `Scaleform/variants/<KEY>/build.psd1` independently. A variant profile owns its movie profile, layout source, component inventory, assets, palettes, palette mode, and optional stub-ESM source. Adding or removing one component or movie behavior in one profile does not require making the other profiles match.
+`Tools/compileScaleform.ps1` is the lower-level HUD bootstrap compiler. It validates and writes one normal or large HUD movie declared by a build manifest while preserving that input's GFX or CWS container and patching only Bethesda's existing ABC. `Tools/compileScaleformAuxiliary.ps1` compiles the complete CUI runtime into a deterministic one-ABC CWS movie. `Tools/sharedScaleformProfiles.ps1` resolves the four shared bootstrap manifests and each variant's auxiliary source profile. `Tools/buildVariant.ps1` compiles the shared bootstrap and HUD-message movies once, compiles each selected auxiliary profile once, and stages each selected profile from `Scaleform/variants/<KEY>/build.psd1` independently. A variant profile owns its auxiliary movie profile, layout source, component inventory, assets, palettes, palette mode, and optional stub-ESM source. Adding or removing one component or auxiliary behavior in one profile does not require making the other profiles match.
 
-The four themed profiles currently share the production layout, eight component fragments, six SVG assets, five external palettes, and the shared live-data HUD movie profile. Minimalist independently declares six component fragments, its own layout, and the `minimalist-live` HUD movie profile. The HUD-message movies remain shared across all five variants. Every variant stages both GFX and CWS/SWF forms of all four movies and loads external XML through the same complete layout runtime; Minimalist differs only in its reduced provider inventory and visual source patches.
+The four themed profiles currently share the production layout, eight component fragments, six SVG assets, five external palettes, and the shared live-data auxiliary movie profile. Minimalist independently declares six component fragments, its own layout, and the `minimalist-live` auxiliary profile. The four base HUD bootstrap movies and four HUD-message movies are shared across all five variants. Every variant stages those eight Bethesda-path movies plus one profile-selected `venworkscui.swf` and loads external XML through the same complete layout runtime; Minimalist differs only in its reduced provider inventory and visual source patches.
 
 ## Minimalist release
 
@@ -127,13 +127,13 @@ Create only its staging Junction and build only its artifacts with:
   -OutputDirectory ".work/release-packages"
 ```
 
-The shared themed movie profile validates the independent 10-provider condition context and 14-provider value context before and after compilation, including the six intentionally duplicated provider names, transactional startup, callback containment, deferred teardown, and bootstrap diagnostics. The Minimalist live profile retains the same guarded lifecycle with exactly seven condition registrations, ten value registrations, and three intentionally duplicated provider names. It removes only `WeaponData`, `HUDStarbornPowersData`, `FavoritesData`, and `ControlMapData`, which serve the equipment rail that Minimalist does not ship.
+The shared themed movie profile validates the independent 10-provider condition context and 14-provider value context before and after compilation, including the six intentionally duplicated provider names, transactional startup, callback containment, deferred teardown, and bootstrap diagnostics. Both contexts start immediately when the auxiliary runtime initializes, before external XML, palettes, or assets load. Each guarded subscription primes its provider through `BSUIDataManager.GetDataFromClient()` before attaching the callback so a newly watched provider's synchronous first snapshot is replayed instead of being lost across the asynchronous movie boundary. The Minimalist live profile retains the same guarded lifecycle with exactly seven condition registrations, ten value registrations, and three intentionally duplicated provider names. It removes only `WeaponData`, `HUDStarbornPowersData`, `FavoritesData`, and `ControlMapData`, which serve the equipment rail that Minimalist does not ship.
 
-The Minimalist profile generates its one-domain seed and imports the complete shared ActionScript tree. It does not replace either data context. Its patch removes only the rail-specific subscription statements and applies the Minimalist-specific visual changes. The compiler verifies the exact provider inventory and the full layout, palette, asset, SVG, path, mask, panel, icon, provider-symbol, and composite class inventory after JPEXS reopens each movie. The four themed variants retain the shared production HUD hashes; only Minimalist's normal and large `hudmenu` GFX/SWF pairs are profile-specific.
+The Minimalist profile compiles the complete shared ActionScript tree into its standalone one-ABC CUI movie. It does not replace either data context. Its patch removes only the rail-specific subscription statements and applies the Minimalist-specific visual changes. The compiler verifies the exact provider inventory and the full layout, palette, asset, SVG, path, mask, panel, icon, provider-symbol, and composite class inventory after JPEXS reopens the auxiliary movie. The four themed variants share one auxiliary hash; Minimalist's `venworkscui.swf` hash is profile-specific. All five variants use the same thin normal and large bootstrap movie hashes.
 
-Minimalist resolves the `starfield.xml` color roles to literal XML colors, removes the palette selector, faction display, helmet cutout paths, and complete equipment rail, and keeps the contact radar in the former faction-display position. Its six fragments use fitted native rectangle and ellipse backings with a 28-percent dark base and 10-percent pale-blue tint beneath the existing corner brackets and divider strokes. The shipped XML contains no `svg`, `path`, `mask`, `icon`, `panel`, or `providerSymbol` nodes, and the build removes the `Assets` and `palettes` directories. It stages the literal-color `layout.xml` and all six component fragments under `Interface\VenworksCUI`, alongside eight independently compiled GFX/SWF movies, the renamed stub ESM, and the Windows, Xbox, and PS5 Main BA2s. The selected release-package command creates all five normal package shapes for Minimalist. Omitting `-VariantKeys` selects all five release variants.
+Minimalist resolves the `starfield.xml` color roles to literal XML colors, removes the palette selector, faction display, helmet cutout paths, and complete equipment rail, and keeps the contact radar in the former faction-display position. Its six fragments use fitted native rectangle and ellipse backings with a 28-percent dark base and 10-percent pale-blue tint beneath the existing corner brackets and divider strokes. The shipped XML contains no `svg`, `path`, `mask`, `icon`, `panel`, or `providerSymbol` nodes, and the build removes the `Assets` and `palettes` directories. It stages the literal-color `layout.xml` and all six component fragments under `Interface\VenworksCUI`, alongside the nine-movie Interface payload, the renamed stub ESM, and the Windows, Xbox, and PS5 Main BA2s. The selected release-package command creates all five normal package shapes for Minimalist. Omitting `-VariantKeys` selects all five release variants.
 
-The provider-free v2.0.6 test produced no change in the reported PS5 crash, so Minimalist again retains its required live providers and provider-driven CUI events. Every movie is now built independently from the matching clean Bethesda container: native `.gfx` inputs produce native GFX outputs, and ZLIB-compressed `.swf` inputs produce CWS outputs. The build never renames, wraps, or converts a generated movie into the other format. Native rectangle and ellipse fills remain in the fitted holographic backings.
+The provider-free v2.0.6 test produced no change in the reported PS5 crash, so Minimalist again retains its required live providers and provider-driven CUI events. Every Bethesda-path movie is built independently from the matching clean container: native `.gfx` inputs produce native GFX outputs, and ZLIB-compressed `.swf` inputs produce CWS outputs. The build never renames, wraps, or converts a generated movie into the other format. The separately authored auxiliary runtime is emitted as compressed CWS version 12. Native rectangle and ellipse fills remain in the fitted holographic backings.
 
 The release workflow produces five ZIP shapes for each of the five variants:
 
@@ -145,7 +145,7 @@ The release workflow produces five ZIP shapes for each of the five variants:
 | Bethesda Xbox | Root ESM, Xbox Main BA2, and any generated Xbox Textures BA2 only |
 | Bethesda PS5 | Root ESM, PS5 Main BA2, and any generated PS5 Textures BA2 only |
 
-Every platform Main archive packages the staged eight-movie inventory directly: native GFX and independently compiled CWS/SWF forms of the normal HUD, large HUD, normal HUD messages, and large HUD messages. Windows, Xbox, and PlayStation therefore use the same source inventory and archive contract; there is no Minimalist-only or PlayStation-only movie rewrite. Minimalist's platform packages contain its ESM and matching Main BA2 with no texture archive, while its fully loose Nexus package contains the eight movies plus the reduced external XML tree. Generated XML and SVG payloads use UTF-8 without a byte-order mark and canonical LF line endings so committed BA2 contents remain byte-identical to clean checkouts on Windows and Linux. The complete release matrix contains 25 ZIPs. Every normal Nexus package leaves only `layout.xml` loose so the compiled HUD movies remain protected by the BA2. Users who need to edit component fragments, palettes, or SVG assets must use a fully loose package or provide a separate loose override. All five variants are eligible for both Nexus package shapes. Do not install a normal and fully loose package together.
+Every platform Main archive packages the staged nine-movie inventory directly: native GFX and independently compiled CWS/SWF forms of the normal HUD, large HUD, normal HUD messages, and large HUD messages, plus the profile-selected `venworkscui.swf`. Windows, Xbox, and PlayStation therefore use the same source inventory and archive contract; there is no platform-only movie rewrite. Minimalist's platform packages contain its ESM and matching Main BA2 with no texture archive, while its fully loose Nexus package contains the nine movies plus the reduced external XML tree. Generated XML and SVG payloads use UTF-8 without a byte-order mark and canonical LF line endings so committed BA2 contents remain byte-identical to clean checkouts on Windows and Linux. The complete release matrix contains 25 ZIPs. Every normal Nexus package leaves only `layout.xml` loose so the compiled HUD movies remain protected by the BA2. Users who need to edit component fragments, palettes, or SVG assets must use a fully loose package or provide a separate loose override. All five variants are eligible for both Nexus package shapes. Do not install a normal and fully loose package together.
 
 ## Persistent BGS reference cache
 
@@ -219,89 +219,25 @@ enforce the exact five release-variant names, their corresponding selected
 palette filenames, the Venworks default selector, and byte-identical source and
 staged copies of all five user-selectable palette files.
 
-## One-domain Scaleform rule
+## Auxiliary movie domain boundary
 
-All cooperating Venworks CUI classes must live in exactly one injected
-`DoABC2Tag` linkage domain. Do not split Venworks classes across multiple ABC
-tags, even when JPEXS can reopen and decompile every class. Starfield's
-Scaleform runtime cannot reliably resolve classes or resources across those
-injected boundaries. Package names such as `venworks.cui.*` do not make
-separate ABC units one runtime domain.
+All cooperating Venworks CUI classes live in exactly one `DoABC` linkage domain inside `Interface\venworkscui.swf`. The normal and large Bethesda HUD movies retain exactly one Bethesda ABC apiece and contain only the guarded loader patch; they must not contain an injected CUI seed or any `venworks.cui.*` implementation. The loader uses the default child application domain, allowing the auxiliary runtime to resolve Bethesda definitions from its parent without explicitly selecting an `ApplicationDomain` or using `LoaderContext`.
 
-This is a mandatory architecture rule enforced by the build: the checked seed
-and each reopened normal/large HUD movie must contain exactly one
-`venworks.cui.components.seed.000` tag. Every dynamically discovered authored
-CUI class must be present inside that one ABC. This rule has regressed more than
-once; decompiled class presence, total script counts, padding records, and
-matching deployment hashes are not substitutes for the one-domain assertion.
+The bootstrap retains one loader and one untyped bridge per HUD instance. It guards duplicate startup, contains complete, I/O, security, placement, visibility, and teardown failures, tolerates removal while loading, and unloads idempotently. The auxiliary root exposes only `initialize(owner)`, `reapplyVanillaPlacements()`, `updateVanillaHudModeVisibility(values)`, and `dispose()` to that bridge.
 
-## Scaleform ActionScript seed
+This boundary is a mandatory build contract. Verification requires one ABC in each base HUD movie, no CUI runtime tokens in those base movies, one ABC in the auxiliary movie, the complete expected CUI/provider inventory in that auxiliary ABC, and no release marker payload.
 
-`Tools/compileScaleform.ps1` imports the authored CUI ActionScript into Bethesda's
-HUD movies with JPEXS. JPEXS can replace classes represented by an AVM2 seed but
-does not grow the seed reliably during `-importScript`. The repository therefore
-stores one generated full-inventory seed at
-`Scaleform/shared/patches/cui-component-abc-seed.xml`. Both the shared and
-Minimalist profiles use it because they expose the same public class inventory;
-Minimalist replaces only the implementations of two existing classes.
+## Standalone CUI compiler
 
-The former build asserted exactly 38 authored CUI files and exactly 205 total
-classes. Those numbers were repository implementation details, not Starfield,
-Scaleform, or AVM2 limits. Goal 8 added `CUIContactRadar` as the thirty-ninth
-authored class. Raising only the file-count assertion caused JPEXS to displace
-`CUIProviderSymbol`, proving that source inventory and seed capacity are separate
-concerns. The build now discovers the authored inventory dynamically, requires
-every authored class after reopening each movie, and requires the complete class
-inventory to remain stable across import.
+`Tools/compileScaleformAuxiliary.ps1` uses Apache Flex `compc.jar` to create a temporary external-library SWC from six compile-only Bethesda stubs under `Scaleform/venworkscui/externs` plus a generated `scaleform.gfx.Extensions` stub. It then uses `mxmlc.jar` to compile `VenworksCUIEntrypoint` and the selected profiled CUI source tree. The host SWC is external-only: none of its stub definitions may be embedded in the output.
 
-Regenerate the shared seed whenever an authored `.as` class is added or removed:
+The compiler emits compressed CWS version 12, removes nondeterministic Flex metadata and product tags through a JPEXS XML normalization pass, reopens the result, and requires exactly one ABC with the expected bridge, runtime classes, provider names, and profile restrictions. The four themed variants use `Scaleform/venworkscui/build.xml` and share one expected hash. Minimalist uses `Scaleform/variants/MIN/movies/venworkscui.build.xml` and its own expected hash.
 
-```powershell
-.\Tools\generateScaleformAbcSeed.ps1 `
-  -FlexSdkPath "<apache-flex-sdk-path>" `
-  -PlayerGlobalPath "<playerglobal.swc-path>" `
-  -JavaPath "<java.exe-path>" `
-  -JpexsJarPath "<ffdec.jar-path>"
-```
+All SDKs, JARs, SWCs, decompiled data, and temporary compiler inputs remain ignored under `.work` or an ephemeral build directory. Do not commit `playerglobal.swc`, the generated host extern SWC, Bethesda binaries, or machine-specific paths.
 
-Pass a movie build manifest when a profile intentionally changes the public
-class inventory and needs a profile-specific seed with the same exclusions used
-by the movie compiler:
+`buildVariant.ps1 -AuxiliaryMarkerProbe` is a local-only loader check. It is accepted only with `-VariantKeys MIN`, cannot be combined with `-Committed` or `-UpdateExpectedHashes`, and emits a temporary one-ABC auxiliary movie containing `VENWORKS AUX LOADED`. Never package or commit the probe. A normal build overwrites it, and release verification rejects the marker string.
 
-```powershell
-.\Tools\generateScaleformAbcSeed.ps1 `
-  -FlexSdkPath "<apache-flex-sdk-path>" `
-  -PlayerGlobalPath "<playerglobal.swc-path>" `
-  -JavaPath "<java.exe-path>" `
-  -JpexsJarPath "<ffdec.jar-path>" `
-  -BuildManifestPath "Scaleform/variants/MIN/movies/hudmenu.build.xml"
-```
-
-The generator inventories public classes beneath
-the selected manifest source root, removes its declared exclusions, creates
-temporary empty stubs with the same qualified names, and creates a synthetic
-root that references every retained class. Apache Flex `mxmlc` compiles that
-root and all stubs into one SWF ABC. JPEXS exports that single `DoABC2Tag`, and
-the generator replaces the selected checked-in seed only after confirming that
-every retained authored class is present in the same ABC.
-Temporary compiler inputs are created under the operating-system temporary
-directory and removed in a `finally` block. Dependencies must remain outside the
-repository and `Scaleform/.work`; do not commit SDKs, JARs, SWCs, or machine paths.
-
-The Goal 8 regeneration used Apache Flex SDK 4.16.1. Its official Windows archive
-was verified against Apache's published MD5 value
-`8841C64BD5E32F8575EBA86E2574873A`. Apache no longer distributes older Adobe
-Player API libraries; the generator used Adobe `playerglobal32_0.swc` with
-SHA-256 `7D4D6168D27603CFB3B750302448E354E0BBC1BDD58F5D101C3DCF6891E9BB65`
-as an external compile-time API. The generated seed contains names and empty AVM2
-slots only; production implementations still come exclusively from the authored
-repository sources during the normal build.
-
-After regeneration, run the complete five-variant `Tools/buildVariant.ps1`
-command, `Tools/createPackages.ps1`, and then
-`Tools/verifyCommittedRelease.ps1`. A successful build
-must import, reopen, and validate every authored class in both normal and large
-HUD movies and regenerate all platform archives from those staged movies.
+After any bootstrap, entrypoint, CUI class, provider profile, or extern change, run the complete five-variant `Tools/buildVariant.ps1` command, `Tools/createPackages.ps1`, and `Tools/verifyCommittedRelease.ps1`. A successful build must reopen and validate all generated movies and regenerate every platform Main archive from the exact nine-movie staging inventory. Rollback is reverting the auxiliary-loader change and restoring the prior embedded-domain movie hashes and eight-movie archives together; mixing either architecture's base and auxiliary payload is unsupported.
 
 ## Component registration contract
 
@@ -336,6 +272,4 @@ sentinel moved `CUISymbol` away from the final record; the same error remained
 with matching deployed hashes. That disproved terminal-record loss and
 confirmed that padding cannot repair the violated one-domain architecture.
 
-The production correction restores one generated ABC containing the entire
-dynamic class inventory. Do not reintroduce `compc` library output, independent
-per-class ABC tags, sentinel slots, or cross-domain resource assumptions.
+The first production correction restored one generated ABC containing the entire dynamic class inventory inside each base HUD movie. The current architecture preserves that one-domain rule while moving the single CUI ABC into `venworkscui.swf`. `compc` is now used only to produce a temporary external host-library SWC; do not embed that SWC, emit independent per-class ABC tags, add sentinel slots, or split cooperating CUI classes across domains.

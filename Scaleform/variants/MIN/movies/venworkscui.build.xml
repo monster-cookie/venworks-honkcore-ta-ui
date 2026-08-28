@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scaleformAuxiliaryBuild name="venworkscui-minimalist-live"
+                         outputFile="venworkscui.swf"
+                         documentClass="../../../venworkscui/VenworksCUIEntrypoint.as"
+                         actionScriptSource="../../../shared/actionscript"
+                         externSource="../../../venworkscui/externs"
+                         expectedHashFile="venworkscui.expected.sha256"
+                         actionScriptProfile="minimalist-live.psd1" />

@@ -68,9 +68,9 @@ For repeated investigation, populate the curated ignored reference cache:
 
 ## 4. Author a bounded modification
 
-Each movie build manifest identifies its clean input, output filename, vanilla hash, expected generated hash, ABC seed patch, ActionScript tree, document-class patch, and optional variant source profile. GFX and SWF manifests for the same movie intentionally repeat the modification contract while pointing at different clean inputs and expected hashes.
+Each base HUD build manifest identifies its clean input, output filename, vanilla hash, expected generated hash, and bounded document-class bootstrap patch. GFX and SWF manifests for the same movie intentionally repeat that modification contract while pointing at different clean inputs and expected hashes. An auxiliary manifest separately identifies the standalone CUI entrypoint, shared ActionScript tree, compile-only host externs, optional variant source profile, and expected `venworkscui.swf` hash.
 
-Keep all cooperating `venworks.cui.*` classes in the single generated ABC domain. When the public class inventory changes, regenerate the seed with `Tools/generateScaleformAbcSeed.ps1`; do not add independent per-class ABC tags. Variant-specific behavior is selected through its build profile and exact ActionScript patches, not through copied variant definitions in build scripts.
+Keep all cooperating `venworks.cui.*` classes in the single ABC domain compiled into `venworkscui.swf`. The base HUD movies retain their one Bethesda ABC and load the child movie through an untyped bridge. Variant-specific behavior is selected through its auxiliary build profile and exact ActionScript patches, not through copied variant definitions in build scripts.
 
 ## 5. Recompile GFX and CWS independently
 
@@ -83,13 +83,13 @@ Build all variants with:
   -VanillaInterfacePath "Scaleform/.work/vanilla-interface-extracted/interface"
 ```
 
-Omitting `-VariantKeys` selects every entry in `$Global:ReleaseVariants`. During each compile, JPEXS imports the authored ABC into a temporary copy of the matching clean source, reopens the generated movie, and verifies patch anchors, class inventory, provider contracts, and the one-domain rule. The compiler then requires the output signature to match its source container and compares the result with the manifest's expected hash.
+Omitting `-VariantKeys` selects every entry in `$Global:ReleaseVariants`. The base compiler patches Bethesda's existing HUD ABC without adding another `DoABC` tag, reopens the generated movie, and verifies the loader anchors and one-ABC contract. The auxiliary compiler creates a temporary external host SWC with `compc`, compiles the profiled CUI source with `mxmlc`, normalizes the CWS output through JPEXS, and reopens it to verify its single ABC, bridge, class inventory, and provider contract. Each compiler compares the result with its manifest's expected hash.
 
 Use `-UpdateExpectedHashes` only for an intentional reviewed source change. A hash update is evidence that output changed, not proof that the movie works in Starfield. Review the source diff and validate in game before accepting it.
 
 ## 6. Stage the complete movie set
 
-Each selected variant receives these eight generated movies:
+Each selected variant receives these nine generated movies:
 
 ```text
 Interface/hudmenu.gfx
@@ -100,9 +100,10 @@ Interface/hudmessagesmenu.gfx
 Interface/hudmessagesmenu.swf
 Interface/hudmessagesmenu_lrg.gfx
 Interface/hudmessagesmenu_lrg.swf
+Interface/venworkscui.swf
 ```
 
-The normal and large HUD pairs may have profile-specific hashes. The HUD-message pairs are shared while their source profile remains common. Do not create an SWF by changing a GFX extension, changing only its signature, or compressing a generated GFX payload. That produces a different artifact than rebuilding from the clean Bethesda CWS source. The builder writes generated XML and SVG payloads as UTF-8 without a byte-order mark with canonical LF line endings. This keeps the loose staging bytes and BA2 entries deterministic across Windows and Linux checkouts.
+The four base HUD and four HUD-message movies are shared while their bootstrap patches remain common. The standalone CUI movie is shared by the four themed variants and profile-specific for Minimalist. Do not create an SWF by changing a GFX extension, changing only its signature, or compressing a generated GFX payload. That produces a different artifact than rebuilding from the clean Bethesda CWS source. The builder writes generated XML and SVG payloads as UTF-8 without a byte-order mark with canonical LF line endings. This keeps the loose staging bytes and BA2 entries deterministic across Windows and Linux checkouts.
 
 ## 7. Build platform archives and release packages
 
@@ -112,7 +113,7 @@ Create every selected Windows, Xbox, and PlayStation archive directly from the s
 .\Tools\createPackages.ps1
 ```
 
-No platform receives a movie rewrite. Each Main BA2 must contain the same eight staged movie paths and byte-identical data. Texture archives remain governed by the variant's source inventory and platform filters.
+No platform receives a movie rewrite. Each Main BA2 must contain the same nine staged movie paths and byte-identical data. Texture archives remain governed by the variant's source inventory and platform filters.
 
 Create the five release ZIP shapes per variant with:
 
@@ -139,9 +140,9 @@ Validation must confirm:
 
 - each staged `.gfx` has a GFX signature and each staged `.swf` has a CWS signature with a valid declared length;
 - every staged movie matches its profile's expected SHA-256;
-- JPEXS can reopen every generated movie and each HUD movie contains exactly one Venworks CUI ABC domain;
+- JPEXS can reopen every generated movie, each base HUD movie contains exactly one Bethesda ABC and no CUI runtime, and each standalone CUI movie contains exactly one complete CUI ABC;
 - every Main BA2 has the exact staged Interface inventory and every archive entry is byte-identical to its staged source;
-- the four themed variants retain their shared hashes when a change is intended only for Minimalist; and
+- the four themed variants retain their shared auxiliary hash while Minimalist retains its profile-specific auxiliary hash; and
 - all 25 release ZIPs have the expected platform/package shape.
 
 Build success is not gameplay acceptance. Test a cold start, save load, normal and large HUD modes, scanner transitions, combat, menu teardown, and platform deployment. When isolating a console crash, change one contract at a time and record both positive and negative results.
@@ -153,5 +154,6 @@ Build success is not gameplay acceptance. Test a cold start, save load, normal a
 - Never synthesize one release format by renaming or wrapping the other.
 - Always package the canonical generated XML/SVG bytes; do not rebuild archives from platform-converted text files.
 - Never edit or commit Bethesda's full decompiled source.
-- Never split cooperating Venworks classes across multiple ABC domains.
+- Never embed the Venworks runtime in a base HUD movie or split cooperating Venworks classes across multiple auxiliary ABC domains.
+- Never embed compile-only Bethesda extern definitions in `venworkscui.swf`.
 - Never treat JPEXS reopen, hash equality, PC acceptance, or archive creation as a substitute for testing the target console.

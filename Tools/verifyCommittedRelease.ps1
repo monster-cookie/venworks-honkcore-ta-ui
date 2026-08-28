@@ -270,6 +270,10 @@ $movies = @(
   [pscustomobject]@{
     FileName = 'hudmessagesmenu_lrg.swf'
     ExpectedHashPath = 'Scaleform/hudmessagesmenu_lrg/validation/expected-swf.sha256'
+  },
+  [pscustomobject]@{
+    FileName = 'venworkscui.swf'
+    ExpectedHashPath = 'Scaleform/venworkscui/validation/expected.sha256'
   }
 )
 
@@ -339,11 +343,11 @@ foreach ($variant in $variants) {
 
 foreach ($movie in $movies) {
   if (@($movieHashes[$movie.FileName] | Select-Object -Unique).Count -ne 1) {
-    throw "The four staged $($movie.FileName) files are not byte-identical."
+    throw "The four themed staged $($movie.FileName) files are not byte-identical."
   }
 }
 
-Write-Host "Verified committed Scaleform movie hashes and complete staged VenworksCUI payloads for all five variants."
+Write-Host "Verified committed Scaleform movie hashes and complete staged VenworksCUI payloads for the four themed variants."
 
 $archive2ScriptReferences = @(
   & git -C $repositoryRoot grep -l -F "Archive2.exe" -- `

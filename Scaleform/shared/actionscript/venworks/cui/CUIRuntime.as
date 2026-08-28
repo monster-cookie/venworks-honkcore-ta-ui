@@ -85,6 +85,7 @@ package venworks.cui
          }
          try
          {
+            this.startProviderContexts();
             loader = new CUILayoutImportLoader();
             loader.addEventListener(Event.COMPLETE,this.onLoaded);
             loader.addEventListener(Event.CANCEL,this.onLoadFailed);
@@ -95,6 +96,19 @@ package venworks.cui
             this.setDiagnosticContext("CUI BOOTSTRAP",null,"LAYOUT LOADER START");
             this.showRuntimeError(param1);
          }
+      }
+
+      private function startProviderContexts() : void
+      {
+         this.setDiagnosticContext("VALUE PROVIDER REGISTRATION",null,"EAGER TRANSACTIONAL START");
+         valueContext = new CUIPlayerHudDataContext();
+         valueContext.addEventListener(CUIPlayerHudDataContext.PROVIDER_ERROR,this.onProviderError);
+         valueContext.start();
+         this.setDiagnosticContext("CONDITION PROVIDER REGISTRATION",null,"EAGER TRANSACTIONAL START");
+         conditionContext = new CUIConditionContext();
+         conditionContext.addEventListener(CUIConditionContext.PROVIDER_ERROR,this.onProviderError);
+         conditionContext.start();
+         this.clearDiagnosticContext();
       }
 
       public function reapplyVanillaPlacements() : void
@@ -154,10 +168,6 @@ package venworks.cui
             this.setDiagnosticContext("PRE-PALETTE COMPOSITION",null,"COMPOSITE LOWERING");
             parser = new CUILayoutParser();
             config = parser.prepareForPalette(config);
-            valueContext = new CUIPlayerHudDataContext();
-            valueContext.addEventListener(CUIPlayerHudDataContext.PROVIDER_ERROR,this.onProviderError);
-            this.setDiagnosticContext("VALUE PROVIDER REGISTRATION",null,"TRANSACTIONAL START");
-            valueContext.start();
             paletteLoader = new CUIPaletteLoader();
             paletteLoader.addEventListener(Event.COMPLETE,this.onPaletteLoaded);
             paletteLoader.addEventListener(Event.CANCEL,this.onPaletteFailed);
@@ -226,10 +236,6 @@ package venworks.cui
             scannerOverlays = [];
             threatAlerts = [];
             statusEffectBars = [];
-            conditionContext = new CUIConditionContext();
-            conditionContext.addEventListener(CUIConditionContext.PROVIDER_ERROR,this.onProviderError);
-            this.setDiagnosticContext("CONDITION PROVIDER REGISTRATION",null,"TRANSACTIONAL START");
-            conditionContext.start();
             conditionContext.addEventListener(CUIConditionContext.CONDITION_CHANGE,this.onConditionChanged);
             valueContext.addEventListener(CUIPlayerHudDataContext.VALUE_CHANGE,this.onValueChanged);
             valueContext.addEventListener(CUIPlayerHudDataContext.COMPASS_CHANGE,this.onCompassChanged);

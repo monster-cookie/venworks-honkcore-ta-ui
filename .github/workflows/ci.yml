@@ -135,6 +135,27 @@ jobs:
 
           $minimalistBase = 'Venworks-CustomizableHUD-Minimalist'
           $minimalistStagingPath = Join-Path $env:GITHUB_WORKSPACE 'Staging-MIN'
+          $expectedMinimalistMovieNames = @(
+            'hudmenu.gfx'
+            'hudmenu.swf'
+            'hudmenu_lrg.gfx'
+            'hudmenu_lrg.swf'
+            'hudmessagesmenu.gfx'
+            'hudmessagesmenu.swf'
+            'hudmessagesmenu_lrg.gfx'
+            'hudmessagesmenu_lrg.swf'
+            'venworkscui.swf'
+          ) | Sort-Object
+          $actualMinimalistMovieNames = @(
+            Get-ChildItem -LiteralPath (Join-Path $minimalistStagingPath 'Interface') -File |
+              Where-Object { $_.Extension -in @('.gfx', '.swf') } |
+              Select-Object -ExpandProperty Name |
+              Sort-Object
+          )
+          if ([string]::Join("`n", $actualMinimalistMovieNames) -cne
+              [string]::Join("`n", $expectedMinimalistMovieNames)) {
+            throw 'Minimalist staging does not contain the exact nine-movie Interface inventory.'
+          }
           $minimalistLooseEntries = @(
             Get-ChildItem -LiteralPath (Join-Path $minimalistStagingPath 'Interface') -Recurse -File |
               ForEach-Object { $_.FullName.Substring($minimalistStagingPath.Length + 1).Replace('\', '/') } |

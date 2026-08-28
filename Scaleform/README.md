@@ -1,10 +1,6 @@
 # Scaleform Sources
 
-This directory contains only Venworks-authored ActionScript, a minimal owned
-ABC seed, patch definitions, XML fixtures, build manifests, hashes, and
-validation records. It intentionally does not contain Bethesda GFX/SWF files,
-full JPEXS XML exports, decompiled Bethesda ActionScript, or extracted game
-assets as tracked repository content.
+This directory contains only Venworks-authored ActionScript, bounded bootstrap patches, compile-only host externs, XML fixtures, build manifests, hashes, and validation records. It intentionally does not contain Bethesda GFX/SWF files, full JPEXS XML exports, decompiled Bethesda ActionScript, or extracted game assets as tracked repository content.
 
 The developer scripts in `../Tools` operate on files extracted from a locally
 installed copy of Starfield. Ignored developer references and temporary build
@@ -14,6 +10,7 @@ output are written to `Scaleform/.work`.
 
 - Eclipse Temurin Java 21 (or a compatible Java 21 runtime)
 - JPEXS Free Flash Decompiler 26.2.1
+- Apache Flex SDK 4.16.1 with exactly one compatible `playerglobal.swc`
 - Clean GFX and SWF copies of `hudmenu`, `hudmenu_lrg`, `hudmessagesmenu`, and `hudmessagesmenu_lrg` extracted from `Starfield - Interface.ba2`
 - The complete reference-cache command additionally requires every movie and
   provider fixture listed in `reference-cache.xml` from the same vanilla
@@ -54,9 +51,9 @@ From the repository root:
   -VanillaInterfacePath "C:\path\to\extracted\interface"
 ```
 
-`buildVariant.ps1` independently compiles the normal and large HUD from clean GFX and SWF inputs for each unique selected movie profile. It compiles the shared HUD-message GFX/SWF pairs once, then stages all eight movies for each selected variant from `Scaleform/variants/<KEY>/build.psd1`. The four themed profiles currently share the production layout, components, SVG assets, external palettes, and movie hashes. Minimalist uses its own faction-free layout, seven-component inventory, literal Starfield colors, and profile-specific normal/large HUD hashes with no external SVG, palette, or DDS files. Omitting `-VariantKeys` selects all five release variants. Pass one key, such as `-VariantKeys MIN`, or an array, such as `-VariantKeys @("TA", "MIN")`, to select a subset. The singular `-VariantKey` name remains a compatibility alias. Use `-Committed` to regenerate tracked staging directories without Vortex Junctions.
+`buildVariant.ps1` independently compiles the normal and large HUD bootstrap from clean GFX and SWF inputs, compiles the shared HUD-message GFX/SWF pairs once, and compiles each selected standalone CUI source profile once. It stages nine movies for each selected variant from `Scaleform/variants/<KEY>/build.psd1`: four base HUD movies, four HUD-message movies, and `venworkscui.swf`. The four themed profiles share the production layout, components, SVG assets, external palettes, and standalone CUI hash. Minimalist uses its own faction-free layout, six-component inventory, literal Starfield colors, and profile-specific standalone CUI hash with no external SVG, palette, or DDS files. Omitting `-VariantKeys` selects all five release variants. Pass one key, such as `-VariantKeys MIN`, or an array, such as `-VariantKeys @("TA", "MIN")`, to select a subset. The singular `-VariantKey` name remains a compatibility alias. Use `-Committed` to regenerate tracked staging directories without Vortex Junctions.
 
-`compileScaleform.ps1` remains the lower-level movie compiler. Each invocation preserves the input container contract: `.gfx` inputs must carry a `GFX` signature and generate GFX outputs, while `.swf` inputs must carry a `CWS` signature and generate CWS outputs. It writes one validated output directory and never mirrors variant configuration or runs Archive2. Deploy each profile's generated `layout.xml` and component directory together. Component imports are relative filenames resolved only inside this fixed directory; nested imports and path traversal are unsupported. The production payload includes `quest-tracker.xml`, whose upper-left panel joins directly beneath the faction and contact-radar panels, binds the existing `HudCompassData` tracked-objective text, and remains independent of scanner and aiming state while leaving its text field blank when the objective is empty. The objective resolver is independent of floating-marker visibility. Vanilla quest markers, icons, arrows, distance labels, and temporary quest notifications remain under Bethesda ownership. `HUDMessagesMenu` is patched at its `MonocleMenu_Opened` handler so opening the on-foot scanner keeps only the always-up objective list hidden; ship-scanner behavior is unchanged. The HUDMenu-owned Watch/environment cluster is configured with `visibleWhen="never"`, which applies real display visibility without positional hiding. Bethesda's original Monocle movies retain scanner input, labels, and survey placement. No HUD-wide frame callback or cross-movie display lookup is used.
+`compileScaleform.ps1` is the lower-level HUD bootstrap compiler. Each invocation preserves the input container contract: `.gfx` inputs must carry a `GFX` signature and generate GFX outputs, while `.swf` inputs must carry a `CWS` signature and generate CWS outputs. It patches Bethesda's existing HUD ABC without adding another `DoABC` tag. `compileScaleformAuxiliary.ps1` compiles the complete CUI runtime into one deterministic CWS auxiliary movie using Apache Flex, compile-only Bethesda externs, and JPEXS normalization/reopen validation. Neither compiler mirrors variant configuration or runs Archive2. Deploy each profile's generated `layout.xml` and component directory together. Component imports are relative filenames resolved only inside this fixed directory; nested imports and path traversal are unsupported. The production payload includes `quest-tracker.xml`, whose upper-left panel joins directly beneath the faction and contact-radar panels, binds the existing `HudCompassData` tracked-objective text, and remains independent of scanner and aiming state while leaving its text field blank when the objective is empty. The objective resolver is independent of floating-marker visibility. Vanilla quest markers, icons, arrows, distance labels, and temporary quest notifications remain under Bethesda ownership. `HUDMessagesMenu` is patched at its `MonocleMenu_Opened` handler so opening the on-foot scanner keeps only the always-up objective list hidden; ship-scanner behavior is unchanged. The HUDMenu-owned Watch/environment cluster is configured with `visibleWhen="never"`, which applies real display visibility without positional hiding. Bethesda's original Monocle movies retain scanner input, labels, and survey placement. No HUD-wide frame callback or cross-movie display lookup is used.
 
 Regenerate the curated built-in icon definitions when their approved Font
 Awesome source subset changes:
@@ -74,15 +71,7 @@ Freestar Collective, Crimson Fleet, and Trackers Alliance logos are not part of
 this library; they remain authored loose SVG assets. Their raster and DDS visual
 references are not repository content.
 
-The build injects the Venworks-only ABC seed into both HUD sizes, reads its
-vanilla XML from the ignored reference cache, exports patched and reopened
-ActionScript only into ignored temporary storage, verifies the authored
-`HUDMenu` patch anchors, and imports the patched document class plus the
-repository-authored CUI classes. A separate bounded override pass patches only
-the normal and large `HUDMessagesMenu` document classes at their exact vanilla
-anchor. Both passes confirm that every other exported class remains textually
-identical and that reopened outputs contain the required contracts. Full
-exported Bethesda classes are never repository source.
+The HUD bootstrap build reads vanilla XML from the ignored reference cache, exports patched and reopened ActionScript only into ignored temporary storage, verifies the authored `HUDMenu` patch anchors, and imports only the patched Bethesda document class back into its existing ABC. The auxiliary build compiles the repository-authored CUI classes and `VenworksCUIEntrypoint` into one child-domain ABC; the six Bethesda API stubs and generated Scaleform extension stub are external libraries and must not appear as definitions in the output. A separate bounded override pass patches only the normal and large `HUDMessagesMenu` document classes at their exact vanilla anchor. Every pass confirms that unrelated exported Bethesda classes remain textually identical and that reopened outputs contain the required contracts. Full exported Bethesda classes are never repository source.
 
 Root layouts may select one optional, version-1 palette by filename with the
 `palette` attribute. The runtime loads that file only from

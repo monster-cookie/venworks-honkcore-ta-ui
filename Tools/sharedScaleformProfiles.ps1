@@ -71,13 +71,53 @@ function Get-ScaleformManifestDefinition {
   }
 }
 
-function Get-ScaleformSourceProfile {
+function Get-ScaleformAuxiliaryManifestDefinition {
   param(
     [Parameter(Mandatory = $true)]
     [string]$ManifestPath
   )
 
-  $definition = Get-ScaleformManifestDefinition -ManifestPath $ManifestPath
+  $resolvedManifestPath = (Resolve-Path -LiteralPath $ManifestPath -ErrorAction Stop).Path
+  [xml]$manifest = Get-Content -LiteralPath $resolvedManifestPath -Raw
+  $build = $manifest.scaleformAuxiliaryBuild
+  if (!$build -or !$build.name -or !$build.outputFile -or !$build.documentClass -or
+      !$build.actionScriptSource -or !$build.externSource -or !$build.expectedHashFile) {
+    throw "Invalid Scaleform auxiliary build manifest: $resolvedManifestPath"
+  }
+
+  $manifestDirectory = Split-Path -Parent $resolvedManifestPath
+  $sourceProfilePath = $null
+  $sourceProfileName = [string]$build.GetAttribute("actionScriptProfile")
+  if (![string]::IsNullOrWhiteSpace($sourceProfileName)) {
+    $sourceProfilePath = [System.IO.Path]::GetFullPath((Join-Path $manifestDirectory $sourceProfileName))
+    if (!(Test-Path -LiteralPath $sourceProfilePath -PathType Leaf)) {
+      throw "Scaleform ActionScript profile does not exist: $sourceProfilePath"
+    }
+  }
+
+  return [pscustomobject]@{
+    Name = [string]$build.name
+    FileName = [string]$build.outputFile
+    ManifestPath = $resolvedManifestPath
+    ExpectedHashPath = [System.IO.Path]::GetFullPath((Join-Path $manifestDirectory ([string]$build.expectedHashFile)))
+    SourceProfilePath = $sourceProfilePath
+  }
+}
+
+function Get-ScaleformSourceProfile {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$ManifestPath,
+
+    [switch]$Auxiliary
+  )
+
+  $definition = if ($Auxiliary) {
+    Get-ScaleformAuxiliaryManifestDefinition -ManifestPath $ManifestPath
+  }
+  else {
+    Get-ScaleformManifestDefinition -ManifestPath $ManifestPath
+  }
   if ($null -eq $definition.SourceProfilePath) {
     return [pscustomobject]@{
       Name = "shared"
@@ -86,8 +126,34 @@ function Get-ScaleformSourceProfile {
       ActionScriptPatchPath = $null
       ForbiddenBytecodeTokens = @()
       RequiredBytecodeTokens = @()
-      ValueProviders = @()
-      ConditionProviders = @()
+      ValueProviders = @(
+        'LocalEnvironmentData'
+        'LocalEnvData_Frequent'
+        'PlayerData'
+        'PlayerFrequentData'
+        'PlayerInventoryData'
+        'WeaponData'
+        'HudJetpackData'
+        'HUDStarbornPowersData'
+        'FavoritesData'
+        'ControlMapData'
+        'EnvironmentEffectsData'
+        'PersonalEffectsData'
+        'StarmapSystemBodyInfoProvider'
+        'HudCompassData'
+      )
+      ConditionProviders = @(
+        'HudCrosshairData'
+        'HUDStealthData'
+        'HudCompassData'
+        'HUDVehicleData'
+        'HUDOpacityData'
+        'WeaponData'
+        'HUDStarbornPowersData'
+        'FavoritesData'
+        'HudJetpackData'
+        'PlayerInventoryData'
+      )
       CrossContextProviderCount = 6
     }
   }
@@ -177,18 +243,13 @@ function Get-VariantScaleformMovieProfile {
     throw "Variant build profile is missing MovieProfile."
   }
 
-  $gfxManifestRelativePaths = if ($VariantBuildProfile.ContainsKey("MovieManifestPaths")) {
-    @($VariantBuildProfile.MovieManifestPaths | ForEach-Object { [string]$_ })
+  if ($VariantBuildProfile.ContainsKey("MovieManifestPaths") -or
+      $VariantBuildProfile.ContainsKey("SwfMovieManifestPaths")) {
+    throw "Variant build profiles no longer override the shared HUD bootstrap manifests."
   }
-  else {
-    @("Scaleform/hudmenu/build.xml", "Scaleform/hudmenu_lrg/build.xml")
-  }
-  $swfManifestRelativePaths = if ($VariantBuildProfile.ContainsKey("SwfMovieManifestPaths")) {
-    @($VariantBuildProfile.SwfMovieManifestPaths | ForEach-Object { [string]$_ })
-  }
-  else {
-    @("Scaleform/hudmenu/build-swf.xml", "Scaleform/hudmenu_lrg/build-swf.xml")
-  }
+
+  $gfxManifestRelativePaths = @("Scaleform/hudmenu/build.xml", "Scaleform/hudmenu_lrg/build.xml")
+  $swfManifestRelativePaths = @("Scaleform/hudmenu/build-swf.xml", "Scaleform/hudmenu_lrg/build-swf.xml")
   $manifestRelativePaths = @($gfxManifestRelativePaths) + @($swfManifestRelativePaths)
   if ($gfxManifestRelativePaths.Count -ne 2 -or
       $swfManifestRelativePaths.Count -ne 2 -or
@@ -210,11 +271,31 @@ function Get-VariantScaleformMovieProfile {
     throw "Scaleform movie profile '$name' must build the normal and large HUD GFX/SWF movies exactly once."
   }
 
-  $sourceProfileNames = @($manifestDefinitions | ForEach-Object {
-    (Get-ScaleformSourceProfile -ManifestPath $_.ManifestPath).Name
-  } | Select-Object -Unique)
-  if ($sourceProfileNames.Count -ne 1 -or $sourceProfileNames[0] -cne $name) {
-    throw "Scaleform movie profile '$name' does not match its manifest ActionScript profile."
+  foreach ($manifestDefinition in $manifestDefinitions) {
+    [xml]$manifest = Get-Content -LiteralPath $manifestDefinition.ManifestPath -Raw
+    if ([string]$manifest.scaleformBuild.GetAttribute('mode') -cne 'auxiliary-bootstrap' -or
+        $null -ne $manifestDefinition.SourceProfilePath) {
+      throw "Shared HUD manifest must select the profile-independent auxiliary bootstrap mode: $($manifestDefinition.ManifestPath)"
+    }
+  }
+
+  $auxiliaryManifestRelativePath = if ($VariantBuildProfile.ContainsKey("AuxiliaryMovieManifestPath")) {
+    [string]$VariantBuildProfile.AuxiliaryMovieManifestPath
+  }
+  else {
+    'Scaleform/venworkscui/build.xml'
+  }
+  $auxiliaryManifestPath = Resolve-ScaleformProfileRepositoryPath `
+    -RepositoryRoot $RepositoryRoot `
+    -RelativePath $auxiliaryManifestRelativePath `
+    -Description "Scaleform movie profile '$name' auxiliary manifest"
+  $auxiliaryDefinition = Get-ScaleformAuxiliaryManifestDefinition -ManifestPath $auxiliaryManifestPath
+  $auxiliarySourceProfile = Get-ScaleformSourceProfileFromAuxiliaryManifest -ManifestPath $auxiliaryManifestPath
+  if ($auxiliarySourceProfile.Name -cne $name) {
+    throw "Scaleform movie profile '$name' does not match its auxiliary ActionScript profile '$($auxiliarySourceProfile.Name)'."
+  }
+  if ($auxiliaryDefinition.FileName -cne 'venworkscui.swf') {
+    throw "Scaleform movie profile '$name' must build venworkscui.swf."
   }
 
   $movieDefinitions = @($manifestDefinitions | ForEach-Object {
@@ -239,14 +320,29 @@ function Get-VariantScaleformMovieProfile {
     [pscustomobject]@{
       FileName = "hudmessagesmenu_lrg.swf"
       ExpectedHashPath = (Join-Path $RepositoryRoot "Scaleform\hudmessagesmenu_lrg\validation\expected-swf.sha256")
+    },
+    [pscustomobject]@{
+      FileName = $auxiliaryDefinition.FileName
+      ExpectedHashPath = $auxiliaryDefinition.ExpectedHashPath
     }
   )
 
   return [pscustomobject]@{
     Name = $name
     ManifestPaths = @($manifestDefinitions | ForEach-Object { $_.ManifestPath })
+    AuxiliaryManifestPath = $auxiliaryDefinition.ManifestPath
+    SourceProfile = $auxiliarySourceProfile
     MovieDefinitions = $movieDefinitions
   }
+}
+
+function Get-ScaleformSourceProfileFromAuxiliaryManifest {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$ManifestPath
+  )
+
+  return Get-ScaleformSourceProfile -ManifestPath $ManifestPath -Auxiliary
 }
 
 function Get-ScaleformProfileActionScriptPath {

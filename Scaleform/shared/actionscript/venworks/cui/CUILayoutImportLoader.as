@@ -88,7 +88,7 @@ package venworks.cui
             this.fail("CUI LAYOUT INVALID","At most one includes element is allowed.");
             return;
          }
-         includes = config.includes.include;
+         includes = config.includes.child("include");
          if(includes.length() > MAX_INCLUDES)
          {
             this.fail("CUI LAYOUT INVALID","The layout exceeds the 16-include limit.");

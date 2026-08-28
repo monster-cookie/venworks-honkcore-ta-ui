@@ -7,6 +7,12 @@
 - https://creations.bethesda.net/en/starfield/details/03b616a3-1902-4b83-a109-fc176f658a69/Venworks_Customizable_HUD___Crimson_Fleet_Theme
 - https://creations.bethesda.net/en/starfield/details/9b635bf7-8c6b-4530-bdbd-0912903b336b/Venworks_Customizable_HUD___Freestar_Collective_Th
 
+## Unreleased
+
+- All: Moved the complete CUI runtime into a standalone `venworkscui.swf` with one ABC and replaced the second embedded HUD ABC with a guarded asynchronous loader.
+- All: Added the standalone CUI movie to every loose payload and Windows, Xbox, and PlayStation Main archive, increasing the shared Interface contract from eight to nine movies.
+- All: Start independent provider contexts before external configuration loads and prime newly watched providers before subscribing, preserving initial and continuous equipment-rail updates across the asynchronous movie boundary.
+
 ## Version 2.0.7 (September 27, 2026)
 
 - Minimalist: Restored the live data registrations.
