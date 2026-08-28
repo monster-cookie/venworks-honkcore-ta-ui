@@ -57,6 +57,7 @@ package venworks.cui
       private var diagnosticNode:XML;
       private var diagnosticCheckpoint:String = "";
       private var disposed:Boolean = false;
+      private var failed:Boolean = false;
       private var teardownPending:Boolean = false;
 
       public function CUIRuntime(param1:DisplayObjectContainer)
@@ -86,6 +87,10 @@ package venworks.cui
          try
          {
             this.startProviderContexts();
+            if(this.failed)
+            {
+               return;
+            }
             loader = new CUILayoutImportLoader();
             loader.addEventListener(Event.COMPLETE,this.onLoaded);
             loader.addEventListener(Event.CANCEL,this.onLoadFailed);
@@ -104,6 +109,10 @@ package venworks.cui
          valueContext = new CUIPlayerHudDataContext();
          valueContext.addEventListener(CUIPlayerHudDataContext.PROVIDER_ERROR,this.onProviderError);
          valueContext.start();
+         if(this.failed)
+         {
+            return;
+         }
          this.setDiagnosticContext("CONDITION PROVIDER REGISTRATION",null,"EAGER TRANSACTIONAL START");
          conditionContext = new CUIConditionContext();
          conditionContext.addEventListener(CUIConditionContext.PROVIDER_ERROR,this.onProviderError);
@@ -161,6 +170,10 @@ package venworks.cui
 
       private function onLoaded(param1:Event) : void
       {
+         if(this.disposed || this.failed)
+         {
+            return;
+         }
          var config:XML = loader.layout;
          this.clearListeners();
          try
@@ -181,6 +194,10 @@ package venworks.cui
 
       private function onPaletteLoaded(param1:Event) : void
       {
+         if(this.disposed || this.failed)
+         {
+            return;
+         }
          var config:XML = paletteLoader.layout;
          this.clearPaletteListeners();
          try
@@ -209,20 +226,38 @@ package venworks.cui
 
       private function onPaletteFailed(param1:Event) : void
       {
+         if(this.disposed || this.failed)
+         {
+            return;
+         }
+         var title:String = paletteLoader.errorTitle;
+         var message:String = paletteLoader.errorMessage;
+         this.enterTerminalFailure();
          this.clearPaletteListeners();
          this.clearComponentLayer();
-         diagnostics.showError(paletteLoader.errorTitle,paletteLoader.errorMessage);
+         diagnostics.showError(title,message);
       }
 
       private function onLoadFailed(param1:Event) : void
       {
+         if(this.disposed || this.failed)
+         {
+            return;
+         }
+         var title:String = loader.errorTitle;
+         var message:String = loader.errorMessage;
+         this.enterTerminalFailure();
          this.clearListeners();
          this.clearComponentLayer();
-         diagnostics.showError(loader.errorTitle,loader.errorMessage);
+         diagnostics.showError(title,message);
       }
 
       private function onAssetsLoaded(param1:Event) : void
       {
+         if(this.disposed || this.failed)
+         {
+            return;
+         }
          this.clearAssetListeners();
          try
          {
@@ -262,16 +297,22 @@ package venworks.cui
 
       private function onAssetFailed(param1:Event) : void
       {
+         if(this.disposed || this.failed)
+         {
+            return;
+         }
+         var message:String = assetManager.errorMessage;
+         this.enterTerminalFailure();
          this.clearAssetListeners();
          this.clearComponentLayer();
-         diagnostics.showError("CUI ASSET LOAD ERROR","PHASE: ASSET LOADING\n" + assetManager.errorMessage);
+         diagnostics.showError("CUI ASSET LOAD ERROR","PHASE: ASSET LOADING\n" + message);
       }
 
       private function onProviderError(param1:CustomEvent) : void
       {
          var details:Object = param1 == null ? null : param1.params;
          var lines:Array = [];
-         if(this.disposed || this.teardownPending)
+         if(this.disposed || this.failed || this.teardownPending)
          {
             return;
          }
@@ -299,6 +340,7 @@ package venworks.cui
          {
             lines.push("STACK: " + String(details.stack));
          }
+         this.enterTerminalFailure();
          try
          {
             componentLayer.visible = false;
@@ -314,10 +356,11 @@ package venworks.cui
       private function showLiveEventError(param1:Error, param2:String) : void
       {
          var detail:String = null;
-         if(this.disposed || this.teardownPending)
+         if(this.disposed || this.failed || this.teardownPending)
          {
             return;
          }
+         this.enterTerminalFailure();
          try
          {
             detail = "CODE: CUI-EVT-CALLBACK\nCONSUMER: RUNTIME\nEVENT: " + param2 + "\n" +
@@ -384,11 +427,36 @@ package venworks.cui
          }
       }
 
+      private function enterTerminalFailure() : void
+      {
+         if(this.failed)
+         {
+            return;
+         }
+         this.failed = true;
+         this.clearListeners();
+         this.clearPaletteListeners();
+         this.clearAssetListeners();
+         if(loader != null)
+         {
+            loader.cancel();
+         }
+         if(paletteLoader != null)
+         {
+            paletteLoader.cancel();
+         }
+         if(assetManager != null)
+         {
+            assetManager.cancel();
+         }
+      }
+
       private function showRuntimeError(param1:Error) : void
       {
          var message:String = param1.message;
          var separator:int = message.indexOf("|");
          var detail:String = this.formatRuntimeError(param1,separator >= 0 ? message.substring(separator + 1) : message);
+         this.enterTerminalFailure();
          this.clearComponentLayer();
          if(message.indexOf("UNSUPPORTED|") == 0)
          {
@@ -804,6 +872,18 @@ package venworks.cui
          this.clearListeners();
          this.clearPaletteListeners();
          this.clearAssetListeners();
+         if(loader != null)
+         {
+            loader.cancel();
+         }
+         if(paletteLoader != null)
+         {
+            paletteLoader.cancel();
+         }
+         if(assetManager != null)
+         {
+            assetManager.cancel();
+         }
          this.clearComponentLayer();
          if(componentLayer.parent === owner)
          {

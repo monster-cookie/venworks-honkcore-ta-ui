@@ -68,7 +68,7 @@ For repeated investigation, populate the curated ignored reference cache:
 
 ## 4. Author a bounded modification
 
-Each base HUD build manifest identifies its clean input, output filename, vanilla hash, expected generated hash, and bounded document-class bootstrap patch. GFX and SWF manifests for the same movie intentionally repeat that modification contract while pointing at different clean inputs and expected hashes. An auxiliary manifest separately identifies the standalone CUI entrypoint, shared ActionScript tree, compile-only host externs, optional variant source profile, and expected `venworkscui.swf` hash.
+Each base HUD build manifest identifies its clean input, output filename, vanilla hash, expected generated hash, and bounded document-class bootstrap patch. GFX and SWF manifests for the same movie intentionally repeat that modification contract while pointing at different clean inputs and expected hashes. An auxiliary manifest separately identifies the standalone CUI entrypoint, shared ActionScript tree, compile-only host externs, optional variant source profile, expected compiled class-inventory hash, and expected `venworkscui.swf` hash.
 
 Keep all cooperating `venworks.cui.*` classes in the single ABC domain compiled into `venworkscui.swf`. The base HUD movies retain their one Bethesda ABC and load the child movie through an untyped bridge. Variant-specific behavior is selected through its auxiliary build profile and exact ActionScript patches, not through copied variant definitions in build scripts.
 
@@ -83,7 +83,7 @@ Build all variants with:
   -VanillaInterfacePath "Scaleform/.work/vanilla-interface-extracted/interface"
 ```
 
-Omitting `-VariantKeys` selects every entry in `$Global:ReleaseVariants`. The base compiler patches Bethesda's existing HUD ABC without adding another `DoABC` tag, reopens the generated movie, and verifies the loader anchors and one-ABC contract. The auxiliary compiler creates a temporary external host SWC with `compc`, compiles the profiled CUI source with `mxmlc`, normalizes the CWS output through JPEXS, and reopens it to verify its single ABC, bridge, class inventory, and provider contract. Each compiler compares the result with its manifest's expected hash.
+Omitting `-VariantKeys` selects every entry in `$Global:ReleaseVariants`. The base compiler patches Bethesda's existing HUD ABC without adding another `DoABC` tag, reopens the generated movie, and verifies the loader anchors, readable Starfield diagnostic format, and one-ABC contract. The auxiliary compiler creates a temporary external host SWC with `compc`, compiles the profiled CUI source with `mxmlc`, normalizes the CWS output through JPEXS, and reopens it twice: the first production pass derives the sorted class-inventory fingerprint, and the second embeds that fingerprint plus the current transformed-source fingerprint and proves the definition inventory is unchanged. Each compiler compares the result with its manifest's expected hashes.
 
 Use `-UpdateExpectedHashes` only for an intentional reviewed source change. A hash update is evidence that output changed, not proof that the movie works in Starfield. Review the source diff and validate in game before accepting it.
 
@@ -141,11 +141,12 @@ Validation must confirm:
 - each staged `.gfx` has a GFX signature and each staged `.swf` has a CWS signature with a valid declared length;
 - every staged movie matches its profile's expected SHA-256;
 - JPEXS can reopen every generated movie, each base HUD movie contains exactly one Bethesda ABC and no CUI runtime, and each standalone CUI movie contains exactly one complete CUI ABC;
+- every auxiliary movie embeds fingerprints recomputed from the current manifest, compiler contract, externs, entrypoint, and transformed ActionScript, and its sorted definition inventory matches the profile's expected class hash;
 - every Main BA2 has the exact staged Interface inventory and every archive entry is byte-identical to its staged source;
 - the four themed variants retain their shared auxiliary hash while Minimalist retains its profile-specific auxiliary hash; and
 - all 25 release ZIPs have the expected platform/package shape.
 
-Build success is not gameplay acceptance. Test a cold start, save load, normal and large HUD modes, scanner transitions, combat, menu teardown, and platform deployment. When isolating a console crash, change one contract at a time and record both positive and negative results.
+Build success is not gameplay acceptance. First omit `Interface/venworkscui.swf` deliberately and confirm the bootstrap's Starfield-font load diagnostic is readable. Then install a Bethesda PC package with only its ESM and Main BA2, disable every loose `Interface` override for that variant, and verify that both the auxiliary movie and external configuration resolve from the archive. Test Minimalist and at least one themed variant through cold start, save load, normal and large HUD modes, scanner transitions, combat, menu teardown, and platform deployment. When isolating a console crash, change one contract at a time and record both positive and negative results.
 
 ## Container rules to preserve
 
@@ -156,4 +157,5 @@ Build success is not gameplay acceptance. Test a cold start, save load, normal a
 - Never edit or commit Bethesda's full decompiled source.
 - Never embed the Venworks runtime in a base HUD movie or split cooperating Venworks classes across multiple auxiliary ABC domains.
 - Never embed compile-only Bethesda extern definitions in `venworkscui.swf`.
+- Never package a marker or stale auxiliary movie; `createPackages.ps1` must verify the selected production auxiliary hash before Archive2 mutates an archive.
 - Never treat JPEXS reopen, hash equality, PC acceptance, or archive creation as a substitute for testing the target console.

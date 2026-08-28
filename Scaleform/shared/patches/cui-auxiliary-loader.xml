@@ -4,7 +4,8 @@
     <insertion position="after"><anchor><![CDATA[   import flash.events.Event;]]></anchor><content><![CDATA[
    import flash.events.IOErrorEvent;
    import flash.events.SecurityErrorEvent;
-   import flash.text.TextField;]]></content></insertion>
+   import flash.text.TextField;
+   import flash.text.TextFormat;]]></content></insertion>
     <insertion position="after"><anchor><![CDATA[      private var SkillPatchLoader:Loader = null;]]></anchor><content><![CDATA[
 
       private var VenworksCUILoader:Loader = null;
@@ -162,6 +163,7 @@
 
       private function showVenworksCUIError(param1:String, param2:String) : void
       {
+         var format:TextFormat = new TextFormat("$MAIN_Font_Bold",18,16777215,true);
          try
          {
             if(this.VenworksCUIBootstrapDiagnostics == null)
@@ -177,6 +179,8 @@
                this.VenworksCUIBootstrapDiagnostics.border = true;
                this.VenworksCUIBootstrapDiagnostics.borderColor = 16711680;
                this.VenworksCUIBootstrapDiagnostics.textColor = 16777215;
+               this.VenworksCUIBootstrapDiagnostics.embedFonts = true;
+               this.VenworksCUIBootstrapDiagnostics.defaultTextFormat = format;
                this.VenworksCUIBootstrapDiagnostics.multiline = true;
                this.VenworksCUIBootstrapDiagnostics.wordWrap = true;
                this.VenworksCUIBootstrapDiagnostics.selectable = false;
@@ -184,6 +188,7 @@
                addChild(this.VenworksCUIBootstrapDiagnostics);
             }
             this.VenworksCUIBootstrapDiagnostics.text = "VENWORKS CUI LOAD ERROR\n" + param1 + " | " + param2;
+            this.VenworksCUIBootstrapDiagnostics.setTextFormat(format);
          }
          catch(venworksDiagnosticsError:Error)
          {

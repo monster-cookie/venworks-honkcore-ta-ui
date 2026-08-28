@@ -4,4 +4,5 @@
                          documentClass="VenworksCUIEntrypoint.as"
                          actionScriptSource="../shared/actionscript"
                          externSource="externs"
-                         expectedHashFile="validation/expected.sha256" />
+                         expectedHashFile="validation/expected.sha256"
+                         expectedClassHashFile="validation/expected-classes.sha256" />

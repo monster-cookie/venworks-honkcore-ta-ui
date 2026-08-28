@@ -363,6 +363,30 @@ if ($archive2ScriptReferences.Count -ne 1 -or
 }
 Write-Host "Verified that createPackages.ps1 exclusively owns Archive2 invocation."
 
+$packageScriptPath = Join-Path $repositoryRoot 'Tools/createPackages.ps1'
+$packageScriptSource = [System.IO.File]::ReadAllText($packageScriptPath)
+$productionGuardIndex = $packageScriptSource.IndexOf(
+  'Verified every selected production auxiliary movie before archive mutation.',
+  [System.StringComparison]::Ordinal
+)
+$archiveRemovalIndex = $packageScriptSource.IndexOf(
+  'Remove-Item -LiteralPath $archivePath -Force',
+  [System.StringComparison]::Ordinal
+)
+$archiveInvocationIndex = $packageScriptSource.IndexOf(
+  '& $archive2Path @archiveArguments',
+  [System.StringComparison]::Ordinal
+)
+if ($productionGuardIndex -lt 0 -or
+    $archiveRemovalIndex -lt 0 -or
+    $archiveInvocationIndex -lt 0 -or
+    $productionGuardIndex -gt $archiveRemovalIndex -or
+    $productionGuardIndex -gt $archiveInvocationIndex -or
+    !$packageScriptSource.Contains('staged venworkscui.swf is not the production auxiliary movie')) {
+  throw 'createPackages.ps1 must reject a non-production auxiliary movie before deleting or creating archives.'
+}
+Write-Host 'Verified the pre-Archive2 production auxiliary movie guard.'
+
 & (Join-Path $PSScriptRoot "verifyVariant.ps1") `
   -Committed
 

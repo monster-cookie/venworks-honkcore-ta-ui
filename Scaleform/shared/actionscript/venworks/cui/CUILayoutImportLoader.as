@@ -20,6 +20,7 @@ package venworks.cui
       private var resolvedLayout:XML;
       private var failureTitle:String = "CUI LAYOUT LOAD ERROR";
       private var failureMessage:String = "Starfield could not load the CUI layout.";
+      private var cancelled:Boolean = false;
 
       public function CUILayoutImportLoader()
       {
@@ -44,7 +45,7 @@ package venworks.cui
 
       public function load() : void
       {
-         if(rootLoader != null)
+         if(cancelled || rootLoader != null)
          {
             return;
          }
@@ -68,6 +69,10 @@ package venworks.cui
          var includes:XMLList = null;
          var node:XML = null;
          var ids:Object = {};
+         if(cancelled)
+         {
+            return;
+         }
          this.clearRootListeners();
          try
          {
@@ -170,6 +175,10 @@ package venworks.cui
          var record:Object = this.findRecord(param1.currentTarget);
          var source:String = null;
          var fragment:XML = null;
+         if(cancelled)
+         {
+            return;
+         }
          if(record == null)
          {
             this.fail("CUI COMPONENT LOAD ERROR","A component loader completed without a matching include.");
@@ -317,6 +326,10 @@ package venworks.cui
       private function fail(param1:String, param2:String) : void
       {
          var record:Object = null;
+         if(cancelled)
+         {
+            return;
+         }
          failureTitle = param1;
          failureMessage = param2;
          this.clearRootListeners();
@@ -325,6 +338,38 @@ package venworks.cui
             this.clearRecordListeners(record);
          }
          dispatchEvent(new Event(Event.CANCEL));
+      }
+
+      public function cancel() : void
+      {
+         var record:Object = null;
+         if(cancelled)
+         {
+            return;
+         }
+         cancelled = true;
+         this.clearRootListeners();
+         this.closeLoader(rootLoader);
+         for each(record in records)
+         {
+            this.clearRecordListeners(record);
+            this.closeLoader(URLLoader(record.loader));
+         }
+      }
+
+      private function closeLoader(param1:URLLoader) : void
+      {
+         if(param1 == null)
+         {
+            return;
+         }
+         try
+         {
+            param1.close();
+         }
+         catch(param2:Error)
+         {
+         }
       }
 
       private function clearRootListeners() : void

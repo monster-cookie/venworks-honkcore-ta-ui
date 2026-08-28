@@ -592,7 +592,11 @@ foreach ($variant in $variants) {
       'CUI-AUX-LOAD',
       'initialize',
       'updateVanillaHudModeVisibility',
-      'dispose'
+      'dispose',
+      '$MAIN_Font_Bold',
+      'embedFonts',
+      'defaultTextFormat',
+      'setTextFormat'
     )) {
       if (!$inspection.Text.Contains($requiredBootstrapToken)) {
         throw "$($variant.VariantName) $baseHudMovieName is missing auxiliary bootstrap token '$requiredBootstrapToken'."
@@ -638,6 +642,18 @@ foreach ($variant in $variants) {
   foreach ($forbiddenAuxiliaryToken in @($sourceProfile.ForbiddenBytecodeTokens)) {
     if ($auxiliaryInspection.Text.Contains([string]$forbiddenAuxiliaryToken)) {
       throw "$($variant.VariantName) venworkscui.swf contains forbidden token '$forbiddenAuxiliaryToken'."
+    }
+  }
+  $sourceFingerprint = Get-ScaleformAuxiliarySourceFingerprint `
+    -ManifestPath $movieProfile.AuxiliaryManifestPath
+  $expectedClassFingerprint = Read-ExpectedSha256 `
+    -Path $movieProfile.AuxiliaryExpectedClassHashPath
+  foreach ($fingerprintToken in @(
+    "VENWORKS_CUI_SOURCE_SHA256:$sourceFingerprint",
+    "VENWORKS_CUI_CLASSES_SHA256:$expectedClassFingerprint"
+  )) {
+    if (!$auxiliaryInspection.Text.Contains($fingerprintToken)) {
+      throw "$($variant.VariantName) venworkscui.swf is not bound to '$fingerprintToken'."
     }
   }
 
@@ -725,11 +741,48 @@ foreach ($variant in $variants) {
   )
   if (!$runtimeLoadMethod.Success -or
       !$runtimeLoadMethod.Value.Contains('this.startProviderContexts();') -or
+      !$runtimeLoadMethod.Value.Contains('if(this.failed)') -or
       $runtimeLoadMethod.Value.IndexOf('this.startProviderContexts();') -gt $runtimeLoadMethod.Value.IndexOf('loader.load();') -or
       !$providerStartupMethod.Success -or
       !$providerStartupMethod.Value.Contains('valueContext.start();') -or
+      !$providerStartupMethod.Value.Contains('if(this.failed)') -or
       !$providerStartupMethod.Value.Contains('conditionContext.start();')) {
     throw "$($variant.VariantName) runtime must start both provider contexts before loading external configuration."
+  }
+  $providerErrorMethod = [regex]::Match(
+    $runtimeSource,
+    '(?s)private function onProviderError\(.*?(?=\s+private function showLiveEventError)'
+  )
+  $terminalFailureMethod = [regex]::Match(
+    $runtimeSource,
+    '(?s)private function enterTerminalFailure\(\) : void.*?(?=\s+private function showRuntimeError)'
+  )
+  if (!$providerErrorMethod.Success -or
+      !$providerErrorMethod.Value.Contains('this.enterTerminalFailure();') -or
+      !$providerErrorMethod.Value.Contains('this.deferComponentTeardown();') -or
+      $providerErrorMethod.Value.IndexOf('this.enterTerminalFailure();') -gt
+        $providerErrorMethod.Value.IndexOf('this.deferComponentTeardown();') -or
+      !$terminalFailureMethod.Success -or
+      !$terminalFailureMethod.Value.Contains('this.failed = true;') -or
+      !$terminalFailureMethod.Value.Contains('loader.cancel();') -or
+      !$terminalFailureMethod.Value.Contains('paletteLoader.cancel();') -or
+      !$terminalFailureMethod.Value.Contains('assetManager.cancel();') -or
+      [regex]::Matches($runtimeSource, 'if\(this\.disposed \|\| this\.failed\)').Count -lt 5) {
+    throw "$($variant.VariantName) runtime does not terminally contain provider faults across its asynchronous load pipeline."
+  }
+  foreach ($cancellableLoaderRelativePath in @(
+    [System.IO.Path]::Combine('venworks', 'cui', 'CUILayoutImportLoader.as'),
+    [System.IO.Path]::Combine('venworks', 'cui', 'CUIPaletteLoader.as'),
+    [System.IO.Path]::Combine('venworks', 'cui', 'CUIAssetManager.as')
+  )) {
+    if (!$profiledActionScript.ContainsKey($cancellableLoaderRelativePath)) {
+      throw "$($variant.VariantName) profile excludes cancellable loader '$cancellableLoaderRelativePath'."
+    }
+    $cancellableLoaderSource = [string]$profiledActionScript[$cancellableLoaderRelativePath]
+    if (!$cancellableLoaderSource.Contains('public function cancel() : void') -or
+        !$cancellableLoaderSource.Contains('.close();')) {
+      throw "$($variant.VariantName) loader '$cancellableLoaderRelativePath' does not cancel its active URLLoader requests."
+    }
   }
   foreach ($contextRelativePath in @($playerContextRelativePath, $conditionContextRelativePath)) {
     $contextSource = [string]$profiledActionScript[$contextRelativePath]

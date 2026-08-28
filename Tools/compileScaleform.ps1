@@ -247,7 +247,11 @@ function Build-AuxiliaryBootstrapMovie {
     'this.VenworksCUIBridge["reapplyVanillaPlacements"]()',
     'this.VenworksCUIBridge["updateVanillaHudModeVisibility"]',
     'this.VenworksCUIBridge["dispose"]()',
-    'this.VenworksCUILoader.unload()'
+    'this.VenworksCUILoader.unload()',
+    'new TextFormat("$MAIN_Font_Bold",18,16777215,true)',
+    'this.VenworksCUIBootstrapDiagnostics.embedFonts = true',
+    'this.VenworksCUIBootstrapDiagnostics.defaultTextFormat = format',
+    'this.VenworksCUIBootstrapDiagnostics.setTextFormat(format)'
   )) {
     if (!$reopenedHudMenuSource.Contains($requiredBootstrapToken)) {
       throw "Generated $BuildName is missing bootstrap contract token '$requiredBootstrapToken'."

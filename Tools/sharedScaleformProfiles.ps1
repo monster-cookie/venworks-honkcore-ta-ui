@@ -81,7 +81,8 @@ function Get-ScaleformAuxiliaryManifestDefinition {
   [xml]$manifest = Get-Content -LiteralPath $resolvedManifestPath -Raw
   $build = $manifest.scaleformAuxiliaryBuild
   if (!$build -or !$build.name -or !$build.outputFile -or !$build.documentClass -or
-      !$build.actionScriptSource -or !$build.externSource -or !$build.expectedHashFile) {
+      !$build.actionScriptSource -or !$build.externSource -or !$build.expectedHashFile -or
+      !$build.expectedClassHashFile) {
     throw "Invalid Scaleform auxiliary build manifest: $resolvedManifestPath"
   }
 
@@ -100,6 +101,7 @@ function Get-ScaleformAuxiliaryManifestDefinition {
     FileName = [string]$build.outputFile
     ManifestPath = $resolvedManifestPath
     ExpectedHashPath = [System.IO.Path]::GetFullPath((Join-Path $manifestDirectory ([string]$build.expectedHashFile)))
+    ExpectedClassHashPath = [System.IO.Path]::GetFullPath((Join-Path $manifestDirectory ([string]$build.expectedClassHashFile)))
     SourceProfilePath = $sourceProfilePath
   }
 }
@@ -324,6 +326,7 @@ function Get-VariantScaleformMovieProfile {
     [pscustomobject]@{
       FileName = $auxiliaryDefinition.FileName
       ExpectedHashPath = $auxiliaryDefinition.ExpectedHashPath
+      ExpectedClassHashPath = $auxiliaryDefinition.ExpectedClassHashPath
     }
   )
 
@@ -331,6 +334,7 @@ function Get-VariantScaleformMovieProfile {
     Name = $name
     ManifestPaths = @($manifestDefinitions | ForEach-Object { $_.ManifestPath })
     AuxiliaryManifestPath = $auxiliaryDefinition.ManifestPath
+    AuxiliaryExpectedClassHashPath = $auxiliaryDefinition.ExpectedClassHashPath
     SourceProfile = $auxiliarySourceProfile
     MovieDefinitions = $movieDefinitions
   }
@@ -418,4 +422,168 @@ function Get-ScaleformPatchedActionScript {
   }
 
   return $sourceText
+}
+
+function Get-ScaleformAuxiliaryFingerprintPlaceholder {
+  param(
+    [Parameter(Mandatory = $true)]
+    [ValidateSet('Source', 'Classes')]
+    [string]$Kind
+  )
+
+  $prefix = if ($Kind -ceq 'Source') {
+    'VENWORKS_CUI_SOURCE_SHA256:'
+  }
+  else {
+    'VENWORKS_CUI_CLASSES_SHA256:'
+  }
+  return $prefix + ('_' * 64)
+}
+
+function Get-ScaleformAuxiliaryExtensionsExternSource {
+  return @'
+package scaleform.gfx
+{
+   import flash.geom.Rectangle;
+
+   public final class Extensions
+   {
+      public static function get visibleRect() : Rectangle
+      {
+         return null;
+      }
+   }
+}
+'@
+}
+
+function Get-ScaleformAuxiliaryTextSha256 {
+  param(
+    [Parameter(Mandatory = $true)]
+    [AllowEmptyString()]
+    [string]$Text
+  )
+
+  $bytes = [System.Text.UTF8Encoding]::new($false).GetBytes($Text)
+  $algorithm = [System.Security.Cryptography.SHA256]::Create()
+  try {
+    return [System.BitConverter]::ToString($algorithm.ComputeHash($bytes)).Replace('-', '')
+  }
+  finally {
+    $algorithm.Dispose()
+  }
+}
+
+function Get-ScaleformCanonicalAuxiliaryEntrypoint {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Source
+  )
+
+  $canonical = $Source.Replace("`r`n", "`n").Replace("`r", "`n")
+  foreach ($kind in @('Source', 'Classes')) {
+    $placeholder = Get-ScaleformAuxiliaryFingerprintPlaceholder -Kind $kind
+    $prefix = $placeholder.Substring(0, $placeholder.Length - 64)
+    $pattern = [regex]::Escape($prefix) + '[0-9A-Fa-f_]{64}'
+    $matches = [regex]::Matches($canonical, $pattern)
+    if ($matches.Count -ne 1) {
+      throw "Auxiliary entrypoint must contain exactly one $kind fingerprint token; found $($matches.Count)."
+    }
+    $canonical = [regex]::Replace($canonical, $pattern, $placeholder)
+  }
+  return $canonical
+}
+
+function Get-ScaleformAuxiliarySourceFingerprint {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$ManifestPath
+  )
+
+  $definition = Get-ScaleformAuxiliaryManifestDefinition -ManifestPath $ManifestPath
+  $sourceProfile = Get-ScaleformSourceProfileFromAuxiliaryManifest -ManifestPath $definition.ManifestPath
+  [xml]$manifest = Get-Content -LiteralPath $definition.ManifestPath -Raw
+  $build = $manifest.scaleformAuxiliaryBuild
+  $manifestDirectory = Split-Path -Parent $definition.ManifestPath
+  $sourceRoot = (Resolve-Path -LiteralPath (Join-Path $manifestDirectory ([string]$build.actionScriptSource)) -ErrorAction Stop).Path
+  $externRoot = (Resolve-Path -LiteralPath (Join-Path $manifestDirectory ([string]$build.externSource)) -ErrorAction Stop).Path
+  $entrypointPath = (Resolve-Path -LiteralPath (Join-Path $manifestDirectory ([string]$build.documentClass)) -ErrorAction Stop).Path
+  $records = [System.Collections.Generic.List[string]]::new()
+
+  $records.Add('CONTRACT|venworks-cui-auxiliary-source-v1')
+  foreach ($contractValue in @(
+    "name=$([string]$build.name)",
+    "outputFile=$([string]$build.outputFile)",
+    "documentClass=$([string]$build.documentClass)",
+    "actionScriptSource=$([string]$build.actionScriptSource)",
+    "externSource=$([string]$build.externSource)",
+    "expectedHashFile=$([string]$build.expectedHashFile)",
+    "expectedClassHashFile=$([string]$build.expectedClassHashFile)",
+    "actionScriptProfile=$([string]$build.GetAttribute('actionScriptProfile'))",
+    'compiler.debug=false',
+    'compiler.optimize=true',
+    'compiler.compress=true',
+    'compiler.omit-trace-statements=true',
+    'use-network=false',
+    'target-player=11.1.0',
+    'swf-version=12'
+  )) {
+    $records.Add("BUILD|$contractValue")
+  }
+  $records.Add("PROFILE|name=$($sourceProfile.Name)")
+  foreach ($path in @($sourceProfile.ExcludedActionScriptPaths | Sort-Object)) {
+    $records.Add("PROFILE|exclude=$($path.Replace('\', '/'))")
+  }
+  foreach ($path in @($sourceProfile.ActionScriptReplacementPaths.Keys | Sort-Object)) {
+    $records.Add("PROFILE|replace=$($path.Replace('\', '/'))")
+  }
+  foreach ($token in @($sourceProfile.RequiredBytecodeTokens)) {
+    $records.Add("PROFILE|required=$token")
+  }
+  foreach ($token in @($sourceProfile.ForbiddenBytecodeTokens)) {
+    $records.Add("PROFILE|forbidden=$token")
+  }
+  foreach ($provider in @($sourceProfile.ValueProviders)) {
+    $records.Add("PROFILE|value=$provider")
+  }
+  foreach ($provider in @($sourceProfile.ConditionProviders)) {
+    $records.Add("PROFILE|condition=$provider")
+  }
+  $records.Add("PROFILE|overlaps=$($sourceProfile.CrossContextProviderCount)")
+
+  foreach ($sourceFile in @(Get-ChildItem -LiteralPath $sourceRoot -Recurse -File -Filter '*.as' | Sort-Object FullName)) {
+    $relativePath = $sourceFile.FullName.Substring($sourceRoot.Length + 1).Replace('\', '/')
+    $profilePath = $relativePath.Replace('/', [System.IO.Path]::DirectorySeparatorChar)
+    if ($profilePath -in $sourceProfile.ExcludedActionScriptPaths) {
+      continue
+    }
+    $effectiveSourcePath = Get-ScaleformProfileActionScriptPath `
+      -SourceProfile $sourceProfile `
+      -SourcePath $sourceFile.FullName `
+      -RelativePath $profilePath
+    $sourceText = if ($null -ne $sourceProfile.ActionScriptPatchPath) {
+      Get-ScaleformPatchedActionScript `
+        -SourcePath $effectiveSourcePath `
+        -RelativePath $profilePath `
+        -PatchPath $sourceProfile.ActionScriptPatchPath
+    }
+    else {
+      [System.IO.File]::ReadAllText($effectiveSourcePath).Replace("`r`n", "`n").Replace("`r", "`n")
+    }
+    $records.Add("SOURCE|$relativePath|$($sourceText.Length)`n$sourceText")
+  }
+
+  $entrypointSource = Get-ScaleformCanonicalAuxiliaryEntrypoint `
+    -Source ([System.IO.File]::ReadAllText($entrypointPath))
+  $records.Add("ENTRYPOINT|$([string]$build.documentClass)|$($entrypointSource.Length)`n$entrypointSource")
+
+  foreach ($externFile in @(Get-ChildItem -LiteralPath $externRoot -Recurse -File -Filter '*.as' | Sort-Object FullName)) {
+    $relativePath = $externFile.FullName.Substring($externRoot.Length + 1).Replace('\', '/')
+    $externText = [System.IO.File]::ReadAllText($externFile.FullName).Replace("`r`n", "`n").Replace("`r", "`n")
+    $records.Add("EXTERN|$relativePath|$($externText.Length)`n$externText")
+  }
+  $extensionsExtern = (Get-ScaleformAuxiliaryExtensionsExternSource).Replace("`r`n", "`n").Replace("`r", "`n")
+  $records.Add("EXTERN|scaleform/gfx/Extensions.as|$($extensionsExtern.Length)`n$extensionsExtern")
+
+  return Get-ScaleformAuxiliaryTextSha256 -Text ([string]::Join("`n--`n", $records))
 }

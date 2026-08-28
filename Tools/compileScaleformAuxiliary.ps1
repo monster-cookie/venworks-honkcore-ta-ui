@@ -220,6 +220,89 @@ function Assert-ProviderInventory {
   }
 }
 
+function Get-AuxiliaryClassInventory {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$ScriptsDirectory
+  )
+
+  $definitions = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+  foreach ($scriptFile in @(Get-ChildItem -LiteralPath $ScriptsDirectory -Recurse -File -Filter '*.as')) {
+    $source = [System.IO.File]::ReadAllText($scriptFile.FullName)
+    $packageMatch = [regex]::Match(
+      $source,
+      '(?m)^\s*package(?:\s+([A-Za-z_][A-Za-z0-9_.]*))?\s*$'
+    )
+    $packageName = if ($packageMatch.Success) { [string]$packageMatch.Groups[1].Value } else { '' }
+    foreach ($definitionMatch in [regex]::Matches(
+      $source,
+      '(?m)^\s*(?:(?:public|internal|final|dynamic)\s+)*(?:class|interface)\s+([A-Za-z_][A-Za-z0-9_]*)\b'
+    )) {
+      $definitionName = [string]$definitionMatch.Groups[1].Value
+      $qualifiedName = if ([string]::IsNullOrEmpty($packageName)) {
+        $definitionName
+      }
+      else {
+        "$packageName.$definitionName"
+      }
+      if (!$definitions.Add($qualifiedName)) {
+        throw "Auxiliary movie exports duplicate definition '$qualifiedName'."
+      }
+    }
+  }
+
+  [string[]]$inventory = @($definitions)
+  [System.Array]::Sort($inventory, [System.StringComparer]::Ordinal)
+  if ($inventory.Count -eq 0) {
+    throw 'Auxiliary movie did not export any ActionScript definitions.'
+  }
+  return $inventory
+}
+
+function Invoke-AuxiliaryCompilation {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$EntrypointPath,
+
+    [Parameter(Mandatory = $true)]
+    [string]$SourceRoot,
+
+    [Parameter(Mandatory = $true)]
+    [string]$OutputPath,
+
+    [string]$ExternSwcPath
+  )
+
+  $compilerArguments = @(
+    "-load-config=$flexConfigPath",
+    '-compiler.library-path=',
+    "-compiler.external-library-path=$resolvedPlayerGlobalPath",
+    '-compiler.source-path', $SourceRoot,
+    '-compiler.debug=false',
+    '-compiler.optimize=true',
+    '-compiler.compress=true',
+    '-compiler.omit-trace-statements=true',
+    '-use-network=false',
+    '-target-player=11.1.0',
+    '-swf-version=12',
+    '-output', $OutputPath,
+    $EntrypointPath
+  )
+  if (![string]::IsNullOrWhiteSpace($ExternSwcPath)) {
+    $compilerArguments = @($compilerArguments[0..2]) +
+      @("-compiler.external-library-path+=$ExternSwcPath") +
+      @($compilerArguments[3..($compilerArguments.Count - 1)])
+  }
+
+  Push-Location (Join-Path $resolvedFlexSdkPath 'frameworks')
+  try {
+    Invoke-JavaJar -JarPath $mxmlcJarPath -Arguments $compilerArguments -Description 'Apache Flex CUI compilation'
+  }
+  finally {
+    Pop-Location
+  }
+}
+
 function Assert-AuxiliaryMovie {
   param(
     [Parameter(Mandatory = $true)]
@@ -231,20 +314,29 @@ function Assert-AuxiliaryMovie {
     [Parameter(Mandatory = $true)]
     [pscustomobject]$SourceProfile,
 
+    [Parameter(Mandatory = $true)]
+    [string]$PassName,
+
+    [string]$ExpectedSourceFingerprint,
+
+    [string]$ExpectedClassFingerprint,
+
     [switch]$Marker
   )
 
   Assert-ScaleformMovieEncoding -Path $MoviePath -Context 'Generated auxiliary movie'
-  $reopenedXmlPath = Join-Path $WorkPath 'reopened.xml'
-  $validationScriptsDirectory = Join-Path $WorkPath 'validation-scripts'
+  $reopenedXmlPath = Join-Path $WorkPath "$PassName-reopened.xml"
+  $validationScriptsDirectory = Join-Path $WorkPath "$PassName-validation-scripts"
   Invoke-JavaJar `
     -JarPath $script:ResolvedJpexsJarPath `
     -Arguments @('-swf2xml', $MoviePath, $reopenedXmlPath) `
-    -Description 'JPEXS auxiliary movie reopen'
+    -Description 'JPEXS auxiliary movie reopen' |
+      Out-Host
   Invoke-JavaJar `
     -JarPath $script:ResolvedJpexsJarPath `
     -Arguments @('-format', 'script:as', '-export', 'script', $validationScriptsDirectory, $MoviePath) `
-    -Description 'JPEXS auxiliary ActionScript export'
+    -Description 'JPEXS auxiliary ActionScript export' |
+      Out-Host
 
   [xml]$reopened = Get-Content -LiteralPath $reopenedXmlPath -Raw
   $abcTags = @($reopened.SelectNodes('/swf/tags/item[@type="DoABC2Tag" or @type="DoABCTag"]'))
@@ -254,6 +346,14 @@ function Assert-AuxiliaryMovie {
   $validationSource = @(Get-ChildItem -LiteralPath $validationScriptsDirectory -Recurse -File -Filter '*.as' | ForEach-Object {
     [System.IO.File]::ReadAllText($_.FullName)
   }) -join "`n"
+  $classInventory = @(Get-AuxiliaryClassInventory -ScriptsDirectory $validationScriptsDirectory)
+  foreach ($className in $classInventory) {
+    if ($className.StartsWith('Shared.', [System.StringComparison]::Ordinal) -or
+        $className -ceq 'scaleform.gfx.Extensions') {
+      throw "Auxiliary movie embeds compile-only host class '$className'."
+    }
+  }
+  $classFingerprint = Get-ScaleformAuxiliaryTextSha256 -Text ([string]::Join("`n", $classInventory) + "`n")
   foreach ($requiredToken in @(
     'public function initialize',
     'public function reapplyVanillaPlacements',
@@ -272,7 +372,11 @@ function Assert-AuxiliaryMovie {
     if (!$validationSource.Contains('VENWORKS AUX LOADED')) {
       throw 'Marker auxiliary movie is missing its acceptance text.'
     }
-    return
+    return [pscustomobject]@{
+      ClassFingerprint = $classFingerprint
+      ClassInventory = $classInventory
+      ValidationSource = $validationSource
+    }
   }
   if ($validationSource.Contains('VENWORKS AUX LOADED')) {
     throw 'Production auxiliary movie retains the marker-probe payload.'
@@ -291,6 +395,20 @@ function Assert-AuxiliaryMovie {
     if (!$validationSource.Contains([string]$providerName)) {
       throw "Auxiliary profile '$($SourceProfile.Name)' is missing provider '$providerName'."
     }
+  }
+  if (![string]::IsNullOrWhiteSpace($ExpectedSourceFingerprint) -and
+      !$validationSource.Contains("VENWORKS_CUI_SOURCE_SHA256:$ExpectedSourceFingerprint")) {
+    throw "Auxiliary profile '$($SourceProfile.Name)' does not embed its current source fingerprint."
+  }
+  if (![string]::IsNullOrWhiteSpace($ExpectedClassFingerprint) -and
+      !$validationSource.Contains("VENWORKS_CUI_CLASSES_SHA256:$ExpectedClassFingerprint")) {
+    throw "Auxiliary profile '$($SourceProfile.Name)' does not embed its compiled class fingerprint."
+  }
+
+  return [pscustomobject]@{
+    ClassFingerprint = $classFingerprint
+    ClassInventory = $classInventory
+    ValidationSource = $validationSource
   }
 }
 
@@ -319,7 +437,8 @@ $resolvedPlayerGlobalPath = Resolve-RequiredFile -Path $PlayerGlobalPath -Descri
 
 [xml]$manifest = Get-Content -LiteralPath $resolvedBuildManifestPath -Raw
 $build = $manifest.scaleformAuxiliaryBuild
-if (!$build -or !$build.outputFile -or !$build.documentClass -or !$build.expectedHashFile) {
+if (!$build -or !$build.outputFile -or !$build.documentClass -or !$build.expectedHashFile -or
+    !$build.expectedClassHashFile) {
   throw "Invalid auxiliary build manifest: $resolvedBuildManifestPath"
 }
 $manifestDirectory = Split-Path -Parent $resolvedBuildManifestPath
@@ -327,6 +446,7 @@ $entrypointPath = Resolve-RequiredFile `
   -Path (Join-Path $manifestDirectory ([string]$build.documentClass)) `
   -Description 'Auxiliary entrypoint'
 $expectedHashPath = [System.IO.Path]::GetFullPath((Join-Path $manifestDirectory ([string]$build.expectedHashFile)))
+$expectedClassHashPath = [System.IO.Path]::GetFullPath((Join-Path $manifestDirectory ([string]$build.expectedClassHashFile)))
 $sourceProfile = Get-ScaleformSourceProfileFromAuxiliaryManifest -ManifestPath $resolvedBuildManifestPath
 
 New-Item -ItemType Directory -Force -Path $resolvedOutputDirectory, $resolvedWorkDirectory | Out-Null
@@ -334,7 +454,9 @@ $buildWorkDirectory = Join-Path $resolvedWorkDirectory ([guid]::NewGuid().ToStri
 New-Item -ItemType Directory -Path $buildWorkDirectory | Out-Null
 $sourceRoot = Join-Path $buildWorkDirectory 'source'
 $externRoot = Join-Path $buildWorkDirectory 'externs'
-$compiledSwfPath = Join-Path $buildWorkDirectory 'compiled.swf'
+$firstCompiledSwfPath = Join-Path $buildWorkDirectory 'first-compiled.swf'
+$firstNormalizedSwfPath = Join-Path $buildWorkDirectory 'first-pass.swf'
+$compiledSwfPath = Join-Path $buildWorkDirectory 'final-compiled.swf'
 $normalizedSwfPath = Join-Path $buildWorkDirectory ([string]$build.outputFile)
 $externSwcPath = Join-Path $buildWorkDirectory 'host-externs.swc'
 
@@ -347,6 +469,7 @@ package
    import flash.display.DisplayObjectContainer;
    import flash.display.MovieClip;
    import flash.text.TextField;
+   import flash.text.TextFormat;
 
    public final class VenworksCUIEntrypoint extends MovieClip
    {
@@ -355,6 +478,7 @@ package
 
       public function initialize(param1:DisplayObjectContainer) : void
       {
+         var format:TextFormat = new TextFormat("$MAIN_Font_Bold",18,0xFFFFFF,true);
          this.dispose();
          this.owner = param1;
          if(this.owner == null)
@@ -371,7 +495,10 @@ package
          this.marker.border = true;
          this.marker.borderColor = 0x00FFFF;
          this.marker.textColor = 0xFFFFFF;
+         this.marker.embedFonts = true;
+         this.marker.defaultTextFormat = format;
          this.marker.text = "VENWORKS AUX LOADED";
+         this.marker.setTextFormat(format);
          this.owner.addChild(this.marker);
       }
 
@@ -416,20 +543,7 @@ package
     Copy-Item -LiteralPath $externSourcePath -Destination $externRoot -Recurse
     $scaleformExternPath = Join-Path $externRoot 'scaleform\gfx\Extensions.as'
     New-Item -ItemType Directory -Force -Path (Split-Path -Parent $scaleformExternPath) | Out-Null
-    Write-Utf8WithoutBom -Path $scaleformExternPath -Text @'
-package scaleform.gfx
-{
-   import flash.geom.Rectangle;
-
-   public final class Extensions
-   {
-      public static function get visibleRect() : Rectangle
-      {
-         return null;
-      }
-   }
-}
-'@
+    Write-Utf8WithoutBom -Path $scaleformExternPath -Text (Get-ScaleformAuxiliaryExtensionsExternSource)
 
     $compcArguments = @(
       "-load-config=$flexConfigPath",
@@ -449,40 +563,93 @@ package scaleform.gfx
     }
   }
 
-  $compilerArguments = @(
-    "-load-config=$flexConfigPath",
-    '-compiler.library-path=',
-    "-compiler.external-library-path=$resolvedPlayerGlobalPath",
-    '-compiler.source-path', $sourceRoot,
-    '-compiler.debug=false',
-    '-compiler.optimize=true',
-    '-compiler.compress=true',
-    '-compiler.omit-trace-statements=true',
-    '-use-network=false',
-    '-target-player=11.1.0',
-    '-swf-version=12',
-    '-output', $compiledSwfPath,
-    $compilerEntrypointPath
-  )
-  if (!$MarkerProbe) {
-    $compilerArguments = @($compilerArguments[0..2]) +
-      @("-compiler.external-library-path+=$externSwcPath") +
-      @($compilerArguments[3..($compilerArguments.Count - 1)])
+  if ($MarkerProbe) {
+    Invoke-AuxiliaryCompilation `
+      -EntrypointPath $compilerEntrypointPath `
+      -SourceRoot $sourceRoot `
+      -OutputPath $compiledSwfPath
+    Normalize-AuxiliaryMovie `
+      -InputPath $compiledSwfPath `
+      -OutputPath $normalizedSwfPath `
+      -WorkPath $buildWorkDirectory
+    $markerInspection = Assert-AuxiliaryMovie `
+      -MoviePath $normalizedSwfPath `
+      -WorkPath $buildWorkDirectory `
+      -SourceProfile $sourceProfile `
+      -PassName 'marker' `
+      -Marker
+    if (!$markerInspection.ValidationSource.Contains('$MAIN_Font_Bold') -or
+        !$markerInspection.ValidationSource.Contains('embedFonts') -or
+        !$markerInspection.ValidationSource.Contains('defaultTextFormat') -or
+        !$markerInspection.ValidationSource.Contains('setTextFormat')) {
+      throw 'Marker auxiliary movie does not apply the required Starfield font format.'
+    }
   }
-  Push-Location (Join-Path $resolvedFlexSdkPath 'frameworks')
-  try {
-    Invoke-JavaJar -JarPath $mxmlcJarPath -Arguments $compilerArguments -Description 'Apache Flex CUI compilation'
-  }
-  finally {
-    Pop-Location
-  }
+  else {
+    $sourceFingerprint = Get-ScaleformAuxiliarySourceFingerprint -ManifestPath $resolvedBuildManifestPath
+    Invoke-AuxiliaryCompilation `
+      -EntrypointPath $compilerEntrypointPath `
+      -SourceRoot $sourceRoot `
+      -OutputPath $firstCompiledSwfPath `
+      -ExternSwcPath $externSwcPath
+    Normalize-AuxiliaryMovie `
+      -InputPath $firstCompiledSwfPath `
+      -OutputPath $firstNormalizedSwfPath `
+      -WorkPath $buildWorkDirectory
+    $firstInspection = Assert-AuxiliaryMovie `
+      -MoviePath $firstNormalizedSwfPath `
+      -WorkPath $buildWorkDirectory `
+      -SourceProfile $sourceProfile `
+      -PassName 'first'
+    $classFingerprint = [string]$firstInspection.ClassFingerprint
+    if ($UpdateExpectedHashes) {
+      Write-Sha256File -Path $expectedClassHashPath -Hash $classFingerprint
+    }
+    else {
+      $resolvedExpectedClassHashPath = Resolve-RequiredFile `
+        -Path $expectedClassHashPath `
+        -Description 'Auxiliary expected class hash file'
+      $expectedClassHash = Read-Sha256File -Path $resolvedExpectedClassHashPath
+      if ($classFingerprint -cne $expectedClassHash) {
+        throw "Auxiliary class inventory hash mismatch. Expected $expectedClassHash; found $classFingerprint."
+      }
+    }
 
-  Normalize-AuxiliaryMovie -InputPath $compiledSwfPath -OutputPath $normalizedSwfPath -WorkPath $buildWorkDirectory
-  Assert-AuxiliaryMovie `
-    -MoviePath $normalizedSwfPath `
-    -WorkPath $buildWorkDirectory `
-    -SourceProfile $sourceProfile `
-    -Marker:$MarkerProbe
+    $entrypointSource = [System.IO.File]::ReadAllText($compilerEntrypointPath)
+    $sourcePlaceholder = Get-ScaleformAuxiliaryFingerprintPlaceholder -Kind Source
+    $classPlaceholder = Get-ScaleformAuxiliaryFingerprintPlaceholder -Kind Classes
+    if (!$entrypointSource.Contains($sourcePlaceholder) -or !$entrypointSource.Contains($classPlaceholder)) {
+      throw 'Auxiliary entrypoint does not contain both build fingerprint placeholders.'
+    }
+    $entrypointSource = $entrypointSource.Replace(
+      $sourcePlaceholder,
+      "VENWORKS_CUI_SOURCE_SHA256:$sourceFingerprint"
+    ).Replace(
+      $classPlaceholder,
+      "VENWORKS_CUI_CLASSES_SHA256:$classFingerprint"
+    )
+    Write-Utf8WithoutBom -Path $compilerEntrypointPath -Text $entrypointSource
+
+    Invoke-AuxiliaryCompilation `
+      -EntrypointPath $compilerEntrypointPath `
+      -SourceRoot $sourceRoot `
+      -OutputPath $compiledSwfPath `
+      -ExternSwcPath $externSwcPath
+    Normalize-AuxiliaryMovie `
+      -InputPath $compiledSwfPath `
+      -OutputPath $normalizedSwfPath `
+      -WorkPath $buildWorkDirectory
+    $finalInspection = Assert-AuxiliaryMovie `
+      -MoviePath $normalizedSwfPath `
+      -WorkPath $buildWorkDirectory `
+      -SourceProfile $sourceProfile `
+      -PassName 'final' `
+      -ExpectedSourceFingerprint $sourceFingerprint `
+      -ExpectedClassFingerprint $classFingerprint
+    if ([string]$finalInspection.ClassFingerprint -cne $classFingerprint) {
+      throw 'Embedding the auxiliary build fingerprints changed the compiled class inventory.'
+    }
+  }
 
   $actualHash = (Get-FileHash -LiteralPath $normalizedSwfPath -Algorithm SHA256).Hash
   if (!$MarkerProbe) {

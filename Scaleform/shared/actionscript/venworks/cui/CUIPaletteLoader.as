@@ -17,6 +17,7 @@ package venworks.cui
       private var resolvedLayout:XML;
       private var failureTitle:String = "CUI PALETTE LOAD ERROR";
       private var failureMessage:String = "Starfield could not load the CUI palette.";
+      private var cancelled:Boolean = false;
 
       public function CUIPaletteLoader()
       {
@@ -41,7 +42,7 @@ package venworks.cui
       public function load(param1:XML) : void
       {
          var palette:String = null;
-         if(sourceLayout != null)
+         if(cancelled || sourceLayout != null)
          {
             return;
          }
@@ -85,6 +86,10 @@ package venworks.cui
          var palette:XML = null;
          var resolver:CUIPaletteResolver = null;
          var message:String = null;
+         if(cancelled)
+         {
+            return;
+         }
          this.clearListeners();
          if(source.length > MAX_PALETTE_BYTES)
          {
@@ -139,10 +144,34 @@ package venworks.cui
 
       private function fail(param1:String, param2:String) : void
       {
+         if(cancelled)
+         {
+            return;
+         }
          failureTitle = param1;
          failureMessage = param2;
          this.clearListeners();
          dispatchEvent(new Event(Event.CANCEL));
+      }
+
+      public function cancel() : void
+      {
+         if(cancelled)
+         {
+            return;
+         }
+         cancelled = true;
+         this.clearListeners();
+         if(paletteLoader != null)
+         {
+            try
+            {
+               paletteLoader.close();
+            }
+            catch(param1:Error)
+            {
+            }
+         }
       }
 
       private function clearListeners() : void

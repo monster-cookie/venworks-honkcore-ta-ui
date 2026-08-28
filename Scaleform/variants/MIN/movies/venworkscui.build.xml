@@ -5,4 +5,5 @@
                          actionScriptSource="../../../shared/actionscript"
                          externSource="../../../venworkscui/externs"
                          expectedHashFile="venworkscui.expected.sha256"
+                         expectedClassHashFile="venworkscui.expected-classes.sha256"
                          actionScriptProfile="minimalist-live.psd1" />

@@ -6,6 +6,9 @@ package
 
    public final class VenworksCUIEntrypoint extends MovieClip
    {
+      public static const SOURCE_FINGERPRINT:String = "VENWORKS_CUI_SOURCE_SHA256:________________________________________________________________";
+      public static const CLASS_FINGERPRINT:String = "VENWORKS_CUI_CLASSES_SHA256:________________________________________________________________";
+
       private var owner:DisplayObjectContainer = null;
       private var runtime:CUIRuntime = null;
 
