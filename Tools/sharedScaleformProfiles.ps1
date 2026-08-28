@@ -485,9 +485,9 @@ function Get-ScaleformCanonicalAuxiliaryEntrypoint {
     $placeholder = Get-ScaleformAuxiliaryFingerprintPlaceholder -Kind $kind
     $prefix = $placeholder.Substring(0, $placeholder.Length - 64)
     $pattern = [regex]::Escape($prefix) + '[0-9A-Fa-f_]{64}'
-    $matches = [regex]::Matches($canonical, $pattern)
-    if ($matches.Count -ne 1) {
-      throw "Auxiliary entrypoint must contain exactly one $kind fingerprint token; found $($matches.Count)."
+    $fingerprintMatches = [regex]::Matches($canonical, $pattern)
+    if ($fingerprintMatches.Count -ne 1) {
+      throw "Auxiliary entrypoint must contain exactly one $kind fingerprint token; found $($fingerprintMatches.Count)."
     }
     $canonical = [regex]::Replace($canonical, $pattern, $placeholder)
   }
