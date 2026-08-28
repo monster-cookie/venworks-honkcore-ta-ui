@@ -7,14 +7,11 @@
 - https://creations.bethesda.net/en/starfield/details/03b616a3-1902-4b83-a109-fc176f658a69/Venworks_Customizable_HUD___Crimson_Fleet_Theme
 - https://creations.bethesda.net/en/starfield/details/9b635bf7-8c6b-4530-bdbd-0912903b336b/Venworks_Customizable_HUD___Freestar_Collective_Th
 
-## Unreleased
+## Version 2.0.8 (September 27, 2026)
 
-- All: Moved the complete CUI runtime into a standalone `venworkscui.swf` with one ABC and replaced the second embedded HUD ABC with a guarded asynchronous loader.
-- All: Added the standalone CUI movie to every loose payload and Windows, Xbox, and PlayStation Main archive, increasing the shared Interface contract from eight to nine movies.
-- All: Start independent provider contexts before external configuration loads and prime newly watched providers before subscribing, preserving initial and continuous equipment-rail updates across the asynchronous movie boundary.
-- All: Made provider and live-callback faults terminal for the current CUI startup, cancelling in-flight layout, palette, and asset loads before teardown so failed initialization cannot continue mutating the HUD.
-- Build: Reject marker or stale auxiliary movies before Archive2 deletes or writes any selected archive, and bind each production auxiliary movie to its current transformed source and compiled class inventory.
-- Diagnostics: Apply Starfield's embedded bold font to the auxiliary marker and bootstrap load-error messages so loader failures remain readable in game.
+- All: Moved the complete CUI runtime into a standalone `venworkscui.swf`.
+- All: Added better error handling and fault tolerance for the new movie setup. 
+- All: Apply Starfield's embedded bold font to the auxiliary marker and bootstrap load-error messages so loader failures remain readable in game.
 
 ## Version 2.0.7 (September 27, 2026)
 
