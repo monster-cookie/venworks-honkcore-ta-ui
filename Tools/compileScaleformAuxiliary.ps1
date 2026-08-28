@@ -270,6 +270,15 @@ function Invoke-AuxiliaryCompilation {
     [Parameter(Mandatory = $true)]
     [string]$OutputPath,
 
+    [Parameter(Mandatory = $true)]
+    [int]$StageWidth,
+
+    [Parameter(Mandatory = $true)]
+    [int]$StageHeight,
+
+    [Parameter(Mandatory = $true)]
+    [int]$FrameRate,
+
     [string]$ExternSwcPath
   )
 
@@ -285,6 +294,8 @@ function Invoke-AuxiliaryCompilation {
     '-use-network=false',
     '-target-player=11.1.0',
     '-swf-version=12',
+    '-default-size', $StageWidth, $StageHeight,
+    "-default-frame-rate=$FrameRate",
     '-output', $OutputPath,
     $EntrypointPath
   )
@@ -317,6 +328,15 @@ function Assert-AuxiliaryMovie {
     [Parameter(Mandatory = $true)]
     [string]$PassName,
 
+    [Parameter(Mandatory = $true)]
+    [int]$ExpectedStageWidth,
+
+    [Parameter(Mandatory = $true)]
+    [int]$ExpectedStageHeight,
+
+    [Parameter(Mandatory = $true)]
+    [int]$ExpectedFrameRate,
+
     [string]$ExpectedSourceFingerprint,
 
     [string]$ExpectedClassFingerprint,
@@ -324,7 +344,16 @@ function Assert-AuxiliaryMovie {
     [switch]$Marker
   )
 
-  Assert-ScaleformMovieEncoding -Path $MoviePath -Context 'Generated auxiliary movie'
+  $movieMetadata = Get-ScaleformMovieMetadata `
+    -Path $MoviePath `
+    -Context 'Generated auxiliary movie' `
+    -ExpectedSignature CWS
+  if ($movieMetadata.StageWidth -ne $ExpectedStageWidth -or
+      $movieMetadata.StageHeight -ne $ExpectedStageHeight -or
+      $movieMetadata.FrameRate -ne $ExpectedFrameRate -or
+      $movieMetadata.FrameCount -ne 1) {
+    throw "Auxiliary movie must be $($ExpectedStageWidth)x$($ExpectedStageHeight) at $($ExpectedFrameRate) fps with one frame; found $($movieMetadata.StageWidth)x$($movieMetadata.StageHeight) at $($movieMetadata.FrameRate) fps with $($movieMetadata.FrameCount) frames."
+  }
   $reopenedXmlPath = Join-Path $WorkPath "$PassName-reopened.xml"
   $validationScriptsDirectory = Join-Path $WorkPath "$PassName-validation-scripts"
   Invoke-JavaJar `
@@ -438,9 +467,14 @@ $resolvedPlayerGlobalPath = Resolve-RequiredFile -Path $PlayerGlobalPath -Descri
 [xml]$manifest = Get-Content -LiteralPath $resolvedBuildManifestPath -Raw
 $build = $manifest.scaleformAuxiliaryBuild
 if (!$build -or !$build.outputFile -or !$build.documentClass -or !$build.expectedHashFile -or
-    !$build.expectedClassHashFile) {
+    !$build.expectedClassHashFile -or !$build.stageWidth -or !$build.stageHeight -or
+    !$build.frameRate) {
   throw "Invalid auxiliary build manifest: $resolvedBuildManifestPath"
 }
+$auxiliaryDefinition = Get-ScaleformAuxiliaryManifestDefinition -ManifestPath $resolvedBuildManifestPath
+$stageWidth = [int]$auxiliaryDefinition.StageWidth
+$stageHeight = [int]$auxiliaryDefinition.StageHeight
+$frameRate = [int]$auxiliaryDefinition.FrameRate
 $manifestDirectory = Split-Path -Parent $resolvedBuildManifestPath
 $entrypointPath = Resolve-RequiredFile `
   -Path (Join-Path $manifestDirectory ([string]$build.documentClass)) `
@@ -567,7 +601,10 @@ package
     Invoke-AuxiliaryCompilation `
       -EntrypointPath $compilerEntrypointPath `
       -SourceRoot $sourceRoot `
-      -OutputPath $compiledSwfPath
+      -OutputPath $compiledSwfPath `
+      -StageWidth $stageWidth `
+      -StageHeight $stageHeight `
+      -FrameRate $frameRate
     Normalize-AuxiliaryMovie `
       -InputPath $compiledSwfPath `
       -OutputPath $normalizedSwfPath `
@@ -577,6 +614,9 @@ package
       -WorkPath $buildWorkDirectory `
       -SourceProfile $sourceProfile `
       -PassName 'marker' `
+      -ExpectedStageWidth $stageWidth `
+      -ExpectedStageHeight $stageHeight `
+      -ExpectedFrameRate $frameRate `
       -Marker
     if (!$markerInspection.ValidationSource.Contains('$MAIN_Font_Bold') -or
         !$markerInspection.ValidationSource.Contains('embedFonts') -or
@@ -591,6 +631,9 @@ package
       -EntrypointPath $compilerEntrypointPath `
       -SourceRoot $sourceRoot `
       -OutputPath $firstCompiledSwfPath `
+      -StageWidth $stageWidth `
+      -StageHeight $stageHeight `
+      -FrameRate $frameRate `
       -ExternSwcPath $externSwcPath
     Normalize-AuxiliaryMovie `
       -InputPath $firstCompiledSwfPath `
@@ -600,7 +643,10 @@ package
       -MoviePath $firstNormalizedSwfPath `
       -WorkPath $buildWorkDirectory `
       -SourceProfile $sourceProfile `
-      -PassName 'first'
+      -PassName 'first' `
+      -ExpectedStageWidth $stageWidth `
+      -ExpectedStageHeight $stageHeight `
+      -ExpectedFrameRate $frameRate
     $classFingerprint = [string]$firstInspection.ClassFingerprint
     if ($UpdateExpectedHashes) {
       Write-Sha256File -Path $expectedClassHashPath -Hash $classFingerprint
@@ -634,6 +680,9 @@ package
       -EntrypointPath $compilerEntrypointPath `
       -SourceRoot $sourceRoot `
       -OutputPath $compiledSwfPath `
+      -StageWidth $stageWidth `
+      -StageHeight $stageHeight `
+      -FrameRate $frameRate `
       -ExternSwcPath $externSwcPath
     Normalize-AuxiliaryMovie `
       -InputPath $compiledSwfPath `
@@ -644,6 +693,9 @@ package
       -WorkPath $buildWorkDirectory `
       -SourceProfile $sourceProfile `
       -PassName 'final' `
+      -ExpectedStageWidth $stageWidth `
+      -ExpectedStageHeight $stageHeight `
+      -ExpectedFrameRate $frameRate `
       -ExpectedSourceFingerprint $sourceFingerprint `
       -ExpectedClassFingerprint $classFingerprint
     if ([string]$finalInspection.ClassFingerprint -cne $classFingerprint) {

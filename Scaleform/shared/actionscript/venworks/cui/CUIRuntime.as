@@ -31,7 +31,8 @@ package venworks.cui
 
    public final class CUIRuntime
    {
-      private var owner:DisplayObjectContainer;
+      private var hudOwner:DisplayObjectContainer;
+      private var displayOwner:DisplayObjectContainer;
       private var componentLayer:Sprite;
       private var diagnostics:CUIDiagnosticsPanel;
       private var loader:CUILayoutImportLoader;
@@ -60,17 +61,18 @@ package venworks.cui
       private var failed:Boolean = false;
       private var teardownPending:Boolean = false;
 
-      public function CUIRuntime(param1:DisplayObjectContainer)
+      public function CUIRuntime(param1:DisplayObjectContainer, param2:DisplayObjectContainer)
       {
          super();
-         owner = param1;
+         hudOwner = param1;
+         displayOwner = param2;
          componentLayer = new Sprite();
          componentLayer.name = "VenworksCUIComponentLayer";
          diagnostics = new CUIDiagnosticsPanel();
          diagnostics.name = "VenworksCUIDiagnosticsPanel";
-         owner.addChild(componentLayer);
-         owner.addChild(diagnostics);
-         owner.addEventListener(Event.REMOVED_FROM_STAGE,this.onOwnerRemovedFromStage);
+         displayOwner.addChild(componentLayer);
+         displayOwner.addChild(diagnostics);
+         hudOwner.addEventListener(Event.REMOVED_FROM_STAGE,this.onOwnerRemovedFromStage);
       }
 
       public function get isDisposed() : Boolean
@@ -382,12 +384,12 @@ package venworks.cui
             return;
          }
          this.teardownPending = true;
-         owner.addEventListener(Event.ENTER_FRAME,this.onDeferredComponentTeardown);
+         hudOwner.addEventListener(Event.ENTER_FRAME,this.onDeferredComponentTeardown);
       }
 
       private function onDeferredComponentTeardown(param1:Event) : void
       {
-         owner.removeEventListener(Event.ENTER_FRAME,this.onDeferredComponentTeardown);
+         hudOwner.removeEventListener(Event.ENTER_FRAME,this.onDeferredComponentTeardown);
          this.teardownPending = false;
          try
          {
@@ -708,7 +710,7 @@ package venworks.cui
          {
             this.setDiagnosticContext("VANILLA ADAPTER CREATION",target);
             adapter = new CUIVanillaVisibilityAdapter(
-               owner,
+               hudOwner,
                target,
                conditionParser.compile(String(target.@visibleWhen)),
                layoutEngine
@@ -863,10 +865,10 @@ package venworks.cui
             return;
          }
          this.disposed = true;
-         owner.removeEventListener(Event.REMOVED_FROM_STAGE,this.onOwnerRemovedFromStage);
+         hudOwner.removeEventListener(Event.REMOVED_FROM_STAGE,this.onOwnerRemovedFromStage);
          if(this.teardownPending)
          {
-            owner.removeEventListener(Event.ENTER_FRAME,this.onDeferredComponentTeardown);
+            hudOwner.removeEventListener(Event.ENTER_FRAME,this.onDeferredComponentTeardown);
             this.teardownPending = false;
          }
          this.clearListeners();
@@ -885,13 +887,13 @@ package venworks.cui
             assetManager.cancel();
          }
          this.clearComponentLayer();
-         if(componentLayer.parent === owner)
+         if(componentLayer.parent === displayOwner)
          {
-            owner.removeChild(componentLayer);
+            displayOwner.removeChild(componentLayer);
          }
-         if(diagnostics.parent === owner)
+         if(diagnostics.parent === displayOwner)
          {
-            owner.removeChild(diagnostics);
+            displayOwner.removeChild(diagnostics);
          }
       }
 

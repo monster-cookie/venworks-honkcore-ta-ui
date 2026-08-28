@@ -2,6 +2,7 @@
 <actionScriptPatch name="cui-auxiliary-bootstrap" version="1" script="HUDMenu">
   <insertions>
     <insertion position="after"><anchor><![CDATA[   import flash.events.Event;]]></anchor><content><![CDATA[
+   import flash.display.DisplayObject;
    import flash.events.IOErrorEvent;
    import flash.events.SecurityErrorEvent;
    import flash.text.TextField;
@@ -11,12 +12,13 @@
       private var VenworksCUILoader:Loader = null;
       private var VenworksCUIBridge:Object = null;
       private var VenworksCUIBootstrapDiagnostics:TextField = null;
+      private var VenworksCUIHudModeVisibility:Array = null;
       private var VenworksCUIBootstrapStarted:Boolean = false;
       private var VenworksCUIBootstrapDisposed:Boolean = false;]]></content></insertion>
+    <insertion position="after"><anchor><![CDATA[         addEventListener(Event.ADDED_TO_STAGE,this.__setPerspectiveProjection_);]]></anchor><content><![CDATA[
+         this.startVenworksCUI();]]></content></insertion>
     <insertion position="after"><anchor><![CDATA[         CENTER_GROUP_POINT.y = this.CenterGroup_mc.y;]]></anchor><content><![CDATA[
          this.reapplyVenworksCUIPlacements();]]></content></insertion>
-    <insertion position="after"><anchor><![CDATA[         super.onAddedToStage();]]></anchor><content><![CDATA[
-         this.startVenworksCUI();]]></content></insertion>
     <insertion position="after"><anchor><![CDATA[               SocialCommandIcons_mc.visible = param1.data.ModeVisibilityA[HUDUtils.SOCIAL_COMMAND_ICONS].bVisible;]]></anchor><content><![CDATA[
                this.updateVenworksCUIHudModeVisibility(param1.data.ModeVisibilityA);]]></content></insertion>
     <insertion position="before"><anchor><![CDATA[      public function ProcessUserEvent(param1:String, param2:Boolean) : Boolean]]></anchor><content><![CDATA[      private function startVenworksCUI() : void
@@ -31,6 +33,7 @@
          try
          {
             this.VenworksCUILoader = new Loader();
+            this.VenworksCUILoader.contentLoaderInfo.addEventListener(Event.INIT,this.onVenworksCUIInit,false,0,true);
             this.VenworksCUILoader.contentLoaderInfo.addEventListener(Event.COMPLETE,this.onVenworksCUIComplete,false,0,true);
             this.VenworksCUILoader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,this.onVenworksCUIError,false,0,true);
             this.VenworksCUILoader.contentLoaderInfo.addEventListener(SecurityErrorEvent.SECURITY_ERROR,this.onVenworksCUIError,false,0,true);
@@ -44,13 +47,12 @@
          }
       }
 
-      private function onVenworksCUIComplete(param1:Event) : void
+      private function onVenworksCUIInit(param1:Event) : void
       {
          if(this.VenworksCUIBootstrapDisposed || this.VenworksCUILoader == null)
          {
             return;
          }
-         this.removeVenworksCUILoadListeners();
          try
          {
             this.VenworksCUIBridge = this.VenworksCUILoader.content;
@@ -59,6 +61,44 @@
                throw new Error("Auxiliary movie does not expose initialize().");
             }
             this.VenworksCUIBridge["initialize"](this);
+            this.reapplyVenworksCUIPlacements();
+            if(this.VenworksCUIHudModeVisibility != null)
+            {
+               this.VenworksCUIBridge["updateVanillaHudModeVisibility"](this.VenworksCUIHudModeVisibility);
+            }
+            this.removeVenworksCUIDiagnostics();
+         }
+         catch(venworksInitializeError:Error)
+         {
+            this.showVenworksCUIError("CUI-AUX-INIT",venworksInitializeError.toString());
+            this.disposeVenworksCUI();
+         }
+      }
+
+      private function onVenworksCUIComplete(param1:Event) : void
+      {
+         var loadedContent:DisplayObject = null;
+         if(this.VenworksCUIBootstrapDisposed || this.VenworksCUILoader == null)
+         {
+            return;
+         }
+         this.removeVenworksCUILoadListeners();
+         try
+         {
+            loadedContent = this.VenworksCUILoader.content;
+            if(this.VenworksCUIBridge == null || loadedContent == null || loadedContent !== this.VenworksCUIBridge)
+            {
+               throw new Error("Auxiliary movie completed without its initialized entrypoint.");
+            }
+            if(loadedContent.parent !== this)
+            {
+               addChild(loadedContent);
+            }
+            this.reapplyVenworksCUIPlacements();
+            if(this.VenworksCUIHudModeVisibility != null)
+            {
+               this.VenworksCUIBridge["updateVanillaHudModeVisibility"](this.VenworksCUIHudModeVisibility);
+            }
             this.removeVenworksCUIDiagnostics();
          }
          catch(venworksInitializeError:Error)
@@ -99,11 +139,12 @@
 
       private function updateVenworksCUIHudModeVisibility(param1:Array) : void
       {
+         this.VenworksCUIHudModeVisibility = param1 == null ? null : param1.concat();
          try
          {
             if(this.VenworksCUIBridge != null && "updateVanillaHudModeVisibility" in this.VenworksCUIBridge)
             {
-               this.VenworksCUIBridge["updateVanillaHudModeVisibility"](param1);
+               this.VenworksCUIBridge["updateVanillaHudModeVisibility"](this.VenworksCUIHudModeVisibility);
             }
          }
          catch(venworksVisibilityError:Error)
@@ -118,6 +159,7 @@
          {
             return;
          }
+         this.VenworksCUILoader.contentLoaderInfo.removeEventListener(Event.INIT,this.onVenworksCUIInit);
          this.VenworksCUILoader.contentLoaderInfo.removeEventListener(Event.COMPLETE,this.onVenworksCUIComplete);
          this.VenworksCUILoader.contentLoaderInfo.removeEventListener(IOErrorEvent.IO_ERROR,this.onVenworksCUIError);
          this.VenworksCUILoader.contentLoaderInfo.removeEventListener(SecurityErrorEvent.SECURITY_ERROR,this.onVenworksCUIError);
@@ -125,6 +167,7 @@
 
       private function disposeVenworksCUI() : void
       {
+         var loadedContent:DisplayObject = null;
          if(this.VenworksCUIBootstrapDisposed)
          {
             return;
@@ -146,7 +189,16 @@
                trace("CUI-AUX-DISPOSE | " + venworksDisposeError.toString());
             }
          }
+         if(this.VenworksCUIBridge is DisplayObject)
+         {
+            loadedContent = this.VenworksCUIBridge as DisplayObject;
+            if(loadedContent.parent === this)
+            {
+               removeChild(loadedContent);
+            }
+         }
          this.VenworksCUIBridge = null;
+         this.VenworksCUIHudModeVisibility = null;
          if(this.VenworksCUILoader != null)
          {
             try

@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <scaleformAuxiliaryBuild name="venworkscui-minimalist-live"
                          outputFile="venworkscui.swf"
+                         stageWidth="1920"
+                         stageHeight="1080"
+                         frameRate="30"
                          documentClass="../../../venworkscui/VenworksCUIEntrypoint.as"
                          actionScriptSource="../../../shared/actionscript"
                          externSource="../../../venworkscui/externs"

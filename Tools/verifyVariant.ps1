@@ -519,6 +519,36 @@ Assert-NotGitLfsPointer `
   -Description "$($canonicalPluginVariant.VariantName) canonical plugin stub"
 $canonicalPluginHash = Get-Sha256 -Path $canonicalPluginPath
 
+$bootstrapPatchPath = Resolve-RequiredFile `
+  -Path (Join-Path $repositoryRoot 'Scaleform\shared\patches\cui-auxiliary-loader.xml') `
+  -Description 'CUI auxiliary loader patch'
+$bootstrapPatchSource = [System.IO.File]::ReadAllText($bootstrapPatchPath).Replace("`r`n", "`n")
+foreach ($requiredBootstrapSourceToken in @(
+  'addEventListener(Event.ADDED_TO_STAGE,this.__setPerspectiveProjection_);',
+  'this.startVenworksCUI();',
+  'addEventListener(Event.INIT,this.onVenworksCUIInit',
+  'addEventListener(Event.COMPLETE,this.onVenworksCUIComplete',
+  'this.VenworksCUIBridge["initialize"](this);',
+  'addChild(loadedContent);',
+  'removeEventListener(Event.INIT,this.onVenworksCUIInit);',
+  'removeChild(loadedContent);'
+)) {
+  if (!$bootstrapPatchSource.Contains($requiredBootstrapSourceToken)) {
+    throw "CUI auxiliary loader patch is missing '$requiredBootstrapSourceToken'."
+  }
+}
+if ($bootstrapPatchSource -match '(?s)<anchor><!\[CDATA\[\s*super\.onAddedToStage\(\);\]\]></anchor><content><!\[CDATA\[\s*this\.startVenworksCUI\(\);') {
+  throw 'CUI auxiliary loading must start from the HUDMenu constructor rather than onAddedToStage().'
+}
+
+$entrypointPath = Resolve-RequiredFile `
+  -Path (Join-Path $repositoryRoot 'Scaleform\venworkscui\VenworksCUIEntrypoint.as') `
+  -Description 'CUI auxiliary entrypoint'
+$entrypointSource = [System.IO.File]::ReadAllText($entrypointPath).Replace("`r`n", "`n")
+if (!$entrypointSource.Contains('new CUIRuntime(this.owner,this);')) {
+  throw 'CUI auxiliary entrypoint must keep the Bethesda HUD owner separate from its child display owner.'
+}
+
 foreach ($variant in $variants) {
   $profilePath = Resolve-RequiredFile `
     -Path (Join-Path $repositoryRoot "Scaleform\variants\$($variant.VariantKey)\build.psd1") `
@@ -573,9 +603,18 @@ foreach ($variant in $variants) {
     if ($actualHash -cne $expectedHash) {
       throw "$($variant.VariantName) $($movie.FileName) hash mismatch. Expected $expectedHash; found $actualHash."
     }
-    Assert-ScaleformMovieEncoding `
+    $movieMetadata = Get-ScaleformMovieMetadata `
       -Path $moviePath `
       -Context "$($variant.VariantName) $($movie.FileName)"
+    $expectedStageWidth = if ([string]$movie.FileName -ceq 'venworkscui.swf') { $movieProfile.AuxiliaryStageWidth } else { 1920 }
+    $expectedStageHeight = if ([string]$movie.FileName -ceq 'venworkscui.swf') { $movieProfile.AuxiliaryStageHeight } else { 1080 }
+    $expectedFrameRate = if ([string]$movie.FileName -ceq 'venworkscui.swf') { $movieProfile.AuxiliaryFrameRate } else { 30 }
+    if ($movieMetadata.StageWidth -ne $expectedStageWidth -or
+        $movieMetadata.StageHeight -ne $expectedStageHeight -or
+        $movieMetadata.FrameRate -ne $expectedFrameRate -or
+        $movieMetadata.FrameCount -ne 1) {
+      throw "$($variant.VariantName) $($movie.FileName) must be $($expectedStageWidth)x$($expectedStageHeight) at $($expectedFrameRate) fps with one frame; found $($movieMetadata.StageWidth)x$($movieMetadata.StageHeight) at $($movieMetadata.FrameRate) fps with $($movieMetadata.FrameCount) frames."
+    }
     $verifiedMoviePaths[[string]$movie.FileName] = $moviePath
     $movieInspections[[string]$movie.FileName] = Get-ScaleformMovieInspection `
       -Path $moviePath `
@@ -731,6 +770,22 @@ foreach ($variant in $variants) {
     throw "$($variant.VariantName) profile excludes the CUI runtime."
   }
   $runtimeSource = [string]$profiledActionScript[$runtimeRelativePath]
+  foreach ($requiredRuntimeOwnershipToken in @(
+    'private var hudOwner:DisplayObjectContainer;',
+    'private var displayOwner:DisplayObjectContainer;',
+    'public function CUIRuntime(param1:DisplayObjectContainer, param2:DisplayObjectContainer)',
+    'displayOwner.addChild(componentLayer);',
+    'displayOwner.addChild(diagnostics);',
+    'hudOwner.addEventListener(Event.REMOVED_FROM_STAGE,this.onOwnerRemovedFromStage);',
+    'new CUIVanillaVisibilityAdapter(',
+    'hudOwner,',
+    'componentLayer.parent === displayOwner',
+    'diagnostics.parent === displayOwner'
+  )) {
+    if (!$runtimeSource.Contains($requiredRuntimeOwnershipToken)) {
+      throw "$($variant.VariantName) runtime does not preserve the separate HUD and auxiliary display ownership contract: missing '$requiredRuntimeOwnershipToken'."
+    }
+  }
   $runtimeLoadMethod = [regex]::Match(
     $runtimeSource,
     '(?s)public function load\(\) : void.*?(?=\s+private function startProviderContexts)'
