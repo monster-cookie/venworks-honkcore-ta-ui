@@ -194,6 +194,7 @@ package venworks.cui
          this.providerSubscriptions.push(subscription);
          try
          {
+            BSUIDataManager.GetDataFromClient(param1,true);
             BSUIDataManager.Subscribe(param1,callback);
             subscription.state = "active";
          }
@@ -1328,6 +1329,11 @@ package venworks.cui
          this.refreshExposureTarget(param1);
          this.exposureTargetTicks[param1] = EXPOSURE_TARGET_MIN_TICKS +
             Math.floor(Math.random() * EXPOSURE_TARGET_TICK_RANGE);
+      }
+
+      private function exposureValueInCurrentRange(param1:Number) : Boolean
+      {
+         return !isNaN(param1) && isFinite(param1) && param1 >= 0 && param1 <= 1;
       }
 
       private function refreshExposureTarget(param1:int) : void

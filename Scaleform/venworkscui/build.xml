@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scaleformAuxiliaryBuild name="venworkscui-shared"
+                         outputFile="venworkscui.swf"
+                         documentClass="VenworksCUIEntrypoint.as"
+                         actionScriptSource="../shared/actionscript"
+                         externSource="externs"
+                         expectedHashFile="validation/expected.sha256"
+                         expectedClassHashFile="validation/expected-classes.sha256" />

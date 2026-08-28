@@ -1,5 +1,7 @@
 package venworks.cui
 {
+   import venworks.cui.components.CUISymbol;
+
    public final class CUILayoutParser
    {
       private var meterStyles:Object;
@@ -680,7 +682,7 @@ package venworks.cui
             this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","name","color","fit","alignX","alignY"]);
             this.requirePositiveBounds(param1);
             this.requireSymbolKey(param1,"name");
-            if(!venworks.cui.components.CUISymbol.isAllowlisted(this.resolveAttributeValue(param1,"name")))
+            if(!CUISymbol.isAllowlisted(this.resolveAttributeValue(param1,"name")))
             {
                throw new Error("INVALID|Embedded symbol is not allowlisted: " + this.resolveAttributeValue(param1,"name"));
             }

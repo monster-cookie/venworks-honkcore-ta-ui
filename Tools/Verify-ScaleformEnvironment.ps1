@@ -236,6 +236,8 @@ Write-Host "-----------"
 
 $Mxmlc = Join-Path $FlexRoot "bin\mxmlc.bat"
 $Compc = Join-Path $FlexRoot "bin\compc.bat"
+$MxmlcJar = Join-Path $FlexRoot "lib\mxmlc.jar"
+$CompcJar = Join-Path $FlexRoot "lib\compc.jar"
 $Asc = Join-Path $FlexRoot "lib\asc.jar"
 
 Write-TestResult `
@@ -252,6 +254,16 @@ Write-TestResult `
     -Name "compc compiler" `
     -Success (Test-Path $Compc) `
     -Details $Compc
+
+Write-TestResult `
+    -Name "mxmlc compiler library" `
+    -Success (Test-Path $MxmlcJar) `
+    -Details $MxmlcJar
+
+Write-TestResult `
+    -Name "compc compiler library" `
+    -Success (Test-Path $CompcJar) `
+    -Details $CompcJar
 
 if (Test-Path $Asc) {
     Write-TestResult `
@@ -322,20 +334,24 @@ if (Test-Path $FrameworksRoot) {
             -ErrorAction SilentlyContinue
     )
 
-    if ($PlayerGlobals.Count -gt 0) {
+    if ($PlayerGlobals.Count -eq 1) {
         Write-TestResult `
             -Name "playerglobal.swc" `
             -Success $true `
             -Details $PlayerGlobals[0].FullName
     }
     else {
-        Write-WarningResult `
+        Write-TestResult `
             -Name "playerglobal.swc" `
-            -Details (
-                "Not found. The Scaleform project may provide or require " +
-                "a specific version."
-            )
+            -Success $false `
+            -Details "Expected exactly one playerglobal.swc; found $($PlayerGlobals.Count)."
     }
+}
+else {
+    Write-TestResult `
+        -Name "playerglobal.swc" `
+        -Success $false `
+        -Details "Flex frameworks directory was not found: $FrameworksRoot"
 }
 
 # ---------------------------------------------------------------------------

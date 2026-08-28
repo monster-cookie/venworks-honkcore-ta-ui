@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <scaleformBuild name="hudmenu"
+                mode="auxiliary-bootstrap"
                 inputFile="hudmenu.gfx"
                 outputFile="hudmenu.gfx"
                 vanillaHashFile="vanilla.sha256"
                 expectedHashFile="validation/expected.sha256"
-                abcSeedPatch="../shared/patches/cui-component-abc-seed.xml"
-                actionScriptSource="../shared/actionscript"
-                actionScriptPatch="../shared/patches/cui-probe-loader.xml" />
+                actionScriptPatch="../shared/patches/cui-auxiliary-loader.xml" />

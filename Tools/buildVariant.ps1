@@ -26,7 +26,9 @@ param(
 
   [switch]$UpdateExpectedHashes,
 
-  [switch]$Committed
+  [switch]$Committed,
+
+  [switch]$AuxiliaryMarkerProbe
 )
 
 $PSNativeCommandUseErrorActionPreference = $true
@@ -260,12 +262,25 @@ $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
 if ($variants.Count -eq 0) {
   throw "At least one variant must be selected."
 }
+if ($AuxiliaryMarkerProbe) {
+  if ($Committed) {
+    throw 'The auxiliary marker probe cannot run in committed-artifact mode.'
+  }
+  if ($UpdateExpectedHashes) {
+    throw 'The auxiliary marker probe cannot update production expected hashes.'
+  }
+  if ($variants.Count -ne 1 -or [string]$variants[0].VariantKey -cne 'MIN') {
+    throw 'The auxiliary marker probe is restricted to -VariantKeys MIN.'
+  }
+}
 
 $resolvedWorkDirectory = [System.IO.Path]::GetFullPath($WorkDirectory)
 New-Item -ItemType Directory -Force -Path $resolvedWorkDirectory | Out-Null
 $buildDirectory = Join-Path $resolvedWorkDirectory ([guid]::NewGuid().ToString("N"))
 $variantBuildProfiles = @{}
-$movieProfiles = @{}
+$variantMovieProfiles = @{}
+$auxiliaryProfiles = @{}
+$baseManifestPaths = $null
 foreach ($variant in $variants) {
   $profilePath = Resolve-RequiredFile `
     -Path (Join-Path $repositoryRoot "Scaleform\variants\$($variant.VariantKey)\build.psd1") `
@@ -275,19 +290,26 @@ foreach ($variant in $variants) {
     -RepositoryRoot $repositoryRoot `
     -VariantBuildProfile $variantBuildProfile
   $variantBuildProfiles[[string]$variant.VariantKey] = $variantBuildProfile
-  if ($movieProfiles.ContainsKey($movieProfile.Name)) {
-    $existingManifestPaths = @($movieProfiles[$movieProfile.Name].ManifestPaths)
-    if (($existingManifestPaths -join "|") -cne (@($movieProfile.ManifestPaths) -join "|")) {
-      throw "Scaleform movie profile '$($movieProfile.Name)' resolves to conflicting build manifests."
+  $variantMovieProfiles[[string]$variant.VariantKey] = $movieProfile
+  if ($null -eq $baseManifestPaths) {
+    $baseManifestPaths = @($movieProfile.ManifestPaths)
+  }
+  elseif (($baseManifestPaths -join '|') -cne (@($movieProfile.ManifestPaths) -join '|')) {
+    throw 'All variants must use the same shared HUD bootstrap manifests.'
+  }
+  if ($auxiliaryProfiles.ContainsKey($movieProfile.Name)) {
+    if ([string]$auxiliaryProfiles[$movieProfile.Name].AuxiliaryManifestPath -cne
+        [string]$movieProfile.AuxiliaryManifestPath) {
+      throw "Scaleform auxiliary profile '$($movieProfile.Name)' resolves to conflicting build manifests."
     }
   }
   else {
-    $movieProfiles[$movieProfile.Name] = $movieProfile
+    $auxiliaryProfiles[$movieProfile.Name] = $movieProfile
   }
 }
 
 try {
-  $movieProfileDirectories = @{}
+  $auxiliaryProfileDirectories = @{}
   $profileMovieNames = @(
     "hudmenu.gfx",
     "hudmenu.swf",
@@ -300,34 +322,60 @@ try {
     "hudmessagesmenu_lrg.gfx",
     "hudmessagesmenu_lrg.swf"
   )
-  foreach ($movieProfileName in @($movieProfiles.Keys | Sort-Object)) {
-    $movieProfile = $movieProfiles[$movieProfileName]
-    $movieProfileDirectory = Join-Path (Join-Path $buildDirectory "movies") $movieProfileName
-    New-Item -ItemType Directory -Force -Path $movieProfileDirectory | Out-Null
-    $movieProfileDirectories[$movieProfileName] = $movieProfileDirectory
-    $compileArguments = @{
+  $baseMovieDirectory = Join-Path (Join-Path $buildDirectory 'movies') 'shared-bootstrap'
+  New-Item -ItemType Directory -Force -Path $baseMovieDirectory | Out-Null
+  $compileArguments = @{
+    JavaPath = $JavaPath
+    JpexsJarPath = $JpexsJarPath
+    VanillaInterfacePath = $VanillaInterfacePath
+    OutputDirectory = $baseMovieDirectory
+    WorkDirectory = $resolvedWorkDirectory
+    ManifestPath = @($baseManifestPaths)
+    SkipOverrides = $true
+  }
+  if ($KeepWork) {
+    $compileArguments.KeepWork = $true
+  }
+  if ($UpdateExpectedHashes) {
+    $compileArguments.UpdateExpectedHashes = $true
+  }
+  if ($AuxiliaryMarkerProbe) {
+    $compileArguments.AuxiliaryMarkerProbe = $true
+  }
+  Write-Host -ForegroundColor Green 'Compiling the shared validated HUD bootstrap movies'
+  & (Join-Path $PSScriptRoot 'compileScaleform.ps1') @compileArguments
+  foreach ($movieName in $profileMovieNames) {
+    [void](Resolve-RequiredFile `
+      -Path (Join-Path $baseMovieDirectory $movieName) `
+      -Description "shared compiled movie '$movieName'")
+  }
+
+  foreach ($movieProfileName in @($auxiliaryProfiles.Keys | Sort-Object)) {
+    $movieProfile = $auxiliaryProfiles[$movieProfileName]
+    $auxiliaryProfileDirectory = Join-Path (Join-Path $buildDirectory 'movies') "auxiliary-$movieProfileName"
+    New-Item -ItemType Directory -Force -Path $auxiliaryProfileDirectory | Out-Null
+    $auxiliaryProfileDirectories[$movieProfileName] = $auxiliaryProfileDirectory
+    $auxiliaryCompileArguments = @{
       JavaPath = $JavaPath
       JpexsJarPath = $JpexsJarPath
-      VanillaInterfacePath = $VanillaInterfacePath
-      OutputDirectory = $movieProfileDirectory
+      OutputDirectory = $auxiliaryProfileDirectory
       WorkDirectory = $resolvedWorkDirectory
-      ManifestPath = @($movieProfile.ManifestPaths)
-      SkipOverrides = $true
+      BuildManifestPath = $movieProfile.AuxiliaryManifestPath
     }
     if ($KeepWork) {
-      $compileArguments.KeepWork = $true
+      $auxiliaryCompileArguments.KeepWork = $true
     }
     if ($UpdateExpectedHashes) {
-      $compileArguments.UpdateExpectedHashes = $true
+      $auxiliaryCompileArguments.UpdateExpectedHashes = $true
     }
-
-    Write-Host -ForegroundColor Green "Compiling the '$movieProfileName' validated Scaleform movies"
-    & (Join-Path $PSScriptRoot "compileScaleform.ps1") @compileArguments
-    foreach ($movieName in $profileMovieNames) {
-      [void](Resolve-RequiredFile `
-        -Path (Join-Path $movieProfileDirectory $movieName) `
-        -Description "$movieProfileName compiled movie '$movieName'")
+    if ($AuxiliaryMarkerProbe) {
+      $auxiliaryCompileArguments.MarkerProbe = $true
     }
+    Write-Host -ForegroundColor Green "Compiling the '$movieProfileName' validated auxiliary movie"
+    & (Join-Path $PSScriptRoot 'compileScaleformAuxiliary.ps1') @auxiliaryCompileArguments
+    [void](Resolve-RequiredFile `
+      -Path (Join-Path $auxiliaryProfileDirectory 'venworkscui.swf') `
+      -Description "$movieProfileName auxiliary movie")
   }
 
   $sharedMovieDirectory = Join-Path (Join-Path $buildDirectory "movies") "shared-overrides"
@@ -355,7 +403,8 @@ try {
 
   foreach ($variant in $variants) {
     $variantBuildProfile = $variantBuildProfiles[[string]$variant.VariantKey]
-    $movieProfileDirectory = $movieProfileDirectories[[string]$variantBuildProfile.MovieProfile]
+    $movieProfile = $variantMovieProfiles[[string]$variant.VariantKey]
+    $auxiliaryProfileDirectory = $auxiliaryProfileDirectories[[string]$movieProfile.Name]
 
     Assert-UniqueSafeFileNames -FileNames @($variantBuildProfile.ComponentFileNames) -Context "$($variant.VariantName) component profile"
     Assert-UniqueSafeFileNames -FileNames @($variantBuildProfile.AssetFileNames) -Context "$($variant.VariantName) asset profile"
@@ -398,7 +447,7 @@ try {
     New-Item -ItemType Directory -Force -Path $interfaceOutputDirectory | Out-Null
     foreach ($movieName in $profileMovieNames) {
       Copy-Item `
-        -LiteralPath (Join-Path $movieProfileDirectory $movieName) `
+        -LiteralPath (Join-Path $baseMovieDirectory $movieName) `
         -Destination (Join-Path $interfaceOutputDirectory $movieName) `
         -Force
     }
@@ -408,6 +457,10 @@ try {
         -Destination (Join-Path $interfaceOutputDirectory $movieName) `
         -Force
     }
+    Copy-Item `
+      -LiteralPath (Join-Path $auxiliaryProfileDirectory 'venworkscui.swf') `
+      -Destination (Join-Path $interfaceOutputDirectory 'venworkscui.swf') `
+      -Force
 
     $cuiOutputDirectory = Join-Path $interfaceOutputDirectory "VenworksCUI"
     $componentOutputDirectory = Join-Path $cuiOutputDirectory "components"

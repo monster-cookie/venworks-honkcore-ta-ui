@@ -150,6 +150,7 @@ package venworks.cui
          this.providerSubscriptions.push(subscription);
          try
          {
+            BSUIDataManager.GetDataFromClient(param1,true);
             BSUIDataManager.Subscribe(param1,callback);
             subscription.state = "active";
          }

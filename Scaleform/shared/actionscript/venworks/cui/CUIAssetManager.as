@@ -15,6 +15,7 @@ package venworks.cui
       private var assets:Object;
       private var pending:int;
       private var failed:Boolean;
+      private var cancelled:Boolean;
       private var failureMessage:String;
       private var paletteResolver:CUIPaletteResolver;
 
@@ -28,6 +29,10 @@ package venworks.cui
 
       public function load(param1:XML) : void
       {
+         if(cancelled)
+         {
+            return;
+         }
          this.collect(param1);
          if(pending == 0)
          {
@@ -97,6 +102,10 @@ package venworks.cui
       {
          var record:Object = this.findByLoader(param1.currentTarget);
          var config:XML = null;
+         if(cancelled)
+         {
+            return;
+         }
          if(record == null)
          {
             this.fail("SVG loader completed without a matching component.");
@@ -146,7 +155,7 @@ package venworks.cui
 
       private function fail(param1:String) : void
       {
-         if(failed)
+         if(failed || cancelled)
          {
             return;
          }
@@ -154,6 +163,27 @@ package venworks.cui
          failureMessage = param1;
          this.clearAllListeners();
          dispatchEvent(new Event(Event.CANCEL));
+      }
+
+      public function cancel() : void
+      {
+         var record:Object = null;
+         if(cancelled)
+         {
+            return;
+         }
+         cancelled = true;
+         this.clearAllListeners();
+         for each(record in records)
+         {
+            try
+            {
+               URLLoader(record.loader).close();
+            }
+            catch(param1:Error)
+            {
+            }
+         }
       }
 
       private function findByLoader(param1:Object) : Object

@@ -270,6 +270,10 @@ $movies = @(
   [pscustomobject]@{
     FileName = 'hudmessagesmenu_lrg.swf'
     ExpectedHashPath = 'Scaleform/hudmessagesmenu_lrg/validation/expected-swf.sha256'
+  },
+  [pscustomobject]@{
+    FileName = 'venworkscui.swf'
+    ExpectedHashPath = 'Scaleform/venworkscui/validation/expected.sha256'
   }
 )
 
@@ -339,11 +343,11 @@ foreach ($variant in $variants) {
 
 foreach ($movie in $movies) {
   if (@($movieHashes[$movie.FileName] | Select-Object -Unique).Count -ne 1) {
-    throw "The four staged $($movie.FileName) files are not byte-identical."
+    throw "The four themed staged $($movie.FileName) files are not byte-identical."
   }
 }
 
-Write-Host "Verified committed Scaleform movie hashes and complete staged VenworksCUI payloads for all five variants."
+Write-Host "Verified committed Scaleform movie hashes and complete staged VenworksCUI payloads for the four themed variants."
 
 $archive2ScriptReferences = @(
   & git -C $repositoryRoot grep -l -F "Archive2.exe" -- `
@@ -358,6 +362,30 @@ if ($archive2ScriptReferences.Count -ne 1 -or
   throw "Tools/createPackages.ps1 must remain the only PowerShell script that invokes Archive2.exe. Found: $($archive2ScriptReferences -join ', ')"
 }
 Write-Host "Verified that createPackages.ps1 exclusively owns Archive2 invocation."
+
+$packageScriptPath = Join-Path $repositoryRoot 'Tools/createPackages.ps1'
+$packageScriptSource = [System.IO.File]::ReadAllText($packageScriptPath)
+$productionGuardIndex = $packageScriptSource.IndexOf(
+  'Verified every selected production auxiliary movie before archive mutation.',
+  [System.StringComparison]::Ordinal
+)
+$archiveRemovalIndex = $packageScriptSource.IndexOf(
+  'Remove-Item -LiteralPath $archivePath -Force',
+  [System.StringComparison]::Ordinal
+)
+$archiveInvocationIndex = $packageScriptSource.IndexOf(
+  '& $archive2Path @archiveArguments',
+  [System.StringComparison]::Ordinal
+)
+if ($productionGuardIndex -lt 0 -or
+    $archiveRemovalIndex -lt 0 -or
+    $archiveInvocationIndex -lt 0 -or
+    $productionGuardIndex -gt $archiveRemovalIndex -or
+    $productionGuardIndex -gt $archiveInvocationIndex -or
+    !$packageScriptSource.Contains('staged venworkscui.swf is not the production auxiliary movie')) {
+  throw 'createPackages.ps1 must reject a non-production auxiliary movie before deleting or creating archives.'
+}
+Write-Host 'Verified the pre-Archive2 production auxiliary movie guard.'
 
 & (Join-Path $PSScriptRoot "verifyVariant.ps1") `
   -Committed

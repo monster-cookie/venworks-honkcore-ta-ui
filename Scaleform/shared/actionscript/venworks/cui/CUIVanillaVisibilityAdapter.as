@@ -2,6 +2,7 @@ package venworks.cui
 {
    import flash.display.DisplayObject;
    import flash.display.DisplayObjectContainer;
+   import flash.utils.getDefinitionByName;
 
    public final class CUIVanillaVisibilityAdapter
    {
@@ -188,25 +189,26 @@ package venworks.cui
       private function getHudModeIndex(param1:String) : int
       {
          var targetName:String = normalizeTarget(param1);
+         var hudUtils:Object = getDefinitionByName("HUDUtils");
          if(targetName == "topcenter")
          {
-            return int(HUDUtils.TOP_CENTER_GROUP);
+            return int(hudUtils["TOP_CENTER_GROUP"]);
          }
          if(targetName == "bottomleft")
          {
-            return int(HUDUtils.BOTTOM_LEFT_GROUP);
+            return int(hudUtils["BOTTOM_LEFT_GROUP"]);
          }
          if(targetName == "rightmeters")
          {
-            return int(HUDUtils.RIGHT_METERS);
+            return int(hudUtils["RIGHT_METERS"]);
          }
          if(targetName == "socialcommandicons")
          {
-            return int(HUDUtils.SOCIAL_COMMAND_ICONS);
+            return int(hudUtils["SOCIAL_COMMAND_ICONS"]);
          }
          if(targetName == "floatingquestmarkers")
          {
-            return int(HUDUtils.FLOATING_QUEST_MARKERS);
+            return int(hudUtils["FLOATING_QUEST_MARKERS"]);
          }
          return -1;
       }

@@ -387,6 +387,97 @@ function Assert-Inventory {
   }
 }
 
+function Get-ScaleformMovieInspection {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Path,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Context
+  )
+
+  $movieBytes = [System.IO.File]::ReadAllBytes($Path)
+  $signature = [System.Text.Encoding]::ASCII.GetString($movieBytes, 0, 3)
+  if ($signature -ceq "CWS") {
+    $compressedStream = [System.IO.MemoryStream]::new(
+      $movieBytes,
+      8,
+      $movieBytes.Length - 8,
+      $false
+    )
+    $decompressedStream = [System.IO.MemoryStream]::new()
+    try {
+      $zlibStream = [System.IO.Compression.ZLibStream]::new(
+        $compressedStream,
+        [System.IO.Compression.CompressionMode]::Decompress
+      )
+      try {
+        $zlibStream.CopyTo($decompressedStream)
+      }
+      finally {
+        $zlibStream.Dispose()
+      }
+      $payloadBytes = $decompressedStream.ToArray()
+    }
+    finally {
+      $decompressedStream.Dispose()
+      $compressedStream.Dispose()
+    }
+    $uncompressedBytes = [byte[]]::new($payloadBytes.Length + 8)
+    [System.Array]::Copy($movieBytes, 0, $uncompressedBytes, 0, 8)
+    [System.Array]::Copy($payloadBytes, 0, $uncompressedBytes, 8, $payloadBytes.Length)
+    $movieBytes = $uncompressedBytes
+  }
+  elseif ($signature -cne "GFX") {
+    throw "$Context has unsupported Scaleform signature '$signature'."
+  }
+
+  if ($movieBytes.Length -lt 14) {
+    throw "$Context is too short to contain a frame header and tags."
+  }
+  $rectBitCount = 5 + (4 * ([int]$movieBytes[8] -shr 3))
+  $rectByteCount = [int][Math]::Ceiling($rectBitCount / 8.0)
+  $tagOffset = 8 + $rectByteCount + 4
+  if ($tagOffset -ge $movieBytes.Length) {
+    throw "$Context contains an invalid frame header."
+  }
+
+  $abcCount = 0
+  $endTagFound = $false
+  while ($tagOffset + 2 -le $movieBytes.Length) {
+    $tagHeader = [int]$movieBytes[$tagOffset] -bor ([int]$movieBytes[$tagOffset + 1] -shl 8)
+    $tagOffset += 2
+    $tagCode = $tagHeader -shr 6
+    $tagLength = $tagHeader -band 0x3F
+    if ($tagLength -eq 0x3F) {
+      if ($tagOffset + 4 -gt $movieBytes.Length) {
+        throw "$Context contains a truncated long tag header."
+      }
+      $tagLength = [System.BitConverter]::ToUInt32($movieBytes, $tagOffset)
+      $tagOffset += 4
+    }
+    if ([uint64]$tagOffset + [uint64]$tagLength -gt [uint64]$movieBytes.Length) {
+      throw "$Context contains a tag that extends beyond the movie."
+    }
+    if ($tagCode -eq 72 -or $tagCode -eq 82) {
+      $abcCount++
+    }
+    $tagOffset += [int]$tagLength
+    if ($tagCode -eq 0) {
+      $endTagFound = $true
+      break
+    }
+  }
+  if (!$endTagFound) {
+    throw "$Context does not contain a terminating End tag."
+  }
+
+  return [pscustomobject]@{
+    AbcCount = $abcCount
+    Text = [System.Text.Encoding]::UTF8.GetString($movieBytes)
+  }
+}
+
 if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction SilentlyContinue)) {
   if ($Committed) {
     . "$PSScriptRoot\sharedConfig.ps1" -SkipEnvironment
@@ -436,6 +527,7 @@ foreach ($variant in $variants) {
   $movieProfile = Get-VariantScaleformMovieProfile `
     -RepositoryRoot $repositoryRoot `
     -VariantBuildProfile $variantBuildProfile
+  $sourceProfile = $movieProfile.SourceProfile
 
   $stagingPath = Resolve-RequiredDirectory `
     -Path (Join-Path $repositoryRoot ([string]$variant.StagingFolderPath)) `
@@ -465,7 +557,15 @@ foreach ($variant in $variants) {
   $expectedCuiInventory += @($variantBuildProfile.PaletteFileNames | ForEach-Object { "palettes/$_" })
   Assert-Inventory -RootPath $cuiPath -ExpectedPaths $expectedCuiInventory -Description "$($variant.VariantName) CUI payload"
 
+  $expectedInterfaceInventory = @($movieProfile.MovieDefinitions | ForEach-Object { [string]$_.FileName })
+  $expectedInterfaceInventory += @($expectedCuiInventory | ForEach-Object { "VenworksCUI/$_" })
+  Assert-Inventory `
+    -RootPath $interfacePath `
+    -ExpectedPaths $expectedInterfaceInventory `
+    -Description "$($variant.VariantName) complete Interface payload"
+
   $verifiedMoviePaths = @{}
+  $movieInspections = @{}
   foreach ($movie in @($movieProfile.MovieDefinitions)) {
     $moviePath = Resolve-RequiredFile -Path (Join-Path $interfacePath $movie.FileName) -Description "$($variant.VariantName) $($movie.FileName)"
     $expectedHash = Read-ExpectedSha256 -Path $movie.ExpectedHashPath
@@ -477,6 +577,225 @@ foreach ($variant in $variants) {
       -Path $moviePath `
       -Context "$($variant.VariantName) $($movie.FileName)"
     $verifiedMoviePaths[[string]$movie.FileName] = $moviePath
+    $movieInspections[[string]$movie.FileName] = Get-ScaleformMovieInspection `
+      -Path $moviePath `
+      -Context "$($variant.VariantName) $($movie.FileName)"
+  }
+
+  foreach ($baseHudMovieName in @('hudmenu.gfx', 'hudmenu.swf', 'hudmenu_lrg.gfx', 'hudmenu_lrg.swf')) {
+    $inspection = $movieInspections[$baseHudMovieName]
+    if ($inspection.AbcCount -ne 1) {
+      throw "$($variant.VariantName) $baseHudMovieName must contain exactly one Bethesda ABC; found $($inspection.AbcCount)."
+    }
+    foreach ($requiredBootstrapToken in @(
+      'venworkscui.swf',
+      'CUI-AUX-LOAD',
+      'initialize',
+      'updateVanillaHudModeVisibility',
+      'dispose',
+      '$MAIN_Font_Bold',
+      'embedFonts',
+      'defaultTextFormat',
+      'setTextFormat'
+    )) {
+      if (!$inspection.Text.Contains($requiredBootstrapToken)) {
+        throw "$($variant.VariantName) $baseHudMovieName is missing auxiliary bootstrap token '$requiredBootstrapToken'."
+      }
+    }
+    foreach ($forbiddenRuntimeToken in @(
+      'CUIRuntime',
+      'CUILayoutImportLoader',
+      'CUIPlayerHudDataContext',
+      'CUIConditionContext',
+      'CUISvgParser',
+      'cui-component-abc-seed'
+    )) {
+      if ($inspection.Text.Contains($forbiddenRuntimeToken)) {
+        throw "$($variant.VariantName) $baseHudMovieName embeds CUI runtime token '$forbiddenRuntimeToken'."
+      }
+    }
+  }
+
+  $auxiliaryInspection = $movieInspections['venworkscui.swf']
+  if ($auxiliaryInspection.AbcCount -ne 1) {
+    throw "$($variant.VariantName) venworkscui.swf must contain exactly one CUI ABC; found $($auxiliaryInspection.AbcCount)."
+  }
+  foreach ($requiredAuxiliaryToken in @(
+    'VenworksCUIEntrypoint',
+    'CUIRuntime',
+    'CUILayoutImportLoader',
+    'CUIPlayerHudDataContext',
+    'CUIConditionContext',
+    'GetDataFromClient',
+    'initialize',
+    'reapplyVanillaPlacements',
+    'updateVanillaHudModeVisibility',
+    'dispose'
+  ) + @($sourceProfile.RequiredBytecodeTokens) + @($sourceProfile.ValueProviders) + @($sourceProfile.ConditionProviders)) {
+    if (!$auxiliaryInspection.Text.Contains([string]$requiredAuxiliaryToken)) {
+      throw "$($variant.VariantName) venworkscui.swf is missing '$requiredAuxiliaryToken'."
+    }
+  }
+  if ($auxiliaryInspection.Text.Contains('VENWORKS AUX LOADED')) {
+    throw "$($variant.VariantName) venworkscui.swf retains the marker-probe payload."
+  }
+  foreach ($forbiddenAuxiliaryToken in @($sourceProfile.ForbiddenBytecodeTokens)) {
+    if ($auxiliaryInspection.Text.Contains([string]$forbiddenAuxiliaryToken)) {
+      throw "$($variant.VariantName) venworkscui.swf contains forbidden token '$forbiddenAuxiliaryToken'."
+    }
+  }
+  $sourceFingerprint = Get-ScaleformAuxiliarySourceFingerprint `
+    -ManifestPath $movieProfile.AuxiliaryManifestPath
+  $expectedClassFingerprint = Read-ExpectedSha256 `
+    -Path $movieProfile.AuxiliaryExpectedClassHashPath
+  foreach ($fingerprintToken in @(
+    "VENWORKS_CUI_SOURCE_SHA256:$sourceFingerprint",
+    "VENWORKS_CUI_CLASSES_SHA256:$expectedClassFingerprint"
+  )) {
+    if (!$auxiliaryInspection.Text.Contains($fingerprintToken)) {
+      throw "$($variant.VariantName) venworkscui.swf is not bound to '$fingerprintToken'."
+    }
+  }
+
+  $actionScriptSourceRoot = Resolve-RequiredDirectory `
+    -Path (Join-Path $repositoryRoot 'Scaleform\shared\actionscript') `
+    -Description "$($variant.VariantName) ActionScript source directory"
+  $profiledActionScript = @{}
+  foreach ($sourceFile in @(Get-ChildItem -LiteralPath $actionScriptSourceRoot -Recurse -File -Filter '*.as')) {
+    $relativeSourcePath = $sourceFile.FullName.Substring($actionScriptSourceRoot.Length + 1).Replace(
+      [System.IO.Path]::AltDirectorySeparatorChar,
+      [System.IO.Path]::DirectorySeparatorChar
+    )
+    if ($relativeSourcePath -in $sourceProfile.ExcludedActionScriptPaths) {
+      continue
+    }
+    $effectiveSourcePath = Get-ScaleformProfileActionScriptPath `
+      -SourceProfile $sourceProfile `
+      -SourcePath $sourceFile.FullName `
+      -RelativePath $relativeSourcePath
+    $profiledActionScript[$relativeSourcePath] = if ($null -ne $sourceProfile.ActionScriptPatchPath) {
+      Get-ScaleformPatchedActionScript `
+        -SourcePath $effectiveSourcePath `
+        -RelativePath $relativeSourcePath `
+        -PatchPath $sourceProfile.ActionScriptPatchPath
+    }
+    else {
+      [System.IO.File]::ReadAllText($effectiveSourcePath).Replace("`r`n", "`n")
+    }
+  }
+  $transformedSource = @($profiledActionScript.Values) -join "`n"
+  foreach ($requiredRuntimeToken in @($sourceProfile.RequiredBytecodeTokens)) {
+    if (!$transformedSource.Contains([string]$requiredRuntimeToken)) {
+      throw "$($variant.VariantName) transformed ActionScript is missing required runtime token '$requiredRuntimeToken'."
+    }
+  }
+  foreach ($forbiddenRuntimeToken in @($sourceProfile.ForbiddenBytecodeTokens)) {
+    if ($transformedSource.Contains([string]$forbiddenRuntimeToken)) {
+      throw "$($variant.VariantName) transformed ActionScript retains forbidden token '$forbiddenRuntimeToken'."
+    }
+  }
+  $playerContextRelativePath = [System.IO.Path]::Combine(
+    'venworks',
+    'cui',
+    'CUIPlayerHudDataContext.as'
+  )
+  $conditionContextRelativePath = [System.IO.Path]::Combine(
+    'venworks',
+    'cui',
+    'CUIConditionContext.as'
+  )
+  if (!$profiledActionScript.ContainsKey($playerContextRelativePath) -or
+      !$profiledActionScript.ContainsKey($conditionContextRelativePath)) {
+    throw "$($variant.VariantName) profile excludes a required provider context."
+  }
+  $actualValueProviders = @(
+    [regex]::Matches([string]$profiledActionScript[$playerContextRelativePath], 'subscribeProvider\("([^"]+)"') |
+      ForEach-Object { $_.Groups[1].Value }
+  )
+  $actualConditionProviders = @(
+    [regex]::Matches([string]$profiledActionScript[$conditionContextRelativePath], 'subscribeProvider\("([^"]+)"') |
+      ForEach-Object { $_.Groups[1].Value }
+  )
+  if ([string]::Join("`n", $actualValueProviders) -cne [string]::Join("`n", @($sourceProfile.ValueProviders)) -or
+      [string]::Join("`n", $actualConditionProviders) -cne [string]::Join("`n", @($sourceProfile.ConditionProviders))) {
+    throw "$($variant.VariantName) transformed ActionScript does not preserve the declared provider inventories."
+  }
+  $actualCrossContextProviderCount = @(
+    $actualValueProviders | Where-Object { $_ -in $actualConditionProviders } | Select-Object -Unique
+  ).Count
+  if ($actualCrossContextProviderCount -ne $sourceProfile.CrossContextProviderCount) {
+    throw "$($variant.VariantName) transformed ActionScript has $actualCrossContextProviderCount cross-context providers; expected $($sourceProfile.CrossContextProviderCount)."
+  }
+  $runtimeRelativePath = [System.IO.Path]::Combine('venworks', 'cui', 'CUIRuntime.as')
+  if (!$profiledActionScript.ContainsKey($runtimeRelativePath)) {
+    throw "$($variant.VariantName) profile excludes the CUI runtime."
+  }
+  $runtimeSource = [string]$profiledActionScript[$runtimeRelativePath]
+  $runtimeLoadMethod = [regex]::Match(
+    $runtimeSource,
+    '(?s)public function load\(\) : void.*?(?=\s+private function startProviderContexts)'
+  )
+  $providerStartupMethod = [regex]::Match(
+    $runtimeSource,
+    '(?s)private function startProviderContexts\(\) : void.*?(?=\s+public function reapplyVanillaPlacements)'
+  )
+  if (!$runtimeLoadMethod.Success -or
+      !$runtimeLoadMethod.Value.Contains('this.startProviderContexts();') -or
+      !$runtimeLoadMethod.Value.Contains('if(this.failed)') -or
+      $runtimeLoadMethod.Value.IndexOf('this.startProviderContexts();') -gt $runtimeLoadMethod.Value.IndexOf('loader.load();') -or
+      !$providerStartupMethod.Success -or
+      !$providerStartupMethod.Value.Contains('valueContext.start();') -or
+      !$providerStartupMethod.Value.Contains('if(this.failed)') -or
+      !$providerStartupMethod.Value.Contains('conditionContext.start();')) {
+    throw "$($variant.VariantName) runtime must start both provider contexts before loading external configuration."
+  }
+  $providerErrorMethod = [regex]::Match(
+    $runtimeSource,
+    '(?s)private function onProviderError\(.*?(?=\s+private function showLiveEventError)'
+  )
+  $terminalFailureMethod = [regex]::Match(
+    $runtimeSource,
+    '(?s)private function enterTerminalFailure\(\) : void.*?(?=\s+private function showRuntimeError)'
+  )
+  if (!$providerErrorMethod.Success -or
+      !$providerErrorMethod.Value.Contains('this.enterTerminalFailure();') -or
+      !$providerErrorMethod.Value.Contains('this.deferComponentTeardown();') -or
+      $providerErrorMethod.Value.IndexOf('this.enterTerminalFailure();') -gt
+        $providerErrorMethod.Value.IndexOf('this.deferComponentTeardown();') -or
+      !$terminalFailureMethod.Success -or
+      !$terminalFailureMethod.Value.Contains('this.failed = true;') -or
+      !$terminalFailureMethod.Value.Contains('loader.cancel();') -or
+      !$terminalFailureMethod.Value.Contains('paletteLoader.cancel();') -or
+      !$terminalFailureMethod.Value.Contains('assetManager.cancel();') -or
+      [regex]::Matches($runtimeSource, 'if\(this\.disposed \|\| this\.failed\)').Count -lt 5) {
+    throw "$($variant.VariantName) runtime does not terminally contain provider faults across its asynchronous load pipeline."
+  }
+  foreach ($cancellableLoaderRelativePath in @(
+    [System.IO.Path]::Combine('venworks', 'cui', 'CUILayoutImportLoader.as'),
+    [System.IO.Path]::Combine('venworks', 'cui', 'CUIPaletteLoader.as'),
+    [System.IO.Path]::Combine('venworks', 'cui', 'CUIAssetManager.as')
+  )) {
+    if (!$profiledActionScript.ContainsKey($cancellableLoaderRelativePath)) {
+      throw "$($variant.VariantName) profile excludes cancellable loader '$cancellableLoaderRelativePath'."
+    }
+    $cancellableLoaderSource = [string]$profiledActionScript[$cancellableLoaderRelativePath]
+    if (!$cancellableLoaderSource.Contains('public function cancel() : void') -or
+        !$cancellableLoaderSource.Contains('.close();')) {
+      throw "$($variant.VariantName) loader '$cancellableLoaderRelativePath' does not cancel its active URLLoader requests."
+    }
+  }
+  foreach ($contextRelativePath in @($playerContextRelativePath, $conditionContextRelativePath)) {
+    $contextSource = [string]$profiledActionScript[$contextRelativePath]
+    $subscribeMethod = [regex]::Match(
+      $contextSource,
+      '(?s)private function subscribeProvider\(.*?(?=\s+private function handleProviderEvent)'
+    )
+    if (!$subscribeMethod.Success -or
+        !$subscribeMethod.Value.Contains('BSUIDataManager.GetDataFromClient(param1,true);') -or
+        $subscribeMethod.Value.IndexOf('BSUIDataManager.GetDataFromClient(param1,true);') -gt
+          $subscribeMethod.Value.IndexOf('BSUIDataManager.Subscribe(param1,callback);')) {
+      throw "$($variant.VariantName) provider subscriptions must prime each provider snapshot before attaching callbacks."
+    }
   }
 
   $layoutSourcePath = Resolve-RequiredFile `
@@ -640,14 +959,6 @@ foreach ($variant in $variants) {
       }
     }
 
-    $sharedHudHash = Read-ExpectedSha256 -Path (Join-Path $repositoryRoot "Scaleform\hudmenu\validation\expected.sha256")
-    $sharedLargeHudHash = Read-ExpectedSha256 -Path (Join-Path $repositoryRoot "Scaleform\hudmenu_lrg\validation\expected.sha256")
-    if ((Get-Sha256 -Path (Join-Path $interfacePath "hudmenu.gfx")) -ceq $sharedHudHash -or
-        (Get-Sha256 -Path (Join-Path $interfacePath "hudmenu_lrg.gfx")) -ceq $sharedLargeHudHash) {
-      throw "Minimalist HUD movies must be profile-specific and differ from the shared themed movies."
-    }
-
-    $sourceProfile = Get-ScaleformSourceProfile -ManifestPath $movieProfile.ManifestPaths[0]
     if ($sourceProfile.Name -cne "minimalist-live" -or
         $sourceProfile.ExcludedActionScriptPaths.Count -ne 0) {
       throw "Minimalist must use the full shared ActionScript inventory through the minimalist-live profile."
@@ -699,57 +1010,6 @@ foreach ($variant in $variants) {
     if (@($requiredRuntimeTokens | Where-Object { $_ -notin $sourceProfile.RequiredBytecodeTokens }).Count -ne 0) {
       throw "Minimalist does not require the complete external XML, palette, SVG, path, mask, icon, panel, provider-symbol, and composite runtime."
     }
-
-    [xml]$minimalistManifest = Get-Content -LiteralPath $movieProfile.ManifestPaths[0] -Raw
-    $minimalistManifestDirectory = Split-Path -Parent $movieProfile.ManifestPaths[0]
-    $minimalistSourceRoot = Resolve-RequiredDirectory `
-      -Path (Join-Path $minimalistManifestDirectory ([string]$minimalistManifest.scaleformBuild.actionScriptSource)) `
-      -Description "Minimalist ActionScript source directory"
-    $transformedSource = @(
-      Get-ChildItem -LiteralPath $minimalistSourceRoot -Recurse -File -Filter "*.as" |
-        ForEach-Object {
-          $relativeSourcePath = $_.FullName.Substring($minimalistSourceRoot.Length).TrimStart(
-            [System.IO.Path]::DirectorySeparatorChar,
-            [System.IO.Path]::AltDirectorySeparatorChar
-          )
-          $effectiveSourcePath = Get-ScaleformProfileActionScriptPath `
-            -SourceProfile $sourceProfile `
-            -SourcePath $_.FullName `
-            -RelativePath $relativeSourcePath
-          Get-ScaleformPatchedActionScript `
-            -SourcePath $effectiveSourcePath `
-            -RelativePath $relativeSourcePath `
-            -PatchPath $sourceProfile.ActionScriptPatchPath
-        }
-    ) -join "`n"
-    foreach ($forbiddenToken in @($sourceProfile.ForbiddenBytecodeTokens)) {
-      if ($transformedSource.Contains($forbiddenToken)) {
-        throw "Minimalist transformed ActionScript retains forbidden token '$forbiddenToken'."
-      }
-    }
-    foreach ($requiredRuntimeToken in $requiredRuntimeTokens) {
-      if (!$transformedSource.Contains($requiredRuntimeToken)) {
-        throw "Minimalist transformed ActionScript is missing required runtime token '$requiredRuntimeToken'."
-      }
-    }
-    $playerContextRelativePath = "venworks/cui/CUIPlayerHudDataContext.as"
-    $conditionContextRelativePath = "venworks/cui/CUIConditionContext.as"
-    $playerContextSource = Get-ScaleformPatchedActionScript `
-      -SourcePath (Join-Path $minimalistSourceRoot $playerContextRelativePath) `
-      -RelativePath $playerContextRelativePath `
-      -PatchPath $sourceProfile.ActionScriptPatchPath
-    $conditionContextSource = Get-ScaleformPatchedActionScript `
-      -SourcePath (Join-Path $minimalistSourceRoot $conditionContextRelativePath) `
-      -RelativePath $conditionContextRelativePath `
-      -PatchPath $sourceProfile.ActionScriptPatchPath
-    $actualValueProviders = @(
-      [regex]::Matches($playerContextSource, 'subscribeProvider\("([^"]+)"') |
-        ForEach-Object { $_.Groups[1].Value }
-    )
-    $actualConditionProviders = @(
-      [regex]::Matches($conditionContextSource, 'subscribeProvider\("([^"]+)"') |
-        ForEach-Object { $_.Groups[1].Value }
-    )
     if ([string]::Join("`n", $actualValueProviders) -cne [string]::Join("`n", $expectedValueProviders) -or
         [string]::Join("`n", $actualConditionProviders) -cne [string]::Join("`n", $expectedConditionProviders)) {
       throw "Minimalist transformed ActionScript does not preserve the exact live provider inventory."
@@ -772,15 +1032,13 @@ foreach ($variant in $variants) {
       }
     }
 
-    $statusEffectRelativePath = "venworks/cui/components/CUIStatusEffectBar.as"
-    $statusEffectSourcePath = Get-ScaleformProfileActionScriptPath `
-      -SourceProfile $sourceProfile `
-      -SourcePath (Join-Path $minimalistSourceRoot $statusEffectRelativePath) `
-      -RelativePath $statusEffectRelativePath
-    $statusEffectSource = Get-ScaleformPatchedActionScript `
-      -SourcePath $statusEffectSourcePath `
-      -RelativePath $statusEffectRelativePath `
-      -PatchPath $sourceProfile.ActionScriptPatchPath
+    $statusEffectRelativePath = [System.IO.Path]::Combine(
+      'venworks',
+      'cui',
+      'components',
+      'CUIStatusEffectBar.as'
+    )
+    $statusEffectSource = [string]$profiledActionScript[$statusEffectRelativePath]
     $statusBackgroundMethod = [regex]::Match(
       $statusEffectSource,
       '(?s)private function drawSlotBackground.*?(?=\s+private function drawFallbackIcon)'
@@ -793,15 +1051,13 @@ foreach ($variant in $variants) {
       throw "Minimalist active status-effect tiles must use only the approved two-layer native rectangle backing."
     }
 
-    $scannerRelativePath = "venworks/cui/components/CUIScannerOverlay.as"
-    $scannerSourcePath = Get-ScaleformProfileActionScriptPath `
-      -SourceProfile $sourceProfile `
-      -SourcePath (Join-Path $minimalistSourceRoot $scannerRelativePath) `
-      -RelativePath $scannerRelativePath
-    $scannerSource = Get-ScaleformPatchedActionScript `
-      -SourcePath $scannerSourcePath `
-      -RelativePath $scannerRelativePath `
-      -PatchPath $sourceProfile.ActionScriptPatchPath
+    $scannerRelativePath = [System.IO.Path]::Combine(
+      'venworks',
+      'cui',
+      'components',
+      'CUIScannerOverlay.as'
+    )
+    $scannerSource = [string]$profiledActionScript[$scannerRelativePath]
     $scannerOverlayMethod = [regex]::Match(
       $scannerSource,
       '(?s)private function createOverlay.*?(?=\s+private function drawCorners)'
@@ -818,15 +1074,6 @@ foreach ($variant in $variants) {
       throw "Minimalist scanner readouts must use only the approved dynamically positioned two-layer native rectangle backings."
     }
 
-    $seedPath = Resolve-RequiredFile `
-      -Path (Join-Path $minimalistManifestDirectory ([string]$minimalistManifest.scaleformBuild.abcSeedPatch)) `
-      -Description "Minimalist ABC seed"
-    $seedText = [System.IO.File]::ReadAllText($seedPath)
-    foreach ($requiredRuntimeToken in $requiredRuntimeTokens) {
-      if (!$seedText.Contains($requiredRuntimeToken)) {
-        throw "Minimalist ABC seed is missing required runtime class '$requiredRuntimeToken'."
-      }
-    }
   }
 
   $pluginPath = Join-Path $stagingPath "$($variant.PackageBaseName).esm"

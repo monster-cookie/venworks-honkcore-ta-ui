@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<actionScriptPatch name="cui-auxiliary-bootstrap" version="1" script="HUDMenu">
+  <insertions>
+    <insertion position="after"><anchor><![CDATA[   import flash.events.Event;]]></anchor><content><![CDATA[
+   import flash.events.IOErrorEvent;
+   import flash.events.SecurityErrorEvent;
+   import flash.text.TextField;
+   import flash.text.TextFormat;]]></content></insertion>
+    <insertion position="after"><anchor><![CDATA[      private var SkillPatchLoader:Loader = null;]]></anchor><content><![CDATA[
+
+      private var VenworksCUILoader:Loader = null;
+      private var VenworksCUIBridge:Object = null;
+      private var VenworksCUIBootstrapDiagnostics:TextField = null;
+      private var VenworksCUIBootstrapStarted:Boolean = false;
+      private var VenworksCUIBootstrapDisposed:Boolean = false;]]></content></insertion>
+    <insertion position="after"><anchor><![CDATA[         CENTER_GROUP_POINT.y = this.CenterGroup_mc.y;]]></anchor><content><![CDATA[
+         this.reapplyVenworksCUIPlacements();]]></content></insertion>
+    <insertion position="after"><anchor><![CDATA[         super.onAddedToStage();]]></anchor><content><![CDATA[
+         this.startVenworksCUI();]]></content></insertion>
+    <insertion position="after"><anchor><![CDATA[               SocialCommandIcons_mc.visible = param1.data.ModeVisibilityA[HUDUtils.SOCIAL_COMMAND_ICONS].bVisible;]]></anchor><content><![CDATA[
+               this.updateVenworksCUIHudModeVisibility(param1.data.ModeVisibilityA);]]></content></insertion>
+    <insertion position="before"><anchor><![CDATA[      public function ProcessUserEvent(param1:String, param2:Boolean) : Boolean]]></anchor><content><![CDATA[      private function startVenworksCUI() : void
+      {
+         if(this.VenworksCUIBootstrapStarted && !this.VenworksCUIBootstrapDisposed)
+         {
+            return;
+         }
+         this.VenworksCUIBootstrapStarted = true;
+         this.VenworksCUIBootstrapDisposed = false;
+         this.removeVenworksCUIDiagnostics();
+         try
+         {
+            this.VenworksCUILoader = new Loader();
+            this.VenworksCUILoader.contentLoaderInfo.addEventListener(Event.COMPLETE,this.onVenworksCUIComplete,false,0,true);
+            this.VenworksCUILoader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,this.onVenworksCUIError,false,0,true);
+            this.VenworksCUILoader.contentLoaderInfo.addEventListener(SecurityErrorEvent.SECURITY_ERROR,this.onVenworksCUIError,false,0,true);
+            addEventListener(Event.REMOVED_FROM_STAGE,this.onVenworksCUIRemoved,false,0,true);
+            this.VenworksCUILoader.load(new URLRequest("venworkscui.swf"));
+         }
+         catch(venworksLoadError:Error)
+         {
+            this.showVenworksCUIError("CUI-AUX-LOAD",venworksLoadError.toString());
+            this.disposeVenworksCUI();
+         }
+      }
+
+      private function onVenworksCUIComplete(param1:Event) : void
+      {
+         if(this.VenworksCUIBootstrapDisposed || this.VenworksCUILoader == null)
+         {
+            return;
+         }
+         this.removeVenworksCUILoadListeners();
+         try
+         {
+            this.VenworksCUIBridge = this.VenworksCUILoader.content;
+            if(this.VenworksCUIBridge == null || !("initialize" in this.VenworksCUIBridge))
+            {
+               throw new Error("Auxiliary movie does not expose initialize().");
+            }
+            this.VenworksCUIBridge["initialize"](this);
+            this.removeVenworksCUIDiagnostics();
+         }
+         catch(venworksInitializeError:Error)
+         {
+            this.showVenworksCUIError("CUI-AUX-INIT",venworksInitializeError.toString());
+            this.disposeVenworksCUI();
+         }
+      }
+
+      private function onVenworksCUIError(param1:Event) : void
+      {
+         this.showVenworksCUIError("CUI-AUX-IO",param1.toString());
+         this.disposeVenworksCUI();
+      }
+
+      private function onVenworksCUIRemoved(param1:Event) : void
+      {
+         if(param1.target === this)
+         {
+            this.disposeVenworksCUI();
+         }
+      }
+
+      private function reapplyVenworksCUIPlacements() : void
+      {
+         try
+         {
+            if(this.VenworksCUIBridge != null && "reapplyVanillaPlacements" in this.VenworksCUIBridge)
+            {
+               this.VenworksCUIBridge["reapplyVanillaPlacements"]();
+            }
+         }
+         catch(venworksPlacementError:Error)
+         {
+            this.showVenworksCUIError("CUI-AUX-PLACE",venworksPlacementError.toString());
+         }
+      }
+
+      private function updateVenworksCUIHudModeVisibility(param1:Array) : void
+      {
+         try
+         {
+            if(this.VenworksCUIBridge != null && "updateVanillaHudModeVisibility" in this.VenworksCUIBridge)
+            {
+               this.VenworksCUIBridge["updateVanillaHudModeVisibility"](param1);
+            }
+         }
+         catch(venworksVisibilityError:Error)
+         {
+            this.showVenworksCUIError("CUI-AUX-MODE",venworksVisibilityError.toString());
+         }
+      }
+
+      private function removeVenworksCUILoadListeners() : void
+      {
+         if(this.VenworksCUILoader == null)
+         {
+            return;
+         }
+         this.VenworksCUILoader.contentLoaderInfo.removeEventListener(Event.COMPLETE,this.onVenworksCUIComplete);
+         this.VenworksCUILoader.contentLoaderInfo.removeEventListener(IOErrorEvent.IO_ERROR,this.onVenworksCUIError);
+         this.VenworksCUILoader.contentLoaderInfo.removeEventListener(SecurityErrorEvent.SECURITY_ERROR,this.onVenworksCUIError);
+      }
+
+      private function disposeVenworksCUI() : void
+      {
+         if(this.VenworksCUIBootstrapDisposed)
+         {
+            return;
+         }
+         this.VenworksCUIBootstrapDisposed = true;
+         removeEventListener(Event.REMOVED_FROM_STAGE,this.onVenworksCUIRemoved);
+         this.removeVenworksCUILoadListeners();
+         if(this.VenworksCUIBridge != null)
+         {
+            try
+            {
+               if("dispose" in this.VenworksCUIBridge)
+               {
+                  this.VenworksCUIBridge["dispose"]();
+               }
+            }
+            catch(venworksDisposeError:Error)
+            {
+               trace("CUI-AUX-DISPOSE | " + venworksDisposeError.toString());
+            }
+         }
+         this.VenworksCUIBridge = null;
+         if(this.VenworksCUILoader != null)
+         {
+            try
+            {
+               this.VenworksCUILoader.unload();
+            }
+            catch(venworksUnloadError:Error)
+            {
+               trace("CUI-AUX-UNLOAD | " + venworksUnloadError.toString());
+            }
+         }
+         this.VenworksCUILoader = null;
+      }
+
+      private function showVenworksCUIError(param1:String, param2:String) : void
+      {
+         var format:TextFormat = new TextFormat("$MAIN_Font_Bold",18,16777215,true);
+         try
+         {
+            if(this.VenworksCUIBootstrapDiagnostics == null)
+            {
+               this.VenworksCUIBootstrapDiagnostics = new TextField();
+               this.VenworksCUIBootstrapDiagnostics.name = "VenworksCUIBootstrapDiagnostics";
+               this.VenworksCUIBootstrapDiagnostics.x = 720;
+               this.VenworksCUIBootstrapDiagnostics.y = 96;
+               this.VenworksCUIBootstrapDiagnostics.width = 480;
+               this.VenworksCUIBootstrapDiagnostics.height = 72;
+               this.VenworksCUIBootstrapDiagnostics.background = true;
+               this.VenworksCUIBootstrapDiagnostics.backgroundColor = 4194304;
+               this.VenworksCUIBootstrapDiagnostics.border = true;
+               this.VenworksCUIBootstrapDiagnostics.borderColor = 16711680;
+               this.VenworksCUIBootstrapDiagnostics.textColor = 16777215;
+               this.VenworksCUIBootstrapDiagnostics.embedFonts = true;
+               this.VenworksCUIBootstrapDiagnostics.defaultTextFormat = format;
+               this.VenworksCUIBootstrapDiagnostics.multiline = true;
+               this.VenworksCUIBootstrapDiagnostics.wordWrap = true;
+               this.VenworksCUIBootstrapDiagnostics.selectable = false;
+               this.VenworksCUIBootstrapDiagnostics.mouseEnabled = false;
+               addChild(this.VenworksCUIBootstrapDiagnostics);
+            }
+            this.VenworksCUIBootstrapDiagnostics.text = "VENWORKS CUI LOAD ERROR\n" + param1 + " | " + param2;
+            this.VenworksCUIBootstrapDiagnostics.setTextFormat(format);
+         }
+         catch(venworksDiagnosticsError:Error)
+         {
+            trace(param1 + " | " + param2);
+         }
+      }
+
+      private function removeVenworksCUIDiagnostics() : void
+      {
+         if(this.VenworksCUIBootstrapDiagnostics != null && this.VenworksCUIBootstrapDiagnostics.parent === this)
+         {
+            removeChild(this.VenworksCUIBootstrapDiagnostics);
+         }
+         this.VenworksCUIBootstrapDiagnostics = null;
+      }
+
+]]></content></insertion>
+  </insertions>
+</actionScriptPatch>

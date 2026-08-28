@@ -23,6 +23,7 @@ if (!$Global:SharedConfigurationLoaded) {
   Write-Host -ForegroundColor Green "Importing Shared Configuration"
   . "$PSScriptRoot/sharedConfig.ps1"
 }
+. (Join-Path $PSScriptRoot 'sharedScaleformProfiles.ps1')
 
 $repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 
@@ -55,6 +56,22 @@ function Assert-NotGitLfsPointer {
   if ($prefix.StartsWith("version https://git-lfs.github.com/spec/v1", [System.StringComparison]::Ordinal)) {
     throw "$Description remains a Git LFS pointer: $Path"
   }
+}
+
+function Read-ExpectedSha256 {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Path
+  )
+
+  if (!(Test-Path -LiteralPath $Path -PathType Leaf)) {
+    throw "Expected SHA-256 file does not exist: $Path"
+  }
+  $hash = [System.IO.File]::ReadAllText($Path).Trim().ToUpperInvariant()
+  if ($hash -notmatch '^[0-9A-F]{64}$') {
+    throw "Expected SHA-256 file is invalid: $Path"
+  }
+  return $hash
 }
 
 $archiveDefinitions = [ordered]@{
@@ -103,6 +120,34 @@ $archiveDefinitions = [ordered]@{
 }
 
 $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
+
+foreach ($variant in $variants) {
+  $profilePath = Join-Path $repositoryRoot "Scaleform\variants\$($variant.VariantKey)\build.psd1"
+  if (!(Test-Path -LiteralPath $profilePath -PathType Leaf)) {
+    throw "$($variant.VariantName) build profile does not exist: $profilePath"
+  }
+  $variantBuildProfile = Import-PowerShellDataFile -LiteralPath $profilePath
+  $movieProfile = Get-VariantScaleformMovieProfile `
+    -RepositoryRoot $repositoryRoot `
+    -VariantBuildProfile $variantBuildProfile
+  $auxiliaryDefinitions = @($movieProfile.MovieDefinitions | Where-Object {
+    [string]$_.FileName -ceq 'venworkscui.swf'
+  })
+  if ($auxiliaryDefinitions.Count -ne 1) {
+    throw "$($variant.VariantName) must declare exactly one production auxiliary movie."
+  }
+  $stagingFolderPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot $variant.StagingFolderPath))
+  $auxiliaryPath = Join-Path $stagingFolderPath 'Interface\venworkscui.swf'
+  if (!(Test-Path -LiteralPath $auxiliaryPath -PathType Leaf)) {
+    throw "$($variant.VariantName) is missing its staged production auxiliary movie: $auxiliaryPath"
+  }
+  $expectedAuxiliaryHash = Read-ExpectedSha256 -Path ([string]$auxiliaryDefinitions[0].ExpectedHashPath)
+  $actualAuxiliaryHash = (Get-FileHash -LiteralPath $auxiliaryPath -Algorithm SHA256).Hash
+  if ($actualAuxiliaryHash -cne $expectedAuxiliaryHash) {
+    throw "$($variant.VariantName) staged venworkscui.swf is not the production auxiliary movie. Expected $expectedAuxiliaryHash; found $actualAuxiliaryHash. Refusing to mutate archives."
+  }
+}
+Write-Host -ForegroundColor Green 'Verified every selected production auxiliary movie before archive mutation.'
 
 foreach ($variant in $variants) {
   $stagingFolderPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot $variant.StagingFolderPath))

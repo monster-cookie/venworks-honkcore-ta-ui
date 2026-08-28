@@ -37,7 +37,7 @@ state from those systems for conditions, but it does not replace them.
 
 ## Release variants
 
-Five separately distributed variants are available. The four themed variants share the production HUD movies and include all five packaged palettes, so their active palette can be changed without reinstalling the HUD. Minimalist uses profile-specific HUD movies, literal Starfield colors, fitted holographic readouts with pale-blue translucent native-shape backings, and the same complete XML, palette, SVG, path, panel, icon, and mask runtime. Its live profile retains the ten required value registrations, seven required condition registrations, and three intentional cross-context overlaps while omitting the providers used only by the removed equipment rail.
+Five separately distributed variants are available. All five use the same thin normal and large HUD bootstrap movies and the same HUD-message movies. The four themed variants share one standalone CUI runtime movie and include all five packaged palettes, so their active palette can be changed without reinstalling the HUD. Minimalist uses its own standalone CUI runtime movie, literal Starfield colors, fitted holographic readouts with pale-blue translucent native-shape backings, and the same complete XML, palette, SVG, path, panel, icon, and mask runtime. Its live profile retains the ten required value registrations, seven required condition registrations, and three intentional cross-context overlaps while omitting the providers used only by the removed equipment rail.
 
 | Public release name | Default palette |
 |---|---|
@@ -47,12 +47,9 @@ Five separately distributed variants are available. The four themed variants sha
 | Venworks Customizable HUD - Crimson Fleet Theme | `crimson-fleet.xml` |
 | Venworks Customizable HUD - Minimalist | Literal Starfield colors; no palette file |
 
-The four themed variants also include `starfield.xml` as a neutral palette
-option. The faction crest and equipment rail are available only in those four
-variants. Minimalist omits both from its shipped layout and also ships no SVG
-assets, palette files, helmet cutout paths, or active `svg`, `path`, `mask`,
-`icon`, `panel`, or `providerSymbol` elements. Those runtime capabilities are
-not compiled out of its movies.
+The four themed variants also include `starfield.xml` as a neutral palette option. The faction crest and equipment rail are available only in those four variants. Minimalist omits both from its shipped layout and also ships no SVG assets, palette files, helmet cutout paths, or active `svg`, `path`, `mask`, `icon`, `panel`, or `providerSymbol` elements. Those runtime capabilities are not compiled out of its standalone CUI movie.
+
+Each installed variant carries nine Interface movies. The four Bethesda HUD and HUD-message names preserve their native GFX or CWS container, and `Interface\venworkscui.swf` contains the complete Venworks runtime in one separately loaded ABC domain. The normal and large HUD movies retain one Bethesda ABC apiece and load the auxiliary movie through a guarded asynchronous bootstrap.
 
 Enable only one release variant at a time. The variants install the same HUD
 movie and configuration paths, so whichever package wins file conflicts also

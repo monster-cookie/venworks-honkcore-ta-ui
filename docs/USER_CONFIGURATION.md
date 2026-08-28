@@ -31,8 +31,7 @@ loading after the selected theme variant. Alternatively, use the Nexus PC -
 Fully Loose Files package by itself. If you edit a downloaded file directly,
 keep a separate backup that an update cannot overwrite.
 
-Do not edit `hudmenu.gfx` or `hudmenu_lrg.gfx` to make the XML changes in this
-guide. The packaged movies already contain the configuration runtime.
+Do not edit `hudmenu.gfx`, `hudmenu_lrg.gfx`, or `venworkscui.swf` to make the XML changes in this guide. The base HUD movies load the packaged standalone configuration runtime automatically.
 
 ## Installed files
 
@@ -59,7 +58,7 @@ The important files are:
 | `Interface\VenworksCUI\palettes\*.xml` | Defines semantic colors, typography, opacity, strokes, and the faction crest. |
 | `Interface\VenworksCUI\Assets\*.svg` | Contains supported local vector artwork used by the layout or palettes. |
 
-Minimalist includes `layout.xml` and six component fragments, but intentionally omits the `Assets` and `palettes` directories. Its build resolves the shipped Starfield color roles to literals. The normal package exposes its layout loose; the fully loose package exposes the reduced XML tree and eight movies: four native GFX files and four independently compiled CWS files at the matching `.swf` paths.
+Minimalist includes `layout.xml` and six component fragments, but intentionally omits the `Assets` and `palettes` directories. Its build resolves the shipped Starfield color roles to literals. The normal package exposes its layout loose; the fully loose package exposes the reduced XML tree and nine movies: four native GFX files, four independently compiled CWS files at the matching `.swf` paths, and the standalone CWS `venworkscui.swf` runtime.
 
 The Nexus PC - Normal package exposes only `layout.xml` from this tree as a
 loose file. The runtime resolves referenced component fragments and, when
@@ -72,7 +71,7 @@ manager-specific staging location is intentionally not fixed by this project.
 
 ## How configuration loading works
 
-At HUD startup, the runtime:
+At HUD startup, the base HUD bootstrap asynchronously loads `Interface\venworkscui.swf`. After the auxiliary bridge initializes, the runtime:
 
 1. loads `layout.xml`;
 2. loads and places every declared component fragment;
@@ -86,7 +85,7 @@ The process is atomic. One invalid file prevents the configurable layer from
 partially rendering. A diagnostic panel identifies the failure category and,
 when available, the phase, checkpoint, component type, and component ID.
 
-Minimalist follows the same external loading path and uses live data contexts. It omits only the four providers used exclusively by its removed equipment rail; all remaining conditions and live-value bindings stay active. Every variant uses the same eight-path movie inventory in its fully loose package and in each platform's Main archive: four native GFX files and four independently compiled CWS files at the matching `.swf` paths. Minimalist's normal and large HUD movie pairs remain profile-specific, while its HUD-message pairs remain shared with the themed variants.
+Minimalist follows the same external configuration loading path and uses live data contexts. It omits only the four providers used exclusively by its removed equipment rail; all remaining conditions and live-value bindings stay active. Every variant uses the same nine-path movie inventory in its fully loose package and in each platform's Main archive: four native GFX files, four independently compiled CWS files at the matching `.swf` paths, and `venworkscui.swf`. The base HUD and HUD-message pairs are shared across all variants; Minimalist's standalone CUI movie is profile-specific.
 
 There is no live reload command. After every XML or SVG change, fully exit and
 restart Starfield. Merely closing the scanner or opening a menu is not a
