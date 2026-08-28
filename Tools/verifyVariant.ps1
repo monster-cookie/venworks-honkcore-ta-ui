@@ -678,8 +678,16 @@ foreach ($variant in $variants) {
       throw "$($variant.VariantName) transformed ActionScript retains forbidden token '$forbiddenRuntimeToken'."
     }
   }
-  $playerContextRelativePath = "venworks\cui\CUIPlayerHudDataContext.as"
-  $conditionContextRelativePath = "venworks\cui\CUIConditionContext.as"
+  $playerContextRelativePath = [System.IO.Path]::Combine(
+    'venworks',
+    'cui',
+    'CUIPlayerHudDataContext.as'
+  )
+  $conditionContextRelativePath = [System.IO.Path]::Combine(
+    'venworks',
+    'cui',
+    'CUIConditionContext.as'
+  )
   if (!$profiledActionScript.ContainsKey($playerContextRelativePath) -or
       !$profiledActionScript.ContainsKey($conditionContextRelativePath)) {
     throw "$($variant.VariantName) profile excludes a required provider context."
@@ -702,7 +710,7 @@ foreach ($variant in $variants) {
   if ($actualCrossContextProviderCount -ne $sourceProfile.CrossContextProviderCount) {
     throw "$($variant.VariantName) transformed ActionScript has $actualCrossContextProviderCount cross-context providers; expected $($sourceProfile.CrossContextProviderCount)."
   }
-  $runtimeRelativePath = "venworks\cui\CUIRuntime.as"
+  $runtimeRelativePath = [System.IO.Path]::Combine('venworks', 'cui', 'CUIRuntime.as')
   if (!$profiledActionScript.ContainsKey($runtimeRelativePath)) {
     throw "$($variant.VariantName) profile excludes the CUI runtime."
   }
@@ -971,7 +979,12 @@ foreach ($variant in $variants) {
       }
     }
 
-    $statusEffectRelativePath = "venworks\cui\components\CUIStatusEffectBar.as"
+    $statusEffectRelativePath = [System.IO.Path]::Combine(
+      'venworks',
+      'cui',
+      'components',
+      'CUIStatusEffectBar.as'
+    )
     $statusEffectSource = [string]$profiledActionScript[$statusEffectRelativePath]
     $statusBackgroundMethod = [regex]::Match(
       $statusEffectSource,
@@ -985,7 +998,12 @@ foreach ($variant in $variants) {
       throw "Minimalist active status-effect tiles must use only the approved two-layer native rectangle backing."
     }
 
-    $scannerRelativePath = "venworks\cui\components\CUIScannerOverlay.as"
+    $scannerRelativePath = [System.IO.Path]::Combine(
+      'venworks',
+      'cui',
+      'components',
+      'CUIScannerOverlay.as'
+    )
     $scannerSource = [string]$profiledActionScript[$scannerRelativePath]
     $scannerOverlayMethod = [regex]::Match(
       $scannerSource,
