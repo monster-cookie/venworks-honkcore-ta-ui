@@ -68,9 +68,9 @@ For repeated investigation, populate the curated ignored reference cache:
 
 ## 4. Author a bounded modification
 
-Each base HUD build manifest identifies its clean input, output filename, vanilla hash, expected generated hash, and bounded document-class bootstrap patch. GFX and SWF manifests for the same movie intentionally repeat that modification contract while pointing at different clean inputs and expected hashes. An auxiliary manifest separately identifies the standalone CUI entrypoint, shared ActionScript tree, compile-only host externs, optional variant source profile, expected compiled class-inventory hash, and expected `venworkscui.swf` hash.
+Each base HUD build manifest identifies its clean input, output filename, vanilla hash, expected generated hash, and bounded document-class bootstrap patch. GFX and SWF manifests for the same movie intentionally repeat that modification contract while pointing at different clean inputs and expected hashes. An auxiliary manifest separately identifies the standalone CUI entrypoint, shared ActionScript tree, compile-only host externs, optional variant source profile, 1920-by-1080 stage, 30-fps frame rate, expected compiled class-inventory hash, and expected `venworkscui.swf` hash.
 
-Keep all cooperating `venworks.cui.*` classes in the single ABC domain compiled into `venworkscui.swf`. The base HUD movies retain their one Bethesda ABC and load the child movie through an untyped bridge. Variant-specific behavior is selected through its auxiliary build profile and exact ActionScript patches, not through copied variant definitions in build scripts.
+Keep all cooperating `venworks.cui.*` classes in the single ABC domain compiled into `venworkscui.swf`. The base HUD movies retain their one Bethesda ABC and load the child movie through an untyped bridge. Start that loader from the HUD constructor, initialize the bridge at `Event.INIT`, attach the auxiliary root directly to the host at `Event.COMPLETE`, and keep the host lifecycle owner separate from the auxiliary display owner. Variant-specific behavior is selected through its auxiliary build profile and exact ActionScript patches, not through copied variant definitions in build scripts.
 
 ## 5. Recompile GFX and CWS independently
 
@@ -83,7 +83,7 @@ Build all variants with:
   -VanillaInterfacePath "Scaleform/.work/vanilla-interface-extracted/interface"
 ```
 
-Omitting `-VariantKeys` selects every entry in `$Global:ReleaseVariants`. The base compiler patches Bethesda's existing HUD ABC without adding another `DoABC` tag, reopens the generated movie, and verifies the loader anchors, readable Starfield diagnostic format, and one-ABC contract. The auxiliary compiler creates a temporary external host SWC with `compc`, compiles the profiled CUI source with `mxmlc`, normalizes the CWS output through JPEXS, and reopens it twice: the first production pass derives the sorted class-inventory fingerprint, and the second embeds that fingerprint plus the current transformed-source fingerprint and proves the definition inventory is unchanged. Each compiler compares the result with its manifest's expected hashes.
+Omitting `-VariantKeys` selects every entry in `$Global:ReleaseVariants`. The base compiler patches Bethesda's existing HUD ABC without adding another `DoABC` tag, reopens the generated movie, and verifies the constructor/INIT/COMPLETE loader anchors, direct-child attachment, cached visibility replay, idempotent teardown, readable Starfield diagnostic format, and one-ABC contract. The auxiliary compiler creates a temporary external host SWC with `compc`, compiles the profiled CUI source with `mxmlc`, normalizes the CWS output through JPEXS, and reopens it twice: the first production pass derives the sorted class-inventory fingerprint, while the second embeds that fingerprint plus the current transformed-source fingerprint and proves the definition inventory is unchanged. It also validates CWS version 12, the 1920-by-1080 stage, 30 fps, and one frame. Each compiler compares the result with its manifest's expected hashes.
 
 Use `-UpdateExpectedHashes` only for an intentional reviewed source change. A hash update is evidence that output changed, not proof that the movie works in Starfield. Review the source diff and validate in game before accepting it.
 
@@ -139,6 +139,7 @@ git diff --check
 Validation must confirm:
 
 - each staged `.gfx` has a GFX signature and each staged `.swf` has a CWS signature with a valid declared length;
+- the normal, large, and auxiliary HUD movies retain the observed 1920-by-1080, 30-fps, one-frame metadata, including the non-ultrawide `_lrg` host;
 - every staged movie matches its profile's expected SHA-256;
 - JPEXS can reopen every generated movie, each base HUD movie contains exactly one Bethesda ABC and no CUI runtime, and each standalone CUI movie contains exactly one complete CUI ABC;
 - every auxiliary movie embeds fingerprints recomputed from the current manifest, compiler contract, externs, entrypoint, and transformed ActionScript, and its sorted definition inventory matches the profile's expected class hash;

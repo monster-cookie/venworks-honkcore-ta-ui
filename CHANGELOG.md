@@ -12,6 +12,7 @@
 - All: Moved the complete CUI runtime into a standalone `venworkscui.swf`.
 - All: Added better error handling and fault tolerance for the new movie setup. 
 - All: Apply Starfield's embedded bold font to the auxiliary marker and bootstrap load-error messages so loader failures remain readable in game.
+- All: Matched the auxiliary movie to Bethesda's 1920-by-1080, 30-fps, one-frame metadata and aligned its constructor, `Event.INIT`, `Event.COMPLETE`, direct-child attachment, visibility replay, and teardown lifecycle with the proven reference loader pattern.
 
 ## Version 2.0.7 (September 27, 2026)
 

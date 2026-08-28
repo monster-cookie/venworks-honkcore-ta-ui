@@ -82,8 +82,19 @@ function Get-ScaleformAuxiliaryManifestDefinition {
   $build = $manifest.scaleformAuxiliaryBuild
   if (!$build -or !$build.name -or !$build.outputFile -or !$build.documentClass -or
       !$build.actionScriptSource -or !$build.externSource -or !$build.expectedHashFile -or
-      !$build.expectedClassHashFile) {
+      !$build.expectedClassHashFile -or !$build.stageWidth -or !$build.stageHeight -or
+      !$build.frameRate) {
     throw "Invalid Scaleform auxiliary build manifest: $resolvedManifestPath"
+  }
+
+  $stageWidth = 0
+  $stageHeight = 0
+  $frameRate = 0
+  if (![int]::TryParse([string]$build.stageWidth, [ref]$stageWidth) -or
+      ![int]::TryParse([string]$build.stageHeight, [ref]$stageHeight) -or
+      ![int]::TryParse([string]$build.frameRate, [ref]$frameRate) -or
+      $stageWidth -ne 1920 -or $stageHeight -ne 1080 -or $frameRate -ne 30) {
+    throw "Scaleform auxiliary build manifest must declare a 1920x1080 stage at 30 fps: $resolvedManifestPath"
   }
 
   $manifestDirectory = Split-Path -Parent $resolvedManifestPath
@@ -102,6 +113,9 @@ function Get-ScaleformAuxiliaryManifestDefinition {
     ManifestPath = $resolvedManifestPath
     ExpectedHashPath = [System.IO.Path]::GetFullPath((Join-Path $manifestDirectory ([string]$build.expectedHashFile)))
     ExpectedClassHashPath = [System.IO.Path]::GetFullPath((Join-Path $manifestDirectory ([string]$build.expectedClassHashFile)))
+    StageWidth = $stageWidth
+    StageHeight = $stageHeight
+    FrameRate = $frameRate
     SourceProfilePath = $sourceProfilePath
   }
 }
@@ -335,6 +349,9 @@ function Get-VariantScaleformMovieProfile {
     ManifestPaths = @($manifestDefinitions | ForEach-Object { $_.ManifestPath })
     AuxiliaryManifestPath = $auxiliaryDefinition.ManifestPath
     AuxiliaryExpectedClassHashPath = $auxiliaryDefinition.ExpectedClassHashPath
+    AuxiliaryStageWidth = $auxiliaryDefinition.StageWidth
+    AuxiliaryStageHeight = $auxiliaryDefinition.StageHeight
+    AuxiliaryFrameRate = $auxiliaryDefinition.FrameRate
     SourceProfile = $auxiliarySourceProfile
     MovieDefinitions = $movieDefinitions
   }

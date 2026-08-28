@@ -309,9 +309,15 @@ foreach ($variant in $variants) {
     if ($actualHash -cne $expectedHash) {
       throw "$($variant.Name) $($movie.FileName) hash mismatch. Expected $expectedHash; found $actualHash."
     }
-    Assert-ScaleformMovieEncoding `
+    $movieMetadata = Get-ScaleformMovieMetadata `
       -Path $moviePath `
       -Context "$($variant.Name) $($movie.FileName)"
+    if ($movieMetadata.StageWidth -ne 1920 -or
+        $movieMetadata.StageHeight -ne 1080 -or
+        $movieMetadata.FrameRate -ne 30 -or
+        $movieMetadata.FrameCount -ne 1) {
+      throw "$($variant.Name) $($movie.FileName) must be 1920x1080 at 30 fps with one frame; found $($movieMetadata.StageWidth)x$($movieMetadata.StageHeight) at $($movieMetadata.FrameRate) fps with $($movieMetadata.FrameCount) frames."
+    }
     $movieHashes[$movie.FileName].Add($actualHash)
   }
 

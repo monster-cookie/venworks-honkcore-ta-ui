@@ -29,7 +29,7 @@ package
          {
             return;
          }
-         this.runtime = new CUIRuntime(this.owner);
+         this.runtime = new CUIRuntime(this.owner,this);
          this.runtime.load();
       }
 
