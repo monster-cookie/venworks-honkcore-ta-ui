@@ -7,6 +7,11 @@
 - https://creations.bethesda.net/en/starfield/details/03b616a3-1902-4b83-a109-fc176f658a69/Venworks_Customizable_HUD___Crimson_Fleet_Theme
 - https://creations.bethesda.net/en/starfield/details/9b635bf7-8c6b-4530-bdbd-0912903b336b/Venworks_Customizable_HUD___Freestar_Collective_Th
 
+## Version 2.0.11 (Unreleased)
+
+- All: Restore independently compiled native GFX and CWS normal/large HUD pairs after the byte-identical alias experiment produced no change in the reported PS5 crash.
+- All: Match Bethesda's Archive2 storage by disabling compression for General Main archives and using LZ4 for DDS texture archives.
+
 ## Version 2.0.10 (September 29, 2026)
 
 - All: Deploy the CWS normal and large HUD movies byte-for-byte under both their `.swf` and `.gfx` names for the next PS5 compatibility probe while retaining the native GFX/CWS HUD-message split.

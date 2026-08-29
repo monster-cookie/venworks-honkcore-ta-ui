@@ -1,6 +1,6 @@
 # Starfield Scaleform Modification Workflow
 
-This repository builds Starfield HUD replacements by modifying clean Bethesda movies while validating both movie containers Bethesda ships. It does not claim to reproduce Bethesda's internal authoring toolchain. The build preserves native GFX and ZLIB-compressed CWS outputs as independent validated intermediates. The v2.0.10 PS5 compatibility probe then applies an explicit TACOS-style runtime mapping: normal and large HUD CWS bytes are deployed under both `.gfx` and `.swf` names, while HUD-message paths retain their native GFX/CWS split.
+This repository builds Starfield HUD replacements by modifying clean Bethesda movies while validating both movie containers Bethesda ships. It does not claim to reproduce Bethesda's internal authoring toolchain. The build preserves and deploys native GFX and ZLIB-compressed CWS outputs independently, matching Bethesda's extension and container split.
 
 ## Required local tools and inputs
 
@@ -103,7 +103,7 @@ Interface/hudmessagesmenu_lrg.swf
 Interface/venworkscui.swf
 ```
 
-The four base HUD paths and four HUD-message movies are shared while their bootstrap patches remain common. The standalone CUI movie is shared by the four themed variants and profile-specific for Minimalist. `hudmenu.gfx` and `hudmenu.swf` are exact copies of the independently compiled `hudmenu.swf` CWS output; the large pair follows the same rule. The native host GFX outputs are never converted or signature-wrapped and remain build-only validation evidence. HUD-message `.gfx` files continue to use the native GFX output, and HUD-message `.swf` files continue to use the independently compiled CWS output. The builder writes generated XML and SVG payloads as UTF-8 without a byte-order mark with canonical LF line endings. This keeps the loose staging bytes and BA2 entries deterministic across Windows and Linux checkouts.
+The four base HUD paths and four HUD-message movies are shared while their bootstrap patches remain common. The standalone CUI movie is shared by the four themed variants and profile-specific for Minimalist. Each `.gfx` path receives the independently compiled native GFX output and each `.swf` path receives the independently compiled CWS output from its matching clean Bethesda source. The builder writes generated XML and SVG payloads as UTF-8 without a byte-order mark with canonical LF line endings. This keeps the loose staging bytes and BA2 entries deterministic across Windows and Linux checkouts.
 
 ## 7. Build platform archives and release packages
 
@@ -113,7 +113,7 @@ Create every selected Windows, Xbox, and PlayStation archive directly from the s
 .\Tools\createPackages.ps1
 ```
 
-No platform receives a movie rewrite. Each Main BA2 must contain the same nine staged movie paths and byte-identical data. Texture archives remain governed by the variant's source inventory and platform filters.
+No platform receives a movie rewrite. Each Main BA2 must contain the same nine staged movie paths and byte-identical data. Texture archives remain governed by the variant's source inventory and platform filters. General Main archives use Archive2 `compression=None`, while DDS and XBoxDDS Textures archives use `compression=LZ4`; CWS movie compression remains internal to each SWF.
 
 Create the five release ZIP shapes per variant with:
 
@@ -138,13 +138,13 @@ git diff --check
 
 Validation must confirm:
 
-- each staged normal/large HUD `.gfx` alias and `.swf` has a CWS signature with a valid declared length, and each alias pair is byte-identical;
+- each staged normal/large HUD `.gfx` has a native GFX signature while each matching `.swf` has a CWS signature with a valid declared length;
 - each staged HUD-message `.gfx` retains a GFX signature while each matching `.swf` retains a CWS signature;
 - the normal, large, and auxiliary HUD movies retain the observed 1920-by-1080, 30-fps, one-frame metadata, including the non-ultrawide `_lrg` host;
 - every staged movie matches its profile's expected SHA-256;
 - JPEXS can reopen every generated movie, each base HUD movie contains exactly one Bethesda ABC and no CUI runtime, and each standalone CUI movie contains exactly one complete CUI ABC;
 - every auxiliary movie embeds fingerprints recomputed from the current manifest, compiler contract, externs, entrypoint, and transformed ActionScript, and its sorted definition inventory matches the profile's expected class hash;
-- every Main BA2 has the exact staged Interface inventory and every archive entry is byte-identical to its staged source;
+- every Main BA2 has the exact staged Interface inventory, stores every entry without BA2 compression, and remains byte-identical to its staged source;
 - the four themed variants retain their shared auxiliary hash while Minimalist retains its profile-specific auxiliary hash; and
 - all 25 release ZIPs have the expected platform/package shape.
 
@@ -153,11 +153,11 @@ Build success is not gameplay acceptance. First omit `Interface/venworkscui.swf`
 ## Container rules to preserve
 
 - Never infer movie encoding from the extension alone; validate the declared deployment signature.
-- Deploy CWS bytes under a `.gfx` name only for the explicit normal/large HUD aliases declared by `Tools/sharedScaleformProfiles.ps1`; HUD-message aliases retain the native container split.
-- Never synthesize CWS by changing a GFX signature or compressing a generated GFX payload. The host aliases must be byte-for-byte copies of the independently compiled Bethesda CWS-source outputs.
+- Preserve Bethesda's native container split: deploy independently compiled GFX output only to `.gfx` paths and independently compiled CWS output only to `.swf` paths.
+- Never synthesize one container by changing another container's signature or by copying bytes under a different extension.
 - Always package the canonical generated XML/SVG bytes; do not rebuild archives from platform-converted text files.
 - Never edit or commit Bethesda's full decompiled source.
 - Never embed the Venworks runtime in a base HUD movie or split cooperating Venworks classes across multiple auxiliary ABC domains.
 - Never embed compile-only Bethesda extern definitions in `venworkscui.swf`.
-- Never package a marker, stale movie, incomplete inventory, wrong container, or mismatched host alias; `createPackages.ps1` must verify the complete selected deployment mapping before Archive2 mutates an archive.
+- Never package a marker, stale movie, incomplete inventory, or wrong container; `createPackages.ps1` must verify the complete selected deployment mapping before Archive2 mutates an archive.
 - Never treat JPEXS reopen, hash equality, PC acceptance, or archive creation as a substitute for testing the target console.
