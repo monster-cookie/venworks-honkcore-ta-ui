@@ -359,9 +359,9 @@ function Get-VariantScaleformMovieProfile {
   }
 
   $deploymentMappings = @(
-    [pscustomobject]@{ FileName = 'hudmenu.gfx'; SourceFileName = 'hudmenu.swf'; ExpectedSignature = 'CWS' },
+    [pscustomobject]@{ FileName = 'hudmenu.gfx'; SourceFileName = 'hudmenu.gfx'; ExpectedSignature = 'GFX' },
     [pscustomobject]@{ FileName = 'hudmenu.swf'; SourceFileName = 'hudmenu.swf'; ExpectedSignature = 'CWS' },
-    [pscustomobject]@{ FileName = 'hudmenu_lrg.gfx'; SourceFileName = 'hudmenu_lrg.swf'; ExpectedSignature = 'CWS' },
+    [pscustomobject]@{ FileName = 'hudmenu_lrg.gfx'; SourceFileName = 'hudmenu_lrg.gfx'; ExpectedSignature = 'GFX' },
     [pscustomobject]@{ FileName = 'hudmenu_lrg.swf'; SourceFileName = 'hudmenu_lrg.swf'; ExpectedSignature = 'CWS' },
     [pscustomobject]@{ FileName = 'hudmessagesmenu.gfx'; SourceFileName = 'hudmessagesmenu.gfx'; ExpectedSignature = 'GFX' },
     [pscustomobject]@{ FileName = 'hudmessagesmenu.swf'; SourceFileName = 'hudmessagesmenu.swf'; ExpectedSignature = 'CWS' },

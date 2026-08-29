@@ -81,42 +81,42 @@ $archiveDefinitions = [ordered]@{
   "Main" = [pscustomobject]@{
     FileSuffix = "Main.ba2"
     Format = "General"
-    Compression = "Default"
+    Compression = "None"
     FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
     Required = $true
   }
   "Textures" = [pscustomobject]@{
     FileSuffix = "Textures.ba2"
     Format = "DDS"
-    Compression = "Default"
+    Compression = "LZ4"
     FilterArgument = '-includeFilters=.*\\.*\.dds'
     Required = $false
   }
   "Main_XBox" = [pscustomobject]@{
     FileSuffix = "Main_XBox.ba2"
     Format = "General"
-    Compression = "XBox"
+    Compression = "None"
     FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
     Required = $true
   }
   "Textures_XBox" = [pscustomobject]@{
     FileSuffix = "Textures_XBox.ba2"
     Format = "XBoxDDS"
-    Compression = "XBox"
+    Compression = "LZ4"
     FilterArgument = '-includeFilters=.*\\.*\.dds'
     Required = $false
   }
   "Main_PS" = [pscustomobject]@{
     FileSuffix = "Main_PS.ba2"
     Format = "General"
-    Compression = "Default"
+    Compression = "None"
     FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
     Required = $true
   }
   "Textures_PS" = [pscustomobject]@{
     FileSuffix = "Textures_PS.ba2"
     Format = "DDS"
-    Compression = "Default"
+    Compression = "LZ4"
     FilterArgument = '-includeFilters=.*\\.*\.dds'
     Required = $false
   }
@@ -152,7 +152,6 @@ foreach ($variant in $variants) {
     throw "$($variant.VariantName) staged movie inventory does not match the exact production deployment mapping. Refusing to mutate archives."
   }
 
-  $verifiedMovieHashes = @{}
   foreach ($deploymentMovie in $deploymentDefinitions) {
     $movieName = [string]$deploymentMovie.FileName
     $moviePath = Join-Path $interfacePath $movieName
@@ -166,13 +165,6 @@ foreach ($variant in $variants) {
       -Path $moviePath `
       -Context "$($variant.VariantName) staged $movieName" `
       -ExpectedSignature ([string]$deploymentMovie.ExpectedSignature)
-    $verifiedMovieHashes[$movieName] = $actualMovieHash
-  }
-  foreach ($hostBaseName in @('hudmenu', 'hudmenu_lrg')) {
-    if ([string]$verifiedMovieHashes["$hostBaseName.gfx"] -cne
-        [string]$verifiedMovieHashes["$hostBaseName.swf"]) {
-      throw "$($variant.VariantName) staged $hostBaseName.gfx must be byte-identical to $hostBaseName.swf. Refusing to mutate archives."
-    }
   }
 }
 Write-Host -ForegroundColor Green 'Verified every selected staged movie deployment before archive mutation.'

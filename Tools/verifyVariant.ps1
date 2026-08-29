@@ -595,7 +595,6 @@ foreach ($variant in $variants) {
     -Description "$($variant.VariantName) complete Interface payload"
 
   $verifiedMoviePaths = @{}
-  $verifiedMovieHashes = @{}
   $movieInspections = @{}
   foreach ($movie in @($movieProfile.DeploymentMovieDefinitions)) {
     $moviePath = Resolve-RequiredFile -Path (Join-Path $interfacePath $movie.FileName) -Description "$($variant.VariantName) $($movie.FileName)"
@@ -618,17 +617,9 @@ foreach ($variant in $variants) {
       throw "$($variant.VariantName) $($movie.FileName) must be $($expectedStageWidth)x$($expectedStageHeight) at $($expectedFrameRate) fps with one frame; found $($movieMetadata.StageWidth)x$($movieMetadata.StageHeight) at $($movieMetadata.FrameRate) fps with $($movieMetadata.FrameCount) frames."
     }
     $verifiedMoviePaths[[string]$movie.FileName] = $moviePath
-    $verifiedMovieHashes[[string]$movie.FileName] = $actualHash
     $movieInspections[[string]$movie.FileName] = Get-ScaleformMovieInspection `
       -Path $moviePath `
       -Context "$($variant.VariantName) $($movie.FileName)"
-  }
-
-  foreach ($hostBaseName in @('hudmenu', 'hudmenu_lrg')) {
-    if ([string]$verifiedMovieHashes["$hostBaseName.gfx"] -cne
-        [string]$verifiedMovieHashes["$hostBaseName.swf"]) {
-      throw "$($variant.VariantName) $hostBaseName.gfx must be byte-identical to $hostBaseName.swf."
-    }
   }
 
   foreach ($baseHudMovieName in @('hudmenu.gfx', 'hudmenu.swf', 'hudmenu_lrg.gfx', 'hudmenu_lrg.swf')) {
@@ -1248,6 +1239,12 @@ foreach ($variant in $variants) {
     if ($actualEntryNames.Count -ne $expectedMainEntries.Count -or
         [string]::Join("`n", $actualEntryNames) -cne [string]::Join("`n", $expectedMainEntries)) {
       throw "$($variant.VariantName) $archiveTarget archive inventory does not match its staged Interface payload."
+    }
+    if ([string]$archiveTarget -match '^Main(?:_|$)') {
+      $compressedEntries = @($entries | Where-Object { [uint32]$_.PackedSize -ne 0 })
+      if ($compressedEntries.Count -ne 0) {
+        throw "$($variant.VariantName) $archiveTarget must store every entry without BA2 compression; compressed entries: $($compressedEntries.Name -join ', ')"
+      }
     }
 
     foreach ($entry in $entries) {

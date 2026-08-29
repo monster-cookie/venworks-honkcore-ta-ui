@@ -292,14 +292,6 @@ foreach ($variant in $variants) {
     }
     $movieHashes[$movie.FileName].Add($actualHash)
   }
-  foreach ($hostBaseName in @('hudmenu', 'hudmenu_lrg')) {
-    $gfxHash = Get-Sha256 -Path (Join-Path $interfaceRoot "$hostBaseName.gfx")
-    $swfHash = Get-Sha256 -Path (Join-Path $interfaceRoot "$hostBaseName.swf")
-    if ($gfxHash -cne $swfHash) {
-      throw "$($variant.Name) $hostBaseName.gfx must be byte-identical to $hostBaseName.swf."
-    }
-  }
-
   foreach ($component in $components) {
     Assert-MatchingFile `
       -ExpectedPath (Join-Path $componentSourceRoot $component) `
@@ -350,6 +342,29 @@ Write-Host "Verified that createPackages.ps1 exclusively owns Archive2 invocatio
 
 $packageScriptPath = Join-Path $repositoryRoot 'Tools/createPackages.ps1'
 $packageScriptSource = [System.IO.File]::ReadAllText($packageScriptPath)
+$archiveCompressionExpectations = @(
+  [pscustomobject]@{ Name = 'Main'; Format = 'General'; Compression = 'None' },
+  [pscustomobject]@{ Name = 'Textures'; Format = 'DDS'; Compression = 'LZ4' },
+  [pscustomobject]@{ Name = 'Main_XBox'; Format = 'General'; Compression = 'None' },
+  [pscustomobject]@{ Name = 'Textures_XBox'; Format = 'XBoxDDS'; Compression = 'LZ4' },
+  [pscustomobject]@{ Name = 'Main_PS'; Format = 'General'; Compression = 'None' },
+  [pscustomobject]@{ Name = 'Textures_PS'; Format = 'DDS'; Compression = 'LZ4' }
+)
+foreach ($archiveExpectation in $archiveCompressionExpectations) {
+  $definitionPattern = '(?ms)^\s*"' + [regex]::Escape([string]$archiveExpectation.Name) +
+    '"\s*=\s*\[pscustomobject\]@\{(?<Definition>.*?)^\s*\}'
+  $definitionMatch = [regex]::Match($packageScriptSource, $definitionPattern)
+  if (!$definitionMatch.Success) {
+    throw "createPackages.ps1 is missing archive definition '$($archiveExpectation.Name)'."
+  }
+  $definitionSource = $definitionMatch.Groups['Definition'].Value
+  if ($definitionSource -cnotmatch ('(?m)^\s*Format\s*=\s*"' + [regex]::Escape([string]$archiveExpectation.Format) + '"\s*$') -or
+      $definitionSource -cnotmatch ('(?m)^\s*Compression\s*=\s*"' + [regex]::Escape([string]$archiveExpectation.Compression) + '"\s*$')) {
+    throw "createPackages.ps1 archive '$($archiveExpectation.Name)' must use format=$($archiveExpectation.Format) and compression=$($archiveExpectation.Compression)."
+  }
+}
+Write-Host 'Verified the Bethesda-style Archive2 format and compression matrix.'
+
 $productionGuardIndex = $packageScriptSource.IndexOf(
   'Verified every selected staged movie deployment before archive mutation.',
   [System.StringComparison]::Ordinal
@@ -368,8 +383,7 @@ if ($productionGuardIndex -lt 0 -or
     $productionGuardIndex -gt $archiveRemovalIndex -or
     $productionGuardIndex -gt $archiveInvocationIndex -or
     !$packageScriptSource.Contains('staged movie inventory does not match the exact production deployment mapping') -or
-    !$packageScriptSource.Contains('staged $movieName is not the declared production movie') -or
-    !$packageScriptSource.Contains('must be byte-identical to $hostBaseName.swf')) {
+    !$packageScriptSource.Contains('staged $movieName is not the declared production movie')) {
   throw 'createPackages.ps1 must reject incomplete, non-production, or mismatched staged movies before deleting or creating archives.'
 }
 Write-Host 'Verified the pre-Archive2 production movie-deployment guard.'
