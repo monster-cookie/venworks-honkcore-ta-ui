@@ -6,6 +6,7 @@ Set-StrictMode -Version Latest
 
 $repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 . (Join-Path $PSScriptRoot "sharedScaleformMovies.ps1")
+. (Join-Path $PSScriptRoot "sharedScaleformProfiles.ps1")
 
 function Resolve-RequiredFile {
   param(
@@ -238,44 +239,14 @@ $variants = @(
   [pscustomobject]@{ Name = 'Freestar Collective'; Directory = 'Staging-FC'; Palette = 'freestar-collective.xml' },
   [pscustomobject]@{ Name = 'Trackers Alliance'; Directory = 'Staging-TA'; Palette = 'trackers-alliance.xml' }
 )
-$movies = @(
-  [pscustomobject]@{
-    FileName = 'hudmenu.gfx'
-    ExpectedHashPath = 'Scaleform/hudmenu/validation/expected.sha256'
-  },
-  [pscustomobject]@{
-    FileName = 'hudmenu.swf'
-    ExpectedHashPath = 'Scaleform/hudmenu/validation/expected-swf.sha256'
-  },
-  [pscustomobject]@{
-    FileName = 'hudmenu_lrg.gfx'
-    ExpectedHashPath = 'Scaleform/hudmenu_lrg/validation/expected.sha256'
-  },
-  [pscustomobject]@{
-    FileName = 'hudmenu_lrg.swf'
-    ExpectedHashPath = 'Scaleform/hudmenu_lrg/validation/expected-swf.sha256'
-  },
-  [pscustomobject]@{
-    FileName = 'hudmessagesmenu.gfx'
-    ExpectedHashPath = 'Scaleform/hudmessagesmenu/validation/expected.sha256'
-  },
-  [pscustomobject]@{
-    FileName = 'hudmessagesmenu.swf'
-    ExpectedHashPath = 'Scaleform/hudmessagesmenu/validation/expected-swf.sha256'
-  },
-  [pscustomobject]@{
-    FileName = 'hudmessagesmenu_lrg.gfx'
-    ExpectedHashPath = 'Scaleform/hudmessagesmenu_lrg/validation/expected.sha256'
-  },
-  [pscustomobject]@{
-    FileName = 'hudmessagesmenu_lrg.swf'
-    ExpectedHashPath = 'Scaleform/hudmessagesmenu_lrg/validation/expected-swf.sha256'
-  },
-  [pscustomobject]@{
-    FileName = 'venworkscui.swf'
-    ExpectedHashPath = 'Scaleform/venworkscui/validation/expected.sha256'
-  }
-)
+$referenceBuildProfile = Import-PowerShellDataFile -LiteralPath (Join-Path $repositoryRoot 'Scaleform/variants/VWKS/build.psd1')
+$referenceMovieProfile = Get-VariantScaleformMovieProfile `
+  -RepositoryRoot $repositoryRoot `
+  -VariantBuildProfile $referenceBuildProfile
+$movies = @($referenceMovieProfile.DeploymentMovieDefinitions)
+if ($movies.Count -ne 9) {
+  throw "The shared deployment profile must contain exactly nine Interface movies; found $($movies.Count)."
+}
 
 $expectedInventory = @('layout.xml')
 $expectedInventory += @($components | ForEach-Object { "components/$_" })
@@ -300,7 +271,7 @@ foreach ($variant in $variants) {
     -Description "$($variant.Name) staged VenworksCUI payload"
 
   foreach ($movie in $movies) {
-    $expectedHashPath = Join-Path $repositoryRoot $movie.ExpectedHashPath
+    $expectedHashPath = [string]$movie.ExpectedHashPath
     $expectedHash = Read-ExpectedSha256 -Path $expectedHashPath
     $moviePath = Resolve-RequiredFile `
       -Path (Join-Path $interfaceRoot $movie.FileName) `
@@ -311,7 +282,8 @@ foreach ($variant in $variants) {
     }
     $movieMetadata = Get-ScaleformMovieMetadata `
       -Path $moviePath `
-      -Context "$($variant.Name) $($movie.FileName)"
+      -Context "$($variant.Name) $($movie.FileName)" `
+      -ExpectedSignature ([string]$movie.ExpectedSignature)
     if ($movieMetadata.StageWidth -ne 1920 -or
         $movieMetadata.StageHeight -ne 1080 -or
         $movieMetadata.FrameRate -ne 30 -or
@@ -319,6 +291,13 @@ foreach ($variant in $variants) {
       throw "$($variant.Name) $($movie.FileName) must be 1920x1080 at 30 fps with one frame; found $($movieMetadata.StageWidth)x$($movieMetadata.StageHeight) at $($movieMetadata.FrameRate) fps with $($movieMetadata.FrameCount) frames."
     }
     $movieHashes[$movie.FileName].Add($actualHash)
+  }
+  foreach ($hostBaseName in @('hudmenu', 'hudmenu_lrg')) {
+    $gfxHash = Get-Sha256 -Path (Join-Path $interfaceRoot "$hostBaseName.gfx")
+    $swfHash = Get-Sha256 -Path (Join-Path $interfaceRoot "$hostBaseName.swf")
+    if ($gfxHash -cne $swfHash) {
+      throw "$($variant.Name) $hostBaseName.gfx must be byte-identical to $hostBaseName.swf."
+    }
   }
 
   foreach ($component in $components) {
@@ -372,7 +351,7 @@ Write-Host "Verified that createPackages.ps1 exclusively owns Archive2 invocatio
 $packageScriptPath = Join-Path $repositoryRoot 'Tools/createPackages.ps1'
 $packageScriptSource = [System.IO.File]::ReadAllText($packageScriptPath)
 $productionGuardIndex = $packageScriptSource.IndexOf(
-  'Verified every selected production auxiliary movie before archive mutation.',
+  'Verified every selected staged movie deployment before archive mutation.',
   [System.StringComparison]::Ordinal
 )
 $archiveRemovalIndex = $packageScriptSource.IndexOf(
@@ -388,10 +367,12 @@ if ($productionGuardIndex -lt 0 -or
     $archiveInvocationIndex -lt 0 -or
     $productionGuardIndex -gt $archiveRemovalIndex -or
     $productionGuardIndex -gt $archiveInvocationIndex -or
-    !$packageScriptSource.Contains('staged venworkscui.swf is not the production auxiliary movie')) {
-  throw 'createPackages.ps1 must reject a non-production auxiliary movie before deleting or creating archives.'
+    !$packageScriptSource.Contains('staged movie inventory does not match the exact production deployment mapping') -or
+    !$packageScriptSource.Contains('staged $movieName is not the declared production movie') -or
+    !$packageScriptSource.Contains('must be byte-identical to $hostBaseName.swf')) {
+  throw 'createPackages.ps1 must reject incomplete, non-production, or mismatched staged movies before deleting or creating archives.'
 }
-Write-Host 'Verified the pre-Archive2 production auxiliary movie guard.'
+Write-Host 'Verified the pre-Archive2 production movie-deployment guard.'
 
 & (Join-Path $PSScriptRoot "verifyVariant.ps1") `
   -Committed

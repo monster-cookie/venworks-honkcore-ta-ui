@@ -314,35 +314,92 @@ function Get-VariantScaleformMovieProfile {
     throw "Scaleform movie profile '$name' must build venworkscui.swf."
   }
 
-  $movieDefinitions = @($manifestDefinitions | ForEach-Object {
+  $buildMovieDefinitions = @($manifestDefinitions | ForEach-Object {
     [pscustomobject]@{
       FileName = $_.FileName
       ExpectedHashPath = $_.ExpectedHashPath
+      SourceGroup = 'Bootstrap'
     }
   })
-  $movieDefinitions += @(
+  $buildMovieDefinitions += @(
     [pscustomobject]@{
       FileName = "hudmessagesmenu.gfx"
       ExpectedHashPath = (Join-Path $RepositoryRoot "Scaleform\hudmessagesmenu\validation\expected.sha256")
+      SourceGroup = 'HudMessages'
     },
     [pscustomobject]@{
       FileName = "hudmessagesmenu.swf"
       ExpectedHashPath = (Join-Path $RepositoryRoot "Scaleform\hudmessagesmenu\validation\expected-swf.sha256")
+      SourceGroup = 'HudMessages'
     },
     [pscustomobject]@{
       FileName = "hudmessagesmenu_lrg.gfx"
       ExpectedHashPath = (Join-Path $RepositoryRoot "Scaleform\hudmessagesmenu_lrg\validation\expected.sha256")
+      SourceGroup = 'HudMessages'
     },
     [pscustomobject]@{
       FileName = "hudmessagesmenu_lrg.swf"
       ExpectedHashPath = (Join-Path $RepositoryRoot "Scaleform\hudmessagesmenu_lrg\validation\expected-swf.sha256")
+      SourceGroup = 'HudMessages'
     },
     [pscustomobject]@{
       FileName = $auxiliaryDefinition.FileName
       ExpectedHashPath = $auxiliaryDefinition.ExpectedHashPath
       ExpectedClassHashPath = $auxiliaryDefinition.ExpectedClassHashPath
+      SourceGroup = 'Auxiliary'
     }
   )
+
+  $buildMoviesByName = @{}
+  foreach ($buildMovie in $buildMovieDefinitions) {
+    if ($buildMoviesByName.ContainsKey([string]$buildMovie.FileName)) {
+      throw "Scaleform movie profile '$name' contains duplicate build output '$($buildMovie.FileName)'."
+    }
+    $buildMoviesByName[[string]$buildMovie.FileName] = $buildMovie
+  }
+
+  $deploymentMappings = @(
+    [pscustomobject]@{ FileName = 'hudmenu.gfx'; SourceFileName = 'hudmenu.swf'; ExpectedSignature = 'CWS' },
+    [pscustomobject]@{ FileName = 'hudmenu.swf'; SourceFileName = 'hudmenu.swf'; ExpectedSignature = 'CWS' },
+    [pscustomobject]@{ FileName = 'hudmenu_lrg.gfx'; SourceFileName = 'hudmenu_lrg.swf'; ExpectedSignature = 'CWS' },
+    [pscustomobject]@{ FileName = 'hudmenu_lrg.swf'; SourceFileName = 'hudmenu_lrg.swf'; ExpectedSignature = 'CWS' },
+    [pscustomobject]@{ FileName = 'hudmessagesmenu.gfx'; SourceFileName = 'hudmessagesmenu.gfx'; ExpectedSignature = 'GFX' },
+    [pscustomobject]@{ FileName = 'hudmessagesmenu.swf'; SourceFileName = 'hudmessagesmenu.swf'; ExpectedSignature = 'CWS' },
+    [pscustomobject]@{ FileName = 'hudmessagesmenu_lrg.gfx'; SourceFileName = 'hudmessagesmenu_lrg.gfx'; ExpectedSignature = 'GFX' },
+    [pscustomobject]@{ FileName = 'hudmessagesmenu_lrg.swf'; SourceFileName = 'hudmessagesmenu_lrg.swf'; ExpectedSignature = 'CWS' },
+    [pscustomobject]@{ FileName = 'venworkscui.swf'; SourceFileName = 'venworkscui.swf'; ExpectedSignature = 'CWS' }
+  )
+  $deploymentMovieDefinitions = @($deploymentMappings | ForEach-Object {
+    $sourceFileName = [string]$_.SourceFileName
+    if (!$buildMoviesByName.ContainsKey($sourceFileName)) {
+      throw "Scaleform movie profile '$name' deploys missing build output '$sourceFileName'."
+    }
+    $sourceDefinition = $buildMoviesByName[$sourceFileName]
+    [pscustomobject]@{
+      FileName = [string]$_.FileName
+      SourceFileName = $sourceFileName
+      ExpectedHashPath = [string]$sourceDefinition.ExpectedHashPath
+      ExpectedSignature = [string]$_.ExpectedSignature
+      SourceGroup = [string]$sourceDefinition.SourceGroup
+    }
+  })
+  $requiredDeploymentNames = @(
+    'hudmenu.gfx',
+    'hudmenu.swf',
+    'hudmenu_lrg.gfx',
+    'hudmenu_lrg.swf',
+    'hudmessagesmenu.gfx',
+    'hudmessagesmenu.swf',
+    'hudmessagesmenu_lrg.gfx',
+    'hudmessagesmenu_lrg.swf',
+    'venworkscui.swf'
+  )
+  $deploymentNames = @($deploymentMovieDefinitions | ForEach-Object { [string]$_.FileName })
+  if ($deploymentNames.Count -ne $requiredDeploymentNames.Count -or
+      @($deploymentNames | Select-Object -Unique).Count -ne $deploymentNames.Count -or
+      @($requiredDeploymentNames | Where-Object { $_ -notin $deploymentNames }).Count -ne 0) {
+    throw "Scaleform movie profile '$name' must deploy the exact nine-movie Interface inventory."
+  }
 
   return [pscustomobject]@{
     Name = $name
@@ -353,7 +410,8 @@ function Get-VariantScaleformMovieProfile {
     AuxiliaryStageHeight = $auxiliaryDefinition.StageHeight
     AuxiliaryFrameRate = $auxiliaryDefinition.FrameRate
     SourceProfile = $auxiliarySourceProfile
-    MovieDefinitions = $movieDefinitions
+    BuildMovieDefinitions = $buildMovieDefinitions
+    DeploymentMovieDefinitions = $deploymentMovieDefinitions
   }
 }
 

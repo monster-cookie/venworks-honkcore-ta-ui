@@ -49,7 +49,7 @@ Five separately distributed variants are available. All five use the same thin n
 
 The four themed variants also include `starfield.xml` as a neutral palette option. The faction crest and equipment rail are available only in those four variants. Minimalist omits both from its shipped layout and also ships no SVG assets, palette files, helmet cutout paths, or active `svg`, `path`, `mask`, `icon`, `panel`, or `providerSymbol` elements. Those runtime capabilities are not compiled out of its standalone CUI movie.
 
-Each installed variant carries nine Interface movies. The four Bethesda HUD and HUD-message names preserve their native GFX or CWS container, and `Interface\venworkscui.swf` contains the complete Venworks runtime in one separately loaded ABC domain. The normal and large HUD movies retain one Bethesda ABC apiece and load the auxiliary movie through a guarded asynchronous bootstrap. The auxiliary uses Bethesda's 1920-by-1080, 30-fps, one-frame stage contract; the bootstrap starts from the HUD constructor, initializes the child runtime at `Event.INIT`, and attaches the loaded child directly to the HUD at `Event.COMPLETE`.
+Each installed variant carries nine Interface movies. The normal and large HUD bootstrap CWS files are deployed byte-for-byte under both their `.swf` and `.gfx` names, matching the working TACOS dual-name structure being tested for PS5 compatibility. The HUD-message `.gfx` files remain native GFX while their `.swf` partners remain independently compiled CWS, and `Interface\venworkscui.swf` contains the complete Venworks runtime in one separately loaded ABC domain. The normal and large HUD movies retain one Bethesda ABC apiece and load the auxiliary movie through a guarded asynchronous bootstrap. The auxiliary uses Bethesda's 1920-by-1080, 30-fps, one-frame stage contract; the bootstrap starts from the HUD constructor, initializes the child runtime at `Event.INIT`, and attaches the loaded child directly to the HUD at `Event.COMPLETE`.
 
 Enable only one release variant at a time. The variants install the same HUD
 movie and configuration paths, so whichever package wins file conflicts also
@@ -57,7 +57,7 @@ determines the starting configuration.
 
 ## Installation
 
-Choose one variant and one PC package shape. The recommended Nexus PC - Normal package installs a root ESM, Windows BA2 archives, and one loose `Interface\VenworksCUI\layout.xml`. Enable the ESM and let the package win HUD conflicts. All five variants, including Minimalist, are published through the same Nexus package matrix.
+Choose one variant and one PC package shape. The recommended Nexus PC - Normal package installs a root ESM, Windows BA2 archives, and one loose `Interface\VenworksCUI\layout.xml`. Enable the ESM and let the package win HUD conflicts. The v2.0.10 compatibility probe keeps all five Nexus package shapes buildable but disables every automated Nexus upload; only Minimalist is intended for manual Creations submission during the PS5 gate.
 
 The Nexus PC - Fully Loose Files package installs the complete `Interface`
 tree without an ESM or BA2. Use it only when component fragments, or palettes
@@ -110,7 +110,7 @@ separate loose override containing the additional changed files.
 - Direct PNG, JPEG, and DDS assets are unsupported by the Starfield Scaleform
   runtime. All movie profiles support the documented local SVG subset;
   Minimalist's shipped configuration simply does not use it.
-- Every platform package contains independently compiled Bethesda-format movie pairs: native `GFX` files at the `.gfx` paths and ZLIB-compressed `CWS` files at the matching `.swf` paths. Files are never renamed or signature-wrapped between formats.
+- Every platform package contains CWS normal and large HUD movies under both the `.gfx` and `.swf` paths, with each pair byte-identical. HUD-message `.gfx` files remain native GFX and HUD-message `.swf` files remain independently compiled CWS.
 - Palette changes require a new HUD load; live switching is unsupported.
 - In the four themed variants, active-power highlighting for favorite slots
   currently compares Bethesda's

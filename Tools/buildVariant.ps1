@@ -310,18 +310,16 @@ foreach ($variant in $variants) {
 
 try {
   $auxiliaryProfileDirectories = @{}
-  $profileMovieNames = @(
-    "hudmenu.gfx",
-    "hudmenu.swf",
-    "hudmenu_lrg.gfx",
-    "hudmenu_lrg.swf"
-  )
-  $sharedMovieNames = @(
-    "hudmessagesmenu.gfx",
-    "hudmessagesmenu.swf",
-    "hudmessagesmenu_lrg.gfx",
-    "hudmessagesmenu_lrg.swf"
-  )
+  $representativeMovieProfile = $variantMovieProfiles[[string]$variants[0].VariantKey]
+  $profileMovieNames = @($representativeMovieProfile.BuildMovieDefinitions |
+    Where-Object { [string]$_.SourceGroup -ceq 'Bootstrap' } |
+    ForEach-Object { [string]$_.FileName })
+  $sharedMovieNames = @($representativeMovieProfile.BuildMovieDefinitions |
+    Where-Object { [string]$_.SourceGroup -ceq 'HudMessages' } |
+    ForEach-Object { [string]$_.FileName })
+  if ($profileMovieNames.Count -ne 4 -or $sharedMovieNames.Count -ne 4) {
+    throw 'The shared movie profile must declare four bootstrap and four HUD-message build outputs.'
+  }
   $baseMovieDirectory = Join-Path (Join-Path $buildDirectory 'movies') 'shared-bootstrap'
   New-Item -ItemType Directory -Force -Path $baseMovieDirectory | Out-Null
   $compileArguments = @{
@@ -445,22 +443,21 @@ try {
     $interfaceOutputDirectory = Join-Path $resolvedStagingPath "Interface"
     Remove-OwnedDirectory -Path $interfaceOutputDirectory -OwnerPath $resolvedStagingPath
     New-Item -ItemType Directory -Force -Path $interfaceOutputDirectory | Out-Null
-    foreach ($movieName in $profileMovieNames) {
+    foreach ($deploymentMovie in @($movieProfile.DeploymentMovieDefinitions)) {
+      $sourceDirectory = switch ([string]$deploymentMovie.SourceGroup) {
+        'Bootstrap' { $baseMovieDirectory; break }
+        'HudMessages' { $sharedMovieDirectory; break }
+        'Auxiliary' { $auxiliaryProfileDirectory; break }
+        default { throw "$($variant.VariantName) movie deployment '$($deploymentMovie.FileName)' has unknown source group '$($deploymentMovie.SourceGroup)'." }
+      }
+      $sourceMoviePath = Resolve-RequiredFile `
+        -Path (Join-Path $sourceDirectory ([string]$deploymentMovie.SourceFileName)) `
+        -Description "$($variant.VariantName) deployment source '$($deploymentMovie.SourceFileName)'"
       Copy-Item `
-        -LiteralPath (Join-Path $baseMovieDirectory $movieName) `
-        -Destination (Join-Path $interfaceOutputDirectory $movieName) `
+        -LiteralPath $sourceMoviePath `
+        -Destination (Join-Path $interfaceOutputDirectory ([string]$deploymentMovie.FileName)) `
         -Force
     }
-    foreach ($movieName in $sharedMovieNames) {
-      Copy-Item `
-        -LiteralPath (Join-Path $sharedMovieDirectory $movieName) `
-        -Destination (Join-Path $interfaceOutputDirectory $movieName) `
-        -Force
-    }
-    Copy-Item `
-      -LiteralPath (Join-Path $auxiliaryProfileDirectory 'venworkscui.swf') `
-      -Destination (Join-Path $interfaceOutputDirectory 'venworkscui.swf') `
-      -Force
 
     $cuiOutputDirectory = Join-Path $interfaceOutputDirectory "VenworksCUI"
     $componentOutputDirectory = Join-Path $cuiOutputDirectory "components"
