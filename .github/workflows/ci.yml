@@ -169,7 +169,7 @@ jobs:
             $actualMovieNames = @(
               Get-ChildItem -LiteralPath $interfacePath -Recurse -File |
                 Where-Object { $_.Extension -in @('.gfx', '.swf') } |
-                ForEach-Object { $_.FullName.Substring($interfacePath.Length + 1).Replace('\', '/') } |
+                ForEach-Object { [System.IO.Path]::GetRelativePath($interfacePath, $_.FullName).Replace('\', '/') } |
                 Sort-Object
             )
             if ([string]::Join("`n", $actualMovieNames) -cne
@@ -207,7 +207,7 @@ jobs:
             $baseName = $variant.PackageBaseName
             $looseEntries = @(
               Get-ChildItem -LiteralPath $interfacePath -Recurse -File |
-                ForEach-Object { $_.FullName.Substring($stagingPath.Length + 1).Replace('\', '/') } |
+                ForEach-Object { [System.IO.Path]::GetRelativePath($stagingPath, $_.FullName).Replace('\', '/') } |
                 Sort-Object
             )
             $windowsArchives = @("$baseName - Main.ba2")
