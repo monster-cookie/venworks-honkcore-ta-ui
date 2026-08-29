@@ -2,9 +2,7 @@
 
 ## PowerShell static analysis
 
-GitHub Actions runs PSScriptAnalyzer 1.25.0 against the PowerShell sources under
-`Tools/`. Install the same pinned module version and run the analyzer from the
-repository root to reproduce the check locally:
+GitHub Actions runs PSScriptAnalyzer 1.25.0 against the PowerShell sources under `Tools/`. Install the same pinned module version and run the analyzer from the repository root to reproduce the check locally:
 
 ```powershell
 $ErrorActionPreference = 'Stop'
@@ -23,41 +21,19 @@ if ($findings.Count -ne 0) {
 }
 ```
 
-A clean analysis produces no findings. CI reports each finding's rule, severity,
-script, line, and message, then fails when the configured Error or Warning
-severities are present. `PSScriptAnalyzerSettings.psd1` documents the
-repository-specific reasons for each intentional baseline exclusion.
+A clean analysis produces no findings. CI reports each finding's rule, severity, script, line, and message, then fails when the configured Error or Warning severities are present. `PSScriptAnalyzerSettings.psd1` documents the repository-specific reasons for each intentional baseline exclusion.
 
 ## Release artifact pipeline
 
-The complete release build is a local Windows process followed by platform-neutral
-ZIP assembly in GitHub Actions. `Archive2.exe` is not installed or downloaded by
-the workflow. Before committing a release build, run these steps from the
-repository root:
+The complete release build is a local Windows process followed by platform-neutral ZIP assembly in GitHub Actions. `Archive2.exe` is not installed or downloaded by the workflow. Before committing a release build, run these steps from the repository root:
 
-1. Run `Tools/buildVariant.ps1` with the validated Java, JPEXS, and vanilla
-   Interface inputs. It compiles each selected movie profile once, then stages
-   every release variant's independent configuration profile unless a subset
-   is selected.
-2. Run `Tools/createPackages.ps1` with the same optional variant selection. The
-   script reads `TOOL_PATH_ARCHIVER` from `.env`, validates each variant's root
-   ESM, and runs only that variant's configured platform archive targets.
-3. Run `Tools/verifyVariant.ps1` with the same optional variant selection,
-   followed by `Tools/verifyCommittedRelease.ps1`. These checks validate the
-   independent payload profiles, movie hashes, root stub ESMs, generated BA2 files, and the
-   complete committed release inventory.
-4. Review and commit the staged loose files, ESMs, and Git LFS-managed BA2 files
-   together. A BA2 must be rebuilt whenever its staged source payload changes.
-5. After the change reaches `master`, create the release tag. The Ubuntu release
-   workflow uses `Tools/createReleasePackages.ps1` to assemble the committed
-   artifacts; it never invokes Archive2.
+1. Run `Tools/buildVariant.ps1` with the validated Java, JPEXS, and vanilla Interface inputs. It compiles each selected movie profile once, then stages every release variant's independent configuration profile unless a subset is selected.
+2. Run `Tools/createPackages.ps1` with the same optional variant selection. The script reads `TOOL_PATH_ARCHIVER` from `.env`, validates each variant's root ESM, and runs only that variant's configured platform archive targets.
+3. Run `Tools/verifyVariant.ps1` with the same optional variant selection, followed by `Tools/verifyCommittedRelease.ps1`. These checks validate the independent payload profiles, movie hashes, root stub ESMs, generated BA2 files, and the complete committed release inventory.
+4. Review and commit the staged loose files, ESMs, and Git LFS-managed BA2 files together. A BA2 must be rebuilt whenever its staged source payload changes.
+5. After the change reaches `master`, create the release tag. The Ubuntu release workflow uses `Tools/createReleasePackages.ps1` to assemble the committed artifacts; it never invokes Archive2.
 
-For repository-local regeneration without Vortex Junctions, use the deliberate
-`-Committed` mode on `buildVariant.ps1` and `createPackages.ps1`. Omitting
-`-VariantKeys` processes all five entries in `$Global:ReleaseVariants`. Pass a
-single key, such as `-VariantKeys MIN`, or an array, such as
-`-VariantKeys @("TA", "MIN")`, to process a subset. `-VariantKey` remains a
-compatibility alias for the plural parameter:
+For repository-local regeneration without Vortex Junctions, use the deliberate `-Committed` mode on `buildVariant.ps1` and `createPackages.ps1`. Omitting `-VariantKeys` processes all five entries in `$Global:ReleaseVariants`. Pass a single key, such as `-VariantKeys MIN`, or an array, such as `-VariantKeys @("TA", "MIN")`, to process a subset. `-VariantKey` remains a compatibility alias for the plural parameter:
 
 ```powershell
 ./Tools/buildVariant.ps1 `
@@ -69,9 +45,7 @@ compatibility alias for the plural parameter:
 ./Tools/verifyCommittedRelease.ps1
 ```
 
-Each variant uses one stable package base, such as
-`Venworks-CustomizableHUD-FreestarCollective`. `Tools/createPackages.ps1`
-creates these version-independent files from the matching staging root:
+Each variant uses one stable package base, such as `Venworks-CustomizableHUD-FreestarCollective`. `Tools/createPackages.ps1` creates these version-independent files from the matching staging root:
 
 ```text
 <PackageBase>.esm
@@ -83,20 +57,9 @@ creates these version-independent files from the matching staging root:
 <PackageBase> - Textures_PS.ba2
 ```
 
-The four themed profiles select all six archive targets shown above. Minimalist
-selects the three Main targets and produces no Textures archives, so its
-committed root contains its ESM and Windows, Xbox, and PS5 Main BA2s. The
-Archive2 format, compression, maximum-size, include-filter, and
-exclude-filter arguments in `Tools/createPackages.ps1` are part of the platform
-packaging contract. Preserve them exactly. Every archive target selected by a
-variant must run even when a source category is currently empty. Archive2 does
-not create a texture BA2 when its include filter matches no files, so each
-platform package contains its Main BA2 plus a Textures BA2 only when the texture
-command produces one.
+The four themed profiles select all six archive targets shown above. Minimalist selects the three Main targets and produces no Textures archives, so its committed root contains its ESM and Windows, Xbox, and PS5 Main BA2s. The Archive2 format, compression, maximum-size, include-filter, and exclude-filter arguments in `Tools/createPackages.ps1` are part of the platform packaging contract. Preserve them exactly. Every archive target selected by a variant must run even when a source category is currently empty. Archive2 does not create a texture BA2 when its include filter matches no files, so each platform package contains its Main BA2 plus a Textures BA2 only when the texture command produces one.
 
-The archive compression matrix follows Bethesda's shipped BA2s: every General Main target uses `None`, while every DDS or XBoxDDS Textures target uses `LZ4`. CWS movie compression remains internal to each SWF and is not changed by the outer BA2 setting.
-SVG assets currently follow the Main-archive filters. Moving SVGs into a texture
-archive is deferred until the generated console archives can be tested.
+The archive compression matrix follows Bethesda's shipped BA2s: every General Main target uses `None`, while every DDS or XBoxDDS Textures target uses `LZ4`. CWS movie compression remains internal to each SWF and is not changed by the outer BA2 setting. SVG assets currently follow the Main-archive filters. Moving SVGs into a texture archive is deferred until the generated console archives can be tested.
 
 ## Variant build profiles
 
@@ -106,9 +69,7 @@ The four themed profiles currently share the production layout, eight component 
 
 ## Minimalist release
 
-The `MIN` variant is a work-in-progress PC, Xbox, and PS5 release profile with
-no external SVG, palette, or DDS payload. Configure its ignored module path in
-`.env` for Junction-based local builds:
+The `MIN` variant is a work-in-progress PC, Xbox, and PS5 release profile with  no external SVG, palette, or DDS payload. Configure its ignored module path in `.env` for Junction-based local builds:
 
 ```text
 MODULE_VARIANT_MIN_PATH=<absolute path to the Minimalist module folder>
@@ -151,23 +112,11 @@ Every platform Main archive packages the staged nine-movie inventory directly: n
 
 ## Persistent BGS reference cache
 
-`Tools/cacheBgsScaleform.ps1` maintains the curated vanilla reference set under
-the Git-ignored `Scaleform/.work/bgs-decompiled` directory. The checked-in
-`Scaleform/reference-cache.xml` manifest includes the normal/large on-foot HUD,
-Watch map-icon library, player HUD components, frequently consulted status,
-favorites, inventory, and galaxy-starmap consumers, the Ship HUD family, and
-the available ship/powers provider JSON fixtures. It does not decompile the
-complete Interface archive.
+`Tools/cacheBgsScaleform.ps1` maintains the curated vanilla reference set under the Git-ignored `Scaleform/.work/bgs-decompiled` directory. The checked-in `Scaleform/reference-cache.xml` manifest includes the normal/large on-foot HUD, Watch map-icon library, player HUD components, frequently consulted status, favorites, inventory, and galaxy-starmap consumers, the Ship HUD family, and the available ship/powers provider JSON fixtures. It does not decompile the complete Interface archive.
 
-Each movie cache entry contains stable `movie.xml`, `scripts`, and `cache.json`
-paths. Cache validity requires the same relative input name, source SHA-256,
-JPEXS JAR SHA-256, parseable SWF XML, and an exported-script directory. Provider
-fixtures are copied byte-identically and checked against their source hashes.
-Changing either a movie or JPEXS invalidates only the affected movie entry;
-`-ForceRefresh` deliberately regenerates the full manifest.
+Each movie cache entry contains stable `movie.xml`, `scripts`, and `cache.json` paths. Cache validity requires the same relative input name, source SHA-256, JPEXS JAR SHA-256, parseable SWF XML, and an exported-script directory. Provider fixtures are copied byte-identically and checked against their source hashes. Changing either a movie or JPEXS invalidates only the affected movie entry; `-ForceRefresh` deliberately regenerates the full manifest.
 
-Run the cache from the repository root with the same external Java, JPEXS, and
-extracted Interface paths used by the normal build:
+Run the cache from the repository root with the same external Java, JPEXS, and extracted Interface paths used by the normal build:
 
 ```powershell
 ./Tools/cacheBgsScaleform.ps1 `
@@ -176,50 +125,15 @@ extracted Interface paths used by the normal build:
   -VanillaInterfacePath "C:\path\to\extracted\interface"
 ```
 
-`Tools/compileScaleform.ps1` requires its normal and large HUD inputs in this
-manifest and copies their cached vanilla XML into the build's GUID work
-directory. It still exports the patched timeline and reopened generated movie
-on every build because those exports enforce the patch-integrity, authored
-class, script-count, and single-domain contracts. Those validation directories
-remain temporary and are removed after a successful build unless `-KeepWork` is
-selected.
+`Tools/compileScaleform.ps1` requires its normal and large HUD inputs in this manifest and copies their cached vanilla XML into the build's GUID work directory. It still exports the patched timeline and reopened generated movie on every build because those exports enforce the patch-integrity, authored class, script-count, and single-domain contracts. Those validation directories remain temporary and are removed after a successful build unless `-KeepWork` is selected.
 
-Cache refreshes stage output below the resolved cache root and validate target
-paths before removing a stale, regenerable entry. Neither the cache nor its
-metadata records machine-specific absolute paths. Bethesda binaries,
-decompiled ActionScript, XML, and provider fixtures must remain ignored local
-references and must never be staged or committed.
+Cache refreshes stage output below the resolved cache root and validate target paths before removing a stale, regenerable entry. Neither the cache nor its metadata records machine-specific absolute paths. Bethesda binaries, decompiled ActionScript, XML, and provider fixtures must remain ignored local references and must never be staged or committed.
 
 ## Palette contract validation
 
-`Schemas/VenworksCUI/palette-v1.xsd` is the structural contract for palette
-files. `Schemas/VenworksCUI/layout-v1.xsd` permits a root layout to select one
-safe palette filename and permits the bounded `@palette.*` token form in
-attributes whose literal types would otherwise reject a reference. Runtime
-resolution remains the semantic gate for role existence, field/category
-compatibility, required roles, and asset allowlists.
+`Schemas/VenworksCUI/palette-v1.xsd` is the structural contract for palette files. `Schemas/VenworksCUI/layout-v1.xsd` permits a root layout to select one safe palette filename and permits the bounded `@palette.*` token form in attributes whose literal types would otherwise reject a reference. Runtime resolution remains the semantic gate for role existence, field/category compatibility, required roles, and asset allowlists.
 
-The normal build validates the positive palette contract and palette-layout
-unsafe paths to fail structurally, and keeps unknown-role and incompatible-role
-fixtures structurally valid for the runtime semantic gate. The runtime lowers
-bounded composites, templates, repeaters, and states on a copy of the fully
-imported layout, inserts the complete selected palette at the head of that
-runtime tree, and resolves semantic values only when the parser, asset manager,
-or components consume an attribute. No palette step rewrites or reparses the
-layout XML. The palette-composite fixture covers
-buttons, quick bars, information panels, warnings, palette-backed composite
-icons, every button state, and every warning severity. The build also verifies
-that the authored loader remains fixed to `VenworksCUI/palettes`, retains its
-size and path bounds, and that the ordering and semantic composite output
-survive the normal/large movie import and reopen cycle. The production layout
-selects `venworks.xml` by default. The build validates and stages
-`venworks.xml`, `crimson-fleet.xml`, `freestar-collective.xml`, and
-`trackers-alliance.xml`, plus the neutral `starfield.xml`, under
-`Interface/VenworksCUI/palettes` in all four themed release variants. Minimalist
-uses literal Starfield colors and stages no palette directory. Repository checks
-enforce the exact five release-variant names, their corresponding selected
-palette filenames, the Venworks default selector, and byte-identical source and
-staged copies of all five user-selectable palette files.
+The normal build validates the positive palette contract and palette-layout unsafe paths to fail structurally, and keeps unknown-role and incompatible-role fixtures structurally valid for the runtime semantic gate. The runtime lowers bounded composites, templates, repeaters, and states on a copy of the fully imported layout, inserts the complete selected palette at the head of that runtime tree, and resolves semantic values only when the parser, asset manager, or components consume an attribute. No palette step rewrites or reparses the layout XML. The palette-composite fixture covers buttons, quick bars, information panels, warnings, palette-backed composite icons, every button state, and every warning severity. The build also verifies that the authored loader remains fixed to `VenworksCUI/palettes`, retains its size and path bounds, and that the ordering and semantic composite output survive the normal/large movie import and reopen cycle. The production layout selects `venworks.xml` by default. The build validates and stages `venworks.xml`, `crimson-fleet.xml`, `freestar-collective.xml`, and `trackers-alliance.xml`, plus the neutral `starfield.xml`, under `Interface/VenworksCUI/palettes` in all four themed release variants. Minimalist uses literal Starfield colors and stages no palette directory. Repository checks enforce the exact five release-variant names, their corresponding selected palette filenames, the Venworks default selector, and byte-identical source and staged copies of all five user-selectable palette files.
 
 ## Auxiliary movie domain boundary
 
@@ -245,35 +159,14 @@ After any bootstrap, entrypoint, CUI class, provider profile, or extern change, 
 
 ## Component registration contract
 
-Components loaded from an included fragment pass through three independent
-runtime gates: `CUICompositionResolver` must accept the XML element,
-`CUILayoutParser` must validate its attributes, and `CUIRuntime` must construct
-the display component. Registering a component in only the parser and runtime
-is insufficient. The composition resolver processes included fragments first
-and reports the element as unknown before layout parsing can reach its branch.
+Components loaded from an included fragment pass through three independent runtime gates: `CUICompositionResolver` must accept the XML element, `CUILayoutParser` must validate its attributes, and `CUIRuntime` must construct the display component. Registering a component in only the parser and runtime is insufficient. The composition resolver processes included fragments first and reports the element as unknown before layout parsing can reach its branch.
 
-Goal 8B initially shipped `contactRadar` without adding it to the composition
-resolver's leaf-component list. Both deployed HUD movies contained the new
-parser and runtime code, but the included `contact-radar.xml` fragment failed at
-composition. The build now requires `contactRadar` registration to survive the
-movie import/reopen cycle in all three gates. Future included-fragment component
-types must extend this validation contract at the same time they are added.
+Goal 8B initially shipped `contactRadar` without adding it to the composition resolver's leaf-component list. Both deployed HUD movies contained the new parser and runtime code, but the included `contact-radar.xml` fragment failed at composition. The build now requires `contactRadar` registration to survive the movie import/reopen cycle in all three gates. Future included-fragment component types must extend this validation contract at the same time they are added.
 
-Starfield's Scaleform runtime can reduce `ReferenceError #1065` to its numeric
-identifier without naming the unresolved variable or class. The runtime
-therefore distinguishes layout validation, asset-manager initialization, and
-asset collection, while the parser retains the component type and ID currently
-being validated. Reopened-movie validation requires these checkpoint strings
-and the optional stack-trace request to survive compilation.
+Starfield's Scaleform runtime can reduce `ReferenceError #1065` to its numeric identifier without naming the unresolved variable or class. The runtime therefore distinguishes layout validation, asset-manager initialization, and asset collection, while the parser retains the component type and ID currently being validated. Reopened-movie validation requires these checkpoint strings and the optional stack-trace request to survive compilation.
 
 ## Goal 8 split-domain regression
 
-Goal 8 runtime diagnostics localized `ReferenceError #1065` to the first call
-to `CUISymbol.isAllowlisted`. The authored vehicle-exit symbol and `CUISymbol`
-implementation were unchanged, but Goal 8 seed regeneration replaced Goal 7's
-single lazy ABC with forty independent lazy ABC tags. A controlled terminal
-sentinel moved `CUISymbol` away from the final record; the same error remained
-with matching deployed hashes. That disproved terminal-record loss and
-confirmed that padding cannot repair the violated one-domain architecture.
+Goal 8 runtime diagnostics localized `ReferenceError #1065` to the first call to `CUISymbol.isAllowlisted`. The authored vehicle-exit symbol and `CUISymbol` implementation were unchanged, but Goal 8 seed regeneration replaced Goal 7's single lazy ABC with forty independent lazy ABC tags. A controlled terminal sentinel moved `CUISymbol` away from the final record; the same error remained with matching deployed hashes. That disproved terminal-record loss and confirmed that padding cannot repair the violated one-domain architecture.
 
 The first production correction restored one generated ABC containing the entire dynamic class inventory inside each base HUD movie. The current architecture preserves that one-domain rule while moving the single CUI ABC into `venworkscui.swf`. `compc` is now used only to produce a temporary external host-library SWC; do not embed that SWC, emit independent per-class ABC tags, add sentinel slots, or split cooperating CUI classes across domains.
