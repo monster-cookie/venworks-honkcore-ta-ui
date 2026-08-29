@@ -177,18 +177,16 @@ jobs:
               throw "$($variant.VariantName) staging does not contain the exact nine-movie Interface inventory."
             }
 
-            foreach ($hostBaseName in @('hudmenu', 'hudmenu_lrg')) {
-              $gfxPath = Join-Path $interfacePath "$hostBaseName.gfx"
-              $swfPath = Join-Path $interfacePath "$hostBaseName.swf"
-              if ((Get-FileHash -LiteralPath $gfxPath -Algorithm SHA256).Hash -cne
-                  (Get-FileHash -LiteralPath $swfPath -Algorithm SHA256).Hash) {
-                throw "$($variant.VariantName) $hostBaseName.gfx is not byte-identical to $hostBaseName.swf."
-              }
-              foreach ($hostPath in @($gfxPath, $swfPath)) {
-                $signature = [System.Text.Encoding]::ASCII.GetString([System.IO.File]::ReadAllBytes($hostPath), 0, 3)
-                if ($signature -cne 'CWS') {
-                  throw "$($variant.VariantName) $([System.IO.Path]::GetFileName($hostPath)) must contain CWS bytes."
-                }
+            foreach ($hostMovie in @(
+              [pscustomobject]@{ FileName = 'hudmenu.gfx'; Signature = 'GFX' }
+              [pscustomobject]@{ FileName = 'hudmenu.swf'; Signature = 'CWS' }
+              [pscustomobject]@{ FileName = 'hudmenu_lrg.gfx'; Signature = 'GFX' }
+              [pscustomobject]@{ FileName = 'hudmenu_lrg.swf'; Signature = 'CWS' }
+            )) {
+              $hostPath = Join-Path $interfacePath $hostMovie.FileName
+              $signature = [System.Text.Encoding]::ASCII.GetString([System.IO.File]::ReadAllBytes($hostPath), 0, 3)
+              if ($signature -cne $hostMovie.Signature) {
+                throw "$($variant.VariantName) $($hostMovie.FileName) must contain $($hostMovie.Signature) bytes."
               }
             }
             foreach ($messageMovie in @(
