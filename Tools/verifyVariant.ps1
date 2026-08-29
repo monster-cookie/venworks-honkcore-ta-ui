@@ -792,6 +792,16 @@ foreach ($variant in $variants) {
     $tacticalAwarenessSource,
     '(?s)private function appendStatusEffects\(.*?(?=\s+private function classifyStatus)'
   )
+  $statusEffectBarRelativePath = [System.IO.Path]::Combine(
+    'venworks',
+    'cui',
+    'components',
+    'CUIStatusEffectBar.as'
+  )
+  if (!$profiledActionScript.ContainsKey($statusEffectBarRelativePath)) {
+    throw "$($variant.VariantName) profile excludes the status-effect bar."
+  }
+  $statusEffectBarSource = [string]$profiledActionScript[$statusEffectBarRelativePath]
   if (!$statusCollectionMethod.Success -or
       !$statusCollectionMethod.Value.Contains('personalEffectsData.aPersonalEffects as Array;') -or
       !$statusCollectionMethod.Value.Contains('environmentData.aEnvironmentEffects as Array;') -or
@@ -799,8 +809,14 @@ foreach ($variant in $variants) {
       !$statusCollectionMethod.Value.Contains('this.appendStatusEffects(result,seen,environmentEffects,true,1);') -or
       !$statusAppendMethod.Success -or
       !$statusAppendMethod.Value.Contains('param2[key] !== true') -or
-      !$statusAppendMethod.Value.Contains('kind = param4 ? "debuff" : this.classifyStatus(key);')) {
-    throw "$($variant.VariantName) tactical-awareness status aggregation must combine and deduplicate personal and environmental effects."
+      !$statusAppendMethod.Value.Contains('kind = param4 ? "debuff" : this.classifyStatus(key);') -or
+      !$statusAppendMethod.Value.Contains('key.indexOf("SUSTENANCE_FOOD_NEGATIVE_") == 0') -or
+      !$statusAppendMethod.Value.Contains('key.indexOf("SUSTENANCE_DRINK_NEGATIVE_") == 0') -or
+      !$statusAppendMethod.Value.Contains('"debuff" : kind,') -or
+      !$statusEffectBarSource.Contains('var colorKind:String = param2.colorKind == null ? String(param2.kind) : String(param2.colorKind);') -or
+      !$statusEffectBarSource.Contains('var color:uint = colorKind == "debuff" ? debuffColor :') -or
+      !$statusEffectBarSource.Contains('colorKind == "sustenance" ? sustenanceColor : neutralColor;')) {
+    throw "$($variant.VariantName) tactical-awareness statuses must aggregate both sources, deduplicate icons, and render negative sustenance with the debuff color."
   }
   $runtimeRelativePath = [System.IO.Path]::Combine('venworks', 'cui', 'CUIRuntime.as')
   if (!$profiledActionScript.ContainsKey($runtimeRelativePath)) {

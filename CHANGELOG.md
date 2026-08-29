@@ -11,8 +11,9 @@
 
 - All: Deploy the CWS normal and large HUD movies byte-for-byte under both their `.swf` and `.gfx` names for the next PS5 compatibility probe while retaining the native GFX/CWS HUD-message split.
 - All: Include active environmental afflictions in the status-effect bar alongside personal and sustenance effects, with duplicate icons collapsed.
+- All: Render negative food and drink status tiles with the configured debuff color while preserving sustenance classification and ordering.
 - All: Preserve native GFX host compilation as a validated build-only intermediate and reject incomplete, stale, incorrectly encoded, or non-production staged movies before Archive2 can mutate an archive.
-- Release: Disable the global and all five variant Nexus upload gates; all variants remain buildable, but only Minimalist is intended for manual Creations publication during this probe.
+- Release: Restore the global and all five variant Nexus upload gates for the official v2.0.10 release while retaining PS5 acceptance as a separate end-user gate.
 
 ## Version 2.0.9 (September 28, 2026)
 

@@ -325,6 +325,9 @@ package venworks.cui
                   icon:icon,
                   label:this.createStatusLabel(key,kind),
                   kind:kind,
+                  colorKind:kind == "sustenance" &&
+                     (key.indexOf("SUSTENANCE_FOOD_NEGATIVE_") == 0 || key.indexOf("SUSTENANCE_DRINK_NEGATIVE_") == 0) ?
+                     "debuff" : kind,
                   sourceGroup:param5,
                   sourceIndex:index
                });

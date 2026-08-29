@@ -191,8 +191,9 @@ package venworks.cui.components
 
       private function configureSlot(param1:Object, param2:Object) : void
       {
-         var color:uint = param2.kind == "debuff" ? debuffColor :
-            param2.kind == "sustenance" ? sustenanceColor : neutralColor;
+         var colorKind:String = param2.colorKind == null ? String(param2.kind) : String(param2.colorKind);
+         var color:uint = colorKind == "debuff" ? debuffColor :
+            colorKind == "sustenance" ? sustenanceColor : neutralColor;
          var format:TextFormat = param1.label.defaultTextFormat;
          var iconSucceeded:Boolean = false;
          this.drawSlotBackground(param1.background,param1.width,param1.height,color);

@@ -57,7 +57,7 @@ determines the starting configuration.
 
 ## Installation
 
-Choose one variant and one PC package shape. The recommended Nexus PC - Normal package installs a root ESM, Windows BA2 archives, and one loose `Interface\VenworksCUI\layout.xml`. Enable the ESM and let the package win HUD conflicts. The v2.0.10 compatibility probe keeps all five Nexus package shapes buildable but disables every automated Nexus upload; only Minimalist is intended for manual Creations submission during the PS5 gate.
+Choose one variant and one PC package shape. The recommended Nexus PC - Normal package installs a root ESM, Windows BA2 archives, and one loose `Interface\VenworksCUI\layout.xml`. Enable the ESM and let the package win HUD conflicts. The official v2.0.10 release publishes both Nexus package shapes for all five variants while PS5 compatibility remains subject to end-user acceptance.
 
 The Nexus PC - Fully Loose Files package installs the complete `Interface`
 tree without an ESM or BA2. Use it only when component fragments, or palettes
@@ -68,6 +68,8 @@ strongly recommended for either package shape.
 Bethesda Creations use separate ESM-and-BA2-only packages for PC, Xbox, and
 PS5. Install only the package supplied for the current platform and enable only
 one release variant.
+
+When replacing an experimental Creation with an official release, uninstall the experimental entry first and verify that only one Creation owning that ESM identity remains; Bethesda's manager can otherwise leave both entries competing to install, replace, or remove the same plugin and archives.
 
 This release has no HONKCORE dependency. It is incompatible with any mod that
 replaces `hudmenu.gfx`, `hudmenu_lrg.gfx`, `hudmessagesmenu.gfx`, or

@@ -22,6 +22,8 @@ complete palette contract and custom-theme workflow, use the
    quotation marks.
 5. Keep a copy of every customized file outside the downloaded mod package.
 
+When replacing an experimental Bethesda Creation with an official release that owns the same ESM identity, uninstall the experimental entry first and verify that only one remains before installing the replacement; duplicate Creation entries can compete over the same plugin and BA2 files.
+
 Mod-manager updates, reinstalls, purge/deploy operations, and file-conflict
 changes can replace local edits. The normal Nexus package supplies only
 `layout.xml` loose; its component fragments, palettes, and SVG assets remain in
