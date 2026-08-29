@@ -24,6 +24,7 @@ if (!$Global:SharedConfigurationLoaded) {
   . "$PSScriptRoot/sharedConfig.ps1"
 }
 . (Join-Path $PSScriptRoot 'sharedScaleformProfiles.ps1')
+. (Join-Path $PSScriptRoot 'sharedScaleformMovies.ps1')
 
 $repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 
@@ -67,11 +68,13 @@ function Read-ExpectedSha256 {
   if (!(Test-Path -LiteralPath $Path -PathType Leaf)) {
     throw "Expected SHA-256 file does not exist: $Path"
   }
-  $hash = [System.IO.File]::ReadAllText($Path).Trim().ToUpperInvariant()
-  if ($hash -notmatch '^[0-9A-F]{64}$') {
-    throw "Expected SHA-256 file is invalid: $Path"
+  $hashLine = Get-Content -LiteralPath $Path | Where-Object {
+    $_ -match '^\s*[A-Fa-f0-9]{64}(?:\s|$)'
+  } | Select-Object -First 1
+  if (!$hashLine) {
+    throw "No SHA-256 value was found in $Path."
   }
-  return $hash
+  return ([regex]::Match($hashLine, '[A-Fa-f0-9]{64}').Value).ToUpperInvariant()
 }
 
 $archiveDefinitions = [ordered]@{
@@ -130,24 +133,49 @@ foreach ($variant in $variants) {
   $movieProfile = Get-VariantScaleformMovieProfile `
     -RepositoryRoot $repositoryRoot `
     -VariantBuildProfile $variantBuildProfile
-  $auxiliaryDefinitions = @($movieProfile.MovieDefinitions | Where-Object {
-    [string]$_.FileName -ceq 'venworkscui.swf'
-  })
-  if ($auxiliaryDefinitions.Count -ne 1) {
-    throw "$($variant.VariantName) must declare exactly one production auxiliary movie."
-  }
   $stagingFolderPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot $variant.StagingFolderPath))
-  $auxiliaryPath = Join-Path $stagingFolderPath 'Interface\venworkscui.swf'
-  if (!(Test-Path -LiteralPath $auxiliaryPath -PathType Leaf)) {
-    throw "$($variant.VariantName) is missing its staged production auxiliary movie: $auxiliaryPath"
+  $interfacePath = Join-Path $stagingFolderPath 'Interface'
+  if (!(Test-Path -LiteralPath $interfacePath -PathType Container)) {
+    throw "$($variant.VariantName) is missing its staged Interface payload: $interfacePath"
   }
-  $expectedAuxiliaryHash = Read-ExpectedSha256 -Path ([string]$auxiliaryDefinitions[0].ExpectedHashPath)
-  $actualAuxiliaryHash = (Get-FileHash -LiteralPath $auxiliaryPath -Algorithm SHA256).Hash
-  if ($actualAuxiliaryHash -cne $expectedAuxiliaryHash) {
-    throw "$($variant.VariantName) staged venworkscui.swf is not the production auxiliary movie. Expected $expectedAuxiliaryHash; found $actualAuxiliaryHash. Refusing to mutate archives."
+
+  $deploymentDefinitions = @($movieProfile.DeploymentMovieDefinitions)
+  $expectedMovieNames = @($deploymentDefinitions | ForEach-Object { [string]$_.FileName } | Sort-Object)
+  $actualMovieNames = @(
+    Get-ChildItem -LiteralPath $interfacePath -Recurse -File |
+      Where-Object { $_.Extension -in @('.gfx', '.swf') } |
+      ForEach-Object { $_.FullName.Substring($interfacePath.Length + 1).Replace('\', '/') } |
+      Sort-Object
+  )
+  if ($actualMovieNames.Count -ne $expectedMovieNames.Count -or
+      [string]::Join("`n", $actualMovieNames) -cne [string]::Join("`n", $expectedMovieNames)) {
+    throw "$($variant.VariantName) staged movie inventory does not match the exact production deployment mapping. Refusing to mutate archives."
+  }
+
+  $verifiedMovieHashes = @{}
+  foreach ($deploymentMovie in $deploymentDefinitions) {
+    $movieName = [string]$deploymentMovie.FileName
+    $moviePath = Join-Path $interfacePath $movieName
+    $expectedMovieHash = Read-ExpectedSha256 -Path ([string]$deploymentMovie.ExpectedHashPath)
+    $actualMovieHash = (Get-FileHash -LiteralPath $moviePath -Algorithm SHA256).Hash.ToUpperInvariant()
+    if ($actualMovieHash -cne $expectedMovieHash) {
+      $markerHint = if ($movieName -ceq 'venworkscui.swf') { ' The marker probe is never packageable.' } else { '' }
+      throw "$($variant.VariantName) staged $movieName is not the declared production movie. Expected $expectedMovieHash; found $actualMovieHash.$markerHint Refusing to mutate archives."
+    }
+    Assert-ScaleformMovieEncoding `
+      -Path $moviePath `
+      -Context "$($variant.VariantName) staged $movieName" `
+      -ExpectedSignature ([string]$deploymentMovie.ExpectedSignature)
+    $verifiedMovieHashes[$movieName] = $actualMovieHash
+  }
+  foreach ($hostBaseName in @('hudmenu', 'hudmenu_lrg')) {
+    if ([string]$verifiedMovieHashes["$hostBaseName.gfx"] -cne
+        [string]$verifiedMovieHashes["$hostBaseName.swf"]) {
+      throw "$($variant.VariantName) staged $hostBaseName.gfx must be byte-identical to $hostBaseName.swf. Refusing to mutate archives."
+    }
   }
 }
-Write-Host -ForegroundColor Green 'Verified every selected production auxiliary movie before archive mutation.'
+Write-Host -ForegroundColor Green 'Verified every selected staged movie deployment before archive mutation.'
 
 foreach ($variant in $variants) {
   $stagingFolderPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot $variant.StagingFolderPath))

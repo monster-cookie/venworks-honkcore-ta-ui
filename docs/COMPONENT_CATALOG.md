@@ -198,7 +198,7 @@ gamer-facing configuration surface.
 | Notification/toast | Future | Panel, icon, primary/secondary text, priority, duration, and bounded entrance/exit effects. |
 | Warning panel | Complete | Severity color, icon, title, detail, and visibility/state rules. |
 | Item/ammo readout | Future | Weapon/item icon, amount, reserve amount, state color, and optional meter. |
-| Status-effect row | Implemented | Bounded active-effects presentation using verified HUD data; large-HUD acceptance remains pending. |
+| Status-effect row | Implemented | Bounded active-effects presentation using verified personal, environmental, and sustenance HUD data; negative food and drink entries retain sustenance behavior but use the configured debuff color, and large-HUD acceptance remains pending. |
 | Scanner overlay | Implemented | Scanner-only heading banner, 5-by-5 square-to-dot radial pulse, and up to five validated forward contacts. Its pulse timer runs only while the component and every display-list ancestor are visible. It preserves Bethesda's reticle/crosshair and uses deterministic type/handle codenames instead of names or random data. |
 | Reticle/crosshair | Vanilla-owned; not configurable | Bethesda retains the complete visual and lifecycle owner; proven crosshair data remains condition input only. |
 
@@ -232,6 +232,8 @@ custom replacement provides no meaningful benefit. Proven crosshair, sneaking,
 and combat fields remain available as read-only condition inputs for the player
 threat meter and approved layout choreography. The player threat meter and
 player status effects remain approved custom surfaces.
+
+The status-effect bar combines personal and environmental effect providers. Environmental afflictions are treated as debuffs, and matching icon identifiers from both providers collapse into one entry.
 
 ## Ship UI coverage targets
 

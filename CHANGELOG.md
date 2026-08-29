@@ -7,6 +7,12 @@
 - https://creations.bethesda.net/en/starfield/details/03b616a3-1902-4b83-a109-fc176f658a69/Venworks_Customizable_HUD___Crimson_Fleet_Theme
 - https://creations.bethesda.net/en/starfield/details/9b635bf7-8c6b-4530-bdbd-0912903b336b/Venworks_Customizable_HUD___Freestar_Collective_Th
 
+## Version 2.0.10 (September 29, 2026)
+
+- All: Deploy the CWS normal and large HUD movies byte-for-byte under both their `.swf` and `.gfx` names for the next PS5 compatibility probe while retaining the native GFX/CWS HUD-message split.
+- All: Include active environmental afflictions in the status-effect bar alongside personal and sustenance effects, with duplicate icons collapsed.
+- All: Render negative food and drink status tiles with the configured debuff color while preserving sustenance classification and ordering.
+
 ## Version 2.0.9 (September 28, 2026)
 
 - All: Set movie resolution to 1920x1080, 30-fps, one-frame metadata.

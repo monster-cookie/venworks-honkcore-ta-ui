@@ -587,7 +587,7 @@ foreach ($variant in $variants) {
   $expectedCuiInventory += @($variantBuildProfile.PaletteFileNames | ForEach-Object { "palettes/$_" })
   Assert-Inventory -RootPath $cuiPath -ExpectedPaths $expectedCuiInventory -Description "$($variant.VariantName) CUI payload"
 
-  $expectedInterfaceInventory = @($movieProfile.MovieDefinitions | ForEach-Object { [string]$_.FileName })
+  $expectedInterfaceInventory = @($movieProfile.DeploymentMovieDefinitions | ForEach-Object { [string]$_.FileName })
   $expectedInterfaceInventory += @($expectedCuiInventory | ForEach-Object { "VenworksCUI/$_" })
   Assert-Inventory `
     -RootPath $interfacePath `
@@ -595,8 +595,9 @@ foreach ($variant in $variants) {
     -Description "$($variant.VariantName) complete Interface payload"
 
   $verifiedMoviePaths = @{}
+  $verifiedMovieHashes = @{}
   $movieInspections = @{}
-  foreach ($movie in @($movieProfile.MovieDefinitions)) {
+  foreach ($movie in @($movieProfile.DeploymentMovieDefinitions)) {
     $moviePath = Resolve-RequiredFile -Path (Join-Path $interfacePath $movie.FileName) -Description "$($variant.VariantName) $($movie.FileName)"
     $expectedHash = Read-ExpectedSha256 -Path $movie.ExpectedHashPath
     $actualHash = Get-Sha256 -Path $moviePath
@@ -605,7 +606,8 @@ foreach ($variant in $variants) {
     }
     $movieMetadata = Get-ScaleformMovieMetadata `
       -Path $moviePath `
-      -Context "$($variant.VariantName) $($movie.FileName)"
+      -Context "$($variant.VariantName) $($movie.FileName)" `
+      -ExpectedSignature ([string]$movie.ExpectedSignature)
     $expectedStageWidth = if ([string]$movie.FileName -ceq 'venworkscui.swf') { $movieProfile.AuxiliaryStageWidth } else { 1920 }
     $expectedStageHeight = if ([string]$movie.FileName -ceq 'venworkscui.swf') { $movieProfile.AuxiliaryStageHeight } else { 1080 }
     $expectedFrameRate = if ([string]$movie.FileName -ceq 'venworkscui.swf') { $movieProfile.AuxiliaryFrameRate } else { 30 }
@@ -616,9 +618,17 @@ foreach ($variant in $variants) {
       throw "$($variant.VariantName) $($movie.FileName) must be $($expectedStageWidth)x$($expectedStageHeight) at $($expectedFrameRate) fps with one frame; found $($movieMetadata.StageWidth)x$($movieMetadata.StageHeight) at $($movieMetadata.FrameRate) fps with $($movieMetadata.FrameCount) frames."
     }
     $verifiedMoviePaths[[string]$movie.FileName] = $moviePath
+    $verifiedMovieHashes[[string]$movie.FileName] = $actualHash
     $movieInspections[[string]$movie.FileName] = Get-ScaleformMovieInspection `
       -Path $moviePath `
       -Context "$($variant.VariantName) $($movie.FileName)"
+  }
+
+  foreach ($hostBaseName in @('hudmenu', 'hudmenu_lrg')) {
+    if ([string]$verifiedMovieHashes["$hostBaseName.gfx"] -cne
+        [string]$verifiedMovieHashes["$hostBaseName.swf"]) {
+      throw "$($variant.VariantName) $hostBaseName.gfx must be byte-identical to $hostBaseName.swf."
+    }
   }
 
   foreach ($baseHudMovieName in @('hudmenu.gfx', 'hudmenu.swf', 'hudmenu_lrg.gfx', 'hudmenu_lrg.swf')) {
@@ -764,6 +774,49 @@ foreach ($variant in $variants) {
   ).Count
   if ($actualCrossContextProviderCount -ne $sourceProfile.CrossContextProviderCount) {
     throw "$($variant.VariantName) transformed ActionScript has $actualCrossContextProviderCount cross-context providers; expected $($sourceProfile.CrossContextProviderCount)."
+  }
+  $tacticalAwarenessRelativePath = [System.IO.Path]::Combine(
+    'venworks',
+    'cui',
+    'CUITacticalAwarenessModel.as'
+  )
+  if (!$profiledActionScript.ContainsKey($tacticalAwarenessRelativePath)) {
+    throw "$($variant.VariantName) profile excludes the tactical-awareness model."
+  }
+  $tacticalAwarenessSource = [string]$profiledActionScript[$tacticalAwarenessRelativePath]
+  $statusCollectionMethod = [regex]::Match(
+    $tacticalAwarenessSource,
+    '(?s)private function collectStatusEffects\(\) : Array.*?(?=\s+private function appendStatusEffects)'
+  )
+  $statusAppendMethod = [regex]::Match(
+    $tacticalAwarenessSource,
+    '(?s)private function appendStatusEffects\(.*?(?=\s+private function classifyStatus)'
+  )
+  $statusEffectBarRelativePath = [System.IO.Path]::Combine(
+    'venworks',
+    'cui',
+    'components',
+    'CUIStatusEffectBar.as'
+  )
+  if (!$profiledActionScript.ContainsKey($statusEffectBarRelativePath)) {
+    throw "$($variant.VariantName) profile excludes the status-effect bar."
+  }
+  $statusEffectBarSource = [string]$profiledActionScript[$statusEffectBarRelativePath]
+  if (!$statusCollectionMethod.Success -or
+      !$statusCollectionMethod.Value.Contains('personalEffectsData.aPersonalEffects as Array;') -or
+      !$statusCollectionMethod.Value.Contains('environmentData.aEnvironmentEffects as Array;') -or
+      !$statusCollectionMethod.Value.Contains('this.appendStatusEffects(result,seen,personalEffects,false,0);') -or
+      !$statusCollectionMethod.Value.Contains('this.appendStatusEffects(result,seen,environmentEffects,true,1);') -or
+      !$statusAppendMethod.Success -or
+      !$statusAppendMethod.Value.Contains('param2[key] !== true') -or
+      !$statusAppendMethod.Value.Contains('kind = param4 ? "debuff" : this.classifyStatus(key);') -or
+      !$statusAppendMethod.Value.Contains('key.indexOf("SUSTENANCE_FOOD_NEGATIVE_") == 0') -or
+      !$statusAppendMethod.Value.Contains('key.indexOf("SUSTENANCE_DRINK_NEGATIVE_") == 0') -or
+      !$statusAppendMethod.Value.Contains('"debuff" : kind,') -or
+      !$statusEffectBarSource.Contains('var colorKind:String = param2.colorKind == null ? String(param2.kind) : String(param2.colorKind);') -or
+      !$statusEffectBarSource.Contains('var color:uint = colorKind == "debuff" ? debuffColor :') -or
+      !$statusEffectBarSource.Contains('colorKind == "sustenance" ? sustenanceColor : neutralColor;')) {
+    throw "$($variant.VariantName) tactical-awareness statuses must aggregate both sources, deduplicate icons, and render negative sustenance with the debuff color."
   }
   $runtimeRelativePath = [System.IO.Path]::Combine('venworks', 'cui', 'CUIRuntime.as')
   if (!$profiledActionScript.ContainsKey($runtimeRelativePath)) {

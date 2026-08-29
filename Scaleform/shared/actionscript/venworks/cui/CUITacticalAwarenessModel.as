@@ -296,33 +296,44 @@ package venworks.cui
       {
          var result:Array = [];
          var seen:Object = {};
-         var effects:Array = personalEffectsData == null ? null : personalEffectsData.aPersonalEffects as Array;
+         var personalEffects:Array = personalEffectsData == null ? null : personalEffectsData.aPersonalEffects as Array;
+         var environmentEffects:Array = environmentData == null ? null : environmentData.aEnvironmentEffects as Array;
+         this.appendStatusEffects(result,seen,personalEffects,false,0);
+         this.appendStatusEffects(result,seen,environmentEffects,true,1);
+         result.sort(this.compareStatuses);
+         return result;
+      }
+
+      private function appendStatusEffects(param1:Array, param2:Object, param3:Array, param4:Boolean, param5:int) : void
+      {
          var source:Object = null;
          var icon:String = null;
          var key:String = null;
          var kind:String = null;
          var index:int = 0;
-         while(effects != null && index < effects.length && result.length < MAX_STATUS_EFFECTS)
+         while(param3 != null && index < param3.length && param1.length < MAX_STATUS_EFFECTS)
          {
-            source = effects[index];
+            source = param3[index];
             icon = source == null || source.sEffectIcon === undefined || source.sEffectIcon === null ? "" :
                String(source.sEffectIcon);
             key = icon.toUpperCase();
-            if(key.length != 0 && seen[key] !== true)
+            if(key.length != 0 && param2[key] !== true)
             {
-               seen[key] = true;
-               kind = this.classifyStatus(key);
-               result.push({
+               param2[key] = true;
+               kind = param4 ? "debuff" : this.classifyStatus(key);
+               param1.push({
                   icon:icon,
                   label:this.createStatusLabel(key,kind),
                   kind:kind,
+                  colorKind:kind == "sustenance" &&
+                     (key.indexOf("SUSTENANCE_FOOD_NEGATIVE_") == 0 || key.indexOf("SUSTENANCE_DRINK_NEGATIVE_") == 0) ?
+                     "debuff" : kind,
+                  sourceGroup:param5,
                   sourceIndex:index
                });
             }
             ++index;
          }
-         result.sort(this.compareStatuses);
-         return result;
       }
 
       private function classifyStatus(param1:String) : String
@@ -376,6 +387,10 @@ package venworks.cui
          if(first != second)
          {
             return first - second;
+         }
+         if(int(param1.sourceGroup) != int(param2.sourceGroup))
+         {
+            return int(param1.sourceGroup) - int(param2.sourceGroup);
          }
          return int(param1.sourceIndex) - int(param2.sourceIndex);
       }

@@ -22,6 +22,8 @@ complete palette contract and custom-theme workflow, use the
    quotation marks.
 5. Keep a copy of every customized file outside the downloaded mod package.
 
+When replacing an experimental Bethesda Creation with an official release that owns the same ESM identity, uninstall the experimental entry first and verify that only one remains before installing the replacement; duplicate Creation entries can compete over the same plugin and BA2 files.
+
 Mod-manager updates, reinstalls, purge/deploy operations, and file-conflict
 changes can replace local edits. The normal Nexus package supplies only
 `layout.xml` loose; its component fragments, palettes, and SVG assets remain in
@@ -58,7 +60,7 @@ The important files are:
 | `Interface\VenworksCUI\palettes\*.xml` | Defines semantic colors, typography, opacity, strokes, and the faction crest. |
 | `Interface\VenworksCUI\Assets\*.svg` | Contains supported local vector artwork used by the layout or palettes. |
 
-Minimalist includes `layout.xml` and six component fragments, but intentionally omits the `Assets` and `palettes` directories. Its build resolves the shipped Starfield color roles to literals. The normal package exposes its layout loose; the fully loose package exposes the reduced XML tree and nine movies: four native GFX files, four independently compiled CWS files at the matching `.swf` paths, and the standalone CWS `venworkscui.swf` runtime.
+Minimalist includes `layout.xml` and six component fragments, but intentionally omits the `Assets` and `palettes` directories. Its build resolves the shipped Starfield color roles to literals. The normal package exposes its layout loose; the fully loose package exposes the reduced XML tree and nine movies: byte-identical CWS normal/large HUD aliases at both `.gfx` and `.swf` paths, the native GFX/CWS HUD-message pairs, and the standalone CWS `venworkscui.swf` runtime.
 
 The Nexus PC - Normal package exposes only `layout.xml` from this tree as a
 loose file. The runtime resolves referenced component fragments and, when
@@ -85,7 +87,7 @@ The process is atomic. One invalid file prevents the configurable layer from
 partially rendering. A diagnostic panel identifies the failure category and,
 when available, the phase, checkpoint, component type, and component ID.
 
-Minimalist follows the same external configuration loading path and uses live data contexts. It omits only the four providers used exclusively by its removed equipment rail; all remaining conditions and live-value bindings stay active. Every variant uses the same nine-path movie inventory in its fully loose package and in each platform's Main archive: four native GFX files, four independently compiled CWS files at the matching `.swf` paths, and `venworkscui.swf`. The base HUD and HUD-message pairs are shared across all variants; Minimalist's standalone CUI movie is profile-specific.
+Minimalist follows the same external configuration loading path and uses live data contexts. It omits only the four providers used exclusively by its removed equipment rail; all remaining conditions and live-value bindings stay active. Every variant uses the same nine-path movie inventory in its fully loose package and in each platform's Main archive: CWS normal/large HUD bytes under both `.gfx` and `.swf` aliases, native GFX/CWS HUD-message pairs, and `venworkscui.swf`. The base HUD and HUD-message paths are shared across all variants; Minimalist's standalone CUI movie is profile-specific.
 
 There is no live reload command. After every XML or SVG change, fully exit and
 restart Starfield. Merely closing the scanner or opening a menu is not a
