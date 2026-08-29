@@ -233,6 +233,8 @@ and combat fields remain available as read-only condition inputs for the player
 threat meter and approved layout choreography. The player threat meter and
 player status effects remain approved custom surfaces.
 
+The status-effect bar combines personal and environmental effect providers. Environmental afflictions are treated as debuffs, and matching icon identifiers from both providers collapse into one entry.
+
 ## Ship UI coverage targets
 
 - hull, shield, and boost meters;

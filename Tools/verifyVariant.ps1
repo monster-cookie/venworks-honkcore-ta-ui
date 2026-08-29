@@ -775,6 +775,33 @@ foreach ($variant in $variants) {
   if ($actualCrossContextProviderCount -ne $sourceProfile.CrossContextProviderCount) {
     throw "$($variant.VariantName) transformed ActionScript has $actualCrossContextProviderCount cross-context providers; expected $($sourceProfile.CrossContextProviderCount)."
   }
+  $tacticalAwarenessRelativePath = [System.IO.Path]::Combine(
+    'venworks',
+    'cui',
+    'CUITacticalAwarenessModel.as'
+  )
+  if (!$profiledActionScript.ContainsKey($tacticalAwarenessRelativePath)) {
+    throw "$($variant.VariantName) profile excludes the tactical-awareness model."
+  }
+  $tacticalAwarenessSource = [string]$profiledActionScript[$tacticalAwarenessRelativePath]
+  $statusCollectionMethod = [regex]::Match(
+    $tacticalAwarenessSource,
+    '(?s)private function collectStatusEffects\(\) : Array.*?(?=\s+private function appendStatusEffects)'
+  )
+  $statusAppendMethod = [regex]::Match(
+    $tacticalAwarenessSource,
+    '(?s)private function appendStatusEffects\(.*?(?=\s+private function classifyStatus)'
+  )
+  if (!$statusCollectionMethod.Success -or
+      !$statusCollectionMethod.Value.Contains('personalEffectsData.aPersonalEffects as Array;') -or
+      !$statusCollectionMethod.Value.Contains('environmentData.aEnvironmentEffects as Array;') -or
+      !$statusCollectionMethod.Value.Contains('this.appendStatusEffects(result,seen,personalEffects,false,0);') -or
+      !$statusCollectionMethod.Value.Contains('this.appendStatusEffects(result,seen,environmentEffects,true,1);') -or
+      !$statusAppendMethod.Success -or
+      !$statusAppendMethod.Value.Contains('param2[key] !== true') -or
+      !$statusAppendMethod.Value.Contains('kind = param4 ? "debuff" : this.classifyStatus(key);')) {
+    throw "$($variant.VariantName) tactical-awareness status aggregation must combine and deduplicate personal and environmental effects."
+  }
   $runtimeRelativePath = [System.IO.Path]::Combine('venworks', 'cui', 'CUIRuntime.as')
   if (!$profiledActionScript.ContainsKey($runtimeRelativePath)) {
     throw "$($variant.VariantName) profile excludes the CUI runtime."
