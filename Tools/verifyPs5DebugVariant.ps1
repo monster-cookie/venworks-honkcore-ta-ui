@@ -443,6 +443,9 @@ $requiredTokens = @(
   'PS5DBG-02 ADDED TO STAGE',
   'PS5DBG-OK HUD LOADED',
   'PS5DBG-ERR UNCAUGHT',
+  'PS5DebugErrorRecorded',
+  'indexOf',
+  'PS5DBG-ERR',
   '$MAIN_Font_Bold',
   'uncaughtErrorEvents'
 )

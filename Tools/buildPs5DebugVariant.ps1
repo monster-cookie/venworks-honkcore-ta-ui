@@ -1,6 +1,9 @@
 <#
 .SYNOPSIS
 Builds the isolated PS5 debug HUD movies and stages their unique plugin payload.
+
+.PARAMETER Committed
+Uses the tracked staging directory without requiring a local module path or junction.
 #>
 [CmdletBinding()]
 param(
@@ -17,7 +20,9 @@ param(
 
   [switch]$KeepWork,
 
-  [switch]$UpdateExpectedHashes
+  [switch]$UpdateExpectedHashes,
+
+  [switch]$Committed
 )
 
 $PSNativeCommandUseErrorActionPreference = $true
@@ -26,7 +31,12 @@ Set-StrictMode -Version Latest
 
 if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction SilentlyContinue)) {
   Write-Host -ForegroundColor Green "Importing Shared Configuration"
-  . (Join-Path $PSScriptRoot "sharedConfig.ps1")
+  if ($Committed) {
+    . (Join-Path $PSScriptRoot "sharedConfig.ps1") -SkipEnvironment
+  }
+  else {
+    . (Join-Path $PSScriptRoot "sharedConfig.ps1")
+  }
 }
 . (Join-Path $PSScriptRoot "sharedScaleformMovies.ps1")
 
@@ -281,6 +291,8 @@ function Build-Ps5DebugMovie {
     'PS5DBG-02 ADDED TO STAGE',
     'PS5DBG-OK HUD LOADED',
     'PS5DBG-ERR UNCAUGHT',
+    'PS5DebugErrorRecorded',
+    'indexOf("PS5DBG-ERR")',
     'new TextFormat("$MAIN_Font_Bold",20',
     'loaderInfo.uncaughtErrorEvents.addEventListener',
     'param1.preventDefault()',
@@ -355,25 +367,27 @@ if ($manifestPaths.Count -ne 4 -or @($manifestPaths | Select-Object -Unique).Cou
 
 $stagingPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot ([string]$variant.StagingFolderPath)))
 if (!(Test-Path -LiteralPath $stagingPath -PathType Container)) {
-  throw "PS5 Debug staging folder does not exist. Run setupPs5DebugVariant.ps1 first: $stagingPath"
-}
-$stagingItem = Get-Item -LiteralPath $stagingPath
-if ($stagingItem.LinkType -ne "Junction") {
-  throw "PS5 Debug staging folder must be a Junction: $stagingPath"
-}
-$stagingTargets = @($stagingItem.Target)
-if ($stagingTargets.Count -ne 1) {
-  throw "PS5 Debug staging Junction must have exactly one target."
+  throw "PS5 Debug staging folder does not exist: $stagingPath"
 }
 $resolvedStagingPath = (Resolve-Path -LiteralPath $stagingPath).Path
-$resolvedJunctionTarget = Resolve-RequiredDirectory `
-  -Path ([string]$stagingTargets[0]) `
-  -Description "PS5 Debug staging Junction target"
-$configuredModulePath = Resolve-RequiredDirectory `
-  -Path ([string]$variant.PluginModulePath) `
-  -Description "PS5 Debug physical module folder"
-if (![string]::Equals($resolvedJunctionTarget, $configuredModulePath, [System.StringComparison]::OrdinalIgnoreCase)) {
-  throw "PS5 Debug staging Junction does not target the configured physical module folder."
+if (!$Committed) {
+  $stagingItem = Get-Item -LiteralPath $stagingPath
+  if ($stagingItem.LinkType -ne "Junction") {
+    throw "PS5 Debug staging folder must be a Junction: $stagingPath"
+  }
+  $stagingTargets = @($stagingItem.Target)
+  if ($stagingTargets.Count -ne 1) {
+    throw "PS5 Debug staging Junction must have exactly one target."
+  }
+  $resolvedJunctionTarget = Resolve-RequiredDirectory `
+    -Path ([string]$stagingTargets[0]) `
+    -Description "PS5 Debug staging Junction target"
+  $configuredModulePath = Resolve-RequiredDirectory `
+    -Path ([string]$variant.PluginModulePath) `
+    -Description "PS5 Debug physical module folder"
+  if (![string]::Equals($resolvedJunctionTarget, $configuredModulePath, [System.StringComparison]::OrdinalIgnoreCase)) {
+    throw "PS5 Debug staging Junction does not target the configured physical module folder."
+  }
 }
 
 foreach ($existingItem in @(Get-ChildItem -LiteralPath $resolvedStagingPath -Force)) {

@@ -1,19 +1,38 @@
 <#
 .SYNOPSIS
 Creates the local staging junction for the isolated PS5 debug variant.
+
+.PARAMETER Committed
+Uses the tracked staging directory without requiring a local module path or junction.
 #>
 [CmdletBinding()]
-param()
+param(
+  [switch]$Committed
+)
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
 if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction SilentlyContinue)) {
   Write-Host -ForegroundColor Green "Importing Shared Configuration"
-  . (Join-Path $PSScriptRoot "sharedConfig.ps1")
+  if ($Committed) {
+    . (Join-Path $PSScriptRoot "sharedConfig.ps1") -SkipEnvironment
+  }
+  else {
+    . (Join-Path $PSScriptRoot "sharedConfig.ps1")
+  }
 }
 
 $variant = @(Get-DiagnosticVariants -VariantKeys "PS5DBG")[0]
+$stagingPath = [System.IO.Path]::GetFullPath([string]$variant.StagingFolderPath)
+if ($Committed) {
+  if (!(Test-Path -LiteralPath $stagingPath -PathType Container)) {
+    throw "PS5 Debug committed staging directory does not exist: $stagingPath"
+  }
+  Write-Host -ForegroundColor Green "PS5 Debug committed staging directory is available at $stagingPath."
+  return
+}
+
 if ([string]::IsNullOrWhiteSpace([string]$variant.PluginModulePath)) {
   throw "PS5 Debug physical module folder is not configured. Set MODULE_VARIANT_PS5DBG_PATH in .env."
 }
@@ -23,7 +42,6 @@ if (!(Test-Path -LiteralPath $modulePath -PathType Container)) {
   New-Item -ItemType Directory -Force -Path $modulePath | Out-Null
 }
 $resolvedModulePath = (Resolve-Path -LiteralPath $modulePath).Path
-$stagingPath = [System.IO.Path]::GetFullPath([string]$variant.StagingFolderPath)
 
 if (Test-Path -LiteralPath $stagingPath) {
   $stagingItem = Get-Item -LiteralPath $stagingPath

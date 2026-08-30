@@ -8,7 +8,8 @@
     <insertion position="after"><anchor><![CDATA[      private var SkillPatchLoader:Loader = null;]]></anchor><content><![CDATA[
 
       private var PS5DebugPane:TextField = null;
-      private var PS5DebugErrorHookInstalled:Boolean = false;]]></content></insertion>
+      private var PS5DebugErrorHookInstalled:Boolean = false;
+      private var PS5DebugErrorRecorded:Boolean = false;]]></content></insertion>
     <insertion position="after"><anchor><![CDATA[         super();]]></anchor><content><![CDATA[
          this.showPS5DebugStatus("PS5DBG-01 CONSTRUCTED",16777215);
          this.installPS5DebugErrorHook();
@@ -25,6 +26,7 @@
          }
          catch(ps5DebugHookError:Error)
          {
+            this.PS5DebugErrorRecorded = true;
             this.showPS5DebugStatus("PS5DBG-ERR HOOK | " + ps5DebugHookError.toString(),16711680);
          }
       }
@@ -36,6 +38,10 @@
             return;
          }
          removeEventListener(Event.ADDED_TO_STAGE,this.onPS5DebugAddedToStage);
+         if(this.PS5DebugErrorRecorded)
+         {
+            return;
+         }
          this.showPS5DebugStatus("PS5DBG-02 ADDED TO STAGE",16777215);
          addEventListener(Event.ENTER_FRAME,this.onPS5DebugFirstFrame,false,0,true);
       }
@@ -43,12 +49,17 @@
       private function onPS5DebugFirstFrame(param1:Event) : void
       {
          removeEventListener(Event.ENTER_FRAME,this.onPS5DebugFirstFrame);
+         if(this.PS5DebugErrorRecorded)
+         {
+            return;
+         }
          this.showPS5DebugStatus("PS5DBG-OK HUD LOADED",65280);
       }
 
       private function onPS5DebugUncaughtError(param1:UncaughtErrorEvent) : void
       {
          var errorText:String = "unknown";
+         this.PS5DebugErrorRecorded = true;
          try
          {
             errorText = String(param1.error);
@@ -65,6 +76,10 @@
       private function showPS5DebugStatus(param1:String, param2:uint) : void
       {
          var format:TextFormat = new TextFormat("$MAIN_Font_Bold",20,param2,true);
+         if(this.PS5DebugErrorRecorded && param1.indexOf("PS5DBG-ERR") != 0)
+         {
+            return;
+         }
          try
          {
             if(this.PS5DebugPane == null)

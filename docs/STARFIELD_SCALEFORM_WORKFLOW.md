@@ -110,18 +110,21 @@ The four base HUD paths and four HUD-message movies are shared while their boots
 Use the isolated PS5 Debug path when the purpose is to determine whether Bethesda's HUD host itself reaches a lifecycle phase before any Venworks runtime or configuration is introduced:
 
 ```powershell
-.\Tools\setupPs5DebugVariant.ps1
+.\Tools\setupPs5DebugVariant.ps1 -Committed
 .\Tools\buildPs5DebugVariant.ps1 `
   -JavaPath ".work/tools/java/bin/java.exe" `
   -JpexsJarPath ".work/tools/jpexs/ffdec.jar" `
-  -VanillaInterfacePath "Scaleform/.work/vanilla-interface-extracted/interface"
-.\Tools\createPs5DebugPackages.ps1
-.\Tools\verifyPs5DebugVariant.ps1
+  -VanillaInterfacePath "Scaleform/.work/vanilla-interface-extracted/interface" `
+  -Committed
+.\Tools\createPs5DebugPackages.ps1 -Committed
+.\Tools\verifyPs5DebugVariant.ps1 -Committed
 ```
+
+The `-Committed` path operates directly on the tracked staging directory and does not load `.env` or require a junction. Omit `-Committed` only when the staging path has already been replaced by the correctly targeted local module junction.
 
 This path imports one bounded patch into the existing `HUDMenu` class in Bethesda's existing ABC. It does not add a `DoABC` tag or custom document class. The output contains only the four normal/large Bethesda HUD movie paths and the uniquely named PS5 Debug plugin. Do not add HUD-message movies, `venworkscui.swf`, XML, SVG, palettes, assets, providers, Xbox archives, or Nexus package shapes to this diagnostic.
 
-Interpret the top-center pane by the last visible phase: `PS5DBG-01 CONSTRUCTED` proves the document-class constructor ran, `PS5DBG-02 ADDED TO STAGE` proves the HUD instance joined the display list, and `PS5DBG-OK HUD LOADED` proves it completed the first rendered-frame transition. `PS5DBG-ERR` records a contained ActionScript failure and its phase. Absence of the pane does not prove the movie was absent; it means the failure occurred before the diagnostic constructor or before the field could render and must be correlated with deployment hashes and the unique ESM/BA2 inventory.
+Interpret the top-center pane by the last visible phase: `PS5DBG-01 CONSTRUCTED` proves the document-class constructor ran, `PS5DBG-02 ADDED TO STAGE` proves the HUD instance joined the display list, and `PS5DBG-OK HUD LOADED` proves it completed the first rendered-frame transition. `PS5DBG-ERR` records a contained ActionScript failure and its phase. Once an error is recorded, the pane suppresses later non-error lifecycle updates so it cannot report false success. Absence of the pane does not prove the movie was absent; it means the failure occurred before the diagnostic constructor or before the field could render and must be correlated with deployment hashes and the unique ESM/BA2 inventory.
 
 ## 7. Build platform archives and release packages
 
