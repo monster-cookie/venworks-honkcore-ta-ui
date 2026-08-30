@@ -105,6 +105,24 @@ Interface/venworkscui.swf
 
 The four base HUD paths and four HUD-message movies are shared while their bootstrap patches remain common. The standalone CUI movie is shared by the four themed variants and profile-specific for Minimalist. Each `.gfx` path receives the independently compiled native GFX output and each `.swf` path receives the independently compiled CWS output from its matching clean Bethesda source. The builder writes generated XML and SVG payloads as UTF-8 without a byte-order mark with canonical LF line endings. This keeps the loose staging bytes and BA2 entries deterministic across Windows and Linux checkouts.
 
+### Build a Bethesda-ABC-only diagnostic
+
+Use the isolated PS5 Debug path when the purpose is to determine whether Bethesda's HUD host itself reaches a lifecycle phase before any Venworks runtime or configuration is introduced:
+
+```powershell
+.\Tools\setupPs5DebugVariant.ps1
+.\Tools\buildPs5DebugVariant.ps1 `
+  -JavaPath ".work/tools/java/bin/java.exe" `
+  -JpexsJarPath ".work/tools/jpexs/ffdec.jar" `
+  -VanillaInterfacePath "Scaleform/.work/vanilla-interface-extracted/interface"
+.\Tools\createPs5DebugPackages.ps1
+.\Tools\verifyPs5DebugVariant.ps1
+```
+
+This path imports one bounded patch into the existing `HUDMenu` class in Bethesda's existing ABC. It does not add a `DoABC` tag or custom document class. The output contains only the four normal/large Bethesda HUD movie paths and the uniquely named PS5 Debug plugin. Do not add HUD-message movies, `venworkscui.swf`, XML, SVG, palettes, assets, providers, Xbox archives, or Nexus package shapes to this diagnostic.
+
+Interpret the top-center pane by the last visible phase: `PS5DBG-01 CONSTRUCTED` proves the document-class constructor ran, `PS5DBG-02 ADDED TO STAGE` proves the HUD instance joined the display list, and `PS5DBG-OK HUD LOADED` proves it completed the first rendered-frame transition. `PS5DBG-ERR` records a contained ActionScript failure and its phase. Absence of the pane does not prove the movie was absent; it means the failure occurred before the diagnostic constructor or before the field could render and must be correlated with deployment hashes and the unique ESM/BA2 inventory.
+
 ## 7. Build platform archives and release packages
 
 Create every selected Windows, Xbox, and PlayStation archive directly from the staged payload:

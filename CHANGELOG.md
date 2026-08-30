@@ -10,7 +10,7 @@
 
 ## Version 2.0.12 (UNRELEASED)
 
-- None Yet
+- PS5 Debug: Add an isolated diagnostic variant with a unique plugin identity, only Bethesda's normal and large HUD movies, and a top-center lifecycle/error pane patched directly into the existing one-ABC HUDMenu bytecode for end-user PS5 startup testing.
 
 ## Version 2.0.11 (September 29, 2026)
 

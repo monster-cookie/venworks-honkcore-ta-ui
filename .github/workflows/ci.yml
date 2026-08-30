@@ -75,6 +75,10 @@ jobs:
         shell: pwsh
         run: ./Tools/verifyVariant.ps1 -Committed
 
+      - name: Verify isolated PS5 diagnostic variant
+        shell: pwsh
+        run: ./Tools/verifyPs5DebugVariant.ps1 -Committed
+
       - name: Verify committed entry point without local environment
         shell: pwsh
         run: |

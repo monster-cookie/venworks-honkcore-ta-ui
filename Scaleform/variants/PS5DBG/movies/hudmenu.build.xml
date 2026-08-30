@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scaleformBuild name="ps5-debug-hudmenu"
+                mode="ps5-debug-hudmenu"
+                inputFile="hudmenu.gfx"
+                outputFile="hudmenu.gfx"
+                vanillaHashFile="../../../hudmenu/vanilla.sha256"
+                expectedHashFile="hudmenu.expected.sha256"
+                actionScriptPatch="../patches/ps5-debug-pane.xml" />

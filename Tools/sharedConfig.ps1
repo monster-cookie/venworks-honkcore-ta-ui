@@ -77,6 +77,7 @@ if (!$SkipEnvironment) {
   Write-Host -ForegroundColor Yellow "Crimson Fleet Variant Folder is $ENV:MODULE_VARIANT_CF_PATH"
   Write-Host -ForegroundColor Yellow "Venworks Variant Folder is $ENV:MODULE_VARIANT_VWKS_PATH"
   Write-Host -ForegroundColor Yellow "Minimalist Variant Folder is $ENV:MODULE_VARIANT_MIN_PATH"
+  Write-Host -ForegroundColor Yellow "PS5 Debug Variant Folder is $ENV:MODULE_VARIANT_PS5DBG_PATH"
 }
 
 $releaseArchiveTargets = @(
@@ -155,6 +156,21 @@ $Global:ReleaseVariants = @(
     )
 )
 
+$Global:DiagnosticVariants = @(
+    [ModuleVariant]::new(
+        "PS5DBG",
+        "PS5 Debug",
+        "Venworks - Customizable HUD - PS5 Debug",
+        "",
+        "",
+        "Venworks-CustomizableHUD-PS5Debug",
+        "./Staging-PS5DBG",
+        "$ENV:MODULE_VARIANT_PS5DBG_PATH",
+        "",
+        @("Main", "Main_PS")
+    )
+)
+
 function Global:Get-ModuleVariants {
   [CmdletBinding()]
   param(
@@ -182,6 +198,40 @@ function Global:Get-ModuleVariants {
     })
     if ($matchingVariants.Count -ne 1) {
       throw "Unknown module variant key '$normalizedKey'."
+    }
+    $matchingVariants[0]
+  }
+
+  return @($selectedVariants)
+}
+
+function Global:Get-DiagnosticVariants {
+  [CmdletBinding()]
+  param(
+    [Alias("VariantKey")]
+    [string[]]$VariantKeys
+  )
+
+  if ($null -eq $VariantKeys -or $VariantKeys.Count -eq 0) {
+    return @($Global:DiagnosticVariants)
+  }
+
+  $normalizedKeys = @($VariantKeys | ForEach-Object {
+    if ([string]::IsNullOrWhiteSpace($_)) {
+      throw "Diagnostic variant keys cannot be empty."
+    }
+    $_.Trim().ToUpperInvariant()
+  })
+  if (@($normalizedKeys | Select-Object -Unique).Count -ne $normalizedKeys.Count) {
+    throw "Diagnostic variant keys cannot be repeated."
+  }
+
+  $selectedVariants = foreach ($normalizedKey in $normalizedKeys) {
+    $matchingVariants = @($Global:DiagnosticVariants | Where-Object {
+      [string]$_.VariantKey -eq $normalizedKey
+    })
+    if ($matchingVariants.Count -ne 1) {
+      throw "Unknown diagnostic variant key '$normalizedKey'."
     }
     $matchingVariants[0]
   }
