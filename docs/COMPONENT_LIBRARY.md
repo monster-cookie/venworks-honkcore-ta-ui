@@ -6,20 +6,20 @@ The Normal PC package exposes the main layout.xml file loose and keeps reusable 
 
 ## Reusable HUD sections
 
-Reusable sections are XML fragments placed from the <includes> block in Interface\VenworksCUI\layout.xml. Each section has its own file under Interface\VenworksCUI\components.
+Reusable sections are XML fragments placed from the `<includes>` block in `Interface\VenworksCUI\layout.xml`. Each section has its own file under `Interface\VenworksCUI\components`.
 
 | Section ID | File | What it shows |
 |---|---|---|
-| faction-display | faction-display.xml | The selected theme's faction crest. This is branding, not the player's live faction. |
+| faction-display | faction-display.xml | The selected theme's faction crest. This is branding, not the player's live faction. The four themed variants include it; Minimalist does not. |
 | contact-radar | contact-radar.xml | A passive 360-degree radar for contacts Starfield has already delivered to the HUD. |
 | quest-tracker | quest-tracker.xml | The currently tracked objective. |
 | environmental-hazard-scanner | environmental-hazard-scanner.xml | Planet, location, local time, protection, and modeled exposure information. |
 | player-status-scanner | player-status-scanner.xml | Level, experience, health, oxygen, CO2, boost, carry mass, credits, digipicks, and time. |
 | equipment-rail | equipment-rail.xml | Favorite slots plus live weapon, explosive, ammunition, and power information. |
-| helmet-awareness | helmet-awareness.xml | Compass heading, threat state, status effects, and the vehicle-exit control. |
+| helmet-awareness | helmet-awareness.xml | Compass heading, threat state, and status effects. The vehicle-exit control is a separate root-level group in `layout.xml`. |
 | scanner-overlay | scanner-overlay.xml | A scanner-only forward view with up to five validated contacts. |
 
-The equipment rail is included in the four themed variants and is intentionally omitted from Minimalist. Ship UI remains outside the current configurable on-foot HUD.
+The equipment rail is included in the four themed variants and is intentionally omitted from Minimalist. Minimalist also omits the faction display. Ship UI remains outside the current configurable on-foot HUD.
 
 ## Placement filters
 
@@ -27,7 +27,7 @@ Every reusable section and most components can use these settings:
 
 | Setting | What it does |
 |---|---|
-| visible="true" or "false" | Always show or always hide the item. |
+| visible="true" or "false" | `true` allows the item to appear and `false` forces it hidden. When `true`, the item still has to pass its `visibleWhen` condition. |
 | visibleWhen="always" | Always allow the item to appear. |
 | visibleWhen="never" | Always hide the item. |
 | visibleWhen="inScanner" | Show only while the hand scanner is open. |
@@ -126,20 +126,20 @@ Live source names ignore capitalization and underscores. Dots remain part of the
 | `diagnostic.starmapProvider` | Diagnostic | Troubleshooting output; not stable player-facing HUD content. |
 | `environment.fullSoakAlertCandidate` | Boolean | Whether Bethesda reports a possible full-suit-soak alert. |
 | `environment.gravity` | Numeric | Current local gravity. |
-| `environment.hazard.airWaterExposureLevel` | Numeric | Whether this environmental hazard category is active, as 0 or 1. |
+| `environment.hazard.airWaterExposureLevel` | Numeric | Modeled air/water exposure after protection, oxygen activity, and interpolation are applied; normally a value from 0 through 1. |
 | `environment.hazard.airWaterLevel` | Numeric | Whether this environmental hazard category is active, as 0 or 1. |
 | `environment.hazard.airWaterShortStatus` | String | Airborne or water-related hazard status. |
 | `environment.hazard.airWaterStatus` | String | Airborne or water-related hazard status. |
-| `environment.hazard.corrosiveExposureLevel` | Numeric | Whether this environmental hazard category is active, as 0 or 1. |
+| `environment.hazard.corrosiveExposureLevel` | Numeric | Modeled corrosive exposure after protection and interpolation are applied; normally a value from 0 through 1. |
 | `environment.hazard.corrosiveLevel` | Numeric | Whether this environmental hazard category is active, as 0 or 1. |
 | `environment.hazard.corrosiveShortStatus` | String | Corrosive hazard status. |
 | `environment.hazard.corrosiveStatus` | String | Corrosive hazard status. |
 | `environment.hazard.effectCount` | Numeric | Number of active environmental hazard effects. |
-| `environment.hazard.radiationExposureLevel` | Numeric | Whether this environmental hazard category is active, as 0 or 1. |
+| `environment.hazard.radiationExposureLevel` | Numeric | Modeled radiation exposure after protection and interpolation are applied; normally a value from 0 through 1. |
 | `environment.hazard.radiationLevel` | Numeric | Whether this environmental hazard category is active, as 0 or 1. |
 | `environment.hazard.radiationShortStatus` | String | Radiation hazard status. |
 | `environment.hazard.radiationStatus` | String | Radiation hazard status. |
-| `environment.hazard.thermalExposureLevel` | Numeric | Whether this environmental hazard category is active, as 0 or 1. |
+| `environment.hazard.thermalExposureLevel` | Numeric | Modeled thermal exposure after protection and interpolation are applied; normally a value from 0 through 1. |
 | `environment.hazard.thermalLevel` | Numeric | Whether this environmental hazard category is active, as 0 or 1. |
 | `environment.hazard.thermalShortStatus` | String | Thermal hazard status. |
 | `environment.hazard.thermalStatus` | String | Thermal hazard status. |
@@ -148,7 +148,7 @@ Live source names ignore capitalization and underscores. Dots remain part of the
 | `environment.protectionLevel` | Numeric | Current suit-protection level. |
 | `environment.protectionPercentage` | Numeric | Suit protection as a percentage. |
 | `environment.protectionStatus` | String | Suit protection status text. |
-| `environment.soakCandidate` | Numeric | Modeled suit-soak alert value. |
+| `environment.soakCandidate` | Numeric | Bethesda's raw `fSoakDamagePct` value. This is different from the Boolean `environment.fullSoakAlertCandidate` and from the modeled exposure values. |
 | `environment.solarTransitionCountdown` | String | Time remaining until the local solar transition. |
 | `environment.temperature` | Numeric | Current local temperature. |
 | `favorite.01.detail` | String | Favorite item detail or quantity; replace 01 with slots 01 through 12. |
@@ -203,7 +203,7 @@ Local SVG artwork is restricted to svg, g, path, rect, circle, ellipse, line, po
 
 ## Bethesda display filters
 
-The optional <vanillaVisibility> block can control only these whole Bethesda HUD groups:
+The optional `<vanillaVisibility>` block can control only these whole Bethesda HUD groups:
 
 | Target ID | Bethesda display |
 |---|---|

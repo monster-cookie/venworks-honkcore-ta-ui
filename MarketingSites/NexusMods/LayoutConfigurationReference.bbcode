@@ -40,20 +40,11 @@ The runtime processes an authored layout as one atomic configuration:
 [list=1]
 [*]Load and parse [font=Courier New]layout.xml[/font].[/*]
 [*]Validate no more than 16 [font=Courier New]<include>[/font] declarations and load their fragments.[/*]
-[*]Require each fragment to contain one local root [font=Courier New]<group>[/font], prefix its IDs,[/*]
-[/list]
-   and append its wrapper to the root [font=Courier New]<components>[/font] collection.
-[list=1]
+[*]Require each fragment to contain one local root [font=Courier New]<group>[/font], prefix its IDs, and append its wrapper to the root [font=Courier New]<components>[/font] collection.[/*]
 [*]Expand [font=Courier New]button[/font], [font=Courier New]quickBar[/font], [font=Courier New]informationPanel[/font], and [font=Courier New]warning[/font] composites.[/*]
 [*]Expand templates, instances, repeaters, and the selected static state.[/*]
-[*]Load and validate the optional selected palette, then resolve compatible[/*]
-[/list]
-   [font=Courier New]@palette.*[/font] attributes.
-[list=1]
-[*]Validate the fully resolved component tree, conditions, live-value sources,[/*]
-[/list]
-   and references.
-[list=1]
+[*]Load and validate the optional selected palette, then resolve compatible [font=Courier New]@palette.*[/font] attributes.[/*]
+[*]Validate the fully resolved component tree, conditions, live-value sources, and references.[/*]
 [*]Preload and validate every referenced local SVG.[/*]
 [*]Create the display layer and subscribe only to the hardcoded HUD providers.[/*]
 [/list]
@@ -133,19 +124,16 @@ They must begin with a letter and may be no longer than 64 characters.
 
 [list]
 [*]Definition IDs are unique across meter styles and templates.[/*]
-[*]Component IDs are unique in each authored tree and in the final resolved[/*]
+[*]Component IDs are unique in each authored tree and in the final resolved layout.[/*]
 [/list]
-  layout.
 [list]
 [*]Include IDs are unique in the root layout.[/*]
 [*]A fragment's local IDs are prefixed with [font=Courier New]<include-id>.[/font].[/*]
-[*]Template descendant IDs are prefixed with the instance, repeater-item, or[/*]
+[*]Template descendant IDs are prefixed with the instance, repeater-item, or state ID.[/*]
 [/list]
-  state ID.
 [list]
-[*]Composite expansion creates additional IDs such as [font=Courier New]<button-id>.label[/font]; the[/*]
+[*]Composite expansion creates additional IDs such as [font=Courier New]<button-id>.label[/font]; the generated full ID must still fit the 64-character limit.[/*]
 [/list]
-  generated full ID must still fit the 64-character limit.
 
 Short, semantic IDs leave room for these generated prefixes.
 
@@ -300,9 +288,8 @@ Each loaded component file:
 [list]
 [*]is limited to 65,536 characters;[/*]
 [*]has root [font=Courier New]venworksCUIFragment[/font];[/*]
-[*]has exactly [font=Courier New]schemaVersion="1"[/font] and [font=Courier New]runtimeVersion="1"[/font] and no other root[/*]
+[*]has exactly [font=Courier New]schemaVersion="1"[/font] and [font=Courier New]runtimeVersion="1"[/font] and no other root attributes;[/*]
 [/list]
-  attributes;
 [list]
 [*]contains exactly one [font=Courier New]<group>[/font] child; and[/*]
 [*]cannot contain [font=Courier New]<includes>[/font] or [font=Courier New]<include>[/font] at any depth.[/*]
@@ -708,9 +695,8 @@ Renders inline SVG path geometry and adds required [font=Courier New]data[/font]
 [*][font=Courier New]data[/font] is nonempty and at most 8192 characters.[/*]
 [*]View-box coordinates are finite; dimensions are positive.[/*]
 [*]Stroke width is non-negative; opacity is 0 through 1.[/*]
-[*]Supported absolute and relative commands are [font=Courier New]M[/font], [font=Courier New]L[/font], [font=Courier New]H[/font], [font=Courier New]V[/font], [font=Courier New]C[/font], [font=Courier New]S[/font],[/*]
+[*]Supported absolute and relative commands are [font=Courier New]M[/font], [font=Courier New]L[/font], [font=Courier New]H[/font], [font=Courier New]V[/font], [font=Courier New]C[/font], [font=Courier New]S[/font], [font=Courier New]Q[/font], [font=Courier New]T[/font], and [font=Courier New]Z[/font].[/*]
 [/list]
-  [font=Courier New]Q[/font], [font=Courier New]T[/font], and [font=Courier New]Z[/font].
 [list]
 [*]Arc command [font=Courier New]A[/font] is explicitly rejected.[/*]
 [*]The parser allows at most 2048 path tokens and 512 commands.[/*]
@@ -912,16 +898,14 @@ Runtime compatibility is attribute-specific:
 [list]
 [*]color roles may resolve only attributes named [font=Courier New]color[/font] or ending in [font=Courier New]Color[/font];[/*]
 [*]opacity roles may resolve only [font=Courier New]opacity[/font] or attributes ending in [font=Courier New]Opacity[/font];[/*]
-[*]typography fields may resolve only the identically named [font=Courier New]font[/font], [font=Courier New]fontSize[/font],[/*]
+[*]typography fields may resolve only the identically named [font=Courier New]font[/font], [font=Courier New]fontSize[/font], [font=Courier New]bold[/font], or [font=Courier New]color[/font] attribute on [font=Courier New]<text>[/font];[/*]
 [/list]
-  [font=Courier New]bold[/font], or [font=Courier New]color[/font] attribute on [font=Courier New]<text>[/font];
 [list]
 [*]stroke [font=Courier New]color[/font] resolves [font=Courier New]strokeColor[/font] or [font=Courier New]divider@color[/font];[/*]
 [*]stroke [font=Courier New]opacity[/font] resolves [font=Courier New]strokeOpacity[/font];[/*]
 [*]stroke [font=Courier New]width[/font] resolves [font=Courier New]strokeWidth[/font]; and[/*]
-[*]an asset role resolves only [font=Courier New]svg@src[/font], [font=Courier New]icon@name[/font], or [font=Courier New]symbol@name[/font] when the[/*]
+[*]an asset role resolves only [font=Courier New]svg@src[/font], [font=Courier New]icon@name[/font], or [font=Courier New]symbol@name[/font] when the role's declared asset kind matches that element.[/*]
 [/list]
-  role's declared asset kind matches that element.
 
 The XSD permits the general [font=Courier New]@palette.*[/font] token shape in several scalar unions,
 but the runtime rejects a category or field used on an incompatible attribute.
@@ -955,9 +939,8 @@ SVG limits and exclusions:
 [*]at most 16 nesting levels;[/*]
 [*]polyline/polygon [font=Courier New]points[/font] contain 2 through 256 coordinate pairs;[/*]
 [*]no text content;[/*]
-[*]no [font=Courier New]text[/font], [font=Courier New]image[/font], [font=Courier New]use[/font], [font=Courier New]defs[/font], filter, mask, style, script, animation,[/*]
+[*]no [font=Courier New]text[/font], [font=Courier New]image[/font], [font=Courier New]use[/font], [font=Courier New]defs[/font], filter, mask, style, script, animation, event, external reference, CSS, or network element;[/*]
 [/list]
-  event, external reference, CSS, or network element;
 [list]
 [*]no unrecognized attributes; and[/*]
 [*]no arc path commands.[/*]
@@ -992,9 +975,8 @@ PNG, JPEG, DDS, and external SWF assets are unsupported.
 Version 1 deliberately does not support:
 
 [list]
-[*]arbitrary ActionScript, JavaScript, expressions, method names, or class[/*]
+[*]arbitrary ActionScript, JavaScript, expressions, method names, or class names;[/*]
 [/list]
-  names;
 [list]
 [*]arbitrary Bethesda provider subscriptions or timeline targets;[/*]
 [*]nested fragment imports;[/*]
@@ -1003,13 +985,11 @@ Version 1 deliberately does not support:
 [*]runtime-generated repeater data;[/*]
 [*]network or absolute asset paths;[/*]
 [*]raster/DDS images or external SWF symbol libraries;[/*]
-[*]notification/toast, item/ammo-readout, chevron/notch meter,[/*]
+[*]notification/toast, item/ammo-readout, chevron/notch meter, image-masked-meter, or bipolar-meter elements; or[/*]
 [/list]
-  image-masked-meter, or bipolar-meter elements; or
 [list]
-[*]custom replacement of Bethesda enemy-health, legendary-state, stealth,[/*]
+[*]custom replacement of Bethesda enemy-health, legendary-state, stealth, hit-indicator, reticle, or crosshair ownership.[/*]
 [/list]
-  hit-indicator, reticle, or crosshair ownership.
 
 An unsupported element or attribute is an error, not a forward-compatible
 extension point.
@@ -1028,9 +1008,8 @@ When authoring:
 [*]keep a clean backup;[/*]
 [*]fully restart Starfield after every change;[/*]
 [*]correct the first reported error before interpreting later behavior; and[/*]
-[*]test normal, aiming, scanner, combat, vehicle, large-HUD, and target aspect[/*]
+[*]test normal, aiming, scanner, combat, vehicle, large-HUD, and target aspect ratio states in game.[/*]
 [/list]
-   ratio states in game.
 
 Build, schema, or staging success demonstrates artifact consistency but does
 not replace current in-game lifecycle and visibility evidence.

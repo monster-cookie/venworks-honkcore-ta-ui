@@ -47,9 +47,8 @@ The filename must:
 [list]
 [*]begin with an ASCII letter or number;[/*]
 [*]contain only letters, numbers, dots, underscores, and hyphens before [font=Courier New].xml[/font];[/*]
-[*]contain no more than 60 characters before the extension under the current[/*]
+[*]contain no more than 60 characters before the extension under the current pattern;[/*]
 [/list]
-  pattern;
 [list]
 [*]name one file directly in [font=Courier New]VenworksCUI\palettes[/font]; and[/*]
 [*]contain no [font=Courier New]..[/font], slash, backslash, colon, query string, or fragment.[/*]
@@ -405,26 +404,13 @@ safe filename instead of overwriting a packaged palette.
 [*]Fully exit Starfield.[/*]
 [*]Copy one complete palette, preferably the closest visual starting point.[/*]
 [*]Rename the copy with a safe unique filename such as [font=Courier New]my-hud.xml[/font].[/*]
-[*]Keep all required roles and the five required sections in their original[/*]
-[/list]
-   order.
-[list=1]
-[*]Change semantic values rather than renaming roles consumed by the production[/*]
-[/list]
-   layout.
-[list=1]
-[*]If changing [font=Courier New]faction.logo[/font], place a supported SVG directly under[/*]
-[/list]
-   [font=Courier New]Interface\VenworksCUI\Assets[/font] and use its filename only.
-[list=1]
+[*]Keep all required roles and the five required sections in their original order.[/*]
+[*]Change semantic values rather than renaming roles consumed by the production layout.[/*]
+[*]If changing [font=Courier New]faction.logo[/font], place a supported SVG directly under [font=Courier New]Interface\VenworksCUI\Assets[/font] and use its filename only.[/*]
 [*]Set [font=Courier New]layout.xml[/font] to [font=Courier New]palette="my-hud.xml"[/font].[/*]
-[*]Restart Starfield and test normal, aiming, scanner, combat, low-health,[/*]
+[*]Restart Starfield and test normal, aiming, scanner, combat, low-health, vehicle, large-HUD, and target-aspect-ratio states.[/*]
+[*]Keep the custom palette and any custom SVG in a personal override mod so a release update does not overwrite them.[/*]
 [/list]
-   vehicle, large-HUD, and target-aspect-ratio states.
-[list=1]
-[*]Keep the custom palette and any custom SVG in a personal override mod so a[/*]
-[/list]
-   release update does not overwrite them.
 
 When changing status colors, preserve clear differentiation among clear,
 caution, danger, and critical states. When changing typography, test the longest

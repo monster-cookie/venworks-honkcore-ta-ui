@@ -10,21 +10,10 @@ complete palette contract and custom-theme workflow, use the
 [size=3][b][u]Before you edit[/u][/b][/size]
 
 [list=1]
-[*]Enable only one of the five Venworks Customizable HUD release variants. All[/*]
-[/list]
-   variants install the same HUD and configuration paths, so they must never be
-   enabled together.
-[list=1]
+[*]Enable only one of the five Venworks Customizable HUD release variants. All variants install the same HUD and configuration paths, so they must never be enabled together.[/*]
 [*]Fully exit Starfield.[/*]
-[*]Back up the loose [font=Courier New]Interface\VenworksCUI\layout.xml[/font] from the normal package.[/*]
-[/list]
-   If you use the fully loose package or an advanced override, back up the
-   complete [font=Courier New]Interface\VenworksCUI[/font] directory.
-[list=1]
-[*]Use a plain-text or XML editor that preserves UTF-8 text and straight ASCII[/*]
-[/list]
-   quotation marks.
-[list=1]
+[*]Back up the loose [font=Courier New]Interface\VenworksCUI\layout.xml[/font] from the normal package. If you use the fully loose package or an advanced override, back up the complete [font=Courier New]Interface\VenworksCUI[/font] directory.[/*]
+[*]Use a plain-text or XML editor that preserves UTF-8 text and straight ASCII quotation marks.[/*]
 [*]Keep a copy of every customized file outside the downloaded mod package.[/*]
 [/list]
 
@@ -250,23 +239,13 @@ components share these attributes:
 [/code]
 
 [list]
-[*][font=Courier New]x[/font] and [font=Courier New]y[/font] place the component relative to its parent when no anchor is[/*]
-[/list]
-  present, or offset it from its anchor when an anchor is present.
-[list]
-[*][font=Courier New]width[/font] and [font=Courier New]height[/font] define design-space bounds. Most visible components[/*]
-[/list]
-  require positive values.
-[list]
+[*][font=Courier New]x[/font] and [font=Courier New]y[/font] place the component relative to its parent when no anchor is present, or offset it from its anchor when an anchor is present.[/*]
+[*][font=Courier New]width[/font] and [font=Courier New]height[/font] define design-space bounds. Most visible components require positive values.[/*]
 [*][font=Courier New]opacity[/font] ranges from [font=Courier New]0[/font] through [font=Courier New]1[/font].[/*]
 [*][font=Courier New]rotation[/font] is expressed in degrees.[/*]
-[*][font=Courier New]scaleX[/font] and [font=Courier New]scaleY[/font] are finite multipliers. Use equal values to preserve[/*]
+[*][font=Courier New]scaleX[/font] and [font=Courier New]scaleY[/font] are finite multipliers. Use equal values to preserve proportions.[/*]
+[*][font=Courier New]z[/font] is an integer used to order siblings; larger values draw above smaller values.[/*]
 [/list]
-  proportions.
-[list]
-[*][font=Courier New]z[/font] is an integer used to order siblings; larger values draw above smaller[/*]
-[/list]
-  values.
 [list]
 [*][font=Courier New]visible[/font] and [font=Courier New]visibleWhen[/font] combine: both must permit display.[/*]
 [/list]
@@ -372,10 +351,7 @@ component ID to search [font=Courier New]layout.xml[/font] and every file under 
 
 [list]
 [*]Fully exit and restart Starfield.[/*]
-[*]Confirm the deployed [font=Courier New]layout.xml[/font], not only a mod-manager staging copy, names[/*]
-[/list]
-  the expected palette.
-[list]
+[*]Confirm the deployed [font=Courier New]layout.xml[/font], not only a mod-manager staging copy, names the expected palette.[/*]
 [*]Check which mod wins [font=Courier New]Interface\VenworksCUI\layout.xml[/font] conflicts.[/*]
 [*]Check for a personal override that still contains an older layout or palette.[/*]
 [/list]
@@ -387,9 +363,8 @@ component ID to search [font=Courier New]layout.xml[/font] and every file under 
 [*]Return [font=Courier New]opacity[/font], [font=Courier New]scaleX[/font], and [font=Courier New]scaleY[/font] to [font=Courier New]1[/font].[/*]
 [*]Return the include to its shipped anchor and offsets.[/*]
 [*]Check whether the section was moved outside the 1920-by-1080 design area.[/*]
-[*]Check whether the error panel reports a different invalid component that[/*]
+[*]Check whether the error panel reports a different invalid component that prevented the entire custom layer from loading.[/*]
 [/list]
-  prevented the entire custom layer from loading.
 
 [size=2][b][u]Restore the shipped configuration[/u][/b][/size]
 
@@ -408,9 +383,8 @@ Before considering a customization finished:
 [*]test normal, aiming, scanner, combat, sneaking, vehicle, and low-health states;[/*]
 [*]test the normal HUD and the large-HUD configuration you actually use;[/*]
 [*]test at the target aspect ratio and HUD opacity;[/*]
-[*]verify Bethesda-owned reticles, crosshairs, enemy health, and prompts still[/*]
+[*]verify Bethesda-owned reticles, crosshairs, enemy health, and prompts still follow their original lifecycle;[/*]
 [/list]
-  follow their original lifecycle;
 [list]
 [*]keep the diagnostic panel absent during startup and transitions; and[/*]
 [*]preserve a clean copy of every customized file outside the managed mod.[/*]
