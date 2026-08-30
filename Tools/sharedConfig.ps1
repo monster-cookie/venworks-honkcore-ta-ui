@@ -154,9 +154,7 @@ $Global:ReleaseVariants = @(
         "starfield.xml",
         @("Main", "Main_XBox", "Main_PS")
     )
-)
 
-$Global:DiagnosticVariants = @(
     [ModuleVariant]::new(
         "PS5DBG",
         "PS5 Debug",
@@ -205,38 +203,27 @@ function Global:Get-ModuleVariants {
   return @($selectedVariants)
 }
 
-function Global:Get-DiagnosticVariants {
+function Global:Get-VariantReleasePackageSuffixes {
   [CmdletBinding()]
   param(
-    [Alias("VariantKey")]
-    [string[]]$VariantKeys
+    [Parameter(Mandatory = $true)]
+    [ModuleVariant]$Variant
   )
 
-  if ($null -eq $VariantKeys -or $VariantKeys.Count -eq 0) {
-    return @($Global:DiagnosticVariants)
+  $archiveTargets = @($Variant.ArchiveTargets)
+  $hasNexusPackages = ![string]::IsNullOrWhiteSpace($Variant.NexusNormalDisplayName) -and
+    ![string]::IsNullOrWhiteSpace($Variant.NexusLooseDisplayName)
+  if ($hasNexusPackages -and 'Main' -in $archiveTargets) {
+    'Nexus PC - Normal'
+    'Nexus PC - Fully Loose Files'
+    'Bethesda PC'
   }
-
-  $normalizedKeys = @($VariantKeys | ForEach-Object {
-    if ([string]::IsNullOrWhiteSpace($_)) {
-      throw "Diagnostic variant keys cannot be empty."
-    }
-    $_.Trim().ToUpperInvariant()
-  })
-  if (@($normalizedKeys | Select-Object -Unique).Count -ne $normalizedKeys.Count) {
-    throw "Diagnostic variant keys cannot be repeated."
+  if ('Main_XBox' -in $archiveTargets) {
+    'Bethesda Xbox'
   }
-
-  $selectedVariants = foreach ($normalizedKey in $normalizedKeys) {
-    $matchingVariants = @($Global:DiagnosticVariants | Where-Object {
-      [string]$_.VariantKey -eq $normalizedKey
-    })
-    if ($matchingVariants.Count -ne 1) {
-      throw "Unknown diagnostic variant key '$normalizedKey'."
-    }
-    $matchingVariants[0]
+  if ('Main_PS' -in $archiveTargets) {
+    'Bethesda PS5'
   }
-
-  return @($selectedVariants)
 }
 
 $Global:SharedConfigurationLoaded=$true

@@ -107,22 +107,22 @@ The four base HUD paths and four HUD-message movies are shared while their boots
 
 ### Build a Bethesda-ABC-only diagnostic
 
-Use the isolated PS5 Debug path when the purpose is to determine whether Bethesda's HUD host itself reaches a lifecycle phase before any Venworks runtime or configuration is introduced:
+Use the PS5 Debug build profile when the purpose is to determine whether Bethesda's HUD host itself reaches a lifecycle phase before any Venworks runtime or configuration is introduced:
 
 ```powershell
-.\Tools\setupPs5DebugVariant.ps1 -Committed
-.\Tools\buildPs5DebugVariant.ps1 `
+.\Tools\buildVariant.ps1 `
+  -VariantKeys PS5DBG `
   -JavaPath ".work/tools/java/bin/java.exe" `
   -JpexsJarPath ".work/tools/jpexs/ffdec.jar" `
   -VanillaInterfacePath "Scaleform/.work/vanilla-interface-extracted/interface" `
   -Committed
-.\Tools\createPs5DebugPackages.ps1 -Committed
-.\Tools\verifyPs5DebugVariant.ps1 -Committed
+.\Tools\createPackages.ps1 -VariantKeys PS5DBG -Committed
+.\Tools\verifyVariant.ps1 -VariantKeys PS5DBG -Committed
 ```
 
-The `-Committed` path operates directly on the tracked staging directory and does not load `.env` or require a junction. Omit `-Committed` only when the staging path has already been replaced by the correctly targeted local module junction.
+The `-Committed` build, package, and verification path operates directly on the tracked staging directory and does not require a junction. For Vortex deployment, first run `.\Tools\setupRepo.ps1 -VariantKeys PS5DBG` to create the correctly targeted local module junction, then omit `-Committed` from the remaining commands.
 
-This path imports one bounded patch into the existing `HUDMenu` class in Bethesda's existing ABC. It does not add a `DoABC` tag or custom document class. The output contains only the four normal/large Bethesda HUD movie paths and the uniquely named PS5 Debug plugin. Do not add HUD-message movies, `venworkscui.swf`, XML, SVG, palettes, assets, providers, Xbox archives, or Nexus package shapes to this diagnostic.
+The PS5 Debug manifests select the same lower-level compiler used by the player-facing host movies, but choose its diagnostic mode. That mode imports one bounded patch into the existing `HUDMenu` class in Bethesda's existing ABC; it does not add a `DoABC` tag or custom document class. The output contains only the four normal/large Bethesda HUD movie paths and the uniquely named PS5 Debug plugin. Do not add HUD-message movies, `venworkscui.swf`, XML, SVG, palettes, assets, providers, Xbox archives, or Nexus package shapes to this diagnostic. The generic archive builder retains a Windows Main BA2 for the PC gate and a PS5 Main BA2 for Creations; the release-package matrix exposes only the Bethesda PS5 ZIP.
 
 Interpret the top-center pane by the last visible phase: `PS5DBG-01 CONSTRUCTED` proves the document-class constructor ran, `PS5DBG-02 ADDED TO STAGE` proves the HUD instance joined the display list, and `PS5DBG-OK HUD LOADED` proves it completed the first rendered-frame transition. `PS5DBG-ERR` records a contained ActionScript failure and its phase. Once an error is recorded, the pane suppresses later non-error lifecycle updates so it cannot report false success. Absence of the pane does not prove the movie was absent; it means the failure occurred before the diagnostic constructor or before the field could render and must be correlated with deployment hashes and the unique ESM/BA2 inventory.
 
@@ -167,7 +167,7 @@ Validation must confirm:
 - every auxiliary movie embeds fingerprints recomputed from the current manifest, compiler contract, externs, entrypoint, and transformed ActionScript, and its sorted definition inventory matches the profile's expected class hash;
 - every Main BA2 has the exact staged Interface inventory, stores every entry without BA2 compression, and remains byte-identical to its staged source;
 - the four themed variants retain their shared auxiliary hash while Minimalist retains its profile-specific auxiliary hash; and
-- all 25 release ZIPs have the expected platform/package shape.
+- all 26 release ZIPs have the expected platform/package shape: five shapes for each player-facing variant and one Bethesda PS5 shape for PS5 Debug.
 
 Build success is not gameplay acceptance. First omit `Interface/venworkscui.swf` deliberately and confirm the bootstrap's Starfield-font load diagnostic is readable. Then install a Bethesda PC package with only its ESM and Main BA2, disable every loose `Interface` override for that variant, and verify that both the auxiliary movie and external configuration resolve from the archive. Test Minimalist and at least one themed variant through cold start, save load, normal and large HUD modes, scanner transitions, combat, menu teardown, and platform deployment. When isolating a console crash, change one contract at a time and record both positive and negative results.
 

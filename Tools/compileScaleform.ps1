@@ -165,7 +165,7 @@ function Apply-ActionScriptPatch {
   )
 }
 
-function Build-AuxiliaryBootstrapMovie {
+function Build-HudHostMovie {
   param(
     [Parameter(Mandatory = $true)]
     [string]$InputPath,
@@ -184,6 +184,10 @@ function Build-AuxiliaryBootstrapMovie {
 
     [Parameter(Mandatory = $true)]
     [string]$BuildName,
+
+    [Parameter(Mandatory = $true)]
+    [ValidateSet('auxiliary-bootstrap', 'ps5-debug-hudmenu')]
+    [string]$Mode,
 
     [switch]$SkipExpectedHash
   )
@@ -211,7 +215,7 @@ function Build-AuxiliaryBootstrapMovie {
 
   Invoke-Jpexs `
     -Arguments @('-onerror', 'abort', '-importScript', $InputPath, $OutputPath, $importScriptsDirectory) `
-    -Description "importing the $BuildName auxiliary bootstrap"
+    -Description "importing the $BuildName HUD host patch"
   Invoke-Jpexs `
     -Arguments @('-swf2xml', $OutputPath, $reopenedXmlPath) `
     -Description "reopening $BuildName"
@@ -238,28 +242,61 @@ function Build-AuxiliaryBootstrapMovie {
     throw "Expected one reopened $scriptName.as; found $($validationScriptMatches.Count)."
   }
   $reopenedHudMenuSource = Get-Content -LiteralPath $validationScriptMatches[0].FullName -Raw
-  foreach ($requiredBootstrapToken in @(
-    'new URLRequest("venworkscui.swf")',
-    'contentLoaderInfo.addEventListener(Event.COMPLETE',
-    'IOErrorEvent.IO_ERROR',
-    'SecurityErrorEvent.SECURITY_ERROR',
-    'this.VenworksCUIBridge["initialize"](this)',
-    'this.VenworksCUIBridge["reapplyVanillaPlacements"]()',
-    'this.VenworksCUIBridge["updateVanillaHudModeVisibility"]',
-    'this.VenworksCUIBridge["dispose"]()',
-    'this.VenworksCUILoader.unload()',
-    'new TextFormat("$MAIN_Font_Bold",18,16777215,true)',
-    'this.VenworksCUIBootstrapDiagnostics.embedFonts = true',
-    'this.VenworksCUIBootstrapDiagnostics.defaultTextFormat = format',
-    'this.VenworksCUIBootstrapDiagnostics.setTextFormat(format)'
-  )) {
-    if (!$reopenedHudMenuSource.Contains($requiredBootstrapToken)) {
-      throw "Generated $BuildName is missing bootstrap contract token '$requiredBootstrapToken'."
+  $requiredTokens = if ($Mode -ceq 'auxiliary-bootstrap') {
+    @(
+      'new URLRequest("venworkscui.swf")',
+      'contentLoaderInfo.addEventListener(Event.COMPLETE',
+      'IOErrorEvent.IO_ERROR',
+      'SecurityErrorEvent.SECURITY_ERROR',
+      'this.VenworksCUIBridge["initialize"](this)',
+      'this.VenworksCUIBridge["reapplyVanillaPlacements"]()',
+      'this.VenworksCUIBridge["updateVanillaHudModeVisibility"]',
+      'this.VenworksCUIBridge["dispose"]()',
+      'this.VenworksCUILoader.unload()',
+      'new TextFormat("$MAIN_Font_Bold",18,16777215,true)',
+      'this.VenworksCUIBootstrapDiagnostics.embedFonts = true',
+      'this.VenworksCUIBootstrapDiagnostics.defaultTextFormat = format',
+      'this.VenworksCUIBootstrapDiagnostics.setTextFormat(format)'
+    )
+  }
+  else {
+    @(
+      'PS5DBG-01 CONSTRUCTED',
+      'PS5DBG-02 ADDED TO STAGE',
+      'PS5DBG-OK HUD LOADED',
+      'PS5DBG-ERR UNCAUGHT',
+      'PS5DebugErrorRecorded',
+      'indexOf("PS5DBG-ERR")',
+      'new TextFormat("$MAIN_Font_Bold",20',
+      'loaderInfo.uncaughtErrorEvents.addEventListener',
+      'param1.preventDefault()',
+      'param1.stopImmediatePropagation()'
+    )
+  }
+  foreach ($requiredToken in $requiredTokens) {
+    if (!$reopenedHudMenuSource.Contains($requiredToken)) {
+      throw "Generated $BuildName is missing $Mode contract token '$requiredToken'."
     }
   }
-  if ($reopenedHudMenuSource -match 'LoaderContext\s*\([^)]*venworkscui|ApplicationDomain[^\r\n]*venworkscui' -or
-      $reopenedHudMenuSource -match 'venworks\.cui\.') {
+  if ($Mode -ceq 'auxiliary-bootstrap' -and
+      ($reopenedHudMenuSource -match 'LoaderContext\s*\([^)]*venworkscui|ApplicationDomain[^\r\n]*venworkscui' -or
+       $reopenedHudMenuSource -match 'venworks\.cui\.')) {
     throw "Generated $BuildName embeds or explicitly binds the auxiliary CUI application domain."
+  }
+  if ($Mode -ceq 'ps5-debug-hudmenu') {
+    foreach ($forbiddenToken in @(
+      'VenworksCUI',
+      'venworks.cui',
+      'venworkscui.swf',
+      'CUILayout',
+      'CUISvg',
+      'CUIPalette',
+      'CUIPlayerHudDataContext'
+    )) {
+      if ($reopenedHudMenuSource.Contains($forbiddenToken)) {
+        throw "Generated $BuildName retains forbidden PS5 Debug token '$forbiddenToken'."
+      }
+    }
   }
 
   $originalScripts = @(Get-ChildItem -LiteralPath $exportedScriptsDirectory -Recurse -File -Filter '*.as')
@@ -279,7 +316,7 @@ function Build-AuxiliaryBootstrapMovie {
     if (!(Test-Path -LiteralPath $validationPath -PathType Leaf) -or
         (Get-FileHash -LiteralPath $originalScript.FullName -Algorithm SHA256).Hash -cne
         (Get-FileHash -LiteralPath $validationPath -Algorithm SHA256).Hash) {
-      throw "Auxiliary bootstrap unexpectedly changed Bethesda class '$relativePath'."
+      throw "HUD host patch unexpectedly changed Bethesda class '$relativePath'."
     }
   }
 
@@ -323,13 +360,14 @@ try {
         !$build.vanillaHashFile -or !$build.expectedHashFile -or !$build.actionScriptPatch) {
       throw "Invalid Scaleform bootstrap build manifest: $resolvedManifestPath"
     }
-    if ([string]$build.GetAttribute('mode') -cne 'auxiliary-bootstrap') {
-      throw "Scaleform HUD manifests must select auxiliary-bootstrap mode: $resolvedManifestPath"
+    $buildMode = [string]$build.GetAttribute('mode')
+    if ($buildMode -notin @('auxiliary-bootstrap', 'ps5-debug-hudmenu')) {
+      throw "Scaleform HUD manifests must select a supported host mode: $resolvedManifestPath"
     }
     if ($build.HasAttribute('abcSeedPatch') -or
         $build.HasAttribute('actionScriptSource') -or
         $build.HasAttribute('actionScriptProfile')) {
-      throw "Scaleform HUD bootstrap manifest retains an embedded-CUI attribute: $resolvedManifestPath"
+      throw "Scaleform HUD host manifest retains an embedded-CUI attribute: $resolvedManifestPath"
     }
     if (!$usedBuildNames.Add([string]$build.name) -or
         !$usedOutputNames.Add([string]$build.outputFile)) {
@@ -358,13 +396,14 @@ try {
     $movieWorkDirectory = Join-Path $buildWorkDirectory ([string]$build.name)
     New-Item -ItemType Directory -Path $movieWorkDirectory | Out-Null
     $generatedMoviePath = Join-Path $movieWorkDirectory ([string]$build.outputFile)
-    Build-AuxiliaryBootstrapMovie `
+    Build-HudHostMovie `
       -InputPath $inputPath `
       -OutputPath $generatedMoviePath `
       -WorkPath $movieWorkDirectory `
       -PatchPath $actionScriptPatchPath `
       -ExpectedHashPath $expectedHashPath `
       -BuildName ([string]$build.name) `
+      -Mode $buildMode `
       -SkipExpectedHash:$AuxiliaryMarkerProbe | Out-Host
 
     $destinationPath = Join-Path $resolvedOutputDirectory ([string]$build.outputFile)

@@ -193,9 +193,9 @@ $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
 
 foreach ($variant in $variants) {
   $stagingPath = (Resolve-Path -LiteralPath $variant.StagingFolderPath).Path
-  $interfacePath = Join-Path $stagingPath "Interface"
-  if (!(Test-Path -LiteralPath $interfacePath -PathType Container)) {
-    throw "$($variant.VariantName) is missing its Interface directory: $interfacePath"
+  $packageSuffixes = @(Get-VariantReleasePackageSuffixes -Variant $variant)
+  if ($packageSuffixes.Count -eq 0) {
+    throw "$($variant.VariantName) metadata does not enable any release package shapes."
   }
 
   $pluginName = "$($variant.PackageBaseName).esm"
@@ -207,64 +207,66 @@ foreach ($variant in $variants) {
   $texturesPsName = "$($variant.PackageBaseName) - Textures_PS.ba2"
 
   $pluginPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $pluginName) -Description "$($variant.VariantName) plugin"
-  $mainPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $mainName) -Description "$($variant.VariantName) Windows Main archive"
-  $texturesPath = Resolve-OptionalFile -Path (Join-Path $stagingPath $texturesName) -Description "$($variant.VariantName) Windows Textures archive"
-  $mainXboxPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $mainXboxName) -Description "$($variant.VariantName) Xbox Main archive"
-  $texturesXboxPath = Resolve-OptionalFile -Path (Join-Path $stagingPath $texturesXboxName) -Description "$($variant.VariantName) Xbox Textures archive"
-  $mainPsPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $mainPsName) -Description "$($variant.VariantName) PS5 Main archive"
-  $texturesPsPath = Resolve-OptionalFile -Path (Join-Path $stagingPath $texturesPsName) -Description "$($variant.VariantName) PS5 Textures archive"
-
-  $layoutPath = Resolve-RequiredFile -Path (Join-Path (Join-Path $interfacePath "VenworksCUI") "layout.xml") -Description "$($variant.VariantName) loose layout"
-
   $pluginFile = New-PackageFile -SourcePath $pluginPath -EntryName $pluginName
-  $layoutFile = New-PackageFile -SourcePath $layoutPath -EntryName "Interface/VenworksCUI/layout.xml"
-  $windowsMainFile = New-PackageFile -SourcePath $mainPath -EntryName $mainName
-  $xboxMainFile = New-PackageFile -SourcePath $mainXboxPath -EntryName $mainXboxName
-  $psMainFile = New-PackageFile -SourcePath $mainPsPath -EntryName $mainPsName
-  $windowsArchiveFiles = @($windowsMainFile)
-  if ($texturesPath) {
-    $windowsArchiveFiles += New-PackageFile -SourcePath $texturesPath -EntryName $texturesName
-  }
-  $xboxArchiveFiles = @($xboxMainFile)
-  if ($texturesXboxPath) {
-    $xboxArchiveFiles += New-PackageFile -SourcePath $texturesXboxPath -EntryName $texturesXboxName
-  }
-  $psArchiveFiles = @($psMainFile)
-  if ($texturesPsPath) {
-    $psArchiveFiles += New-PackageFile -SourcePath $texturesPsPath -EntryName $texturesPsName
-  }
-
-  $looseFiles = @(
-    Get-ChildItem -LiteralPath $interfacePath -Recurse -File -Force |
-      Sort-Object -Property FullName |
-      ForEach-Object {
-        $relativePath = $_.FullName.Substring($stagingPath.Length + 1)
-        New-PackageFile -SourcePath $_.FullName -EntryName $relativePath
-      }
-  )
-
-  $packages = @(
-    [pscustomobject]@{
-      Suffix = "Nexus PC - Normal"
-      Files = @($pluginFile) + $windowsArchiveFiles + @($layoutFile)
-    },
-    [pscustomobject]@{
-      Suffix = "Nexus PC - Fully Loose Files"
-      Files = $looseFiles
-    },
-    [pscustomobject]@{
-      Suffix = "Bethesda PC"
-      Files = @($pluginFile) + $windowsArchiveFiles
-    },
-    [pscustomobject]@{
-      Suffix = "Bethesda Xbox"
-      Files = @($pluginFile) + $xboxArchiveFiles
-    },
-    [pscustomobject]@{
-      Suffix = "Bethesda PS5"
-      Files = @($pluginFile) + $psArchiveFiles
+  $windowsArchiveFiles = @()
+  if (@($packageSuffixes | Where-Object { $_ -in @('Nexus PC - Normal', 'Bethesda PC') }).Count -ne 0) {
+    $mainPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $mainName) -Description "$($variant.VariantName) Windows Main archive"
+    $windowsArchiveFiles = @(New-PackageFile -SourcePath $mainPath -EntryName $mainName)
+    $texturesPath = Resolve-OptionalFile -Path (Join-Path $stagingPath $texturesName) -Description "$($variant.VariantName) Windows Textures archive"
+    if ($texturesPath) {
+      $windowsArchiveFiles += New-PackageFile -SourcePath $texturesPath -EntryName $texturesName
     }
-  )
+  }
+  $xboxArchiveFiles = @()
+  if ('Bethesda Xbox' -in $packageSuffixes) {
+    $mainXboxPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $mainXboxName) -Description "$($variant.VariantName) Xbox Main archive"
+    $xboxArchiveFiles = @(New-PackageFile -SourcePath $mainXboxPath -EntryName $mainXboxName)
+    $texturesXboxPath = Resolve-OptionalFile -Path (Join-Path $stagingPath $texturesXboxName) -Description "$($variant.VariantName) Xbox Textures archive"
+    if ($texturesXboxPath) {
+      $xboxArchiveFiles += New-PackageFile -SourcePath $texturesXboxPath -EntryName $texturesXboxName
+    }
+  }
+  $psArchiveFiles = @()
+  if ('Bethesda PS5' -in $packageSuffixes) {
+    $mainPsPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $mainPsName) -Description "$($variant.VariantName) PS5 Main archive"
+    $psArchiveFiles = @(New-PackageFile -SourcePath $mainPsPath -EntryName $mainPsName)
+    $texturesPsPath = Resolve-OptionalFile -Path (Join-Path $stagingPath $texturesPsName) -Description "$($variant.VariantName) PS5 Textures archive"
+    if ($texturesPsPath) {
+      $psArchiveFiles += New-PackageFile -SourcePath $texturesPsPath -EntryName $texturesPsName
+    }
+  }
+
+  $layoutFile = $null
+  $looseFiles = @()
+  if (@($packageSuffixes | Where-Object { $_ -like 'Nexus PC*' }).Count -ne 0) {
+    $interfacePath = Join-Path $stagingPath "Interface"
+    if (!(Test-Path -LiteralPath $interfacePath -PathType Container)) {
+      throw "$($variant.VariantName) is missing its Interface directory: $interfacePath"
+    }
+    $layoutPath = Resolve-RequiredFile -Path (Join-Path (Join-Path $interfacePath "VenworksCUI") "layout.xml") -Description "$($variant.VariantName) loose layout"
+    $layoutFile = New-PackageFile -SourcePath $layoutPath -EntryName "Interface/VenworksCUI/layout.xml"
+    $looseFiles = @(
+      Get-ChildItem -LiteralPath $interfacePath -Recurse -File -Force |
+        Sort-Object -Property FullName |
+        ForEach-Object {
+          $relativePath = $_.FullName.Substring($stagingPath.Length + 1)
+          New-PackageFile -SourcePath $_.FullName -EntryName $relativePath
+        }
+    )
+  }
+
+  $packages = @($packageSuffixes | ForEach-Object {
+    $suffix = [string]$_
+    $files = switch ($suffix) {
+      'Nexus PC - Normal' { @($pluginFile) + $windowsArchiveFiles + @($layoutFile); break }
+      'Nexus PC - Fully Loose Files' { $looseFiles; break }
+      'Bethesda PC' { @($pluginFile) + $windowsArchiveFiles; break }
+      'Bethesda Xbox' { @($pluginFile) + $xboxArchiveFiles; break }
+      'Bethesda PS5' { @($pluginFile) + $psArchiveFiles; break }
+      default { throw "$($variant.VariantName) has unsupported release package suffix '$suffix'." }
+    }
+    [pscustomobject]@{ Suffix = $suffix; Files = @($files) }
+  })
 
   foreach ($package in $packages) {
     $zipName = "$($variant.ReleaseDisplayName) - $($package.Suffix).zip"
@@ -273,7 +275,7 @@ foreach ($variant in $variants) {
 }
 
 if ($null -eq $VariantKeys -or $VariantKeys.Count -eq 0) {
-  Write-Host -ForegroundColor Cyan "Created all five release package shapes for all five variants."
+  Write-Host -ForegroundColor Cyan "Created every configured release package shape for all variants."
 }
 else {
   Write-Host -ForegroundColor Cyan "Created the configured release package shapes for the selected variants."

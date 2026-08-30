@@ -580,15 +580,25 @@ foreach ($variant in $variants) {
   }
 
   $interfacePath = Resolve-RequiredDirectory -Path (Join-Path $stagingPath "Interface") -Description "$($variant.VariantName) Interface payload"
-  $cuiPath = Resolve-RequiredDirectory -Path (Join-Path $interfacePath "VenworksCUI") -Description "$($variant.VariantName) CUI payload"
-  $expectedCuiInventory = @("layout.xml")
-  $expectedCuiInventory += @($variantBuildProfile.ComponentFileNames | ForEach-Object { "components/$_" })
-  $expectedCuiInventory += @($variantBuildProfile.AssetFileNames | ForEach-Object { "Assets/$_" })
-  $expectedCuiInventory += @($variantBuildProfile.PaletteFileNames | ForEach-Object { "palettes/$_" })
-  Assert-Inventory -RootPath $cuiPath -ExpectedPaths $expectedCuiInventory -Description "$($variant.VariantName) CUI payload"
-
+  $hasCuiPayload = $variantBuildProfile.ContainsKey('LayoutSource') -and
+    ![string]::IsNullOrWhiteSpace([string]$variantBuildProfile.LayoutSource)
+  $cuiPath = $null
+  $expectedCuiInventory = @()
+  if ($hasCuiPayload) {
+    $cuiPath = Resolve-RequiredDirectory -Path (Join-Path $interfacePath "VenworksCUI") -Description "$($variant.VariantName) CUI payload"
+    $expectedCuiInventory = @("layout.xml")
+    $expectedCuiInventory += @($variantBuildProfile.ComponentFileNames | ForEach-Object { "components/$_" })
+    $expectedCuiInventory += @($variantBuildProfile.AssetFileNames | ForEach-Object { "Assets/$_" })
+    $expectedCuiInventory += @($variantBuildProfile.PaletteFileNames | ForEach-Object { "palettes/$_" })
+    Assert-Inventory -RootPath $cuiPath -ExpectedPaths $expectedCuiInventory -Description "$($variant.VariantName) CUI payload"
+  }
+  elseif (Test-Path -LiteralPath (Join-Path $interfacePath "VenworksCUI")) {
+    throw "$($variant.VariantName) host-only profile must not stage a VenworksCUI payload."
+  }
   $expectedInterfaceInventory = @($movieProfile.DeploymentMovieDefinitions | ForEach-Object { [string]$_.FileName })
-  $expectedInterfaceInventory += @($expectedCuiInventory | ForEach-Object { "VenworksCUI/$_" })
+  if ($hasCuiPayload) {
+    $expectedInterfaceInventory += @($expectedCuiInventory | ForEach-Object { "VenworksCUI/$_" })
+  }
   Assert-Inventory `
     -RootPath $interfacePath `
     -ExpectedPaths $expectedInterfaceInventory `
@@ -627,20 +637,52 @@ foreach ($variant in $variants) {
     if ($inspection.AbcCount -ne 1) {
       throw "$($variant.VariantName) $baseHudMovieName must contain exactly one Bethesda ABC; found $($inspection.AbcCount)."
     }
-    foreach ($requiredBootstrapToken in @(
-      'venworkscui.swf',
-      'CUI-AUX-LOAD',
-      'initialize',
-      'updateVanillaHudModeVisibility',
-      'dispose',
-      '$MAIN_Font_Bold',
-      'embedFonts',
-      'defaultTextFormat',
-      'setTextFormat'
-    )) {
-      if (!$inspection.Text.Contains($requiredBootstrapToken)) {
-        throw "$($variant.VariantName) $baseHudMovieName is missing auxiliary bootstrap token '$requiredBootstrapToken'."
+    if ([string]$movieProfile.HostMode -ceq 'auxiliary-bootstrap') {
+      foreach ($requiredBootstrapToken in @(
+        'venworkscui.swf',
+        'CUI-AUX-LOAD',
+        'initialize',
+        'updateVanillaHudModeVisibility',
+        'dispose',
+        '$MAIN_Font_Bold',
+        'embedFonts',
+        'defaultTextFormat',
+        'setTextFormat'
+      )) {
+        if (!$inspection.Text.Contains($requiredBootstrapToken)) {
+          throw "$($variant.VariantName) $baseHudMovieName is missing auxiliary bootstrap token '$requiredBootstrapToken'."
+        }
       }
+    }
+    elseif ([string]$movieProfile.HostMode -ceq 'ps5-debug-hudmenu') {
+      foreach ($requiredDebugToken in @(
+        'PS5DBG-01 CONSTRUCTED',
+        'PS5DBG-02 ADDED TO STAGE',
+        'PS5DBG-OK HUD LOADED',
+        'PS5DBG-ERR UNCAUGHT',
+        'PS5DebugErrorRecorded',
+        'PS5DBG-ERR'
+      )) {
+        if (!$inspection.Text.Contains($requiredDebugToken)) {
+          throw "$($variant.VariantName) $baseHudMovieName is missing PS5 Debug token '$requiredDebugToken'."
+        }
+      }
+      foreach ($forbiddenDebugToken in @(
+        'VenworksCUI',
+        'venworks.cui',
+        'venworkscui.swf',
+        'CUILayout',
+        'CUISvg',
+        'CUIPalette',
+        'CUIPlayerHudDataContext'
+      )) {
+        if ($inspection.Text.Contains($forbiddenDebugToken)) {
+          throw "$($variant.VariantName) $baseHudMovieName contains forbidden PS5 Debug token '$forbiddenDebugToken'."
+        }
+      }
+    }
+    else {
+      throw "$($variant.VariantName) selects unsupported HUD host mode '$($movieProfile.HostMode)'."
     }
     foreach ($forbiddenRuntimeToken in @(
       'CUIRuntime',
@@ -656,6 +698,7 @@ foreach ($variant in $variants) {
     }
   }
 
+  if ($hasCuiPayload) {
   $auxiliaryInspection = $movieInspections['venworkscui.swf']
   if ($auxiliaryInspection.AbcCount -ne 1) {
     throw "$($variant.VariantName) venworkscui.swf must contain exactly one CUI ABC; found $($auxiliaryInspection.AbcCount)."
@@ -1173,6 +1216,7 @@ foreach ($variant in $variants) {
       throw "Minimalist scanner readouts must use only the approved dynamically positioned two-layer native rectangle backings."
     }
 
+  }
   }
 
   $pluginPath = Join-Path $stagingPath "$($variant.PackageBaseName).esm"

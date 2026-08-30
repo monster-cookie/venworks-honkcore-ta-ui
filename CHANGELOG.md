@@ -12,6 +12,8 @@
 
 - PS5Debug: Add an isolated diagnostic variant for end-user PS5 startup testing.
 - PS5Debug: Add a top-center lifecycle/error pane patched directly into the existing one-ABC HUDMenu bytecode.
+- PS5Debug: Register the diagnostic as a standard release variant and build, archive, verify, and stage it through the shared manifest-driven pipeline.
+- PS5Debug: Keep its unique plugin identity and PC test archive while limiting release packaging to one Bethesda PS5 ZIP with no Nexus delivery.
 
 ## Version 2.0.11 (September 29, 2026)
 

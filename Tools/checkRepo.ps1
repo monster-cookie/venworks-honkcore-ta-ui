@@ -33,24 +33,16 @@ if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction Si
 
 $repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 $releaseVariants = @($Global:ReleaseVariants)
-if ($releaseVariants.Count -ne 5) {
-  throw "ReleaseVariants must contain all five release variants; found $($releaseVariants.Count)."
-}
-$diagnosticVariants = @($Global:DiagnosticVariants)
-if ($diagnosticVariants.Count -ne 1 -or
-    [string]$diagnosticVariants[0].VariantKey -cne "PS5DBG") {
-  throw "DiagnosticVariants must contain only the isolated PS5DBG variant."
+if ($releaseVariants.Count -ne 6) {
+  throw "ReleaseVariants must contain all six variants; found $($releaseVariants.Count)."
 }
 
 $requiredStringProperties = @(
   "VariantKey",
   "VariantName",
   "ReleaseDisplayName",
-  "NexusNormalDisplayName",
-  "NexusLooseDisplayName",
   "PackageBaseName",
-  "StagingFolderPath",
-  "PaletteFileName"
+  "StagingFolderPath"
 )
 foreach ($propertyName in $requiredStringProperties) {
   $values = @($releaseVariants | ForEach-Object { [string]$_.$propertyName })
@@ -64,7 +56,6 @@ foreach ($propertyName in $requiredStringProperties) {
 }
 
 $allowedArchiveTargets = @("Main", "Textures", "Main_XBox", "Textures_XBox", "Main_PS", "Textures_PS")
-$requiredMainTargets = @("Main", "Main_XBox", "Main_PS")
 $forbiddenProfileProperties = @(
   "VariantKey",
   "VariantName",
@@ -78,6 +69,12 @@ $forbiddenProfileProperties = @(
   "ArchiveTargets"
 )
 foreach ($variant in $releaseVariants) {
+  $nexusNormalDisplayName = [string]$variant.NexusNormalDisplayName
+  $nexusLooseDisplayName = [string]$variant.NexusLooseDisplayName
+  if ([string]::IsNullOrWhiteSpace($nexusNormalDisplayName) -ne
+      [string]::IsNullOrWhiteSpace($nexusLooseDisplayName)) {
+    throw "Variant '$($variant.VariantKey)' must define both Nexus display names or neither."
+  }
   foreach ($nexusPropertyName in @("NexusNormalDisplayName", "NexusLooseDisplayName")) {
     if (([string]$variant.$nexusPropertyName).Length -gt 50) {
       throw "Variant '$($variant.VariantKey)' exceeds the Nexus display-name limit in $nexusPropertyName."
@@ -90,10 +87,24 @@ foreach ($variant in $releaseVariants) {
       @($archiveTargets | Where-Object { $_ -notin $allowedArchiveTargets }).Count -ne 0) {
     throw "Variant '$($variant.VariantKey)' has invalid or repeated archive targets."
   }
+  $requiredMainTargets = if ([string]::IsNullOrWhiteSpace($nexusNormalDisplayName)) {
+    @("Main", "Main_PS")
+  }
+  else {
+    @("Main", "Main_XBox", "Main_PS")
+  }
   foreach ($requiredMainTarget in $requiredMainTargets) {
     if ($requiredMainTarget -notin $archiveTargets) {
       throw "Variant '$($variant.VariantKey)' must publish the $requiredMainTarget archive."
     }
+  }
+  if ([string]::IsNullOrWhiteSpace($nexusNormalDisplayName) -and
+      ([string]$variant.PaletteFileName).Length -ne 0) {
+    throw "Non-Nexus variant '$($variant.VariantKey)' must not declare a palette selection."
+  }
+  if (![string]::IsNullOrWhiteSpace($nexusNormalDisplayName) -and
+      [string]::IsNullOrWhiteSpace([string]$variant.PaletteFileName)) {
+    throw "Nexus variant '$($variant.VariantKey)' must declare a palette selection."
   }
 
   $profilePath = Join-Path $repositoryRoot "Scaleform\variants\$($variant.VariantKey)\build.psd1"
@@ -114,9 +125,8 @@ $profileKeys = @(
     Sort-Object
 )
 $releaseKeys = @($releaseVariants.VariantKey | Sort-Object)
-$expectedProfileKeys = @(@($releaseKeys) + @($diagnosticVariants.VariantKey) | Sort-Object)
-if ([string]::Join("`n", $profileKeys) -cne [string]::Join("`n", $expectedProfileKeys)) {
-  throw "Scaleform profile directories must match the release and diagnostic variant definitions exactly."
+if ([string]::Join("`n", $profileKeys) -cne [string]::Join("`n", $releaseKeys)) {
+  throw "Scaleform profile directories must match the release variant definitions exactly."
 }
 
 $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
