@@ -8,7 +8,7 @@
 - https://creations.bethesda.net/en/starfield/details/9b635bf7-8c6b-4530-bdbd-0912903b336b/Venworks_Customizable_HUD___Freestar_Collective_Th
 
 
-## Version 2.0.12 (September 29, 2026)
+## Version 2.0.13 (September 29, 2026)
 
 - PS5Debug: Add an isolated diagnostic variant for end-user PS5 startup testing.
 - PS5Debug: Add a top-center lifecycle/error pane patched directly into the existing one-ABC HUDMenu bytecode.
