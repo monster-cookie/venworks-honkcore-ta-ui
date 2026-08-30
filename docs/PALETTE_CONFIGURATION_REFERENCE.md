@@ -1,7 +1,6 @@
 # Palette Configuration Reference
 
-This document defines version 1 Venworks Customizable HUD palettes and the
-runtime rules for using semantic palette references in a layout.
+This is the complete reference for players who want to create custom colors, text styles, transparency, outlines, and faction artwork. It explains the required palette structure and the settings the HUD accepts.
 
 The structural contract is
 [`Schemas/VenworksCUI/palette-v1.xsd`](../Schemas/VenworksCUI/palette-v1.xsd).
@@ -10,9 +9,10 @@ and compatibility checks. A palette must satisfy both.
 
 Use the [user configuration guide](USER_CONFIGURATION.md) for simple theme
 switching and the [layout configuration reference](LAYOUT_CONFIGURATION_REFERENCE.md)
-for all other XML elements.
+for all other XML elements. The [component library](COMPONENT_LIBRARY.md)
+lists the HUD sections and components that consume these palette values.
 
-## Packaged palettes and public themes
+## Included palettes and public themes
 
 Each of the four themed release variants packages all five palette XML files under `Interface\VenworksCUI\palettes`. The themed variant controls only the initial `palette` attribute in `layout.xml`. Minimalist packages no palette files; its build resolves the `starfield.xml` color roles to literals before staging its external layout and six component fragments.
 
