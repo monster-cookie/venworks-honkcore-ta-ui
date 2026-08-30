@@ -1,8 +1,6 @@
 # Layout Configuration Reference
 
-This document is the authoring reference for version 1 Venworks Customizable
-HUD layouts. It covers the checked-in XML schema and the stricter behavior of
-the current Scaleform/ActionScript runtime.
+This is the complete reference for advanced players who want to adjust HUD placement, visibility, live values, meters, icons, reusable sections, and display filters. The rules below explain what can be changed safely and what the HUD will reject.
 
 The structural contract is
 [`Schemas/VenworksCUI/layout-v1.xsd`](../Schemas/VenworksCUI/layout-v1.xsd).
@@ -12,9 +10,11 @@ XSD. A document must satisfy both layers.
 For common player changes, start with the
 [user configuration guide](USER_CONFIGURATION.md). Palette roles and
 references are documented separately in the
-[palette configuration reference](PALETTE_CONFIGURATION_REFERENCE.md).
+[palette configuration reference](PALETTE_CONFIGURATION_REFERENCE.md). The
+[component library](COMPONENT_LIBRARY.md) groups reusable sections,
+component families, and display filters by player-facing purpose.
 
-## Movie-profile availability
+## Which HUD versions support these options
 
 All five variants use the complete layout runtime documented by this reference. Minimalist's `minimalist-live` movie profile retains `panel`, `svg`, `path`, `mask`, `icon`, `providerSymbol`, palette, asset, and imported-fragment support. Its shipped layout deliberately omits those optional elements, external palette and asset files, the faction display, helmet cutout paths, and equipment rail. The reduced loose XML instead uses literal Starfield colors, fitted translucent rectangle and ellipse backings, and open corner/divider geometry.
 

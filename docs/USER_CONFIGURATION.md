@@ -1,15 +1,15 @@
-# User Configuration Guide
+# Venworks Customizable HUD: Player Guide
 
-This guide covers safe, common changes to an installed Venworks Customizable
-HUD. It assumes you want to switch themes, move or hide existing HUD sections,
-adjust safe areas or visibility, or make basic color changes.
+This guide is for players who want to customize the look, placement, visibility, and colors of the Venworks Customizable HUD. You do not need to change HUD movies or write code; make changes in the supplied XML files.
 
 For every supported XML element and attribute, use the
 [layout configuration reference](LAYOUT_CONFIGURATION_REFERENCE.md). For a
 complete palette contract and custom-theme workflow, use the
-[palette configuration reference](PALETTE_CONFIGURATION_REFERENCE.md).
+[palette configuration reference](PALETTE_CONFIGURATION_REFERENCE.md). For a
+list of reusable HUD sections, components, and display filters, use the
+[component library](COMPONENT_LIBRARY.md).
 
-## Before editing
+## Before you edit
 
 1. Enable only one of the five Venworks Customizable HUD release variants. All
    variants install the same HUD and configuration paths, so they must never be

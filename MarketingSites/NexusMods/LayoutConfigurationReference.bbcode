@@ -1,0 +1,1036 @@
+[size=4][b][u]Layout Configuration Reference[/u][/b][/size]
+
+This is the complete reference for advanced players who want to adjust HUD placement, visibility, live values, meters, icons, reusable sections, and display filters. The [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/MarketingSites/NexusMods/ComponentLibrary.bbcode]component library[/url] groups these features by player-facing purpose. The rules below explain what can be changed safely and what the HUD will reject.
+
+The detailed layout rules are maintained in the repository's layout schema and reference documentation.
+The runtime remains authoritative where it imposes a narrower rule than the
+XSD. A document must satisfy both layers.
+
+For common player changes, start with the
+[url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/MarketingSites/NexusMods/UserConfiguration.bbcode]player configuration guide[/url]. Palette roles and
+references are documented separately in the
+[url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/MarketingSites/NexusMods/PaletteConfigurationReference.bbcode]palette configuration reference[/url].
+
+[size=3][b][u]Which HUD versions support these options[/u][/b][/size]
+
+All five variants use the complete layout runtime documented by this reference. Minimalist's [font=Courier New]minimalist-live[/font] movie profile retains [font=Courier New]panel[/font], [font=Courier New]svg[/font], [font=Courier New]path[/font], [font=Courier New]mask[/font], [font=Courier New]icon[/font], [font=Courier New]providerSymbol[/font], palette, asset, and imported-fragment support. Its shipped layout deliberately omits those optional elements, external palette and asset files, the faction display, helmet cutout paths, and equipment rail. The reduced loose XML instead uses literal Starfield colors, fitted translucent rectangle and ellipse backings, and open corner/divider geometry.
+
+[size=3][b][u]Fixed runtime paths[/u][/b][/size]
+
+All paths below are relative to Starfield's [font=Courier New]Data\Interface[/font] directory.
+
+[list][*]Resource — Runtime path[/*][/list]
+[list][*]Root layout — [font=Courier New]VenworksCUI\layout.xml[/font][/*][/list]
+[list][*]Imported fragments — [font=Courier New]VenworksCUI\components\<filename>.xml[/font][/*][/list]
+[list][*]Selected palette — [font=Courier New]VenworksCUI\palettes\<filename>.xml[/font][/*][/list]
+[list][*]Local SVG assets — [font=Courier New]VenworksCUI\Assets\<relative-path>.svg[/font][/*][/list]
+
+The root layout and imported-fragment paths apply to all five variants.
+Minimalist ships no selected palette or local SVG asset, although its restored
+runtime supports both paths when a complete valid configuration supplies them.
+
+The runtime does not load a user-selected layout from any other root, execute
+scripts from XML, call arbitrary game methods, subscribe to arbitrary data
+providers, or fetch network resources.
+
+[size=3][b][u]Load and validation order[/u][/b][/size]
+
+The runtime processes an authored layout as one atomic configuration:
+
+[list=1]
+[*]Load and parse [font=Courier New]layout.xml[/font].[/*]
+[*]Validate no more than 16 [font=Courier New]<include>[/font] declarations and load their fragments.[/*]
+[*]Require each fragment to contain one local root [font=Courier New]<group>[/font], prefix its IDs,[/*]
+[/list]
+   and append its wrapper to the root [font=Courier New]<components>[/font] collection.
+[list=1]
+[*]Expand [font=Courier New]button[/font], [font=Courier New]quickBar[/font], [font=Courier New]informationPanel[/font], and [font=Courier New]warning[/font] composites.[/*]
+[*]Expand templates, instances, repeaters, and the selected static state.[/*]
+[*]Load and validate the optional selected palette, then resolve compatible[/*]
+[/list]
+   [font=Courier New]@palette.*[/font] attributes.
+[list=1]
+[*]Validate the fully resolved component tree, conditions, live-value sources,[/*]
+[/list]
+   and references.
+[list=1]
+[*]Preload and validate every referenced local SVG.[/*]
+[*]Create the display layer and subscribe only to the hardcoded HUD providers.[/*]
+[/list]
+
+Any failure prevents the complete configurable layer from rendering and shows
+a categorized diagnostic. No invalid subtree is skipped or partially accepted.
+
+Minimalist uses live data contexts with ten value registrations, seven condition registrations, and three intentional cross-context overlaps. It omits only [font=Courier New]WeaponData[/font], [font=Courier New]HUDStarbornPowersData[/font], [font=Courier New]FavoritesData[/font], and [font=Courier New]ControlMapData[/font], which are used by the equipment rail that Minimalist does not ship. Its remaining conditions and live-value bindings behave like the themed variants and retain the same guarded subscription, callback, and teardown lifecycle.
+
+[size=3][b][u]Root layout document[/u][/b][/size]
+
+The source [font=Courier New]layout.xml[/font] uses this order:
+
+[code]
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUI schemaVersion="1" runtimeVersion="1"
+             designWidth="1920" designHeight="1080"
+             safeLeft="64" safeTop="36"
+             safeRight="64" safeBottom="36"
+             palette="venworks.xml">
+  <definitions>
+    <meterStyle id="example.continuous" renderer="continuous"
+                fillColor="#FFFFFF" emptyColor="#000000"
+                fillOpacity="1" emptyOpacity="0.25" />
+  </definitions>
+  <vanillaVisibility>
+    <target id="topCenter" visibleWhen="always" />
+  </vanillaVisibility>
+  <includes>
+    <include id="example.fragment" src="faction-display.xml"
+             x="0" y="0" anchor="top-left" z="0" />
+  </includes>
+  <components>
+    <group id="example.inline" x="0" y="0"
+           width="0" height="0" z="0" />
+  </components>
+</venworksCUI>
+[/code]
+
+[font=Courier New]definitions[/font] and [font=Courier New]components[/font] are required. [font=Courier New]vanillaVisibility[/font] and [font=Courier New]includes[/font]
+are optional. When present, the elements must remain in the order above.
+The final tree must resolve to at least one rendered component; an empty
+[font=Courier New]components[/font] element is useful only when one or more valid includes supply that
+content.
+
+[size=2][b][u]Root attributes[/u][/b][/size]
+
+[list][*]Attribute — Required — Contract[/*][/list]
+[list][*][font=Courier New]schemaVersion[/font] — Yes — Fixed value [font=Courier New]1[/font].[/*][/list]
+[list][*][font=Courier New]runtimeVersion[/font] — Yes — Fixed value [font=Courier New]1[/font].[/*][/list]
+[list][*][font=Courier New]designWidth[/font] — Yes — Fixed value [font=Courier New]1920[/font].[/*][/list]
+[list][*][font=Courier New]designHeight[/font] — Yes — Fixed value [font=Courier New]1080[/font].[/*][/list]
+[list][*][font=Courier New]safeLeft[/font] — Yes — Non-negative integer left inset; runtime also checks that it is finite.[/*][/list]
+[list][*][font=Courier New]safeTop[/font] — Yes — Non-negative integer top inset; runtime also checks that it is finite.[/*][/list]
+[list][*][font=Courier New]safeRight[/font] — Yes — Non-negative integer right inset; runtime also checks that it is finite.[/*][/list]
+[list][*][font=Courier New]safeBottom[/font] — Yes — Non-negative integer bottom inset; runtime also checks that it is finite.[/*][/list]
+[list][*][font=Courier New]palette[/font] — No — One safe XML filename directly under [font=Courier New]VenworksCUI\palettes[/font].[/*][/list]
+
+The horizontal safe insets may not total more than 1920, and the vertical
+insets may not total more than 1080. The transformed visible rectangle must
+retain positive width and height after applying them.
+
+The palette filename must match
+[font=Courier New][A-Za-z0-9][A-Za-z0-9._-]{0,59}.xml[/font]. It cannot contain [font=Courier New]..[/font], a slash, a
+backslash, a colon, [font=Courier New]?[/font], or [font=Courier New]#[/font].
+
+[size=3][b][u]Identifiers[/u][/b][/size]
+
+Definition, component, include, repeater-item, override-target, and state-option
+identifiers use this form:
+
+[code]
+[A-Za-z][A-Za-z0-9._-]{0,63}
+[/code]
+
+They must begin with a letter and may be no longer than 64 characters.
+
+[list]
+[*]Definition IDs are unique across meter styles and templates.[/*]
+[*]Component IDs are unique in each authored tree and in the final resolved[/*]
+[/list]
+  layout.
+[list]
+[*]Include IDs are unique in the root layout.[/*]
+[*]A fragment's local IDs are prefixed with [font=Courier New]<include-id>.[/font].[/*]
+[*]Template descendant IDs are prefixed with the instance, repeater-item, or[/*]
+[/list]
+  state ID.
+[list]
+[*]Composite expansion creates additional IDs such as [font=Courier New]<button-id>.label[/font]; the[/*]
+[/list]
+  generated full ID must still fit the 64-character limit.
+
+Short, semantic IDs leave room for these generated prefixes.
+
+[size=3][b][u]Coordinates, bounds, transforms, and anchors[/u][/b][/size]
+
+The layout uses a fixed 1920-by-1080 design coordinate system. Starfield's
+current visible rectangle establishes the root viewport; the root safe insets
+are applied inside it.
+
+Without [font=Courier New]anchor[/font], [font=Courier New]x[/font] and [font=Courier New]y[/font] remain ordinary parent-relative positions. With
+an anchor, the engine aligns the same point on the component's transformed
+configured bounds to the named point on the parent bounds, then applies [font=Courier New]x[/font]
+and [font=Courier New]y[/font] as signed offsets.
+
+Supported anchors are:
+
+[code]
+top-left       top-center       top-right
+center-left    center           center-right
+bottom-left    bottom-center    bottom-right
+[/code]
+
+Nested components anchor to their parent group's configured bounds. Root
+components and imported-fragment wrappers anchor inside the root safe area.
+
+[font=Courier New]rotation[/font], [font=Courier New]scaleX[/font], and [font=Courier New]scaleY[/font] must be finite numbers. The runtime does not
+automatically reflow neighboring components after a transform.
+
+[size=3][b][u]Common component attributes[/u][/b][/size]
+
+Unless a later section says otherwise, rendered primitives, specialized live
+components, groups, masks, and top-level composites use these attributes:
+
+[list][*]Attribute — Required — Value and behavior[/*][/list]
+[list][*][font=Courier New]id[/font] — Yes — Valid identifier unique in the current tree.[/*][/list]
+[list][*][font=Courier New]x[/font] — Yes — Finite design-space number.[/*][/list]
+[list][*][font=Courier New]y[/font] — Yes — Finite design-space number.[/*][/list]
+[list][*][font=Courier New]width[/font] — Yes — Non-negative integer in the XSD; most visible/specialized components require a positive runtime value.[/*][/list]
+[list][*][font=Courier New]height[/font] — Yes — Non-negative integer in the XSD; most visible/specialized components require a positive runtime value.[/*][/list]
+[list][*][font=Courier New]opacity[/font] — No — [font=Courier New]0[/font] through [font=Courier New]1[/font]; default [font=Courier New]1[/font].[/*][/list]
+[list][*][font=Courier New]visible[/font] — No — [font=Courier New]true[/font] or [font=Courier New]false[/font]; default [font=Courier New]true[/font].[/*][/list]
+[list][*][font=Courier New]visibleWhen[/font] — No — One compiled visibility expression.[/*][/list]
+[list][*][font=Courier New]rotation[/font] — No — Finite degrees; default [font=Courier New]0[/font].[/*][/list]
+[list][*][font=Courier New]scaleX[/font] — No — Finite horizontal multiplier; default [font=Courier New]1[/font].[/*][/list]
+[list][*][font=Courier New]scaleY[/font] — No — Finite vertical multiplier; default [font=Courier New]1[/font].[/*][/list]
+[list][*][font=Courier New]z[/font] — Yes — Integer sibling draw order.[/*][/list]
+[list][*][font=Courier New]anchor[/font] — No — One of the nine anchors above.[/*][/list]
+
+Static [font=Courier New]visible[/font] and dynamic [font=Courier New]visibleWhen[/font] are combined. A component displays
+only when [font=Courier New]visible[/font] is true and its expression evaluates true. Unknown live
+state evaluates as unknown and remains hidden.
+
+Only attributes explicitly declared for an element are accepted. Unknown
+attributes fail validation.
+
+[size=3][b][u]Definitions[/u][/b][/size]
+
+[font=Courier New]<definitions>[/font] must contain at least one [font=Courier New]<meterStyle>[/font] or [font=Courier New]<template>[/font]. The
+runtime accepts at most 64 templates. Every definition ID is unique across both
+definition types.
+
+[size=2][b][u]Meter styles[/u][/b][/size]
+
+A meter instance refers to a meter style by ID:
+
+[code]
+<meterStyle id="player.health" renderer="segments"
+            fillColor="@palette.colors.meter.health"
+            emptyColor="@palette.colors.panel.background"
+            fillOpacity="1" emptyOpacity="0.72"
+            segmentCount="16" gap="2"
+            direction="right" partialSegments="true" />
+[/code]
+
+All meter styles require [font=Courier New]id[/font], [font=Courier New]renderer[/font], [font=Courier New]fillColor[/font], [font=Courier New]emptyColor[/font],
+[font=Courier New]fillOpacity[/font], and [font=Courier New]emptyOpacity[/font].
+
+[list][*]Renderer — Additional attributes — Rejected attributes[/*][/list]
+[list][*][font=Courier New]continuous[/font] — Optional [font=Courier New]direction[/font]. — [font=Courier New]segmentCount[/font], [font=Courier New]gap[/font], [font=Courier New]partialSegments[/font], [font=Courier New]trianglePattern[/font], [font=Courier New]startAngle[/font], [font=Courier New]sweepAngle[/font], [font=Courier New]clockwise[/font], [font=Courier New]thickness[/font].[/*][/list]
+[list][*][font=Courier New]triangles[/font] — Required [font=Courier New]segmentCount[/font] and [font=Courier New]gap[/font]; optional [font=Courier New]direction[/font], [font=Courier New]partialSegments[/font], and [font=Courier New]trianglePattern[/font]. — [font=Courier New]startAngle[/font], [font=Courier New]sweepAngle[/font], [font=Courier New]clockwise[/font], [font=Courier New]thickness[/font].[/*][/list]
+[list][*][font=Courier New]segments[/font] — Required [font=Courier New]segmentCount[/font] and [font=Courier New]gap[/font]; optional [font=Courier New]direction[/font] and [font=Courier New]partialSegments[/font]. — [font=Courier New]trianglePattern[/font], [font=Courier New]startAngle[/font], [font=Courier New]sweepAngle[/font], [font=Courier New]clockwise[/font], [font=Courier New]thickness[/font].[/*][/list]
+[list][*][font=Courier New]dots[/font] — Required [font=Courier New]segmentCount[/font] and [font=Courier New]gap[/font]; optional [font=Courier New]direction[/font] and [font=Courier New]partialSegments[/font]. — [font=Courier New]trianglePattern[/font], [font=Courier New]startAngle[/font], [font=Courier New]sweepAngle[/font], [font=Courier New]clockwise[/font], [font=Courier New]thickness[/font].[/*][/list]
+[list][*][font=Courier New]radial[/font] — Required [font=Courier New]thickness[/font]; optional [font=Courier New]startAngle[/font], [font=Courier New]sweepAngle[/font], and [font=Courier New]clockwise[/font]. — [font=Courier New]segmentCount[/font], [font=Courier New]gap[/font], [font=Courier New]direction[/font], [font=Courier New]partialSegments[/font], [font=Courier New]trianglePattern[/font].[/*][/list]
+
+Meter-style value rules:
+
+[list][*]Attribute — Contract[/*][/list]
+[list][*][font=Courier New]fillColor[/font], [font=Courier New]emptyColor[/font] — Literal [font=Courier New]#RRGGBB[/font] or compatible color palette reference.[/*][/list]
+[list][*][font=Courier New]fillOpacity[/font], [font=Courier New]emptyOpacity[/font] — [font=Courier New]0[/font] through [font=Courier New]1[/font] or compatible opacity palette reference.[/*][/list]
+[list][*][font=Courier New]segmentCount[/font] — Integer [font=Courier New]1[/font] through [font=Courier New]64[/font].[/*][/list]
+[list][*][font=Courier New]gap[/font] — Non-negative integer; runtime also checks that it is finite.[/*][/list]
+[list][*][font=Courier New]direction[/font] — [font=Courier New]right[/font], [font=Courier New]left[/font], [font=Courier New]down[/font], or [font=Courier New]up[/font]; default renderer behavior applies when omitted.[/*][/list]
+[list][*][font=Courier New]partialSegments[/font] — [font=Courier New]true[/font] or [font=Courier New]false[/font].[/*][/list]
+[list][*][font=Courier New]trianglePattern[/font] — [font=Courier New]uniform[/font] or [font=Courier New]alternating[/font].[/*][/list]
+[list][*][font=Courier New]startAngle[/font] — [font=Courier New]-360[/font] through [font=Courier New]360[/font].[/*][/list]
+[list][*][font=Courier New]sweepAngle[/font] — Greater than [font=Courier New]0[/font] and no more than [font=Courier New]360[/font].[/*][/list]
+[list][*][font=Courier New]clockwise[/font] — [font=Courier New]true[/font] or [font=Courier New]false[/font].[/*][/list]
+[list][*][font=Courier New]thickness[/font] — Finite number greater than [font=Courier New]0[/font]; it may not exceed the smaller bound of a radial meter instance.[/*][/list]
+
+[size=2][b][u]Templates[/u][/b][/size]
+
+A template contains exactly one nonempty root [font=Courier New]<group>[/font]:
+
+[code]
+<template id="compact.readout">
+  <group id="root" x="0" y="0" width="240" height="48"
+         opacity="1" visible="true" rotation="0"
+         scaleX="1" scaleY="1" z="0">
+    <text id="label" x="8" y="8" width="224" height="28"
+          opacity="1" visible="true" rotation="0"
+          scaleX="1" scaleY="1" z="1"
+          value="READY" font="$MAIN_Font_Bold" fontSize="14"
+          color="@palette.colors.foreground.primary"
+          bold="false" align="left" />
+  </group>
+</template>
+[/code]
+
+Templates may contain only [font=Courier New]group[/font], [font=Courier New]text[/font], [font=Courier New]panel[/font], [font=Courier New]shape[/font], [font=Courier New]divider[/font],
+[font=Courier New]meter[/font], [font=Courier New]svg[/font], [font=Courier New]path[/font], [font=Courier New]mask[/font], [font=Courier New]icon[/font], [font=Courier New]symbol[/font], and [font=Courier New]providerSymbol[/font].
+Templates cannot contain composites, specialized live renderers, another
+template/instance, a repeater, or a state.
+
+[size=3][b][u]Imported fragments[/u][/b][/size]
+
+The optional root [font=Courier New]<includes>[/font] element accepts 1 through 16 [font=Courier New]<include>[/font] entries:
+
+[code]
+<include id="player-status" src="player-status-scanner.xml"
+         x="-39" y="11" anchor="bottom-left"
+         visible="true" visibleWhen="always" z="100" />
+[/code]
+
+[size=2][b][u]Include attributes[/u][/b][/size]
+
+[list][*]Attribute — Required — Contract[/*][/list]
+[list][*][font=Courier New]id[/font] — Yes — Unique valid identifier; becomes the wrapper ID and fragment prefix.[/*][/list]
+[list][*][font=Courier New]src[/font] — Yes — One safe XML filename directly under [font=Courier New]VenworksCUI\components[/font].[/*][/list]
+[list][*][font=Courier New]x[/font] — Yes — Finite wrapper position.[/*][/list]
+[list][*][font=Courier New]y[/font] — Yes — Finite wrapper position.[/*][/list]
+[list][*][font=Courier New]anchor[/font] — No — Root-safe-area anchor.[/*][/list]
+[list][*][font=Courier New]visible[/font] — No — Static Boolean; default [font=Courier New]true[/font].[/*][/list]
+[list][*][font=Courier New]visibleWhen[/font] — No — Visibility expression applied to the wrapper.[/*][/list]
+[list][*][font=Courier New]z[/font] — Yes — Use an integer; the final wrapper is validated as a component.[/*][/list]
+
+[font=Courier New]src[/font] must match [font=Courier New][A-Za-z0-9][A-Za-z0-9._-]{0,59}.xml[/font] and cannot contain
+[font=Courier New]..[/font], a slash, a backslash, a colon, [font=Courier New]?[/font], or [font=Courier New]#[/font]. Include declarations cannot
+contain child elements.
+
+Each loaded component file:
+
+[list]
+[*]is limited to 65,536 characters;[/*]
+[*]has root [font=Courier New]venworksCUIFragment[/font];[/*]
+[*]has exactly [font=Courier New]schemaVersion="1"[/font] and [font=Courier New]runtimeVersion="1"[/font] and no other root[/*]
+[/list]
+  attributes;
+[list]
+[*]contains exactly one [font=Courier New]<group>[/font] child; and[/*]
+[*]cannot contain [font=Courier New]<includes>[/font] or [font=Courier New]<include>[/font] at any depth.[/*]
+[/list]
+
+The imported group supplies the wrapper [font=Courier New]width[/font] and [font=Courier New]height[/font]. Its own [font=Courier New]x[/font] and
+[font=Courier New]y[/font] become [font=Courier New]0[/font], its anchor becomes [font=Courier New]top-left[/font], and all local IDs receive the
+include prefix. Its authored opacity, visibility, conditions, transforms, and
+children remain subject to normal component validation.
+
+[size=3][b][u]Bethesda HUD visibility adapters[/u][/b][/size]
+
+The optional [font=Courier New]<vanillaVisibility>[/font] element accepts 1 through 16 [font=Courier New]<target>[/font]
+entries. Only these normalized IDs are allowlisted:
+
+[list][*]Authored ID — Bethesda target[/*][/list]
+[list][*][font=Courier New]topCenter[/font] — [font=Courier New]TopCenterGroup_mc[/font][/*][/list]
+[list][*][font=Courier New]bottomLeft[/font] — [font=Courier New]BottomLeftGroup_mc[/font][/*][/list]
+[list][*][font=Courier New]rightMeters[/font] — [font=Courier New]RightMeters_mc[/font][/*][/list]
+[list][*][font=Courier New]socialCommandIcons[/font] — [font=Courier New]SocialCommandIcons_mc[/font][/*][/list]
+[list][*][font=Courier New]floatingQuestMarkers[/font] — [font=Courier New]FloatingQuestMarkerBase[/font][/*][/list]
+[list][*][font=Courier New]crewBuffWidget[/font] — [font=Courier New]CrewBuffWidget_mc[/font][/*][/list]
+
+IDs are case-insensitive and ignore underscores. A normalized target may appear
+only once.
+
+Every target requires [font=Courier New]id[/font] and [font=Courier New]visibleWhen[/font]. Placement is optional and uses
+one of two mutually exclusive forms:
+
+[list]
+[*]absolute: [font=Courier New]x[/font], [font=Courier New]y[/font], and [font=Courier New]anchor[/font] must all be present; or[/*]
+[*]relative: [font=Courier New]offsetX[/font] and [font=Courier New]offsetY[/font] must both be present.[/*]
+[/list]
+
+Relative offsets are added to Bethesda's captured original position. Absolute
+placement anchors the target's current bounds in its display-list parent.
+Neither form changes scale or rotation.
+
+The adapter preserves Bethesda's current HUD-mode visibility and composes it
+with the configured condition. It also follows Bethesda's HUD opacity. A
+condition cannot force an element visible when its owning Bethesda HUD mode is
+hidden.
+
+[size=3][b][u]Visibility conditions[/u][/b][/size]
+
+Condition names are case-insensitive and ignore underscores. For example,
+[font=Courier New]inScanner[/font], [font=Courier New]IN_SCANNER[/font], and [font=Courier New]inscanner[/font] normalize to the same condition.
+
+[size=2][b][u]Boolean conditions[/u][/b][/size]
+
+[list][*]Condition — Meaning[/*][/list]
+[list][*][font=Courier New]always[/font] — Constant true.[/*][/list]
+[list][*][font=Courier New]never[/font] — Constant false.[/*][/list]
+[list][*][font=Courier New]firstPerson[/font] — Player is in first person.[/*][/list]
+[list][*][font=Courier New]thirdPerson[/font] — Player is in third person.[/*][/list]
+[list][*][font=Courier New]inCombat[/font] — Bethesda stealth data reports combat.[/*][/list]
+[list][*][font=Courier New]inScanner[/font] — Scanner mode is active.[/*][/list]
+[list][*][font=Courier New]isSneaking[/font] — Bethesda stealth data reports sneaking.[/*][/list]
+[list][*][font=Courier New]weaponAiming[/font] — Iron-sights/aiming state is active.[/*][/list]
+[list][*][font=Courier New]weaponHasAmmo[/font] — Current weapon exposes ammunition.[/*][/list]
+[list][*][font=Courier New]weaponHasExplosive[/font] — Current explosive count/type is available.[/*][/list]
+[list][*][font=Courier New]weaponExplosiveIsMine[/font] — Current explosive category is a mine.[/*][/list]
+[list][*][font=Courier New]boostActive[/font] — Jetpack boost is active.[/*][/list]
+[list][*][font=Courier New]inVehicle[/font] — Player HUD is in the vehicle state.[/*][/list]
+[list][*][font=Courier New]digipicksAvailable[/font] — Player inventory reports at least one digipick.[/*][/list]
+[list][*][font=Courier New]hudVisible[/font] — HUD opacity is greater than zero.[/*][/list]
+[list][*][font=Courier New]criticalHealth[/font] — Known player health is below the runtime's 35-percent threshold.[/*][/list]
+
+For favorite slots [font=Courier New]01[/font] through [font=Courier New]12[/font], these Boolean families are available:
+
+[code]
+favorite01Active       favorite01Populated
+favorite01Power        favorite01Weapon
+favorite01Item
+[/code]
+
+Replace [font=Courier New]01[/font] with any two-digit slot through [font=Courier New]12[/font].
+
+[font=Courier New]favorite01Active[/font] through [font=Courier New]favorite12Active[/font] compare the localized favorite
+name with the independently live weapon or power name. Weapon matching follows
+the current game language. Power matching currently relies on an English name
+mapped from the live HUD power key, so active-power favorite highlighting is
+reliable only in English until HUDMenu exposes a verified language-independent
+favorite-power identifier.
+
+[size=2][b][u]Numeric conditions[/u][/b][/size]
+
+[font=Courier New]hudOpacityPercentage[/font] is the only numeric condition. It requires a comparison
+against a literal value from 0 through 100.
+
+[size=2][b][u]Grammar and limits[/u][/b][/size]
+
+[list]
+[*]Keywords: [font=Courier New]AND[/font], [font=Courier New]OR[/font], and [font=Courier New]NOT[/font].[/*]
+[*]Precedence: parentheses, [font=Courier New]NOT[/font], [font=Courier New]AND[/font], then [font=Courier New]OR[/font].[/*]
+[*]Numeric operators: [font=Courier New]=[/font], [font=Courier New]!=[/font], [font=Courier New]<>[/font], [font=Courier New]<[/font], [font=Courier New]<=[/font], [font=Courier New]>[/font], and [font=Courier New]>=[/font].[/*]
+[*]Maximum expression length: 256 characters.[/*]
+[*]Maximum tokens: 64.[/*]
+[*]Maximum parenthesis nesting: 8 levels.[/*]
+[*]Numeric literals: unsigned values from 0 through 100.[/*]
+[*]Boolean literals are not supported; use [font=Courier New]always[/font] and [font=Courier New]never[/font].[/*]
+[/list]
+
+In XML attributes, escape less-than operators:
+
+[code]
+visibleWhen="hudOpacityPercentage &lt; 50"
+visibleWhen="hudOpacityPercentage &lt;= 75 AND hudVisible"
+[/code]
+
+[font=Courier New]hasCombatEffect("id")[/font] and [font=Courier New]hasEnvironmentEffect("id")[/font] are recognized names
+but deliberately unavailable in [font=Courier New]hudmenu.gfx[/font]; using either fails validation.
+No other functions are accepted.
+
+Unknown runtime state does not become false internally, but the visibility
+binding displays only an explicit true result. This fail-hidden behavior avoids
+showing state-dependent UI before its provider initializes.
+
+[size=3][b][u]Live-value sources[/u][/b][/size]
+
+Live source names are case-insensitive and ignore underscores. Dots remain part
+of the source namespace. Only the following hardcoded sources are accepted.
+
+[size=2][b][u]String sources[/u][/b][/size]
+
+[code]
+location.name
+player.serial
+power.key
+power.name
+quest.objective
+weapon.name
+weapon.icon
+weapon.ammoType
+weapon.explosiveLabel
+environment.protectionStatus
+environment.solarTransitionCountdown
+environment.hazard.airWaterStatus
+environment.hazard.thermalStatus
+environment.hazard.corrosiveStatus
+environment.hazard.radiationStatus
+environment.hazard.airWaterShortStatus
+environment.hazard.thermalShortStatus
+environment.hazard.corrosiveShortStatus
+environment.hazard.radiationShortStatus
+[/code]
+
+For favorite slots [font=Courier New]01[/font] through [font=Courier New]12[/font], these string sources are also available:
+
+[code]
+favorite.01.name
+favorite.01.detail
+favorite.01.hotkey
+[/code]
+
+Replace [font=Courier New]01[/font] with any two-digit slot through [font=Courier New]12[/font].
+
+Diagnostic string sources are:
+
+[code]
+diagnostic.inventoryProvider
+diagnostic.powerNameProvider
+diagnostic.environmentProvider
+diagnostic.environmentFields
+diagnostic.environmentCandidates
+diagnostic.localEnvironmentFields
+diagnostic.activityOxygen
+diagnostic.activityEnvelope
+diagnostic.activityProtection
+diagnostic.activityLoads
+diagnostic.playerFields
+diagnostic.playerTargets
+diagnostic.playerIdentifiers
+diagnostic.playerTimeInventory
+diagnostic.effect0
+diagnostic.effect1
+diagnostic.effect2
+diagnostic.effect3
+diagnostic.armorResistance
+diagnostic.starmapProvider
+[/code]
+
+Diagnostic sources expose bounded troubleshooting text and are not stable
+player-facing content contracts.
+
+[size=2][b][u]Boolean sources[/u][/b][/size]
+
+[code]
+power.hasSpell
+weapon.displayAmmo
+weapon.ammoAsPercent
+environment.fullSoakAlertCandidate
+[/code]
+
+[size=2][b][u]Numeric sources[/u][/b][/size]
+
+[code]
+environment.oxygenPercentage
+environment.temperature
+environment.gravity
+environment.localTime
+player.universalTime
+player.level
+player.levelXP
+player.nextLevelXP
+player.xpPercentage
+player.health
+player.maxHealth
+player.healthPercentage
+player.oxygen
+player.maxOxygen
+player.oxygenPercentage
+player.carbonDioxide
+player.carbonDioxidePercentage
+player.digipicks
+power.current
+power.maximum
+power.percentage
+power.cost
+power.cooldown
+carry.current
+carry.maximum
+carry.percentage
+credits
+weapon.clipAmmo
+weapon.totalAmmo
+weapon.reserveAmmo
+weapon.explosiveCount
+weapon.explosiveType
+boost.charge
+boost.percentage
+environment.hazard.effectCount
+environment.hazard.airWaterLevel
+environment.hazard.thermalLevel
+environment.hazard.corrosiveLevel
+environment.hazard.radiationLevel
+environment.hazard.airWaterExposureLevel
+environment.hazard.thermalExposureLevel
+environment.hazard.corrosiveExposureLevel
+environment.hazard.radiationExposureLevel
+environment.soakCandidate
+environment.protectionLevel
+environment.protectionPercentage
+[/code]
+
+An allowlisted source can still be unknown until its Bethesda provider publishes usable data. Text and meter components use their authored fallback while data is unknown.
+
+Minimalist's retained live providers publish their supported sources normally. Sources owned only by the removed equipment rail are unavailable because Minimalist omits [font=Courier New]WeaponData[/font], [font=Courier New]HUDStarbornPowersData[/font], [font=Courier New]FavoritesData[/font], and [font=Courier New]ControlMapData[/font]; the four themed variants retain those providers.
+
+[size=3][b][u]Text formats and value templates[/u][/b][/size]
+
+A [font=Courier New]<text>[/font] may use either one [font=Courier New]source[/font] or one [font=Courier New]valueTemplate[/font], not both.
+
+[size=2][b][u]Direct source[/u][/b][/size]
+
+[code]
+<text id="health.percent" x="0" y="0" width="100" height="24"
+      opacity="1" visible="true" rotation="0"
+      scaleX="1" scaleY="1" z="1"
+      value="--" source="player.healthPercentage" format="percent"
+      font="$MAIN_Font" fontSize="14" color="#FFFFFF"
+      bold="false" align="right" />
+[/code]
+
+[font=Courier New]value[/font] is required and serves as the fallback until the source is known.
+
+[size=2][b][u]Value template[/u][/b][/size]
+
+[code]
+value="HEALTH --/--"
+valueTemplate="HEALTH {player.health:integer}/{player.maxHealth:integer}"
+[/code]
+
+A template is 1 through 256 characters and must contain 1 through 8 variables.
+Each variable is [font=Courier New]{source}[/font] or [font=Courier New]{source:format}[/font]. A [font=Courier New]format[/font] attribute on the
+text itself is forbidden when [font=Courier New]valueTemplate[/font] is present. If any variable is
+unknown, the complete authored [font=Courier New]value[/font] fallback is displayed.
+
+[size=2][b][u]Formats[/u][/b][/size]
+
+[list][*]Format — Allowed source kind — Output[/*][/list]
+[list][*][font=Courier New]raw[/font] — String, Boolean, or number — ActionScript string conversion.[/*][/list]
+[list][*][font=Courier New]integer[/font] — Number — Rounded integer.[/*][/list]
+[list][*][font=Courier New]percent[/font] — Number — Rounded number followed by [font=Courier New]%[/font].[/*][/list]
+[list][*][font=Courier New]temperature[/font] — Number — Rounded number followed by [font=Courier New]°[/font].[/*][/list]
+[list][*][font=Courier New]gravity[/font] — Number — Two decimal places followed by [font=Courier New]g[/font].[/*][/list]
+[list][*][font=Courier New]time24[/font] — Number — Fractional-day value rendered as [font=Courier New]HH:MM[/font].[/*][/list]
+[list][*][font=Courier New]boolean[/font] — Boolean — [font=Courier New]TRUE[/font] or [font=Courier New]FALSE[/font].[/*][/list]
+
+String sources require [font=Courier New]raw[/font]. Boolean sources permit [font=Courier New]raw[/font] or [font=Courier New]boolean[/font].
+Numeric sources reject [font=Courier New]boolean[/font].
+[font=Courier New]percent[/font] does not multiply by 100; the selected source must already publish a
+percentage-scale value.
+
+[size=3][b][u]Primitive and container components[/u][/b][/size]
+
+[size=2][b][u][font=Courier New]group[/font][/u][/b][/size]
+
+Uses only the common component attributes. It may contain zero or more authored
+components. A template's root group must be nonempty; an ordinary group may be
+empty.
+
+[size=2][b][u][font=Courier New]text[/font][/u][/b][/size]
+
+Adds these attributes:
+
+[list][*]Attribute — Required — Contract[/*][/list]
+[list][*][font=Courier New]value[/font] — Yes — Static text or unknown-data fallback. It may be empty only when [font=Courier New]source[/font] or [font=Courier New]valueTemplate[/font] exists.[/*][/list]
+[list][*][font=Courier New]source[/font] — No — One allowlisted source; mutually exclusive with [font=Courier New]valueTemplate[/font].[/*][/list]
+[list][*][font=Courier New]format[/font] — No — One format above; default [font=Courier New]raw[/font]; forbidden with [font=Courier New]valueTemplate[/font].[/*][/list]
+[list][*][font=Courier New]valueTemplate[/font] — No — Bounded multi-source template; mutually exclusive with [font=Courier New]source[/font].[/*][/list]
+[list][*][font=Courier New]font[/font] — Yes — Nonempty font name. Packaged layouts use [font=Courier New]$MAIN_Font[/font] or [font=Courier New]$MAIN_Font_Bold[/font].[/*][/list]
+[list][*][font=Courier New]fontSize[/font] — Yes — Positive integer or compatible typography palette reference.[/*][/list]
+[list][*][font=Courier New]color[/font] — Yes — [font=Courier New]#RRGGBB[/font] or compatible color/typography palette reference.[/*][/list]
+[list][*][font=Courier New]bold[/font] — No — Boolean; default [font=Courier New]false[/font]; compatible typography field reference is supported.[/*][/list]
+[list][*][font=Courier New]multiline[/font] — No — Boolean; default [font=Courier New]false[/font].[/*][/list]
+[list][*][font=Courier New]wordWrap[/font] — No — Boolean; default [font=Courier New]false[/font].[/*][/list]
+[list][*][font=Courier New]align[/font] — Yes — [font=Courier New]left[/font], [font=Courier New]center[/font], or [font=Courier New]right[/font].[/*][/list]
+
+[size=2][b][u][font=Courier New]panel[/font][/u][/b][/size]
+
+Adds required [font=Courier New]fillColor[/font], [font=Courier New]fillOpacity[/font], [font=Courier New]strokeColor[/font], [font=Courier New]strokeOpacity[/font], and
+[font=Courier New]strokeWidth[/font]. Colors use [font=Courier New]#RRGGBB[/font]; opacity values use 0 through 1; stroke
+width is finite and non-negative.
+
+[size=2][b][u][font=Courier New]shape[/font][/u][/b][/size]
+
+Adds required [font=Courier New]shape[/font], [font=Courier New]fillColor[/font], [font=Courier New]fillOpacity[/font], [font=Courier New]strokeColor[/font],
+[font=Courier New]strokeOpacity[/font], and [font=Courier New]strokeWidth[/font]. [font=Courier New]shape[/font] is [font=Courier New]rectangle[/font] or [font=Courier New]ellipse[/font].
+
+[size=2][b][u][font=Courier New]divider[/font][/u][/b][/size]
+
+Adds required [font=Courier New]color[/font], [font=Courier New]strokeOpacity[/font], and [font=Courier New]strokeWidth[/font]. Stroke width must be
+greater than zero. A divider can be horizontal, vertical, or diagonal according
+to its configured bounds.
+
+[size=2][b][u][font=Courier New]mask[/font][/u][/b][/size]
+
+Adds required [font=Courier New]shape[/font], where the value is [font=Courier New]rectangle[/font], [font=Courier New]ellipse[/font], or [font=Courier New]path[/font].
+It must contain at least one child.
+
+For a path mask, [font=Courier New]data[/font], [font=Courier New]viewBoxX[/font], [font=Courier New]viewBoxY[/font], [font=Courier New]viewBoxWidth[/font], and
+[font=Courier New]viewBoxHeight[/font] are required by runtime validation. View-box dimensions must be
+positive. Rectangle and ellipse masks must not declare path geometry.
+
+[size=3][b][u]Meter component[/u][/b][/size]
+
+[font=Courier New]<meter>[/font] adds:
+
+[list][*]Attribute — Required — Contract[/*][/list]
+[list][*][font=Courier New]style[/font] — Yes — Existing [font=Courier New]meterStyle[/font] ID.[/*][/list]
+[list][*][font=Courier New]value[/font] — Yes — Finite fallback/current value.[/*][/list]
+[list][*][font=Courier New]max[/font] — Yes — Finite fallback maximum greater than zero.[/*][/list]
+[list][*][font=Courier New]source[/font] — No — Allowlisted numeric live source.[/*][/list]
+[list][*][font=Courier New]maxSource[/font] — No — Allowlisted numeric live source; requires [font=Courier New]source[/font].[/*][/list]
+
+Values are clamped by the renderer to the range from zero through the current
+maximum. If the live source or maximum is unknown, the authored fallback is
+used. A radial style's [font=Courier New]thickness[/font] cannot exceed the smaller of the meter's
+configured width and height. For segmented, dot, and triangle styles, all gaps
+combined must be smaller than the meter's directional axis so every segment
+retains positive space.
+
+[size=3][b][u]Specialized live components[/u][/b][/size]
+
+All specialized components use the common attributes and require positive
+width and height.
+
+[list][*]Element — Additional required attributes — Runtime limits/behavior[/*][/list]
+[list][*][font=Courier New]contactRadar[/font] — [font=Courier New]enemyColor[/font], [font=Courier New]allyColor[/font], [font=Courier New]playerColor[/font] — Displays only the runtime's bounded, validated acquired-contact model.[/*][/list]
+[list][*][font=Courier New]compassTape[/font] — [font=Courier New]fieldOfView[/font], [font=Courier New]tickColor[/font], [font=Courier New]headingColor[/font], [font=Courier New]centerColor[/font], [font=Courier New]fallbackColor[/font] — [font=Courier New]fieldOfView[/font] is 30 through 180 degrees.[/*][/list]
+[list][*][font=Courier New]scannerOverlay[/font] — [font=Courier New]fieldOfView[/font], [font=Courier New]maxTargets[/font], [font=Courier New]flickerIntervalMs[/font], [font=Courier New]scanningColor[/font], [font=Courier New]gridColor[/font], [font=Courier New]contactColor[/font], [font=Courier New]hostileColor[/font], [font=Courier New]backgroundColor[/font] — Field of view is 30-180; targets 1-5; interval 50-2000 milliseconds. Its pulse timer stops and resets whenever it or any display-list ancestor is hidden.[/*][/list]
+[list][*][font=Courier New]threatAlert[/font] — [font=Courier New]backgroundColor[/font], [font=Courier New]clearColor[/font], [font=Courier New]cautionColor[/font], [font=Courier New]dangerColor[/font], [font=Courier New]criticalColor[/font] — Uses the bounded player-threat model; it does not replace Bethesda's enemy health or stealth UI.[/*][/list]
+[list][*][font=Courier New]statusEffectBar[/font] — [font=Courier New]maxItems[/font], [font=Courier New]debuffColor[/font], [font=Courier New]sustenanceColor[/font], [font=Courier New]neutralColor[/font], [font=Courier New]backgroundColor[/font] — [font=Courier New]maxItems[/font] is 1 through 16.[/*][/list]
+
+Every color accepts [font=Courier New]#RRGGBB[/font] or a compatible palette color reference.
+
+[size=3][b][u]Vector, icon, and symbol components[/u][/b][/size]
+
+[size=2][b][u][font=Courier New]svg[/font][/u][/b][/size]
+
+Loads one local SVG and adds:
+
+[list][*]Attribute — Required — Values[/*][/list]
+[list][*][font=Courier New]src[/font] — Yes — Safe relative [font=Courier New].svg[/font] path under [font=Courier New]VenworksCUI\Assets[/font].[/*][/list]
+[list][*][font=Courier New]fit[/font] — No — [font=Courier New]contain[/font], [font=Courier New]cover[/font], [font=Courier New]stretch[/font], or [font=Courier New]none[/font]; default [font=Courier New]contain[/font].[/*][/list]
+[list][*][font=Courier New]alignX[/font] — No — [font=Courier New]left[/font], [font=Courier New]center[/font], or [font=Courier New]right[/font]; default [font=Courier New]center[/font].[/*][/list]
+[list][*][font=Courier New]alignY[/font] — No — [font=Courier New]top[/font], [font=Courier New]center[/font], or [font=Courier New]bottom[/font]; default [font=Courier New]center[/font].[/*][/list]
+
+The direct [font=Courier New]src[/font] form may contain safe subdirectories. It must be 5 through
+128 characters, start with an alphanumeric character, use only letters,
+numbers, dots, underscores, slashes, and hyphens, and end in [font=Courier New].svg[/font]. Absolute
+paths, backslashes, colons, empty segments, [font=Courier New].[/font] segments, and [font=Courier New]..[/font] segments are
+rejected.
+
+[size=2][b][u][font=Courier New]path[/font][/u][/b][/size]
+
+Renders inline SVG path geometry and adds required [font=Courier New]data[/font], [font=Courier New]viewBoxX[/font],
+[font=Courier New]viewBoxY[/font], [font=Courier New]viewBoxWidth[/font], [font=Courier New]viewBoxHeight[/font], [font=Courier New]fillColor[/font], [font=Courier New]fillOpacity[/font],
+[font=Courier New]strokeColor[/font], [font=Courier New]strokeOpacity[/font], and [font=Courier New]strokeWidth[/font].
+
+[list]
+[*][font=Courier New]data[/font] is nonempty and at most 8192 characters.[/*]
+[*]View-box coordinates are finite; dimensions are positive.[/*]
+[*]Stroke width is non-negative; opacity is 0 through 1.[/*]
+[*]Supported absolute and relative commands are [font=Courier New]M[/font], [font=Courier New]L[/font], [font=Courier New]H[/font], [font=Courier New]V[/font], [font=Courier New]C[/font], [font=Courier New]S[/font],[/*]
+[/list]
+  [font=Courier New]Q[/font], [font=Courier New]T[/font], and [font=Courier New]Z[/font].
+[list]
+[*]Arc command [font=Courier New]A[/font] is explicitly rejected.[/*]
+[*]The parser allows at most 2048 path tokens and 512 commands.[/*]
+[/list]
+
+[size=2][b][u][font=Courier New]icon[/font][/u][/b][/size]
+
+Creates a same-domain built-in vector icon. It adds required [font=Courier New]name[/font] plus
+optional [font=Courier New]color[/font], [font=Courier New]fit[/font], [font=Courier New]alignX[/font], and [font=Courier New]alignY[/font].
+
+The 21 allowlisted names are:
+
+[code]
+health          oxygen        co2             shield
+armor           weapon        aiming          ship
+vehicle         fuel          cargo           scanner
+stealth         warning       objective       jolly-roger
+death           poison        burning         electrocution
+disease
+[/code]
+
+[size=2][b][u][font=Courier New]symbol[/font][/u][/b][/size]
+
+Creates an allowlisted symbol embedded in the owning Bethesda HUD movie. It
+adds required [font=Courier New]name[/font] plus optional [font=Courier New]color[/font], [font=Courier New]fit[/font], [font=Courier New]alignX[/font], and [font=Courier New]alignY[/font].
+
+The allowlisted names are:
+
+[code]
+environment-alert
+quest-door-marker
+boost-fill
+vehicle-exit-prompt
+[/code]
+
+Availability is movie-aware. [font=Courier New]vehicle-exit-prompt[/font] is presentation-only and
+extracts the current controller or keyboard glyph region; it does not own input.
+
+[size=2][b][u][font=Courier New]providerSymbol[/font][/u][/b][/size]
+
+Loads a symbol named by an approved live provider. It adds required [font=Courier New]source[/font]
+plus optional [font=Courier New]color[/font], [font=Courier New]fit[/font], [font=Courier New]alignX[/font], and [font=Courier New]alignY[/font].
+
+The only allowlisted provider-symbol source is [font=Courier New]weapon.icon[/font]. Unknown, empty,
+or failed symbols remain hidden. Provider values beginning with [font=Courier New]CCSUP[/font] use
+their supplied library; other values use Bethesda's [font=Courier New]WeaponIcons[/font] library.
+
+[size=3][b][u]Composite components[/u][/b][/size]
+
+Composites are convenient authored elements that the runtime lowers into
+primitive groups before final validation. They use semantic palette roles when
+a palette is selected.
+
+[size=2][b][u][font=Courier New]button[/font][/u][/b][/size]
+
+Uses the common attributes and adds:
+
+[list][*]Attribute — Required — Values[/*][/list]
+[list][*][font=Courier New]label[/font] — Yes — Nonempty text.[/*][/list]
+[list][*][font=Courier New]icon[/font] — No — Built-in icon key or compatible palette asset reference.[/*][/list]
+[list][*][font=Courier New]key[/font] — No — Nonempty key-hint text when present.[/*][/list]
+[list][*][font=Courier New]state[/font] — Yes — [font=Courier New]normal[/font], [font=Courier New]selected[/font], [font=Courier New]disabled[/font], or [font=Courier New]warning[/font].[/*][/list]
+
+The configured bounds must be at least 160 by 48. Generated label space must
+remain positive after optional icon and key areas.
+
+[size=2][b][u][font=Courier New]quickBar[/font][/u][/b][/size]
+
+Uses the common attributes and adds required positive [font=Courier New]buttonHeight[/font] and
+non-negative [font=Courier New]gap[/font]. Bounds must be at least 160 by 48, and [font=Courier New]buttonHeight[/font] must
+be at least 48.
+
+It contains 1 through 16 child [font=Courier New]<button>[/font] entries. A child button accepts:
+
+[list][*]Attribute — Required — Values[/*][/list]
+[list][*][font=Courier New]id[/font] — Yes — Unique local identifier.[/*][/list]
+[list][*][font=Courier New]label[/font] — Yes — Nonempty text.[/*][/list]
+[list][*][font=Courier New]icon[/font] — No — Built-in icon key or compatible palette asset.[/*][/list]
+[list][*][font=Courier New]key[/font] — No — Nonempty key text.[/*][/list]
+[list][*][font=Courier New]state[/font] — Yes — Button state above.[/*][/list]
+[list][*][font=Courier New]visible[/font] — No — Static Boolean; default [font=Courier New]true[/font].[/*][/list]
+[list][*][font=Courier New]visibleWhen[/font] — No — Visibility expression.[/*][/list]
+
+Statically hidden buttons collapse from vertical layout. At least one declared
+button and at least one statically visible button are required. The generated
+buttons and gaps must fit inside the quick bar's height.
+
+[size=2][b][u][font=Courier New]informationPanel[/font][/u][/b][/size]
+
+Uses the common attributes and adds required nonempty [font=Courier New]title[/font], optional [font=Courier New]icon[/font],
+and optional nonempty [font=Courier New]body[/font]. Bounds must be at least 300 by 150.
+
+It accepts up to 20 child items, no more than 12 of which may be rows:
+
+[list][*]Child — Attributes[/*][/list]
+[list][*][font=Courier New]row[/font] — Required [font=Courier New]id[/font], nonempty [font=Courier New]label[/font], nonempty [font=Courier New]value[/font]; optional [font=Courier New]icon[/font], [font=Courier New]visible[/font], [font=Courier New]visibleWhen[/font].[/*][/list]
+[list][*][font=Courier New]meter[/font] — Required [font=Courier New]id[/font], [font=Courier New]style[/font], finite [font=Courier New]value[/font], and positive [font=Courier New]max[/font]; optional nonempty [font=Courier New]label[/font], [font=Courier New]icon[/font], [font=Courier New]visible[/font], [font=Courier New]visibleWhen[/font].[/*][/list]
+[list][*][font=Courier New]divider[/font] — Required [font=Courier New]id[/font]; optional [font=Courier New]visible[/font], [font=Courier New]visibleWhen[/font].[/*][/list]
+
+The panel requires body text or at least one child item. Generated content must
+fit the configured bounds. Information-panel meters are static composite inputs;
+they do not accept [font=Courier New]source[/font] or [font=Courier New]maxSource[/font].
+
+[size=2][b][u][font=Courier New]warning[/font][/u][/b][/size]
+
+Uses the common attributes and adds required [font=Courier New]severity[/font], nonempty [font=Courier New]title[/font], and
+nonempty [font=Courier New]message[/font], plus optional [font=Courier New]icon[/font].
+
+[font=Courier New]severity[/font] is [font=Courier New]info[/font], [font=Courier New]warning[/font], [font=Courier New]danger[/font], or [font=Courier New]critical[/font]. Bounds must be at
+least 320 by 100. When [font=Courier New]icon[/font] is omitted, informational warnings use [font=Courier New]shield[/font]
+and the other severities use [font=Courier New]warning[/font].
+
+[size=3][b][u]Template placement and bounded composition[/u][/b][/size]
+
+[size=2][b][u][font=Courier New]instance[/font][/u][/b][/size]
+
+Creates one template instance. It accepts:
+
+[list][*]Attribute — Required — Contract[/*][/list]
+[list][*][font=Courier New]id[/font] — Yes — Instance ID and generated prefix.[/*][/list]
+[list][*][font=Courier New]template[/font] — Yes — Existing template ID.[/*][/list]
+[list][*][font=Courier New]x[/font], [font=Courier New]y[/font] — Yes — Finite placement.[/*][/list]
+[list][*][font=Courier New]z[/font] — Yes — Integer.[/*][/list]
+[list][*][font=Courier New]anchor[/font] — No — Supported anchor.[/*][/list]
+[list][*][font=Courier New]visible[/font] — No — Static Boolean.[/*][/list]
+[list][*][font=Courier New]visibleWhen[/font] — No — Expression combined with any template-root expression using [font=Courier New]AND[/font].[/*][/list]
+
+It may contain zero or more [font=Courier New]<override>[/font] children.
+
+[size=2][b][u][font=Courier New]repeater[/font][/u][/b][/size]
+
+Creates bounded instances of one template. It accepts:
+
+[list][*]Attribute — Required — Contract[/*][/list]
+[list][*][font=Courier New]id[/font], [font=Courier New]template[/font] — Yes — Repeater ID/prefix and existing template ID.[/*][/list]
+[list][*][font=Courier New]x[/font], [font=Courier New]y[/font] — Yes — Finite placement.[/*][/list]
+[list][*][font=Courier New]width[/font], [font=Courier New]height[/font] — Yes — Finite non-negative container bounds.[/*][/list]
+[list][*][font=Courier New]z[/font] — Yes — Integer.[/*][/list]
+[list][*][font=Courier New]anchor[/font] — No — Supported anchor.[/*][/list]
+[list][*][font=Courier New]visible[/font] — No — Static Boolean; default [font=Courier New]true[/font].[/*][/list]
+[list][*][font=Courier New]visibleWhen[/font] — No — Container visibility expression.[/*][/list]
+[list][*][font=Courier New]flow[/font] — Yes — [font=Courier New]vertical[/font], [font=Courier New]horizontal[/font], or [font=Courier New]grid[/font].[/*][/list]
+[list][*][font=Courier New]gapX[/font], [font=Courier New]gapY[/font] — Yes — Finite non-negative spacing.[/*][/list]
+[list][*][font=Courier New]columns[/font] — Grid only — Integer 1 through 16. Non-grid repeaters may omit it or use [font=Courier New]1[/font].[/*][/list]
+
+It contains 1 through 64 [font=Courier New]<item>[/font] children. Each item requires unique [font=Courier New]id[/font] and
+may use [font=Courier New]visible[/font], [font=Courier New]visibleWhen[/font], and overrides. A statically false item is
+omitted and collapses. A conditionally hidden item retains its composed slot.
+Every generated item must fit the repeater bounds.
+
+[size=2][b][u][font=Courier New]state[/font][/u][/b][/size]
+
+Selects one static template option during composition. It accepts required
+[font=Courier New]id[/font], [font=Courier New]selected[/font], [font=Courier New]x[/font], [font=Courier New]y[/font], and integer [font=Courier New]z[/font], plus optional [font=Courier New]anchor[/font], [font=Courier New]visible[/font],
+and [font=Courier New]visibleWhen[/font].
+
+It contains 1 through 16 [font=Courier New]<option>[/font] children. Each option requires a unique
+[font=Courier New]name[/font] and an existing [font=Courier New]template[/font], and may contain overrides. [font=Courier New]selected[/font] must
+match one declared option. This is bounded static selection; it does not change
+options from a live expression.
+
+[size=2][b][u][font=Courier New]override[/font][/u][/b][/size]
+
+An override requires [font=Courier New]target[/font], naming a local ID inside the selected template,
+and at least one approved modification:
+
+[list][*]Attribute — Target requirement — Effect[/*][/list]
+[list][*][font=Courier New]text[/font] — Target is [font=Courier New]text[/font]. — Replaces the target's [font=Courier New]value[/font] fallback/static text.[/*][/list]
+[list][*][font=Courier New]meterValue[/font] — Target is [font=Courier New]meter[/font]. — Replaces its finite [font=Courier New]value[/font].[/*][/list]
+[list][*][font=Courier New]visible[/font] — Any target. — Replaces static visibility.[/*][/list]
+[list][*][font=Courier New]visibleWhen[/font] — Any target. — Replaces the target expression before placement expressions are combined.[/*][/list]
+
+The same target/property pair cannot be overridden twice within one placement.
+Overrides cannot change position, bounds, style, source, maximum, transform,
+or arbitrary attributes.
+
+[size=3][b][u]Palette references in layouts[/u][/b][/size]
+
+A palette reference must occupy the complete attribute value. Text such as
+[font=Courier New]prefix-@palette.colors.accent.primary[/font] is rejected.
+
+Compatible forms are:
+
+[code]
+@palette.colors.<role>
+@palette.opacities.<role>
+@palette.typography.<role>.font
+@palette.typography.<role>.fontSize
+@palette.typography.<role>.bold
+@palette.typography.<role>.color
+@palette.strokes.<role>.color
+@palette.strokes.<role>.opacity
+@palette.strokes.<role>.width
+@palette.assets.<role>
+[/code]
+
+Runtime compatibility is attribute-specific:
+
+[list]
+[*]color roles may resolve only attributes named [font=Courier New]color[/font] or ending in [font=Courier New]Color[/font];[/*]
+[*]opacity roles may resolve only [font=Courier New]opacity[/font] or attributes ending in [font=Courier New]Opacity[/font];[/*]
+[*]typography fields may resolve only the identically named [font=Courier New]font[/font], [font=Courier New]fontSize[/font],[/*]
+[/list]
+  [font=Courier New]bold[/font], or [font=Courier New]color[/font] attribute on [font=Courier New]<text>[/font];
+[list]
+[*]stroke [font=Courier New]color[/font] resolves [font=Courier New]strokeColor[/font] or [font=Courier New]divider@color[/font];[/*]
+[*]stroke [font=Courier New]opacity[/font] resolves [font=Courier New]strokeOpacity[/font];[/*]
+[*]stroke [font=Courier New]width[/font] resolves [font=Courier New]strokeWidth[/font]; and[/*]
+[*]an asset role resolves only [font=Courier New]svg@src[/font], [font=Courier New]icon@name[/font], or [font=Courier New]symbol@name[/font] when the[/*]
+[/list]
+  role's declared asset kind matches that element.
+
+The XSD permits the general [font=Courier New]@palette.*[/font] token shape in several scalar unions,
+but the runtime rejects a category or field used on an incompatible attribute.
+
+[size=3][b][u]Supported local SVG subset[/u][/b][/size]
+
+Every [font=Courier New]<svg>[/font] asset is parsed as data; no SVG script or network behavior is
+available.
+
+Supported elements are:
+
+[code]
+svg  g  path  rect  circle  ellipse  line  polyline  polygon
+[/code]
+
+The root requires a four-number [font=Courier New]viewBox[/font] with positive width and height. It
+may also declare [font=Courier New]width[/font], [font=Courier New]height[/font], [font=Courier New]fill[/font], [font=Courier New]stroke[/font], [font=Courier New]fill-opacity[/font],
+[font=Courier New]stroke-opacity[/font], [font=Courier New]stroke-width[/font], [font=Courier New]opacity[/font], and [font=Courier New]transform[/font].
+
+Shape elements accept only their geometry attributes plus the common style and
+transform attributes. Colors are [font=Courier New]#RRGGBB[/font] or [font=Courier New]none[/font]. Opacity is 0 through 1;
+stroke width is non-negative. Supported transforms are bounded [font=Courier New]translate[/font],
+[font=Courier New]scale[/font], and one-angle [font=Courier New]rotate[/font] operations. Root transforms compose after the
+view-box offset, and nested [font=Courier New]opacity[/font] values multiply through the ancestor
+chain.
+
+SVG limits and exclusions:
+
+[list]
+[*]at most 256 elements;[/*]
+[*]at most 16 nesting levels;[/*]
+[*]polyline/polygon [font=Courier New]points[/font] contain 2 through 256 coordinate pairs;[/*]
+[*]no text content;[/*]
+[*]no [font=Courier New]text[/font], [font=Courier New]image[/font], [font=Courier New]use[/font], [font=Courier New]defs[/font], filter, mask, style, script, animation,[/*]
+[/list]
+  event, external reference, CSS, or network element;
+[list]
+[*]no unrecognized attributes; and[/*]
+[*]no arc path commands.[/*]
+[/list]
+
+PNG, JPEG, DDS, and external SWF assets are unsupported.
+
+[size=3][b][u]Global limits[/u][/b][/size]
+
+[list][*]Resource — Limit[/*][/list]
+[list][*]Root includes — 16[/*][/list]
+[list][*]Fragment size — 65,536 characters[/*][/list]
+[list][*]Selected palette size — 65,536 characters[/*][/list]
+[list][*]Templates — 64[/*][/list]
+[list][*]Resolved components after all expansion — 512[/*][/list]
+[list][*]Repeater items — 64 per repeater[/*][/list]
+[list][*]Grid columns — 16[/*][/list]
+[list][*]State options — 16 per state[/*][/list]
+[list][*]Quick-bar buttons — 16[/*][/list]
+[list][*]Information-panel items — 20[/*][/list]
+[list][*]Information-panel rows — 12[/*][/list]
+[list][*]Status-effect items — 16[/*][/list]
+[list][*]Meter segments/dots/triangles — 64[/*][/list]
+[list][*]Scanner targets — 5[/*][/list]
+[list][*]Text-template variables — 8[/*][/list]
+[list][*]Condition expression — 256 characters, 64 tokens, 8 nesting levels[/*][/list]
+[list][*]Inline path data — 8192 characters, 2048 tokens, 512 commands[/*][/list]
+[list][*]SVG document — 256 elements, 16 nesting levels[/*][/list]
+
+[size=3][b][u]Unsupported configuration behavior[/u][/b][/size]
+
+Version 1 deliberately does not support:
+
+[list]
+[*]arbitrary ActionScript, JavaScript, expressions, method names, or class[/*]
+[/list]
+  names;
+[list]
+[*]arbitrary Bethesda provider subscriptions or timeline targets;[/*]
+[*]nested fragment imports;[/*]
+[*]live palette switching;[/*]
+[*]live state-option selection;[/*]
+[*]runtime-generated repeater data;[/*]
+[*]network or absolute asset paths;[/*]
+[*]raster/DDS images or external SWF symbol libraries;[/*]
+[*]notification/toast, item/ammo-readout, chevron/notch meter,[/*]
+[/list]
+  image-masked-meter, or bipolar-meter elements; or
+[list]
+[*]custom replacement of Bethesda enemy-health, legendary-state, stealth,[/*]
+[/list]
+  hit-indicator, reticle, or crosshair ownership.
+
+An unsupported element or attribute is an error, not a forward-compatible
+extension point.
+
+[size=3][b][u]Diagnostics and recovery[/u][/b][/size]
+
+Configuration errors are categorized as missing, malformed, invalid,
+unsupported, security, or asset-load failures. Layout-validation errors may
+also identify the current phase, checkpoint, component type, and component ID.
+
+When authoring:
+
+[list=1]
+[*]change one bounded area at a time;[/*]
+[*]retain the shipped [font=Courier New]schemaVersion[/font] and [font=Courier New]runtimeVersion[/font];[/*]
+[*]keep a clean backup;[/*]
+[*]fully restart Starfield after every change;[/*]
+[*]correct the first reported error before interpreting later behavior; and[/*]
+[*]test normal, aiming, scanner, combat, vehicle, large-HUD, and target aspect[/*]
+[/list]
+   ratio states in game.
+
+Build, schema, or staging success demonstrates artifact consistency but does
+not replace current in-game lifecycle and visibility evidence.

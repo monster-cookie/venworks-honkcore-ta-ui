@@ -1,0 +1,447 @@
+[size=4][b][u]Palette Configuration Reference[/u][/b][/size]
+
+This is the complete reference for players who want to create custom colors, text styles, transparency, outlines, and faction artwork. The [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/MarketingSites/NexusMods/ComponentLibrary.bbcode]component library[/url] shows which HUD sections and components use these values.
+
+The detailed palette rules are maintained in the repository's palette schema and reference documentation.
+The Scaleform/ActionScript resolver adds required-role, allowlist, reference,
+and compatibility checks. A palette must satisfy both.
+
+Use the [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/MarketingSites/NexusMods/UserConfiguration.bbcode]player configuration guide[/url] for simple theme
+switching and the [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/MarketingSites/NexusMods/LayoutConfigurationReference.bbcode]layout configuration reference[/url]
+for all other XML elements.
+
+[size=3][b][u]Included palettes and public themes[/u][/b][/size]
+
+Each of the four themed release variants packages all five palette XML files under [font=Courier New]Interface\VenworksCUI\palettes[/font]. The themed variant controls only the initial [font=Courier New]palette[/font] attribute in [font=Courier New]layout.xml[/font]. Minimalist packages no palette files; its build resolves the [font=Courier New]starfield.xml[/font] color roles to literals before staging its external layout and six component fragments.
+
+[list][*]Public appearance — Palette filename[/*][/list]
+[list][*]Venworks Customizable HUD - Venworks Theme — [font=Courier New]venworks.xml[/font][/*][/list]
+[list][*]Venworks Customizable HUD - Trackers Alliance Theme — [font=Courier New]trackers-alliance.xml[/font][/*][/list]
+[list][*]Venworks Customizable HUD - Freestar Collective Theme — [font=Courier New]freestar-collective.xml[/font][/*][/list]
+[list][*]Venworks Customizable HUD - Crimson Fleet Theme — [font=Courier New]crimson-fleet.xml[/font][/*][/list]
+[list][*]Included neutral Starfield option — [font=Courier New]starfield.xml[/font][/*][/list]
+
+All five packaged palettes currently resolve their [font=Courier New]faction.logo[/font] roles to SVG
+files included with the HUD.
+
+[size=3][b][u]Runtime path and selection[/u][/b][/size]
+
+Palette files load only from:
+
+[code]
+Data\Interface\VenworksCUI\palettes\
+[/code]
+
+The root layout selects one palette by filename:
+
+[code]
+<venworksCUI schemaVersion="1" runtimeVersion="1"
+             designWidth="1920" designHeight="1080"
+             safeLeft="64" safeTop="36"
+             safeRight="64" safeBottom="36"
+             palette="venworks.xml">
+[/code]
+
+The filename must:
+
+[list]
+[*]begin with an ASCII letter or number;[/*]
+[*]contain only letters, numbers, dots, underscores, and hyphens before [font=Courier New].xml[/font];[/*]
+[*]contain no more than 60 characters before the extension under the current[/*]
+[/list]
+  pattern;
+[list]
+[*]name one file directly in [font=Courier New]VenworksCUI\palettes[/font]; and[/*]
+[*]contain no [font=Courier New]..[/font], slash, backslash, colon, query string, or fragment.[/*]
+[/list]
+
+The loaded palette is limited to 65,536 characters. There is no live palette
+switching. Fully exit and restart Starfield after changing the selection or
+palette content.
+
+If the root layout omits [font=Courier New]palette[/font], literal-only version 1 layouts remain
+supported. Any [font=Courier New]@palette.*[/font] reference without a selected palette is invalid.
+
+[size=3][b][u]Document structure[/u][/b][/size]
+
+A [font=Courier New]venworksCUIPalette[/font] document has exactly five sections in this exact order:
+
+[code]
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUIPalette schemaVersion="1">
+  <colors>
+    <color role="foreground.primary" value="#F4FBFF" />
+  </colors>
+  <typography>
+    <style role="body" font="$MAIN_Font" fontSize="16"
+           bold="false" color="foreground.primary" />
+  </typography>
+  <opacities>
+    <opacity role="opaque" value="1" />
+  </opacities>
+  <strokes>
+    <stroke role="panel" color="panel.border"
+            opacity="muted" width="2" />
+  </strokes>
+  <assets>
+    <asset role="faction.logo" kind="svg"
+           value="venworks-logo.svg" />
+  </assets>
+</venworksCUIPalette>
+[/code]
+
+The root requires only [font=Courier New]schemaVersion="1"[/font]. Unknown root or section attributes,
+extra sections, missing sections, reordered sections, child content inside an
+entry, and unknown entry attributes are rejected.
+
+The abbreviated sample above illustrates structure but is not a valid runtime
+palette because it omits required roles. Start custom work from a complete
+packaged palette or the complete template later in this document.
+
+[size=3][b][u]Semantic role names[/u][/b][/size]
+
+Every entry has a unique [font=Courier New]role[/font] within its own category. Roles:
+
+[list]
+[*]use lowercase ASCII letters and numbers;[/*]
+[*]begin each dot-separated segment with a lowercase letter;[/*]
+[*]may contain hyphens inside a segment;[/*]
+[*]use dots to express semantic hierarchy; and[/*]
+[*]contain at most 64 characters.[/*]
+[/list]
+
+The effective pattern is:
+
+[code]
+[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)*
+[/code]
+
+The same role text may exist in different categories because colors,
+typography, opacities, strokes, and assets have separate namespaces.
+
+Additional non-required roles are allowed within the category limits and may be
+referenced by compatible layout attributes.
+
+[size=3][b][u]Section counts[/u][/b][/size]
+
+[list][*]Section — Entry element — Minimum — Maximum[/*][/list]
+[list][*][font=Courier New]colors[/font] — [font=Courier New]color[/font] — 1 — 64[/*][/list]
+[list][*][font=Courier New]typography[/font] — [font=Courier New]style[/font] — 1 — 16[/*][/list]
+[list][*][font=Courier New]opacities[/font] — [font=Courier New]opacity[/font] — 1 — 32[/*][/list]
+[list][*][font=Courier New]strokes[/font] — [font=Courier New]stroke[/font] — 1 — 32[/*][/list]
+[list][*][font=Courier New]assets[/font] — [font=Courier New]asset[/font] — 1 — 32[/*][/list]
+
+[size=3][b][u]Colors[/u][/b][/size]
+
+A color entry requires exactly [font=Courier New]role[/font] and [font=Courier New]value[/font]:
+
+[code]
+<color role="accent.primary" value="#19C8FF" />
+[/code]
+
+[font=Courier New]value[/font] must be six-digit [font=Courier New]#RRGGBB[/font]. Three-digit shorthand, eight-digit alpha,
+CSS names, functions, and unprefixed hex values are rejected. The runtime
+normalizes accepted colors to uppercase when resolving them.
+
+[size=2][b][u]Required color roles[/u][/b][/size]
+
+[list][*]Role — Intended semantic use[/*][/list]
+[list][*][font=Courier New]foreground.primary[/font] — Primary readable text and foreground artwork.[/*][/list]
+[list][*][font=Courier New]foreground.muted[/font] — Secondary labels and de-emphasized foregrounds.[/*][/list]
+[list][*][font=Courier New]accent.primary[/font] — Main theme accent and focus color.[/*][/list]
+[list][*][font=Courier New]accent.secondary[/font] — Supporting accent.[/*][/list]
+[list][*][font=Courier New]panel.background[/font] — Panel and recess backgrounds.[/*][/list]
+[list][*][font=Courier New]panel.border[/font] — Panel outlines and dividers.[/*][/list]
+[list][*][font=Courier New]state.normal[/font] — Normal interactive/composite foreground state.[/*][/list]
+[list][*][font=Courier New]state.selected[/font] — Selected or active state.[/*][/list]
+[list][*][font=Courier New]state.disabled[/font] — Disabled or unavailable state.[/*][/list]
+[list][*][font=Courier New]state.clear[/font] — Clear/safe status.[/*][/list]
+[list][*][font=Courier New]state.caution[/font] — Caution status.[/*][/list]
+[list][*][font=Courier New]state.danger[/font] — Danger status.[/*][/list]
+[list][*][font=Courier New]state.critical[/font] — Critical/hostile status.[/*][/list]
+[list][*][font=Courier New]meter.health[/font] — Player health meter.[/*][/list]
+[list][*][font=Courier New]meter.oxygen[/font] — Oxygen meter.[/*][/list]
+[list][*][font=Courier New]meter.carbondioxide[/font] — CO2 meter.[/*][/list]
+[list][*][font=Courier New]meter.boost[/font] — Boost meter.[/*][/list]
+[list][*][font=Courier New]marker.player[/font] — Player marker.[/*][/list]
+[list][*][font=Courier New]marker.ally[/font] — Ally/friendly marker.[/*][/list]
+[list][*][font=Courier New]marker.hostile[/font] — Hostile marker.[/*][/list]
+[list][*][font=Courier New]marker.objective[/font] — Objective marker.[/*][/list]
+
+All 21 roles are required even if a particular custom layout does not visibly
+consume every role.
+
+[size=3][b][u]Typography[/u][/b][/size]
+
+A typography entry requires exactly [font=Courier New]role[/font], [font=Courier New]font[/font], [font=Courier New]fontSize[/font], [font=Courier New]bold[/font], and
+[font=Courier New]color[/font]:
+
+[code]
+<style role="heading" font="$MAIN_Font_Bold" fontSize="22"
+       bold="true" color="foreground.primary" />
+[/code]
+
+[list][*]Attribute — Contract[/*][/list]
+[list][*][font=Courier New]font[/font] — Exactly [font=Courier New]$MAIN_Font[/font] or [font=Courier New]$MAIN_Font_Bold[/font].[/*][/list]
+[list][*][font=Courier New]fontSize[/font] — Integer 1 through 128.[/*][/list]
+[list][*][font=Courier New]bold[/font] — Exactly [font=Courier New]true[/font] or [font=Courier New]false[/font].[/*][/list]
+[list][*][font=Courier New]color[/font] — Name of an existing color role in the same palette, without [font=Courier New]@palette.colors.[/font].[/*][/list]
+
+Required typography roles are [font=Courier New]body[/font], [font=Courier New]label[/font], and [font=Courier New]heading[/font].
+
+Typography references expose resolved fields individually:
+
+[code]
+@palette.typography.heading.font
+@palette.typography.heading.fontSize
+@palette.typography.heading.bold
+@palette.typography.heading.color
+[/code]
+
+Each field may be used only on the identically named attribute of a [font=Courier New]<text>[/font]
+element. A typography role cannot be applied to a component as a single style
+object.
+
+[size=3][b][u]Opacities[/u][/b][/size]
+
+An opacity entry requires exactly [font=Courier New]role[/font] and [font=Courier New]value[/font]:
+
+[code]
+<opacity role="panel" value="0.94" />
+[/code]
+
+The value must be a plain decimal from [font=Courier New]0[/font] through [font=Courier New]1[/font]. Scientific notation,
+negative values, and values over 1 are rejected.
+
+Required opacity roles are:
+
+[list][*]Role — Intended semantic use[/*][/list]
+[list][*][font=Courier New]opaque[/font] — Fully visible generated content.[/*][/list]
+[list][*][font=Courier New]panel[/font] — Standard panel opacity.[/*][/list]
+[list][*][font=Courier New]muted[/font] — De-emphasized fills, strokes, or empty meters.[/*][/list]
+
+An opacity reference may resolve only an attribute named [font=Courier New]opacity[/font] or ending in
+[font=Courier New]Opacity[/font].
+
+[size=3][b][u]Strokes[/u][/b][/size]
+
+A stroke entry requires exactly [font=Courier New]role[/font], [font=Courier New]color[/font], [font=Courier New]opacity[/font], and [font=Courier New]width[/font]:
+
+[code]
+<stroke role="panel" color="panel.border"
+        opacity="muted" width="2" />
+[/code]
+
+[list][*]Attribute — Contract[/*][/list]
+[list][*][font=Courier New]color[/font] — Existing color role in the same palette.[/*][/list]
+[list][*][font=Courier New]opacity[/font] — Existing opacity role in the same palette.[/*][/list]
+[list][*][font=Courier New]width[/font] — Integer 0 through 64.[/*][/list]
+
+The required stroke role is [font=Courier New]panel[/font].
+
+Stroke fields resolve separately:
+
+[code]
+@palette.strokes.panel.color
+@palette.strokes.panel.opacity
+@palette.strokes.panel.width
+[/code]
+
+[list]
+[*][font=Courier New]color[/font] is compatible with [font=Courier New]strokeColor[/font] and [font=Courier New]divider@color[/font].[/*]
+[*][font=Courier New]opacity[/font] is compatible with [font=Courier New]strokeOpacity[/font].[/*]
+[*][font=Courier New]width[/font] is compatible with [font=Courier New]strokeWidth[/font].[/*]
+[/list]
+
+[size=3][b][u]Assets[/u][/b][/size]
+
+An asset entry requires exactly [font=Courier New]role[/font], [font=Courier New]kind[/font], and [font=Courier New]value[/font]:
+
+[code]
+<asset role="faction.logo" kind="svg" value="venworks-logo.svg" />
+[/code]
+
+The required asset role is [font=Courier New]faction.logo[/font].
+
+[size=2][b][u]SVG asset kind[/u][/b][/size]
+
+[font=Courier New]kind="svg"[/font] requires one packaged filename matching this shape:
+
+[code]
+[A-Za-z0-9][A-Za-z0-9._-]{0,59}.svg
+[/code]
+
+Palette SVG assets must be single files directly under
+[font=Courier New]Interface\VenworksCUI\Assets[/font]; subdirectories and [font=Courier New]..[/font] are rejected.
+
+The production faction-display fragment consumes [font=Courier New]faction.logo[/font] through
+[font=Courier New]<svg src="@palette.assets.faction.logo">[/font]. Therefore a palette used with the
+production layout must declare [font=Courier New]faction.logo[/font] as [font=Courier New]kind="svg"[/font], even though the
+general palette schema permits the other asset kinds.
+
+[size=2][b][u]Built-in icon asset kind[/u][/b][/size]
+
+[font=Courier New]kind="icon"[/font] requires one of these allowlisted same-domain icons:
+
+[code]
+health          oxygen        co2             shield
+armor           weapon        aiming          ship
+vehicle         fuel          cargo           scanner
+stealth         warning       objective       jolly-roger
+death           poison        burning         electrocution
+disease
+[/code]
+
+An icon asset reference is compatible only with [font=Courier New]icon@name[/font].
+
+[size=2][b][u]Embedded symbol asset kind[/u][/b][/size]
+
+[font=Courier New]kind="symbol"[/font] requires one allowlisted Bethesda HUD symbol:
+
+[code]
+environment-alert
+quest-door-marker
+boost-fill
+vehicle-exit-prompt
+[/code]
+
+A symbol asset reference is compatible only with [font=Courier New]symbol@name[/font]. Symbol
+availability remains specific to the owning normal or large HUD movie.
+
+[size=3][b][u]Reference syntax and compatibility[/u][/b][/size]
+
+References must occupy the complete layout attribute value. They are not string
+interpolation.
+
+[list][*]Category — Syntax — Compatible destination[/*][/list]
+[list][*]Color — [font=Courier New]@palette.colors.<role>[/font] — [font=Courier New]color[/font] or an attribute ending in [font=Courier New]Color[/font].[/*][/list]
+[list][*]Opacity — [font=Courier New]@palette.opacities.<role>[/font] — [font=Courier New]opacity[/font] or an attribute ending in [font=Courier New]Opacity[/font].[/*][/list]
+[list][*]Typography — [font=Courier New]@palette.typography.<role>.<field>[/font] — Identically named [font=Courier New]font[/font], [font=Courier New]fontSize[/font], [font=Courier New]bold[/font], or [font=Courier New]color[/font] on [font=Courier New]<text>[/font].[/*][/list]
+[list][*]Stroke — [font=Courier New]@palette.strokes.<role>.<field>[/font] — [font=Courier New]strokeColor[/font]/[font=Courier New]divider@color[/font], [font=Courier New]strokeOpacity[/font], or [font=Courier New]strokeWidth[/font] according to field.[/*][/list]
+[list][*]Asset — [font=Courier New]@palette.assets.<role>[/font] — [font=Courier New]svg@src[/font], [font=Courier New]icon@name[/font], or [font=Courier New]symbol@name[/font] matching the asset kind.[/*][/list]
+
+Examples:
+
+[code]
+color="@palette.colors.foreground.primary"
+fillOpacity="@palette.opacities.panel"
+font="@palette.typography.heading.font"
+fontSize="@palette.typography.heading.fontSize"
+bold="@palette.typography.heading.bold"
+strokeWidth="@palette.strokes.panel.width"
+src="@palette.assets.faction.logo"
+[/code]
+
+Invalid examples include:
+
+[code]
+value="Color: @palette.colors.accent.primary"
+width="@palette.colors.accent.primary"
+visible="@palette.opacities.opaque"
+src="@palette.assets.some-icon"
+[/code]
+
+The last form is invalid when [font=Courier New]some-icon[/font] is declared as [font=Courier New]kind="icon"[/font], because
+an icon asset can resolve only [font=Courier New]icon@name[/font], not [font=Courier New]svg@src[/font].
+
+[size=3][b][u]Complete custom-palette starter[/u][/b][/size]
+
+This template contains every required role. Save a customized copy under a new
+safe filename instead of overwriting a packaged palette.
+
+[code]
+<?xml version="1.0" encoding="utf-8"?>
+<venworksCUIPalette schemaVersion="1">
+  <colors>
+    <color role="foreground.primary" value="#F4FBFF" />
+    <color role="foreground.muted" value="#8EB9D0" />
+    <color role="accent.primary" value="#19C8FF" />
+    <color role="accent.secondary" value="#6BE7FF" />
+    <color role="panel.background" value="#061722" />
+    <color role="panel.border" value="#2DCBFF" />
+    <color role="state.normal" value="#F4FBFF" />
+    <color role="state.selected" value="#19C8FF" />
+    <color role="state.disabled" value="#536D7A" />
+    <color role="state.clear" value="#64E572" />
+    <color role="state.caution" value="#FFD800" />
+    <color role="state.danger" value="#FF7B21" />
+    <color role="state.critical" value="#FF3C54" />
+    <color role="meter.health" value="#D34A5B" />
+    <color role="meter.oxygen" value="#35E6E6" />
+    <color role="meter.carbondioxide" value="#FFB51B" />
+    <color role="meter.boost" value="#6D8CFF" />
+    <color role="marker.player" value="#F4FBFF" />
+    <color role="marker.ally" value="#64E572" />
+    <color role="marker.hostile" value="#FF3C54" />
+    <color role="marker.objective" value="#19C8FF" />
+  </colors>
+  <typography>
+    <style role="body" font="$MAIN_Font" fontSize="16"
+           bold="false" color="foreground.primary" />
+    <style role="label" font="$MAIN_Font" fontSize="14"
+           bold="false" color="foreground.muted" />
+    <style role="heading" font="$MAIN_Font_Bold" fontSize="22"
+           bold="true" color="foreground.primary" />
+  </typography>
+  <opacities>
+    <opacity role="opaque" value="1" />
+    <opacity role="panel" value="0.94" />
+    <opacity role="muted" value="0.7" />
+  </opacities>
+  <strokes>
+    <stroke role="panel" color="panel.border"
+            opacity="muted" width="2" />
+  </strokes>
+  <assets>
+    <asset role="faction.logo" kind="svg"
+           value="venworks-logo.svg" />
+  </assets>
+</venworksCUIPalette>
+[/code]
+
+[size=3][b][u]Custom-palette workflow[/u][/b][/size]
+
+[list=1]
+[*]Fully exit Starfield.[/*]
+[*]Copy one complete palette, preferably the closest visual starting point.[/*]
+[*]Rename the copy with a safe unique filename such as [font=Courier New]my-hud.xml[/font].[/*]
+[*]Keep all required roles and the five required sections in their original[/*]
+[/list]
+   order.
+[list=1]
+[*]Change semantic values rather than renaming roles consumed by the production[/*]
+[/list]
+   layout.
+[list=1]
+[*]If changing [font=Courier New]faction.logo[/font], place a supported SVG directly under[/*]
+[/list]
+   [font=Courier New]Interface\VenworksCUI\Assets[/font] and use its filename only.
+[list=1]
+[*]Set [font=Courier New]layout.xml[/font] to [font=Courier New]palette="my-hud.xml"[/font].[/*]
+[*]Restart Starfield and test normal, aiming, scanner, combat, low-health,[/*]
+[/list]
+   vehicle, large-HUD, and target-aspect-ratio states.
+[list=1]
+[*]Keep the custom palette and any custom SVG in a personal override mod so a[/*]
+[/list]
+   release update does not overwrite them.
+
+When changing status colors, preserve clear differentiation among clear,
+caution, danger, and critical states. When changing typography, test the longest
+localized strings and both normal and large HUD movies.
+
+[size=3][b][u]Failure behavior[/u][/b][/size]
+
+Palette failures use categorized diagnostics:
+
+[list][*]Diagnostic — Typical cause[/*][/list]
+[list][*][font=Courier New]CUI PALETTE MISSING[/font] — Selected filename is not deployed under [font=Courier New]palettes[/font].[/*][/list]
+[list][*][font=Courier New]CUI PALETTE MALFORMED[/font] — XML is not well formed.[/*][/list]
+[list][*][font=Courier New]CUI PALETTE UNSUPPORTED[/font] — [font=Courier New]schemaVersion[/font] is not [font=Courier New]1[/font].[/*][/list]
+[list][*][font=Courier New]CUI PALETTE INVALID[/font] — Missing/duplicate role, wrong section order, bad value, unknown reference, or incompatible reference destination.[/*][/list]
+[list][*][font=Courier New]CUI PALETTE SECURITY ERROR[/font] — Unsafe filename/path or unsafe SVG asset value.[/*][/list]
+[list][*][font=Courier New]CUI ASSET LOAD ERROR[/font] — A resolved SVG is absent, unreadable, or outside the supported SVG subset.[/*][/list]
+
+Because loading is atomic, a palette error prevents the full configurable HUD
+layer from displaying. Correct the first diagnostic, restart Starfield, and
+verify the result in game.
