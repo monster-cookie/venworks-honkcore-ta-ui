@@ -351,11 +351,11 @@ if ([string]$variant.VariantName -cne 'PS5 Debug' -or
 $profilePath = Resolve-RequiredFile `
   -Path (Join-Path $repositoryRoot 'Scaleform/variants/PS5DBG/build.psd1') `
   -Description 'PS5 Debug build profile'
-$profile = Import-PowerShellDataFile -LiteralPath $profilePath
-if (@($profile.Keys | Sort-Object).Count -ne 2 -or
-    @($profile.MovieManifestPaths).Count -ne 4 -or
-    @($profile.MovieManifestPaths | Select-Object -Unique).Count -ne 4 -or
-    [string]$profile.PluginSourcePath -cne 'Staging-TA/Venworks-CustomizableHUD-TrackersAlliance.esm') {
+$buildProfile = Import-PowerShellDataFile -LiteralPath $profilePath
+if (@($buildProfile.Keys | Sort-Object).Count -ne 2 -or
+    @($buildProfile.MovieManifestPaths).Count -ne 4 -or
+    @($buildProfile.MovieManifestPaths | Select-Object -Unique).Count -ne 4 -or
+    [string]$buildProfile.PluginSourcePath -cne 'Staging-TA/Venworks-CustomizableHUD-TrackersAlliance.esm') {
   throw "The PS5 Debug build profile must contain only four movie manifests and the canonical plugin source."
 }
 
@@ -367,7 +367,7 @@ $expectedManifestDefinitions = [ordered]@{
 }
 
 $movieDefinitions = @{}
-foreach ($manifestRelativePath in @($profile.MovieManifestPaths)) {
+foreach ($manifestRelativePath in @($buildProfile.MovieManifestPaths)) {
   $manifestPath = Resolve-RequiredFile `
     -Path (Resolve-RepositoryPath -RelativePath ([string]$manifestRelativePath) -Description 'PS5 Debug movie manifest') `
     -Description 'PS5 Debug movie manifest'
@@ -430,7 +430,7 @@ Assert-Inventory `
 
 $pluginPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $pluginName) -Description 'PS5 Debug plugin'
 $canonicalPluginPath = Resolve-RequiredFile `
-  -Path (Resolve-RepositoryPath -RelativePath ([string]$profile.PluginSourcePath) -Description 'Canonical plugin source') `
+  -Path (Resolve-RepositoryPath -RelativePath ([string]$buildProfile.PluginSourcePath) -Description 'Canonical plugin source') `
   -Description 'Canonical plugin source'
 Assert-NotGitLfsPointer -Path $canonicalPluginPath -Description 'Canonical plugin source'
 Assert-NotGitLfsPointer -Path $pluginPath -Description 'PS5 Debug plugin'

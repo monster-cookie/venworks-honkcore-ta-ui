@@ -186,7 +186,9 @@ function Build-Ps5DebugMovie {
     [string]$OutputDirectory,
 
     [Parameter(Mandatory = $true)]
-    [string]$VanillaDirectory
+    [string]$VanillaDirectory,
+
+    [switch]$WriteExpectedHashes
   )
 
   [xml]$manifest = Get-Content -LiteralPath $ManifestPath -Raw
@@ -324,7 +326,7 @@ function Build-Ps5DebugMovie {
   }
 
   $actualHash = (Get-FileHash -LiteralPath $generatedPath -Algorithm SHA256).Hash.ToUpperInvariant()
-  if ($UpdateExpectedHashes) {
+  if ($WriteExpectedHashes) {
     Write-Sha256File -Path $expectedHashPath -Hash $actualHash -FileName ([string]$build.outputFile)
   }
   $expectedHash = Read-Sha256File -Path $expectedHashPath
@@ -345,8 +347,8 @@ $variant = @(Get-DiagnosticVariants -VariantKeys "PS5DBG")[0]
 $profilePath = Resolve-RequiredFile `
   -Path (Join-Path $repositoryRoot "Scaleform\variants\PS5DBG\build.psd1") `
   -Description "PS5 Debug build profile"
-$profile = Import-PowerShellDataFile -LiteralPath $profilePath
-$manifestPaths = @($profile.MovieManifestPaths)
+$buildProfile = Import-PowerShellDataFile -LiteralPath $profilePath
+$manifestPaths = @($buildProfile.MovieManifestPaths)
 if ($manifestPaths.Count -ne 4 -or @($manifestPaths | Select-Object -Unique).Count -ne 4) {
   throw "PS5 Debug must declare exactly four unique HUD movie manifests."
 }
@@ -400,11 +402,12 @@ try {
       -ManifestPath $manifestPath `
       -BuildRoot $buildRoot `
       -OutputDirectory $interfacePath `
-      -VanillaDirectory $resolvedVanillaPath
+      -VanillaDirectory $resolvedVanillaPath `
+      -WriteExpectedHashes:$UpdateExpectedHashes
   }
 
   $pluginSourcePath = Resolve-RequiredFile `
-    -Path (Join-Path $repositoryRoot ([string]$profile.PluginSourcePath)) `
+    -Path (Join-Path $repositoryRoot ([string]$buildProfile.PluginSourcePath)) `
     -Description "Canonical plugin stub"
   Assert-NotGitLfsPointer -Path $pluginSourcePath -Description "Canonical plugin stub"
   $pluginOutputPath = Join-Path $resolvedStagingPath "$($variant.PackageBaseName).esm"

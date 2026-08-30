@@ -76,7 +76,7 @@ $variant = @(Get-DiagnosticVariants -VariantKeys "PS5DBG")[0]
 $profilePath = Resolve-RequiredFile `
   -Path (Join-Path $repositoryRoot "Scaleform\variants\PS5DBG\build.psd1") `
   -Description "PS5 Debug build profile"
-$profile = Import-PowerShellDataFile -LiteralPath $profilePath
+$buildProfile = Import-PowerShellDataFile -LiteralPath $profilePath
 
 if ([string]::IsNullOrWhiteSpace($ENV:TOOL_PATH_ARCHIVER)) {
   throw "TOOL_PATH_ARCHIVER must name the directory containing Archive2.exe."
@@ -126,7 +126,7 @@ if ([string]::Join("`n", $actualMovieNames) -cne [string]::Join("`n", $expectedM
   throw "PS5 Debug staging must contain exactly the four declared HUD movies before archive mutation."
 }
 
-$manifestDefinitions = foreach ($manifestRelativePath in @($profile.MovieManifestPaths)) {
+$manifestDefinitions = foreach ($manifestRelativePath in @($buildProfile.MovieManifestPaths)) {
   $manifestPath = Resolve-RequiredFile `
     -Path (Join-Path $repositoryRoot ([string]$manifestRelativePath)) `
     -Description "PS5 Debug movie manifest"
