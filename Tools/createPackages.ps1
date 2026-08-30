@@ -21,7 +21,12 @@ $ErrorActionPreference = "Stop"
 # If not loaded already pull in the shared config
 if (!$Global:SharedConfigurationLoaded) {
   Write-Host -ForegroundColor Green "Importing Shared Configuration"
-  . "$PSScriptRoot/sharedConfig.ps1"
+  if ($Committed) {
+    . "$PSScriptRoot/sharedConfig.ps1" -SkipEnvironment
+  }
+  else {
+    . "$PSScriptRoot/sharedConfig.ps1"
+  }
 }
 . (Join-Path $PSScriptRoot 'sharedScaleformProfiles.ps1')
 . (Join-Path $PSScriptRoot 'sharedScaleformMovies.ps1')

@@ -268,9 +268,34 @@ foreach ($variant in $variants) {
     [pscustomobject]@{ Suffix = $suffix; Files = @($files) }
   })
 
+  $zipNamePrefix = "$($variant.ReleaseDisplayName) - "
+  $expectedZipNames = @(
+    $packages |
+      ForEach-Object { "$zipNamePrefix$($_.Suffix).zip" } |
+      Sort-Object
+  )
+  $existingVariantZipFiles = @(
+    Get-ChildItem -LiteralPath $resolvedOutputDirectory -File -Filter '*.zip' |
+      Where-Object { $_.Name.StartsWith($zipNamePrefix, [System.StringComparison]::Ordinal) }
+  )
+  foreach ($existingVariantZipFile in $existingVariantZipFiles) {
+    Remove-Item -LiteralPath $existingVariantZipFile.FullName -Force
+  }
+
   foreach ($package in $packages) {
     $zipName = "$($variant.ReleaseDisplayName) - $($package.Suffix).zip"
     New-ReleaseZip -ZipPath (Join-Path $resolvedOutputDirectory $zipName) -Files $package.Files
+  }
+
+  $actualZipNames = @(
+    Get-ChildItem -LiteralPath $resolvedOutputDirectory -File -Filter '*.zip' |
+      Where-Object { $_.Name.StartsWith($zipNamePrefix, [System.StringComparison]::Ordinal) } |
+      ForEach-Object { $_.Name } |
+      Sort-Object
+  )
+  if ($actualZipNames.Count -ne $expectedZipNames.Count -or
+      [string]::Join("`n", $actualZipNames) -cne [string]::Join("`n", $expectedZipNames)) {
+    throw "$($variant.VariantName) release output does not contain its exact configured ZIP inventory."
   }
 }
 

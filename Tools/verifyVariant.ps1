@@ -1256,6 +1256,27 @@ foreach ($variant in $variants) {
     }
   }
 
+  $hasTexturePayload = @(
+    Get-ChildItem -LiteralPath $stagingPath -Recurse -File |
+      Where-Object { $_.Extension -ieq '.dds' }
+  ).Count -ne 0
+  $expectedArchiveNames = @(
+    foreach ($archiveTarget in @($variant.ArchiveTargets)) {
+      $archiveDefinition = $archiveDefinitions[[string]$archiveTarget]
+      if ($archiveDefinition.Required -or
+          ($hasTexturePayload -and [string]$archiveTarget -like 'Textures*')) {
+        "$($variant.PackageBaseName) - $($archiveDefinition.FileSuffix)"
+      }
+    }
+  )
+  $expectedStagingInventory = @("$($variant.PackageBaseName).esm")
+  $expectedStagingInventory += @($expectedInterfaceInventory | ForEach-Object { "Interface/$_" })
+  $expectedStagingInventory += $expectedArchiveNames
+  Assert-Inventory `
+    -RootPath $stagingPath `
+    -ExpectedPaths $expectedStagingInventory `
+    -Description "$($variant.VariantName) complete staging payload"
+
   $stagedMainEntryPaths = [System.Collections.Generic.Dictionary[string,string]]::new(
     [System.StringComparer]::Ordinal
   )

@@ -75,6 +75,39 @@ jobs:
         shell: pwsh
         run: ./Tools/verifyVariant.ps1 -Committed
 
+      - name: Reject undeclared staging files through the shared verifier
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          . ./Tools/sharedConfig.ps1 -SkipEnvironment
+          $PSNativeCommandUseErrorActionPreference = $false
+          foreach ($variantKey in @('TA', 'PS5DBG')) {
+            $variant = @(Get-ModuleVariants -VariantKeys $variantKey)[0]
+            $unexpectedName = "codex-ci-$([System.Guid]::NewGuid().ToString('N')).esm"
+            $unexpectedPath = Join-Path $variant.StagingFolderPath $unexpectedName
+            if (Test-Path -LiteralPath $unexpectedPath) {
+              throw "Refusing to overwrite an existing staging path: $unexpectedPath"
+            }
+            $createdUnexpectedFile = $false
+            try {
+              [System.IO.File]::WriteAllText($unexpectedPath, 'unexpected staging payload')
+              $createdUnexpectedFile = $true
+              $outputLines = @(& pwsh -NoProfile -File ./Tools/verifyVariant.ps1 -VariantKeys $variantKey -Committed 2>&1)
+              $exitCode = $LASTEXITCODE
+              $outputText = $outputLines -join "`n"
+              if ($exitCode -eq 0 -or $outputText -notmatch 'complete staging payload') {
+                $outputLines | ForEach-Object { Write-Host $_ }
+                throw "$variantKey verification did not reject an undeclared staging file through the shared inventory check."
+              }
+            }
+            finally {
+              if ($createdUnexpectedFile -and (Test-Path -LiteralPath $unexpectedPath -PathType Leaf)) {
+                Remove-Item -LiteralPath $unexpectedPath -Force
+              }
+            }
+          }
+
       - name: Verify committed entry point without local environment
         shell: pwsh
         run: |
@@ -90,6 +123,23 @@ jobs:
           }
           if ($outputText -notmatch 'Selected Variant Build Artifacts Are Valid') {
             throw 'Committed repository check exited before reporting successful artifact validation.'
+          }
+
+      - name: Verify committed packaging bypasses local environment loading
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $env:TOOL_PATH_ARCHIVER = $null
+          $outputLines = @(& pwsh -NoProfile -File ./Tools/createPackages.ps1 -VariantKeys PS5DBG -Committed 2>&1)
+          $exitCode = $LASTEXITCODE
+          $outputText = $outputLines -join "`n"
+          if ($exitCode -eq 0 -or $outputText -notmatch 'TOOL_PATH_ARCHIVER must name') {
+            $outputLines | ForEach-Object { Write-Host $_ }
+            throw 'Committed packaging did not reach the explicit Archive2 environment check.'
+          }
+          if ($outputText -match '\.env file must be created') {
+            throw 'Committed packaging attempted to load the local .env file.'
           }
 
   package-release:
@@ -122,6 +172,9 @@ jobs:
           $ErrorActionPreference = 'Stop'
 
           $releaseRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts/ci-release'
+          New-Item -ItemType Directory -Force -Path $releaseRoot | Out-Null
+          $obsoleteZipPath = Join-Path $releaseRoot 'Venworks - Customizable HUD - PS5 Debug - Bethesda PC.zip'
+          [System.IO.File]::WriteAllText($obsoleteZipPath, 'obsolete package shape')
           & "$env:GITHUB_WORKSPACE/Tools/createReleasePackages.ps1" `
             -OutputDirectory $releaseRoot
 
