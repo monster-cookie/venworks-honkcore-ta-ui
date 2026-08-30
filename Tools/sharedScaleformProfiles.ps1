@@ -39,6 +39,70 @@ function Resolve-ScaleformProfileRepositoryPath {
   return (Resolve-Path -LiteralPath $resolvedPath).Path
 }
 
+function Get-ScaleformActionScriptPatchDefinition {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$PatchPath
+  )
+
+  $resolvedPatchPath = (Resolve-Path -LiteralPath $PatchPath -ErrorAction Stop).Path
+  [xml]$patch = Get-Content -LiteralPath $resolvedPatchPath -Raw
+  $patchRoot = $patch.actionScriptPatch
+  if (!$patchRoot -or !$patchRoot.name -or !$patchRoot.script) {
+    throw "Invalid Scaleform ActionScript patch: $resolvedPatchPath"
+  }
+
+  $validationRoot = $patchRoot.validation
+  if (!$validationRoot) {
+    throw "Scaleform ActionScript patch is missing its validation contract: $resolvedPatchPath"
+  }
+
+  $readValidationValues = {
+    param(
+      [Parameter(Mandatory = $true)]
+      [string]$XPath,
+
+      [Parameter(Mandatory = $true)]
+      [string]$Description
+    )
+
+    $values = @($patch.SelectNodes($XPath) | ForEach-Object { [string]$_.InnerText })
+    if (@($values | Where-Object { [string]::IsNullOrWhiteSpace($_) }).Count -ne 0 -or
+        @($values | Select-Object -Unique).Count -ne $values.Count) {
+      throw "Scaleform ActionScript patch contains blank or duplicate $Description entries: $resolvedPatchPath"
+    }
+
+    return $values
+  }
+
+  $requiredSourceTokens = @(& $readValidationValues `
+    -XPath '/actionScriptPatch/validation/requiredSourceTokens/token' `
+    -Description 'required source token')
+  $requiredInspectionTokens = @(& $readValidationValues `
+    -XPath '/actionScriptPatch/validation/requiredInspectionTokens/token' `
+    -Description 'required inspection token')
+  if ($requiredSourceTokens.Count -eq 0 -or $requiredInspectionTokens.Count -eq 0) {
+    throw "Scaleform ActionScript patch must declare required source and inspection tokens: $resolvedPatchPath"
+  }
+
+  return [pscustomobject]@{
+    Name = [string]$patchRoot.name
+    Script = [string]$patchRoot.script
+    PatchPath = $resolvedPatchPath
+    RequiredSourceTokens = $requiredSourceTokens
+    ForbiddenSourceTokens = @(& $readValidationValues `
+      -XPath '/actionScriptPatch/validation/forbiddenSourceTokens/token' `
+      -Description 'forbidden source token')
+    ForbiddenSourcePatterns = @(& $readValidationValues `
+      -XPath '/actionScriptPatch/validation/forbiddenSourcePatterns/pattern' `
+      -Description 'forbidden source pattern')
+    RequiredInspectionTokens = $requiredInspectionTokens
+    ForbiddenInspectionTokens = @(& $readValidationValues `
+      -XPath '/actionScriptPatch/validation/forbiddenInspectionTokens/token' `
+      -Description 'forbidden inspection token')
+  }
+}
+
 function Get-ScaleformManifestDefinition {
   param(
     [Parameter(Mandatory = $true)]
@@ -48,7 +112,8 @@ function Get-ScaleformManifestDefinition {
   $resolvedManifestPath = (Resolve-Path -LiteralPath $ManifestPath -ErrorAction Stop).Path
   [xml]$manifest = Get-Content -LiteralPath $resolvedManifestPath -Raw
   $build = $manifest.scaleformBuild
-  if (!$build -or !$build.name -or !$build.outputFile -or !$build.expectedHashFile) {
+  if (!$build -or !$build.name -or !$build.outputFile -or !$build.expectedHashFile -or
+      !$build.actionScriptPatch) {
     throw "Invalid Scaleform build manifest: $resolvedManifestPath"
   }
 
@@ -62,12 +127,23 @@ function Get-ScaleformManifestDefinition {
     }
   }
 
+  $actionScriptPatchPath = [System.IO.Path]::GetFullPath(
+    (Join-Path $manifestDirectory ([string]$build.actionScriptPatch))
+  )
+  if (!(Test-Path -LiteralPath $actionScriptPatchPath -PathType Leaf)) {
+    throw "Scaleform ActionScript patch does not exist: $actionScriptPatchPath"
+  }
+  $patchDefinition = Get-ScaleformActionScriptPatchDefinition -PatchPath $actionScriptPatchPath
+
   return [pscustomobject]@{
     Name = [string]$build.name
+    Mode = [string]$build.GetAttribute("mode")
     FileName = [string]$build.outputFile
     ManifestPath = $resolvedManifestPath
     ExpectedHashPath = [System.IO.Path]::GetFullPath((Join-Path $manifestDirectory ([string]$build.expectedHashFile)))
     SourceProfilePath = $sourceProfilePath
+    ActionScriptPatchPath = $actionScriptPatchPath
+    PatchDefinition = $patchDefinition
   }
 }
 
@@ -259,16 +335,23 @@ function Get-VariantScaleformMovieProfile {
     throw "Variant build profile is missing MovieProfile."
   }
 
-  if ($VariantBuildProfile.ContainsKey("MovieManifestPaths") -or
-      $VariantBuildProfile.ContainsKey("SwfMovieManifestPaths")) {
-    throw "Variant build profiles no longer override the shared HUD bootstrap manifests."
+  if ($VariantBuildProfile.ContainsKey("SwfMovieManifestPaths")) {
+    throw "Variant build profiles must declare one complete MovieManifestPaths collection instead of a parallel SWF manifest list."
   }
 
-  $gfxManifestRelativePaths = @("Scaleform/hudmenu/build.xml", "Scaleform/hudmenu_lrg/build.xml")
-  $swfManifestRelativePaths = @("Scaleform/hudmenu/build-swf.xml", "Scaleform/hudmenu_lrg/build-swf.xml")
-  $manifestRelativePaths = @($gfxManifestRelativePaths) + @($swfManifestRelativePaths)
-  if ($gfxManifestRelativePaths.Count -ne 2 -or
-      $swfManifestRelativePaths.Count -ne 2 -or
+  $usesCustomHudManifests = $VariantBuildProfile.ContainsKey("MovieManifestPaths")
+  $manifestRelativePaths = if ($usesCustomHudManifests) {
+    @($VariantBuildProfile.MovieManifestPaths | ForEach-Object { [string]$_ })
+  }
+  else {
+    @(
+      "Scaleform/hudmenu/build.xml"
+      "Scaleform/hudmenu_lrg/build.xml"
+      "Scaleform/hudmenu/build-swf.xml"
+      "Scaleform/hudmenu_lrg/build-swf.xml"
+    )
+  }
+  if ($manifestRelativePaths.Count -ne 4 -or
       @($manifestRelativePaths | Select-Object -Unique).Count -ne 4) {
     throw "Scaleform movie profile '$name' must declare exactly two unique GFX and two unique SWF HUD build manifests."
   }
@@ -288,67 +371,100 @@ function Get-VariantScaleformMovieProfile {
   }
 
   foreach ($manifestDefinition in $manifestDefinitions) {
-    [xml]$manifest = Get-Content -LiteralPath $manifestDefinition.ManifestPath -Raw
-    if ([string]$manifest.scaleformBuild.GetAttribute('mode') -cne 'auxiliary-bootstrap' -or
+    if ([string]::IsNullOrWhiteSpace([string]$manifestDefinition.Mode) -or
+        [string]$manifestDefinition.Mode -notin @('auxiliary-bootstrap', 'bgs-hudmenu-only') -or
         $null -ne $manifestDefinition.SourceProfilePath) {
-      throw "Shared HUD manifest must select the profile-independent auxiliary bootstrap mode: $($manifestDefinition.ManifestPath)"
+      throw "HUD manifest must select a supported profile-independent host mode: $($manifestDefinition.ManifestPath)"
     }
   }
+  $manifestModes = @($manifestDefinitions.Mode | Select-Object -Unique)
+  if ($manifestModes.Count -ne 1) {
+    throw "Scaleform movie profile '$name' cannot mix HUD host build modes."
+  }
+  if (!$usesCustomHudManifests -and [string]$manifestModes[0] -cne 'auxiliary-bootstrap') {
+    throw "The shared HUD manifests must select auxiliary-bootstrap mode."
+  }
+  $hostMode = [string]$manifestModes[0]
 
-  $auxiliaryManifestRelativePath = if ($VariantBuildProfile.ContainsKey("AuxiliaryMovieManifestPath")) {
-    [string]$VariantBuildProfile.AuxiliaryMovieManifestPath
+  $auxiliaryDefinition = $null
+  $auxiliarySourceProfile = $null
+  $includeSharedRuntimeMovies = $hostMode -ceq 'auxiliary-bootstrap'
+  if ($hostMode -ceq 'bgs-hudmenu-only' -and
+      $VariantBuildProfile.ContainsKey('AuxiliaryMovieManifestPath')) {
+    throw "Scaleform movie profile '$name' cannot declare an auxiliary manifest in bgs-hudmenu-only mode."
   }
-  else {
-    'Scaleform/venworkscui/build.xml'
-  }
-  $auxiliaryManifestPath = Resolve-ScaleformProfileRepositoryPath `
-    -RepositoryRoot $RepositoryRoot `
-    -RelativePath $auxiliaryManifestRelativePath `
-    -Description "Scaleform movie profile '$name' auxiliary manifest"
-  $auxiliaryDefinition = Get-ScaleformAuxiliaryManifestDefinition -ManifestPath $auxiliaryManifestPath
-  $auxiliarySourceProfile = Get-ScaleformSourceProfileFromAuxiliaryManifest -ManifestPath $auxiliaryManifestPath
-  if ($auxiliarySourceProfile.Name -cne $name) {
-    throw "Scaleform movie profile '$name' does not match its auxiliary ActionScript profile '$($auxiliarySourceProfile.Name)'."
-  }
-  if ($auxiliaryDefinition.FileName -cne 'venworkscui.swf') {
-    throw "Scaleform movie profile '$name' must build venworkscui.swf."
+  if ($includeSharedRuntimeMovies) {
+    $auxiliaryManifestRelativePath = if ($VariantBuildProfile.ContainsKey("AuxiliaryMovieManifestPath")) {
+      [string]$VariantBuildProfile.AuxiliaryMovieManifestPath
+    }
+    else {
+      'Scaleform/venworkscui/build.xml'
+    }
+    $auxiliaryManifestPath = Resolve-ScaleformProfileRepositoryPath `
+      -RepositoryRoot $RepositoryRoot `
+      -RelativePath $auxiliaryManifestRelativePath `
+      -Description "Scaleform movie profile '$name' auxiliary manifest"
+    $auxiliaryDefinition = Get-ScaleformAuxiliaryManifestDefinition -ManifestPath $auxiliaryManifestPath
+    $auxiliarySourceProfile = Get-ScaleformSourceProfileFromAuxiliaryManifest -ManifestPath $auxiliaryManifestPath
+    if ($auxiliarySourceProfile.Name -cne $name) {
+      throw "Scaleform movie profile '$name' does not match its auxiliary ActionScript profile '$($auxiliarySourceProfile.Name)'."
+    }
+    if ($auxiliaryDefinition.FileName -cne 'venworkscui.swf') {
+      throw "Scaleform movie profile '$name' must build venworkscui.swf."
+    }
   }
 
   $buildMovieDefinitions = @($manifestDefinitions | ForEach-Object {
     [pscustomobject]@{
       FileName = $_.FileName
       ExpectedHashPath = $_.ExpectedHashPath
+      ManifestPath = $_.ManifestPath
+      Mode = $_.Mode
       SourceGroup = 'Bootstrap'
+      RequiredInspectionTokens = @($_.PatchDefinition.RequiredInspectionTokens)
+      ForbiddenInspectionTokens = @($_.PatchDefinition.ForbiddenInspectionTokens)
     }
   })
-  $buildMovieDefinitions += @(
-    [pscustomobject]@{
-      FileName = "hudmessagesmenu.gfx"
-      ExpectedHashPath = (Join-Path $RepositoryRoot "Scaleform\hudmessagesmenu\validation\expected.sha256")
-      SourceGroup = 'HudMessages'
-    },
-    [pscustomobject]@{
-      FileName = "hudmessagesmenu.swf"
-      ExpectedHashPath = (Join-Path $RepositoryRoot "Scaleform\hudmessagesmenu\validation\expected-swf.sha256")
-      SourceGroup = 'HudMessages'
-    },
-    [pscustomobject]@{
-      FileName = "hudmessagesmenu_lrg.gfx"
-      ExpectedHashPath = (Join-Path $RepositoryRoot "Scaleform\hudmessagesmenu_lrg\validation\expected.sha256")
-      SourceGroup = 'HudMessages'
-    },
-    [pscustomobject]@{
-      FileName = "hudmessagesmenu_lrg.swf"
-      ExpectedHashPath = (Join-Path $RepositoryRoot "Scaleform\hudmessagesmenu_lrg\validation\expected-swf.sha256")
-      SourceGroup = 'HudMessages'
-    },
-    [pscustomobject]@{
-      FileName = $auxiliaryDefinition.FileName
-      ExpectedHashPath = $auxiliaryDefinition.ExpectedHashPath
-      ExpectedClassHashPath = $auxiliaryDefinition.ExpectedClassHashPath
-      SourceGroup = 'Auxiliary'
-    }
-  )
+  if ($includeSharedRuntimeMovies) {
+    $buildMovieDefinitions += @(
+      [pscustomobject]@{
+        FileName = "hudmessagesmenu.gfx"
+        ExpectedHashPath = (Join-Path $RepositoryRoot "Scaleform\hudmessagesmenu\validation\expected.sha256")
+        SourceGroup = 'HudMessages'
+        RequiredInspectionTokens = @()
+        ForbiddenInspectionTokens = @()
+      },
+      [pscustomobject]@{
+        FileName = "hudmessagesmenu.swf"
+        ExpectedHashPath = (Join-Path $RepositoryRoot "Scaleform\hudmessagesmenu\validation\expected-swf.sha256")
+        SourceGroup = 'HudMessages'
+        RequiredInspectionTokens = @()
+        ForbiddenInspectionTokens = @()
+      },
+      [pscustomobject]@{
+        FileName = "hudmessagesmenu_lrg.gfx"
+        ExpectedHashPath = (Join-Path $RepositoryRoot "Scaleform\hudmessagesmenu_lrg\validation\expected.sha256")
+        SourceGroup = 'HudMessages'
+        RequiredInspectionTokens = @()
+        ForbiddenInspectionTokens = @()
+      },
+      [pscustomobject]@{
+        FileName = "hudmessagesmenu_lrg.swf"
+        ExpectedHashPath = (Join-Path $RepositoryRoot "Scaleform\hudmessagesmenu_lrg\validation\expected-swf.sha256")
+        SourceGroup = 'HudMessages'
+        RequiredInspectionTokens = @()
+        ForbiddenInspectionTokens = @()
+      },
+      [pscustomobject]@{
+        FileName = $auxiliaryDefinition.FileName
+        ExpectedHashPath = $auxiliaryDefinition.ExpectedHashPath
+        ExpectedClassHashPath = $auxiliaryDefinition.ExpectedClassHashPath
+        SourceGroup = 'Auxiliary'
+        RequiredInspectionTokens = @()
+        ForbiddenInspectionTokens = @()
+      }
+    )
+  }
 
   $buildMoviesByName = @{}
   foreach ($buildMovie in $buildMovieDefinitions) {
@@ -358,17 +474,19 @@ function Get-VariantScaleformMovieProfile {
     $buildMoviesByName[[string]$buildMovie.FileName] = $buildMovie
   }
 
-  $deploymentMappings = @(
-    [pscustomobject]@{ FileName = 'hudmenu.gfx'; SourceFileName = 'hudmenu.gfx'; ExpectedSignature = 'GFX' },
-    [pscustomobject]@{ FileName = 'hudmenu.swf'; SourceFileName = 'hudmenu.swf'; ExpectedSignature = 'CWS' },
-    [pscustomobject]@{ FileName = 'hudmenu_lrg.gfx'; SourceFileName = 'hudmenu_lrg.gfx'; ExpectedSignature = 'GFX' },
-    [pscustomobject]@{ FileName = 'hudmenu_lrg.swf'; SourceFileName = 'hudmenu_lrg.swf'; ExpectedSignature = 'CWS' },
-    [pscustomobject]@{ FileName = 'hudmessagesmenu.gfx'; SourceFileName = 'hudmessagesmenu.gfx'; ExpectedSignature = 'GFX' },
-    [pscustomobject]@{ FileName = 'hudmessagesmenu.swf'; SourceFileName = 'hudmessagesmenu.swf'; ExpectedSignature = 'CWS' },
-    [pscustomobject]@{ FileName = 'hudmessagesmenu_lrg.gfx'; SourceFileName = 'hudmessagesmenu_lrg.gfx'; ExpectedSignature = 'GFX' },
-    [pscustomobject]@{ FileName = 'hudmessagesmenu_lrg.swf'; SourceFileName = 'hudmessagesmenu_lrg.swf'; ExpectedSignature = 'CWS' },
-    [pscustomobject]@{ FileName = 'venworkscui.swf'; SourceFileName = 'venworkscui.swf'; ExpectedSignature = 'CWS' }
-  )
+  $deploymentMappings = @($buildMovieDefinitions | ForEach-Object {
+    $extension = [System.IO.Path]::GetExtension([string]$_.FileName)
+    $expectedSignature = switch ($extension) {
+      '.gfx' { 'GFX'; break }
+      '.swf' { 'CWS'; break }
+      default { throw "Scaleform movie profile '$name' has unsupported movie extension '$extension'." }
+    }
+    [pscustomobject]@{
+      FileName = [string]$_.FileName
+      SourceFileName = [string]$_.FileName
+      ExpectedSignature = $expectedSignature
+    }
+  })
   $deploymentMovieDefinitions = @($deploymentMappings | ForEach-Object {
     $sourceFileName = [string]$_.SourceFileName
     if (!$buildMoviesByName.ContainsKey($sourceFileName)) {
@@ -381,34 +499,27 @@ function Get-VariantScaleformMovieProfile {
       ExpectedHashPath = [string]$sourceDefinition.ExpectedHashPath
       ExpectedSignature = [string]$_.ExpectedSignature
       SourceGroup = [string]$sourceDefinition.SourceGroup
+      RequiredInspectionTokens = @($sourceDefinition.RequiredInspectionTokens)
+      ForbiddenInspectionTokens = @($sourceDefinition.ForbiddenInspectionTokens)
     }
   })
-  $requiredDeploymentNames = @(
-    'hudmenu.gfx',
-    'hudmenu.swf',
-    'hudmenu_lrg.gfx',
-    'hudmenu_lrg.swf',
-    'hudmessagesmenu.gfx',
-    'hudmessagesmenu.swf',
-    'hudmessagesmenu_lrg.gfx',
-    'hudmessagesmenu_lrg.swf',
-    'venworkscui.swf'
-  )
+  $requiredDeploymentNames = @($buildMovieDefinitions | ForEach-Object { [string]$_.FileName })
   $deploymentNames = @($deploymentMovieDefinitions | ForEach-Object { [string]$_.FileName })
   if ($deploymentNames.Count -ne $requiredDeploymentNames.Count -or
       @($deploymentNames | Select-Object -Unique).Count -ne $deploymentNames.Count -or
       @($requiredDeploymentNames | Where-Object { $_ -notin $deploymentNames }).Count -ne 0) {
-    throw "Scaleform movie profile '$name' must deploy the exact nine-movie Interface inventory."
+    throw "Scaleform movie profile '$name' must deploy every declared build output exactly once."
   }
 
   return [pscustomobject]@{
     Name = $name
+    HostMode = $hostMode
     ManifestPaths = @($manifestDefinitions | ForEach-Object { $_.ManifestPath })
-    AuxiliaryManifestPath = $auxiliaryDefinition.ManifestPath
-    AuxiliaryExpectedClassHashPath = $auxiliaryDefinition.ExpectedClassHashPath
-    AuxiliaryStageWidth = $auxiliaryDefinition.StageWidth
-    AuxiliaryStageHeight = $auxiliaryDefinition.StageHeight
-    AuxiliaryFrameRate = $auxiliaryDefinition.FrameRate
+    AuxiliaryManifestPath = if ($null -eq $auxiliaryDefinition) { $null } else { $auxiliaryDefinition.ManifestPath }
+    AuxiliaryExpectedClassHashPath = if ($null -eq $auxiliaryDefinition) { $null } else { $auxiliaryDefinition.ExpectedClassHashPath }
+    AuxiliaryStageWidth = if ($null -eq $auxiliaryDefinition) { 0 } else { $auxiliaryDefinition.StageWidth }
+    AuxiliaryStageHeight = if ($null -eq $auxiliaryDefinition) { 0 } else { $auxiliaryDefinition.StageHeight }
+    AuxiliaryFrameRate = if ($null -eq $auxiliaryDefinition) { 0 } else { $auxiliaryDefinition.FrameRate }
     SourceProfile = $auxiliarySourceProfile
     BuildMovieDefinitions = $buildMovieDefinitions
     DeploymentMovieDefinitions = $deploymentMovieDefinitions

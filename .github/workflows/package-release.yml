@@ -109,8 +109,8 @@ jobs:
             -OutputDirectory $releaseRoot
 
           $releaseFiles = @(Get-ChildItem -LiteralPath $releaseRoot -File -Filter '*.zip')
-          if ($releaseFiles.Count -ne 25) {
-            throw "Expected 25 release ZIPs; found $($releaseFiles.Count)."
+          if ($releaseFiles.Count -ne 26) {
+            throw "Expected 26 release ZIPs; found $($releaseFiles.Count)."
           }
 
           "release_root=$releaseRoot" >> $env:GITHUB_OUTPUT
@@ -247,17 +247,11 @@ jobs:
 
           . "$env:GITHUB_WORKSPACE/Tools/sharedConfig.ps1" -SkipEnvironment
           $releaseRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts/release'
-          $packageSuffixes = @(
-            'Nexus PC - Normal',
-            'Nexus PC - Fully Loose Files',
-            'Bethesda PC',
-            'Bethesda Xbox',
-            'Bethesda PS5'
-          )
           $expectedPackageNames = [System.Collections.Generic.List[string]]::new()
 
           foreach ($variant in $Global:ReleaseVariants) {
             $key = $variant.VariantKey.ToLowerInvariant()
+            $packageSuffixes = @(Get-VariantReleasePackageSuffixes -Variant $variant)
             foreach ($packageSuffix in $packageSuffixes) {
               $packageName = "$($variant.ReleaseDisplayName) - $packageSuffix.zip"
               $expectedPackageNames.Add($packageName)
@@ -270,10 +264,12 @@ jobs:
               }
             }
 
-            $normalPath = Join-Path $releaseRoot "$($variant.ReleaseDisplayName) - Nexus PC - Normal.zip"
-            $loosePath = Join-Path $releaseRoot "$($variant.ReleaseDisplayName) - Nexus PC - Fully Loose Files.zip"
-            "$($key)_normal_path=$normalPath" >> $env:GITHUB_OUTPUT
-            "$($key)_loose_path=$loosePath" >> $env:GITHUB_OUTPUT
+            if ('Nexus PC - Normal' -in $packageSuffixes) {
+              $normalPath = Join-Path $releaseRoot "$($variant.ReleaseDisplayName) - Nexus PC - Normal.zip"
+              $loosePath = Join-Path $releaseRoot "$($variant.ReleaseDisplayName) - Nexus PC - Fully Loose Files.zip"
+              "$($key)_normal_path=$normalPath" >> $env:GITHUB_OUTPUT
+              "$($key)_loose_path=$loosePath" >> $env:GITHUB_OUTPUT
+            }
           }
 
           $actualPackageNames = @(

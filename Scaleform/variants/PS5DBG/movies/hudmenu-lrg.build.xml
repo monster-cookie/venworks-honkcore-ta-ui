@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <scaleformBuild name="ps5-debug-hudmenu-lrg"
-                mode="ps5-debug-hudmenu"
+                mode="bgs-hudmenu-only"
                 inputFile="hudmenu_lrg.gfx"
                 outputFile="hudmenu_lrg.gfx"
                 vanillaHashFile="../../../hudmenu_lrg/vanilla.sha256"

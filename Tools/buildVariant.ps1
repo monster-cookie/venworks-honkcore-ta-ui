@@ -279,8 +279,10 @@ New-Item -ItemType Directory -Force -Path $resolvedWorkDirectory | Out-Null
 $buildDirectory = Join-Path $resolvedWorkDirectory ([guid]::NewGuid().ToString("N"))
 $variantBuildProfiles = @{}
 $variantMovieProfiles = @{}
+$variantBootstrapProfileKeys = @{}
+$bootstrapProfiles = @{}
 $auxiliaryProfiles = @{}
-$baseManifestPaths = $null
+$sharedMovieNames = @()
 foreach ($variant in $variants) {
   $profilePath = Resolve-RequiredFile `
     -Path (Join-Path $repositoryRoot "Scaleform\variants\$($variant.VariantKey)\build.psd1") `
@@ -291,61 +293,77 @@ foreach ($variant in $variants) {
     -VariantBuildProfile $variantBuildProfile
   $variantBuildProfiles[[string]$variant.VariantKey] = $variantBuildProfile
   $variantMovieProfiles[[string]$variant.VariantKey] = $movieProfile
-  if ($null -eq $baseManifestPaths) {
-    $baseManifestPaths = @($movieProfile.ManifestPaths)
+  $bootstrapProfileKey = @($movieProfile.ManifestPaths) -join '|'
+  $variantBootstrapProfileKeys[[string]$variant.VariantKey] = $bootstrapProfileKey
+  if (!$bootstrapProfiles.ContainsKey($bootstrapProfileKey)) {
+    $bootstrapProfiles[$bootstrapProfileKey] = [pscustomobject]@{
+      Name = [string]$movieProfile.HostMode
+      ManifestPaths = @($movieProfile.ManifestPaths)
+      MovieNames = @($movieProfile.BuildMovieDefinitions |
+        Where-Object { [string]$_.SourceGroup -ceq 'Bootstrap' } |
+        ForEach-Object { [string]$_.FileName })
+    }
   }
-  elseif (($baseManifestPaths -join '|') -cne (@($movieProfile.ManifestPaths) -join '|')) {
-    throw 'All variants must use the same shared HUD bootstrap manifests.'
+  if (@($bootstrapProfiles[$bootstrapProfileKey].MovieNames).Count -ne 4) {
+    throw "Scaleform movie profile '$($movieProfile.Name)' must declare four HUD host build outputs."
   }
-  if ($auxiliaryProfiles.ContainsKey($movieProfile.Name)) {
+  $profileHudMessageNames = @($movieProfile.BuildMovieDefinitions |
+    Where-Object { [string]$_.SourceGroup -ceq 'HudMessages' } |
+    ForEach-Object { [string]$_.FileName })
+  if ($profileHudMessageNames.Count -ne 0) {
+    if ($sharedMovieNames.Count -eq 0) {
+      $sharedMovieNames = @($profileHudMessageNames)
+    }
+    elseif (($sharedMovieNames -join '|') -cne ($profileHudMessageNames -join '|')) {
+      throw 'Selected movie profiles declare conflicting HUD-message output inventories.'
+    }
+  }
+  if ($null -ne $movieProfile.AuxiliaryManifestPath -and $auxiliaryProfiles.ContainsKey($movieProfile.Name)) {
     if ([string]$auxiliaryProfiles[$movieProfile.Name].AuxiliaryManifestPath -cne
         [string]$movieProfile.AuxiliaryManifestPath) {
       throw "Scaleform auxiliary profile '$($movieProfile.Name)' resolves to conflicting build manifests."
     }
   }
-  else {
+  elseif ($null -ne $movieProfile.AuxiliaryManifestPath) {
     $auxiliaryProfiles[$movieProfile.Name] = $movieProfile
   }
 }
 
 try {
+  $bootstrapProfileDirectories = @{}
   $auxiliaryProfileDirectories = @{}
-  $representativeMovieProfile = $variantMovieProfiles[[string]$variants[0].VariantKey]
-  $profileMovieNames = @($representativeMovieProfile.BuildMovieDefinitions |
-    Where-Object { [string]$_.SourceGroup -ceq 'Bootstrap' } |
-    ForEach-Object { [string]$_.FileName })
-  $sharedMovieNames = @($representativeMovieProfile.BuildMovieDefinitions |
-    Where-Object { [string]$_.SourceGroup -ceq 'HudMessages' } |
-    ForEach-Object { [string]$_.FileName })
-  if ($profileMovieNames.Count -ne 4 -or $sharedMovieNames.Count -ne 4) {
-    throw 'The shared movie profile must declare four bootstrap and four HUD-message build outputs.'
-  }
-  $baseMovieDirectory = Join-Path (Join-Path $buildDirectory 'movies') 'shared-bootstrap'
-  New-Item -ItemType Directory -Force -Path $baseMovieDirectory | Out-Null
-  $compileArguments = @{
-    JavaPath = $JavaPath
-    JpexsJarPath = $JpexsJarPath
-    VanillaInterfacePath = $VanillaInterfacePath
-    OutputDirectory = $baseMovieDirectory
-    WorkDirectory = $resolvedWorkDirectory
-    ManifestPath = @($baseManifestPaths)
-    SkipOverrides = $true
-  }
-  if ($KeepWork) {
-    $compileArguments.KeepWork = $true
-  }
-  if ($UpdateExpectedHashes) {
-    $compileArguments.UpdateExpectedHashes = $true
-  }
-  if ($AuxiliaryMarkerProbe) {
-    $compileArguments.AuxiliaryMarkerProbe = $true
-  }
-  Write-Host -ForegroundColor Green 'Compiling the shared validated HUD bootstrap movies'
-  & (Join-Path $PSScriptRoot 'compileScaleform.ps1') @compileArguments
-  foreach ($movieName in $profileMovieNames) {
-    [void](Resolve-RequiredFile `
-      -Path (Join-Path $baseMovieDirectory $movieName) `
-      -Description "shared compiled movie '$movieName'")
+  $bootstrapIndex = 0
+  foreach ($bootstrapProfileKey in @($bootstrapProfiles.Keys | Sort-Object)) {
+    $bootstrapProfile = $bootstrapProfiles[$bootstrapProfileKey]
+    $bootstrapIndex++
+    $bootstrapMovieDirectory = Join-Path (Join-Path $buildDirectory 'movies') "bootstrap-$bootstrapIndex"
+    New-Item -ItemType Directory -Force -Path $bootstrapMovieDirectory | Out-Null
+    $bootstrapProfileDirectories[$bootstrapProfileKey] = $bootstrapMovieDirectory
+    $compileArguments = @{
+      JavaPath = $JavaPath
+      JpexsJarPath = $JpexsJarPath
+      VanillaInterfacePath = $VanillaInterfacePath
+      OutputDirectory = $bootstrapMovieDirectory
+      WorkDirectory = $resolvedWorkDirectory
+      ManifestPath = @($bootstrapProfile.ManifestPaths)
+      SkipOverrides = $true
+    }
+    if ($KeepWork) {
+      $compileArguments.KeepWork = $true
+    }
+    if ($UpdateExpectedHashes) {
+      $compileArguments.UpdateExpectedHashes = $true
+    }
+    if ($AuxiliaryMarkerProbe) {
+      $compileArguments.AuxiliaryMarkerProbe = $true
+    }
+    Write-Host -ForegroundColor Green "Compiling the '$($bootstrapProfile.Name)' validated HUD host movies"
+    & (Join-Path $PSScriptRoot 'compileScaleform.ps1') @compileArguments
+    foreach ($movieName in @($bootstrapProfile.MovieNames)) {
+      [void](Resolve-RequiredFile `
+        -Path (Join-Path $bootstrapMovieDirectory $movieName) `
+        -Description "$($bootstrapProfile.Name) compiled movie '$movieName'")
+    }
   }
 
   foreach ($movieProfileName in @($auxiliaryProfiles.Keys | Sort-Object)) {
@@ -376,45 +394,45 @@ try {
       -Description "$movieProfileName auxiliary movie")
   }
 
-  $sharedMovieDirectory = Join-Path (Join-Path $buildDirectory "movies") "shared-overrides"
-  New-Item -ItemType Directory -Force -Path $sharedMovieDirectory | Out-Null
-  $overrideCompileArguments = @{
-    JavaPath = $JavaPath
-    JpexsJarPath = $JpexsJarPath
-    VanillaInterfacePath = $VanillaInterfacePath
-    OutputDirectory = @($sharedMovieDirectory)
-    WorkDirectory = $resolvedWorkDirectory
-  }
-  if ($KeepWork) {
-    $overrideCompileArguments.KeepWork = $true
-  }
-  if ($UpdateExpectedHashes) {
-    $overrideCompileArguments.UpdateExpectedHashes = $true
-  }
-  Write-Host -ForegroundColor Green "Compiling the shared validated HUD-message GFX/SWF movies"
-  & (Join-Path $PSScriptRoot "compileScaleformOverrides.ps1") @overrideCompileArguments
-  foreach ($movieName in $sharedMovieNames) {
-    [void](Resolve-RequiredFile `
-      -Path (Join-Path $sharedMovieDirectory $movieName) `
-      -Description "shared compiled movie '$movieName'")
+  $sharedMovieDirectory = $null
+  if ($sharedMovieNames.Count -ne 0) {
+    if ($sharedMovieNames.Count -ne 4) {
+      throw 'HUD-message movie profiles must declare exactly four build outputs.'
+    }
+    $sharedMovieDirectory = Join-Path (Join-Path $buildDirectory "movies") "shared-overrides"
+    New-Item -ItemType Directory -Force -Path $sharedMovieDirectory | Out-Null
+    $overrideCompileArguments = @{
+      JavaPath = $JavaPath
+      JpexsJarPath = $JpexsJarPath
+      VanillaInterfacePath = $VanillaInterfacePath
+      OutputDirectory = @($sharedMovieDirectory)
+      WorkDirectory = $resolvedWorkDirectory
+    }
+    if ($KeepWork) {
+      $overrideCompileArguments.KeepWork = $true
+    }
+    if ($UpdateExpectedHashes) {
+      $overrideCompileArguments.UpdateExpectedHashes = $true
+    }
+    Write-Host -ForegroundColor Green "Compiling the shared validated HUD-message GFX/SWF movies"
+    & (Join-Path $PSScriptRoot "compileScaleformOverrides.ps1") @overrideCompileArguments
+    foreach ($movieName in $sharedMovieNames) {
+      [void](Resolve-RequiredFile `
+        -Path (Join-Path $sharedMovieDirectory $movieName) `
+        -Description "shared compiled movie '$movieName'")
+    }
   }
 
   foreach ($variant in $variants) {
     $variantBuildProfile = $variantBuildProfiles[[string]$variant.VariantKey]
     $movieProfile = $variantMovieProfiles[[string]$variant.VariantKey]
-    $auxiliaryProfileDirectory = $auxiliaryProfileDirectories[[string]$movieProfile.Name]
-
-    Assert-UniqueSafeFileNames -FileNames @($variantBuildProfile.ComponentFileNames) -Context "$($variant.VariantName) component profile"
-    Assert-UniqueSafeFileNames -FileNames @($variantBuildProfile.AssetFileNames) -Context "$($variant.VariantName) asset profile"
-    Assert-UniqueSafeFileNames -FileNames @($variantBuildProfile.PaletteFileNames) -Context "$($variant.VariantName) palette profile"
-    Assert-UniqueSafeFileNames -FileNames @([string]$variant.PaletteFileName) -Context "$($variant.VariantName) selected palette"
-
-    $layoutSourcePath = Resolve-RequiredFile `
-      -Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.LayoutSource) -Description "$($variant.VariantName) layout source") `
-      -Description "$($variant.VariantName) layout source"
-    $componentSourceDirectory = Resolve-RequiredDirectory `
-      -Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.ComponentSourceDirectory) -Description "$($variant.VariantName) component source") `
-      -Description "$($variant.VariantName) component source directory"
+    $bootstrapMovieDirectory = $bootstrapProfileDirectories[$variantBootstrapProfileKeys[[string]$variant.VariantKey]]
+    $auxiliaryProfileDirectory = if ($null -eq $movieProfile.AuxiliaryManifestPath) {
+      $null
+    }
+    else {
+      $auxiliaryProfileDirectories[[string]$movieProfile.Name]
+    }
 
     $stagingFolderPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot $variant.StagingFolderPath))
     if (!(Test-Path -LiteralPath $stagingFolderPath -PathType Container)) {
@@ -445,7 +463,7 @@ try {
     New-Item -ItemType Directory -Force -Path $interfaceOutputDirectory | Out-Null
     foreach ($deploymentMovie in @($movieProfile.DeploymentMovieDefinitions)) {
       $sourceDirectory = switch ([string]$deploymentMovie.SourceGroup) {
-        'Bootstrap' { $baseMovieDirectory; break }
+        'Bootstrap' { $bootstrapMovieDirectory; break }
         'HudMessages' { $sharedMovieDirectory; break }
         'Auxiliary' { $auxiliaryProfileDirectory; break }
         default { throw "$($variant.VariantName) movie deployment '$($deploymentMovie.FileName)' has unknown source group '$($deploymentMovie.SourceGroup)'." }
@@ -459,113 +477,129 @@ try {
         -Force
     }
 
-    $cuiOutputDirectory = Join-Path $interfaceOutputDirectory "VenworksCUI"
-    $componentOutputDirectory = Join-Path $cuiOutputDirectory "components"
-    New-Item -ItemType Directory -Force -Path $componentOutputDirectory | Out-Null
+    $hasCuiPayload = $variantBuildProfile.ContainsKey('LayoutSource') -and
+      ![string]::IsNullOrWhiteSpace([string]$variantBuildProfile.LayoutSource)
+    if ($hasCuiPayload) {
+      Assert-UniqueSafeFileNames -FileNames @($variantBuildProfile.ComponentFileNames) -Context "$($variant.VariantName) component profile"
+      Assert-UniqueSafeFileNames -FileNames @($variantBuildProfile.AssetFileNames) -Context "$($variant.VariantName) asset profile"
+      Assert-UniqueSafeFileNames -FileNames @($variantBuildProfile.PaletteFileNames) -Context "$($variant.VariantName) palette profile"
+      Assert-UniqueSafeFileNames -FileNames @([string]$variant.PaletteFileName) -Context "$($variant.VariantName) selected palette"
 
-    $paletteMode = [string]$variantBuildProfile.PaletteMode
-    $selectedPaletteFileName = [string]$variant.PaletteFileName
-    $layoutText = [System.IO.File]::ReadAllText($layoutSourcePath)
-    $literalColors = $null
-    if ($paletteMode -ceq "External") {
-      if (@($variantBuildProfile.PaletteFileNames | Where-Object { [string]$_ -ceq $selectedPaletteFileName }).Count -ne 1) {
-        throw "$($variant.VariantName) selected palette '$selectedPaletteFileName' is not present exactly once in its payload profile."
-      }
-      $paletteMatches = @([regex]::Matches($layoutText, '\bpalette="[^"]+"'))
-      if ($paletteMatches.Count -ne 1) {
-        throw "$($variant.VariantName) external-palette layout must contain exactly one palette selector."
-      }
-      $layoutText = [regex]::Replace(
-        $layoutText,
-        '\bpalette="[^"]+"',
-        "palette=`"$selectedPaletteFileName`"",
-        1
-      )
-    }
-    elseif ($paletteMode -ceq "Literal") {
-      if ($layoutText -match '@palette\.|\bpalette="') {
-        throw "$($variant.VariantName) literal-palette layout must already contain literal values and no palette selector."
-      }
-      $literalPalettePath = Resolve-RequiredFile `
-        -Path (Join-Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.PaletteSourceDirectory) -Description "$($variant.VariantName) palette source") $selectedPaletteFileName) `
-        -Description "$($variant.VariantName) literal palette"
-      $literalColors = Get-LiteralPaletteColors -PalettePath $literalPalettePath
-    }
-    else {
-      throw "$($variant.VariantName) profile selects unsupported palette mode '$paletteMode'."
-    }
-    Write-Utf8WithoutBom -Path (Join-Path $cuiOutputDirectory "layout.xml") -Text $layoutText
+      $layoutSourcePath = Resolve-RequiredFile `
+        -Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.LayoutSource) -Description "$($variant.VariantName) layout source") `
+        -Description "$($variant.VariantName) layout source"
+      $componentSourceDirectory = Resolve-RequiredDirectory `
+        -Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.ComponentSourceDirectory) -Description "$($variant.VariantName) component source") `
+        -Description "$($variant.VariantName) component source directory"
 
-    foreach ($componentFileName in @($variantBuildProfile.ComponentFileNames)) {
-      $componentSourcePath = Resolve-RequiredFile `
-        -Path (Join-Path $componentSourceDirectory ([string]$componentFileName)) `
-        -Description "$($variant.VariantName) component '$componentFileName'"
-      $componentOutputPath = Join-Path $componentOutputDirectory ([string]$componentFileName)
-      if ($paletteMode -ceq "Literal") {
-        $componentText = Resolve-PaletteColorReferences `
-          -Text ([System.IO.File]::ReadAllText($componentSourcePath)) `
-          -ColorValues $literalColors `
-          -Context "$($variant.VariantName) component '$componentFileName'"
-        $componentText = $componentText.TrimEnd([char[]]"`r`n") + [Environment]::NewLine
-        Write-Utf8WithoutBom -Path $componentOutputPath -Text $componentText
+      $cuiOutputDirectory = Join-Path $interfaceOutputDirectory "VenworksCUI"
+      $componentOutputDirectory = Join-Path $cuiOutputDirectory "components"
+      New-Item -ItemType Directory -Force -Path $componentOutputDirectory | Out-Null
+
+      $paletteMode = [string]$variantBuildProfile.PaletteMode
+      $selectedPaletteFileName = [string]$variant.PaletteFileName
+      $layoutText = [System.IO.File]::ReadAllText($layoutSourcePath)
+      $literalColors = $null
+      if ($paletteMode -ceq "External") {
+        if (@($variantBuildProfile.PaletteFileNames | Where-Object { [string]$_ -ceq $selectedPaletteFileName }).Count -ne 1) {
+          throw "$($variant.VariantName) selected palette '$selectedPaletteFileName' is not present exactly once in its payload profile."
+        }
+        $paletteMatches = @([regex]::Matches($layoutText, '\bpalette="[^"]+"'))
+        if ($paletteMatches.Count -ne 1) {
+          throw "$($variant.VariantName) external-palette layout must contain exactly one palette selector."
+        }
+        $layoutText = [regex]::Replace(
+          $layoutText,
+          '\bpalette="[^"]+"',
+          "palette=`"$selectedPaletteFileName`"",
+          1
+        )
+      }
+      elseif ($paletteMode -ceq "Literal") {
+        if ($layoutText -match '@palette\.|\bpalette="') {
+          throw "$($variant.VariantName) literal-palette layout must already contain literal values and no palette selector."
+        }
+        $literalPalettePath = Resolve-RequiredFile `
+          -Path (Join-Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.PaletteSourceDirectory) -Description "$($variant.VariantName) palette source") $selectedPaletteFileName) `
+          -Description "$($variant.VariantName) literal palette"
+        $literalColors = Get-LiteralPaletteColors -PalettePath $literalPalettePath
       }
       else {
-        Copy-ProfilePayloadFile `
-          -SourcePath $componentSourcePath `
-          -DestinationPath $componentOutputPath
+        throw "$($variant.VariantName) profile selects unsupported palette mode '$paletteMode'."
       }
-    }
+      Write-Utf8WithoutBom -Path (Join-Path $cuiOutputDirectory "layout.xml") -Text $layoutText
 
-    if (@($variantBuildProfile.AssetFileNames).Count -ne 0) {
-      $assetSourceDirectory = Resolve-RequiredDirectory `
-        -Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.AssetSourceDirectory) -Description "$($variant.VariantName) asset source") `
-        -Description "$($variant.VariantName) asset source directory"
-      $assetOutputDirectory = Join-Path $cuiOutputDirectory "Assets"
-      New-Item -ItemType Directory -Force -Path $assetOutputDirectory | Out-Null
-      foreach ($assetFileName in @($variantBuildProfile.AssetFileNames)) {
-        Copy-ProfilePayloadFile `
-          -SourcePath (Resolve-RequiredFile -Path (Join-Path $assetSourceDirectory ([string]$assetFileName)) -Description "$($variant.VariantName) asset '$assetFileName'") `
-          -DestinationPath (Join-Path $assetOutputDirectory ([string]$assetFileName))
+      foreach ($componentFileName in @($variantBuildProfile.ComponentFileNames)) {
+        $componentSourcePath = Resolve-RequiredFile `
+          -Path (Join-Path $componentSourceDirectory ([string]$componentFileName)) `
+          -Description "$($variant.VariantName) component '$componentFileName'"
+        $componentOutputPath = Join-Path $componentOutputDirectory ([string]$componentFileName)
+        if ($paletteMode -ceq "Literal") {
+          $componentText = Resolve-PaletteColorReferences `
+            -Text ([System.IO.File]::ReadAllText($componentSourcePath)) `
+            -ColorValues $literalColors `
+            -Context "$($variant.VariantName) component '$componentFileName'"
+          $componentText = $componentText.TrimEnd([char[]]"`r`n") + [Environment]::NewLine
+          Write-Utf8WithoutBom -Path $componentOutputPath -Text $componentText
+        }
+        else {
+          Copy-ProfilePayloadFile `
+            -SourcePath $componentSourcePath `
+            -DestinationPath $componentOutputPath
+        }
       }
-    }
 
-    if (@($variantBuildProfile.PaletteFileNames).Count -ne 0) {
-      $paletteSourceDirectory = Resolve-RequiredDirectory `
-        -Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.PaletteSourceDirectory) -Description "$($variant.VariantName) palette source") `
-        -Description "$($variant.VariantName) palette source directory"
-      $paletteOutputDirectory = Join-Path $cuiOutputDirectory "palettes"
-      New-Item -ItemType Directory -Force -Path $paletteOutputDirectory | Out-Null
-      foreach ($paletteFileName in @($variantBuildProfile.PaletteFileNames)) {
-        Copy-ProfilePayloadFile `
-          -SourcePath (Resolve-RequiredFile -Path (Join-Path $paletteSourceDirectory ([string]$paletteFileName)) -Description "$($variant.VariantName) palette '$paletteFileName'") `
-          -DestinationPath (Join-Path $paletteOutputDirectory ([string]$paletteFileName))
+      if (@($variantBuildProfile.AssetFileNames).Count -ne 0) {
+        $assetSourceDirectory = Resolve-RequiredDirectory `
+          -Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.AssetSourceDirectory) -Description "$($variant.VariantName) asset source") `
+          -Description "$($variant.VariantName) asset source directory"
+        $assetOutputDirectory = Join-Path $cuiOutputDirectory "Assets"
+        New-Item -ItemType Directory -Force -Path $assetOutputDirectory | Out-Null
+        foreach ($assetFileName in @($variantBuildProfile.AssetFileNames)) {
+          Copy-ProfilePayloadFile `
+            -SourcePath (Resolve-RequiredFile -Path (Join-Path $assetSourceDirectory ([string]$assetFileName)) -Description "$($variant.VariantName) asset '$assetFileName'") `
+            -DestinationPath (Join-Path $assetOutputDirectory ([string]$assetFileName))
+        }
       }
-    }
 
-    [xml]$stagedLayout = Get-Content -LiteralPath (Join-Path $cuiOutputDirectory "layout.xml") -Raw
-    $includedComponentFileNames = @($stagedLayout.SelectNodes('/venworksCUI/includes/include') | ForEach-Object {
-      [string]$_.src
-    } | Sort-Object)
-    $profileComponentFileNames = @($variantBuildProfile.ComponentFileNames | ForEach-Object { [string]$_ } | Sort-Object)
-    if ($includedComponentFileNames.Count -ne $profileComponentFileNames.Count) {
-      throw "$($variant.VariantName) layout includes $($includedComponentFileNames.Count) component files; its profile declares $($profileComponentFileNames.Count)."
-    }
-    for ($index = 0; $index -lt $profileComponentFileNames.Count; $index++) {
-      if ($includedComponentFileNames[$index] -cne $profileComponentFileNames[$index]) {
-        throw "$($variant.VariantName) layout/profile component mismatch. Expected '$($profileComponentFileNames[$index])'; found '$($includedComponentFileNames[$index])'."
+      if (@($variantBuildProfile.PaletteFileNames).Count -ne 0) {
+        $paletteSourceDirectory = Resolve-RequiredDirectory `
+          -Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.PaletteSourceDirectory) -Description "$($variant.VariantName) palette source") `
+          -Description "$($variant.VariantName) palette source directory"
+        $paletteOutputDirectory = Join-Path $cuiOutputDirectory "palettes"
+        New-Item -ItemType Directory -Force -Path $paletteOutputDirectory | Out-Null
+        foreach ($paletteFileName in @($variantBuildProfile.PaletteFileNames)) {
+          Copy-ProfilePayloadFile `
+            -SourcePath (Resolve-RequiredFile -Path (Join-Path $paletteSourceDirectory ([string]$paletteFileName)) -Description "$($variant.VariantName) palette '$paletteFileName'") `
+            -DestinationPath (Join-Path $paletteOutputDirectory ([string]$paletteFileName))
+        }
       }
-    }
 
-    if ($paletteMode -ceq "Literal") {
-      $configurationText = @(
-        Get-ChildItem -LiteralPath $cuiOutputDirectory -Recurse -File -Filter "*.xml" |
-          ForEach-Object { [System.IO.File]::ReadAllText($_.FullName) }
-      ) -join "`n"
-      if ($configurationText -match '(?i)<svg\b|\.svg\b|@palette\.|\bpalette="' -or
-          (Test-Path -LiteralPath (Join-Path $cuiOutputDirectory "Assets")) -or
-          (Test-Path -LiteralPath (Join-Path $cuiOutputDirectory "palettes")) -or
-          @(Get-ChildItem -LiteralPath $interfaceOutputDirectory -Recurse -File -Include "*.svg","*.dds").Count -ne 0) {
-        throw "$($variant.VariantName) literal payload retains external SVG, palette, or DDS content."
+      [xml]$stagedLayout = Get-Content -LiteralPath (Join-Path $cuiOutputDirectory "layout.xml") -Raw
+      $includedComponentFileNames = @($stagedLayout.SelectNodes('/venworksCUI/includes/include') | ForEach-Object {
+        [string]$_.src
+      } | Sort-Object)
+      $profileComponentFileNames = @($variantBuildProfile.ComponentFileNames | ForEach-Object { [string]$_ } | Sort-Object)
+      if ($includedComponentFileNames.Count -ne $profileComponentFileNames.Count) {
+        throw "$($variant.VariantName) layout includes $($includedComponentFileNames.Count) component files; its profile declares $($profileComponentFileNames.Count)."
+      }
+      for ($index = 0; $index -lt $profileComponentFileNames.Count; $index++) {
+        if ($includedComponentFileNames[$index] -cne $profileComponentFileNames[$index]) {
+          throw "$($variant.VariantName) layout/profile component mismatch. Expected '$($profileComponentFileNames[$index])'; found '$($includedComponentFileNames[$index])'."
+        }
+      }
+
+      if ($paletteMode -ceq "Literal") {
+        $configurationText = @(
+          Get-ChildItem -LiteralPath $cuiOutputDirectory -Recurse -File -Filter "*.xml" |
+            ForEach-Object { [System.IO.File]::ReadAllText($_.FullName) }
+        ) -join "`n"
+        if ($configurationText -match '(?i)<svg\b|\.svg\b|@palette\.|\bpalette="' -or
+            (Test-Path -LiteralPath (Join-Path $cuiOutputDirectory "Assets")) -or
+            (Test-Path -LiteralPath (Join-Path $cuiOutputDirectory "palettes")) -or
+            @(Get-ChildItem -LiteralPath $interfaceOutputDirectory -Recurse -File -Include "*.svg","*.dds").Count -ne 0) {
+          throw "$($variant.VariantName) literal payload retains external SVG, palette, or DDS content."
+        }
       }
     }
 

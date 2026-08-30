@@ -580,15 +580,25 @@ foreach ($variant in $variants) {
   }
 
   $interfacePath = Resolve-RequiredDirectory -Path (Join-Path $stagingPath "Interface") -Description "$($variant.VariantName) Interface payload"
-  $cuiPath = Resolve-RequiredDirectory -Path (Join-Path $interfacePath "VenworksCUI") -Description "$($variant.VariantName) CUI payload"
-  $expectedCuiInventory = @("layout.xml")
-  $expectedCuiInventory += @($variantBuildProfile.ComponentFileNames | ForEach-Object { "components/$_" })
-  $expectedCuiInventory += @($variantBuildProfile.AssetFileNames | ForEach-Object { "Assets/$_" })
-  $expectedCuiInventory += @($variantBuildProfile.PaletteFileNames | ForEach-Object { "palettes/$_" })
-  Assert-Inventory -RootPath $cuiPath -ExpectedPaths $expectedCuiInventory -Description "$($variant.VariantName) CUI payload"
-
+  $hasCuiPayload = $variantBuildProfile.ContainsKey('LayoutSource') -and
+    ![string]::IsNullOrWhiteSpace([string]$variantBuildProfile.LayoutSource)
+  $cuiPath = $null
+  $expectedCuiInventory = @()
+  if ($hasCuiPayload) {
+    $cuiPath = Resolve-RequiredDirectory -Path (Join-Path $interfacePath "VenworksCUI") -Description "$($variant.VariantName) CUI payload"
+    $expectedCuiInventory = @("layout.xml")
+    $expectedCuiInventory += @($variantBuildProfile.ComponentFileNames | ForEach-Object { "components/$_" })
+    $expectedCuiInventory += @($variantBuildProfile.AssetFileNames | ForEach-Object { "Assets/$_" })
+    $expectedCuiInventory += @($variantBuildProfile.PaletteFileNames | ForEach-Object { "palettes/$_" })
+    Assert-Inventory -RootPath $cuiPath -ExpectedPaths $expectedCuiInventory -Description "$($variant.VariantName) CUI payload"
+  }
+  elseif (Test-Path -LiteralPath (Join-Path $interfacePath "VenworksCUI")) {
+    throw "$($variant.VariantName) host-only profile must not stage a VenworksCUI payload."
+  }
   $expectedInterfaceInventory = @($movieProfile.DeploymentMovieDefinitions | ForEach-Object { [string]$_.FileName })
-  $expectedInterfaceInventory += @($expectedCuiInventory | ForEach-Object { "VenworksCUI/$_" })
+  if ($hasCuiPayload) {
+    $expectedInterfaceInventory += @($expectedCuiInventory | ForEach-Object { "VenworksCUI/$_" })
+  }
   Assert-Inventory `
     -RootPath $interfacePath `
     -ExpectedPaths $expectedInterfaceInventory `
@@ -624,23 +634,24 @@ foreach ($variant in $variants) {
 
   foreach ($baseHudMovieName in @('hudmenu.gfx', 'hudmenu.swf', 'hudmenu_lrg.gfx', 'hudmenu_lrg.swf')) {
     $inspection = $movieInspections[$baseHudMovieName]
+    $movieDefinition = @($movieProfile.DeploymentMovieDefinitions | Where-Object {
+      [string]$_.FileName -ceq $baseHudMovieName
+    })[0]
     if ($inspection.AbcCount -ne 1) {
       throw "$($variant.VariantName) $baseHudMovieName must contain exactly one Bethesda ABC; found $($inspection.AbcCount)."
     }
-    foreach ($requiredBootstrapToken in @(
-      'venworkscui.swf',
-      'CUI-AUX-LOAD',
-      'initialize',
-      'updateVanillaHudModeVisibility',
-      'dispose',
-      '$MAIN_Font_Bold',
-      'embedFonts',
-      'defaultTextFormat',
-      'setTextFormat'
-    )) {
-      if (!$inspection.Text.Contains($requiredBootstrapToken)) {
-        throw "$($variant.VariantName) $baseHudMovieName is missing auxiliary bootstrap token '$requiredBootstrapToken'."
+    foreach ($requiredInspectionToken in @($movieDefinition.RequiredInspectionTokens)) {
+      if (!$inspection.Text.Contains($requiredInspectionToken)) {
+        throw "$($variant.VariantName) $baseHudMovieName is missing patch contract token '$requiredInspectionToken'."
       }
+    }
+    foreach ($forbiddenInspectionToken in @($movieDefinition.ForbiddenInspectionTokens)) {
+      if ($inspection.Text.Contains($forbiddenInspectionToken)) {
+        throw "$($variant.VariantName) $baseHudMovieName contains forbidden patch contract token '$forbiddenInspectionToken'."
+      }
+    }
+    if ([string]$movieProfile.HostMode -notin @('auxiliary-bootstrap', 'bgs-hudmenu-only')) {
+      throw "$($variant.VariantName) selects unsupported HUD host mode '$($movieProfile.HostMode)'."
     }
     foreach ($forbiddenRuntimeToken in @(
       'CUIRuntime',
@@ -656,6 +667,7 @@ foreach ($variant in $variants) {
     }
   }
 
+  if ($hasCuiPayload) {
   $auxiliaryInspection = $movieInspections['venworkscui.swf']
   if ($auxiliaryInspection.AbcCount -ne 1) {
     throw "$($variant.VariantName) venworkscui.swf must contain exactly one CUI ABC; found $($auxiliaryInspection.AbcCount)."
@@ -1174,6 +1186,7 @@ foreach ($variant in $variants) {
     }
 
   }
+  }
 
   $pluginPath = Join-Path $stagingPath "$($variant.PackageBaseName).esm"
   Assert-NotGitLfsPointer -Path $pluginPath -Description "$($variant.VariantName) plugin"
@@ -1211,6 +1224,27 @@ foreach ($variant in $variants) {
       throw "$($variant.VariantName) contains archive outside its configured targets: $($archiveFile.FullName)"
     }
   }
+
+  $hasTexturePayload = @(
+    Get-ChildItem -LiteralPath $stagingPath -Recurse -File |
+      Where-Object { $_.Extension -ieq '.dds' }
+  ).Count -ne 0
+  $expectedArchiveNames = @(
+    foreach ($archiveTarget in @($variant.ArchiveTargets)) {
+      $archiveDefinition = $archiveDefinitions[[string]$archiveTarget]
+      if ($archiveDefinition.Required -or
+          ($hasTexturePayload -and [string]$archiveTarget -like 'Textures*')) {
+        "$($variant.PackageBaseName) - $($archiveDefinition.FileSuffix)"
+      }
+    }
+  )
+  $expectedStagingInventory = @("$($variant.PackageBaseName).esm")
+  $expectedStagingInventory += @($expectedInterfaceInventory | ForEach-Object { "Interface/$_" })
+  $expectedStagingInventory += $expectedArchiveNames
+  Assert-Inventory `
+    -RootPath $stagingPath `
+    -ExpectedPaths $expectedStagingInventory `
+    -Description "$($variant.VariantName) complete staging payload"
 
   $stagedMainEntryPaths = [System.Collections.Generic.Dictionary[string,string]]::new(
     [System.StringComparer]::Ordinal

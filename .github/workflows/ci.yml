@@ -75,9 +75,40 @@ jobs:
         shell: pwsh
         run: ./Tools/verifyVariant.ps1 -Committed
 
-      - name: Verify isolated PS5 diagnostic variant
+      - name: Reject undeclared staging files through the shared verifier
         shell: pwsh
-        run: ./Tools/verifyPs5DebugVariant.ps1 -Committed
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          . ./Tools/sharedConfig.ps1 -SkipEnvironment
+          $PSNativeCommandUseErrorActionPreference = $false
+          foreach ($variantKey in @('TA', 'PS5DBG')) {
+            $variant = @(Get-ModuleVariants -VariantKeys $variantKey)[0]
+            $unexpectedName = "codex-ci-$([System.Guid]::NewGuid().ToString('N')).esm"
+            $unexpectedPath = Join-Path $variant.StagingFolderPath $unexpectedName
+            if (Test-Path -LiteralPath $unexpectedPath) {
+              throw "Refusing to overwrite an existing staging path: $unexpectedPath"
+            }
+            $createdUnexpectedFile = $false
+            try {
+              [System.IO.File]::WriteAllText($unexpectedPath, 'unexpected staging payload')
+              $createdUnexpectedFile = $true
+              $outputLines = @(& pwsh -NoProfile -File ./Tools/verifyVariant.ps1 -VariantKeys $variantKey -Committed 2>&1)
+              $exitCode = $LASTEXITCODE
+              $outputText = $outputLines -join "`n"
+              if ($exitCode -eq 0 -or $outputText -notmatch 'complete staging payload') {
+                $outputLines | ForEach-Object { Write-Host $_ }
+                throw "$variantKey verification did not reject an undeclared staging file through the shared inventory check."
+              }
+              Write-Host "$variantKey rejected an undeclared staging file through the shared inventory check."
+            }
+            finally {
+              if ($createdUnexpectedFile -and (Test-Path -LiteralPath $unexpectedPath -PathType Leaf)) {
+                Remove-Item -LiteralPath $unexpectedPath -Force
+              }
+            }
+          }
+          $global:LASTEXITCODE = 0
 
       - name: Verify committed entry point without local environment
         shell: pwsh
@@ -95,6 +126,25 @@ jobs:
           if ($outputText -notmatch 'Selected Variant Build Artifacts Are Valid') {
             throw 'Committed repository check exited before reporting successful artifact validation.'
           }
+
+      - name: Verify committed packaging bypasses local environment loading
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $env:TOOL_PATH_ARCHIVER = $null
+          $outputLines = @(& pwsh -NoProfile -File ./Tools/createPackages.ps1 -VariantKeys PS5DBG -Committed 2>&1)
+          $exitCode = $LASTEXITCODE
+          $outputText = $outputLines -join "`n"
+          if ($exitCode -eq 0 -or $outputText -notmatch 'TOOL_PATH_ARCHIVER must name') {
+            $outputLines | ForEach-Object { Write-Host $_ }
+            throw 'Committed packaging did not reach the explicit Archive2 environment check.'
+          }
+          if ($outputText -match '\.env file must be created') {
+            throw 'Committed packaging attempted to load the local .env file.'
+          }
+          Write-Host 'Committed packaging bypassed .env and reached the explicit Archive2 environment check.'
+          $global:LASTEXITCODE = 0
 
   package-release:
     name: Package Release Smoke Test
@@ -126,50 +176,42 @@ jobs:
           $ErrorActionPreference = 'Stop'
 
           $releaseRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts/ci-release'
+          New-Item -ItemType Directory -Force -Path $releaseRoot | Out-Null
+          $obsoleteZipPath = Join-Path $releaseRoot 'Venworks - Customizable HUD - PS5 Debug - Bethesda PC.zip'
+          [System.IO.File]::WriteAllText($obsoleteZipPath, 'obsolete package shape')
           & "$env:GITHUB_WORKSPACE/Tools/createReleasePackages.ps1" `
             -OutputDirectory $releaseRoot
 
           $releaseFiles = @(Get-ChildItem -LiteralPath $releaseRoot -File -Filter '*.zip')
-          if ($releaseFiles.Count -ne 25) {
-            throw "Expected 25 release ZIPs; found $($releaseFiles.Count)."
+          if ($releaseFiles.Count -ne 26) {
+            throw "Expected 26 release ZIPs; found $($releaseFiles.Count)."
           }
           if (@($releaseFiles | Where-Object { $_.Length -le 0 }).Count -ne 0) {
             throw 'One or more release ZIPs are empty.'
           }
 
           . "$env:GITHUB_WORKSPACE/Tools/sharedConfig.ps1" -SkipEnvironment
-          $expectedMovieNames = @(
-            'hudmenu.gfx'
-            'hudmenu.swf'
-            'hudmenu_lrg.gfx'
-            'hudmenu_lrg.swf'
-            'hudmessagesmenu.gfx'
-            'hudmessagesmenu.swf'
-            'hudmessagesmenu_lrg.gfx'
-            'hudmessagesmenu_lrg.swf'
-            'venworkscui.swf'
-          ) | Sort-Object
+          . "$env:GITHUB_WORKSPACE/Tools/sharedScaleformProfiles.ps1"
           $expectedZipNames = @(
             foreach ($variant in $Global:ReleaseVariants) {
-              foreach ($packageSuffix in @(
-                'Nexus PC - Normal'
-                'Nexus PC - Fully Loose Files'
-                'Bethesda PC'
-                'Bethesda Xbox'
-                'Bethesda PS5'
-              )) {
+              foreach ($packageSuffix in @(Get-VariantReleasePackageSuffixes -Variant $variant)) {
                 "$($variant.ReleaseDisplayName) - $packageSuffix.zip"
               }
             }
           ) | Sort-Object
           if ([string]::Join("`n", @($releaseFiles.Name | Sort-Object)) -cne
               [string]::Join("`n", $expectedZipNames)) {
-            throw 'Release ZIP names do not match the exact five-variant package matrix.'
+            throw 'Release ZIP names do not match the configured variant package matrix.'
           }
 
           foreach ($variant in $Global:ReleaseVariants) {
             $stagingPath = Join-Path $env:GITHUB_WORKSPACE $variant.StagingFolderPath
             $interfacePath = Join-Path $stagingPath 'Interface'
+            $buildProfile = Import-PowerShellDataFile -LiteralPath (Join-Path $env:GITHUB_WORKSPACE "Scaleform/variants/$($variant.VariantKey)/build.psd1")
+            $movieProfile = Get-VariantScaleformMovieProfile `
+              -RepositoryRoot $env:GITHUB_WORKSPACE `
+              -VariantBuildProfile $buildProfile
+            $expectedMovieNames = @($movieProfile.DeploymentMovieDefinitions.FileName | Sort-Object)
             $actualMovieNames = @(
               Get-ChildItem -LiteralPath $interfacePath -Recurse -File |
                 Where-Object { $_.Extension -in @('.gfx', '.swf') } |
@@ -178,31 +220,14 @@ jobs:
             )
             if ([string]::Join("`n", $actualMovieNames) -cne
                 [string]::Join("`n", $expectedMovieNames)) {
-              throw "$($variant.VariantName) staging does not contain the exact nine-movie Interface inventory."
+              throw "$($variant.VariantName) staging does not contain its exact declared movie inventory."
             }
 
-            foreach ($hostMovie in @(
-              [pscustomobject]@{ FileName = 'hudmenu.gfx'; Signature = 'GFX' }
-              [pscustomobject]@{ FileName = 'hudmenu.swf'; Signature = 'CWS' }
-              [pscustomobject]@{ FileName = 'hudmenu_lrg.gfx'; Signature = 'GFX' }
-              [pscustomobject]@{ FileName = 'hudmenu_lrg.swf'; Signature = 'CWS' }
-            )) {
-              $hostPath = Join-Path $interfacePath $hostMovie.FileName
-              $signature = [System.Text.Encoding]::ASCII.GetString([System.IO.File]::ReadAllBytes($hostPath), 0, 3)
-              if ($signature -cne $hostMovie.Signature) {
-                throw "$($variant.VariantName) $($hostMovie.FileName) must contain $($hostMovie.Signature) bytes."
-              }
-            }
-            foreach ($messageMovie in @(
-              [pscustomobject]@{ FileName = 'hudmessagesmenu.gfx'; Signature = 'GFX' }
-              [pscustomobject]@{ FileName = 'hudmessagesmenu.swf'; Signature = 'CWS' }
-              [pscustomobject]@{ FileName = 'hudmessagesmenu_lrg.gfx'; Signature = 'GFX' }
-              [pscustomobject]@{ FileName = 'hudmessagesmenu_lrg.swf'; Signature = 'CWS' }
-            )) {
-              $messagePath = Join-Path $interfacePath $messageMovie.FileName
-              $signature = [System.Text.Encoding]::ASCII.GetString([System.IO.File]::ReadAllBytes($messagePath), 0, 3)
-              if ($signature -cne $messageMovie.Signature) {
-                throw "$($variant.VariantName) $($messageMovie.FileName) must contain $($messageMovie.Signature) bytes."
+            foreach ($movieDefinition in @($movieProfile.DeploymentMovieDefinitions)) {
+              $moviePath = Join-Path $interfacePath $movieDefinition.FileName
+              $signature = [System.Text.Encoding]::ASCII.GetString([System.IO.File]::ReadAllBytes($moviePath), 0, 3)
+              if ($signature -cne [string]$movieDefinition.ExpectedSignature) {
+                throw "$($variant.VariantName) $($movieDefinition.FileName) must contain $($movieDefinition.ExpectedSignature) bytes."
               }
             }
 
@@ -224,14 +249,15 @@ jobs:
             if (Test-Path -LiteralPath (Join-Path $stagingPath "$baseName - Textures_PS.ba2") -PathType Leaf) {
               $psArchives += "$baseName - Textures_PS.ba2"
             }
-            $expectedEntriesBySuffix = [ordered]@{
-              'Nexus PC - Normal' = @("$baseName.esm") + $windowsArchives + @('Interface/VenworksCUI/layout.xml')
-              'Nexus PC - Fully Loose Files' = $looseEntries
-              'Bethesda PC' = @("$baseName.esm") + $windowsArchives
-              'Bethesda Xbox' = @("$baseName.esm") + $xboxArchives
-              'Bethesda PS5' = @("$baseName.esm") + $psArchives
-            }
-            foreach ($packageSuffix in $expectedEntriesBySuffix.Keys) {
+            foreach ($packageSuffix in @(Get-VariantReleasePackageSuffixes -Variant $variant)) {
+              $expectedEntries = switch ($packageSuffix) {
+                'Nexus PC - Normal' { @("$baseName.esm") + $windowsArchives + @('Interface/VenworksCUI/layout.xml'); break }
+                'Nexus PC - Fully Loose Files' { $looseEntries; break }
+                'Bethesda PC' { @("$baseName.esm") + $windowsArchives; break }
+                'Bethesda Xbox' { @("$baseName.esm") + $xboxArchives; break }
+                'Bethesda PS5' { @("$baseName.esm") + $psArchives; break }
+                default { throw "$($variant.VariantName) has unsupported release package suffix '$packageSuffix'." }
+              }
               $zipPath = Join-Path $releaseRoot "$($variant.ReleaseDisplayName) - $packageSuffix.zip"
               $zip = [System.IO.Compression.ZipFile]::OpenRead($zipPath)
               try {
@@ -240,7 +266,7 @@ jobs:
               finally {
                 $zip.Dispose()
               }
-              $expectedEntries = @($expectedEntriesBySuffix[$packageSuffix] | Sort-Object)
+              $expectedEntries = @($expectedEntries | Sort-Object)
               if ($entries.Count -ne $expectedEntries.Count -or
                   [string]::Join("`n", $entries) -cne [string]::Join("`n", $expectedEntries)) {
                 throw "$($variant.VariantName) $packageSuffix ZIP contains unexpected entries."
@@ -248,4 +274,4 @@ jobs:
             }
           }
 
-          Write-Host 'Verified all 25 release ZIP shapes and all five nine-movie staging contracts.'
+          Write-Host 'Verified all 26 configured release ZIP shapes and all six staging movie contracts.'

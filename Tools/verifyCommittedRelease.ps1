@@ -248,6 +248,73 @@ if ($movies.Count -ne 9) {
   throw "The shared deployment profile must contain exactly nine Interface movies; found $($movies.Count)."
 }
 
+$explicitSharedBuildProfile = @{
+  MovieProfile = 'shared'
+  MovieManifestPaths = @(
+    'Scaleform/hudmenu/build.xml'
+    'Scaleform/hudmenu_lrg/build.xml'
+    'Scaleform/hudmenu/build-swf.xml'
+    'Scaleform/hudmenu_lrg/build-swf.xml'
+  )
+  AuxiliaryMovieManifestPath = 'Scaleform/venworkscui/build.xml'
+}
+$explicitSharedMovieProfile = Get-VariantScaleformMovieProfile `
+  -RepositoryRoot $repositoryRoot `
+  -VariantBuildProfile $explicitSharedBuildProfile
+if ($explicitSharedMovieProfile.HostMode -cne 'auxiliary-bootstrap' -or
+    $null -eq $explicitSharedMovieProfile.AuxiliaryManifestPath -or
+    $null -eq $explicitSharedMovieProfile.SourceProfile -or
+    @($explicitSharedMovieProfile.DeploymentMovieDefinitions).Count -ne 9) {
+  throw 'Explicit auxiliary-bootstrap manifests must retain all nine shared runtime movies and their auxiliary source profile.'
+}
+
+$hostOnlyBuildProfile = Import-PowerShellDataFile -LiteralPath (Join-Path $repositoryRoot 'Scaleform/variants/PS5DBG/build.psd1')
+$hostOnlyMovieProfile = Get-VariantScaleformMovieProfile `
+  -RepositoryRoot $repositoryRoot `
+  -VariantBuildProfile $hostOnlyBuildProfile
+if ($hostOnlyMovieProfile.HostMode -cne 'bgs-hudmenu-only' -or
+    $null -ne $hostOnlyMovieProfile.AuxiliaryManifestPath -or
+    $null -ne $hostOnlyMovieProfile.SourceProfile -or
+    @($hostOnlyMovieProfile.DeploymentMovieDefinitions).Count -ne 4) {
+  throw 'The bgs-hudmenu-only profile must contain exactly four host movies and no auxiliary runtime.'
+}
+
+$requiredHostOnlyInspectionTokens = @(
+  '$MAIN_Font_Bold'
+  'uncaughtErrorEvents'
+  'indexOf'
+  'preventDefault'
+  'stopImmediatePropagation'
+)
+foreach ($hostMovie in @($hostOnlyMovieProfile.DeploymentMovieDefinitions)) {
+  foreach ($requiredToken in $requiredHostOnlyInspectionTokens) {
+    if ($requiredToken -cnotin @($hostMovie.RequiredInspectionTokens)) {
+      throw "The bgs-hudmenu-only host contract for $($hostMovie.FileName) is missing required inspection token '$requiredToken'."
+    }
+  }
+}
+
+$contradictoryHostOnlyBuildProfile = @{}
+foreach ($profileKey in $hostOnlyBuildProfile.Keys) {
+  $contradictoryHostOnlyBuildProfile[$profileKey] = $hostOnlyBuildProfile[$profileKey]
+}
+$contradictoryHostOnlyBuildProfile.AuxiliaryMovieManifestPath = 'Scaleform/venworkscui/build.xml'
+$rejectedContradictoryHostOnlyProfile = $false
+try {
+  Get-VariantScaleformMovieProfile `
+    -RepositoryRoot $repositoryRoot `
+    -VariantBuildProfile $contradictoryHostOnlyBuildProfile | Out-Null
+}
+catch {
+  if ($_.Exception.Message -notmatch 'cannot declare an auxiliary manifest in bgs-hudmenu-only mode') {
+    throw
+  }
+  $rejectedContradictoryHostOnlyProfile = $true
+}
+if (!$rejectedContradictoryHostOnlyProfile) {
+  throw 'The bgs-hudmenu-only profile resolver accepted a contradictory auxiliary manifest.'
+}
+
 $expectedInventory = @('layout.xml')
 $expectedInventory += @($components | ForEach-Object { "components/$_" })
 $expectedInventory += @($palettes | ForEach-Object { "palettes/$_" })
@@ -340,15 +407,14 @@ $normalizedArchive2ScriptReferences = @(
     Sort-Object
 )
 $expectedArchive2ScriptReferences = @(
-  'Tools/createPackages.ps1',
-  'Tools/createPs5DebugPackages.ps1'
+  'Tools/createPackages.ps1'
 )
 if ($normalizedArchive2ScriptReferences.Count -ne $expectedArchive2ScriptReferences.Count -or
     [string]::Join("`n", $normalizedArchive2ScriptReferences) -cne
     [string]::Join("`n", $expectedArchive2ScriptReferences)) {
-  throw "Only the release and PS5 Debug packaging scripts may invoke Archive2.exe. Found: $($normalizedArchive2ScriptReferences -join ', ')"
+  throw "Only the shared release packaging script may invoke Archive2.exe. Found: $($normalizedArchive2ScriptReferences -join ', ')"
 }
-Write-Host "Verified the two isolated Archive2 packaging owners."
+Write-Host "Verified the single shared Archive2 packaging owner."
 
 $packageScriptPath = Join-Path $repositoryRoot 'Tools/createPackages.ps1'
 $packageScriptSource = [System.IO.File]::ReadAllText($packageScriptPath)
@@ -398,39 +464,7 @@ if ($productionGuardIndex -lt 0 -or
 }
 Write-Host 'Verified the pre-Archive2 production movie-deployment guard.'
 
-$debugPackageScriptPath = Join-Path $repositoryRoot 'Tools/createPs5DebugPackages.ps1'
-$debugPackageScriptSource = [System.IO.File]::ReadAllText($debugPackageScriptPath)
-$debugGuardIndex = $debugPackageScriptSource.IndexOf(
-  'Verified the PS5 Debug movie payload before archive mutation.',
-  [System.StringComparison]::Ordinal
-)
-$debugRemovalIndex = $debugPackageScriptSource.IndexOf(
-  'Remove-Item -LiteralPath $archivePath -Force',
-  [System.StringComparison]::Ordinal
-)
-$debugArchiveInvocationIndex = $debugPackageScriptSource.IndexOf(
-  '& $archive2Path @archiveArguments',
-  [System.StringComparison]::Ordinal
-)
-if ($debugGuardIndex -lt 0 -or
-    $debugRemovalIndex -lt 0 -or
-    $debugArchiveInvocationIndex -lt 0 -or
-    $debugGuardIndex -gt $debugRemovalIndex -or
-    $debugGuardIndex -gt $debugArchiveInvocationIndex -or
-    !$debugPackageScriptSource.Contains("[pscustomobject]@{ Target = 'Main'; Suffix = 'Main.ba2' }") -or
-    !$debugPackageScriptSource.Contains("[pscustomobject]@{ Target = 'Main_PS'; Suffix = 'Main_PS.ba2' }") -or
-    !$debugPackageScriptSource.Contains("'-format=General'") -or
-    !$debugPackageScriptSource.Contains("'-compression=None'") -or
-    $debugPackageScriptSource.Contains("Target = 'Main_XBox'") -or
-    $debugPackageScriptSource.Contains("Target = 'Textures")) {
-  throw 'createPs5DebugPackages.ps1 must validate its four movies before creating only uncompressed PC and PS5 Main archives.'
-}
-Write-Host 'Verified the isolated PS5 Debug Archive2 contract.'
-
 & (Join-Path $PSScriptRoot "verifyVariant.ps1") `
   -Committed
 
-& (Join-Path $PSScriptRoot "verifyPs5DebugVariant.ps1") `
-  -Committed
-
-Write-Host "Verified all five release variants and the isolated PS5 Debug diagnostic variant."
+Write-Host "Verified all six variants through the shared release pipeline."

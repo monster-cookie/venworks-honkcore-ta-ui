@@ -33,6 +33,7 @@ $PSNativeCommandUseErrorActionPreference = $true
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot "sharedScaleformMovies.ps1")
+. (Join-Path $PSScriptRoot "sharedScaleformProfiles.ps1")
 
 function Resolve-RequiredFile {
   param(
@@ -165,7 +166,7 @@ function Apply-ActionScriptPatch {
   )
 }
 
-function Build-AuxiliaryBootstrapMovie {
+function Build-HudHostMovie {
   param(
     [Parameter(Mandatory = $true)]
     [string]$InputPath,
@@ -198,8 +199,8 @@ function Build-AuxiliaryBootstrapMovie {
     -Arguments @('-format', 'script:as', '-export', 'script', $exportedScriptsDirectory, $InputPath) `
     -Description "exporting $BuildName ActionScript"
 
-  [xml]$actionScriptPatch = Get-Content -LiteralPath $PatchPath -Raw
-  $scriptName = [string]$actionScriptPatch.actionScriptPatch.script
+  $patchDefinition = Get-ScaleformActionScriptPatchDefinition -PatchPath $PatchPath
+  $scriptName = [string]$patchDefinition.Script
   $exportedScriptMatches = @(Get-ChildItem -LiteralPath $exportedScriptsDirectory -Recurse -File -Filter "$scriptName.as")
   if ($exportedScriptMatches.Count -ne 1) {
     throw "Expected one exported $scriptName.as; found $($exportedScriptMatches.Count)."
@@ -211,7 +212,7 @@ function Build-AuxiliaryBootstrapMovie {
 
   Invoke-Jpexs `
     -Arguments @('-onerror', 'abort', '-importScript', $InputPath, $OutputPath, $importScriptsDirectory) `
-    -Description "importing the $BuildName auxiliary bootstrap"
+    -Description "importing the $BuildName HUD host patch"
   Invoke-Jpexs `
     -Arguments @('-swf2xml', $OutputPath, $reopenedXmlPath) `
     -Description "reopening $BuildName"
@@ -238,28 +239,20 @@ function Build-AuxiliaryBootstrapMovie {
     throw "Expected one reopened $scriptName.as; found $($validationScriptMatches.Count)."
   }
   $reopenedHudMenuSource = Get-Content -LiteralPath $validationScriptMatches[0].FullName -Raw
-  foreach ($requiredBootstrapToken in @(
-    'new URLRequest("venworkscui.swf")',
-    'contentLoaderInfo.addEventListener(Event.COMPLETE',
-    'IOErrorEvent.IO_ERROR',
-    'SecurityErrorEvent.SECURITY_ERROR',
-    'this.VenworksCUIBridge["initialize"](this)',
-    'this.VenworksCUIBridge["reapplyVanillaPlacements"]()',
-    'this.VenworksCUIBridge["updateVanillaHudModeVisibility"]',
-    'this.VenworksCUIBridge["dispose"]()',
-    'this.VenworksCUILoader.unload()',
-    'new TextFormat("$MAIN_Font_Bold",18,16777215,true)',
-    'this.VenworksCUIBootstrapDiagnostics.embedFonts = true',
-    'this.VenworksCUIBootstrapDiagnostics.defaultTextFormat = format',
-    'this.VenworksCUIBootstrapDiagnostics.setTextFormat(format)'
-  )) {
-    if (!$reopenedHudMenuSource.Contains($requiredBootstrapToken)) {
-      throw "Generated $BuildName is missing bootstrap contract token '$requiredBootstrapToken'."
+  foreach ($requiredToken in @($patchDefinition.RequiredSourceTokens)) {
+    if (!$reopenedHudMenuSource.Contains($requiredToken)) {
+      throw "Generated $BuildName is missing patch contract token '$requiredToken'."
     }
   }
-  if ($reopenedHudMenuSource -match 'LoaderContext\s*\([^)]*venworkscui|ApplicationDomain[^\r\n]*venworkscui' -or
-      $reopenedHudMenuSource -match 'venworks\.cui\.') {
-    throw "Generated $BuildName embeds or explicitly binds the auxiliary CUI application domain."
+  foreach ($forbiddenToken in @($patchDefinition.ForbiddenSourceTokens)) {
+    if ($reopenedHudMenuSource.Contains($forbiddenToken)) {
+      throw "Generated $BuildName contains forbidden patch contract token '$forbiddenToken'."
+    }
+  }
+  foreach ($forbiddenPattern in @($patchDefinition.ForbiddenSourcePatterns)) {
+    if ($reopenedHudMenuSource -match $forbiddenPattern) {
+      throw "Generated $BuildName matches forbidden patch contract pattern '$forbiddenPattern'."
+    }
   }
 
   $originalScripts = @(Get-ChildItem -LiteralPath $exportedScriptsDirectory -Recurse -File -Filter '*.as')
@@ -279,7 +272,7 @@ function Build-AuxiliaryBootstrapMovie {
     if (!(Test-Path -LiteralPath $validationPath -PathType Leaf) -or
         (Get-FileHash -LiteralPath $originalScript.FullName -Algorithm SHA256).Hash -cne
         (Get-FileHash -LiteralPath $validationPath -Algorithm SHA256).Hash) {
-      throw "Auxiliary bootstrap unexpectedly changed Bethesda class '$relativePath'."
+      throw "HUD host patch unexpectedly changed Bethesda class '$relativePath'."
     }
   }
 
@@ -323,13 +316,14 @@ try {
         !$build.vanillaHashFile -or !$build.expectedHashFile -or !$build.actionScriptPatch) {
       throw "Invalid Scaleform bootstrap build manifest: $resolvedManifestPath"
     }
-    if ([string]$build.GetAttribute('mode') -cne 'auxiliary-bootstrap') {
-      throw "Scaleform HUD manifests must select auxiliary-bootstrap mode: $resolvedManifestPath"
+    $buildMode = [string]$build.GetAttribute('mode')
+    if ($buildMode -notin @('auxiliary-bootstrap', 'bgs-hudmenu-only')) {
+      throw "Scaleform HUD manifests must select a supported host mode: $resolvedManifestPath"
     }
     if ($build.HasAttribute('abcSeedPatch') -or
         $build.HasAttribute('actionScriptSource') -or
         $build.HasAttribute('actionScriptProfile')) {
-      throw "Scaleform HUD bootstrap manifest retains an embedded-CUI attribute: $resolvedManifestPath"
+      throw "Scaleform HUD host manifest retains an embedded-CUI attribute: $resolvedManifestPath"
     }
     if (!$usedBuildNames.Add([string]$build.name) -or
         !$usedOutputNames.Add([string]$build.outputFile)) {
@@ -358,7 +352,7 @@ try {
     $movieWorkDirectory = Join-Path $buildWorkDirectory ([string]$build.name)
     New-Item -ItemType Directory -Path $movieWorkDirectory | Out-Null
     $generatedMoviePath = Join-Path $movieWorkDirectory ([string]$build.outputFile)
-    Build-AuxiliaryBootstrapMovie `
+    Build-HudHostMovie `
       -InputPath $inputPath `
       -OutputPath $generatedMoviePath `
       -WorkPath $movieWorkDirectory `
