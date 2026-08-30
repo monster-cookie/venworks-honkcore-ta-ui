@@ -1,5 +1,5 @@
 @{
-  MovieProfile = 'ps5-debug-hudmenu'
+  MovieProfile = 'bgs-hudmenu-only'
   MovieManifestPaths = @(
     'Scaleform/variants/PS5DBG/movies/hudmenu.build.xml'
     'Scaleform/variants/PS5DBG/movies/hudmenu-swf.build.xml'

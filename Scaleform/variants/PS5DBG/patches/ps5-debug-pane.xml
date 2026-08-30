@@ -1,5 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <actionScriptPatch name="ps5-debug-pane" version="1" script="HUDMenu">
+  <validation>
+    <requiredSourceTokens>
+      <token><![CDATA[PS5DBG-01 CONSTRUCTED]]></token>
+      <token><![CDATA[PS5DBG-02 ADDED TO STAGE]]></token>
+      <token><![CDATA[PS5DBG-OK HUD LOADED]]></token>
+      <token><![CDATA[PS5DBG-ERR UNCAUGHT]]></token>
+      <token><![CDATA[PS5DebugErrorRecorded]]></token>
+      <token><![CDATA[indexOf("PS5DBG-ERR")]]></token>
+      <token><![CDATA[new TextFormat("$MAIN_Font_Bold",20]]></token>
+      <token><![CDATA[loaderInfo.uncaughtErrorEvents.addEventListener]]></token>
+      <token><![CDATA[param1.preventDefault()]]></token>
+      <token><![CDATA[param1.stopImmediatePropagation()]]></token>
+    </requiredSourceTokens>
+    <forbiddenSourceTokens>
+      <token><![CDATA[VenworksCUI]]></token>
+      <token><![CDATA[venworks.cui]]></token>
+      <token><![CDATA[venworkscui.swf]]></token>
+      <token><![CDATA[CUILayout]]></token>
+      <token><![CDATA[CUISvg]]></token>
+      <token><![CDATA[CUIPalette]]></token>
+      <token><![CDATA[CUIPlayerHudDataContext]]></token>
+    </forbiddenSourceTokens>
+    <requiredInspectionTokens>
+      <token><![CDATA[PS5DBG-01 CONSTRUCTED]]></token>
+      <token><![CDATA[PS5DBG-02 ADDED TO STAGE]]></token>
+      <token><![CDATA[PS5DBG-OK HUD LOADED]]></token>
+      <token><![CDATA[PS5DBG-ERR UNCAUGHT]]></token>
+      <token><![CDATA[PS5DebugErrorRecorded]]></token>
+      <token><![CDATA[PS5DBG-ERR]]></token>
+      <token><![CDATA[$MAIN_Font_Bold]]></token>
+      <token><![CDATA[uncaughtErrorEvents]]></token>
+      <token><![CDATA[indexOf]]></token>
+      <token><![CDATA[preventDefault]]></token>
+      <token><![CDATA[stopImmediatePropagation]]></token>
+    </requiredInspectionTokens>
+    <forbiddenInspectionTokens>
+      <token><![CDATA[VenworksCUI]]></token>
+      <token><![CDATA[venworks.cui]]></token>
+      <token><![CDATA[venworkscui.swf]]></token>
+      <token><![CDATA[CUILayout]]></token>
+      <token><![CDATA[CUISvg]]></token>
+      <token><![CDATA[CUIPalette]]></token>
+      <token><![CDATA[CUIPlayerHudDataContext]]></token>
+    </forbiddenInspectionTokens>
+  </validation>
   <insertions>
     <insertion position="after"><anchor><![CDATA[   import flash.events.Event;]]></anchor><content><![CDATA[
    import flash.events.UncaughtErrorEvent;

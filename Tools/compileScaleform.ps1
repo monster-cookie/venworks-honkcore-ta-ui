@@ -33,6 +33,7 @@ $PSNativeCommandUseErrorActionPreference = $true
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot "sharedScaleformMovies.ps1")
+. (Join-Path $PSScriptRoot "sharedScaleformProfiles.ps1")
 
 function Resolve-RequiredFile {
   param(
@@ -185,10 +186,6 @@ function Build-HudHostMovie {
     [Parameter(Mandatory = $true)]
     [string]$BuildName,
 
-    [Parameter(Mandatory = $true)]
-    [ValidateSet('auxiliary-bootstrap', 'ps5-debug-hudmenu')]
-    [string]$Mode,
-
     [switch]$SkipExpectedHash
   )
 
@@ -202,8 +199,8 @@ function Build-HudHostMovie {
     -Arguments @('-format', 'script:as', '-export', 'script', $exportedScriptsDirectory, $InputPath) `
     -Description "exporting $BuildName ActionScript"
 
-  [xml]$actionScriptPatch = Get-Content -LiteralPath $PatchPath -Raw
-  $scriptName = [string]$actionScriptPatch.actionScriptPatch.script
+  $patchDefinition = Get-ScaleformActionScriptPatchDefinition -PatchPath $PatchPath
+  $scriptName = [string]$patchDefinition.Script
   $exportedScriptMatches = @(Get-ChildItem -LiteralPath $exportedScriptsDirectory -Recurse -File -Filter "$scriptName.as")
   if ($exportedScriptMatches.Count -ne 1) {
     throw "Expected one exported $scriptName.as; found $($exportedScriptMatches.Count)."
@@ -242,60 +239,19 @@ function Build-HudHostMovie {
     throw "Expected one reopened $scriptName.as; found $($validationScriptMatches.Count)."
   }
   $reopenedHudMenuSource = Get-Content -LiteralPath $validationScriptMatches[0].FullName -Raw
-  $requiredTokens = if ($Mode -ceq 'auxiliary-bootstrap') {
-    @(
-      'new URLRequest("venworkscui.swf")',
-      'contentLoaderInfo.addEventListener(Event.COMPLETE',
-      'IOErrorEvent.IO_ERROR',
-      'SecurityErrorEvent.SECURITY_ERROR',
-      'this.VenworksCUIBridge["initialize"](this)',
-      'this.VenworksCUIBridge["reapplyVanillaPlacements"]()',
-      'this.VenworksCUIBridge["updateVanillaHudModeVisibility"]',
-      'this.VenworksCUIBridge["dispose"]()',
-      'this.VenworksCUILoader.unload()',
-      'new TextFormat("$MAIN_Font_Bold",18,16777215,true)',
-      'this.VenworksCUIBootstrapDiagnostics.embedFonts = true',
-      'this.VenworksCUIBootstrapDiagnostics.defaultTextFormat = format',
-      'this.VenworksCUIBootstrapDiagnostics.setTextFormat(format)'
-    )
-  }
-  else {
-    @(
-      'PS5DBG-01 CONSTRUCTED',
-      'PS5DBG-02 ADDED TO STAGE',
-      'PS5DBG-OK HUD LOADED',
-      'PS5DBG-ERR UNCAUGHT',
-      'PS5DebugErrorRecorded',
-      'indexOf("PS5DBG-ERR")',
-      'new TextFormat("$MAIN_Font_Bold",20',
-      'loaderInfo.uncaughtErrorEvents.addEventListener',
-      'param1.preventDefault()',
-      'param1.stopImmediatePropagation()'
-    )
-  }
-  foreach ($requiredToken in $requiredTokens) {
+  foreach ($requiredToken in @($patchDefinition.RequiredSourceTokens)) {
     if (!$reopenedHudMenuSource.Contains($requiredToken)) {
-      throw "Generated $BuildName is missing $Mode contract token '$requiredToken'."
+      throw "Generated $BuildName is missing patch contract token '$requiredToken'."
     }
   }
-  if ($Mode -ceq 'auxiliary-bootstrap' -and
-      ($reopenedHudMenuSource -match 'LoaderContext\s*\([^)]*venworkscui|ApplicationDomain[^\r\n]*venworkscui' -or
-       $reopenedHudMenuSource -match 'venworks\.cui\.')) {
-    throw "Generated $BuildName embeds or explicitly binds the auxiliary CUI application domain."
+  foreach ($forbiddenToken in @($patchDefinition.ForbiddenSourceTokens)) {
+    if ($reopenedHudMenuSource.Contains($forbiddenToken)) {
+      throw "Generated $BuildName contains forbidden patch contract token '$forbiddenToken'."
+    }
   }
-  if ($Mode -ceq 'ps5-debug-hudmenu') {
-    foreach ($forbiddenToken in @(
-      'VenworksCUI',
-      'venworks.cui',
-      'venworkscui.swf',
-      'CUILayout',
-      'CUISvg',
-      'CUIPalette',
-      'CUIPlayerHudDataContext'
-    )) {
-      if ($reopenedHudMenuSource.Contains($forbiddenToken)) {
-        throw "Generated $BuildName retains forbidden PS5 Debug token '$forbiddenToken'."
-      }
+  foreach ($forbiddenPattern in @($patchDefinition.ForbiddenSourcePatterns)) {
+    if ($reopenedHudMenuSource -match $forbiddenPattern) {
+      throw "Generated $BuildName matches forbidden patch contract pattern '$forbiddenPattern'."
     }
   }
 
@@ -361,7 +317,7 @@ try {
       throw "Invalid Scaleform bootstrap build manifest: $resolvedManifestPath"
     }
     $buildMode = [string]$build.GetAttribute('mode')
-    if ($buildMode -notin @('auxiliary-bootstrap', 'ps5-debug-hudmenu')) {
+    if ($buildMode -notin @('auxiliary-bootstrap', 'bgs-hudmenu-only')) {
       throw "Scaleform HUD manifests must select a supported host mode: $resolvedManifestPath"
     }
     if ($build.HasAttribute('abcSeedPatch') -or
@@ -403,7 +359,6 @@ try {
       -PatchPath $actionScriptPatchPath `
       -ExpectedHashPath $expectedHashPath `
       -BuildName ([string]$build.name) `
-      -Mode $buildMode `
       -SkipExpectedHash:$AuxiliaryMarkerProbe | Out-Host
 
     $destinationPath = Join-Path $resolvedOutputDirectory ([string]$build.outputFile)

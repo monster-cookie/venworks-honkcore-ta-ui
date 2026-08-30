@@ -634,54 +634,23 @@ foreach ($variant in $variants) {
 
   foreach ($baseHudMovieName in @('hudmenu.gfx', 'hudmenu.swf', 'hudmenu_lrg.gfx', 'hudmenu_lrg.swf')) {
     $inspection = $movieInspections[$baseHudMovieName]
+    $movieDefinition = @($movieProfile.DeploymentMovieDefinitions | Where-Object {
+      [string]$_.FileName -ceq $baseHudMovieName
+    })[0]
     if ($inspection.AbcCount -ne 1) {
       throw "$($variant.VariantName) $baseHudMovieName must contain exactly one Bethesda ABC; found $($inspection.AbcCount)."
     }
-    if ([string]$movieProfile.HostMode -ceq 'auxiliary-bootstrap') {
-      foreach ($requiredBootstrapToken in @(
-        'venworkscui.swf',
-        'CUI-AUX-LOAD',
-        'initialize',
-        'updateVanillaHudModeVisibility',
-        'dispose',
-        '$MAIN_Font_Bold',
-        'embedFonts',
-        'defaultTextFormat',
-        'setTextFormat'
-      )) {
-        if (!$inspection.Text.Contains($requiredBootstrapToken)) {
-          throw "$($variant.VariantName) $baseHudMovieName is missing auxiliary bootstrap token '$requiredBootstrapToken'."
-        }
+    foreach ($requiredInspectionToken in @($movieDefinition.RequiredInspectionTokens)) {
+      if (!$inspection.Text.Contains($requiredInspectionToken)) {
+        throw "$($variant.VariantName) $baseHudMovieName is missing patch contract token '$requiredInspectionToken'."
       }
     }
-    elseif ([string]$movieProfile.HostMode -ceq 'ps5-debug-hudmenu') {
-      foreach ($requiredDebugToken in @(
-        'PS5DBG-01 CONSTRUCTED',
-        'PS5DBG-02 ADDED TO STAGE',
-        'PS5DBG-OK HUD LOADED',
-        'PS5DBG-ERR UNCAUGHT',
-        'PS5DebugErrorRecorded',
-        'PS5DBG-ERR'
-      )) {
-        if (!$inspection.Text.Contains($requiredDebugToken)) {
-          throw "$($variant.VariantName) $baseHudMovieName is missing PS5 Debug token '$requiredDebugToken'."
-        }
-      }
-      foreach ($forbiddenDebugToken in @(
-        'VenworksCUI',
-        'venworks.cui',
-        'venworkscui.swf',
-        'CUILayout',
-        'CUISvg',
-        'CUIPalette',
-        'CUIPlayerHudDataContext'
-      )) {
-        if ($inspection.Text.Contains($forbiddenDebugToken)) {
-          throw "$($variant.VariantName) $baseHudMovieName contains forbidden PS5 Debug token '$forbiddenDebugToken'."
-        }
+    foreach ($forbiddenInspectionToken in @($movieDefinition.ForbiddenInspectionTokens)) {
+      if ($inspection.Text.Contains($forbiddenInspectionToken)) {
+        throw "$($variant.VariantName) $baseHudMovieName contains forbidden patch contract token '$forbiddenInspectionToken'."
       }
     }
-    else {
+    if ([string]$movieProfile.HostMode -notin @('auxiliary-bootstrap', 'bgs-hudmenu-only')) {
       throw "$($variant.VariantName) selects unsupported HUD host mode '$($movieProfile.HostMode)'."
     }
     foreach ($forbiddenRuntimeToken in @(

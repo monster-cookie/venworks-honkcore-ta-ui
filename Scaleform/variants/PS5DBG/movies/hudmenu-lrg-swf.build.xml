@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <scaleformBuild name="ps5-debug-hudmenu-lrg-swf"
-                mode="ps5-debug-hudmenu"
+                mode="bgs-hudmenu-only"
                 inputFile="hudmenu_lrg.swf"
                 outputFile="hudmenu_lrg.swf"
                 vanillaHashFile="../../../hudmenu_lrg/vanilla-swf.sha256"

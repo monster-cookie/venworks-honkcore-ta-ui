@@ -1,5 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <actionScriptPatch name="cui-auxiliary-bootstrap" version="1" script="HUDMenu">
+  <validation>
+    <requiredSourceTokens>
+      <token><![CDATA[new URLRequest("venworkscui.swf")]]></token>
+      <token><![CDATA[contentLoaderInfo.addEventListener(Event.COMPLETE]]></token>
+      <token><![CDATA[IOErrorEvent.IO_ERROR]]></token>
+      <token><![CDATA[SecurityErrorEvent.SECURITY_ERROR]]></token>
+      <token><![CDATA[this.VenworksCUIBridge["initialize"](this)]]></token>
+      <token><![CDATA[this.VenworksCUIBridge["reapplyVanillaPlacements"]()]]></token>
+      <token><![CDATA[this.VenworksCUIBridge["updateVanillaHudModeVisibility"]]]></token>
+      <token><![CDATA[this.VenworksCUIBridge["dispose"]()]]></token>
+      <token><![CDATA[this.VenworksCUILoader.unload()]]></token>
+      <token><![CDATA[new TextFormat("$MAIN_Font_Bold",18,16777215,true)]]></token>
+      <token><![CDATA[this.VenworksCUIBootstrapDiagnostics.embedFonts = true]]></token>
+      <token><![CDATA[this.VenworksCUIBootstrapDiagnostics.defaultTextFormat = format]]></token>
+      <token><![CDATA[this.VenworksCUIBootstrapDiagnostics.setTextFormat(format)]]></token>
+    </requiredSourceTokens>
+    <forbiddenSourcePatterns>
+      <pattern><![CDATA[LoaderContext\s*\([^)]*venworkscui|ApplicationDomain[^\r\n]*venworkscui]]></pattern>
+      <pattern><![CDATA[venworks\.cui\.]]></pattern>
+    </forbiddenSourcePatterns>
+    <requiredInspectionTokens>
+      <token><![CDATA[venworkscui.swf]]></token>
+      <token><![CDATA[CUI-AUX-LOAD]]></token>
+      <token><![CDATA[initialize]]></token>
+      <token><![CDATA[updateVanillaHudModeVisibility]]></token>
+      <token><![CDATA[dispose]]></token>
+      <token><![CDATA[$MAIN_Font_Bold]]></token>
+      <token><![CDATA[embedFonts]]></token>
+      <token><![CDATA[defaultTextFormat]]></token>
+      <token><![CDATA[setTextFormat]]></token>
+    </requiredInspectionTokens>
+  </validation>
   <insertions>
     <insertion position="after"><anchor><![CDATA[   import flash.events.Event;]]></anchor><content><![CDATA[
    import flash.display.DisplayObject;
