@@ -100,6 +100,7 @@ jobs:
                 $outputLines | ForEach-Object { Write-Host $_ }
                 throw "$variantKey verification did not reject an undeclared staging file through the shared inventory check."
               }
+              Write-Host "$variantKey rejected an undeclared staging file through the shared inventory check."
             }
             finally {
               if ($createdUnexpectedFile -and (Test-Path -LiteralPath $unexpectedPath -PathType Leaf)) {
@@ -107,6 +108,7 @@ jobs:
               }
             }
           }
+          $global:LASTEXITCODE = 0
 
       - name: Verify committed entry point without local environment
         shell: pwsh
@@ -141,6 +143,8 @@ jobs:
           if ($outputText -match '\.env file must be created') {
             throw 'Committed packaging attempted to load the local .env file.'
           }
+          Write-Host 'Committed packaging bypassed .env and reached the explicit Archive2 environment check.'
+          $global:LASTEXITCODE = 0
 
   package-release:
     name: Package Release Smoke Test
