@@ -36,6 +36,11 @@ $releaseVariants = @($Global:ReleaseVariants)
 if ($releaseVariants.Count -ne 5) {
   throw "ReleaseVariants must contain all five release variants; found $($releaseVariants.Count)."
 }
+$diagnosticVariants = @($Global:DiagnosticVariants)
+if ($diagnosticVariants.Count -ne 1 -or
+    [string]$diagnosticVariants[0].VariantKey -cne "PS5DBG") {
+  throw "DiagnosticVariants must contain only the isolated PS5DBG variant."
+}
 
 $requiredStringProperties = @(
   "VariantKey",
@@ -109,8 +114,9 @@ $profileKeys = @(
     Sort-Object
 )
 $releaseKeys = @($releaseVariants.VariantKey | Sort-Object)
-if ([string]::Join("`n", $profileKeys) -cne [string]::Join("`n", $releaseKeys)) {
-  throw "Scaleform profile directories must match ReleaseVariants exactly."
+$expectedProfileKeys = @(@($releaseKeys) + @($diagnosticVariants.VariantKey) | Sort-Object)
+if ([string]::Join("`n", $profileKeys) -cne [string]::Join("`n", $expectedProfileKeys)) {
+  throw "Scaleform profile directories must match the release and diagnostic variant definitions exactly."
 }
 
 $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)

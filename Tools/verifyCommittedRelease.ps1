@@ -334,11 +334,21 @@ $archive2ScriptReferences = @(
 if ($LASTEXITCODE -ne 0) {
   throw "Unable to inventory PowerShell Archive2 references."
 }
-if ($archive2ScriptReferences.Count -ne 1 -or
-    $archive2ScriptReferences[0].Replace('\', '/') -cne "Tools/createPackages.ps1") {
-  throw "Tools/createPackages.ps1 must remain the only PowerShell script that invokes Archive2.exe. Found: $($archive2ScriptReferences -join ', ')"
+$normalizedArchive2ScriptReferences = @(
+  $archive2ScriptReferences |
+    ForEach-Object { $_.Replace('\', '/') } |
+    Sort-Object
+)
+$expectedArchive2ScriptReferences = @(
+  'Tools/createPackages.ps1',
+  'Tools/createPs5DebugPackages.ps1'
+)
+if ($normalizedArchive2ScriptReferences.Count -ne $expectedArchive2ScriptReferences.Count -or
+    [string]::Join("`n", $normalizedArchive2ScriptReferences) -cne
+    [string]::Join("`n", $expectedArchive2ScriptReferences)) {
+  throw "Only the release and PS5 Debug packaging scripts may invoke Archive2.exe. Found: $($normalizedArchive2ScriptReferences -join ', ')"
 }
-Write-Host "Verified that createPackages.ps1 exclusively owns Archive2 invocation."
+Write-Host "Verified the two isolated Archive2 packaging owners."
 
 $packageScriptPath = Join-Path $repositoryRoot 'Tools/createPackages.ps1'
 $packageScriptSource = [System.IO.File]::ReadAllText($packageScriptPath)
@@ -388,7 +398,39 @@ if ($productionGuardIndex -lt 0 -or
 }
 Write-Host 'Verified the pre-Archive2 production movie-deployment guard.'
 
+$debugPackageScriptPath = Join-Path $repositoryRoot 'Tools/createPs5DebugPackages.ps1'
+$debugPackageScriptSource = [System.IO.File]::ReadAllText($debugPackageScriptPath)
+$debugGuardIndex = $debugPackageScriptSource.IndexOf(
+  'Verified the PS5 Debug movie payload before archive mutation.',
+  [System.StringComparison]::Ordinal
+)
+$debugRemovalIndex = $debugPackageScriptSource.IndexOf(
+  'Remove-Item -LiteralPath $archivePath -Force',
+  [System.StringComparison]::Ordinal
+)
+$debugArchiveInvocationIndex = $debugPackageScriptSource.IndexOf(
+  '& $archive2Path @archiveArguments',
+  [System.StringComparison]::Ordinal
+)
+if ($debugGuardIndex -lt 0 -or
+    $debugRemovalIndex -lt 0 -or
+    $debugArchiveInvocationIndex -lt 0 -or
+    $debugGuardIndex -gt $debugRemovalIndex -or
+    $debugGuardIndex -gt $debugArchiveInvocationIndex -or
+    !$debugPackageScriptSource.Contains("[pscustomobject]@{ Target = 'Main'; Suffix = 'Main.ba2' }") -or
+    !$debugPackageScriptSource.Contains("[pscustomobject]@{ Target = 'Main_PS'; Suffix = 'Main_PS.ba2' }") -or
+    !$debugPackageScriptSource.Contains("'-format=General'") -or
+    !$debugPackageScriptSource.Contains("'-compression=None'") -or
+    $debugPackageScriptSource.Contains("Target = 'Main_XBox'") -or
+    $debugPackageScriptSource.Contains("Target = 'Textures")) {
+  throw 'createPs5DebugPackages.ps1 must validate its four movies before creating only uncompressed PC and PS5 Main archives.'
+}
+Write-Host 'Verified the isolated PS5 Debug Archive2 contract.'
+
 & (Join-Path $PSScriptRoot "verifyVariant.ps1") `
   -Committed
 
-Write-Host "Verified all five committed variant profiles and their configured release inputs."
+& (Join-Path $PSScriptRoot "verifyPs5DebugVariant.ps1") `
+  -Committed
+
+Write-Host "Verified all five release variants and the isolated PS5 Debug diagnostic variant."

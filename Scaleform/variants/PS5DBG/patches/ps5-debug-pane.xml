@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<actionScriptPatch name="ps5-debug-pane" version="1" script="HUDMenu">
+  <insertions>
+    <insertion position="after"><anchor><![CDATA[   import flash.events.Event;]]></anchor><content><![CDATA[
+   import flash.events.UncaughtErrorEvent;
+   import flash.text.TextField;
+   import flash.text.TextFormat;]]></content></insertion>
+    <insertion position="after"><anchor><![CDATA[      private var SkillPatchLoader:Loader = null;]]></anchor><content><![CDATA[
+
+      private var PS5DebugPane:TextField = null;
+      private var PS5DebugErrorHookInstalled:Boolean = false;
+      private var PS5DebugErrorRecorded:Boolean = false;]]></content></insertion>
+    <insertion position="after"><anchor><![CDATA[         super();]]></anchor><content><![CDATA[
+         this.showPS5DebugStatus("PS5DBG-01 CONSTRUCTED",16777215);
+         this.installPS5DebugErrorHook();
+         addEventListener(Event.ADDED_TO_STAGE,this.onPS5DebugAddedToStage,false,0,true);]]></content></insertion>
+    <insertion position="before"><anchor><![CDATA[      public function ProcessUserEvent(param1:String, param2:Boolean) : Boolean]]></anchor><content><![CDATA[      private function installPS5DebugErrorHook() : void
+      {
+         try
+         {
+            if(!this.PS5DebugErrorHookInstalled && loaderInfo != null && loaderInfo.uncaughtErrorEvents != null)
+            {
+               loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR,this.onPS5DebugUncaughtError,false,0,true);
+               this.PS5DebugErrorHookInstalled = true;
+            }
+         }
+         catch(ps5DebugHookError:Error)
+         {
+            this.PS5DebugErrorRecorded = true;
+            this.showPS5DebugStatus("PS5DBG-ERR HOOK | " + ps5DebugHookError.toString(),16711680);
+         }
+      }
+
+      private function onPS5DebugAddedToStage(param1:Event) : void
+      {
+         if(param1.target !== this)
+         {
+            return;
+         }
+         removeEventListener(Event.ADDED_TO_STAGE,this.onPS5DebugAddedToStage);
+         if(this.PS5DebugErrorRecorded)
+         {
+            return;
+         }
+         this.showPS5DebugStatus("PS5DBG-02 ADDED TO STAGE",16777215);
+         addEventListener(Event.ENTER_FRAME,this.onPS5DebugFirstFrame,false,0,true);
+      }
+
+      private function onPS5DebugFirstFrame(param1:Event) : void
+      {
+         removeEventListener(Event.ENTER_FRAME,this.onPS5DebugFirstFrame);
+         if(this.PS5DebugErrorRecorded)
+         {
+            return;
+         }
+         this.showPS5DebugStatus("PS5DBG-OK HUD LOADED",65280);
+      }
+
+      private function onPS5DebugUncaughtError(param1:UncaughtErrorEvent) : void
+      {
+         var errorText:String = "unknown";
+         this.PS5DebugErrorRecorded = true;
+         try
+         {
+            errorText = String(param1.error);
+         }
+         catch(ps5DebugErrorTextFailure:Error)
+         {
+            errorText = ps5DebugErrorTextFailure.toString();
+         }
+         this.showPS5DebugStatus("PS5DBG-ERR UNCAUGHT | " + errorText,16711680);
+         param1.preventDefault();
+         param1.stopImmediatePropagation();
+      }
+
+      private function showPS5DebugStatus(param1:String, param2:uint) : void
+      {
+         var format:TextFormat = new TextFormat("$MAIN_Font_Bold",20,param2,true);
+         if(this.PS5DebugErrorRecorded && param1.indexOf("PS5DBG-ERR") != 0)
+         {
+            return;
+         }
+         try
+         {
+            if(this.PS5DebugPane == null)
+            {
+               this.PS5DebugPane = new TextField();
+               this.PS5DebugPane.name = "PS5DebugPane";
+               this.PS5DebugPane.x = 560;
+               this.PS5DebugPane.y = 56;
+               this.PS5DebugPane.width = 800;
+               this.PS5DebugPane.height = 82;
+               this.PS5DebugPane.background = true;
+               this.PS5DebugPane.backgroundColor = 1048576;
+               this.PS5DebugPane.border = true;
+               this.PS5DebugPane.borderColor = 16777215;
+               this.PS5DebugPane.embedFonts = true;
+               this.PS5DebugPane.defaultTextFormat = format;
+               this.PS5DebugPane.multiline = true;
+               this.PS5DebugPane.wordWrap = true;
+               this.PS5DebugPane.selectable = false;
+               this.PS5DebugPane.mouseEnabled = false;
+               addChild(this.PS5DebugPane);
+            }
+            this.PS5DebugPane.text = param1;
+            this.PS5DebugPane.setTextFormat(format);
+         }
+         catch(ps5DebugPaneError:Error)
+         {
+            trace("PS5DBG-ERR PANE | " + ps5DebugPaneError.toString() + " | " + param1);
+         }
+      }
+
+]]></content></insertion>
+  </insertions>
+</actionScriptPatch>

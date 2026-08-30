@@ -67,6 +67,39 @@ The archive compression matrix follows Bethesda's shipped BA2s: every General Ma
 
 The four themed profiles currently share the production layout, eight component fragments, six SVG assets, five external palettes, and the shared live-data auxiliary movie profile. Minimalist independently declares six component fragments, its own layout, and the `minimalist-live` auxiliary profile. The four base HUD bootstrap movies and four HUD-message movies are shared across all five variants. Every variant stages those eight Bethesda-path movies plus one profile-selected `venworkscui.swf` and loads external XML through the same complete layout runtime; Minimalist differs only in its reduced provider inventory and visual source patches.
 
+## Isolated PS5 Debug variant
+
+`PS5DBG` is a diagnostic profile outside `$Global:ReleaseVariants`. It does not participate in the normal five-variant build, Nexus workflow, 25-ZIP release matrix, or `Get-ModuleVariants`. Its metadata lives in `$Global:DiagnosticVariants`, and its unique `Venworks-CustomizableHUD-PS5Debug.esm` filename prevents it from sharing plugin identity with any release variant.
+
+Configure its ignored local module path in `.env`:
+
+```text
+MODULE_VARIANT_PS5DBG_PATH=<absolute path to the PS5 Debug module folder>
+```
+
+For a normal tracked checkout, regenerate and package directly in the committed staging directory without loading `.env` or requiring a junction:
+
+```powershell
+.\Tools\setupPs5DebugVariant.ps1 -Committed
+.\Tools\buildPs5DebugVariant.ps1 `
+  -JavaPath ".work/tools/java/bin/java.exe" `
+  -JpexsJarPath ".work/tools/jpexs/ffdec.jar" `
+  -VanillaInterfacePath "Scaleform/.work/vanilla-interface-extracted/interface" `
+  -Committed
+.\Tools\createPs5DebugPackages.ps1 -Committed
+.\Tools\verifyPs5DebugVariant.ps1 -Committed
+.\Tools\createPs5DebugReleasePackages.ps1 `
+  -OutputDirectory ".work/ps5-debug-release"
+```
+
+For Vortex deployment, first replace the tracked staging directory with the configured local junction through the normal repository workflow, then run the same commands without `-Committed`. Ordinary mode continues to reject missing, non-junction, or incorrectly targeted staging paths; committed mode never deletes or converts the tracked staging directory into a junction.
+
+The builder patches only Bethesda's existing `HUDMenu` class in each clean normal and large GFX/CWS source. Each resulting movie retains one Bethesda ABC, the original 1920-by-1080, 30-fps, one-frame metadata, and the original class inventory. The top-center pane reports constructor, added-to-stage, first-frame success, and caught uncaught-error phases through the embedded `$MAIN_Font_Bold` font. Error states are latched before display so a later lifecycle phase cannot overwrite an error with false success. No Venworks CUI class, auxiliary movie, XML, SVG, palette, asset, or Venworks provider subscription is present.
+
+The exact staged payload is the unique ESM plus `hudmenu.gfx`, `hudmenu.swf`, `hudmenu_lrg.gfx`, and `hudmenu_lrg.swf`. The dedicated packager creates only Windows `Main.ba2` and PlayStation `Main_PS.ba2`, both General archives with `compression=None`. The dedicated release packager creates only Bethesda PC and Bethesda PS5 ZIPs. It deliberately creates no Xbox, Nexus, or fully loose package.
+
+`verifyPs5DebugVariant.ps1` rejects any extra file, archive, movie, ABC, CUI token, compressed BA2 entry, mismatched hash, or noncanonical ESM bytes. `verifyCommittedRelease.ps1` and CI verify the diagnostic profile in addition to the unchanged five-variant release contract. A successful PC result proves only that the diagnostic host movies load locally; VWKSHUD-37 remains in review until a PS5 end user reports whether the pane reaches `PS5DBG-OK HUD LOADED` or displays a `PS5DBG-ERR` phase.
+
 ## Minimalist release
 
 The `MIN` variant is a work-in-progress PC, Xbox, and PS5 release profile with  no external SVG, palette, or DDS payload. Configure its ignored module path in `.env` for Junction-based local builds:
