@@ -441,6 +441,10 @@ function Assert-AuxiliaryMovie {
         throw "Diagnostic auxiliary movie contains forbidden runtime token '$forbiddenToken'."
       }
     }
+    if (![string]::IsNullOrWhiteSpace($ExpectedClassFingerprint) -and
+        !$validationSource.Contains("VENWORKS_CUI_CLASSES_SHA256:$ExpectedClassFingerprint")) {
+      throw 'Diagnostic auxiliary movie does not embed its compiled class fingerprint.'
+    }
     return [pscustomobject]@{
       ClassFingerprint = $classFingerprint
       ClassInventory = $classInventory
@@ -686,23 +690,23 @@ package
     Invoke-AuxiliaryCompilation `
       -EntrypointPath $compilerEntrypointPath `
       -SourceRoot $sourceRoot `
-      -OutputPath $compiledSwfPath `
+      -OutputPath $firstCompiledSwfPath `
       -StageWidth $stageWidth `
       -StageHeight $stageHeight `
       -FrameRate $frameRate
     Normalize-AuxiliaryMovie `
-      -InputPath $compiledSwfPath `
-      -OutputPath $normalizedSwfPath `
+      -InputPath $firstCompiledSwfPath `
+      -OutputPath $firstNormalizedSwfPath `
       -WorkPath $buildWorkDirectory
-    $diagnosticInspection = Assert-AuxiliaryMovie `
-      -MoviePath $normalizedSwfPath `
+    $firstDiagnosticInspection = Assert-AuxiliaryMovie `
+      -MoviePath $firstNormalizedSwfPath `
       -WorkPath $buildWorkDirectory `
       -Contract $contract `
-      -PassName 'diagnostic' `
+      -PassName 'diagnostic-first' `
       -ExpectedStageWidth $stageWidth `
       -ExpectedStageHeight $stageHeight `
       -ExpectedFrameRate $frameRate
-    $classFingerprint = [string]$diagnosticInspection.ClassFingerprint
+    $classFingerprint = [string]$firstDiagnosticInspection.ClassFingerprint
     if ($UpdateExpectedHashes) {
       Write-Sha256File -Path $expectedClassHashPath -Hash $classFingerprint
     }
@@ -714,6 +718,41 @@ package
       if ($classFingerprint -cne $expectedClassHash) {
         throw "Diagnostic auxiliary class inventory hash mismatch. Expected $expectedClassHash; found $classFingerprint."
       }
+    }
+
+    $entrypointSource = [System.IO.File]::ReadAllText($compilerEntrypointPath)
+    $classPlaceholder = Get-ScaleformAuxiliaryFingerprintPlaceholder -Kind Classes
+    if (!$entrypointSource.Contains($classPlaceholder)) {
+      throw 'Diagnostic auxiliary entrypoint does not contain its class fingerprint placeholder.'
+    }
+    $entrypointSource = $entrypointSource.Replace(
+      $classPlaceholder,
+      "VENWORKS_CUI_CLASSES_SHA256:$classFingerprint"
+    )
+    Write-Utf8WithoutBom -Path $compilerEntrypointPath -Text $entrypointSource
+
+    Invoke-AuxiliaryCompilation `
+      -EntrypointPath $compilerEntrypointPath `
+      -SourceRoot $sourceRoot `
+      -OutputPath $compiledSwfPath `
+      -StageWidth $stageWidth `
+      -StageHeight $stageHeight `
+      -FrameRate $frameRate
+    Normalize-AuxiliaryMovie `
+      -InputPath $compiledSwfPath `
+      -OutputPath $normalizedSwfPath `
+      -WorkPath $buildWorkDirectory
+    $finalDiagnosticInspection = Assert-AuxiliaryMovie `
+      -MoviePath $normalizedSwfPath `
+      -WorkPath $buildWorkDirectory `
+      -Contract $contract `
+      -PassName 'diagnostic-final' `
+      -ExpectedStageWidth $stageWidth `
+      -ExpectedStageHeight $stageHeight `
+      -ExpectedFrameRate $frameRate `
+      -ExpectedClassFingerprint $classFingerprint
+    if ([string]$finalDiagnosticInspection.ClassFingerprint -cne $classFingerprint) {
+      throw 'Embedding the diagnostic class fingerprint changed the compiled class inventory.'
     }
   }
   else {

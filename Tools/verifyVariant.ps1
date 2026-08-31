@@ -1243,6 +1243,10 @@ foreach ($variant in $variants) {
     if ($expectedDiagnosticClassFingerprint -cne $canonicalDiagnosticClassFingerprint) {
       throw "$($variant.VariantName) diagnostic auxiliary expected class hash does not match its one-class contract."
     }
+    $embeddedDiagnosticClassFingerprint = "VENWORKS_CUI_CLASSES_SHA256:$expectedDiagnosticClassFingerprint"
+    if (!$auxiliaryInspection.Text.Contains($embeddedDiagnosticClassFingerprint)) {
+      throw "$($variant.VariantName) staged diagnostic venworkscui.swf does not embed its expected class fingerprint."
+    }
   }
   elseif ($hasAuxiliaryMovie) {
     throw "$($variant.VariantName) selects unsupported auxiliary contract '$($movieProfile.AuxiliaryContract)'."

@@ -7,6 +7,8 @@
       <token><![CDATA[PS5DBG-OK HUD LOADED]]></token>
       <token><![CDATA[PS5DBG-ERR UNCAUGHT]]></token>
       <token><![CDATA[PS5DebugErrorRecorded]]></token>
+      <token><![CDATA[PS5DebugAuxiliaryComplete]]></token>
+      <token><![CDATA[param1 != "PS5DBG-OK AUX COMPLETE"]]></token>
       <token><![CDATA[indexOf("PS5DBG-ERR")]]></token>
       <token><![CDATA[new TextFormat("$MAIN_Font_Bold",20]]></token>
       <token><![CDATA[loaderInfo.uncaughtErrorEvents.addEventListener]]></token>
@@ -26,6 +28,7 @@
       <token><![CDATA[PS5DBG-OK HUD LOADED]]></token>
       <token><![CDATA[PS5DBG-ERR UNCAUGHT]]></token>
       <token><![CDATA[PS5DebugErrorRecorded]]></token>
+      <token><![CDATA[PS5DebugAuxiliaryComplete]]></token>
       <token><![CDATA[PS5DBG-ERR]]></token>
       <token><![CDATA[$MAIN_Font_Bold]]></token>
       <token><![CDATA[uncaughtErrorEvents]]></token>
@@ -50,7 +53,8 @@
 
       private var PS5DebugPane:TextField = null;
       private var PS5DebugErrorHookInstalled:Boolean = false;
-      private var PS5DebugErrorRecorded:Boolean = false;]]></content></insertion>
+      private var PS5DebugErrorRecorded:Boolean = false;
+      private var PS5DebugAuxiliaryComplete:Boolean = false;]]></content></insertion>
     <insertion position="after"><anchor><![CDATA[         super();]]></anchor><content><![CDATA[
          this.showPS5DebugStatus("PS5DBG-01 CONSTRUCTED",16777215);
          this.installPS5DebugErrorHook();
@@ -118,6 +122,10 @@
       {
          var format:TextFormat = new TextFormat("$MAIN_Font_Bold",20,param2,true);
          if(this.PS5DebugErrorRecorded && param1.indexOf("PS5DBG-ERR") != 0)
+         {
+            return;
+         }
+         if(this.PS5DebugAuxiliaryComplete && param1 != "PS5DBG-OK AUX COMPLETE" && param1.indexOf("PS5DBG-ERR") != 0)
          {
             return;
          }

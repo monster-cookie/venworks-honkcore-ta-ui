@@ -10,6 +10,7 @@
 ## Version 2.0.14 (UNRELEASED)
 
 - PS5Debug: Loading an isolated one-class `venworkscui.swf` diagnostic bridge without XML, providers, or the full CUI runtime.
+- PS5Debug: Preserve auxiliary completion as the terminal successful host status and bind the diagnostic class fingerprint to the staged movie.
 
 ## Version 2.0.13 (September 29, 2026)
 

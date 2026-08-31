@@ -7,6 +7,8 @@ package
 
    public final class VenworksCUIDiagnosticEntrypoint extends MovieClip
    {
+      public static const CLASS_FINGERPRINT:String = "VENWORKS_CUI_CLASSES_SHA256:________________________________________________________________";
+
       private var owner:DisplayObjectContainer = null;
       private var pane:TextField = null;
 

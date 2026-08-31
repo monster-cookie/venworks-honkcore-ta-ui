@@ -6,12 +6,14 @@
       <token><![CDATA[PS5DBG-04 AUX INITIALIZED]]></token>
       <token><![CDATA[PS5DBG-OK AUX COMPLETE]]></token>
       <token><![CDATA[PS5DBG-ERR AUX | ]]></token>
+      <token><![CDATA[this.PS5DebugAuxiliaryComplete = true;]]></token>
     </requiredSourceTokens>
     <requiredInspectionTokens>
       <token><![CDATA[PS5DBG-03 AUX LOAD STARTED]]></token>
       <token><![CDATA[PS5DBG-04 AUX INITIALIZED]]></token>
       <token><![CDATA[PS5DBG-OK AUX COMPLETE]]></token>
       <token><![CDATA[PS5DBG-ERR AUX | ]]></token>
+      <token><![CDATA[PS5DebugAuxiliaryComplete]]></token>
     </requiredInspectionTokens>
   </validation>
   <insertions>
@@ -20,6 +22,7 @@
     <insertion position="after"><anchor><![CDATA[            this.VenworksCUIBridge["initialize"](this);]]></anchor><content><![CDATA[
             this.showPS5DebugStatus("PS5DBG-04 AUX INITIALIZED",16777215);]]></content></insertion>
     <insertion position="after"><anchor><![CDATA[               addChild(loadedContent);]]></anchor><content><![CDATA[
+               this.PS5DebugAuxiliaryComplete = true;
                this.showPS5DebugStatus("PS5DBG-OK AUX COMPLETE",65280);]]></content></insertion>
     <insertion position="after"><anchor><![CDATA[      private function showVenworksCUIError(param1:String, param2:String) : void
       {]]></anchor><content><![CDATA[
