@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <scaleformBuild name="ps5-debug-hudmenu-swf"
-                mode="bgs-hudmenu-only"
+                mode="auxiliary-bootstrap"
                 inputFile="hudmenu.swf"
                 outputFile="hudmenu.swf"
                 vanillaHashFile="../../../hudmenu/vanilla-swf.sha256"
-                expectedHashFile="hudmenu-swf.expected.sha256"
-                actionScriptPatch="../patches/ps5-debug-pane.xml" />
+                expectedHashFile="hudmenu-swf.expected.sha256">
+  <actionScriptPatches>
+    <patch path="../patches/ps5-debug-pane.xml" />
+    <patch path="../../../shared/patches/cui-auxiliary-loader.xml" />
+    <patch path="../patches/ps5-debug-auxiliary-status.xml" />
+  </actionScriptPatches>
+</scaleformBuild>

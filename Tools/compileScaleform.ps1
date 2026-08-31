@@ -178,7 +178,7 @@ function Build-HudHostMovie {
     [string]$WorkPath,
 
     [Parameter(Mandatory = $true)]
-    [string]$PatchPath,
+    [string[]]$PatchPaths,
 
     [Parameter(Mandatory = $true)]
     [string]$ExpectedHashPath,
@@ -199,16 +199,32 @@ function Build-HudHostMovie {
     -Arguments @('-format', 'script:as', '-export', 'script', $exportedScriptsDirectory, $InputPath) `
     -Description "exporting $BuildName ActionScript"
 
-  $patchDefinition = Get-ScaleformActionScriptPatchDefinition -PatchPath $PatchPath
-  $scriptName = [string]$patchDefinition.Script
+  $patchDefinitions = @($PatchPaths | ForEach-Object {
+    Get-ScaleformActionScriptPatchDefinition -PatchPath $_
+  })
+  $scriptNames = @($patchDefinitions.Script | Select-Object -Unique)
+  if ($scriptNames.Count -ne 1) {
+    throw "HUD host patches for $BuildName must target one ActionScript class."
+  }
+  $scriptName = [string]$scriptNames[0]
   $exportedScriptMatches = @(Get-ChildItem -LiteralPath $exportedScriptsDirectory -Recurse -File -Filter "$scriptName.as")
   if ($exportedScriptMatches.Count -ne 1) {
     throw "Expected one exported $scriptName.as; found $($exportedScriptMatches.Count)."
   }
-  Apply-ActionScriptPatch `
-    -SourcePath $exportedScriptMatches[0].FullName `
-    -PatchPath $PatchPath `
-    -OutputPath (Join-Path $importScriptsDirectory "$scriptName.as")
+  $patchedSourcePath = $exportedScriptMatches[0].FullName
+  for ($patchIndex = 0; $patchIndex -lt $PatchPaths.Count; $patchIndex++) {
+    $patchOutputPath = if ($patchIndex -eq ($PatchPaths.Count - 1)) {
+      Join-Path $importScriptsDirectory "$scriptName.as"
+    }
+    else {
+      Join-Path $WorkPath "$scriptName-patch-$patchIndex.as"
+    }
+    Apply-ActionScriptPatch `
+      -SourcePath $patchedSourcePath `
+      -PatchPath $PatchPaths[$patchIndex] `
+      -OutputPath $patchOutputPath
+    $patchedSourcePath = $patchOutputPath
+  }
 
   Invoke-Jpexs `
     -Arguments @('-onerror', 'abort', '-importScript', $InputPath, $OutputPath, $importScriptsDirectory) `
@@ -239,17 +255,17 @@ function Build-HudHostMovie {
     throw "Expected one reopened $scriptName.as; found $($validationScriptMatches.Count)."
   }
   $reopenedHudMenuSource = Get-Content -LiteralPath $validationScriptMatches[0].FullName -Raw
-  foreach ($requiredToken in @($patchDefinition.RequiredSourceTokens)) {
+  foreach ($requiredToken in @($patchDefinitions | ForEach-Object { $_.RequiredSourceTokens } | Select-Object -Unique)) {
     if (!$reopenedHudMenuSource.Contains($requiredToken)) {
       throw "Generated $BuildName is missing patch contract token '$requiredToken'."
     }
   }
-  foreach ($forbiddenToken in @($patchDefinition.ForbiddenSourceTokens)) {
+  foreach ($forbiddenToken in @($patchDefinitions | ForEach-Object { $_.ForbiddenSourceTokens } | Select-Object -Unique)) {
     if ($reopenedHudMenuSource.Contains($forbiddenToken)) {
       throw "Generated $BuildName contains forbidden patch contract token '$forbiddenToken'."
     }
   }
-  foreach ($forbiddenPattern in @($patchDefinition.ForbiddenSourcePatterns)) {
+  foreach ($forbiddenPattern in @($patchDefinitions | ForEach-Object { $_.ForbiddenSourcePatterns } | Select-Object -Unique)) {
     if ($reopenedHudMenuSource -match $forbiddenPattern) {
       throw "Generated $BuildName matches forbidden patch contract pattern '$forbiddenPattern'."
     }
@@ -309,14 +325,10 @@ try {
   $usedOutputNames = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
   foreach ($manifestEntry in $ManifestPath) {
     $resolvedManifestPath = Resolve-RequiredFile -Path $manifestEntry -Description "Scaleform build manifest"
-    $manifestDirectory = Split-Path -Parent $resolvedManifestPath
+    $manifestDefinition = Get-ScaleformManifestDefinition -ManifestPath $resolvedManifestPath
     [xml]$manifest = Get-Content -LiteralPath $resolvedManifestPath -Raw
     $build = $manifest.scaleformBuild
-    if (!$build -or !$build.name -or !$build.inputFile -or !$build.outputFile -or
-        !$build.vanillaHashFile -or !$build.expectedHashFile -or !$build.actionScriptPatch) {
-      throw "Invalid Scaleform bootstrap build manifest: $resolvedManifestPath"
-    }
-    $buildMode = [string]$build.GetAttribute('mode')
+    $buildMode = [string]$manifestDefinition.Mode
     if ($buildMode -notin @('auxiliary-bootstrap', 'bgs-hudmenu-only')) {
       throw "Scaleform HUD manifests must select a supported host mode: $resolvedManifestPath"
     }
@@ -325,17 +337,17 @@ try {
         $build.HasAttribute('actionScriptProfile')) {
       throw "Scaleform HUD host manifest retains an embedded-CUI attribute: $resolvedManifestPath"
     }
-    if (!$usedBuildNames.Add([string]$build.name) -or
-        !$usedOutputNames.Add([string]$build.outputFile)) {
+    if (!$usedBuildNames.Add([string]$manifestDefinition.Name) -or
+        !$usedOutputNames.Add([string]$manifestDefinition.FileName)) {
       throw "Scaleform HUD bootstrap manifests contain a duplicate build or output name."
     }
 
     $inputPath = Resolve-RequiredFile `
-      -Path (Join-Path $resolvedVanillaInterfacePath ([string]$build.inputFile)) `
+      -Path (Join-Path $resolvedVanillaInterfacePath ([string]$manifestDefinition.InputFile)) `
       -Description "Vanilla Scaleform input"
-    Assert-ScaleformMovieEncoding -Path $inputPath -Context "Vanilla $($build.inputFile)"
+    Assert-ScaleformMovieEncoding -Path $inputPath -Context "Vanilla $($manifestDefinition.InputFile)"
     $vanillaHashPath = Resolve-RequiredFile `
-      -Path (Join-Path $manifestDirectory ([string]$build.vanillaHashFile)) `
+      -Path $manifestDefinition.VanillaHashPath `
       -Description "Vanilla hash file"
     $expectedVanillaHash = Read-Sha256File -Path $vanillaHashPath
     $actualVanillaHash = (Get-FileHash -LiteralPath $inputPath -Algorithm SHA256).Hash
@@ -343,25 +355,22 @@ try {
       throw "Vanilla hash mismatch for $inputPath. Expected $expectedVanillaHash; found $actualVanillaHash."
     }
     $expectedHashPath = Resolve-RequiredFile `
-      -Path (Join-Path $manifestDirectory ([string]$build.expectedHashFile)) `
+      -Path $manifestDefinition.ExpectedHashPath `
       -Description "Expected output hash file"
-    $actionScriptPatchPath = Resolve-RequiredFile `
-      -Path (Join-Path $manifestDirectory ([string]$build.actionScriptPatch)) `
-      -Description "ActionScript bootstrap patch"
 
-    $movieWorkDirectory = Join-Path $buildWorkDirectory ([string]$build.name)
+    $movieWorkDirectory = Join-Path $buildWorkDirectory ([string]$manifestDefinition.Name)
     New-Item -ItemType Directory -Path $movieWorkDirectory | Out-Null
-    $generatedMoviePath = Join-Path $movieWorkDirectory ([string]$build.outputFile)
+    $generatedMoviePath = Join-Path $movieWorkDirectory ([string]$manifestDefinition.FileName)
     Build-HudHostMovie `
       -InputPath $inputPath `
       -OutputPath $generatedMoviePath `
       -WorkPath $movieWorkDirectory `
-      -PatchPath $actionScriptPatchPath `
+      -PatchPaths $manifestDefinition.ActionScriptPatchPaths `
       -ExpectedHashPath $expectedHashPath `
-      -BuildName ([string]$build.name) `
+      -BuildName ([string]$manifestDefinition.Name) `
       -SkipExpectedHash:$AuxiliaryMarkerProbe | Out-Host
 
-    $destinationPath = Join-Path $resolvedOutputDirectory ([string]$build.outputFile)
+    $destinationPath = Join-Path $resolvedOutputDirectory ([string]$manifestDefinition.FileName)
     Copy-Item -LiteralPath $generatedMoviePath -Destination $destinationPath -Force
     $actualOutputHash = (Get-FileHash -LiteralPath $destinationPath -Algorithm SHA256).Hash
     Write-Host -ForegroundColor Green "Built and validated $destinationPath ($actualOutputHash)"

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scaleformAuxiliaryBuild name="venworkscui-ps5-debug"
+                         contract="diagnostic-bridge"
+                         outputFile="venworkscui.swf"
+                         stageWidth="1920"
+                         stageHeight="1080"
+                         frameRate="30"
+                         documentClass="../venworkscui/VenworksCUIDiagnosticEntrypoint.as"
+                         expectedHashFile="venworkscui.expected.sha256"
+                         expectedClassHashFile="venworkscui.expected-classes.sha256" />

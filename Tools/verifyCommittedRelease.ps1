@@ -268,51 +268,47 @@ if ($explicitSharedMovieProfile.HostMode -cne 'auxiliary-bootstrap' -or
   throw 'Explicit auxiliary-bootstrap manifests must retain all nine shared runtime movies and their auxiliary source profile.'
 }
 
-$hostOnlyBuildProfile = Import-PowerShellDataFile -LiteralPath (Join-Path $repositoryRoot 'Scaleform/variants/PS5DBG/build.psd1')
-$hostOnlyMovieProfile = Get-VariantScaleformMovieProfile `
+$diagnosticBuildProfile = Import-PowerShellDataFile -LiteralPath (Join-Path $repositoryRoot 'Scaleform/variants/PS5DBG/build.psd1')
+$diagnosticMovieProfile = Get-VariantScaleformMovieProfile `
   -RepositoryRoot $repositoryRoot `
-  -VariantBuildProfile $hostOnlyBuildProfile
-if ($hostOnlyMovieProfile.HostMode -cne 'bgs-hudmenu-only' -or
-    $null -ne $hostOnlyMovieProfile.AuxiliaryManifestPath -or
-    $null -ne $hostOnlyMovieProfile.SourceProfile -or
-    @($hostOnlyMovieProfile.DeploymentMovieDefinitions).Count -ne 4) {
-  throw 'The bgs-hudmenu-only profile must contain exactly four host movies and no auxiliary runtime.'
+  -VariantBuildProfile $diagnosticBuildProfile
+$diagnosticMovieNames = @($diagnosticMovieProfile.DeploymentMovieDefinitions | ForEach-Object { [string]$_.FileName })
+$expectedDiagnosticMovieNames = @('hudmenu.gfx', 'hudmenu.swf', 'hudmenu_lrg.gfx', 'hudmenu_lrg.swf', 'venworkscui.swf')
+if ($diagnosticMovieProfile.HostMode -cne 'auxiliary-bootstrap' -or
+    $diagnosticMovieProfile.AuxiliaryContract -cne 'diagnostic-bridge' -or
+    $null -eq $diagnosticMovieProfile.AuxiliaryManifestPath -or
+    $null -ne $diagnosticMovieProfile.SourceProfile -or
+    $diagnosticMovieProfile.IncludesHudMessageMovies -or
+    $diagnosticMovieNames.Count -ne $expectedDiagnosticMovieNames.Count -or
+    @($expectedDiagnosticMovieNames | Where-Object { $_ -notin $diagnosticMovieNames }).Count -ne 0) {
+  throw 'The PS5 Debug profile must contain exactly four HUD host movies and one diagnostic auxiliary movie.'
 }
 
-$requiredHostOnlyInspectionTokens = @(
+$requiredDiagnosticHostInspectionTokens = @(
   '$MAIN_Font_Bold'
   'uncaughtErrorEvents'
   'indexOf'
   'preventDefault'
   'stopImmediatePropagation'
+  'venworkscui.swf'
+  'CUI-AUX-LOAD'
+  'PS5DBG-03 AUX LOAD STARTED'
+  'PS5DBG-04 AUX INITIALIZED'
+  'PS5DBG-OK AUX COMPLETE'
+  'PS5DBG-ERR AUX | '
 )
-foreach ($hostMovie in @($hostOnlyMovieProfile.DeploymentMovieDefinitions)) {
-  foreach ($requiredToken in $requiredHostOnlyInspectionTokens) {
+foreach ($hostMovie in @($diagnosticMovieProfile.DeploymentMovieDefinitions | Where-Object { $_.SourceGroup -ceq 'Bootstrap' })) {
+  foreach ($requiredToken in $requiredDiagnosticHostInspectionTokens) {
     if ($requiredToken -cnotin @($hostMovie.RequiredInspectionTokens)) {
-      throw "The bgs-hudmenu-only host contract for $($hostMovie.FileName) is missing required inspection token '$requiredToken'."
+      throw "The PS5 Debug host contract for $($hostMovie.FileName) is missing required inspection token '$requiredToken'."
     }
   }
 }
-
-$contradictoryHostOnlyBuildProfile = @{}
-foreach ($profileKey in $hostOnlyBuildProfile.Keys) {
-  $contradictoryHostOnlyBuildProfile[$profileKey] = $hostOnlyBuildProfile[$profileKey]
-}
-$contradictoryHostOnlyBuildProfile.AuxiliaryMovieManifestPath = 'Scaleform/venworkscui/build.xml'
-$rejectedContradictoryHostOnlyProfile = $false
-try {
-  Get-VariantScaleformMovieProfile `
-    -RepositoryRoot $repositoryRoot `
-    -VariantBuildProfile $contradictoryHostOnlyBuildProfile | Out-Null
-}
-catch {
-  if ($_.Exception.Message -notmatch 'cannot declare an auxiliary manifest in bgs-hudmenu-only mode') {
-    throw
-  }
-  $rejectedContradictoryHostOnlyProfile = $true
-}
-if (!$rejectedContradictoryHostOnlyProfile) {
-  throw 'The bgs-hudmenu-only profile resolver accepted a contradictory auxiliary manifest.'
+if (@($diagnosticMovieProfile.DeploymentMovieDefinitions | Where-Object { $_.SourceGroup -ceq 'HudMessages' }).Count -ne 0 -or
+    @($diagnosticMovieProfile.DeploymentMovieDefinitions | Where-Object {
+      $_.SourceGroup -ceq 'Auxiliary' -and $_.FileName -ceq 'venworkscui.swf'
+    }).Count -ne 1) {
+  throw 'The PS5 Debug profile must exclude HUD-message movies and deploy exactly one auxiliary movie.'
 }
 
 $expectedInventory = @('layout.xml')
