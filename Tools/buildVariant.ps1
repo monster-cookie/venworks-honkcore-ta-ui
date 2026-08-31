@@ -479,6 +479,24 @@ try {
 
     $hasCuiPayload = $variantBuildProfile.ContainsKey('LayoutSource') -and
       ![string]::IsNullOrWhiteSpace([string]$variantBuildProfile.LayoutSource)
+    $hasDiagnosticXmlPayload = $variantBuildProfile.ContainsKey('DiagnosticXmlSource') -and
+      ![string]::IsNullOrWhiteSpace([string]$variantBuildProfile.DiagnosticXmlSource)
+    if ($hasCuiPayload -and $hasDiagnosticXmlPayload) {
+      throw "$($variant.VariantName) profile must not combine production CUI configuration with a diagnostic XML payload."
+    }
+    if ($hasDiagnosticXmlPayload) {
+      if ($movieProfile.AuxiliaryContract -cne 'diagnostic-bridge') {
+        throw "$($variant.VariantName) diagnostic XML payload requires a diagnostic-bridge auxiliary profile."
+      }
+      $diagnosticXmlSourcePath = Resolve-RequiredFile `
+        -Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.DiagnosticXmlSource) -Description "$($variant.VariantName) diagnostic XML source") `
+        -Description "$($variant.VariantName) diagnostic XML source"
+      $diagnosticCuiOutputDirectory = Join-Path $interfaceOutputDirectory "VenworksCUI"
+      New-Item -ItemType Directory -Force -Path $diagnosticCuiOutputDirectory | Out-Null
+      Copy-ProfilePayloadFile `
+        -SourcePath $diagnosticXmlSourcePath `
+        -DestinationPath (Join-Path $diagnosticCuiOutputDirectory "layout.xml")
+    }
     if ($hasCuiPayload) {
       Assert-UniqueSafeFileNames -FileNames @($variantBuildProfile.ComponentFileNames) -Context "$($variant.VariantName) component profile"
       Assert-UniqueSafeFileNames -FileNames @($variantBuildProfile.AssetFileNames) -Context "$($variant.VariantName) asset profile"

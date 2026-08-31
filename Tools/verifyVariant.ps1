@@ -5,13 +5,19 @@ Verifies staged or committed artifacts for release variants.
 .PARAMETER VariantKeys
 One or more keys from `$Global:ReleaseVariants`. Omit this parameter to process
 all release variants. `VariantKey` remains a compatibility alias.
+
+.PARAMETER PreArchiveMutation
+Verifies each selected profile, complete staged Interface payload, movie, and
+plugin without requiring or inspecting generated BA2 archives.
 #>
 [CmdletBinding()]
 param(
   [Alias("VariantKey")]
   [string[]]$VariantKeys,
 
-  [switch]$Committed
+  [switch]$Committed,
+
+  [switch]$PreArchiveMutation
 )
 
 $ErrorActionPreference = "Stop"
@@ -583,8 +589,14 @@ foreach ($variant in $variants) {
   $interfacePath = Resolve-RequiredDirectory -Path (Join-Path $stagingPath "Interface") -Description "$($variant.VariantName) Interface payload"
   $hasCuiPayload = $variantBuildProfile.ContainsKey('LayoutSource') -and
     ![string]::IsNullOrWhiteSpace([string]$variantBuildProfile.LayoutSource)
+  $hasDiagnosticXmlPayload = $variantBuildProfile.ContainsKey('DiagnosticXmlSource') -and
+    ![string]::IsNullOrWhiteSpace([string]$variantBuildProfile.DiagnosticXmlSource)
+  if ($hasCuiPayload -and $hasDiagnosticXmlPayload) {
+    throw "$($variant.VariantName) profile must not combine production CUI configuration with a diagnostic XML payload."
+  }
   $cuiPath = $null
   $expectedCuiInventory = @()
+  $diagnosticXmlValue = $null
   if ($hasCuiPayload) {
     $cuiPath = Resolve-RequiredDirectory -Path (Join-Path $interfacePath "VenworksCUI") -Description "$($variant.VariantName) CUI payload"
     $expectedCuiInventory = @("layout.xml")
@@ -592,6 +604,61 @@ foreach ($variant in $variants) {
     $expectedCuiInventory += @($variantBuildProfile.AssetFileNames | ForEach-Object { "Assets/$_" })
     $expectedCuiInventory += @($variantBuildProfile.PaletteFileNames | ForEach-Object { "palettes/$_" })
     Assert-Inventory -RootPath $cuiPath -ExpectedPaths $expectedCuiInventory -Description "$($variant.VariantName) CUI payload"
+  }
+  elseif ($hasDiagnosticXmlPayload) {
+    if ($movieProfile.AuxiliaryContract -cne 'diagnostic-bridge' -or $null -ne $sourceProfile) {
+      throw "$($variant.VariantName) diagnostic XML payload requires an isolated diagnostic-bridge auxiliary profile."
+    }
+    $cuiPath = Resolve-RequiredDirectory -Path (Join-Path $interfacePath "VenworksCUI") -Description "$($variant.VariantName) diagnostic XML payload"
+    $expectedCuiInventory = @("layout.xml")
+    Assert-Inventory -RootPath $cuiPath -ExpectedPaths $expectedCuiInventory -Description "$($variant.VariantName) diagnostic XML payload"
+    $diagnosticXmlSourcePath = Resolve-RequiredFile `
+      -Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.DiagnosticXmlSource) -Description "$($variant.VariantName) diagnostic XML source") `
+      -Description "$($variant.VariantName) diagnostic XML source"
+    $diagnosticXmlSourceText = [System.IO.File]::ReadAllText($diagnosticXmlSourcePath)
+    Assert-MatchingText `
+      -ExpectedText $diagnosticXmlSourceText `
+      -ActualPath $diagnosticXmlSourcePath `
+      -Description "$($variant.VariantName) diagnostic XML source"
+    $diagnosticXmlPath = Join-Path $cuiPath "layout.xml"
+    Assert-MatchingText `
+      -ExpectedText $diagnosticXmlSourceText `
+      -ActualPath $diagnosticXmlPath `
+      -Description "$($variant.VariantName) staged diagnostic XML"
+    if ($diagnosticXmlSourceText.Length -eq 0 -or $diagnosticXmlSourceText.Length -gt 4096) {
+      throw "$($variant.VariantName) diagnostic XML source must contain between 1 and 4096 characters."
+    }
+    try {
+      [xml]$diagnosticXml = $diagnosticXmlSourceText
+    }
+    catch {
+      throw "$($variant.VariantName) diagnostic XML source is not well-formed XML."
+    }
+    $diagnosticRoot = $diagnosticXml.DocumentElement
+    $diagnosticRootElements = @($diagnosticRoot.ChildNodes | Where-Object { $_.NodeType -eq [System.Xml.XmlNodeType]::Element })
+    $diagnosticTextNodes = @($diagnosticRoot.SelectNodes('diagnosticText'))
+    if ($null -eq $diagnosticRoot -or
+        $diagnosticRoot.Name -cne 'venworksCUI' -or
+        ![string]::IsNullOrEmpty([string]$diagnosticRoot.NamespaceURI) -or
+        $diagnosticRootElements.Count -ne 1 -or
+        $diagnosticTextNodes.Count -ne 1 -or
+        $diagnosticTextNodes[0].SelectNodes('*').Count -ne 0) {
+      throw "$($variant.VariantName) diagnostic XML must contain exactly one direct, text-only diagnosticText element under an unnamespaced venworksCUI root."
+    }
+    $diagnosticXmlValue = [string]$diagnosticTextNodes[0].InnerText
+    if ([string]::IsNullOrWhiteSpace($diagnosticXmlValue) -or
+        $diagnosticXmlValue.Length -gt 80 -or
+        $diagnosticXmlValue -cne $diagnosticXmlValue.Trim() -or
+        $diagnosticXmlValue -match '[\r\n\t]') {
+      throw "$($variant.VariantName) diagnosticText must be non-empty, trimmed, single-line text no longer than 80 characters."
+    }
+    $diagnosticEntrypointPath = Resolve-RequiredFile `
+      -Path (Join-Path $repositoryRoot 'Scaleform\variants\PS5DBG\venworkscui\VenworksCUIDiagnosticEntrypoint.as') `
+      -Description "$($variant.VariantName) diagnostic ActionScript entrypoint"
+    $diagnosticEntrypointSource = [System.IO.File]::ReadAllText($diagnosticEntrypointPath)
+    if ($diagnosticEntrypointSource.Contains($diagnosticXmlValue)) {
+      throw "$($variant.VariantName) diagnostic ActionScript must not embed the XML-derived acceptance text."
+    }
   }
   elseif (Test-Path -LiteralPath (Join-Path $interfacePath "VenworksCUI")) {
     throw "$($variant.VariantName) profile without CUI configuration must not stage a VenworksCUI payload."
@@ -606,8 +673,11 @@ foreach ($variant in $variants) {
   if ($movieProfile.AuxiliaryContract -ceq 'diagnostic-bridge' -and $null -ne $sourceProfile) {
     throw "$($variant.VariantName) diagnostic auxiliary profile must not resolve a CUI source profile."
   }
+  if ($movieProfile.AuxiliaryContract -ceq 'diagnostic-bridge' -and !$hasDiagnosticXmlPayload) {
+    throw "$($variant.VariantName) diagnostic auxiliary profile requires its isolated diagnostic XML payload."
+  }
   $expectedInterfaceInventory = @($movieProfile.DeploymentMovieDefinitions | ForEach-Object { [string]$_.FileName })
-  if ($hasCuiPayload) {
+  if ($hasCuiPayload -or $hasDiagnosticXmlPayload) {
     $expectedInterfaceInventory += @($expectedCuiInventory | ForEach-Object { "VenworksCUI/$_" })
   }
   Assert-Inventory `
@@ -1217,8 +1287,22 @@ foreach ($variant in $variants) {
       'PS5DBG-05 PLAYERDATA NEXT FRAME',
       'PS5DBG-06 PLAYERDATA REQUEST',
       'PS5DBG-07 PLAYERDATA WAITING',
+      'PS5DBG-08 XML NEXT FRAME',
+      'PS5DBG-09 XML REQUEST',
+      'PS5DBG-10 XML RECEIVED',
+      'PS5DBG-11 XML PARSE NEXT FRAME',
       'PS5DBG-OK PLAYERDATA',
       'PS5DBG-ERR PLAYERDATA',
+      'PS5DBG-OK XML',
+      'PS5DBG-ERR XML REQUEST',
+      'PS5DBG-ERR XML IO',
+      'PS5DBG-ERR XML SECURITY',
+      'PS5DBG-ERR XML PARSE',
+      'PS5DBG-ERR XML VALUE',
+      'URLRequest',
+      'URLLoader',
+      'VenworksCUI/layout.xml',
+      'diagnosticText',
       'initialize',
       'reapplyVanillaPlacements',
       'updateVanillaHudModeVisibility',
@@ -1237,13 +1321,14 @@ foreach ($variant in $variants) {
       'CUILayoutImportLoader',
       'CUIPlayerHudDataContext',
       'CUIConditionContext',
-      'URLRequest',
-      'URLLoader',
       'VENWORKS AUX LOADED'
     )) {
       if ($auxiliaryInspection.Text.Contains($forbiddenDiagnosticToken)) {
         throw "$($variant.VariantName) diagnostic venworkscui.swf contains forbidden runtime token '$forbiddenDiagnosticToken'."
       }
+    }
+    if ([string]::IsNullOrWhiteSpace($diagnosticXmlValue) -or $auxiliaryInspection.Text.Contains($diagnosticXmlValue)) {
+      throw "$($variant.VariantName) diagnostic venworkscui.swf must not embed the XML-derived acceptance text."
     }
     $expectedDiagnosticClassFingerprint = Read-ExpectedSha256 `
       -Path $movieProfile.AuxiliaryExpectedClassHashPath
@@ -1273,6 +1358,11 @@ foreach ($variant in $variants) {
     if ((Get-Sha256 -Path $pluginSourcePath) -cne $pluginHash) {
       throw "$($variant.VariantName) plugin is not byte-identical to its configured source stub."
     }
+  }
+
+  if ($PreArchiveMutation) {
+    Write-Host -ForegroundColor Green "$($variant.VariantName) profile, complete Interface payload, movies, and plugin are valid before archive mutation."
+    continue
   }
 
   $archiveFiles = @(Get-ChildItem -LiteralPath $stagingPath -File -Filter "*.ba2")

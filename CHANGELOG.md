@@ -9,7 +9,8 @@
 
 ## Version 2.0.16 (Unreleased)
 
-- Nothing Yet
+- Add a PS5 Debug probe that parses one isolated XML value and displays it alongside the verified player name.
+- Consolidate Scaleform environment setup around checksum-pinned Temurin, JPEXS, Apache Flex, and Flash Player 11.1 inputs with an optional private local artifact cache.
 
 ## Version 2.0.15 (September 30, 2026)
 
