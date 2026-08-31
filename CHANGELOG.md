@@ -7,6 +7,10 @@
 - https://creations.bethesda.net/en/starfield/details/03b616a3-1902-4b83-a109-fc176f658a69/Venworks_Customizable_HUD___Crimson_Fleet_Theme
 - https://creations.bethesda.net/en/starfield/details/9b635bf7-8c6b-4530-bdbd-0912903b336b/Venworks_Customizable_HUD___Freestar_Collective_Th
 
+## Version 2.0.15 (UNRELEASED)
+
+- Nothing Yet
+
 ## Version 2.0.14 (September 30, 2026)
 
 - PS5Debug: Loading an isolated one-class `venworkscui.swf` diagnostic bridge without XML, providers, or the full CUI runtime.
