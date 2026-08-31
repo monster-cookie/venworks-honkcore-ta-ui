@@ -7,60 +7,59 @@
 - https://creations.bethesda.net/en/starfield/details/03b616a3-1902-4b83-a109-fc176f658a69/Venworks_Customizable_HUD___Crimson_Fleet_Theme
 - https://creations.bethesda.net/en/starfield/details/9b635bf7-8c6b-4530-bdbd-0912903b336b/Venworks_Customizable_HUD___Freestar_Collective_Th
 
-## Version 2.0.16 (Unreleased)
+## Version 2.0.16 (August 31, 2026)
 
 - Add a PS5 Debug probe that parses one isolated XML value and displays it alongside the verified player name.
-- Consolidate Scaleform environment setup around checksum-pinned Temurin, JPEXS, Apache Flex, and Flash Player 11.1 inputs with an optional private local artifact cache.
 
-## Version 2.0.15 (September 30, 2026)
+## Version 2.0.15 (August 30, 2026)
 
 - PS5Debug: Add a `PlayerData` subscription test that displays the sanitized `sName` value in the debug pane.
 
-## Version 2.0.14 (September 30, 2026)
+## Version 2.0.14 (August 30, 2026)
 
 - PS5Debug: Loading an isolated one-class `venworkscui.swf` diagnostic bridge without XML, providers, or the full CUI runtime.
 
-## Version 2.0.13 (September 29, 2026)
+## Version 2.0.13 (August 29, 2026)
 
 - PS5Debug: Add an isolated diagnostic variant for end-user PS5 startup testing.
 - PS5Debug: Add a top-center lifecycle/error pane patched directly into the existing one-ABC HUDMenu bytecode.
 
-## Version 2.0.11 (September 29, 2026)
+## Version 2.0.11 (August 29, 2026)
 
 - All: Restore independently compiled native GFX and CWS normal/large HUD pairs after the byte-identical alias experiment produced no change in the reported PS5 crash.
 - All: Match Bethesda's Archive2 storage by disabling compression for General Main archives and using LZ4 for DDS texture archives.
 
-## Version 2.0.10 (September 29, 2026)
+## Version 2.0.10 (August 29, 2026)
 
 - All: Deploy the CWS normal and large HUD movies byte-for-byte under both their `.swf` and `.gfx` names for the next PS5 compatibility probe while retaining the native GFX/CWS HUD-message split.
 - All: Include active environmental afflictions in the status-effect bar alongside personal and sustenance effects, with duplicate icons collapsed.
 - All: Render negative food and drink status tiles with the configured debuff color while preserving sustenance classification and ordering.
 
-## Version 2.0.9 (September 28, 2026)
+## Version 2.0.9 (August 28, 2026)
 
 - All: Set movie resolution to 1920x1080, 30-fps, one-frame metadata.
 - All: Moved movie registration/teardown to the `Event.INIT` and `Event.COMPLETE` handlers.
 
-## Version 2.0.8 (September 27, 2026)
+## Version 2.0.8 (August 27, 2026)
 
 - All: Moved the complete CUI runtime into a standalone `venworkscui.swf`.
 - All: Added better error handling and fault tolerance for the new movie setup. 
 - All: Apply Starfield's embedded bold font to the auxiliary marker and bootstrap load-error messages so loader failures remain readable in game.
 
-## Version 2.0.7 (September 27, 2026)
+## Version 2.0.7 (August 27, 2026)
 
 - Minimalist: Restored the live data registrations.
 - All: All variants now compile independent native GFX and ZLIB-compressed CWS versions of all four HUD movies from their matching clean Bethesda source files. 
 - All: Every Windows, Xbox, and PlayStation Main archive ships both `.gfx` and `.swf` paths, matching Bethesda's dual-movie packaging.
 
-## Version 2.0.6 (September 26, 2026)
+## Version 2.0.6 (August 26, 2026)
 
 - Minimalist: Restored loose XML configuration as it produced no change in the PS5 startup crash.
 - Minimalist: Replaced both live data contexts with static implementations and removed all game-provider registrations and provider-driven runtime events for the next PS5 isolation test.
 
 BREAKING: This version disables all live data and is really only for testing the PS5 crash. 
 
-## Version 2.0.5 (September 26, 2026)
+## Version 2.0.5 (August 26, 2026)
 
 - Minimalist: Remove XML support and baked in the components into the movies for PS5 startup crash isolation. Hopefully this doesn't fix anything cause it kills the customization part lol. 
 
