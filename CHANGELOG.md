@@ -9,7 +9,7 @@
 
 ## Version 2.0.15 (UNRELEASED)
 
-- Nothing Yet
+- PS5Debug: Add a next-frame `PlayerData` subscription probe that dynamically resolves `BSUIDataManager` and displays the sanitized `sName` value in the isolated child pane.
 
 ## Version 2.0.14 (September 30, 2026)
 

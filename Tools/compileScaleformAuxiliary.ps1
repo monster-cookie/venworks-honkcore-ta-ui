@@ -417,6 +417,18 @@ function Assert-AuxiliaryMovie {
     foreach ($requiredToken in @(
       'VenworksCUIDiagnosticEntrypoint',
       'venworkscui.swf loaded',
+      'Shared.AS3.Data.BSUIDataManager',
+      'getDefinitionByName',
+      'PlayerData',
+      'GetDataFromClient',
+      'Subscribe',
+      'Unsubscribe',
+      'sName',
+      'PS5DBG-05 PLAYERDATA NEXT FRAME',
+      'PS5DBG-06 PLAYERDATA REQUEST',
+      'PS5DBG-07 PLAYERDATA WAITING',
+      'PS5DBG-OK PLAYERDATA',
+      'PS5DBG-ERR PLAYERDATA',
       '$MAIN_Font_Bold',
       'embedFonts',
       'defaultTextFormat',
@@ -431,9 +443,6 @@ function Assert-AuxiliaryMovie {
       'CUILayoutImportLoader',
       'CUIPlayerHudDataContext',
       'CUIConditionContext',
-      'BSUIDataManager',
-      'GetDataFromClient',
-      'Subscribe',
       'URLRequest',
       'URLLoader'
     )) {
