@@ -75,6 +75,24 @@ jobs:
         shell: pwsh
         run: ./Tools/verifyVariant.ps1 -Committed
 
+      - name: Verify PS5 Debug auxiliary profile isolation
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          . ./Tools/sharedScaleformProfiles.ps1
+          $profile = Get-VariantScaleformMovieProfile `
+            -RepositoryRoot $env:GITHUB_WORKSPACE `
+            -VariantBuildProfile (Import-PowerShellDataFile -LiteralPath ./Scaleform/variants/PS5DBG/build.psd1)
+          $expectedMovies = @('hudmenu.gfx', 'hudmenu.swf', 'hudmenu_lrg.gfx', 'hudmenu_lrg.swf', 'venworkscui.swf')
+          $actualMovies = @($profile.DeploymentMovieDefinitions.FileName)
+          if ($profile.AuxiliaryContract -cne 'diagnostic-bridge' -or
+              $null -ne $profile.SourceProfile -or
+              $profile.IncludesHudMessageMovies -or
+              [string]::Join("`n", $actualMovies) -cne [string]::Join("`n", $expectedMovies)) {
+            throw 'PS5 Debug must resolve only its four host movies and isolated diagnostic auxiliary movie.'
+          }
+
       - name: Reject undeclared staging files through the shared verifier
         shell: pwsh
         run: |

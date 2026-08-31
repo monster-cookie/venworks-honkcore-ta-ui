@@ -14,9 +14,7 @@
       <token><![CDATA[param1.stopImmediatePropagation()]]></token>
     </requiredSourceTokens>
     <forbiddenSourceTokens>
-      <token><![CDATA[VenworksCUI]]></token>
       <token><![CDATA[venworks.cui]]></token>
-      <token><![CDATA[venworkscui.swf]]></token>
       <token><![CDATA[CUILayout]]></token>
       <token><![CDATA[CUISvg]]></token>
       <token><![CDATA[CUIPalette]]></token>
@@ -36,9 +34,7 @@
       <token><![CDATA[stopImmediatePropagation]]></token>
     </requiredInspectionTokens>
     <forbiddenInspectionTokens>
-      <token><![CDATA[VenworksCUI]]></token>
       <token><![CDATA[venworks.cui]]></token>
-      <token><![CDATA[venworkscui.swf]]></token>
       <token><![CDATA[CUILayout]]></token>
       <token><![CDATA[CUISvg]]></token>
       <token><![CDATA[CUIPalette]]></token>

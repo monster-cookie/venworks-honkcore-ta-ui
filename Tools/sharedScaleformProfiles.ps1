@@ -112,8 +112,8 @@ function Get-ScaleformManifestDefinition {
   $resolvedManifestPath = (Resolve-Path -LiteralPath $ManifestPath -ErrorAction Stop).Path
   [xml]$manifest = Get-Content -LiteralPath $resolvedManifestPath -Raw
   $build = $manifest.scaleformBuild
-  if (!$build -or !$build.name -or !$build.outputFile -or !$build.expectedHashFile -or
-      !$build.actionScriptPatch) {
+  if (!$build -or !$build.name -or !$build.inputFile -or !$build.outputFile -or
+      !$build.vanillaHashFile -or !$build.expectedHashFile) {
     throw "Invalid Scaleform build manifest: $resolvedManifestPath"
   }
 
@@ -127,23 +127,48 @@ function Get-ScaleformManifestDefinition {
     }
   }
 
-  $actionScriptPatchPath = [System.IO.Path]::GetFullPath(
-    (Join-Path $manifestDirectory ([string]$build.actionScriptPatch))
-  )
-  if (!(Test-Path -LiteralPath $actionScriptPatchPath -PathType Leaf)) {
-    throw "Scaleform ActionScript patch does not exist: $actionScriptPatchPath"
+  $legacyPatchPath = [string]$build.GetAttribute('actionScriptPatch')
+  $patchNodes = @($manifest.SelectNodes('/scaleformBuild/actionScriptPatches/patch'))
+  if (![string]::IsNullOrWhiteSpace($legacyPatchPath) -and $patchNodes.Count -ne 0) {
+    throw "Scaleform build manifest cannot mix actionScriptPatch with actionScriptPatches: $resolvedManifestPath"
   }
-  $patchDefinition = Get-ScaleformActionScriptPatchDefinition -PatchPath $actionScriptPatchPath
+  $relativePatchPaths = @(if (![string]::IsNullOrWhiteSpace($legacyPatchPath)) {
+    $legacyPatchPath
+  }
+  else {
+    $patchNodes | ForEach-Object { [string]$_.GetAttribute('path') }
+  })
+  if ($relativePatchPaths.Count -eq 0 -or
+      @($relativePatchPaths | Where-Object { [string]::IsNullOrWhiteSpace($_) }).Count -ne 0 -or
+      @($relativePatchPaths | Select-Object -Unique).Count -ne $relativePatchPaths.Count) {
+    throw "Scaleform build manifest must declare an ordered, unique ActionScript patch list: $resolvedManifestPath"
+  }
+  $actionScriptPatchPaths = @($relativePatchPaths | ForEach-Object {
+    $patchPath = [System.IO.Path]::GetFullPath((Join-Path $manifestDirectory $_))
+    if (!(Test-Path -LiteralPath $patchPath -PathType Leaf)) {
+      throw "Scaleform ActionScript patch does not exist: $patchPath"
+    }
+    (Resolve-Path -LiteralPath $patchPath).Path
+  })
+  $patchDefinitions = @($actionScriptPatchPaths | ForEach-Object {
+    Get-ScaleformActionScriptPatchDefinition -PatchPath $_
+  })
+  $patchScripts = @($patchDefinitions.Script | Select-Object -Unique)
+  if ($patchScripts.Count -ne 1) {
+    throw "Scaleform build manifest patches must target one ActionScript class: $resolvedManifestPath"
+  }
 
   return [pscustomobject]@{
     Name = [string]$build.name
     Mode = [string]$build.GetAttribute("mode")
+    InputFile = [string]$build.inputFile
     FileName = [string]$build.outputFile
     ManifestPath = $resolvedManifestPath
+    VanillaHashPath = [System.IO.Path]::GetFullPath((Join-Path $manifestDirectory ([string]$build.vanillaHashFile)))
     ExpectedHashPath = [System.IO.Path]::GetFullPath((Join-Path $manifestDirectory ([string]$build.expectedHashFile)))
     SourceProfilePath = $sourceProfilePath
-    ActionScriptPatchPath = $actionScriptPatchPath
-    PatchDefinition = $patchDefinition
+    ActionScriptPatchPaths = $actionScriptPatchPaths
+    PatchDefinitions = $patchDefinitions
   }
 }
 
@@ -157,10 +182,32 @@ function Get-ScaleformAuxiliaryManifestDefinition {
   [xml]$manifest = Get-Content -LiteralPath $resolvedManifestPath -Raw
   $build = $manifest.scaleformAuxiliaryBuild
   if (!$build -or !$build.name -or !$build.outputFile -or !$build.documentClass -or
-      !$build.actionScriptSource -or !$build.externSource -or !$build.expectedHashFile -or
+      !$build.expectedHashFile -or
       !$build.expectedClassHashFile -or !$build.stageWidth -or !$build.stageHeight -or
       !$build.frameRate) {
     throw "Invalid Scaleform auxiliary build manifest: $resolvedManifestPath"
+  }
+
+  $contract = [string]$build.GetAttribute('contract')
+  if ([string]::IsNullOrWhiteSpace($contract)) {
+    $contract = 'runtime-bridge'
+  }
+  if ($contract -notin @('runtime-bridge', 'diagnostic-bridge')) {
+    throw "Scaleform auxiliary build manifest selects unsupported contract '$contract': $resolvedManifestPath"
+  }
+  $actionScriptSource = [string]$build.GetAttribute('actionScriptSource')
+  $externSource = [string]$build.GetAttribute('externSource')
+  $actionScriptProfile = [string]$build.GetAttribute('actionScriptProfile')
+  if ($contract -ceq 'runtime-bridge' -and
+      ([string]::IsNullOrWhiteSpace($actionScriptSource) -or
+       [string]::IsNullOrWhiteSpace($externSource))) {
+    throw "Runtime auxiliary build manifest must declare ActionScript and extern sources: $resolvedManifestPath"
+  }
+  if ($contract -ceq 'diagnostic-bridge' -and
+      (![string]::IsNullOrWhiteSpace($actionScriptSource) -or
+       ![string]::IsNullOrWhiteSpace($externSource) -or
+       ![string]::IsNullOrWhiteSpace($actionScriptProfile))) {
+    throw "Diagnostic auxiliary build manifest cannot declare runtime sources, externs, or profiles: $resolvedManifestPath"
   }
 
   $stageWidth = 0
@@ -175,7 +222,7 @@ function Get-ScaleformAuxiliaryManifestDefinition {
 
   $manifestDirectory = Split-Path -Parent $resolvedManifestPath
   $sourceProfilePath = $null
-  $sourceProfileName = [string]$build.GetAttribute("actionScriptProfile")
+  $sourceProfileName = $actionScriptProfile
   if (![string]::IsNullOrWhiteSpace($sourceProfileName)) {
     $sourceProfilePath = [System.IO.Path]::GetFullPath((Join-Path $manifestDirectory $sourceProfileName))
     if (!(Test-Path -LiteralPath $sourceProfilePath -PathType Leaf)) {
@@ -192,6 +239,7 @@ function Get-ScaleformAuxiliaryManifestDefinition {
     StageWidth = $stageWidth
     StageHeight = $stageHeight
     FrameRate = $frameRate
+    Contract = $contract
     SourceProfilePath = $sourceProfilePath
   }
 }
@@ -388,12 +436,22 @@ function Get-VariantScaleformMovieProfile {
 
   $auxiliaryDefinition = $null
   $auxiliarySourceProfile = $null
-  $includeSharedRuntimeMovies = $hostMode -ceq 'auxiliary-bootstrap'
+  $includeAuxiliaryMovie = $hostMode -ceq 'auxiliary-bootstrap'
+  $includeHudMessageMovies = $includeAuxiliaryMovie
+  if ($VariantBuildProfile.ContainsKey('IncludeHudMessageMovies')) {
+    if ($VariantBuildProfile.IncludeHudMessageMovies -isnot [bool]) {
+      throw "Scaleform movie profile '$name' IncludeHudMessageMovies must be Boolean."
+    }
+    $includeHudMessageMovies = [bool]$VariantBuildProfile.IncludeHudMessageMovies
+  }
+  if ($hostMode -ceq 'bgs-hudmenu-only' -and $includeHudMessageMovies) {
+    throw "Scaleform movie profile '$name' cannot include HUD-message movies in bgs-hudmenu-only mode."
+  }
   if ($hostMode -ceq 'bgs-hudmenu-only' -and
       $VariantBuildProfile.ContainsKey('AuxiliaryMovieManifestPath')) {
     throw "Scaleform movie profile '$name' cannot declare an auxiliary manifest in bgs-hudmenu-only mode."
   }
-  if ($includeSharedRuntimeMovies) {
+  if ($includeAuxiliaryMovie) {
     $auxiliaryManifestRelativePath = if ($VariantBuildProfile.ContainsKey("AuxiliaryMovieManifestPath")) {
       [string]$VariantBuildProfile.AuxiliaryMovieManifestPath
     }
@@ -405,9 +463,11 @@ function Get-VariantScaleformMovieProfile {
       -RelativePath $auxiliaryManifestRelativePath `
       -Description "Scaleform movie profile '$name' auxiliary manifest"
     $auxiliaryDefinition = Get-ScaleformAuxiliaryManifestDefinition -ManifestPath $auxiliaryManifestPath
-    $auxiliarySourceProfile = Get-ScaleformSourceProfileFromAuxiliaryManifest -ManifestPath $auxiliaryManifestPath
-    if ($auxiliarySourceProfile.Name -cne $name) {
-      throw "Scaleform movie profile '$name' does not match its auxiliary ActionScript profile '$($auxiliarySourceProfile.Name)'."
+    if ($auxiliaryDefinition.Contract -ceq 'runtime-bridge') {
+      $auxiliarySourceProfile = Get-ScaleformSourceProfileFromAuxiliaryManifest -ManifestPath $auxiliaryManifestPath
+      if ($auxiliarySourceProfile.Name -cne $name) {
+        throw "Scaleform movie profile '$name' does not match its auxiliary ActionScript profile '$($auxiliarySourceProfile.Name)'."
+      }
     }
     if ($auxiliaryDefinition.FileName -cne 'venworkscui.swf') {
       throw "Scaleform movie profile '$name' must build venworkscui.swf."
@@ -421,11 +481,11 @@ function Get-VariantScaleformMovieProfile {
       ManifestPath = $_.ManifestPath
       Mode = $_.Mode
       SourceGroup = 'Bootstrap'
-      RequiredInspectionTokens = @($_.PatchDefinition.RequiredInspectionTokens)
-      ForbiddenInspectionTokens = @($_.PatchDefinition.ForbiddenInspectionTokens)
+      RequiredInspectionTokens = @($_.PatchDefinitions | ForEach-Object { $_.RequiredInspectionTokens })
+      ForbiddenInspectionTokens = @($_.PatchDefinitions | ForEach-Object { $_.ForbiddenInspectionTokens })
     }
   })
-  if ($includeSharedRuntimeMovies) {
+  if ($includeHudMessageMovies) {
     $buildMovieDefinitions += @(
       [pscustomobject]@{
         FileName = "hudmessagesmenu.gfx"
@@ -454,7 +514,11 @@ function Get-VariantScaleformMovieProfile {
         SourceGroup = 'HudMessages'
         RequiredInspectionTokens = @()
         ForbiddenInspectionTokens = @()
-      },
+      }
+    )
+  }
+  if ($includeAuxiliaryMovie) {
+    $buildMovieDefinitions += @(
       [pscustomobject]@{
         FileName = $auxiliaryDefinition.FileName
         ExpectedHashPath = $auxiliaryDefinition.ExpectedHashPath
@@ -516,10 +580,12 @@ function Get-VariantScaleformMovieProfile {
     HostMode = $hostMode
     ManifestPaths = @($manifestDefinitions | ForEach-Object { $_.ManifestPath })
     AuxiliaryManifestPath = if ($null -eq $auxiliaryDefinition) { $null } else { $auxiliaryDefinition.ManifestPath }
+    AuxiliaryContract = if ($null -eq $auxiliaryDefinition) { $null } else { $auxiliaryDefinition.Contract }
     AuxiliaryExpectedClassHashPath = if ($null -eq $auxiliaryDefinition) { $null } else { $auxiliaryDefinition.ExpectedClassHashPath }
     AuxiliaryStageWidth = if ($null -eq $auxiliaryDefinition) { 0 } else { $auxiliaryDefinition.StageWidth }
     AuxiliaryStageHeight = if ($null -eq $auxiliaryDefinition) { 0 } else { $auxiliaryDefinition.StageHeight }
     AuxiliaryFrameRate = if ($null -eq $auxiliaryDefinition) { 0 } else { $auxiliaryDefinition.FrameRate }
+    IncludesHudMessageMovies = $includeHudMessageMovies
     SourceProfile = $auxiliarySourceProfile
     BuildMovieDefinitions = $buildMovieDefinitions
     DeploymentMovieDefinitions = $deploymentMovieDefinitions

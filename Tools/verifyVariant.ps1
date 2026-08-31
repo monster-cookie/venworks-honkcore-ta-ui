@@ -558,6 +558,7 @@ foreach ($variant in $variants) {
     -RepositoryRoot $repositoryRoot `
     -VariantBuildProfile $variantBuildProfile
   $sourceProfile = $movieProfile.SourceProfile
+  $hasAuxiliaryMovie = $null -ne $movieProfile.AuxiliaryManifestPath
 
   $stagingPath = Resolve-RequiredDirectory `
     -Path (Join-Path $repositoryRoot ([string]$variant.StagingFolderPath)) `
@@ -593,7 +594,17 @@ foreach ($variant in $variants) {
     Assert-Inventory -RootPath $cuiPath -ExpectedPaths $expectedCuiInventory -Description "$($variant.VariantName) CUI payload"
   }
   elseif (Test-Path -LiteralPath (Join-Path $interfacePath "VenworksCUI")) {
-    throw "$($variant.VariantName) host-only profile must not stage a VenworksCUI payload."
+    throw "$($variant.VariantName) profile without CUI configuration must not stage a VenworksCUI payload."
+  }
+  if ($hasCuiPayload -and
+      ($movieProfile.AuxiliaryContract -cne 'runtime-bridge' -or $null -eq $sourceProfile)) {
+    throw "$($variant.VariantName) CUI configuration requires a runtime-bridge auxiliary profile."
+  }
+  if (!$hasCuiPayload -and $movieProfile.AuxiliaryContract -ceq 'runtime-bridge') {
+    throw "$($variant.VariantName) runtime-bridge auxiliary profile requires staged CUI configuration."
+  }
+  if ($movieProfile.AuxiliaryContract -ceq 'diagnostic-bridge' -and $null -ne $sourceProfile) {
+    throw "$($variant.VariantName) diagnostic auxiliary profile must not resolve a CUI source profile."
   }
   $expectedInterfaceInventory = @($movieProfile.DeploymentMovieDefinitions | ForEach-Object { [string]$_.FileName })
   if ($hasCuiPayload) {
@@ -1186,6 +1197,55 @@ foreach ($variant in $variants) {
     }
 
   }
+  }
+  elseif ($movieProfile.AuxiliaryContract -ceq 'diagnostic-bridge') {
+    $auxiliaryInspection = $movieInspections['venworkscui.swf']
+    if ($null -eq $auxiliaryInspection -or $auxiliaryInspection.AbcCount -ne 1) {
+      $actualAbcCount = if ($null -eq $auxiliaryInspection) { 0 } else { $auxiliaryInspection.AbcCount }
+      throw "$($variant.VariantName) diagnostic venworkscui.swf must contain exactly one ABC; found $actualAbcCount."
+    }
+    foreach ($requiredDiagnosticToken in @(
+      'VenworksCUIDiagnosticEntrypoint',
+      'venworkscui.swf loaded',
+      'initialize',
+      'reapplyVanillaPlacements',
+      'updateVanillaHudModeVisibility',
+      'dispose',
+      '$MAIN_Font_Bold',
+      'embedFonts',
+      'defaultTextFormat',
+      'setTextFormat'
+    )) {
+      if (!$auxiliaryInspection.Text.Contains($requiredDiagnosticToken)) {
+        throw "$($variant.VariantName) diagnostic venworkscui.swf is missing '$requiredDiagnosticToken'."
+      }
+    }
+    foreach ($forbiddenDiagnosticToken in @(
+      'CUIRuntime',
+      'CUILayoutImportLoader',
+      'CUIPlayerHudDataContext',
+      'CUIConditionContext',
+      'BSUIDataManager',
+      'GetDataFromClient',
+      'Subscribe',
+      'URLRequest',
+      'URLLoader',
+      'VENWORKS AUX LOADED'
+    )) {
+      if ($auxiliaryInspection.Text.Contains($forbiddenDiagnosticToken)) {
+        throw "$($variant.VariantName) diagnostic venworkscui.swf contains forbidden runtime token '$forbiddenDiagnosticToken'."
+      }
+    }
+    $expectedDiagnosticClassFingerprint = Read-ExpectedSha256 `
+      -Path $movieProfile.AuxiliaryExpectedClassHashPath
+    $canonicalDiagnosticClassFingerprint = Get-ScaleformAuxiliaryTextSha256 `
+      -Text "VenworksCUIDiagnosticEntrypoint`n"
+    if ($expectedDiagnosticClassFingerprint -cne $canonicalDiagnosticClassFingerprint) {
+      throw "$($variant.VariantName) diagnostic auxiliary expected class hash does not match its one-class contract."
+    }
+  }
+  elseif ($hasAuxiliaryMovie) {
+    throw "$($variant.VariantName) selects unsupported auxiliary contract '$($movieProfile.AuxiliaryContract)'."
   }
 
   $pluginPath = Join-Path $stagingPath "$($variant.PackageBaseName).esm"

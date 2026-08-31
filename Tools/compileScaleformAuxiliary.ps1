@@ -322,8 +322,11 @@ function Assert-AuxiliaryMovie {
     [Parameter(Mandatory = $true)]
     [string]$WorkPath,
 
-    [Parameter(Mandatory = $true)]
     [pscustomobject]$SourceProfile,
+
+    [Parameter(Mandatory = $true)]
+    [ValidateSet('runtime-bridge', 'diagnostic-bridge')]
+    [string]$Contract,
 
     [Parameter(Mandatory = $true)]
     [string]$PassName,
@@ -407,6 +410,46 @@ function Assert-AuxiliaryMovie {
       ValidationSource = $validationSource
     }
   }
+  if ($Contract -ceq 'diagnostic-bridge') {
+    if ([string]::Join("`n", $classInventory) -cne 'VenworksCUIDiagnosticEntrypoint') {
+      throw "Diagnostic auxiliary movie has an unexpected class inventory: $([string]::Join(', ', $classInventory))."
+    }
+    foreach ($requiredToken in @(
+      'VenworksCUIDiagnosticEntrypoint',
+      'venworkscui.swf loaded',
+      '$MAIN_Font_Bold',
+      'embedFonts',
+      'defaultTextFormat',
+      'setTextFormat'
+    )) {
+      if (!$validationSource.Contains($requiredToken)) {
+        throw "Diagnostic auxiliary movie is missing '$requiredToken'."
+      }
+    }
+    foreach ($forbiddenToken in @(
+      'CUIRuntime',
+      'CUILayoutImportLoader',
+      'CUIPlayerHudDataContext',
+      'CUIConditionContext',
+      'BSUIDataManager',
+      'GetDataFromClient',
+      'Subscribe',
+      'URLRequest',
+      'URLLoader'
+    )) {
+      if ($validationSource.Contains($forbiddenToken)) {
+        throw "Diagnostic auxiliary movie contains forbidden runtime token '$forbiddenToken'."
+      }
+    }
+    return [pscustomobject]@{
+      ClassFingerprint = $classFingerprint
+      ClassInventory = $classInventory
+      ValidationSource = $validationSource
+    }
+  }
+  if ($null -eq $SourceProfile) {
+    throw 'Runtime auxiliary validation requires a source profile.'
+  }
   if ($validationSource.Contains('VENWORKS AUX LOADED')) {
     throw 'Production auxiliary movie retains the marker-probe payload.'
   }
@@ -472,6 +515,10 @@ if (!$build -or !$build.outputFile -or !$build.documentClass -or !$build.expecte
   throw "Invalid auxiliary build manifest: $resolvedBuildManifestPath"
 }
 $auxiliaryDefinition = Get-ScaleformAuxiliaryManifestDefinition -ManifestPath $resolvedBuildManifestPath
+$contract = [string]$auxiliaryDefinition.Contract
+if ($MarkerProbe -and $contract -cne 'runtime-bridge') {
+  throw 'The marker probe requires a runtime-bridge auxiliary manifest.'
+}
 $stageWidth = [int]$auxiliaryDefinition.StageWidth
 $stageHeight = [int]$auxiliaryDefinition.StageHeight
 $frameRate = [int]$auxiliaryDefinition.FrameRate
@@ -481,7 +528,12 @@ $entrypointPath = Resolve-RequiredFile `
   -Description 'Auxiliary entrypoint'
 $expectedHashPath = [System.IO.Path]::GetFullPath((Join-Path $manifestDirectory ([string]$build.expectedHashFile)))
 $expectedClassHashPath = [System.IO.Path]::GetFullPath((Join-Path $manifestDirectory ([string]$build.expectedClassHashFile)))
-$sourceProfile = Get-ScaleformSourceProfileFromAuxiliaryManifest -ManifestPath $resolvedBuildManifestPath
+$sourceProfile = if ($contract -ceq 'runtime-bridge') {
+  Get-ScaleformSourceProfileFromAuxiliaryManifest -ManifestPath $resolvedBuildManifestPath
+}
+else {
+  $null
+}
 
 New-Item -ItemType Directory -Force -Path $resolvedOutputDirectory, $resolvedWorkDirectory | Out-Null
 $buildWorkDirectory = Join-Path $resolvedWorkDirectory ([guid]::NewGuid().ToString('N'))
@@ -559,6 +611,10 @@ package
     $compilerEntrypointPath = Join-Path $sourceRoot 'VenworksCUIEntrypoint.as'
     Write-Utf8WithoutBom -Path $compilerEntrypointPath -Text $markerSource
   }
+  elseif ($contract -ceq 'diagnostic-bridge') {
+    $compilerEntrypointPath = Join-Path $sourceRoot ([System.IO.Path]::GetFileName($entrypointPath))
+    Copy-Item -LiteralPath $entrypointPath -Destination $compilerEntrypointPath
+  }
   else {
     $actionScriptSourcePath = Resolve-RequiredDirectory `
       -Path (Join-Path $manifestDirectory ([string]$build.actionScriptSource)) `
@@ -613,6 +669,7 @@ package
       -MoviePath $normalizedSwfPath `
       -WorkPath $buildWorkDirectory `
       -SourceProfile $sourceProfile `
+      -Contract $contract `
       -PassName 'marker' `
       -ExpectedStageWidth $stageWidth `
       -ExpectedStageHeight $stageHeight `
@@ -623,6 +680,40 @@ package
         !$markerInspection.ValidationSource.Contains('defaultTextFormat') -or
         !$markerInspection.ValidationSource.Contains('setTextFormat')) {
       throw 'Marker auxiliary movie does not apply the required Starfield font format.'
+    }
+  }
+  elseif ($contract -ceq 'diagnostic-bridge') {
+    Invoke-AuxiliaryCompilation `
+      -EntrypointPath $compilerEntrypointPath `
+      -SourceRoot $sourceRoot `
+      -OutputPath $compiledSwfPath `
+      -StageWidth $stageWidth `
+      -StageHeight $stageHeight `
+      -FrameRate $frameRate
+    Normalize-AuxiliaryMovie `
+      -InputPath $compiledSwfPath `
+      -OutputPath $normalizedSwfPath `
+      -WorkPath $buildWorkDirectory
+    $diagnosticInspection = Assert-AuxiliaryMovie `
+      -MoviePath $normalizedSwfPath `
+      -WorkPath $buildWorkDirectory `
+      -Contract $contract `
+      -PassName 'diagnostic' `
+      -ExpectedStageWidth $stageWidth `
+      -ExpectedStageHeight $stageHeight `
+      -ExpectedFrameRate $frameRate
+    $classFingerprint = [string]$diagnosticInspection.ClassFingerprint
+    if ($UpdateExpectedHashes) {
+      Write-Sha256File -Path $expectedClassHashPath -Hash $classFingerprint
+    }
+    else {
+      $resolvedExpectedClassHashPath = Resolve-RequiredFile `
+        -Path $expectedClassHashPath `
+        -Description 'Diagnostic auxiliary expected class hash file'
+      $expectedClassHash = Read-Sha256File -Path $resolvedExpectedClassHashPath
+      if ($classFingerprint -cne $expectedClassHash) {
+        throw "Diagnostic auxiliary class inventory hash mismatch. Expected $expectedClassHash; found $classFingerprint."
+      }
     }
   }
   else {
@@ -643,6 +734,7 @@ package
       -MoviePath $firstNormalizedSwfPath `
       -WorkPath $buildWorkDirectory `
       -SourceProfile $sourceProfile `
+      -Contract $contract `
       -PassName 'first' `
       -ExpectedStageWidth $stageWidth `
       -ExpectedStageHeight $stageHeight `
@@ -692,6 +784,7 @@ package
       -MoviePath $normalizedSwfPath `
       -WorkPath $buildWorkDirectory `
       -SourceProfile $sourceProfile `
+      -Contract $contract `
       -PassName 'final' `
       -ExpectedStageWidth $stageWidth `
       -ExpectedStageHeight $stageHeight `
@@ -719,7 +812,7 @@ package
 
   $destinationPath = Join-Path $resolvedOutputDirectory ([string]$build.outputFile)
   Copy-Item -LiteralPath $normalizedSwfPath -Destination $destinationPath -Force
-  Write-Host -ForegroundColor Green "Built and validated $($sourceProfile.Name) auxiliary movie $destinationPath ($actualHash)"
+  Write-Host -ForegroundColor Green "Built and validated $([string]$build.name) auxiliary movie $destinationPath ($actualHash)"
 }
 finally {
   if ($KeepWork) {
