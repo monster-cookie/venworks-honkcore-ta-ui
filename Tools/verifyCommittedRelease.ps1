@@ -274,6 +274,11 @@ $diagnosticMovieProfile = Get-VariantScaleformMovieProfile `
   -VariantBuildProfile $diagnosticBuildProfile
 $diagnosticMovieNames = @($diagnosticMovieProfile.DeploymentMovieDefinitions | ForEach-Object { [string]$_.FileName })
 $expectedDiagnosticMovieNames = @('hudmenu.gfx', 'hudmenu.swf', 'hudmenu_lrg.gfx', 'hudmenu_lrg.swf', 'venworkscui.swf')
+if (!$diagnosticBuildProfile.ContainsKey('DiagnosticXmlSource') -or
+    [string]$diagnosticBuildProfile.DiagnosticXmlSource -cne 'Scaleform/variants/PS5DBG/layout.xml' -or
+    ($diagnosticBuildProfile.ContainsKey('LayoutSource') -and ![string]::IsNullOrWhiteSpace([string]$diagnosticBuildProfile.LayoutSource))) {
+  throw 'The PS5 Debug profile must select only its isolated diagnostic XML source.'
+}
 if ($diagnosticMovieProfile.HostMode -cne 'auxiliary-bootstrap' -or
     $diagnosticMovieProfile.AuxiliaryContract -cne 'diagnostic-bridge' -or
     $null -eq $diagnosticMovieProfile.AuxiliaryManifestPath -or

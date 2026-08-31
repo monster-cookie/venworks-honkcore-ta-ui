@@ -427,8 +427,22 @@ function Assert-AuxiliaryMovie {
       'PS5DBG-05 PLAYERDATA NEXT FRAME',
       'PS5DBG-06 PLAYERDATA REQUEST',
       'PS5DBG-07 PLAYERDATA WAITING',
+      'PS5DBG-08 XML NEXT FRAME',
+      'PS5DBG-09 XML REQUEST',
+      'PS5DBG-10 XML RECEIVED',
+      'PS5DBG-11 XML PARSE NEXT FRAME',
       'PS5DBG-OK PLAYERDATA',
       'PS5DBG-ERR PLAYERDATA',
+      'PS5DBG-OK XML',
+      'PS5DBG-ERR XML REQUEST',
+      'PS5DBG-ERR XML IO',
+      'PS5DBG-ERR XML SECURITY',
+      'PS5DBG-ERR XML PARSE',
+      'PS5DBG-ERR XML VALUE',
+      'URLRequest',
+      'URLLoader',
+      'VenworksCUI/layout.xml',
+      'diagnosticText',
       '$MAIN_Font_Bold',
       'embedFonts',
       'defaultTextFormat',
@@ -442,9 +456,7 @@ function Assert-AuxiliaryMovie {
       'CUIRuntime',
       'CUILayoutImportLoader',
       'CUIPlayerHudDataContext',
-      'CUIConditionContext',
-      'URLRequest',
-      'URLLoader'
+      'CUIConditionContext'
     )) {
       if ($validationSource.Contains($forbiddenToken)) {
         throw "Diagnostic auxiliary movie contains forbidden runtime token '$forbiddenToken'."
