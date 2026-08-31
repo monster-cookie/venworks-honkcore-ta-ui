@@ -403,7 +403,77 @@ function Install-Jpexs {
     }
 }
 
+function Write-PinnedPlayerGlobal {
+    param(
+        [Parameter(Mandatory)]
+        [bool]$LicenseAccepted,
+
+        [Parameter(Mandatory)]
+        [string]$DestinationPath
+    )
+
+    if (-not $LicenseAccepted) {
+        throw (
+            "Player 11.1 installation requires acceptance of the Adobe Flex SDK license. " +
+            "Review the license in the Adobe Flex SDK archive, then rerun setup with -AcceptAdobeLicense."
+        )
+    }
+
+    Assert-PathWithinDirectory -Path $DestinationPath -Directory $TempRoot
+
+    $archivePath = Resolve-PinnedArtifact -Artifact $Artifacts.AdobeFlex
+    $destinationDirectory = Split-Path -Parent $DestinationPath
+    New-Item -ItemType Directory -Path $destinationDirectory -Force | Out-Null
+
+    $archive = [System.IO.Compression.ZipFile]::OpenRead($archivePath)
+
+    try {
+        $entries = @(
+            $archive.Entries |
+                Where-Object {
+                    ($_.FullName -replace "\\", "/") -eq
+                        "frameworks/libs/player/11.1/playerglobal.swc"
+                }
+        )
+
+        if ($entries.Count -ne 1) {
+            throw "Pinned Adobe Flex SDK archive must contain exactly one Player 11.1 SWC; found $($entries.Count)."
+        }
+
+        $inputStream = $entries[0].Open()
+        $outputStream = [System.IO.File]::Create($DestinationPath)
+
+        try {
+            $inputStream.CopyTo($outputStream)
+        }
+        finally {
+            $outputStream.Dispose()
+            $inputStream.Dispose()
+        }
+    }
+    finally {
+        $archive.Dispose()
+    }
+
+    if (-not (Test-PlayerGlobalInstallation -Path $DestinationPath)) {
+        throw "Pinned Adobe Flex SDK $AdobeFlexVersion did not contain the expected Player 11.1 SWC."
+    }
+}
+
 function Install-Flex {
+    param(
+        [Parameter(Mandatory)]
+        [bool]$LicenseAccepted
+    )
+
+    $preservePlayerGlobal = Test-PlayerGlobalInstallation -Path $PlayerGlobalPath
+    if (-not $preservePlayerGlobal -and -not $LicenseAccepted) {
+        throw (
+            "Apache Flex repair also requires the missing or invalid Player 11.1 compiler library. " +
+            "Review the Adobe Flex SDK license, then rerun setup with -AcceptAdobeLicense."
+        )
+    }
+
     $archivePath = Resolve-PinnedArtifact -Artifact $Artifacts.Flex
     $stagingRoot = Join-Path $TempRoot "flex-extract-$PID"
 
@@ -418,6 +488,28 @@ function Install-Flex {
 
         if (-not (Test-FlexInstallation -Root $stagingRoot)) {
             throw "Pinned Apache Flex $FlexVersion archive did not produce the expected installation."
+        }
+
+        $stagedPlayerGlobalPath = Join-Path $stagingRoot "frameworks\libs\player\11.1\playerglobal.swc"
+        $stagedPlayerGlobalDirectory = Split-Path -Parent $stagedPlayerGlobalPath
+        New-Item -ItemType Directory -Path $stagedPlayerGlobalDirectory -Force | Out-Null
+
+        if ($preservePlayerGlobal) {
+            Copy-Item -LiteralPath $PlayerGlobalPath -Destination $stagedPlayerGlobalPath -Force
+
+            if (-not (Test-PlayerGlobalInstallation -Path $stagedPlayerGlobalPath)) {
+                throw "Preserved Player 11.1 SWC failed validation in the staged Apache Flex installation."
+            }
+        }
+        else {
+            Write-PinnedPlayerGlobal `
+                -LicenseAccepted $LicenseAccepted `
+                -DestinationPath $stagedPlayerGlobalPath
+        }
+
+        if (-not (Test-FlexInstallation -Root $stagingRoot) -or
+            -not (Test-PlayerGlobalInstallation -Path $stagedPlayerGlobalPath)) {
+            throw "Staged Apache Flex installation is incomplete. Refusing to replace the existing tool directory."
         }
 
         Replace-ToolDirectory -SourcePath $stagingRoot -DestinationPath $FlexRoot
@@ -435,52 +527,14 @@ function Install-PlayerGlobal {
         [bool]$LicenseAccepted
     )
 
-    if (-not $LicenseAccepted) {
-        throw (
-            "Player 11.1 installation requires acceptance of the Adobe Flex SDK license. " +
-            "Review the license in the Adobe Flex SDK archive, then rerun setup with -AcceptAdobeLicense."
-        )
-    }
-
-    $archivePath = Resolve-PinnedArtifact -Artifact $Artifacts.AdobeFlex
     $stagingPath = Join-Path $TempRoot "playerglobal-11.1-$PID.swc"
 
     Assert-PathWithinDirectory -Path $stagingPath -Directory $TempRoot
 
     try {
-        $archive = [System.IO.Compression.ZipFile]::OpenRead($archivePath)
-
-        try {
-            $entries = @(
-                $archive.Entries |
-                    Where-Object {
-                        ($_.FullName -replace "\\", "/") -eq
-                            "frameworks/libs/player/11.1/playerglobal.swc"
-                    }
-            )
-
-            if ($entries.Count -ne 1) {
-                throw "Pinned Adobe Flex SDK archive must contain exactly one Player 11.1 SWC; found $($entries.Count)."
-            }
-
-            $inputStream = $entries[0].Open()
-            $outputStream = [System.IO.File]::Create($stagingPath)
-
-            try {
-                $inputStream.CopyTo($outputStream)
-            }
-            finally {
-                $outputStream.Dispose()
-                $inputStream.Dispose()
-            }
-        }
-        finally {
-            $archive.Dispose()
-        }
-
-        if (-not (Test-PlayerGlobalInstallation -Path $stagingPath)) {
-            throw "Pinned Adobe Flex SDK $AdobeFlexVersion did not contain the expected Player 11.1 SWC."
-        }
+        Write-PinnedPlayerGlobal `
+            -LicenseAccepted $LicenseAccepted `
+            -DestinationPath $stagingPath
 
         $destinationDirectory = Split-Path -Parent $PlayerGlobalPath
         New-Item -ItemType Directory -Path $destinationDirectory -Force | Out-Null
@@ -584,7 +638,7 @@ if (Test-FlexInstallation -Root $FlexRoot) {
     Write-Host "  $FlexRoot"
 }
 else {
-    Install-Flex
+    Install-Flex -LicenseAccepted $AcceptAdobeLicense.IsPresent
 }
 
 Write-Step "Checking pinned Flash Player 11.1 compiler library"

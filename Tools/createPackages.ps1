@@ -129,50 +129,12 @@ $archiveDefinitions = [ordered]@{
 
 $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
 
-foreach ($variant in $variants) {
-  $profilePath = Join-Path $repositoryRoot "Scaleform\variants\$($variant.VariantKey)\build.psd1"
-  if (!(Test-Path -LiteralPath $profilePath -PathType Leaf)) {
-    throw "$($variant.VariantName) build profile does not exist: $profilePath"
-  }
-  $variantBuildProfile = Import-PowerShellDataFile -LiteralPath $profilePath
-  $movieProfile = Get-VariantScaleformMovieProfile `
-    -RepositoryRoot $repositoryRoot `
-    -VariantBuildProfile $variantBuildProfile
-  $stagingFolderPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot $variant.StagingFolderPath))
-  $interfacePath = Join-Path $stagingFolderPath 'Interface'
-  if (!(Test-Path -LiteralPath $interfacePath -PathType Container)) {
-    throw "$($variant.VariantName) is missing its staged Interface payload: $interfacePath"
-  }
-
-  $deploymentDefinitions = @($movieProfile.DeploymentMovieDefinitions)
-  $expectedMovieNames = @($deploymentDefinitions | ForEach-Object { [string]$_.FileName } | Sort-Object)
-  $actualMovieNames = @(
-    Get-ChildItem -LiteralPath $interfacePath -Recurse -File |
-      Where-Object { $_.Extension -in @('.gfx', '.swf') } |
-      ForEach-Object { $_.FullName.Substring($interfacePath.Length + 1).Replace('\', '/') } |
-      Sort-Object
-  )
-  if ($actualMovieNames.Count -ne $expectedMovieNames.Count -or
-      [string]::Join("`n", $actualMovieNames) -cne [string]::Join("`n", $expectedMovieNames)) {
-    throw "$($variant.VariantName) staged movie inventory does not match the exact production deployment mapping. Refusing to mutate archives."
-  }
-
-  foreach ($deploymentMovie in $deploymentDefinitions) {
-    $movieName = [string]$deploymentMovie.FileName
-    $moviePath = Join-Path $interfacePath $movieName
-    $expectedMovieHash = Read-ExpectedSha256 -Path ([string]$deploymentMovie.ExpectedHashPath)
-    $actualMovieHash = (Get-FileHash -LiteralPath $moviePath -Algorithm SHA256).Hash.ToUpperInvariant()
-    if ($actualMovieHash -cne $expectedMovieHash) {
-      $markerHint = if ($movieName -ceq 'venworkscui.swf') { ' The marker probe is never packageable.' } else { '' }
-      throw "$($variant.VariantName) staged $movieName is not the declared production movie. Expected $expectedMovieHash; found $actualMovieHash.$markerHint Refusing to mutate archives."
-    }
-    Assert-ScaleformMovieEncoding `
-      -Path $moviePath `
-      -Context "$($variant.VariantName) staged $movieName" `
-      -ExpectedSignature ([string]$deploymentMovie.ExpectedSignature)
-  }
-}
-Write-Host -ForegroundColor Green 'Verified every selected staged movie deployment before archive mutation.'
+$preArchiveVariantKeys = @($variants | ForEach-Object { [string]$_.VariantKey })
+& (Join-Path $PSScriptRoot "verifyVariant.ps1") `
+  -VariantKeys $preArchiveVariantKeys `
+  -Committed:$Committed `
+  -PreArchiveMutation
+Write-Host -ForegroundColor Green 'Verified every selected complete staged Interface payload before archive mutation.'
 
 foreach ($variant in $variants) {
   $stagingFolderPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot $variant.StagingFolderPath))

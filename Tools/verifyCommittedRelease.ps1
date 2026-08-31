@@ -442,8 +442,12 @@ foreach ($archiveExpectation in $archiveCompressionExpectations) {
 }
 Write-Host 'Verified the Bethesda-style Archive2 format and compression matrix.'
 
-$productionGuardIndex = $packageScriptSource.IndexOf(
-  'Verified every selected staged movie deployment before archive mutation.',
+$payloadGuardIndex = $packageScriptSource.IndexOf(
+  'Verified every selected complete staged Interface payload before archive mutation.',
+  [System.StringComparison]::Ordinal
+)
+$preArchiveVerifierIndex = $packageScriptSource.IndexOf(
+  '-PreArchiveMutation',
   [System.StringComparison]::Ordinal
 )
 $archiveRemovalIndex = $packageScriptSource.IndexOf(
@@ -454,16 +458,24 @@ $archiveInvocationIndex = $packageScriptSource.IndexOf(
   '& $archive2Path @archiveArguments',
   [System.StringComparison]::Ordinal
 )
-if ($productionGuardIndex -lt 0 -or
+if ($payloadGuardIndex -lt 0 -or
+    $preArchiveVerifierIndex -lt 0 -or
     $archiveRemovalIndex -lt 0 -or
     $archiveInvocationIndex -lt 0 -or
-    $productionGuardIndex -gt $archiveRemovalIndex -or
-    $productionGuardIndex -gt $archiveInvocationIndex -or
-    !$packageScriptSource.Contains('staged movie inventory does not match the exact production deployment mapping') -or
-    !$packageScriptSource.Contains('staged $movieName is not the declared production movie')) {
-  throw 'createPackages.ps1 must reject incomplete, non-production, or mismatched staged movies before deleting or creating archives.'
+    $preArchiveVerifierIndex -gt $payloadGuardIndex -or
+    $payloadGuardIndex -gt $archiveRemovalIndex -or
+    $payloadGuardIndex -gt $archiveInvocationIndex -or
+    !$packageScriptSource.Contains('-VariantKeys $preArchiveVariantKeys') -or
+    !$packageScriptSource.Contains('-Committed:$Committed')) {
+  throw 'createPackages.ps1 must verify every selected complete staged Interface payload before deleting or creating archives.'
 }
-Write-Host 'Verified the pre-Archive2 production movie-deployment guard.'
+Write-Host 'Verified the pre-Archive2 complete staged Interface payload guard.'
+
+& (Join-Path $PSScriptRoot "verifyVariant.ps1") `
+  -Committed `
+  -PreArchiveMutation
+
+Write-Host "Verified all six variants before archive mutation."
 
 & (Join-Path $PSScriptRoot "verifyVariant.ps1") `
   -Committed

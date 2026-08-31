@@ -5,13 +5,19 @@ Verifies staged or committed artifacts for release variants.
 .PARAMETER VariantKeys
 One or more keys from `$Global:ReleaseVariants`. Omit this parameter to process
 all release variants. `VariantKey` remains a compatibility alias.
+
+.PARAMETER PreArchiveMutation
+Verifies each selected profile, complete staged Interface payload, movie, and
+plugin without requiring or inspecting generated BA2 archives.
 #>
 [CmdletBinding()]
 param(
   [Alias("VariantKey")]
   [string[]]$VariantKeys,
 
-  [switch]$Committed
+  [switch]$Committed,
+
+  [switch]$PreArchiveMutation
 )
 
 $ErrorActionPreference = "Stop"
@@ -1352,6 +1358,11 @@ foreach ($variant in $variants) {
     if ((Get-Sha256 -Path $pluginSourcePath) -cne $pluginHash) {
       throw "$($variant.VariantName) plugin is not byte-identical to its configured source stub."
     }
+  }
+
+  if ($PreArchiveMutation) {
+    Write-Host -ForegroundColor Green "$($variant.VariantName) profile, complete Interface payload, movies, and plugin are valid before archive mutation."
+    continue
   }
 
   $archiveFiles = @(Get-ChildItem -LiteralPath $stagingPath -File -Filter "*.ba2")
