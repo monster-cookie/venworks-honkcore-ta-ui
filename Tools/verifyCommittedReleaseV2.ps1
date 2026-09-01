@@ -398,7 +398,7 @@ $archive2ScriptReferences = @(
   & git -C $repositoryRoot grep -l -F "Archive2.exe" -- `
     "Tools/*.ps1" `
     ":(exclude)Tools/verifyCommittedRelease.ps1" `
-    ":(exclude)Tools/*V2.ps1"
+    ":(exclude)Tools/verifyCommittedReleaseV2.ps1"
 )
 if ($LASTEXITCODE -ne 0) {
   throw "Unable to inventory PowerShell Archive2 references."
@@ -409,7 +409,8 @@ $normalizedArchive2ScriptReferences = @(
     Sort-Object
 )
 $expectedArchive2ScriptReferences = @(
-  'Tools/createPackages.ps1'
+  'Tools/createPackages.ps1',
+  'Tools/createPackagesV2.ps1'
 )
 if ($normalizedArchive2ScriptReferences.Count -ne $expectedArchive2ScriptReferences.Count -or
     [string]::Join("`n", $normalizedArchive2ScriptReferences) -cne
@@ -418,7 +419,7 @@ if ($normalizedArchive2ScriptReferences.Count -ne $expectedArchive2ScriptReferen
 }
 Write-Host "Verified the single shared Archive2 packaging owner."
 
-$packageScriptPath = Join-Path $repositoryRoot 'Tools/createPackages.ps1'
+$packageScriptPath = Join-Path $repositoryRoot 'Tools/createPackagesV2.ps1'
 $packageScriptSource = [System.IO.File]::ReadAllText($packageScriptPath)
 $archiveCompressionExpectations = @(
   [pscustomobject]@{ Name = 'Main'; Format = 'General'; Compression = 'None' },
@@ -433,12 +434,12 @@ foreach ($archiveExpectation in $archiveCompressionExpectations) {
     '"\s*=\s*\[pscustomobject\]@\{(?<Definition>.*?)^\s*\}'
   $definitionMatch = [regex]::Match($packageScriptSource, $definitionPattern)
   if (!$definitionMatch.Success) {
-    throw "createPackages.ps1 is missing archive definition '$($archiveExpectation.Name)'."
+    throw "createPackagesV2.ps1 is missing archive definition '$($archiveExpectation.Name)'."
   }
   $definitionSource = $definitionMatch.Groups['Definition'].Value
   if ($definitionSource -cnotmatch ('(?m)^\s*Format\s*=\s*"' + [regex]::Escape([string]$archiveExpectation.Format) + '"\s*$') -or
       $definitionSource -cnotmatch ('(?m)^\s*Compression\s*=\s*"' + [regex]::Escape([string]$archiveExpectation.Compression) + '"\s*$')) {
-    throw "createPackages.ps1 archive '$($archiveExpectation.Name)' must use format=$($archiveExpectation.Format) and compression=$($archiveExpectation.Compression)."
+    throw "createPackagesV2.ps1 archive '$($archiveExpectation.Name)' must use format=$($archiveExpectation.Format) and compression=$($archiveExpectation.Compression)."
   }
 }
 Write-Host 'Verified the Bethesda-style Archive2 format and compression matrix.'
@@ -468,19 +469,17 @@ if ($payloadGuardIndex -lt 0 -or
     $payloadGuardIndex -gt $archiveInvocationIndex -or
     !$packageScriptSource.Contains('-VariantKeys $preArchiveVariantKeys') -or
     !$packageScriptSource.Contains('-Committed:$Committed')) {
-  throw 'createPackages.ps1 must verify every selected complete staged Interface payload before deleting or creating archives.'
+  throw 'createPackagesV2.ps1 must verify every selected complete staged Interface payload before deleting or creating archives.'
 }
 Write-Host 'Verified the pre-Archive2 complete staged Interface payload guard.'
 
-& (Join-Path $PSScriptRoot "verifyVariant.ps1") `
-  -VariantKeys @('TA', 'FC', 'CF', 'VWKS', 'MIN') `
+& (Join-Path $PSScriptRoot "verifyVariantV2.ps1") `
   -Committed `
   -PreArchiveMutation
 
-Write-Host "Verified all five v1 variants before archive mutation."
+Write-Host "Verified all six variants before archive mutation."
 
-& (Join-Path $PSScriptRoot "verifyVariant.ps1") `
-  -VariantKeys @('TA', 'FC', 'CF', 'VWKS', 'MIN') `
+& (Join-Path $PSScriptRoot "verifyVariantV2.ps1") `
   -Committed
 
-Write-Host "Verified all five v1 variants through the shared release pipeline."
+Write-Host "Verified all six variants through the shared release pipeline."

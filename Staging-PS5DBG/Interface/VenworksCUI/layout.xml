@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<venworksCUI>
-  <diagnosticText>Loaded from PS5DBG XML</diagnosticText>
-</venworksCUI>
+<html>
+  <head>
+    <title>Venworks HTML Test</title>
+  </head>
+  <body>
+    <section>
+      <h1>VENWORKS HUD</h1>
+      <p>This interface was created with basic HTML.</p>
+    </section>
+  </body>
+</html>

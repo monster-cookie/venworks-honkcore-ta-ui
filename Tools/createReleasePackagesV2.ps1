@@ -3,9 +3,8 @@
 Assembles version-independent Nexus and Bethesda release ZIPs.
 
 .PARAMETER VariantKeys
-One or more keys from the five v1 release variants. Omit this parameter to process
-all five v1 variants. PS5DBG requires createReleasePackagesV2.ps1. `VariantKey`
-remains a compatibility alias.
+One or more keys from `$Global:ReleaseVariants`. Omit this parameter to process
+all release variants. `VariantKey` remains a compatibility alias.
 #>
 [CmdletBinding()]
 param(
@@ -190,16 +189,7 @@ function New-ReleaseZip {
 $resolvedOutputDirectory = [System.IO.Path]::GetFullPath($OutputDirectory)
 New-Item -ItemType Directory -Force -Path $resolvedOutputDirectory | Out-Null
 
-$v1VariantKeys = @('TA', 'FC', 'CF', 'VWKS', 'MIN')
-if ($null -eq $VariantKeys -or $VariantKeys.Count -eq 0) {
-  $variants = @(Get-ModuleVariants -VariantKeys $v1VariantKeys)
-}
-else {
-  $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
-}
-if (@($variants | Where-Object { [string]$_.VariantKey -ceq 'PS5DBG' }).Count -ne 0) {
-  throw 'PS5DBG requires Tools/createReleasePackagesV2.ps1; the v1 release packager supports only TA, FC, CF, VWKS, and MIN.'
-}
+$variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
 
 foreach ($variant in $variants) {
   $stagingPath = (Resolve-Path -LiteralPath $variant.StagingFolderPath).Path
@@ -310,7 +300,7 @@ foreach ($variant in $variants) {
 }
 
 if ($null -eq $VariantKeys -or $VariantKeys.Count -eq 0) {
-  Write-Host -ForegroundColor Cyan "Created every configured release package shape for all five v1 variants."
+  Write-Host -ForegroundColor Cyan "Created every configured release package shape for all variants."
 }
 else {
   Write-Host -ForegroundColor Cyan "Created the configured release package shapes for the selected variants."

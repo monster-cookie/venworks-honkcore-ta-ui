@@ -3,9 +3,8 @@
 Compiles the shared Scaleform movies and stages independent variant payloads.
 
 .PARAMETER VariantKeys
-One or more keys from the five v1 release variants. Omit this parameter to process
-all five v1 variants. PS5DBG requires buildVariantV2.ps1. `VariantKey` remains a
-compatibility alias.
+One or more keys from `$Global:ReleaseVariants`. Omit this parameter to process
+all release variants. `VariantKey` remains a compatibility alias.
 #>
 [CmdletBinding()]
 param(
@@ -259,16 +258,7 @@ if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction Si
   -Path (Join-Path $PSScriptRoot "sharedScaleformProfiles.ps1") `
   -Description "Scaleform movie-profile helper")
 
-$v1VariantKeys = @('TA', 'FC', 'CF', 'VWKS', 'MIN')
-if ($null -eq $VariantKeys -or $VariantKeys.Count -eq 0) {
-  $variants = @(Get-ModuleVariants -VariantKeys $v1VariantKeys)
-}
-else {
-  $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
-}
-if (@($variants | Where-Object { [string]$_.VariantKey -ceq 'PS5DBG' }).Count -ne 0) {
-  throw 'PS5DBG requires Tools/buildVariantV2.ps1; the v1 builder supports only TA, FC, CF, VWKS, and MIN.'
-}
+$variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
 if ($variants.Count -eq 0) {
   throw "At least one variant must be selected."
 }
@@ -398,7 +388,7 @@ try {
       $auxiliaryCompileArguments.MarkerProbe = $true
     }
     Write-Host -ForegroundColor Green "Compiling the '$movieProfileName' validated auxiliary movie"
-    & (Join-Path $PSScriptRoot 'compileScaleformAuxiliary.ps1') @auxiliaryCompileArguments
+    & (Join-Path $PSScriptRoot 'compileScaleformAuxiliaryV2.ps1') @auxiliaryCompileArguments
     [void](Resolve-RequiredFile `
       -Path (Join-Path $auxiliaryProfileDirectory 'venworkscui.swf') `
       -Description "$movieProfileName auxiliary movie")
