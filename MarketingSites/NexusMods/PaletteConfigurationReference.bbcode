@@ -2,11 +2,9 @@
 
 This is the complete reference for players who want to create custom colors, text styles, transparency, outlines, and faction artwork. The [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/MarketingSites/NexusMods/ComponentLibrary.bbcode]component library[/url] shows which HUD sections and components use these values.
 
-The detailed palette rules are maintained in the repository's palette schema and reference documentation.
-The Scaleform/ActionScript resolver adds required-role, allowlist, reference,
-and compatibility checks. A palette must satisfy both.
+The detailed palette rules are maintained in the repository's palette schema and reference documentation. The Scaleform/ActionScript resolver adds required-role, allowlist, reference, and compatibility checks. A palette must satisfy both.
 
-Use the [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/MarketingSites/NexusMods/UserConfiguration.bbcode]player configuration guide[/url] for simple theme
+Use the [url=]player configuration guide[/url] for simple theme
 switching and the [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/MarketingSites/NexusMods/LayoutConfigurationReference.bbcode]layout configuration reference[/url]
 for all other XML elements.
 
@@ -14,12 +12,14 @@ for all other XML elements.
 
 Each of the four themed release variants packages all five palette XML files under [font=Courier New]Interface\VenworksCUI\palettes[/font]. The themed variant controls only the initial [font=Courier New]palette[/font] attribute in [font=Courier New]layout.xml[/font]. Minimalist packages no palette files; its build resolves the [font=Courier New]starfield.xml[/font] color roles to literals before staging its external layout and six component fragments.
 
-[list][*]Public appearance — Palette filename[/*][/list]
-[list][*]Venworks Customizable HUD - Venworks Theme — [font=Courier New]venworks.xml[/font][/*][/list]
-[list][*]Venworks Customizable HUD - Trackers Alliance Theme — [font=Courier New]trackers-alliance.xml[/font][/*][/list]
-[list][*]Venworks Customizable HUD - Freestar Collective Theme — [font=Courier New]freestar-collective.xml[/font][/*][/list]
-[list][*]Venworks Customizable HUD - Crimson Fleet Theme — [font=Courier New]crimson-fleet.xml[/font][/*][/list]
-[list][*]Included neutral Starfield option — [font=Courier New]starfield.xml[/font][/*][/list]
+[list]
+[*]Public appearance — Palette filename
+[*]Venworks Customizable HUD - Venworks Theme — [font=Courier New]venworks.xml[/font]
+[*]Venworks Customizable HUD - Trackers Alliance Theme — [font=Courier New]trackers-alliance.xml[/font]
+[*]Venworks Customizable HUD - Freestar Collective Theme — [font=Courier New]freestar-collective.xml[/font]
+[*]Venworks Customizable HUD - Crimson Fleet Theme — [font=Courier New]crimson-fleet.xml[/font]
+[*]Included neutral Starfield option — [font=Courier New]starfield.xml[/font]
+[/list]
 
 All five packaged palettes currently resolve their [font=Courier New]faction.logo[/font] roles to SVG
 files included with the HUD.
