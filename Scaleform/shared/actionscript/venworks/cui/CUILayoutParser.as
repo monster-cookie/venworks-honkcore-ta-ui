@@ -26,7 +26,8 @@ package venworks.cui
          var compositionTemplates:Object = null;
          var resolvedComponents:XML = null;
          this.requireName(param1,"venworksCUI");
-         if(param1.descendants("include").length() != 0 || param1.descendants("includes").length() != 0)
+         if(param1.descendants("include").length() != 0 || param1.descendants("swfComponent").length() != 0 ||
+            param1.descendants("includes").length() != 0)
          {
             throw new Error("INVALID|Layout imports must be resolved before palette preparation.");
          }
@@ -57,7 +58,8 @@ package venworks.cui
          paletteResolver = param1.venworksCUIPalette.length() == 1 ?
             new CUIPaletteResolver(param1.venworksCUIPalette[0]) : null;
          this.validatePaletteReferences(param1);
-         if(param1.descendants("include").length() != 0 || param1.descendants("includes").length() != 0)
+         if(param1.descendants("include").length() != 0 || param1.descendants("swfComponent").length() != 0 ||
+            param1.descendants("includes").length() != 0)
          {
             throw new Error("INVALID|Layout imports must be resolved before parsing.");
          }
@@ -542,12 +544,17 @@ package venworks.cui
          }
          else if(type == "scannerOverlay")
          {
-            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","fieldOfView","maxTargets","flickerIntervalMs","scanningColor","gridColor","contactColor","hostileColor","backgroundColor"]);
+            this.validateBase(param1,["id","x","y","width","height","opacity","visible","visibleWhen","rotation","scaleX","scaleY","z","anchor","fieldOfView","section","maxTargets","flickerIntervalMs","scanningColor","gridColor","contactColor","hostileColor","backgroundColor"]);
             this.requirePositiveBounds(param1);
             this.requireFinite(param1,"fieldOfView");
             if(Number(param1.@fieldOfView) < 30 || Number(param1.@fieldOfView) > 180)
             {
                throw new Error("INVALID|Scanner fieldOfView must be between 30 and 180 degrees: " + String(param1.@id));
+            }
+            if(param1.@section.length() == 1 && String(param1.@section) != "both" &&
+               String(param1.@section) != "hash" && String(param1.@section) != "data")
+            {
+               throw new Error("INVALID|Scanner section must be both, hash, or data: " + String(param1.@id));
             }
             this.requirePositiveInteger(param1,"maxTargets");
             if(int(param1.@maxTargets) > 5)

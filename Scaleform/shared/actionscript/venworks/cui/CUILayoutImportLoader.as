@@ -6,12 +6,13 @@ package venworks.cui
    import flash.events.SecurityErrorEvent;
    import flash.net.URLLoader;
    import flash.net.URLRequest;
+   import venworks.cui.components.library.CUISwfComponentLibrary;
 
    public final class CUILayoutImportLoader extends EventDispatcher
    {
       private static const LAYOUT_PATH:String = "VenworksCUI/layout.xml";
       private static const COMPONENT_ROOT:String = "VenworksCUI/components/";
-      private static const MAX_INCLUDES:int = 16;
+      private static const MAX_COMPONENT_REFERENCES:int = 16;
       private static const MAX_FRAGMENT_BYTES:int = 65536;
 
       private var rootLoader:URLLoader;
@@ -66,9 +67,10 @@ package venworks.cui
       private function onRootLoaded(param1:Event) : void
       {
          var config:XML = null;
-         var includes:XMLList = null;
+         var references:XMLList = null;
          var node:XML = null;
          var ids:Object = {};
+         var nodeName:String = null;
          if(cancelled)
          {
             return;
@@ -93,26 +95,46 @@ package venworks.cui
             this.fail("CUI LAYOUT INVALID","At most one includes element is allowed.");
             return;
          }
-         includes = config.includes.child("include");
-         if(includes.length() > MAX_INCLUDES)
+         references = config.includes.length() == 0 ? new XMLList() : config.includes[0].children();
+         if(references.length() > MAX_COMPONENT_REFERENCES)
          {
-            this.fail("CUI LAYOUT INVALID","The layout exceeds the 16-include limit.");
+            this.fail("CUI LAYOUT INVALID","The layout exceeds the 16-component-reference limit.");
             return;
          }
          resolvedLayout = config;
-         if(includes.length() == 0)
+         if(references.length() == 0)
          {
             delete resolvedLayout.includes;
             dispatchEvent(new Event(Event.COMPLETE));
             return;
          }
-         for each(node in includes)
+         for each(node in references)
          {
-            if(!this.validateInclude(node,ids))
+            nodeName = String(node.name());
+            if(nodeName == "include")
             {
+               if(!this.validateInclude(node,ids))
+               {
+                  return;
+               }
+               this.loadFragment(node);
+            }
+            else if(nodeName == "swfComponent")
+            {
+               if(!this.validateSwfComponent(node,ids) || !this.resolveSwfComponent(node))
+               {
+                  return;
+               }
+            }
+            else
+            {
+               this.fail("CUI LAYOUT INVALID","Unsupported component reference: " + nodeName);
                return;
             }
-            this.loadFragment(node);
+         }
+         if(pending == 0)
+         {
+            this.finish();
          }
       }
 
@@ -146,6 +168,64 @@ package venworks.cui
          if(param1.children().length() != 0)
          {
             this.fail("CUI LAYOUT INVALID","Include declarations cannot contain child elements: " + id);
+            return false;
+         }
+         return true;
+      }
+
+      private function validateSwfComponent(param1:XML, param2:Object) : Boolean
+      {
+         var allowed:Object = { id:true,name:true,variant:true,x:true,y:true,anchor:true,visible:true,visibleWhen:true,z:true };
+         var attribute:XML = null;
+         var id:String = String(param1.@id);
+         var name:String = String(param1.@name);
+         var variant:String = param1.@variant.length() == 1 ? String(param1.@variant) :
+            CUISwfComponentLibrary.STANDARD_VARIANT;
+         for each(attribute in param1.attributes())
+         {
+            if(allowed[String(attribute.name())] !== true)
+            {
+               this.fail("CUI LAYOUT INVALID","Unsupported swfComponent attribute: " + String(attribute.name()));
+               return false;
+            }
+         }
+         if(!/^[A-Za-z][A-Za-z0-9._-]{0,63}$/.test(id) || param2[id] === true)
+         {
+            this.fail("CUI LAYOUT INVALID","Component reference IDs must be unique valid identifiers: " + id);
+            return false;
+         }
+         param2[id] = true;
+         if(!CUISwfComponentLibrary.contains(name))
+         {
+            this.fail("CUI LAYOUT INVALID","Unknown SWF component: " + name);
+            return false;
+         }
+         if(!CUISwfComponentLibrary.isSupportedVariant(variant))
+         {
+            this.fail("CUI LAYOUT INVALID","Unsupported SWF component variant: " + variant);
+            return false;
+         }
+         if(param1.children().length() != 0)
+         {
+            this.fail("CUI LAYOUT INVALID","SWF component declarations cannot contain child elements: " + id);
+            return false;
+         }
+         return true;
+      }
+
+      private function resolveSwfComponent(param1:XML) : Boolean
+      {
+         var variant:String = param1.@variant.length() == 1 ? String(param1.@variant) :
+            CUISwfComponentLibrary.STANDARD_VARIANT;
+         var fragment:XML = null;
+         try
+         {
+            fragment = CUISwfComponentLibrary.create(String(param1.@name),variant);
+            records.push({ includeNode:param1.copy(),group:this.resolveFragment(param1,fragment) });
+         }
+         catch(param2:Error)
+         {
+            this.fail("CUI COMPONENT INVALID",param2.message);
             return false;
          }
          return true;
@@ -223,12 +303,12 @@ package venworks.cui
          if(String(param2.name()) != "venworksCUIFragment" || String(param2.@schemaVersion) != "1" ||
             String(param2.@runtimeVersion) != "1" || param2.attributes().length() != 2)
          {
-            throw new Error("Component root must be venworksCUIFragment with schemaVersion=1 and runtimeVersion=1: " + String(param1.@src));
+            throw new Error("Component root must be venworksCUIFragment with schemaVersion=1 and runtimeVersion=1: " + this.describeReference(param1));
          }
          if(param2.children().length() != 1 || param2.group.length() != 1 || param2.descendants("include").length() != 0 ||
             param2.descendants("includes").length() != 0)
          {
-            throw new Error("Component file must contain exactly one group and cannot contain imports: " + String(param1.@src));
+            throw new Error("Component definition must contain exactly one group and cannot contain imports: " + this.describeReference(param1));
          }
          root = param2.group[0].copy();
          this.prefixIds(root,String(param1.@id) + ".");
@@ -257,6 +337,15 @@ package venworks.cui
          root.@anchor = "top-left";
          wrapper.appendChild(root);
          return wrapper;
+      }
+
+      private function describeReference(param1:XML) : String
+      {
+         if(String(param1.name()) == "swfComponent")
+         {
+            return String(param1.@name);
+         }
+         return String(param1.@src);
       }
 
       private function prefixIds(param1:XML, param2:String) : void
@@ -353,7 +442,10 @@ package venworks.cui
          for each(record in records)
          {
             this.clearRecordListeners(record);
-            this.closeLoader(URLLoader(record.loader));
+            if(record.loader != null)
+            {
+               this.closeLoader(URLLoader(record.loader));
+            }
          }
       }
 
@@ -384,6 +476,10 @@ package venworks.cui
 
       private function clearRecordListeners(param1:Object) : void
       {
+         if(param1.loader == null)
+         {
+            return;
+         }
          URLLoader(param1.loader).removeEventListener(Event.COMPLETE,this.onFragmentLoaded);
          URLLoader(param1.loader).removeEventListener(IOErrorEvent.IO_ERROR,this.onFragmentMissing);
          URLLoader(param1.loader).removeEventListener(SecurityErrorEvent.SECURITY_ERROR,this.onFragmentSecurityError);

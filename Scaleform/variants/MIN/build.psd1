@@ -2,14 +2,18 @@
   MovieProfile = 'minimalist-live'
   AuxiliaryMovieManifestPath = 'Scaleform/variants/MIN/movies/venworkscui.build.xml'
   LayoutSource = 'Scaleform/variants/MIN/layout.xml'
-  ComponentSourceDirectory = 'Scaleform/variants/MIN/components'
-  ComponentFileNames = @(
-    'contact-radar.xml'
-    'environmental-hazard-scanner.xml'
-    'helmet-awareness.xml'
-    'player-status-scanner.xml'
-    'quest-tracker.xml'
-    'scanner-overlay.xml'
+  ComponentSourceDirectory = ''
+  ComponentFileNames = @()
+  SwfComponentNames = @(
+    'player-data-panel'
+    'planet-data-panel'
+    'compass'
+    'quest-tracker'
+    'threat-meter'
+    'radar'
+    'status-effect-screen'
+    'scanner-hash-panel'
+    'scanner-data-panel'
   )
   AssetSourceDirectory = ''
   AssetFileNames = @()

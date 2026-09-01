@@ -25,7 +25,8 @@ All paths below are relative to Starfield's `Data\Interface` directory.
 | Resource | Runtime path |
 |---|---|
 | Root layout | `VenworksCUI\layout.xml` |
-| Imported fragments | `VenworksCUI\components\<filename>.xml` |
+| Supplied component definitions | Compiled into `Interface\venworkscui.swf` |
+| Optional legacy custom fragments | `VenworksCUI\components\<filename>.xml` |
 | Selected palette | `VenworksCUI\palettes\<filename>.xml` |
 | Local SVG assets | `VenworksCUI\Assets\<relative-path>.svg` |
 
@@ -42,9 +43,8 @@ providers, or fetch network resources.
 The runtime processes an authored layout as one atomic configuration:
 
 1. Load and parse `layout.xml`.
-2. Validate no more than 16 `<include>` declarations and load their fragments.
-3. Require each fragment to contain one local root `<group>`, prefix its IDs,
-   and append its wrapper to the root `<components>` collection.
+2. Validate no more than 16 total `<swfComponent>` and legacy `<include>` declarations.
+3. Resolve supplied definitions synchronously from `venworkscui.swf` or load declared legacy fragments, require one local root `<group>`, prefix its IDs, and append its wrapper to the root `<components>` collection.
 4. Expand `button`, `quickBar`, `informationPanel`, and `warning` composites.
 5. Expand templates, instances, repeaters, and the selected static state.
 6. Load and validate the optional selected palette, then resolve compatible
@@ -79,8 +79,8 @@ The source `layout.xml` uses this order:
     <target id="topCenter" visibleWhen="always" />
   </vanillaVisibility>
   <includes>
-    <include id="example.fragment" src="faction-display.xml"
-             x="0" y="0" anchor="top-left" z="0" />
+    <swfComponent id="example.faction" name="faction-icon"
+                  x="0" y="0" anchor="top-left" z="0" />
   </includes>
   <components>
     <group id="example.inline" x="0" y="0"
@@ -131,8 +131,8 @@ They must begin with a letter and may be no longer than 64 characters.
 - Definition IDs are unique across meter styles and templates.
 - Component IDs are unique in each authored tree and in the final resolved
   layout.
-- Include IDs are unique in the root layout.
-- A fragment's local IDs are prefixed with `<include-id>.`.
+- Component-reference IDs are unique in the root layout.
+- A resolved definition's local IDs are prefixed with `<reference-id>.`.
 - Template descendant IDs are prefixed with the instance, repeater-item, or
   state ID.
 - Composite expansion creates additional IDs such as `<button-id>.label`; the
@@ -263,17 +263,47 @@ Templates may contain only `group`, `text`, `panel`, `shape`, `divider`,
 Templates cannot contain composites, specialized live renderers, another
 template/instance, a repeater, or a state.
 
-## Imported fragments
+## Reusable component references
 
-The optional root `<includes>` element accepts 1 through 16 `<include>` entries:
+The optional root `<includes>` element accepts 1 through 16 combined `<swfComponent>` and legacy `<include>` entries. Supplied HUD sections use `<swfComponent>`:
 
 ```xml
-<include id="player-status" src="player-status-scanner.xml"
-         x="-39" y="11" anchor="bottom-left"
-         visible="true" visibleWhen="always" z="100" />
+<swfComponent id="player-data-panel" name="player-data-panel"
+              x="-39" y="11" anchor="bottom-left"
+              visible="true" visibleWhen="always" z="100" />
 ```
 
-### Include attributes
+### SWF component attributes
+
+| Attribute | Required | Contract |
+|---|---:|---|
+| `id` | Yes | Unique valid identifier; becomes the wrapper ID and definition prefix. |
+| `name` | Yes | One of the 11 compiled component names listed below. |
+| `variant` | No | `standard` by default; `minimalist` selects the literal-color Minimalist definition. |
+| `x` | Yes | Finite wrapper position. |
+| `y` | Yes | Finite wrapper position. |
+| `anchor` | No | Root-safe-area anchor. |
+| `visible` | No | Static Boolean; default `true`. |
+| `visibleWhen` | No | Visibility expression applied to the wrapper. |
+| `z` | Yes | Use an integer; the final wrapper is validated as a component. |
+
+The compiled names are `faction-icon`, `radar`, `quest-tracker`, `planet-data-panel`, `player-data-panel`, `equipment-rail`, `compass`, `threat-meter`, `status-effect-screen`, `scanner-hash-panel`, and `scanner-data-panel`. All 11 exist in both production auxiliary profiles. The four themed layouts instantiate all 11 with the default `standard` variant; Minimalist instantiates nine with `variant="minimalist"` and omits `faction-icon` and `equipment-rail`.
+
+SWF component declarations cannot contain child elements. Their definitions are cloned from the local registry and then follow the same wrapper placement, ID prefixing, composition, palette, and validation path as an imported fragment. A missing name or unsupported variant invalidates the complete layout without starting an external file load.
+
+### Legacy external fragments
+
+Separately authored custom fragments remain supported through `<include>`:
+
+```xml
+<include id="custom.fragment" src="custom-fragment.xml"
+         x="0" y="0" anchor="center"
+         visible="true" visibleWhen="always" z="120" />
+```
+
+The release does not ship duplicate external XML definitions for its supplied 11 components.
+
+#### Legacy include attributes
 
 | Attribute | Required | Contract |
 |---|---:|---|

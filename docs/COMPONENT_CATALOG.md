@@ -24,19 +24,19 @@ This is a clean-room requirements catalog. It does not describe or reproduce HON
 
 ### Layout composition
 
-Root layouts may place reusable external fragments with bounded imports:
+Root layouts place supplied reusable definitions from `venworkscui.swf` with bounded references:
 
 ```xml
 <includes>
-  <include id="player-status-scanner" src="player-status-scanner.xml"
-           x="-39" y="11" anchor="bottom-left"
-           visible="true" visibleWhen="always" z="100" />
+  <swfComponent id="player-data-panel" name="player-data-panel"
+                x="-39" y="11" anchor="bottom-left"
+                visible="true" visibleWhen="always" z="100" />
 </includes>
 ```
 
-The runtime loads `src` only from `Interface/VenworksCUI/components`, resolves all includes atomically, prefixes fragment-local IDs with the include ID, and then passes the complete document to ordinary composition and validation. A fragment is a `venworksCUIFragment` containing exactly one local root `group`. Fragments cannot import other fragments. The root owns placement, anchoring, visibility, and z-order.
+The runtime clones the named definition from the local SWF registry, prefixes its local IDs with the reference ID, and then passes the complete document to ordinary composition and validation. The root owns placement, anchoring, visibility, and z-order. All 11 supplied names are compiled into both production auxiliary profiles; the four themed layouts instantiate all 11, while Minimalist instantiates the nine applicable definitions.
 
-At most 16 fragments may be included. Paths cannot contain traversal, subdirectories, backslashes, schemes, query strings, or URL fragments, and a fragment is limited to 65,536 characters. Missing, malformed, unsafe, nested, or duplicate imports fail the complete configurable layer with an actionable diagnostic.
+At most 16 combined SWF references and legacy external includes may be declared. The release ships no duplicate component XML. Separately authored legacy fragments remain supported: the runtime loads `src` only from `Interface/VenworksCUI/components`, fragments cannot import other fragments, paths cannot contain traversal, subdirectories, backslashes, schemes, query strings, or URL fragments, and a fragment is limited to 65,536 characters. Missing, malformed, unsafe, nested, unknown, or duplicate references fail the complete configurable layer with an actionable diagnostic.
 
 ### Palette contract
 
@@ -75,7 +75,7 @@ Goal 4A keeps a fixed 1920-by-1080 design coordinate system and relies on Starfi
 | State container | Implemented | Select one fixed configuration state without allowing arbitrary expressions or method calls. |
 | Mask/clip | Complete | Bound one or more children to rectangle, ellipse, or approved path geometry, including nested masks. |
 
-All five movie profiles expose the complete component catalog above. The shipped Minimalist layout does not instantiate `panel`, `mask`, `svg`, `path`, `icon`, or `providerSymbol`, but their runtime classes remain present. Its loose layout and six component fragments compose fitted holographic surfaces from groups, text, translucent native rectangle and ellipse shapes, dividers, meters, radar rings, markers, and the remaining specialized components.
+All five movie profiles expose the complete component catalog above and compile all 11 supplied reusable definitions. The shipped Minimalist layout does not instantiate `panel`, `mask`, `svg`, `path`, `icon`, or `providerSymbol`, but their runtime classes remain present. Its loose layout references nine `minimalist` definitions that compose fitted holographic surfaces from groups, text, translucent native rectangle and ellipse shapes, dividers, meters, radar rings, markers, and the remaining specialized components.
 
 ## Meter and bar family
 
@@ -260,13 +260,13 @@ Future player documentation must call the component a **200-provider-unit acquir
 
 The retired top-center probe reported the complete general-marker count and unique numeric marker types as `G:<count> TYPES:<types>`. It established the 10/13 runtime mapping without adding another provider, recursive field dumping, input, callbacks, persistence, native code, or SFSE behavior. Its panel, binding, and count/type formatting are absent from the production HUD; the existing `HudCompassData` subscription remains solely to deliver radar data.
 
-The adjacent `faction-display` fragment owns its palette-selected SVG crest and panel separately from `contact-radar`. Each has an independent layout include, so a theme or player configuration can hide the faction display while leaving the passive radar active. The selected crest identifies the configured theme, not the player's live faction membership. Branding text embedded in a selected owned SVG, when present, is the sole logo label; the layout must not add a duplicate text label.
+The adjacent `faction-icon` SWF component owns its palette-selected SVG crest and panel separately from `radar`. Each has an independent layout reference, so a theme or player configuration can hide the faction icon while leaving the passive radar active. The selected crest identifies the configured theme, not the player's live faction membership. Branding text embedded in a selected owned SVG, when present, is the sole logo label; the layout must not add a duplicate text label.
 
-The contact radar is also independent from Bethesda's Watch. It remains on the owned `VenworksCUIComponentLayer`, uses its own fixed-size `Shape` pool, and only shares the read-only `HudCompassData` provider. Vanilla visibility targets use real display visibility composed from Bethesda `HudModeData` and the configured `visibleWhen` expression. Consequently a false expression removes the target tree from rendering instead of leaving it active at alpha zero. A target may use paired `offsetX` and `offsetY` values to retain its original Bethesda-authored position plus a design-space offset; relative offsets cannot be mixed with the absolute `x`, `y`, and `anchor` placement contract. Neither Watch state changes radar ownership or visibility, and the separate faction-display include can be disabled independently.
+The contact radar is also independent from Bethesda's Watch. It remains on the owned `VenworksCUIComponentLayer`, uses its own fixed-size `Shape` pool, and only shares the read-only `HudCompassData` provider. Vanilla visibility targets use real display visibility composed from Bethesda `HudModeData` and the configured `visibleWhen` expression. Consequently a false expression removes the target tree from rendering instead of leaving it active at alpha zero. A target may use paired `offsetX` and `offsetY` values to retain its original Bethesda-authored position plus a design-space offset; relative offsets cannot be mixed with the absolute `x`, `y`, and `anchor` placement contract. Neither Watch state changes radar ownership or visibility, and the separate `faction-icon` reference can be disabled independently.
 
 ## Card 142 persistent quest tracker
 
-The `quest-tracker` fragment is an independent noninteractive 447-by-90 panel joined directly below the upper-left faction and contact-radar panels. The three panels preserve their matching 18-design-unit corner locations with rounded quadratic returns instead of straight bevels. Its multiline, word-wrapped text binds to `quest.objective`. The include uses `always`, so the panel remains present with a blank text field when no active tracked-objective text exists. It has no scanner, aiming, combat, or view-mode condition and therefore remains part of normal, aiming, and scanner HUD compositions.
+The `quest-tracker` SWF component is an independent noninteractive 447-by-90 panel joined directly below the upper-left faction and radar panels. The three panels preserve their matching 18-design-unit corner locations with rounded quadratic returns instead of straight bevels. Its multiline, word-wrapped text binds to `quest.objective`. The reference uses `always`, so the panel remains present with a blank text field when no active tracked-objective text exists. It has no scanner, aiming, combat, or view-mode condition and therefore remains part of normal, aiming, and scanner HUD compositions.
 
 The scanner survey panel is not part of HUDMenu's `bottomLeft` group. Bethesda creates it as `MonocleMenu.PlanetInfo_mc` whenever the on-foot scanner opens. The shipped build does not override either Monocle movie: recompiling its document class broke scanner button initialization and prevented scanner exit despite passing static reopen checks. Survey placement therefore remains at Bethesda's stock position pending a separately validated, bytecode-preserving approach.
 

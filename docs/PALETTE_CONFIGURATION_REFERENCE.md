@@ -14,7 +14,7 @@ lists the HUD sections and components that consume these palette values.
 
 ## Included palettes and public themes
 
-Each of the four themed release variants packages all five palette XML files under `Interface\VenworksCUI\palettes`. The themed variant controls only the initial `palette` attribute in `layout.xml`. Minimalist packages no palette files; its build resolves the `starfield.xml` color roles to literals before staging its external layout and six component fragments.
+Each of the four themed release variants packages all five palette XML files under `Interface\VenworksCUI\palettes`. The themed variant controls only the initial `palette` attribute in `layout.xml`. Minimalist packages no palette files; its build resolves the `starfield.xml` color roles to literals in its root layout and `minimalist` SWF component definitions.
 
 | Public appearance | Palette filename |
 |---|---|
@@ -274,7 +274,7 @@ The required asset role is `faction.logo`.
 Palette SVG assets must be single files directly under
 `Interface\VenworksCUI\Assets`; subdirectories and `..` are rejected.
 
-The production faction-display fragment consumes `faction.logo` through
+The production `faction-icon` SWF component consumes `faction.logo` through
 `<svg src="@palette.assets.faction.logo">`. Therefore a palette used with the
 production layout must declare `faction.logo` as `kind="svg"`, even though the
 general palette schema permits the other asset kinds.

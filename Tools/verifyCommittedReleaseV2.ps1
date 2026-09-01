@@ -208,16 +208,27 @@ foreach ($relativeScriptPath in $trackedPowerShellScripts) {
 }
 Write-Host "Validated PowerShell syntax for $($trackedPowerShellScripts.Count) tracked scripts."
 
-$components = @(
-  'contact-radar.xml',
-  'faction-display.xml',
-  'equipment-rail.xml',
-  'environmental-hazard-scanner.xml',
-  'helmet-awareness.xml',
-  'player-status-scanner.xml',
-  'quest-tracker.xml',
-  'scanner-overlay.xml'
+$removedSuppliedComponentPaths = @(
+  'Scaleform/shared/fixtures/components/contact-radar.xml',
+  'Scaleform/shared/fixtures/components/environmental-hazard-scanner.xml',
+  'Scaleform/shared/fixtures/components/equipment-rail.xml',
+  'Scaleform/shared/fixtures/components/faction-display.xml',
+  'Scaleform/shared/fixtures/components/helmet-awareness.xml',
+  'Scaleform/shared/fixtures/components/player-status-scanner.xml',
+  'Scaleform/shared/fixtures/components/quest-tracker.xml',
+  'Scaleform/shared/fixtures/components/scanner-overlay.xml',
+  'Scaleform/variants/MIN/components/contact-radar.xml',
+  'Scaleform/variants/MIN/components/environmental-hazard-scanner.xml',
+  'Scaleform/variants/MIN/components/helmet-awareness.xml',
+  'Scaleform/variants/MIN/components/player-status-scanner.xml',
+  'Scaleform/variants/MIN/components/quest-tracker.xml',
+  'Scaleform/variants/MIN/components/scanner-overlay.xml'
 )
+foreach ($removedSuppliedComponentPath in $removedSuppliedComponentPaths) {
+  if (Test-Path -LiteralPath (Join-Path $repositoryRoot $removedSuppliedComponentPath)) {
+    throw "Supplied component XML must remain removed after its definition moves into venworkscui.swf: $removedSuppliedComponentPath"
+  }
+}
 $palettes = @(
   'venworks.xml',
   'crimson-fleet.xml',
@@ -317,7 +328,6 @@ if (@($diagnosticMovieProfile.DeploymentMovieDefinitions | Where-Object { $_.Sou
 }
 
 $expectedInventory = @('layout.xml')
-$expectedInventory += @($components | ForEach-Object { "components/$_" })
 $expectedInventory += @($palettes | ForEach-Object { "palettes/$_" })
 $expectedInventory += @($assets | ForEach-Object { "Assets/$_" })
 $movieHashes = @{}
@@ -326,7 +336,6 @@ foreach ($movie in $movies) {
 }
 
 $layoutSourcePath = Join-Path $repositoryRoot 'Scaleform/shared/fixtures/chronomark-provider-probe.xml'
-$componentSourceRoot = Join-Path $repositoryRoot 'Scaleform/shared/fixtures/components'
 $paletteSourceRoot = Join-Path $repositoryRoot 'Scaleform/shared/palettes'
 $assetSourceRoot = Join-Path $repositoryRoot 'Scaleform/shared/assets'
 
@@ -359,12 +368,6 @@ foreach ($variant in $variants) {
       throw "$($variant.Name) $($movie.FileName) must be 1920x1080 at 30 fps with one frame; found $($movieMetadata.StageWidth)x$($movieMetadata.StageHeight) at $($movieMetadata.FrameRate) fps with $($movieMetadata.FrameCount) frames."
     }
     $movieHashes[$movie.FileName].Add($actualHash)
-  }
-  foreach ($component in $components) {
-    Assert-MatchingFile `
-      -ExpectedPath (Join-Path $componentSourceRoot $component) `
-      -ActualPath (Join-Path (Join-Path $payloadRoot 'components') $component) `
-      -Description "$($variant.Name) component $component"
   }
   foreach ($palette in $palettes) {
     Assert-MatchingFile `
