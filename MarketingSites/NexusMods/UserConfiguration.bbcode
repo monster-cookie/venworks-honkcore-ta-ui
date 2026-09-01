@@ -1,11 +1,8 @@
-[size=4][b][u]Venworks Customizable HUD: Player Guide[/u][/b][/size]
+[size=4][b][u]Player Configuration Guide[/u][/b][/size]
 
 This guide is for players who want to customize the look, placement, visibility, and colors of the Venworks Customizable HUD. You do not need to change HUD movies or write code; make changes in the supplied XML files.
 
-For every supported XML element and attribute, use the
-[url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/MarketingSites/NexusMods/LayoutConfigurationReference.bbcode]layout configuration reference[/url]. For a
-complete palette contract and custom-theme workflow, use the
-[url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/MarketingSites/NexusMods/PaletteConfigurationReference.bbcode]palette configuration reference[/url]. For reusable HUD sections, components, and display filters, use the [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/MarketingSites/NexusMods/ComponentLibrary.bbcode]component library[/url].
+For every supported XML element and attribute, use the [url=https://www.nexusmods.com/starfield/articles/1117]Layout Configuration Reference[/url]. For a complete palette information and custom-theme workflow, use the [url=https://www.nexusmods.com/starfield/articles/1118]Palette Configuration Reference[/url]. For reusable HUD sections, components,and display filters, use the [url=https://www.nexusmods.com/starfield/articles/1116]Component Library[/url].
 
 [size=3][b][u]Before you edit[/u][/b][/size]
 
@@ -19,21 +16,13 @@ complete palette contract and custom-theme workflow, use the
 
 When replacing an experimental Bethesda Creation with an official release that owns the same ESM identity, uninstall the experimental entry first and verify that only one remains before installing the replacement; duplicate Creation entries can compete over the same plugin and BA2 files.
 
-Mod-manager updates, reinstalls, purge/deploy operations, and file-conflict
-changes can replace local edits. The normal Nexus package supplies only
-[font=Courier New]layout.xml[/font] loose; its component fragments, palettes, and SVG assets remain in
-the BA2. The safest long-term setup for advanced changes is a small personal
-override mod containing only your changed [font=Courier New]Interface\VenworksCUI[/font] files and
-loading after the selected theme variant. Alternatively, use the Nexus PC -
-Fully Loose Files package by itself. If you edit a downloaded file directly,
-keep a separate backup that an update cannot overwrite.
+Mod-manager updates, reinstalls, purge/deploy operations, and file-conflict changes can replace local edits. The normal Nexus package supplies only [font=Courier New]layout.xml[/font] loose; its component fragments, palettes, and SVG assets remain in the BA2. The safest long-term setup for advanced changes is a small personal override mod containing only your changed [font=Courier New]Interface\VenworksCUI[/font] files and loading after the selected theme variant. Alternatively, use the Nexus PC - Fully Loose Files package by itself. If you edit a downloaded file directly, keep a separate backup that an update cannot overwrite.
 
 Do not edit [font=Courier New]hudmenu.gfx[/font], [font=Courier New]hudmenu_lrg.gfx[/font], or [font=Courier New]venworkscui.swf[/font] to make the XML changes in this guide. The base HUD movies load the packaged standalone configuration runtime automatically.
 
 [size=3][b][u]Installed files[/u][/b][/size]
 
-The release variants expose these runtime paths relative to Starfield's
-[font=Courier New]Data\Interface[/font] directory:
+The release variants expose these runtime paths relative to Starfield's [font=Courier New]Data\Interface[/font] directory:
 
 [code]
 VenworksCUI\
@@ -48,22 +37,18 @@ VenworksCUI\
 
 The important files are:
 
-[list][*]Path — Purpose[/*][/list]
-[list][*][font=Courier New]Interface\VenworksCUI\layout.xml[/font] — Selects the palette, defines shared meter styles, controls Bethesda HUD targets, places reusable fragments, and contains small root-level components.[/*][/list]
-[list][*][font=Courier New]Interface\VenworksCUI\components\*.xml[/font] — Defines the contents of each reusable HUD section.[/*][/list]
-[list][*][font=Courier New]Interface\VenworksCUI\palettes\*.xml[/font] — Defines semantic colors, typography, opacity, strokes, and the faction crest.[/*][/list]
-[list][*][font=Courier New]Interface\VenworksCUI\Assets\*.svg[/font] — Contains supported local vector artwork used by the layout or palettes.[/*][/list]
+[list]
+[*][font=Courier New]Interface\VenworksCUI\layout.xml[/font] — Selects the palette, defines shared meter styles, controls Bethesda HUD targets, places reusable fragments, and contains small root-level components.
+[*][font=Courier New]Interface\VenworksCUI\components\*.xml[/font] — Defines the contents of each reusable HUD section.
+[*][font=Courier New]Interface\VenworksCUI\palettes\*.xml[/font] — Defines semantic colors, typography, opacity, strokes, and the faction crest.
+[*][font=Courier New]Interface\VenworksCUI\Assets\*.svg[/font] — Contains supported local vector artwork used by the layout or palettes.
+[/list]
 
 Minimalist includes [font=Courier New]layout.xml[/font] and six component fragments, but intentionally omits the [font=Courier New]Assets[/font] and [font=Courier New]palettes[/font] directories. Its build resolves the shipped Starfield color roles to literals. The normal package exposes its layout loose; the fully loose package exposes the reduced XML tree and nine movies: byte-identical CWS normal/large HUD aliases at both [font=Courier New].gfx[/font] and [font=Courier New].swf[/font] paths, the native GFX/CWS HUD-message pairs, and the standalone CWS [font=Courier New]venworkscui.swf[/font] runtime.
 
-The Nexus PC - Normal package exposes only [font=Courier New]layout.xml[/font] from this tree as a
-loose file. The runtime resolves referenced component fragments and, when
-configured, palettes and SVG assets from the package's BA2. Do not install the
-normal and fully loose packages together.
+The Nexus PC - Normal package exposes only [font=Courier New]layout.xml[/font] from this tree as a loose file. The runtime resolves referenced component fragments and, when configured, palettes and SVG assets from the package's BA2. Do not install the normal and fully loose packages together.
 
-When using a mod manager, open the active mod's own file directory rather than
-assuming the deployed [font=Courier New]Data[/font] copy is the authoritative source. The exact
-manager-specific staging location is intentionally not fixed by this project.
+When using a mod manager, open the active mod's own file directory rather than assuming the deployed [font=Courier New]Data[/font] copy is the authoritative source. The exact manager-specific staging location is intentionally not fixed by this project.
 
 [size=3][b][u]How configuration loading works[/u][/b][/size]
 
@@ -79,15 +64,11 @@ At HUD startup, the base HUD bootstrap asynchronously loads [font=Courier New]In
 [*]displays the complete custom layer only after those steps succeed.[/*]
 [/list]
 
-The process is atomic. One invalid file prevents the configurable layer from
-partially rendering. A diagnostic panel identifies the failure category and,
-when available, the phase, checkpoint, component type, and component ID.
+The process is atomic. One invalid file prevents the configurable layer from partially rendering. A diagnostic panel identifies the failure category and, when available, the phase, checkpoint, component type, and component ID.
 
 Minimalist follows the same external configuration loading path and uses live data contexts. It omits only the four providers used exclusively by its removed equipment rail; all remaining conditions and live-value bindings stay active. Every variant uses the same nine-path movie inventory in its fully loose package and in each platform's Main archive: CWS normal/large HUD bytes under both [font=Courier New].gfx[/font] and [font=Courier New].swf[/font] aliases, native GFX/CWS HUD-message pairs, and [font=Courier New]venworkscui.swf[/font]. The base HUD and HUD-message paths are shared across all variants; Minimalist's standalone CUI movie is profile-specific.
 
-There is no live reload command. After every XML or SVG change, fully exit and
-restart Starfield. Merely closing the scanner or opening a menu is not a
-guaranteed reload.
+There is no live reload command. After every XML or SVG change, fully exit and restart Starfield. Merely closing the scanner or opening a menu is not a guaranteed reload.
 
 [size=3][b][u]Switch the active theme[/u][/b][/size]
 
@@ -104,27 +85,22 @@ attribute:
 
 The packaged choices are:
 
-[list][*]Appearance — Palette filename[/*][/list]
-[list][*]Venworks Customizable HUD - Venworks Theme — [font=Courier New]venworks.xml[/font][/*][/list]
-[list][*]Venworks Customizable HUD - Trackers Alliance Theme — [font=Courier New]trackers-alliance.xml[/font][/*][/list]
-[list][*]Venworks Customizable HUD - Freestar Collective Theme — [font=Courier New]freestar-collective.xml[/font][/*][/list]
-[list][*]Venworks Customizable HUD - Crimson Fleet Theme — [font=Courier New]crimson-fleet.xml[/font][/*][/list]
-[list][*]Neutral Starfield option — [font=Courier New]starfield.xml[/font][/*][/list]
+[list]
+[*]Appearance — Palette filename
+[*]Venworks Customizable HUD - Venworks Theme — [font=Courier New]venworks.xml[/font]
+[*]Venworks Customizable HUD - Trackers Alliance Theme — [font=Courier New]trackers-alliance.xml[/font]
+[*]Venworks Customizable HUD - Freestar Collective Theme — [font=Courier New]freestar-collective.xml[/font]
+[*]Venworks Customizable HUD - Crimson Fleet Theme — [font=Courier New]crimson-fleet.xml[/font]
+[*]Neutral Starfield option — [font=Courier New]starfield.xml[/font]
+[/list]
 
-The filename must name one XML file directly inside
-[font=Courier New]Interface\VenworksCUI\palettes[/font]. Subdirectories, path traversal, URLs, query
-strings, and fragments are rejected.
+The filename must name one XML file directly inside [font=Courier New]Interface\VenworksCUI\palettes[/font]. Subdirectories, path traversal, URLs, query strings, and fragments are rejected.
 
-Every themed release variant includes all five palette XML files. The themed
-variant only chooses the initial default. All five current palette logo
-references resolve to SVG files included with the themed HUD. Minimalist does
-not ship an external palette or SVG asset, and its root layout has no palette
-selector, although its movie retains the same palette and SVG runtime.
+Every themed release variant includes all five palette XML files. The themed variant only chooses the initial default. All five current palette logo references resolve to SVG files included with the themed HUD. Minimalist does not ship an external palette or SVG asset, and its root layout has no palette selector, although its movie retains the same palette and SVG runtime.
 
 [size=3][b][u]Move a complete HUD section[/u][/b][/size]
 
-Reusable HUD sections are placed in the [font=Courier New]<includes>[/font] block of [font=Courier New]layout.xml[/font].
-Each [font=Courier New]<include>[/font] has an [font=Courier New]x[/font], [font=Courier New]y[/font], and optional [font=Courier New]anchor[/font]:
+Reusable HUD sections are placed in the [font=Courier New]<includes>[/font] block of [font=Courier New]layout.xml[/font]. Each [font=Courier New]<include>[/font] has an [font=Courier New]x[/font], [font=Courier New]y[/font], and optional [font=Courier New]anchor[/font]:
 
 [code]
 <include id="equipment-rail" src="equipment-rail.xml"
@@ -146,19 +122,19 @@ bottom-left    bottom-center    bottom-right
 
 The production fragments are:
 
-[list][*]Include ID — File — HUD section[/*][/list]
-[list][*][font=Courier New]faction-display[/font] — [font=Courier New]faction-display.xml[/font] — Palette-selected faction crest.[/*][/list]
-[list][*][font=Courier New]contact-radar[/font] — [font=Courier New]contact-radar.xml[/font] — Bounded acquired-contact radar.[/*][/list]
-[list][*][font=Courier New]quest-tracker[/font] — [font=Courier New]quest-tracker.xml[/font] — Persistent tracked objective.[/*][/list]
-[list][*][font=Courier New]environmental-hazard-scanner[/font] — [font=Courier New]environmental-hazard-scanner.xml[/font] — Location, planet, local solar-transition countdown, protection, and exposure status.[/*][/list]
-[list][*][font=Courier New]player-status-scanner[/font] — [font=Courier New]player-status-scanner.xml[/font] — Player statistics and meters.[/*][/list]
-[list][*][font=Courier New]equipment-rail[/font] — [font=Courier New]equipment-rail.xml[/font] — Favorites, weapon, explosive, and power information.[/*][/list]
-[list][*][font=Courier New]helmet-awareness[/font] — [font=Courier New]helmet-awareness.xml[/font] — Compass, threat state, and status effects.[/*][/list]
-[list][*][font=Courier New]scanner-overlay[/font] — [font=Courier New]scanner-overlay.xml[/font] — Scanner-only pulse and forward contacts.[/*][/list]
+[list]
+[*]Include ID — File — HUD section
+[*][font=Courier New]faction-display[/font] — [font=Courier New]faction-display.xml[/font] — Palette-selected faction crest.
+[*][font=Courier New]contact-radar[/font] — [font=Courier New]contact-radar.xml[/font] — Bounded acquired-contact radar.
+[*][font=Courier New]quest-tracker[/font] — [font=Courier New]quest-tracker.xml[/font] — Persistent tracked objective.
+[*][font=Courier New]environmental-hazard-scanner[/font] — [font=Courier New]environmental-hazard-scanner.xml[/font] — Location, planet, local solar-transition countdown, protection, and exposure status.
+[*][font=Courier New]player-status-scanner[/font] — [font=Courier New]player-status-scanner.xml[/font] — Player statistics and meters.
+[*][font=Courier New]equipment-rail[/font] — [font=Courier New]equipment-rail.xml[/font] — Favorites, weapon, explosive, and power information.
+[*][font=Courier New]helmet-awareness[/font] — [font=Courier New]helmet-awareness.xml[/font] — Compass, threat state, and status effects.
+[*][font=Courier New]scanner-overlay[/font] — [font=Courier New]scanner-overlay.xml[/font] — Scanner-only pulse and forward contacts.
+[/list]
 
-Change one axis at a time in small increments, restart the game, and check
-normal, aiming, scanner, and vehicle states. A placement that looks correct in
-one state can overlap Bethesda-owned content in another.
+Change one axis at a time in small increments, restart the game, and check normal, aiming, scanner, and vehicle states. A placement that looks correct in one state can overlap Bethesda-owned content in another.
 
 [size=3][b][u]Hide a complete HUD section[/u][/b][/size]
 
@@ -170,11 +146,9 @@ Set the include's [font=Courier New]visible[/font] attribute to [font=Courier Ne
          visible="false" visibleWhen="always" z="103" />
 [/code]
 
-Keep the include in the file. Removing it also works structurally, but toggling
-[font=Courier New]visible[/font] makes the customization easier to maintain and reverse.
+Keep the include in the file. Removing it also works structurally, but toggling [font=Courier New]visible[/font] makes the customization easier to maintain and reverse.
 
-[font=Courier New]visible="false"[/font] always hides the section. [font=Courier New]visibleWhen[/font] cannot override a
-static false value.
+[font=Courier New]visible="false"[/font] always hides the section. [font=Courier New]visibleWhen[/font] cannot override a static false value.
 
 [size=3][b][u]Show a section only in a specific state[/u][/b][/size]
 
@@ -186,9 +160,7 @@ Use [font=Courier New]visibleWhen[/font] with an allowlisted condition:
          visible="true" visibleWhen="inScanner" z="109" />
 [/code]
 
-Conditions are case-insensitive and ignore underscores. They support [font=Courier New]AND[/font],
-[font=Courier New]OR[/font], [font=Courier New]NOT[/font], parentheses, and the numeric comparison operators [font=Courier New]=[/font], [font=Courier New]!=[/font],
-[font=Courier New]<>[/font], [font=Courier New]<[/font], [font=Courier New]<=[/font], [font=Courier New]>[/font], and [font=Courier New]>=[/font].
+Conditions are case-insensitive and ignore underscores. They support [font=Courier New]AND[/font], [font=Courier New]OR[/font], [font=Courier New]NOT[/font], parentheses, and the numeric comparison operators [font=Courier New]=[/font], [font=Courier New]!=[/font], [font=Courier New]<>[/font], [font=Courier New]<[/font], [font=Courier New]<=[/font], [font=Courier New]>[/font], and [font=Courier New]>=[/font].
 
 Examples:
 
@@ -200,33 +172,23 @@ visibleWhen="weaponAiming OR inScanner"
 visibleWhen="hudOpacityPercentage >= 50"
 [/code]
 
-Unknown live state evaluates as unknown and therefore remains hidden. Use the
-[url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/MarketingSites/NexusMods/LayoutConfigurationReference.bbcode]condition reference[/url]
-for the complete allowlist and expression limits.
+Unknown live state evaluates as unknown and therefore remains hidden. Use the [url=https://www.nexusmods.com/starfield/articles/1117]Layout Configuration Reference[/url] for the complete allowlist and expression limits.
 
 [size=3][b][u]Adjust the root safe area[/u][/b][/size]
 
-The root layout always uses a 1920-by-1080 design coordinate system. The four
-safe-area values inset the area used by root anchors from Starfield's visible
-rectangle:
+The root layout always uses a 1920-by-1080 design coordinate system. The four safe-area values inset the area used by root anchors from Starfield's visible rectangle:
 
 [code]
 safeLeft="64" safeTop="36" safeRight="64" safeBottom="36"
 [/code]
 
-Larger values move anchored content farther inward from that edge. Values must
-be non-negative. [font=Courier New]safeLeft + safeRight[/font] cannot exceed 1920, and
-[font=Courier New]safeTop + safeBottom[/font] cannot exceed 1080. The insets must leave a nonempty
-visible area.
+Larger values move anchored content farther inward from that edge. Values must be non-negative. [font=Courier New]safeLeft + safeRight[/font] cannot exceed 1920, and [font=Courier New]safeTop + safeBottom[/font] cannot exceed 1080. The insets must leave a nonempty visible area.
 
-Safe-area changes affect anchored root components and included fragments. They
-do not apply nonuniform screen scaling and should be tested at the actual aspect
-ratio where they will be used.
+Safe-area changes affect anchored root components and included fragments. They do not apply nonuniform screen scaling and should be tested at the actual aspect ratio where they will be used.
 
 [size=3][b][u]Move, resize, scale, or fade an individual component[/u][/b][/size]
 
-Open the owning file under [font=Courier New]Interface\VenworksCUI\components[/font]. Most rendered
-components share these attributes:
+Open the owning file under [font=Courier New]Interface\VenworksCUI\components[/font]. Most rendered components share these attributes:
 
 [code]
 <group id="unique.name"
@@ -245,36 +207,28 @@ components share these attributes:
 [*][font=Courier New]rotation[/font] is expressed in degrees.[/*]
 [*][font=Courier New]scaleX[/font] and [font=Courier New]scaleY[/font] are finite multipliers. Use equal values to preserve proportions.[/*]
 [*][font=Courier New]z[/font] is an integer used to order siblings; larger values draw above smaller values.[/*]
-[/list]
-[list]
 [*][font=Courier New]visible[/font] and [font=Courier New]visibleWhen[/font] combine: both must permit display.[/*]
 [/list]
 
-To scale a complete imported fragment, change [font=Courier New]scaleX[/font] and [font=Courier New]scaleY[/font] on the
-fragment's one root [font=Courier New]<group>[/font]. Include declarations do not have scale
-attributes. Scaling does not automatically reflow surrounding sections, so
-recheck overlaps and anchor offsets.
+To scale a complete imported fragment, change [font=Courier New]scaleX[/font] and [font=Courier New]scaleY[/font] on the fragment's one root [font=Courier New]<group>[/font]. Include declarations do not have scale attributes. Scaling does not automatically reflow surrounding sections, so recheck overlaps and anchor offsets.
 
-Keep every [font=Courier New]id[/font] unique within its document. IDs must start with a letter, may
-contain letters, numbers, dots, underscores, and hyphens, and may be no longer
-than 64 characters.
+Keep every [font=Courier New]id[/font] unique within its document. IDs must start with a letter, may contain letters, numbers, dots, underscores, and hyphens, and may be no longer than 64 characters.
 
 [size=3][b][u]Control approved Bethesda HUD sections[/u][/b][/size]
 
-The optional [font=Courier New]<vanillaVisibility>[/font] block in [font=Courier New]layout.xml[/font] can conditionally show,
-hide, or reposition only six whole Bethesda HUD targets:
+The optional [font=Courier New]<vanillaVisibility>[/font] block in [font=Courier New]layout.xml[/font] can conditionally show, hide, or reposition only six whole Bethesda HUD targets:
 
-[list][*]Target ID — Bethesda display[/*][/list]
-[list][*][font=Courier New]topCenter[/font] — Top-center HUD group.[/*][/list]
-[list][*][font=Courier New]bottomLeft[/font] — Watch/environment HUD group.[/*][/list]
-[list][*][font=Courier New]rightMeters[/font] — Right-side meters.[/*][/list]
-[list][*][font=Courier New]socialCommandIcons[/font] — Social command icons.[/*][/list]
-[list][*][font=Courier New]floatingQuestMarkers[/font] — Floating quest markers.[/*][/list]
-[list][*][font=Courier New]crewBuffWidget[/font] — Crew buff widget.[/*][/list]
+[list]
+[*]Target ID — Bethesda display
+[*][font=Courier New]topCenter[/font] — Top-center HUD group.
+[*][font=Courier New]bottomLeft[/font] — Watch/environment HUD group.
+[*][font=Courier New]rightMeters[/font] — Right-side meters.
+[*][font=Courier New]socialCommandIcons[/font] — Social command icons.
+[*][font=Courier New]floatingQuestMarkers[/font] — Floating quest markers.
+[*][font=Courier New]crewBuffWidget[/font] — Crew buff widget.
+[/list]
 
-Target names are case-insensitive and ignore underscores. The production layout
-suppresses the Bethesda Watch/environment group and right-side meters with real
-display visibility:
+Target names are case-insensitive and ignore underscores. The production layout suppresses the Bethesda Watch/environment group and right-side meters with real display visibility:
 
 [code]
 <vanillaVisibility>
@@ -283,26 +237,17 @@ display visibility:
 </vanillaVisibility>
 [/code]
 
-Do not use an offset to move an unwanted target outside the design area. That
-is not a visibility contract and can fail under UI scaling or aspect-ratio
-changes.
+Do not use an offset to move an unwanted target outside the design area. That is not a visibility contract and can fail under UI scaling or aspect-ratio changes.
 
-Relative placement requires [font=Courier New]offsetX[/font] and [font=Courier New]offsetY[/font] together and adds them to
-Bethesda's original position. Absolute placement requires [font=Courier New]x[/font], [font=Courier New]y[/font], and
-[font=Courier New]anchor[/font] together. Do not combine relative and absolute placement on one
-target.
+Relative placement requires [font=Courier New]offsetX[/font] and [font=Courier New]offsetY[/font] together and adds them to Bethesda's original position. Absolute placement requires [font=Courier New]x[/font], [font=Courier New]y[/font], and [font=Courier New]anchor[/font] together. Do not combine relative and absolute placement on one target.
 
-The adapter still composes your condition with Bethesda's own HUD-mode
-visibility and HUD opacity. It does not force an engine-hidden element to
-display.
+The adapter still composes your condition with Bethesda's own HUD-mode visibility and HUD opacity. It does not force an engine-hidden element to display.
 
-Do not attempt to name a timeline clip or arbitrary Bethesda class. Only the
-six allowlisted target IDs are accepted.
+Do not attempt to name a timeline clip or arbitrary Bethesda class. Only the six allowlisted target IDs are accepted.
 
 [size=3][b][u]Make basic color changes[/u][/b][/size]
 
-Do not replace palette references throughout the layout for ordinary theme
-changes. Instead:
+Do not replace palette references throughout the layout for ordinary theme changes. Instead:
 
 [list=1]
 [*]Copy a complete packaged palette XML file.[/*]
@@ -320,12 +265,9 @@ For example:
 <color role="marker.hostile" value="#FF3C54" />
 [/code]
 
-Always begin with a complete shipped palette. The runtime requires every core
-semantic role even if the current layout does not visibly use it. Colors must
-use six-digit [font=Courier New]#RRGGBB[/font]; shorthand and alpha-channel forms are rejected.
+Always begin with a complete shipped palette. The runtime requires every core semantic role even if the current layout does not visibly use it. Colors must use six-digit [font=Courier New]#RRGGBB[/font]; shorthand and alpha-channel forms are rejected.
 
-See the [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/MarketingSites/NexusMods/PaletteConfigurationReference.bbcode]palette configuration reference[/url]
-before changing typography, strokes, opacities, or faction artwork.
+See the [url=https://www.nexusmods.com/starfield/articles/1118]Palette Configuration Reference[/url] before changing typography, strokes, opacities, or faction artwork.
 
 [size=3][b][u]Troubleshooting[/u][/b][/size]
 
@@ -333,19 +275,20 @@ before changing typography, strokes, opacities, or faction artwork.
 
 Read the title and first detail line. Common categories are:
 
-[list][*]Diagnostic — Check[/*][/list]
-[list][*][font=Courier New]CUI LAYOUT MISSING[/font] — Confirm [font=Courier New]Interface\VenworksCUI\layout.xml[/font] exists in the active deployment.[/*][/list]
-[list][*][font=Courier New]CUI LAYOUT MALFORMED[/font] — Check XML quoting, closing tags, and entity escaping.[/*][/list]
-[list][*][font=Courier New]CUI LAYOUT INVALID[/font] — Check the named element, attribute, ID, limit, reference, condition, or source.[/*][/list]
-[list][*][font=Courier New]CUI COMPONENT MISSING[/font] — Confirm the named fragment exists directly under [font=Courier New]components[/font].[/*][/list]
-[list][*][font=Courier New]CUI PALETTE MISSING[/font] — Confirm the root [font=Courier New]palette[/font] filename exists directly under [font=Courier New]palettes[/font].[/*][/list]
-[list][*][font=Courier New]CUI PALETTE INVALID[/font] — Restore all required roles and valid values from a packaged palette.[/*][/list]
-[list][*][font=Courier New]CUI ASSET LOAD ERROR[/font] — Confirm the named local SVG exists under [font=Courier New]Assets[/font] and uses the supported subset.[/*][/list]
-[list][*][font=Courier New]CUI LAYOUT SECURITY ERROR[/font] — Scaleform denied access to [font=Courier New]layout.xml[/font]; check deployment and file access. Unsafe include names are reported as layout-invalid errors instead.[/*][/list]
-[list][*][font=Courier New]CUI PALETTE SECURITY ERROR[/font] — Remove traversal, subdirectories, URLs, schemes, query strings, or fragments from the palette selection/asset, or check file access.[/*][/list]
+[list]
+[*]Diagnostic — Check
+[*][font=Courier New]CUI LAYOUT MISSING[/font] — Confirm [font=Courier New]Interface\VenworksCUI\layout.xml[/font] exists in the active deployment.
+[*][font=Courier New]CUI LAYOUT MALFORMED[/font] — Check XML quoting, closing tags, and entity escaping.
+[*][font=Courier New]CUI LAYOUT INVALID[/font] — Check the named element, attribute, ID, limit, reference, condition, or source.
+[*][font=Courier New]CUI COMPONENT MISSING[/font] — Confirm the named fragment exists directly under [font=Courier New]components[/font].
+[*][font=Courier New]CUI PALETTE MISSING[/font] — Confirm the root [font=Courier New]palette[/font] filename exists directly under [font=Courier New]palettes[/font].
+[*][font=Courier New]CUI PALETTE INVALID[/font] — Restore all required roles and valid values from a packaged palette.
+[*][font=Courier New]CUI ASSET LOAD ERROR[/font] — Confirm the named local SVG exists under [font=Courier New]Assets[/font] and uses the supported subset.
+[*][font=Courier New]CUI LAYOUT SECURITY ERROR[/font] — Scaleform denied access to [font=Courier New]layout.xml[/font]; check deployment and file access. Unsafe include names are reported as layout-invalid errors instead.
+[*][font=Courier New]CUI PALETTE SECURITY ERROR[/font] — Remove traversal, subdirectories, URLs, schemes, query strings, or fragments from the palette selection/asset, or check file access.
+[/list]
 
-The diagnostic may also show [font=Courier New]PHASE[/font], [font=Courier New]CHECKPOINT[/font], and [font=Courier New]COMPONENT[/font]. Use the
-component ID to search [font=Courier New]layout.xml[/font] and every file under [font=Courier New]components[/font].
+The diagnostic may also show [font=Courier New]PHASE[/font], [font=Courier New]CHECKPOINT[/font], and [font=Courier New]COMPONENT[/font]. Use the component ID to search [font=Courier New]layout.xml[/font] and every file under [font=Courier New]components[/font].
 
 [size=2][b][u]The theme changed but the old colors remain[/u][/b][/size]
 
@@ -368,11 +311,7 @@ component ID to search [font=Courier New]layout.xml[/font] and every file under 
 
 [size=2][b][u]Restore the shipped configuration[/u][/b][/size]
 
-Disable or remove your personal override, then reinstall or redeploy the chosen
-theme variant. If you edited the active package directly, replace the complete
-[font=Courier New]Interface\VenworksCUI[/font] directory from your backup or a clean copy of the same
-release. Do not combine configuration files from different release versions
-unless you have checked their [font=Courier New]schemaVersion[/font] and [font=Courier New]runtimeVersion[/font] contracts.
+Disable or remove your personal override, then reinstall or redeploy the chosen theme variant. If you edited the active package directly, replace the complete [font=Courier New]Interface\VenworksCUI[/font] directory from your backup or a clean copy of the same release. Do not combine configuration files from different release versions unless you have checked their [font=Courier New]schemaVersion[/font] and [font=Courier New]runtimeVersion[/font] contracts.
 
 [size=3][b][u]Safe customization checklist[/u][/b][/size]
 
@@ -384,8 +323,6 @@ Before considering a customization finished:
 [*]test the normal HUD and the large-HUD configuration you actually use;[/*]
 [*]test at the target aspect ratio and HUD opacity;[/*]
 [*]verify Bethesda-owned reticles, crosshairs, enemy health, and prompts still follow their original lifecycle;[/*]
-[/list]
-[list]
 [*]keep the diagnostic panel absent during startup and transitions; and[/*]
 [*]preserve a clean copy of every customized file outside the managed mod.[/*]
 [/list]
