@@ -616,10 +616,6 @@ foreach ($variant in $variants) {
       -Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.DiagnosticXmlSource) -Description "$($variant.VariantName) diagnostic XML source") `
       -Description "$($variant.VariantName) diagnostic XML source"
     $diagnosticXmlSourceText = [System.IO.File]::ReadAllText($diagnosticXmlSourcePath)
-    Assert-MatchingText `
-      -ExpectedText $diagnosticXmlSourceText `
-      -ActualPath $diagnosticXmlSourcePath `
-      -Description "$($variant.VariantName) diagnostic XML source"
     $diagnosticXmlPath = Join-Path $cuiPath "layout.xml"
     Assert-MatchingText `
       -ExpectedText $diagnosticXmlSourceText `
@@ -658,6 +654,14 @@ foreach ($variant in $variants) {
     $diagnosticEntrypointSource = [System.IO.File]::ReadAllText($diagnosticEntrypointPath)
     if ($diagnosticEntrypointSource.Contains($diagnosticXmlValue)) {
       throw "$($variant.VariantName) diagnostic ActionScript must not embed the XML-derived acceptance text."
+    }
+    if ($diagnosticEntrypointSource.Contains('XMLList') -or
+        $diagnosticEntrypointSource.Contains('.elements(')) {
+      throw "$($variant.VariantName) diagnostic ActionScript must use the production-compatible root-name and direct-child E4X operations without XMLList declarations or elements() traversal."
+    }
+    if (!$diagnosticEntrypointSource.Contains('String(parsedXml.name())') -or
+        !$diagnosticEntrypointSource.Contains('String(parsedXml.diagnosticText)')) {
+      throw "$($variant.VariantName) diagnostic ActionScript must use the production-compatible root-name and direct diagnosticText E4X lookup."
     }
   }
   elseif (Test-Path -LiteralPath (Join-Path $interfacePath "VenworksCUI")) {
@@ -1287,8 +1291,8 @@ foreach ($variant in $variants) {
       'PS5DBG-05 PLAYERDATA NEXT FRAME',
       'PS5DBG-06 PLAYERDATA REQUEST',
       'PS5DBG-07 PLAYERDATA WAITING',
-      'PS5DBG-08 XML NEXT FRAME',
-      'PS5DBG-09 XML REQUEST',
+      'PS5DBG-08 XML LOAD NEXT FRAME',
+      'PS5DBG-09 XML LOAD RETURNED',
       'PS5DBG-10 XML RECEIVED',
       'PS5DBG-11 XML PARSE NEXT FRAME',
       'PS5DBG-OK PLAYERDATA',
@@ -1299,6 +1303,8 @@ foreach ($variant in $variants) {
       'PS5DBG-ERR XML SECURITY',
       'PS5DBG-ERR XML PARSE',
       'PS5DBG-ERR XML VALUE',
+      'PLAYERDATA:',
+      'XML:',
       'URLRequest',
       'URLLoader',
       'VenworksCUI/layout.xml',
@@ -1321,6 +1327,8 @@ foreach ($variant in $variants) {
       'CUILayoutImportLoader',
       'CUIPlayerHudDataContext',
       'CUIConditionContext',
+      'XMLList',
+      'elements',
       'VENWORKS AUX LOADED'
     )) {
       if ($auxiliaryInspection.Text.Contains($forbiddenDiagnosticToken)) {
