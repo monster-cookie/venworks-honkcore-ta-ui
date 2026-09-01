@@ -9,7 +9,7 @@
 
 ## Version 2.0.18 (UNRELEASED)
 
-- PS5Debug: Load `VenworksCUI/layout.xml` only as bounded text and parse its exact `html/head/title/body/section/h1/p` structure with a non-recursive ActionScript parser that does not invoke Scaleform XML, E4X, or the disabled HTML engine.
+- PS5Debug: Load `VenworksCUI/layout.xml` only as bounded text and parse its exact `html/head/title/body/section/h1/p` structure with a custom ActionScript parser that does not invoke Scaleform XML, E4X, or the disabled HTML engine.
 - PS5Debug: Render the accepted heading and paragraph through a native Scaleform text field without CSS, JavaScript, attributes, namespaces, entities, mixed content, or browser behavior.
 
 ## Version 2.0.17 (August 31, 2026)

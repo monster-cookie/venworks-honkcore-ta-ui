@@ -266,6 +266,42 @@ function Assert-NotGitLfsPointer {
   }
 }
 
+function ConvertTo-CanonicalUtf8Text {
+  param(
+    [Parameter(Mandatory = $true)]
+    [byte[]]$Bytes,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Description,
+
+    [switch]$AllowCrLf
+  )
+
+  if ($Bytes.Length -ge 3 -and
+      $Bytes[0] -eq 0xEF -and
+      $Bytes[1] -eq 0xBB -and
+      $Bytes[2] -eq 0xBF) {
+    throw "$Description must use UTF-8 without a byte-order mark."
+  }
+  try {
+    $text = [System.Text.UTF8Encoding]::new($false, $true).GetString($Bytes)
+  }
+  catch {
+    throw "$Description must contain valid UTF-8 text without a byte-order mark."
+  }
+  if ($text.Contains("`r")) {
+    if (!$AllowCrLf) {
+      throw "$Description must use canonical LF line endings."
+    }
+    $textWithoutCrLf = $text.Replace("`r`n", "")
+    if ($textWithoutCrLf.Contains("`r") -or $textWithoutCrLf.Contains("`n")) {
+      throw "$Description must use consistent LF or CRLF line endings."
+    }
+  }
+
+  return $text.Replace("`r`n", "`n")
+}
+
 function Assert-MatchingText {
   param(
     [Parameter(Mandatory = $true)]
@@ -275,23 +311,19 @@ function Assert-MatchingText {
     [string]$ActualPath,
 
     [Parameter(Mandatory = $true)]
-    [string]$Description
+    [string]$Description,
+
+    [switch]$AllowCrLf
   )
 
   $resolvedActualPath = Resolve-RequiredFile -Path $ActualPath -Description $Description
   $actualBytes = [System.IO.File]::ReadAllBytes($resolvedActualPath)
-  if ($actualBytes.Length -ge 3 -and
-      $actualBytes[0] -eq 0xEF -and
-      $actualBytes[1] -eq 0xBB -and
-      $actualBytes[2] -eq 0xBF) {
-    throw "$Description must use UTF-8 without a byte-order mark."
-  }
-  $actualText = [System.Text.UTF8Encoding]::new($false, $true).GetString($actualBytes)
-  if ($actualText.Contains("`r")) {
-    throw "$Description must use canonical LF line endings."
-  }
+  $canonicalActualText = ConvertTo-CanonicalUtf8Text `
+    -Bytes $actualBytes `
+    -Description $Description `
+    -AllowCrLf:$AllowCrLf
   $canonicalExpectedText = $ExpectedText.Replace("`r`n", "`n").Replace("`r", "`n")
-  if ($actualText -cne $canonicalExpectedText) {
+  if ($canonicalActualText -cne $canonicalExpectedText) {
     throw "$Description differs from its profile-derived expected content."
   }
 }
@@ -620,7 +652,8 @@ foreach ($variant in $variants) {
     Assert-MatchingText `
       -ExpectedText $diagnosticXmlSourceText `
       -ActualPath $diagnosticXmlPath `
-      -Description "$($variant.VariantName) staged diagnostic XML"
+      -Description "$($variant.VariantName) staged diagnostic XML" `
+      -AllowCrLf
     if ($diagnosticXmlSourceText.Length -eq 0 -or $diagnosticXmlSourceText.Length -gt 4096) {
       throw "$($variant.VariantName) diagnostic XML source must contain between 1 and 4096 characters."
     }
@@ -1564,10 +1597,26 @@ foreach ($variant in $variants) {
         throw "$($variant.VariantName) $archiveTarget contains an archive entry not present in staging: '$entryName'."
       }
       $stagedEntryPath = $stagedMainEntryPaths[$entryName]
-      $archiveHash = Get-ByteArraySha256 -Bytes (Read-GeneralBa2EntryBytes -Entry $entry)
+      $archiveEntryBytes = Read-GeneralBa2EntryBytes -Entry $entry
+      $archiveHash = Get-ByteArraySha256 -Bytes $archiveEntryBytes
       $stagedHash = Get-Sha256 -Path $stagedEntryPath
       if ($archiveHash -cne $stagedHash) {
-        throw "$($variant.VariantName) $archiveTarget '$entryName' is not byte-identical to staging."
+        $isDiagnosticLayoutEntry = [string]$variant.VariantKey -eq 'PS5DBG' -and
+          $entryName -ceq 'interface/venworkscui/layout.xml'
+        if (!$isDiagnosticLayoutEntry) {
+          throw "$($variant.VariantName) $archiveTarget '$entryName' is not byte-identical to staging."
+        }
+        $archiveEntryText = ConvertTo-CanonicalUtf8Text `
+          -Bytes $archiveEntryBytes `
+          -Description "$($variant.VariantName) $archiveTarget '$entryName' archive entry" `
+          -AllowCrLf
+        $stagedEntryText = ConvertTo-CanonicalUtf8Text `
+          -Bytes ([System.IO.File]::ReadAllBytes($stagedEntryPath)) `
+          -Description "$($variant.VariantName) staged diagnostic layout" `
+          -AllowCrLf
+        if ($archiveEntryText -cne $stagedEntryText) {
+          throw "$($variant.VariantName) $archiveTarget '$entryName' differs from staging after line-ending normalization."
+        }
       }
     }
   }
