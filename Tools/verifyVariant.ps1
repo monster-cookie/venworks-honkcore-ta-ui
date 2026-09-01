@@ -499,7 +499,16 @@ if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction Si
   -Path (Join-Path $PSScriptRoot "sharedScaleformMovies.ps1") `
   -Description "Scaleform movie-format helper")
 
-$variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
+$v1VariantKeys = @('TA', 'FC', 'CF', 'VWKS', 'MIN')
+if ($null -eq $VariantKeys -or $VariantKeys.Count -eq 0) {
+  $variants = @(Get-ModuleVariants -VariantKeys $v1VariantKeys)
+}
+else {
+  $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
+}
+if (@($variants | Where-Object { [string]$_.VariantKey -ceq 'PS5DBG' }).Count -ne 0) {
+  throw 'PS5DBG requires Tools/verifyVariantV2.ps1; the v1 verifier supports only TA, FC, CF, VWKS, and MIN.'
+}
 $archiveDefinitions = [ordered]@{
   "Main" = [pscustomobject]@{ FileSuffix = "Main.ba2"; Required = $true }
   "Textures" = [pscustomobject]@{ FileSuffix = "Textures.ba2"; Required = $false }
@@ -632,103 +641,36 @@ foreach ($variant in $variants) {
     }
     $diagnosticRoot = $diagnosticXml.DocumentElement
     $diagnosticRootElements = @($diagnosticRoot.ChildNodes | Where-Object { $_.NodeType -eq [System.Xml.XmlNodeType]::Element })
-    $diagnosticHeadNodes = @($diagnosticRoot.SelectNodes('head'))
-    $diagnosticTitleNodes = @($diagnosticRoot.SelectNodes('head/title'))
-    $diagnosticBodyNodes = @($diagnosticRoot.SelectNodes('body'))
-    $diagnosticSectionNodes = @($diagnosticRoot.SelectNodes('body/section'))
-    $diagnosticHeadingNodes = @($diagnosticRoot.SelectNodes('body/section/h1'))
-    $diagnosticParagraphNodes = @($diagnosticRoot.SelectNodes('body/section/p'))
-    $diagnosticHeadElements = @()
-    if ($diagnosticHeadNodes.Count -eq 1) {
-      $diagnosticHeadElements = @($diagnosticHeadNodes[0].ChildNodes | Where-Object { $_.NodeType -eq [System.Xml.XmlNodeType]::Element })
-    }
-    $diagnosticBodyElements = @()
-    if ($diagnosticBodyNodes.Count -eq 1) {
-      $diagnosticBodyElements = @($diagnosticBodyNodes[0].ChildNodes | Where-Object { $_.NodeType -eq [System.Xml.XmlNodeType]::Element })
-    }
-    $diagnosticSectionElements = @()
-    if ($diagnosticSectionNodes.Count -eq 1) {
-      $diagnosticSectionElements = @($diagnosticSectionNodes[0].ChildNodes | Where-Object { $_.NodeType -eq [System.Xml.XmlNodeType]::Element })
-    }
+    $diagnosticTextNodes = @($diagnosticRoot.SelectNodes('diagnosticText'))
     if ($null -eq $diagnosticRoot -or
-        $diagnosticRoot.Name -cne 'html' -or
+        $diagnosticRoot.Name -cne 'venworksCUI' -or
         ![string]::IsNullOrEmpty([string]$diagnosticRoot.NamespaceURI) -or
-        $diagnosticRoot.Attributes.Count -ne 0 -or
-        $diagnosticRootElements.Count -ne 2 -or
-        $diagnosticRootElements[0].Name -cne 'head' -or
-        $diagnosticRootElements[1].Name -cne 'body' -or
-        $diagnosticHeadNodes.Count -ne 1 -or
-        $diagnosticHeadNodes[0].Attributes.Count -ne 0 -or
-        $diagnosticHeadElements.Count -ne 1 -or
-        $diagnosticHeadElements[0].Name -cne 'title' -or
-        $diagnosticTitleNodes.Count -ne 1 -or
-        $diagnosticTitleNodes[0].Attributes.Count -ne 0 -or
-        $diagnosticTitleNodes[0].SelectNodes('*').Count -ne 0 -or
-        $diagnosticBodyNodes.Count -ne 1 -or
-        $diagnosticBodyNodes[0].Attributes.Count -ne 0 -or
-        $diagnosticBodyElements.Count -ne 1 -or
-        $diagnosticBodyElements[0].Name -cne 'section' -or
-        $diagnosticSectionNodes.Count -ne 1 -or
-        $diagnosticSectionNodes[0].Attributes.Count -ne 0 -or
-        $diagnosticSectionElements.Count -ne 2 -or
-        $diagnosticSectionElements[0].Name -cne 'h1' -or
-        $diagnosticSectionElements[1].Name -cne 'p' -or
-        $diagnosticHeadingNodes.Count -ne 1 -or
-        $diagnosticHeadingNodes[0].Attributes.Count -ne 0 -or
-        $diagnosticHeadingNodes[0].SelectNodes('*').Count -ne 0 -or
-        $diagnosticParagraphNodes.Count -ne 1 -or
-        $diagnosticParagraphNodes[0].Attributes.Count -ne 0 -or
-        $diagnosticParagraphNodes[0].SelectNodes('*').Count -ne 0) {
-      throw "$($variant.VariantName) diagnostic XML must be an exact unnamespaced html/head/title/body/section/h1/p document with text-only title, h1, and p elements."
+        $diagnosticRootElements.Count -ne 1 -or
+        $diagnosticTextNodes.Count -ne 1 -or
+        $diagnosticTextNodes[0].SelectNodes('*').Count -ne 0) {
+      throw "$($variant.VariantName) diagnostic XML must contain exactly one direct, text-only diagnosticText element under an unnamespaced venworksCUI root."
     }
-    $diagnosticHtmlValues = @(
-      [string]$diagnosticTitleNodes[0].InnerText
-      [string]$diagnosticHeadingNodes[0].InnerText
-      [string]$diagnosticParagraphNodes[0].InnerText
-    )
-    foreach ($diagnosticHtmlValue in $diagnosticHtmlValues) {
-      if ([string]::IsNullOrWhiteSpace($diagnosticHtmlValue) -or
-          $diagnosticHtmlValue.Length -gt 80 -or
-          $diagnosticHtmlValue -cne $diagnosticHtmlValue.Trim() -or
-          $diagnosticHtmlValue -match '[\r\n\t]') {
-        throw "$($variant.VariantName) diagnostic title, h1, and p values must be non-empty, trimmed, single-line text no longer than 80 characters."
-      }
+    $diagnosticXmlValue = [string]$diagnosticTextNodes[0].InnerText
+    if ([string]::IsNullOrWhiteSpace($diagnosticXmlValue) -or
+        $diagnosticXmlValue.Length -gt 80 -or
+        $diagnosticXmlValue -cne $diagnosticXmlValue.Trim() -or
+        $diagnosticXmlValue -match '[\r\n\t]') {
+      throw "$($variant.VariantName) diagnosticText must be non-empty, trimmed, single-line text no longer than 80 characters."
     }
     $diagnosticEntrypointPath = Resolve-RequiredFile `
       -Path (Join-Path $repositoryRoot 'Scaleform\variants\PS5DBG\venworkscui\VenworksCUIDiagnosticEntrypoint.as') `
       -Description "$($variant.VariantName) diagnostic ActionScript entrypoint"
     $diagnosticEntrypointSource = [System.IO.File]::ReadAllText($diagnosticEntrypointPath)
-    foreach ($diagnosticHtmlValue in $diagnosticHtmlValues) {
-      if ($diagnosticEntrypointSource.Contains($diagnosticHtmlValue)) {
-        throw "$($variant.VariantName) diagnostic ActionScript must not embed XML-derived HTML text."
-      }
+    if ($diagnosticEntrypointSource.Contains($diagnosticXmlValue)) {
+      throw "$($variant.VariantName) diagnostic ActionScript must not embed the XML-derived acceptance text."
     }
-    foreach ($forbiddenDiagnosticSourceToken in @(
-      'XMLList',
-      '.elements(',
-      '.children(',
-      '.descendants(',
-      '.child(',
-      'htmlText',
-      'StyleSheet',
-      'ExternalInterface',
-      'navigateToURL'
-    )) {
-      if ($diagnosticEntrypointSource.Contains($forbiddenDiagnosticSourceToken)) {
-        throw "$($variant.VariantName) diagnostic ActionScript contains forbidden basic-HTML token '$forbiddenDiagnosticSourceToken'."
-      }
+    if ($diagnosticEntrypointSource.Contains('XMLList') -or
+        $diagnosticEntrypointSource.Contains('.elements(')) {
+      throw "$($variant.VariantName) diagnostic ActionScript must use the production-compatible root-name and direct-child E4X operations without XMLList declarations or elements() traversal."
     }
-    foreach ($requiredDiagnosticSourceToken in @(
-      'String(parsedXml.name()) != "html"',
-      'String(parsedXml.head.title)',
-      'String(parsedXml.body.section.h1)',
-      'String(parsedXml.body.section.p)',
-      'this.htmlPane.text =',
-      'this.htmlPane.setTextFormat'
-    )) {
-      if (!$diagnosticEntrypointSource.Contains($requiredDiagnosticSourceToken)) {
-        throw "$($variant.VariantName) diagnostic ActionScript is missing required bounded basic-HTML token '$requiredDiagnosticSourceToken'."
-      }
+    if (!$diagnosticEntrypointSource.Contains('String(parsedXml.name())') -or
+        !$diagnosticEntrypointSource.Contains('String(parsedXml.diagnosticText)')) {
+      throw "$($variant.VariantName) diagnostic ActionScript must use the production-compatible root-name and direct diagnosticText E4X lookup."
     }
   }
   elseif (Test-Path -LiteralPath (Join-Path $interfacePath "VenworksCUI")) {
@@ -1362,25 +1304,20 @@ foreach ($variant in $variants) {
       'PS5DBG-09 XML LOAD RETURNED',
       'PS5DBG-10 XML RECEIVED',
       'PS5DBG-11 XML PARSE NEXT FRAME',
-      'PS5DBG-12 BASIC HTML RENDER',
       'PS5DBG-OK PLAYERDATA',
       'PS5DBG-ERR PLAYERDATA',
-      'PS5DBG-OK HTML',
+      'PS5DBG-OK XML',
       'PS5DBG-ERR XML REQUEST',
       'PS5DBG-ERR XML IO',
       'PS5DBG-ERR XML SECURITY',
       'PS5DBG-ERR XML PARSE',
       'PS5DBG-ERR XML VALUE',
-      'PS5DBG-ERR HTML VALUE',
-      'PS5DBG-ERR HTML RENDER',
       'PLAYERDATA:',
       'XML:',
       'URLRequest',
       'URLLoader',
       'VenworksCUI/layout.xml',
-      'html/head/title/body/section/h1/p',
-      'VenworksCUIBasicHtmlPane',
-      'renderBasicHtml',
+      'diagnosticText',
       'initialize',
       'reapplyVanillaPlacements',
       'updateVanillaHudModeVisibility',
@@ -1401,22 +1338,14 @@ foreach ($variant in $variants) {
       'CUIConditionContext',
       'XMLList',
       'elements',
-      'children',
-      'descendants',
-      'htmlText',
-      'StyleSheet',
-      'ExternalInterface',
-      'navigateToURL',
       'VENWORKS AUX LOADED'
     )) {
       if ($auxiliaryInspection.Text.Contains($forbiddenDiagnosticToken)) {
         throw "$($variant.VariantName) diagnostic venworkscui.swf contains forbidden runtime token '$forbiddenDiagnosticToken'."
       }
     }
-    foreach ($diagnosticHtmlValue in $diagnosticHtmlValues) {
-      if ([string]::IsNullOrWhiteSpace($diagnosticHtmlValue) -or $auxiliaryInspection.Text.Contains($diagnosticHtmlValue)) {
-        throw "$($variant.VariantName) diagnostic venworkscui.swf must not embed XML-derived HTML text."
-      }
+    if ([string]::IsNullOrWhiteSpace($diagnosticXmlValue) -or $auxiliaryInspection.Text.Contains($diagnosticXmlValue)) {
+      throw "$($variant.VariantName) diagnostic venworkscui.swf must not embed the XML-derived acceptance text."
     }
     $expectedDiagnosticClassFingerprint = Read-ExpectedSha256 `
       -Path $movieProfile.AuxiliaryExpectedClassHashPath

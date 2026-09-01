@@ -76,7 +76,7 @@ Keep all cooperating `venworks.cui.*` classes in the single ABC domain compiled 
 
 ## 5. Recompile GFX and CWS independently
 
-Build all variants with:
+Build the five player-facing V1 variants with:
 
 ```powershell
 .\Tools\buildVariant.ps1 `
@@ -85,7 +85,7 @@ Build all variants with:
   -VanillaInterfacePath "Scaleform/.work/vanilla-interface-extracted/interface"
 ```
 
-Omitting `-VariantKeys` selects every entry in `$Global:ReleaseVariants`. The base compiler patches Bethesda's existing HUD ABC without adding another `DoABC` tag, reopens every native GFX and CWS build output, and verifies the constructor/INIT/COMPLETE loader anchors, direct-child attachment, cached visibility replay, idempotent teardown, readable Starfield diagnostic format, and one-ABC contract. The auxiliary compiler creates a temporary external host SWC with `compc` when required, compiles the selected auxiliary source with `mxmlc`, normalizes the CWS output through JPEXS, and reopens it twice: the first pass derives the sorted class-inventory fingerprint, while the second embeds that fingerprint, additionally embeds the transformed-source fingerprint for runtime bridges, and proves the definition inventory is unchanged. It also validates CWS version 12, the 1920-by-1080 stage, 30 fps, and one frame. Each compiler compares the result with its manifest's expected hashes. The separate deployment mapping is applied only after these build contracts pass.
+Omitting `-VariantKeys` from a V1 entrypoint selects `TA`, `FC`, `CF`, `VWKS`, and `MIN`; selecting `PS5DBG` explicitly fails with the matching V2 command. Omitting `-VariantKeys` from a V2 entrypoint selects all six registry entries. The base compiler patches Bethesda's existing HUD ABC without adding another `DoABC` tag, reopens every native GFX and CWS build output, and verifies the constructor/INIT/COMPLETE loader anchors, direct-child attachment, cached visibility replay, idempotent teardown, readable Starfield diagnostic format, and one-ABC contract. The auxiliary compiler creates a temporary external host SWC with `compc` when required, compiles the selected auxiliary source with `mxmlc`, normalizes the CWS output through JPEXS, and reopens it twice: the first pass derives the sorted class-inventory fingerprint, while the second embeds that fingerprint, additionally embeds the transformed-source fingerprint for runtime bridges, and proves the definition inventory is unchanged. It also validates CWS version 12, the 1920-by-1080 stage, 30 fps, and one frame. Each compiler compares the result with its manifest's expected hashes. The separate deployment mapping is applied only after these build contracts pass.
 
 Use `-UpdateExpectedHashes` only for an intentional reviewed source change. A hash update is evidence that output changed, not proof that the movie works in Starfield. Review the source diff and validate in game before accepting it.
 
@@ -122,7 +122,7 @@ Use the PS5 Debug build profile when the purpose is to advance the console isola
 .\Tools\verifyVariantV2.ps1 -VariantKeys PS5DBG -Committed
 ```
 
-The normal v1 entrypoints and workflows remain unchanged. The seven `V2` scripts are a complete opt-in chain for this experimental contract; they retain v1 behavior for the five player-facing variants and change only PS5Debug compilation and verification. The `-Committed` build, package, and verification path operates directly on the tracked staging directory and does not require a junction. For Vortex deployment, first confirm that the selected tracked staging directory contains no work that must be preserved, delete that directory, run `.\Tools\setupRepo.ps1 -VariantKeys PS5DBG` to create the correctly targeted local module junction, and restore the deleted tracked files from the current commit through Git so the payload is written through the junction into the module folder. `setupRepo.ps1` never deletes or replaces tracked staging data. Once the junction is populated, omit `-Committed` from the remaining commands. This manual delete, junction, and restore workflow applies to every variant.
+The V1 entrypoints own only the five player-facing variants. The seven `V2` scripts retain those five contracts and add the experimental PS5 Debug compilation and verification contract. CI validates both pipelines, and tagged releases use the V2 ZIP assembler to retain the complete 26-package matrix. The `-Committed` build, package, and verification path operates directly on the tracked staging directory and does not require a junction. For Vortex deployment, first confirm that the selected tracked staging directory contains no work that must be preserved, delete that directory, run `.\Tools\setupRepo.ps1 -VariantKeys PS5DBG` to create the correctly targeted local module junction, and restore the deleted tracked files from the current commit through Git so the payload is written through the junction into the module folder. `setupRepo.ps1` never deletes or replaces tracked staging data. Once the junction is populated, omit `-Committed` from the remaining commands. This manual delete, junction, and restore workflow applies to every variant.
 
 The PS5 Debug manifests select the same lower-level compiler and existing shared loader used by the player-facing host movies. Ordered patches add the lifecycle pane, shared loader, and a small observer that reports the loader's existing phases; they modify only the existing `HUDMenu` class in Bethesda's existing ABC and do not add another `DoABC` tag or custom host document class. The output contains the four normal/large Bethesda HUD movie paths, one diagnostic `venworkscui.swf`, one `VenworksCUI/layout.xml`, and the uniquely named PS5 Debug plugin. The child movie contains only `VenworksCUIDiagnosticEntrypoint`, its embedded class-inventory fingerprint, its four untyped bridge methods, the two-row Starfield-font status pane, and the fixed native XHTML result pane. It first identifies `venworkscui.swf loaded`, then the next frame resolves `Shared.AS3.Data.BSUIDataManager` by name, primes and subscribes only `PlayerData`, and displays sanitized, bounded `sName` text or a contained error. A valid callback renders the pre-call text-load boundary, invokes `URLLoader` with `URLLoaderDataFormat.TEXT` on the following frame, records whether that call returns, and defers the custom parser to another visible boundary. No Scaleform XML, E4X, `XMLList`, `XMLDocument`, `parseXML`, or disabled HTML engine participates. The accepted document must have the exact declaration and ordered `html/head/title/body/section/h1/p` structure. The title, heading, and paragraph must be text-only, trimmed, single-line values of at most 80 characters. The renderer assigns ordinary `TextField.text` and applies separate `TextFormat` ranges. Do not add CSS, JavaScript, `htmlText`, attributes, namespaces, entities, comments, CDATA, mixed content, traversal, links, remote resources, HUD-message movies, production layout semantics, components, SVG, palettes, assets, production provider contexts, other providers, the production CUI runtime, Xbox archives, or Nexus package shapes to this diagnostic. The v2 archive builder retains a Windows Main BA2 for the PC gate and a PS5 Main BA2 for Creations; the v2 release-package matrix exposes only the Bethesda PS5 ZIP.
 
@@ -132,7 +132,7 @@ The v2.0.18 parser is an iterative cursor/state machine inside the existing auth
 
 ## 7. Build platform archives and release packages
 
-Create every selected Windows, Xbox, and PlayStation archive directly from the staged payload:
+Create the five player-facing variants' Windows, Xbox, and PlayStation archives directly from their staged payloads with V1:
 
 ```powershell
 .\Tools\createPackages.ps1
@@ -140,14 +140,14 @@ Create every selected Windows, Xbox, and PlayStation archive directly from the s
 
 No platform receives a movie rewrite. Each Main BA2 must contain the same nine staged movie paths and byte-identical data. Texture archives remain governed by the variant's source inventory and platform filters. General Main archives use Archive2 `compression=None`, while DDS and XBoxDDS Textures archives use `compression=LZ4`; CWS movie compression remains internal to each SWF.
 
-Create the five release ZIP shapes per variant with:
+Use `createPackagesV2.ps1` instead when PS5 Debug is selected or all six variants must be rebuilt. Create the complete 26-ZIP release matrix with:
 
 ```powershell
-.\Tools\createReleasePackages.ps1 `
+.\Tools\createReleasePackagesV2.ps1 `
   -OutputDirectory ".work/release-packages"
 ```
 
-This produces Nexus normal, Nexus fully loose, Bethesda PC, Bethesda Xbox, and Bethesda PlayStation packages for each release variant.
+This produces five package shapes for each player-facing variant and the single Bethesda PS5 package for PS5 Debug.
 
 ## 8. Validate before release
 
@@ -157,6 +157,9 @@ Run the complete repository contract:
 .\Tools\verifyVariant.ps1
 .\Tools\verifyCommittedRelease.ps1
 .\Tools\checkRepo.ps1 -Committed
+.\Tools\verifyVariantV2.ps1 -Committed
+.\Tools\verifyCommittedReleaseV2.ps1
+.\Tools\checkRepoV2.ps1 -Committed
 actionlint .github/workflows/ci.yml .github/workflows/package-release.yml
 git diff --check
 ```

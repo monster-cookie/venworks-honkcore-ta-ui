@@ -628,7 +628,6 @@ foreach ($variant in $variants) {
   }
   $cuiPath = $null
   $expectedCuiInventory = @()
-  $diagnosticXmlValue = $null
   if ($hasCuiPayload) {
     $cuiPath = Resolve-RequiredDirectory -Path (Join-Path $interfacePath "VenworksCUI") -Description "$($variant.VariantName) CUI payload"
     $expectedCuiInventory = @("layout.xml")

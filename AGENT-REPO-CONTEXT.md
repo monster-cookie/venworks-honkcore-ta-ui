@@ -87,7 +87,7 @@ The intended automation account is currently:
 
 | Display name | Member UUID                            |
 | ------------ | -------------------------------------- |
-| Codeex       | `fe284e57-9057-4570-9f91-db9917732350` |
+| Codex        | `fe284e57-9057-4570-9f91-db9917732350` |
 
 The MCP may authenticate as a different workspace member. The result of `member me` does not automatically identify the intended work-item assignee.
 
@@ -109,7 +109,7 @@ For new implementation:
 2. Confirm that it is a Task in Backlog or Todo, or that the user explicitly approved work in another state.
 3. Inspect its parent, dependencies, relations, description, labels, comments, assignment, and definition of done.
 4. Confirm that dependencies are ready and no conflicting owner is assigned.
-5. Assign it to the verified `Copdex` member only when authorized by the approved plan.
+5. Assign it to the verified `Codex` member only when authorized by the approved plan.
 6. Move it to In Progress only when authorized by the approved plan.
 7. Re-read the work item and verify its project, assignee, and In Progress state before editing repository files.
 

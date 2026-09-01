@@ -3,8 +3,9 @@
 Checks shared release metadata and verifies selected variant artifacts.
 
 .PARAMETER VariantKeys
-One or more keys from `$Global:ReleaseVariants`. Omit this parameter to process
-all release variants. `VariantKey` remains a compatibility alias.
+One or more keys from the five v1 release variants. Omit this parameter to process
+all five v1 variants. PS5DBG requires checkRepoV2.ps1. `VariantKey` remains a
+compatibility alias.
 
 .PARAMETER Committed
 Verifies the tracked staging directories instead of requiring local junctions.
@@ -129,7 +130,16 @@ if ([string]::Join("`n", $profileKeys) -cne [string]::Join("`n", $releaseKeys)) 
   throw "Scaleform profile directories must match the release variant definitions exactly."
 }
 
-$variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
+$v1VariantKeys = @('TA', 'FC', 'CF', 'VWKS', 'MIN')
+if ($null -eq $VariantKeys -or $VariantKeys.Count -eq 0) {
+  $variants = @(Get-ModuleVariants -VariantKeys $v1VariantKeys)
+}
+else {
+  $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
+}
+if (@($variants | Where-Object { [string]$_.VariantKey -ceq 'PS5DBG' }).Count -ne 0) {
+  throw 'PS5DBG requires Tools/checkRepoV2.ps1; the v1 repository check supports only TA, FC, CF, VWKS, and MIN.'
+}
 
 & (Join-Path $PSScriptRoot "verifyVariant.ps1") `
   -VariantKeys @($variants.VariantKey) `

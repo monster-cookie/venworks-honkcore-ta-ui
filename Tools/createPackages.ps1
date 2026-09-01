@@ -3,8 +3,9 @@
 Creates configured platform archives for release variants.
 
 .PARAMETER VariantKeys
-One or more keys from `$Global:ReleaseVariants`. Omit this parameter to process
-all release variants. `VariantKey` remains a compatibility alias.
+One or more keys from the five v1 release variants. Omit this parameter to process
+all five v1 variants. PS5DBG requires createPackagesV2.ps1. `VariantKey` remains a
+compatibility alias.
 #>
 [CmdletBinding()]
 param(
@@ -127,7 +128,16 @@ $archiveDefinitions = [ordered]@{
   }
 }
 
-$variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
+$v1VariantKeys = @('TA', 'FC', 'CF', 'VWKS', 'MIN')
+if ($null -eq $VariantKeys -or $VariantKeys.Count -eq 0) {
+  $variants = @(Get-ModuleVariants -VariantKeys $v1VariantKeys)
+}
+else {
+  $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
+}
+if (@($variants | Where-Object { [string]$_.VariantKey -ceq 'PS5DBG' }).Count -ne 0) {
+  throw 'PS5DBG requires Tools/createPackagesV2.ps1; the v1 packager supports only TA, FC, CF, VWKS, and MIN.'
+}
 
 $preArchiveVariantKeys = @($variants | ForEach-Object { [string]$_.VariantKey })
 & (Join-Path $PSScriptRoot "verifyVariant.ps1") `

@@ -397,7 +397,8 @@ Write-Host "Verified committed Scaleform movie hashes and complete staged Venwor
 $archive2ScriptReferences = @(
   & git -C $repositoryRoot grep -l -F "Archive2.exe" -- `
     "Tools/*.ps1" `
-    ":(exclude)Tools/verifyCommittedRelease.ps1"
+    ":(exclude)Tools/verifyCommittedRelease.ps1" `
+    ":(exclude)Tools/*V2.ps1"
 )
 if ($LASTEXITCODE -ne 0) {
   throw "Unable to inventory PowerShell Archive2 references."
@@ -472,12 +473,14 @@ if ($payloadGuardIndex -lt 0 -or
 Write-Host 'Verified the pre-Archive2 complete staged Interface payload guard.'
 
 & (Join-Path $PSScriptRoot "verifyVariant.ps1") `
+  -VariantKeys @('TA', 'FC', 'CF', 'VWKS', 'MIN') `
   -Committed `
   -PreArchiveMutation
 
-Write-Host "Verified all six variants before archive mutation."
+Write-Host "Verified all five v1 variants before archive mutation."
 
 & (Join-Path $PSScriptRoot "verifyVariant.ps1") `
+  -VariantKeys @('TA', 'FC', 'CF', 'VWKS', 'MIN') `
   -Committed
 
-Write-Host "Verified all six variants through the shared release pipeline."
+Write-Host "Verified all five v1 variants through the shared release pipeline."

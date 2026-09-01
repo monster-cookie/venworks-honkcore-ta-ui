@@ -105,7 +105,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
 
           $releaseRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts/release'
-          & "$env:GITHUB_WORKSPACE/Tools/createReleasePackages.ps1" `
+          & "$env:GITHUB_WORKSPACE/Tools/createReleasePackagesV2.ps1" `
             -OutputDirectory $releaseRoot
 
           $releaseFiles = @(Get-ChildItem -LiteralPath $releaseRoot -File -Filter '*.zip')
