@@ -23,6 +23,8 @@ package
 
       private var owner:DisplayObjectContainer = null;
       private var pane:TextField = null;
+      private var playerDataStatus:String = "PS5DBG-05 PLAYERDATA NEXT FRAME";
+      private var xmlStatus:String = "venworkscui.swf loaded";
       private var dataManager:Object = null;
       private var deferredProbeCallback:Function = null;
       private var deferredXmlRequestCallback:Function = null;
@@ -60,9 +62,9 @@ package
          this.disposed = false;
          this.pane = new TextField();
          this.pane.name = "VenworksCUIDiagnosticPane";
-         this.pane.x = 760;
+         this.pane.x = 600;
          this.pane.y = 160;
-         this.pane.width = 400;
+         this.pane.width = 720;
          this.pane.height = 96;
          this.pane.background = true;
          this.pane.backgroundColor = 2631720;
@@ -72,10 +74,12 @@ package
          this.pane.embedFonts = true;
          this.pane.defaultTextFormat = format;
          this.pane.multiline = true;
-         this.pane.wordWrap = true;
+         this.pane.wordWrap = false;
          this.pane.selectable = false;
          this.pane.mouseEnabled = false;
-         this.pane.text = "venworkscui.swf loaded\nPS5DBG-05 PLAYERDATA NEXT FRAME";
+         this.playerDataStatus = "PS5DBG-05 PLAYERDATA NEXT FRAME";
+         this.xmlStatus = "venworkscui.swf loaded";
+         this.renderStatus();
          this.pane.setTextFormat(format);
          addChild(this.pane);
          this.playerDataCallback = this.onPlayerData;
@@ -125,6 +129,8 @@ package
          this.playerDataCallback = null;
          this.playerDataState = "disposed";
          this.playerName = "";
+         this.playerDataStatus = "PS5DBG-05 PLAYERDATA NEXT FRAME";
+         this.xmlStatus = "venworkscui.swf loaded";
          this.xmlText = null;
          this.xmlState = "disposed";
          this.xmlParseArmed = false;
@@ -143,7 +149,7 @@ package
          }
          try
          {
-            this.setStatus("PS5DBG-06 PLAYERDATA REQUEST");
+            this.setPlayerDataStatus("PS5DBG-06 PLAYERDATA REQUEST");
             this.dataManager = getDefinitionByName("Shared.AS3.Data.BSUIDataManager");
             if(this.dataManager == null)
             {
@@ -158,7 +164,7 @@ package
             if(this.playerDataState == "subscribing")
             {
                this.playerDataState = "waiting";
-               this.setStatus("PS5DBG-07 PLAYERDATA WAITING");
+               this.setPlayerDataStatus("PS5DBG-07 PLAYERDATA WAITING");
             }
          }
          catch(param2:Error)
@@ -168,7 +174,7 @@ package
             if(!this.disposed)
             {
                this.playerDataState = "failed";
-               this.setStatus("PS5DBG-ERR PLAYERDATA | " + this.sanitizeText(failure,PLAYER_NAME_LIMIT));
+               this.setPlayerDataStatus("PS5DBG-ERR PLAYERDATA | " + this.sanitizeText(failure,PLAYER_NAME_LIMIT));
             }
          }
       }
@@ -195,7 +201,8 @@ package
             }
             this.playerDataState = "received";
             this.xmlState = "scheduled";
-            this.setXmlStatus("PS5DBG-08 XML NEXT FRAME");
+            this.setPlayerDataStatus("PS5DBG-OK PLAYERDATA | " + this.playerName);
+            this.setXmlStatus("PS5DBG-08 XML LOAD NEXT FRAME");
             addEventListener(Event.ENTER_FRAME,this.deferredXmlRequestCallback,false,0,true);
          }
          catch(param2:Error)
@@ -204,7 +211,7 @@ package
             if(!this.disposed)
             {
                this.playerDataState = "failed";
-               this.setStatus("PS5DBG-ERR PLAYERDATA | " + this.sanitizeText(param2,PLAYER_NAME_LIMIT));
+               this.setPlayerDataStatus("PS5DBG-ERR PLAYERDATA | " + this.sanitizeText(param2,PLAYER_NAME_LIMIT));
             }
          }
       }
@@ -222,12 +229,15 @@ package
          try
          {
             this.xmlState = "requesting";
-            this.setXmlStatus("PS5DBG-09 XML REQUEST");
             this.xmlLoader = new URLLoader();
             this.xmlLoader.addEventListener(Event.COMPLETE,this.onXmlLoadComplete,false,0,true);
             this.xmlLoader.addEventListener(IOErrorEvent.IO_ERROR,this.onXmlIoError,false,0,true);
             this.xmlLoader.addEventListener(SecurityErrorEvent.SECURITY_ERROR,this.onXmlSecurityError,false,0,true);
             this.xmlLoader.load(new URLRequest(DIAGNOSTIC_XML_PATH));
+            if(!this.disposed && this.xmlState == "requesting" && this.xmlLoader != null)
+            {
+               this.setXmlStatus("PS5DBG-09 XML LOAD RETURNED");
+            }
          }
          catch(param2:Error)
          {
@@ -385,18 +395,25 @@ package
          this.subscriptionActive = false;
       }
 
-      private function setXmlStatus(param1:String) : void
+      private function setPlayerDataStatus(param1:String) : void
       {
-         this.setStatus("PS5DBG-OK PLAYERDATA | " + this.playerName + " | " + param1);
+         this.playerDataStatus = this.sanitizeText(param1,120);
+         this.renderStatus();
       }
 
-      private function setStatus(param1:String) : void
+      private function setXmlStatus(param1:String) : void
+      {
+         this.xmlStatus = this.sanitizeText(param1,120);
+         this.renderStatus();
+      }
+
+      private function renderStatus() : void
       {
          if(this.pane == null)
          {
             return;
          }
-         this.pane.text = this.sanitizeText(param1,240);
+         this.pane.text = "PLAYERDATA: " + this.playerDataStatus + "\nXML: " + this.xmlStatus;
       }
 
       private function sanitizeText(param1:Object, param2:int) : String
