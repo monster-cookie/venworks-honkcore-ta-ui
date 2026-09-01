@@ -7,7 +7,7 @@
 - https://creations.bethesda.net/en/starfield/details/03b616a3-1902-4b83-a109-fc176f658a69/Venworks_Customizable_HUD___Crimson_Fleet_Theme
 - https://creations.bethesda.net/en/starfield/details/9b635bf7-8c6b-4530-bdbd-0912903b336b/Venworks_Customizable_HUD___Freestar_Collective_Th
 
-## Version 2.0.17 (UNRELEASED)
+## Version 2.0.17 (August 31, 2026)
 
 - PS5Debug: Keep PlayerData and XML loader results on separate persistent rows and report whether the isolated XML load call returns.
 - PS5Debug: Parse one isolated XML value with the same root-name and direct-child E4X operations used by the player-facing runtime, and display it alongside the verified player name.
