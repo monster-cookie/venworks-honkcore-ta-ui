@@ -59,11 +59,7 @@ determines the starting configuration.
 
 Choose one variant and one PC package shape. The recommended Nexus PC - Normal package installs a root ESM, Windows BA2 archives, and one loose `Interface\VenworksCUI\layout.xml`. Enable the ESM and let the package win HUD conflicts. The official v2.0.10 release publishes both Nexus package shapes for all five variants while PS5 compatibility remains subject to end-user acceptance.
 
-The Nexus PC - Fully Loose Files package installs the complete `Interface`
-tree without an ESM or BA2. Use it when palettes and SVG assets in a themed
-variant, or a separately authored legacy external fragment, must remain loose. Do not install the
-normal and fully loose packages together. A Starfield-capable mod manager is
-strongly recommended for either package shape.
+The Nexus PC - Fully Loose Files package installs the complete `Interface` tree without an ESM or BA2. Use it when palettes and SVG assets in a themed variant, or a separately authored legacy external fragment, must remain loose. Do not install the normal and fully loose packages together. A Starfield-capable mod manager is strongly recommended for either package shape.
 
 Bethesda Creations use separate ESM-and-BA2-only packages for PC, Xbox, and
 PS5. Install only the package supplied for the current platform and enable only

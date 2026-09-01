@@ -684,7 +684,7 @@
     <xs:attribute name="anchor" type="anchorType" />
     <xs:attribute name="visible" type="strictBooleanType" default="true" />
     <xs:attribute name="visibleWhen" type="xs:string" />
-    <xs:attribute name="z" type="xs:decimal" use="required" />
+    <xs:attribute name="z" type="xs:integer" use="required" />
   </xs:complexType>
 
   <xs:element name="venworksCUI">

@@ -345,8 +345,8 @@ Read the title and first detail line. Common categories are:
 |---|---|
 | `CUI LAYOUT MISSING` | Confirm `Interface\VenworksCUI\layout.xml` exists in the active deployment. |
 | `CUI LAYOUT MALFORMED` | Check XML quoting, closing tags, and entity escaping. |
-| `CUI LAYOUT INVALID` | Check the named element, attribute, ID, limit, reference, condition, or source. |
-| `CUI COMPONENT MISSING` | For a supplied component, confirm the `name` and optional `variant` are supported; for a legacy custom include, confirm its fragment exists directly under `components`. |
+| `CUI LAYOUT INVALID` | Check the named element, attribute, ID, limit, reference, condition, or source. For a supplied component, confirm the `name` and optional `variant` are supported. |
+| `CUI COMPONENT MISSING` | For a legacy custom include, confirm its fragment exists directly under `components`. |
 | `CUI PALETTE MISSING` | Confirm the root `palette` filename exists directly under `palettes`. |
 | `CUI PALETTE INVALID` | Restore all required roles and valid values from a packaged palette. |
 | `CUI ASSET LOAD ERROR` | Confirm the named local SVG exists under `Assets` and uses the supported subset. |

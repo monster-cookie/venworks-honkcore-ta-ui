@@ -200,9 +200,14 @@ package venworks.cui
             this.fail("CUI LAYOUT INVALID","Unknown SWF component: " + name);
             return false;
          }
-         if(!CUISwfComponentLibrary.isSupportedVariant(variant))
+         if(!CUISwfComponentLibrary.isSupported(name,variant))
          {
-            this.fail("CUI LAYOUT INVALID","Unsupported SWF component variant: " + variant);
+            this.fail("CUI LAYOUT INVALID","Unsupported SWF component variant for " + name + ": " + variant);
+            return false;
+         }
+         if(!this.hasFiniteAttribute(param1,"x") || !this.hasFiniteAttribute(param1,"y"))
+         {
+            this.fail("CUI LAYOUT INVALID","SWF component x and y must be nonempty finite numbers: " + id);
             return false;
          }
          if(param1.children().length() != 0)
@@ -211,6 +216,14 @@ package venworks.cui
             return false;
          }
          return true;
+      }
+
+      private function hasFiniteAttribute(param1:XML, param2:String) : Boolean
+      {
+         var value:String = param1.attribute(param2).length() == 1 ?
+            String(param1.attribute(param2)) : "";
+         var numberValue:Number = Number(value);
+         return /\S/.test(value) && !isNaN(numberValue) && isFinite(numberValue);
       }
 
       private function resolveSwfComponent(param1:XML) : Boolean

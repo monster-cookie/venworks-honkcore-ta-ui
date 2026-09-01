@@ -25,11 +25,22 @@ package venworks.cui.components.library
          return param1 == STANDARD_VARIANT || param1 == MINIMALIST_VARIANT;
       }
 
+      public static function isSupported(param1:String, param2:String) : Boolean
+      {
+         return contains(param1) && isSupportedVariant(param2) &&
+            (param2 != MINIMALIST_VARIANT ||
+               (param1 != "equipment-rail" && param1 != "faction-icon"));
+      }
+
       public static function create(param1:String, param2:String) : XML
       {
-         if(!isSupportedVariant(param2))
+         if(!contains(param1))
          {
-            throw new Error("Unsupported SWF component variant: " + param2);
+            throw new Error("Unknown SWF component: " + param1);
+         }
+         if(!isSupported(param1,param2))
+         {
+            throw new Error("Unsupported SWF component variant for " + param1 + ": " + param2);
          }
          if(param1 == "player-data-panel")
          {
@@ -75,7 +86,7 @@ package venworks.cui.components.library
          {
             return CUISwfScannerDataPanelDefinition.create(param2);
          }
-         throw new Error("Unknown SWF component: " + param1);
+         throw new Error("Unsupported SWF component: " + param1);
       }
    }
 }
