@@ -6,6 +6,7 @@ package
    import flash.events.IOErrorEvent;
    import flash.events.SecurityErrorEvent;
    import flash.net.URLLoader;
+   import flash.net.URLLoaderDataFormat;
    import flash.net.URLRequest;
    import flash.text.TextField;
    import flash.text.TextFormat;
@@ -17,28 +18,29 @@ package
 
       private static const PLAYER_DATA_PROVIDER:String = "PlayerData";
       private static const PLAYER_NAME_LIMIT:int = 80;
-      private static const DIAGNOSTIC_XML_PATH:String = "VenworksCUI/layout.xml";
-      private static const DIAGNOSTIC_XML_LIMIT:int = 4096;
-      private static const HTML_TEXT_LIMIT:int = 80;
+      private static const DIAGNOSTIC_LAYOUT_PATH:String = "VenworksCUI/layout.xml";
+      private static const DIAGNOSTIC_LAYOUT_LIMIT:int = 4096;
+      private static const XHTML_TEXT_LIMIT:int = 80;
+      private static const XHTML_DECLARATION:String = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
 
       private var owner:DisplayObjectContainer = null;
       private var pane:TextField = null;
-      private var htmlPane:TextField = null;
+      private var xhtmlPane:TextField = null;
       private var playerDataStatus:String = "PS5DBG-05 PLAYERDATA NEXT FRAME";
-      private var xmlStatus:String = "venworkscui.swf loaded";
+      private var xhtmlStatus:String = "venworkscui.swf loaded";
       private var dataManager:Object = null;
       private var deferredProbeCallback:Function = null;
-      private var deferredXmlRequestCallback:Function = null;
-      private var deferredXmlParseCallback:Function = null;
+      private var deferredLayoutRequestCallback:Function = null;
+      private var deferredLayoutParseCallback:Function = null;
       private var playerDataCallback:Function = null;
       private var playerDataState:String = "idle";
       private var playerName:String = "";
       private var subscriptionPending:Boolean = false;
       private var subscriptionActive:Boolean = false;
-      private var xmlLoader:URLLoader = null;
-      private var xmlText:String = null;
-      private var xmlState:String = "idle";
-      private var xmlParseArmed:Boolean = false;
+      private var layoutLoader:URLLoader = null;
+      private var layoutText:String = null;
+      private var layoutState:String = "idle";
+      private var layoutParseArmed:Boolean = false;
       private var disposed:Boolean = true;
 
       public function VenworksCUIDiagnosticEntrypoint()
@@ -79,16 +81,16 @@ package
          this.pane.selectable = false;
          this.pane.mouseEnabled = false;
          this.playerDataStatus = "PS5DBG-05 PLAYERDATA NEXT FRAME";
-         this.xmlStatus = "venworkscui.swf loaded";
+         this.xhtmlStatus = "venworkscui.swf loaded";
          this.renderStatus();
          this.pane.setTextFormat(format);
          addChild(this.pane);
          this.playerDataCallback = this.onPlayerData;
          this.deferredProbeCallback = this.onDeferredProbe;
-         this.deferredXmlRequestCallback = this.onDeferredXmlRequest;
-         this.deferredXmlParseCallback = this.onDeferredXmlParse;
+         this.deferredLayoutRequestCallback = this.onDeferredLayoutRequest;
+         this.deferredLayoutParseCallback = this.onDeferredLayoutParse;
          this.playerDataState = "scheduled";
-         this.xmlState = "idle";
+         this.layoutState = "idle";
          addEventListener(Event.ENTER_FRAME,this.deferredProbeCallback,false,0,true);
       }
 
@@ -107,17 +109,17 @@ package
          {
             removeEventListener(Event.ENTER_FRAME,this.deferredProbeCallback);
          }
-         if(this.deferredXmlRequestCallback != null)
+         if(this.deferredLayoutRequestCallback != null)
          {
-            removeEventListener(Event.ENTER_FRAME,this.deferredXmlRequestCallback);
+            removeEventListener(Event.ENTER_FRAME,this.deferredLayoutRequestCallback);
          }
-         if(this.deferredXmlParseCallback != null)
+         if(this.deferredLayoutParseCallback != null)
          {
-            removeEventListener(Event.ENTER_FRAME,this.deferredXmlParseCallback);
+            removeEventListener(Event.ENTER_FRAME,this.deferredLayoutParseCallback);
          }
          this.unsubscribePlayerData();
-         this.releaseXmlLoader(true);
-         this.removeBasicHtmlPane();
+         this.releaseLayoutLoader(true);
+         this.removeBasicXhtmlPane();
          if(this.pane != null && this.pane.parent === this)
          {
             removeChild(this.pane);
@@ -126,16 +128,16 @@ package
          this.owner = null;
          this.dataManager = null;
          this.deferredProbeCallback = null;
-         this.deferredXmlRequestCallback = null;
-         this.deferredXmlParseCallback = null;
+         this.deferredLayoutRequestCallback = null;
+         this.deferredLayoutParseCallback = null;
          this.playerDataCallback = null;
          this.playerDataState = "disposed";
          this.playerName = "";
          this.playerDataStatus = "PS5DBG-05 PLAYERDATA NEXT FRAME";
-         this.xmlStatus = "venworkscui.swf loaded";
-         this.xmlText = null;
-         this.xmlState = "disposed";
-         this.xmlParseArmed = false;
+         this.xhtmlStatus = "venworkscui.swf loaded";
+         this.layoutText = null;
+         this.layoutState = "disposed";
+         this.layoutParseArmed = false;
       }
 
       private function onDeferredProbe(param1:Event) : void
@@ -183,7 +185,7 @@ package
 
       private function onPlayerData(param1:Object) : void
       {
-         if(this.disposed || this.playerDataState == "failed" || this.xmlState != "idle")
+         if(this.disposed || this.playerDataState == "failed" || this.layoutState != "idle")
          {
             return;
          }
@@ -202,10 +204,10 @@ package
                }
             }
             this.playerDataState = "received";
-            this.xmlState = "scheduled";
+            this.layoutState = "scheduled";
             this.setPlayerDataStatus("PS5DBG-OK PLAYERDATA | " + this.playerName);
-            this.setXmlStatus("PS5DBG-08 XML LOAD NEXT FRAME");
-            addEventListener(Event.ENTER_FRAME,this.deferredXmlRequestCallback,false,0,true);
+            this.setXhtmlStatus("PS5DBG-08 XHTML TEXT LOAD NEXT FRAME");
+            addEventListener(Event.ENTER_FRAME,this.deferredLayoutRequestCallback,false,0,true);
          }
          catch(param2:Error)
          {
@@ -218,211 +220,348 @@ package
          }
       }
 
-      private function onDeferredXmlRequest(param1:Event) : void
+      private function onDeferredLayoutRequest(param1:Event) : void
       {
-         if(this.deferredXmlRequestCallback != null)
+         if(this.deferredLayoutRequestCallback != null)
          {
-            removeEventListener(Event.ENTER_FRAME,this.deferredXmlRequestCallback);
+            removeEventListener(Event.ENTER_FRAME,this.deferredLayoutRequestCallback);
          }
-         if(this.disposed || this.xmlState != "scheduled")
+         if(this.disposed || this.layoutState != "scheduled")
          {
             return;
          }
          try
          {
-            this.xmlState = "requesting";
-            this.xmlLoader = new URLLoader();
-            this.xmlLoader.addEventListener(Event.COMPLETE,this.onXmlLoadComplete,false,0,true);
-            this.xmlLoader.addEventListener(IOErrorEvent.IO_ERROR,this.onXmlIoError,false,0,true);
-            this.xmlLoader.addEventListener(SecurityErrorEvent.SECURITY_ERROR,this.onXmlSecurityError,false,0,true);
-            this.xmlLoader.load(new URLRequest(DIAGNOSTIC_XML_PATH));
-            if(!this.disposed && this.xmlState == "requesting" && this.xmlLoader != null)
+            this.layoutState = "requesting";
+            this.layoutLoader = new URLLoader();
+            this.layoutLoader.dataFormat = URLLoaderDataFormat.TEXT;
+            this.layoutLoader.addEventListener(Event.COMPLETE,this.onLayoutLoadComplete,false,0,true);
+            this.layoutLoader.addEventListener(IOErrorEvent.IO_ERROR,this.onLayoutIoError,false,0,true);
+            this.layoutLoader.addEventListener(SecurityErrorEvent.SECURITY_ERROR,this.onLayoutSecurityError,false,0,true);
+            this.layoutLoader.load(new URLRequest(DIAGNOSTIC_LAYOUT_PATH));
+            if(!this.disposed && this.layoutState == "requesting" && this.layoutLoader != null)
             {
-               this.setXmlStatus("PS5DBG-09 XML LOAD RETURNED");
+               this.setXhtmlStatus("PS5DBG-09 XHTML LOAD RETURNED");
             }
          }
          catch(param2:Error)
          {
-            this.failXml("PS5DBG-ERR XML REQUEST");
+            this.failLayout("PS5DBG-ERR XHTML REQUEST");
          }
       }
 
-      private function onXmlLoadComplete(param1:Event) : void
+      private function onLayoutLoadComplete(param1:Event) : void
       {
-         if(this.disposed || this.xmlState != "requesting" || this.xmlLoader == null)
+         if(this.disposed || this.layoutState != "requesting" || this.layoutLoader == null)
          {
             return;
          }
          try
          {
-            this.xmlText = String(this.xmlLoader.data);
+            this.layoutText = String(this.layoutLoader.data);
          }
          catch(param2:Error)
          {
-            this.failXml("PS5DBG-ERR XML VALUE");
+            this.failLayout("PS5DBG-ERR XHTML TEXT");
             return;
          }
-         this.releaseXmlLoader(false);
-         this.xmlState = "received";
-         this.xmlParseArmed = false;
-         this.setXmlStatus("PS5DBG-10 XML RECEIVED");
-         addEventListener(Event.ENTER_FRAME,this.deferredXmlParseCallback,false,0,true);
+         this.releaseLayoutLoader(false);
+         this.layoutState = "received";
+         this.layoutParseArmed = false;
+         this.setXhtmlStatus("PS5DBG-10 XHTML TEXT RECEIVED");
+         addEventListener(Event.ENTER_FRAME,this.deferredLayoutParseCallback,false,0,true);
       }
 
-      private function onXmlIoError(param1:IOErrorEvent) : void
+      private function onLayoutIoError(param1:IOErrorEvent) : void
       {
-         this.failXml("PS5DBG-ERR XML IO");
+         this.failLayout("PS5DBG-ERR XHTML IO");
       }
 
-      private function onXmlSecurityError(param1:SecurityErrorEvent) : void
+      private function onLayoutSecurityError(param1:SecurityErrorEvent) : void
       {
-         this.failXml("PS5DBG-ERR XML SECURITY");
+         this.failLayout("PS5DBG-ERR XHTML SECURITY");
       }
 
-      private function onDeferredXmlParse(param1:Event) : void
+      private function onDeferredLayoutParse(param1:Event) : void
       {
-         var parsedXml:XML = null;
-         var htmlTitle:String = null;
-         var htmlHeading:String = null;
-         var htmlParagraph:String = null;
-         if(this.disposed || this.xmlState != "received")
+         var parsedLayout:Object = null;
+         if(this.disposed || this.layoutState != "received")
          {
-            if(this.deferredXmlParseCallback != null)
+            if(this.deferredLayoutParseCallback != null)
             {
-               removeEventListener(Event.ENTER_FRAME,this.deferredXmlParseCallback);
+               removeEventListener(Event.ENTER_FRAME,this.deferredLayoutParseCallback);
             }
             return;
          }
-         if(!this.xmlParseArmed)
+         if(!this.layoutParseArmed)
          {
-            this.xmlParseArmed = true;
-            this.setXmlStatus("PS5DBG-11 XML PARSE NEXT FRAME");
+            this.layoutParseArmed = true;
+            this.setXhtmlStatus("PS5DBG-11 XHTML PARSE NEXT FRAME");
             return;
          }
-         if(this.deferredXmlParseCallback != null)
+         if(this.deferredLayoutParseCallback != null)
          {
-            removeEventListener(Event.ENTER_FRAME,this.deferredXmlParseCallback);
+            removeEventListener(Event.ENTER_FRAME,this.deferredLayoutParseCallback);
          }
-         if(this.xmlText == null || this.xmlText.length == 0 || this.xmlText.length > DIAGNOSTIC_XML_LIMIT)
+         if(this.layoutText == null || this.layoutText.length == 0)
          {
-            this.failXml("PS5DBG-ERR XML VALUE");
+            this.failLayout("PS5DBG-ERR XHTML TEXT");
+            return;
+         }
+         if(this.layoutText.length > DIAGNOSTIC_LAYOUT_LIMIT)
+         {
+            this.failLayout("PS5DBG-ERR XHTML SIZE");
             return;
          }
          try
          {
-            parsedXml = new XML(this.xmlText);
+            parsedLayout = this.parseBoundedXhtml(this.layoutText);
          }
          catch(param2:Error)
          {
-            this.failXml("PS5DBG-ERR XML PARSE");
+            this.failLayout("PS5DBG-ERR XHTML PARSE");
             return;
          }
-         if(String(parsedXml.name()) != "html")
+         if(parsedLayout == null)
          {
-            this.failXml("PS5DBG-ERR HTML VALUE");
+            this.failLayout("PS5DBG-ERR XHTML PARSE");
             return;
          }
-         htmlTitle = this.sanitizeText(String(parsedXml.head.title),HTML_TEXT_LIMIT);
-         htmlHeading = this.sanitizeText(String(parsedXml.body.section.h1),HTML_TEXT_LIMIT);
-         htmlParagraph = this.sanitizeText(String(parsedXml.body.section.p),HTML_TEXT_LIMIT);
-         if(htmlTitle.length == 0 || htmlHeading.length == 0 || htmlParagraph.length == 0)
-         {
-            this.failXml("PS5DBG-ERR HTML VALUE");
-            return;
-         }
-         this.setXmlStatus("PS5DBG-12 BASIC HTML RENDER");
+         this.setXhtmlStatus("PS5DBG-12 BASIC XHTML RENDER");
          try
          {
-            this.renderBasicHtml(htmlHeading,htmlParagraph);
+            this.renderBasicXhtml(String(parsedLayout.heading),String(parsedLayout.paragraph));
          }
          catch(param3:Error)
          {
-            this.failXml("PS5DBG-ERR HTML RENDER");
+            this.failLayout("PS5DBG-ERR XHTML RENDER");
             return;
          }
-         this.xmlText = null;
-         this.xmlState = "complete";
-         this.setXmlStatus("PS5DBG-OK HTML | html/head/title/body/section/h1/p");
+         this.layoutText = null;
+         this.layoutState = "complete";
+         this.setXhtmlStatus("PS5DBG-OK XHTML | html/head/title/body/section/h1/p");
       }
 
-      private function renderBasicHtml(param1:String, param2:String) : void
+      private function parseBoundedXhtml(param1:String) : Object
+      {
+         var cursor:Object = {"position":0};
+         var title:String = null;
+         var heading:String = null;
+         var paragraph:String = null;
+         if(!this.expectLayoutLiteral(param1,cursor,XHTML_DECLARATION))
+         {
+            return null;
+         }
+         this.skipLayoutWhitespace(param1,cursor);
+         if(!this.expectLayoutLiteral(param1,cursor,"<html>"))
+         {
+            return null;
+         }
+         this.skipLayoutWhitespace(param1,cursor);
+         if(!this.expectLayoutLiteral(param1,cursor,"<head>"))
+         {
+            return null;
+         }
+         this.skipLayoutWhitespace(param1,cursor);
+         if(!this.expectLayoutLiteral(param1,cursor,"<title>"))
+         {
+            return null;
+         }
+         title = this.readLayoutText(param1,cursor,"</title>");
+         if(title == null || !this.expectLayoutLiteral(param1,cursor,"</title>"))
+         {
+            return null;
+         }
+         this.skipLayoutWhitespace(param1,cursor);
+         if(!this.expectLayoutLiteral(param1,cursor,"</head>"))
+         {
+            return null;
+         }
+         this.skipLayoutWhitespace(param1,cursor);
+         if(!this.expectLayoutLiteral(param1,cursor,"<body>"))
+         {
+            return null;
+         }
+         this.skipLayoutWhitespace(param1,cursor);
+         if(!this.expectLayoutLiteral(param1,cursor,"<section>"))
+         {
+            return null;
+         }
+         this.skipLayoutWhitespace(param1,cursor);
+         if(!this.expectLayoutLiteral(param1,cursor,"<h1>"))
+         {
+            return null;
+         }
+         heading = this.readLayoutText(param1,cursor,"</h1>");
+         if(heading == null || !this.expectLayoutLiteral(param1,cursor,"</h1>"))
+         {
+            return null;
+         }
+         this.skipLayoutWhitespace(param1,cursor);
+         if(!this.expectLayoutLiteral(param1,cursor,"<p>"))
+         {
+            return null;
+         }
+         paragraph = this.readLayoutText(param1,cursor,"</p>");
+         if(paragraph == null || !this.expectLayoutLiteral(param1,cursor,"</p>"))
+         {
+            return null;
+         }
+         this.skipLayoutWhitespace(param1,cursor);
+         if(!this.expectLayoutLiteral(param1,cursor,"</section>"))
+         {
+            return null;
+         }
+         this.skipLayoutWhitespace(param1,cursor);
+         if(!this.expectLayoutLiteral(param1,cursor,"</body>"))
+         {
+            return null;
+         }
+         this.skipLayoutWhitespace(param1,cursor);
+         if(!this.expectLayoutLiteral(param1,cursor,"</html>"))
+         {
+            return null;
+         }
+         this.skipLayoutWhitespace(param1,cursor);
+         if(int(cursor.position) != param1.length)
+         {
+            return null;
+         }
+         return {"title":title,"heading":heading,"paragraph":paragraph};
+      }
+
+      private function skipLayoutWhitespace(param1:String, param2:Object) : void
+      {
+         var position:int = int(param2.position);
+         while(position < param1.length && this.isLayoutWhitespace(param1.charCodeAt(position)))
+         {
+            position++;
+         }
+         param2.position = position;
+      }
+
+      private function expectLayoutLiteral(param1:String, param2:Object, param3:String) : Boolean
+      {
+         var position:int = int(param2.position);
+         if(position + param3.length > param1.length || param1.substr(position,param3.length) != param3)
+         {
+            return false;
+         }
+         param2.position = position + param3.length;
+         return true;
+      }
+
+      private function readLayoutText(param1:String, param2:Object, param3:String) : String
+      {
+         var position:int = int(param2.position);
+         var end:int = param1.indexOf(param3,position);
+         var value:String = null;
+         var index:int = 0;
+         var code:Number = 0;
+         if(end <= position || end - position > XHTML_TEXT_LIMIT)
+         {
+            return null;
+         }
+         value = param1.substring(position,end);
+         if(this.isLayoutWhitespace(value.charCodeAt(0)) || this.isLayoutWhitespace(value.charCodeAt(value.length - 1)))
+         {
+            return null;
+         }
+         for(index = 0; index < value.length; index++)
+         {
+            code = value.charCodeAt(index);
+            if(code == 38 || code == 60 || code == 9 || code == 10 || code == 13)
+            {
+               return null;
+            }
+         }
+         param2.position = end;
+         return value;
+      }
+
+      private function isLayoutWhitespace(param1:Number) : Boolean
+      {
+         return param1 == 32 || param1 == 9 || param1 == 10 || param1 == 13;
+      }
+
+      private function renderBasicXhtml(param1:String, param2:String) : void
       {
          var headingFormat:TextFormat = new TextFormat("$MAIN_Font_Bold",24,65280,true);
          var paragraphFormat:TextFormat = new TextFormat("$MAIN_Font_Bold",18,16777215,false);
          var headingEnd:int = param1.length;
-         this.removeBasicHtmlPane();
-         this.htmlPane = new TextField();
-         this.htmlPane.name = "VenworksCUIBasicHtmlPane";
-         this.htmlPane.x = 600;
-         this.htmlPane.y = 285;
-         this.htmlPane.width = 720;
-         this.htmlPane.height = 150;
-         this.htmlPane.background = true;
-         this.htmlPane.backgroundColor = 1577000;
-         this.htmlPane.border = true;
-         this.htmlPane.borderColor = 65535;
-         this.htmlPane.embedFonts = true;
-         this.htmlPane.defaultTextFormat = paragraphFormat;
-         this.htmlPane.multiline = true;
-         this.htmlPane.wordWrap = true;
-         this.htmlPane.selectable = false;
-         this.htmlPane.mouseEnabled = false;
-         this.htmlPane.text = param1 + "\n" + param2;
-         this.htmlPane.setTextFormat(headingFormat,0,headingEnd);
-         this.htmlPane.setTextFormat(paragraphFormat,headingEnd + 1,this.htmlPane.text.length);
-         addChild(this.htmlPane);
+         this.removeBasicXhtmlPane();
+         this.xhtmlPane = new TextField();
+         this.xhtmlPane.name = "VenworksCUIBasicXhtmlPane";
+         this.xhtmlPane.x = 600;
+         this.xhtmlPane.y = 285;
+         this.xhtmlPane.width = 720;
+         this.xhtmlPane.height = 150;
+         this.xhtmlPane.background = true;
+         this.xhtmlPane.backgroundColor = 1577000;
+         this.xhtmlPane.border = true;
+         this.xhtmlPane.borderColor = 65535;
+         this.xhtmlPane.embedFonts = true;
+         this.xhtmlPane.defaultTextFormat = paragraphFormat;
+         this.xhtmlPane.multiline = true;
+         this.xhtmlPane.wordWrap = true;
+         this.xhtmlPane.selectable = false;
+         this.xhtmlPane.mouseEnabled = false;
+         this.xhtmlPane.text = param1 + "\n" + param2;
+         this.xhtmlPane.setTextFormat(headingFormat,0,headingEnd);
+         this.xhtmlPane.setTextFormat(paragraphFormat,headingEnd + 1,this.xhtmlPane.text.length);
+         addChild(this.xhtmlPane);
       }
 
-      private function removeBasicHtmlPane() : void
+      private function removeBasicXhtmlPane() : void
       {
-         if(this.htmlPane != null && this.htmlPane.parent === this)
+         if(this.xhtmlPane != null && this.xhtmlPane.parent === this)
          {
-            removeChild(this.htmlPane);
+            removeChild(this.xhtmlPane);
          }
-         this.htmlPane = null;
+         this.xhtmlPane = null;
       }
 
-      private function failXml(param1:String) : void
+      private function failLayout(param1:String) : void
       {
-         if(this.deferredXmlRequestCallback != null)
+         if(this.deferredLayoutRequestCallback != null)
          {
-            removeEventListener(Event.ENTER_FRAME,this.deferredXmlRequestCallback);
+            removeEventListener(Event.ENTER_FRAME,this.deferredLayoutRequestCallback);
          }
-         if(this.deferredXmlParseCallback != null)
+         if(this.deferredLayoutParseCallback != null)
          {
-            removeEventListener(Event.ENTER_FRAME,this.deferredXmlParseCallback);
+            removeEventListener(Event.ENTER_FRAME,this.deferredLayoutParseCallback);
          }
-         this.releaseXmlLoader(true);
-         this.removeBasicHtmlPane();
-         this.xmlText = null;
-         this.xmlState = "failed";
-         this.xmlParseArmed = false;
+         this.releaseLayoutLoader(true);
+         this.removeBasicXhtmlPane();
+         this.layoutText = null;
+         this.layoutState = "failed";
+         this.layoutParseArmed = false;
          if(!this.disposed)
          {
-            this.setXmlStatus(param1);
+            this.setXhtmlStatus(param1);
          }
       }
 
-      private function releaseXmlLoader(param1:Boolean) : void
+      private function releaseLayoutLoader(param1:Boolean) : void
       {
-         if(this.xmlLoader == null)
+         if(this.layoutLoader == null)
          {
             return;
          }
-         this.xmlLoader.removeEventListener(Event.COMPLETE,this.onXmlLoadComplete);
-         this.xmlLoader.removeEventListener(IOErrorEvent.IO_ERROR,this.onXmlIoError);
-         this.xmlLoader.removeEventListener(SecurityErrorEvent.SECURITY_ERROR,this.onXmlSecurityError);
+         this.layoutLoader.removeEventListener(Event.COMPLETE,this.onLayoutLoadComplete);
+         this.layoutLoader.removeEventListener(IOErrorEvent.IO_ERROR,this.onLayoutIoError);
+         this.layoutLoader.removeEventListener(SecurityErrorEvent.SECURITY_ERROR,this.onLayoutSecurityError);
          if(param1)
          {
             try
             {
-               this.xmlLoader.close();
+               this.layoutLoader.close();
             }
             catch(param2:Error)
             {
             }
          }
-         this.xmlLoader = null;
+         this.layoutLoader = null;
       }
 
       private function unsubscribePlayerData() : void
@@ -447,9 +586,9 @@ package
          this.renderStatus();
       }
 
-      private function setXmlStatus(param1:String) : void
+      private function setXhtmlStatus(param1:String) : void
       {
-         this.xmlStatus = this.sanitizeText(param1,120);
+         this.xhtmlStatus = this.sanitizeText(param1,120);
          this.renderStatus();
       }
 
@@ -459,7 +598,7 @@ package
          {
             return;
          }
-         this.pane.text = "PLAYERDATA: " + this.playerDataStatus + "\nXML: " + this.xmlStatus;
+         this.pane.text = "PLAYERDATA: " + this.playerDataStatus + "\nXHTML: " + this.xhtmlStatus;
       }
 
       private function sanitizeText(param1:Object, param2:int) : String
