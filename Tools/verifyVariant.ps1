@@ -655,6 +655,14 @@ foreach ($variant in $variants) {
     if ($diagnosticEntrypointSource.Contains($diagnosticXmlValue)) {
       throw "$($variant.VariantName) diagnostic ActionScript must not embed the XML-derived acceptance text."
     }
+    if ($diagnosticEntrypointSource.Contains('XMLList') -or
+        $diagnosticEntrypointSource.Contains('.elements(')) {
+      throw "$($variant.VariantName) diagnostic ActionScript must use the production-compatible root-name and direct-child E4X operations without XMLList declarations or elements() traversal."
+    }
+    if (!$diagnosticEntrypointSource.Contains('String(parsedXml.name())') -or
+        !$diagnosticEntrypointSource.Contains('String(parsedXml.diagnosticText)')) {
+      throw "$($variant.VariantName) diagnostic ActionScript must use the production-compatible root-name and direct diagnosticText E4X lookup."
+    }
   }
   elseif (Test-Path -LiteralPath (Join-Path $interfacePath "VenworksCUI")) {
     throw "$($variant.VariantName) profile without CUI configuration must not stage a VenworksCUI payload."
@@ -1319,6 +1327,8 @@ foreach ($variant in $variants) {
       'CUILayoutImportLoader',
       'CUIPlayerHudDataContext',
       'CUIConditionContext',
+      'XMLList',
+      'elements',
       'VENWORKS AUX LOADED'
     )) {
       if ($auxiliaryInspection.Text.Contains($forbiddenDiagnosticToken)) {

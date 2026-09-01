@@ -458,7 +458,9 @@ function Assert-AuxiliaryMovie {
       'CUIRuntime',
       'CUILayoutImportLoader',
       'CUIPlayerHudDataContext',
-      'CUIConditionContext'
+      'CUIConditionContext',
+      'XMLList',
+      'elements'
     )) {
       if ($validationSource.Contains($forbiddenToken)) {
         throw "Diagnostic auxiliary movie contains forbidden runtime token '$forbiddenToken'."

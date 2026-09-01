@@ -280,8 +280,6 @@ package
       private function onDeferredXmlParse(param1:Event) : void
       {
          var parsedXml:XML = null;
-         var rootElements:XMLList = null;
-         var diagnosticNodes:XMLList = null;
          var diagnosticValue:String = null;
          if(this.disposed || this.xmlState != "received")
          {
@@ -315,18 +313,12 @@ package
             this.failXml("PS5DBG-ERR XML PARSE");
             return;
          }
-         rootElements = parsedXml.elements();
-         diagnosticNodes = parsedXml.child("diagnosticText");
-         if(String(parsedXml.name()) != "venworksCUI" ||
-            rootElements.length() != 1 ||
-            diagnosticNodes.length() != 1 ||
-            String(rootElements[0].name()) != "diagnosticText" ||
-            diagnosticNodes[0].elements().length() != 0)
+         if(String(parsedXml.name()) != "venworksCUI")
          {
             this.failXml("PS5DBG-ERR XML VALUE");
             return;
          }
-         diagnosticValue = this.sanitizeText(diagnosticNodes[0].toString(),DIAGNOSTIC_TEXT_LIMIT);
+         diagnosticValue = this.sanitizeText(String(parsedXml.diagnosticText),DIAGNOSTIC_TEXT_LIMIT);
          if(diagnosticValue.length == 0)
          {
             this.failXml("PS5DBG-ERR XML VALUE");
