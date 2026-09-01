@@ -6,7 +6,7 @@ These instructions apply only to the Venworks Customizable HUD repository.
 
 | Stable Plane project UUID              | Plane identifier | Repository path                                    | Repository URL                                              |
 | -------------------------------------- | ---------------- | -------------------------------------------------- | ----------------------------------------------------------- |
-| `7dd2481d-cf26-4030-ba0d-7563612d1493` | `VWKSHUD`        | `C:\Repositories\Venworks\venworks-honkcore-ta-ui` | `https://github.com/monster-cookie/venworks-honkcore-ta-ui` |
+| `7dd2481d-cf26-4030-ba0d-7563612d1493` | `VWHUD`          | `C:\Repositories\Venworks\venworks-honkcore-ta-ui` | `https://github.com/monster-cookie/venworks-honkcore-ta-ui` |
 
 The stable Plane project UUID is the canonical external identity. Project names, identifiers, member display names, labels, and workflow names may change and must not replace the UUID as the primary identity.
 
@@ -15,10 +15,10 @@ At the beginning of Plane-backed work:
 1. Verify that the Plane MCP is available and authenticated.
 2. List the available Plane projects.
 3. Find project UUID `7dd2481d-cf26-4030-ba0d-7563612d1493`.
-4. Verify that its current identifier is `VWKSHUD` and record its current name.
+4. Verify that its current identifier is `VWHUD` and record its current name.
 5. Use the full project UUID in every MCP operation that accepts `project_id`.
 6. Retrieve the governing work item and verify that its returned `project` field matches the canonical project UUID.
-7. Retain both its human-readable identifier, such as `VWKSHUD-30`, and its full work-item UUID before planning or mutation.
+7. Retain both its human-readable identifier, such as `VWHUD-30`, and its full work-item UUID before planning or mutation.
 
 Do not rely only on a remembered project name, work-item title, short identifier, label name, list position, or search result.
 
