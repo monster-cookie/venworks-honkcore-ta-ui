@@ -7,7 +7,7 @@
 - https://creations.bethesda.net/en/starfield/details/03b616a3-1902-4b83-a109-fc176f658a69/Venworks_Customizable_HUD___Crimson_Fleet_Theme
 - https://creations.bethesda.net/en/starfield/details/9b635bf7-8c6b-4530-bdbd-0912903b336b/Venworks_Customizable_HUD___Freestar_Collective_Th
 
-## Version 2.0.18 (UNRELEASED)
+## Version 2.0.18 (August 31, 2026)
 
 - PS5Debug: Load `VenworksCUI/layout.xml` only as bounded text and parse its exact `html/head/title/body/section/h1/p` structure with a custom ActionScript parser that does not invoke Scaleform XML, E4X, or the disabled HTML engine.
 - PS5Debug: Render the accepted heading and paragraph through a native Scaleform text field without CSS, JavaScript, attributes, namespaces, entities, mixed content, or browser behavior.
