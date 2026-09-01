@@ -21,6 +21,7 @@ jobs:
       PSSCRIPTANALYZER_PATH: ./Tools
       PSSCRIPTANALYZER_SETTINGS: ./PSScriptAnalyzerSettings.psd1
     steps:
+      # GitHub-authored actions must remain pinned to full commit SHAs.
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
