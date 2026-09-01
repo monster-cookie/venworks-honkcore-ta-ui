@@ -19,10 +19,11 @@ package
       private static const PLAYER_NAME_LIMIT:int = 80;
       private static const DIAGNOSTIC_XML_PATH:String = "VenworksCUI/layout.xml";
       private static const DIAGNOSTIC_XML_LIMIT:int = 4096;
-      private static const DIAGNOSTIC_TEXT_LIMIT:int = 80;
+      private static const HTML_TEXT_LIMIT:int = 80;
 
       private var owner:DisplayObjectContainer = null;
       private var pane:TextField = null;
+      private var htmlPane:TextField = null;
       private var playerDataStatus:String = "PS5DBG-05 PLAYERDATA NEXT FRAME";
       private var xmlStatus:String = "venworkscui.swf loaded";
       private var dataManager:Object = null;
@@ -116,6 +117,7 @@ package
          }
          this.unsubscribePlayerData();
          this.releaseXmlLoader(true);
+         this.removeBasicHtmlPane();
          if(this.pane != null && this.pane.parent === this)
          {
             removeChild(this.pane);
@@ -280,7 +282,9 @@ package
       private function onDeferredXmlParse(param1:Event) : void
       {
          var parsedXml:XML = null;
-         var diagnosticValue:String = null;
+         var htmlTitle:String = null;
+         var htmlHeading:String = null;
+         var htmlParagraph:String = null;
          if(this.disposed || this.xmlState != "received")
          {
             if(this.deferredXmlParseCallback != null)
@@ -313,20 +317,69 @@ package
             this.failXml("PS5DBG-ERR XML PARSE");
             return;
          }
-         if(String(parsedXml.name()) != "venworksCUI")
+         if(String(parsedXml.name()) != "html")
          {
-            this.failXml("PS5DBG-ERR XML VALUE");
+            this.failXml("PS5DBG-ERR HTML VALUE");
             return;
          }
-         diagnosticValue = this.sanitizeText(String(parsedXml.diagnosticText),DIAGNOSTIC_TEXT_LIMIT);
-         if(diagnosticValue.length == 0)
+         htmlTitle = this.sanitizeText(String(parsedXml.head.title),HTML_TEXT_LIMIT);
+         htmlHeading = this.sanitizeText(String(parsedXml.body.section.h1),HTML_TEXT_LIMIT);
+         htmlParagraph = this.sanitizeText(String(parsedXml.body.section.p),HTML_TEXT_LIMIT);
+         if(htmlTitle.length == 0 || htmlHeading.length == 0 || htmlParagraph.length == 0)
          {
-            this.failXml("PS5DBG-ERR XML VALUE");
+            this.failXml("PS5DBG-ERR HTML VALUE");
+            return;
+         }
+         this.setXmlStatus("PS5DBG-12 BASIC HTML RENDER");
+         try
+         {
+            this.renderBasicHtml(htmlHeading,htmlParagraph);
+         }
+         catch(param3:Error)
+         {
+            this.failXml("PS5DBG-ERR HTML RENDER");
             return;
          }
          this.xmlText = null;
          this.xmlState = "complete";
-         this.setXmlStatus("PS5DBG-OK XML | " + diagnosticValue);
+         this.setXmlStatus("PS5DBG-OK HTML | html/head/title/body/section/h1/p");
+      }
+
+      private function renderBasicHtml(param1:String, param2:String) : void
+      {
+         var headingFormat:TextFormat = new TextFormat("$MAIN_Font_Bold",24,65280,true);
+         var paragraphFormat:TextFormat = new TextFormat("$MAIN_Font_Bold",18,16777215,false);
+         var headingEnd:int = param1.length;
+         this.removeBasicHtmlPane();
+         this.htmlPane = new TextField();
+         this.htmlPane.name = "VenworksCUIBasicHtmlPane";
+         this.htmlPane.x = 600;
+         this.htmlPane.y = 285;
+         this.htmlPane.width = 720;
+         this.htmlPane.height = 150;
+         this.htmlPane.background = true;
+         this.htmlPane.backgroundColor = 1577000;
+         this.htmlPane.border = true;
+         this.htmlPane.borderColor = 65535;
+         this.htmlPane.embedFonts = true;
+         this.htmlPane.defaultTextFormat = paragraphFormat;
+         this.htmlPane.multiline = true;
+         this.htmlPane.wordWrap = true;
+         this.htmlPane.selectable = false;
+         this.htmlPane.mouseEnabled = false;
+         this.htmlPane.text = param1 + "\n" + param2;
+         this.htmlPane.setTextFormat(headingFormat,0,headingEnd);
+         this.htmlPane.setTextFormat(paragraphFormat,headingEnd + 1,this.htmlPane.text.length);
+         addChild(this.htmlPane);
+      }
+
+      private function removeBasicHtmlPane() : void
+      {
+         if(this.htmlPane != null && this.htmlPane.parent === this)
+         {
+            removeChild(this.htmlPane);
+         }
+         this.htmlPane = null;
       }
 
       private function failXml(param1:String) : void
@@ -340,6 +393,7 @@ package
             removeEventListener(Event.ENTER_FRAME,this.deferredXmlParseCallback);
          }
          this.releaseXmlLoader(true);
+         this.removeBasicHtmlPane();
          this.xmlText = null;
          this.xmlState = "failed";
          this.xmlParseArmed = false;
