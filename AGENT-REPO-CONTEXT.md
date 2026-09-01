@@ -87,14 +87,14 @@ The intended automation account is currently:
 
 | Display name | Member UUID                            |
 | ------------ | -------------------------------------- |
-| Paseo        | `fe284e57-9057-4570-9f91-db9917732350` |
+| Codeex       | `fe284e57-9057-4570-9f91-db9917732350` |
 
 The MCP may authenticate as a different workspace member. The result of `member me` does not automatically identify the intended work-item assignee.
 
 Before assigning agent work:
 
 1. List the current project members.
-2. Verify that member UUID `fe284e57-9057-4570-9f91-db9917732350` still represents the `Paseo` automation account.
+2. Verify that member UUID `fe284e57-9057-4570-9f91-db9917732350` still represents the `Codex` automation account.
 3. Inspect the work item's current assignees.
 4. Stop if another person or agent has conflicting ownership.
 5. Assign or unassign members only when that mutation is included in the approved task-specific plan.
@@ -109,7 +109,7 @@ For new implementation:
 2. Confirm that it is a Task in Backlog or Todo, or that the user explicitly approved work in another state.
 3. Inspect its parent, dependencies, relations, description, labels, comments, assignment, and definition of done.
 4. Confirm that dependencies are ready and no conflicting owner is assigned.
-5. Assign it to the verified `Paseo` member only when authorized by the approved plan.
+5. Assign it to the verified `Copdex` member only when authorized by the approved plan.
 6. Move it to In Progress only when authorized by the approved plan.
 7. Re-read the work item and verify its project, assignee, and In Progress state before editing repository files.
 
