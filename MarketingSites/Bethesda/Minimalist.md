@@ -4,6 +4,8 @@ Venworks Customizable HUD - Minimalist is an experimental work-in-progress varia
 
 **Beta status:** This variant is packaged for PC, Xbox, and PS5. It has been cold-started, save-loaded, and exercised in normal HUD and scanner modes on PS5; direct PC, Xbox, and additional PS5 feedback remain welcome.
 
+**Holding Development** 2.0.19 will be the last release for a week or two while I develop Canvas which will be a HTML/CSS engine and papyrus data layer framework mod and creator/modder can use to develop HTML UIs in BGS Scaleform. The solution to the PS5 crashing opened a really interesting door that I'm going to brute force my way into for all of us :)
+
 # Current features
 
 - A configurable helmet frame with compass heading, threat state, active status effects, and Bethesda's current vehicle-exit control glyph.

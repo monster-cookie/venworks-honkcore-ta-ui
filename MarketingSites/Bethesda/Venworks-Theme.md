@@ -4,6 +4,8 @@ Venworks Customizable HUD overhauls Starfield's interface with a new HUD written
 
 **Beta platforms:** This beta targets PC and every console platform supported by Starfield Creations. Console testing and feedback are especially welcome.
 
+**Holding Development** 2.0.19 will be the last release for a week or two while I develop Canvas which will be a HTML/CSS engine and papyrus data layer framework mod and creator/modder can use to develop HTML UIs in BGS Scaleform. The solution to the PS5 crashing opened a really interesting door that I'm going to brute force my way into for all of us :)
+
 # Features
 
 - A configurable helmet frame with compass heading, threat state, active status effects, and Bethesda's current vehicle-exit control glyph.

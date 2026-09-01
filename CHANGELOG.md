@@ -24,7 +24,6 @@ NOTE: This will be the last release until 2.1.0 release (in a week or 2), this n
 
 - PS5Debug: Keep PlayerData and XML loader results on separate persistent rows and report whether the isolated XML load call returns.
 - PS5Debug: Parse one isolated XML value with the same root-name and direct-child E4X operations used by the player-facing runtime, and display it alongside the verified player name.
-- Runtime result: The archive-only PC test passed, but the PS5 test produced no visible diagnostic and crashed hard enough to reboot the console.
 
 ## Version 2.0.15 (August 30, 2026)
 

@@ -2,7 +2,9 @@
 
 Venworks Customizable HUD overhauls Starfield's interface with a new HUD written from the ground up in Scaleform and ActionScript 3. This Creation starts with the Crimson Fleet palette and crest. Every gauge, contact, status bar, and information panel has a defined gameplay or interface purpose; this is not a static mockup placed over the game.
 
-**Beta platforms:** This beta targets PC and every console platform supported by Starfield Creations. Console testing and feedback are especially welcome.
+**Beta Platforms:** This beta targets PC and every console platform supported by Starfield Creations. Console testing and feedback are especially welcome.
+
+**Holding Development** 2.0.19 will be the last release for a week or two while I develop Canvas which will be a HTML/CSS engine and papyrus data layer framework mod and creator/modder can use to develop HTML UIs in BGS Scaleform. The solution to the PS5 crashing opened a really interesting door that I'm going to brute force my way into for all of us :)
 
 # Features
 
