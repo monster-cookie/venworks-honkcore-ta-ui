@@ -21,6 +21,9 @@ package venworks.cui.components
       private static const HEADING_LABELS:Array = ["N","NE","E","SE","S","SW","W","NW"];
 
       private var fieldOfView:Number;
+      private var section:String;
+      private var showHash:Boolean;
+      private var showData:Boolean;
       private var maximumTargets:int;
       private var pulseIntervalMs:int;
       private var scanningColor:uint;
@@ -40,6 +43,9 @@ package venworks.cui.components
          mouseEnabled = false;
          mouseChildren = false;
          fieldOfView = Math.max(30,Math.min(180,this.readNumber(param1,"fieldOfView",90)));
+         section = param1.@section.length() == 1 ? String(param1.@section) : "both";
+         showHash = section != "data";
+         showData = section != "hash";
          maximumTargets = Math.max(1,Math.min(HARD_MAX_TARGETS,
             int(this.readNumber(param1,"maxTargets",HARD_MAX_TARGETS))));
          pulseIntervalMs = Math.max(50,Math.min(2000,
@@ -66,12 +72,22 @@ package venworks.cui.components
          {
             direction = 0;
          }
-         this.updateHeading(direction);
-         this.updateContacts(targets,direction);
+         if(showHash)
+         {
+            this.updateHeading(direction);
+         }
+         if(showData)
+         {
+            this.updateContacts(targets,direction);
+         }
       }
 
       public function updateVisibilityState() : void
       {
+         if(!showHash)
+         {
+            return;
+         }
          if(this.isEffectivelyVisible())
          {
             if(!pulseTimer.running)
@@ -91,25 +107,36 @@ package venworks.cui.components
       private function createOverlay() : void
       {
          var panelShape:Shape = new Shape();
-         panelShape.graphics.lineStyle(1,scanningColor,0.86);
-         panelShape.graphics.beginFill(backgroundColor,0.76);
-         panelShape.graphics.drawRect(componentWidth / 2 - 112,0,224,26);
-         panelShape.graphics.endFill();
-         panelShape.graphics.lineStyle(1,contactColor,0.64);
-         panelShape.graphics.beginFill(backgroundColor,0.72);
-         panelShape.graphics.drawRect(componentWidth - 270,156,260,146);
-         panelShape.graphics.endFill();
+         if(showHash)
+         {
+            panelShape.graphics.lineStyle(1,scanningColor,0.86);
+            panelShape.graphics.beginFill(backgroundColor,0.76);
+            panelShape.graphics.drawRect(componentWidth / 2 - 112,0,224,26);
+            panelShape.graphics.endFill();
+         }
+         if(showData)
+         {
+            panelShape.graphics.lineStyle(1,contactColor,0.64);
+            panelShape.graphics.beginFill(backgroundColor,0.72);
+            panelShape.graphics.drawRect(componentWidth - 270,156,260,146);
+            panelShape.graphics.endFill();
+         }
          addChild(panelShape);
 
-         headingField = this.createTextField(componentWidth / 2 - 108,4,216,19,11,scanningColor,"center",true);
-         this.createTextField(componentWidth - 262,162,244,18,9,scanningColor,"left",true).text =
-            "FORWARD CONTACTS // DIR / RANGE";
-
-         gridShape = new Shape();
-         this.drawGrid();
-         gridShape.alpha = 1;
-         addChild(gridShape);
-         this.createContactFields();
+         if(showHash)
+         {
+            headingField = this.createTextField(componentWidth / 2 - 108,4,216,19,11,scanningColor,"center",true);
+            gridShape = new Shape();
+            this.drawGrid();
+            gridShape.alpha = 1;
+            addChild(gridShape);
+         }
+         if(showData)
+         {
+            this.createTextField(componentWidth - 262,162,244,18,9,scanningColor,"left",true).text =
+               "FORWARD CONTACTS // DIR / RANGE";
+            this.createContactFields();
+         }
       }
 
       private function createContactFields() : void
@@ -149,6 +176,10 @@ package venworks.cui.components
 
       private function drawGrid() : void
       {
+         if(gridShape == null)
+         {
+            return;
+         }
          var centerX:Number = componentWidth / 2;
          var centerY:Number = componentHeight / 2;
          var spacing:Number = Math.min(54,Math.max(30,componentHeight / 9));

@@ -7,6 +7,14 @@
 - https://creations.bethesda.net/en/starfield/details/03b616a3-1902-4b83-a109-fc176f658a69/Venworks_Customizable_HUD___Crimson_Fleet_Theme
 - https://creations.bethesda.net/en/starfield/details/9b635bf7-8c6b-4530-bdbd-0912903b336b/Venworks_Customizable_HUD___Freestar_Collective_Th
 
+## Version 2.0.19 (September 1, 2026)
+
+- All: Moved the 11 supplied reusable HUD component definitions into `venworkscui.swf`, replaced their shipped XML includes with bounded `<swfComponent>` references, and removed the duplicate component XML payloads.
+- All: Split the scanner overlay into independently placeable hash and data panel definitions while preserving their combined presentation in the shipped layouts.
+- Minimalist: Uses the same 11-component SWF registry as the four themed variants and instantiates the nine applicable definitions with literal Starfield colors.
+
+NOTE: This will be the last release until 2.1.0 release (in a week or 2), this new release will be based on Venworks Canvas which is a HTML and CSS Engine written in ActionScript and will have a Papyrus to Scaleform data layer.
+
 ## Version 2.0.18 (August 31, 2026)
 
 - PS5Debug: Load `VenworksCUI/layout.xml` only as bounded text and parse its exact `html/head/title/body/section/h1/p` structure with a custom ActionScript parser that does not invoke Scaleform XML, E4X, or the disabled HTML engine.

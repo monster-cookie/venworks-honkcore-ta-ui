@@ -2,24 +2,27 @@
 
 This page explains the reusable HUD pieces available to the layout system and the display filters that control when they appear. It is a player-friendly companion to the Player Configuration Guide and the Layout Configuration Reference.
 
-The Normal PC package exposes the main layout.xml file loose and keeps reusable files in its BA2 archives. The Fully Loose Files package exposes the complete Interface\VenworksCUI tree. Do not install both package shapes together.
+The Normal PC package exposes the main `layout.xml` file loose. The supplied reusable definitions are compiled into `Interface\venworkscui.swf`; the Fully Loose Files package exposes the remaining configurable Interface tree. Do not install both package shapes together.
 
 ## Reusable HUD sections
 
-Reusable sections are XML fragments placed from the `<includes>` block in `Interface\VenworksCUI\layout.xml`. Each section has its own file under `Interface\VenworksCUI\components`.
+Reusable supplied sections are placed from the `<includes>` block in `Interface\VenworksCUI\layout.xml` with `<swfComponent>` declarations. Their definitions live in `venworkscui.swf`, so the release no longer ships duplicate XML files for them. Legacy `<include>` declarations remain supported for separately authored custom fragments under `Interface\VenworksCUI\components`.
 
-| Section ID | File | What it shows |
-|---|---|---|
-| faction-display | faction-display.xml | The selected theme's faction crest. This is branding, not the player's live faction. The four themed variants include it; Minimalist does not. |
-| contact-radar | contact-radar.xml | A passive 360-degree radar for contacts Starfield has already delivered to the HUD. |
-| quest-tracker | quest-tracker.xml | The currently tracked objective. |
-| environmental-hazard-scanner | environmental-hazard-scanner.xml | Planet, location, local time, protection, and modeled exposure information. |
-| player-status-scanner | player-status-scanner.xml | Level, experience, health, oxygen, CO2, boost, carry mass, credits, digipicks, and time. |
-| equipment-rail | equipment-rail.xml | Favorite slots plus live weapon, explosive, ammunition, and power information. |
-| helmet-awareness | helmet-awareness.xml | Compass heading, threat state, and status effects. The vehicle-exit control is a separate root-level group in `layout.xml`. |
-| scanner-overlay | scanner-overlay.xml | A scanner-only forward view with up to five validated contacts. |
+| SWF component name | What it shows |
+|---|---|
+| `faction-icon` | The selected theme's faction crest. This is branding, not the player's live faction. The four themed variants include it; Minimalist does not. |
+| `radar` | A passive 360-degree radar for contacts Starfield has already delivered to the HUD. |
+| `quest-tracker` | The currently tracked objective. |
+| `planet-data-panel` | Planet, location, local time, protection, and modeled exposure information. |
+| `player-data-panel` | Level, experience, health, oxygen, CO2, boost, carry mass, credits, digipicks, and time. |
+| `equipment-rail` | Favorite slots plus live weapon, explosive, ammunition, and power information. The four themed variants include it; Minimalist does not. |
+| `compass` | Compass heading. The vehicle-exit control remains a separate root-level group in `layout.xml`. |
+| `threat-meter` | Current threat state. |
+| `status-effect-screen` | Active status effects. |
+| `scanner-hash-panel` | Scanner-only heading, pulse, and hash-grid presentation. |
+| `scanner-data-panel` | Scanner-only forward view with up to five validated contacts. |
 
-The equipment rail is included in the four themed variants and is intentionally omitted from Minimalist. Minimalist also omits the faction display. Ship UI remains outside the current configurable on-foot HUD.
+All 11 names are compiled into both production auxiliary profiles. The four themed layouts instantiate all 11; Minimalist instantiates nine and intentionally omits the equipment rail and faction icon. Ship UI remains outside the current configurable on-foot HUD.
 
 ## Placement filters
 
@@ -231,7 +234,7 @@ These filters respect Starfield's own HUD mode and opacity. They cannot make an 
 
 | Resource | Limit |
 |---|---:|
-| Root includes | 16 |
+| Root component references (`swfComponent` plus legacy `include`) | 16 |
 | Fragment or palette size | 65,536 characters |
 | Templates | 64 |
 | Resolved components | 512 |

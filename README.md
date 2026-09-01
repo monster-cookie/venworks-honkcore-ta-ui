@@ -5,7 +5,7 @@ the ground up in Scaleform and ActionScript 3. It does not depend on HONKCORE
 and does not reuse HONKCORE code, bytecode, or configuration formats.
 
 All five HUD variants are driven by versioned XML files that control layout,
-visibility, colors, typography, meters, icons, and reusable component fragments.
+visibility, colors, typography, meters, icons, and placements of reusable SWF-resident components.
 The runtime validates that configuration before displaying it and reports an
 on-screen diagnostic instead of partially applying an invalid layout.
 
@@ -49,7 +49,7 @@ Five separately distributed variants are available. All five use the same thin n
 
 The four themed variants also include `starfield.xml` as a neutral palette option. The faction crest and equipment rail are available only in those four variants. Minimalist omits both from its shipped layout and also ships no SVG assets, palette files, helmet cutout paths, or active `svg`, `path`, `mask`, `icon`, `panel`, or `providerSymbol` elements. Those runtime capabilities are not compiled out of its standalone CUI movie.
 
-Each installed variant carries nine Interface movies. The normal, large, and HUD-message `.gfx` files use independently compiled native GFX containers while their `.swf` partners use independently compiled CWS containers, matching Bethesda's extension and container split. `Interface\venworkscui.swf` contains the complete Venworks runtime in one separately loaded ABC domain. The normal and large HUD movies retain one Bethesda ABC apiece and load the auxiliary movie through a guarded asynchronous bootstrap. The auxiliary uses Bethesda's 1920-by-1080, 30-fps, one-frame stage contract; the bootstrap starts from the HUD constructor, initializes the child runtime at `Event.INIT`, and attaches the loaded child directly to the HUD at `Event.COMPLETE`.
+Each installed variant carries nine Interface movies. The normal, large, and HUD-message `.gfx` files use independently compiled native GFX containers while their `.swf` partners use independently compiled CWS containers, matching Bethesda's extension and container split. `Interface\venworkscui.swf` contains the complete Venworks runtime and all 11 supplied reusable component definitions in one separately loaded ABC domain. The four themed layouts instantiate all 11 definitions; Minimalist uses the same registry and instantiates nine, omitting the faction icon and equipment rail. The normal and large HUD movies retain one Bethesda ABC apiece and load the auxiliary movie through a guarded asynchronous bootstrap. The auxiliary uses Bethesda's 1920-by-1080, 30-fps, one-frame stage contract; the bootstrap starts from the HUD constructor, initializes the child runtime at `Event.INIT`, and attaches the loaded child directly to the HUD at `Event.COMPLETE`.
 
 Enable only one release variant at a time. The variants install the same HUD
 movie and configuration paths, so whichever package wins file conflicts also
@@ -59,11 +59,7 @@ determines the starting configuration.
 
 Choose one variant and one PC package shape. The recommended Nexus PC - Normal package installs a root ESM, Windows BA2 archives, and one loose `Interface\VenworksCUI\layout.xml`. Enable the ESM and let the package win HUD conflicts. The official v2.0.10 release publishes both Nexus package shapes for all five variants while PS5 compatibility remains subject to end-user acceptance.
 
-The Nexus PC - Fully Loose Files package installs the complete `Interface`
-tree without an ESM or BA2. Use it only when component fragments, or palettes
-and SVG assets in a themed variant, must also remain loose. Do not install the
-normal and fully loose packages together. A Starfield-capable mod manager is
-strongly recommended for either package shape.
+The Nexus PC - Fully Loose Files package installs the complete `Interface` tree without an ESM or BA2. Use it when palettes and SVG assets in a themed variant, or a separately authored legacy external fragment, must remain loose. Do not install the normal and fully loose packages together. A Starfield-capable mod manager is strongly recommended for either package shape.
 
 Bethesda Creations use separate ESM-and-BA2-only packages for PC, Xbox, and
 PS5. Install only the package supplied for the current platform and enable only
@@ -88,7 +84,7 @@ troubleshooting.
 Configuration authors can use the complete references:
 
 - [Layout configuration reference](docs/LAYOUT_CONFIGURATION_REFERENCE.md)
-  covers the root document, fragments, conditions, live values, templates,
+  covers the root document, supplied SWF-component references, legacy custom fragments, conditions, live values, templates,
   components, composites, limits, and assets.
 - [Palette configuration reference](docs/PALETTE_CONFIGURATION_REFERENCE.md)
   covers packaged themes, required semantic roles, custom palettes, and
@@ -98,16 +94,14 @@ All five variants load their configuration files when the HUD movie starts.
 There is no live reload command; fully exit and restart Starfield after changing
 XML or SVG files.
 
-The normal Nexus package exposes only `layout.xml` as a loose file. Advanced
-component, palette, and SVG customization requires the fully loose package or a
-separate loose override containing the additional changed files.
+The normal Nexus package exposes only `layout.xml` as a loose file. Supplied component placement is configured there through `<swfComponent>` references. Custom external fragments, palette files, and SVG customization require the fully loose package or a separate loose override containing the additional changed files.
 
 ## Current limitations and validation status
 
 - The configurable release currently covers the on-foot player HUD. Ship UI
   remains outside the current release.
 - Configuration is strict and atomic. A missing, malformed, unsafe, or invalid
-  layout, fragment, palette, or SVG prevents the custom layer from loading and
+  layout, SWF component reference, legacy custom fragment, palette, or SVG prevents the custom layer from loading and
   displays a categorized diagnostic.
 - Direct PNG, JPEG, and DDS assets are unsupported by the Starfield Scaleform
   runtime. All movie profiles support the documented local SVG subset;

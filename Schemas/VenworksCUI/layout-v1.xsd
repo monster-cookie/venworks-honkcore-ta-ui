@@ -120,6 +120,37 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="scannerSectionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="both" />
+      <xs:enumeration value="hash" />
+      <xs:enumeration value="data" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="swfComponentNameType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="player-data-panel" />
+      <xs:enumeration value="planet-data-panel" />
+      <xs:enumeration value="equipment-rail" />
+      <xs:enumeration value="faction-icon" />
+      <xs:enumeration value="compass" />
+      <xs:enumeration value="quest-tracker" />
+      <xs:enumeration value="threat-meter" />
+      <xs:enumeration value="radar" />
+      <xs:enumeration value="status-effect-screen" />
+      <xs:enumeration value="scanner-hash-panel" />
+      <xs:enumeration value="scanner-data-panel" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="swfComponentVariantType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="standard" />
+      <xs:enumeration value="minimalist" />
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:simpleType name="anchorType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="top-left" />
@@ -302,6 +333,7 @@
   <xs:complexType name="scannerOverlayType">
     <xs:attributeGroup ref="componentAttributes" />
     <xs:attribute name="fieldOfView" type="scannerFieldOfViewType" use="required" />
+    <xs:attribute name="section" type="scannerSectionType" default="both" />
     <xs:attribute name="maxTargets" type="scannerTargetCountType" use="required" />
     <xs:attribute name="flickerIntervalMs" type="scannerFlickerIntervalType" use="required" />
     <xs:attribute name="scanningColor" type="colorType" use="required" />
@@ -643,12 +675,24 @@
     <xs:attribute name="z" type="xs:decimal" use="required" />
   </xs:complexType>
 
+  <xs:complexType name="swfComponentType">
+    <xs:attribute name="id" type="idType" use="required" />
+    <xs:attribute name="name" type="swfComponentNameType" use="required" />
+    <xs:attribute name="variant" type="swfComponentVariantType" default="standard" />
+    <xs:attribute name="x" type="xs:decimal" use="required" />
+    <xs:attribute name="y" type="xs:decimal" use="required" />
+    <xs:attribute name="anchor" type="anchorType" />
+    <xs:attribute name="visible" type="strictBooleanType" default="true" />
+    <xs:attribute name="visibleWhen" type="xs:string" />
+    <xs:attribute name="z" type="xs:integer" use="required" />
+  </xs:complexType>
+
   <xs:element name="venworksCUI">
     <xs:complexType>
       <xs:sequence>
         <xs:element name="definitions"><xs:complexType><xs:choice minOccurs="1" maxOccurs="unbounded"><xs:element name="meterStyle" type="meterStyleType" /><xs:element name="template" type="templateType" /></xs:choice></xs:complexType></xs:element>
         <xs:element name="vanillaVisibility" minOccurs="0"><xs:complexType><xs:sequence><xs:element name="target" type="vanillaVisibilityTargetType" minOccurs="1" maxOccurs="16" /></xs:sequence></xs:complexType></xs:element>
-        <xs:element name="includes" minOccurs="0"><xs:complexType><xs:sequence><xs:element name="include" type="includeType" minOccurs="1" maxOccurs="16" /></xs:sequence></xs:complexType></xs:element>
+        <xs:element name="includes" minOccurs="0"><xs:complexType><xs:choice minOccurs="1" maxOccurs="16"><xs:element name="include" type="includeType" /><xs:element name="swfComponent" type="swfComponentType" /></xs:choice></xs:complexType></xs:element>
         <xs:element name="components"><xs:complexType><xs:sequence><xs:group ref="componentChoice" minOccurs="0" maxOccurs="unbounded" /></xs:sequence></xs:complexType></xs:element>
       </xs:sequence>
       <xs:attribute name="schemaVersion" fixed="1" use="required" />
@@ -664,7 +708,7 @@
     <xs:key name="definitionIds"><xs:selector xpath="definitions/meterStyle | definitions/template" /><xs:field xpath="@id" /></xs:key>
     <xs:key name="meterStyleIds"><xs:selector xpath="definitions/meterStyle" /><xs:field xpath="@id" /></xs:key>
     <xs:key name="templateIds"><xs:selector xpath="definitions/template" /><xs:field xpath="@id" /></xs:key>
-    <xs:key name="includeIds"><xs:selector xpath="includes/include" /><xs:field xpath="@id" /></xs:key>
+    <xs:key name="componentReferenceIds"><xs:selector xpath="includes/*" /><xs:field xpath="@id" /></xs:key>
     <xs:keyref name="meterStyleReferences" refer="meterStyleIds"><xs:selector xpath=".//meter" /><xs:field xpath="@style" /></xs:keyref>
     <xs:keyref name="templateReferences" refer="templateIds"><xs:selector xpath=".//instance | .//repeater | .//option" /><xs:field xpath="@template" /></xs:keyref>
   </xs:element>

@@ -1141,10 +1141,14 @@ foreach ($variant in $variants) {
   $layoutPath = Join-Path $cuiPath "layout.xml"
   Assert-MatchingText -ExpectedText $expectedLayoutText -ActualPath $layoutPath -Description "$($variant.VariantName) layout"
 
-  $componentSourceDirectory = Resolve-RequiredDirectory `
-    -Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.ComponentSourceDirectory) -Description "$($variant.VariantName) component source") `
-    -Description "$($variant.VariantName) component source directory"
-  foreach ($componentFileName in @($variantBuildProfile.ComponentFileNames)) {
+  $componentFileNames = @($variantBuildProfile.ComponentFileNames)
+  $componentSourceDirectory = $null
+  if ($componentFileNames.Count -ne 0) {
+    $componentSourceDirectory = Resolve-RequiredDirectory `
+      -Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.ComponentSourceDirectory) -Description "$($variant.VariantName) component source") `
+      -Description "$($variant.VariantName) component source directory"
+  }
+  foreach ($componentFileName in $componentFileNames) {
     $componentSourcePath = Resolve-RequiredFile -Path (Join-Path $componentSourceDirectory ([string]$componentFileName)) -Description "$($variant.VariantName) component source '$componentFileName'"
     $expectedComponentText = [System.IO.File]::ReadAllText($componentSourcePath)
     if ([string]$variantBuildProfile.PaletteMode -ceq "Literal") {
@@ -1179,7 +1183,7 @@ foreach ($variant in $variants) {
 
   [xml]$layout = Get-Content -LiteralPath $layoutPath -Raw
   $includedFileNames = @($layout.SelectNodes('/venworksCUI/includes/include') | ForEach-Object { [string]$_.src } | Sort-Object)
-  $profileFileNames = @($variantBuildProfile.ComponentFileNames | ForEach-Object { [string]$_ } | Sort-Object)
+  $profileFileNames = @($componentFileNames | ForEach-Object { [string]$_ } | Sort-Object)
   if ($includedFileNames.Count -ne $profileFileNames.Count) {
     throw "$($variant.VariantName) layout/profile component count differs."
   }
@@ -1188,55 +1192,116 @@ foreach ($variant in $variants) {
       throw "$($variant.VariantName) layout/profile component mismatch."
     }
   }
+  $layoutSwfComponentNames = @($layout.SelectNodes('/venworksCUI/includes/swfComponent') | ForEach-Object { [string]$_.name } | Sort-Object)
+  $profileSwfComponentNames = @($variantBuildProfile.SwfComponentNames | ForEach-Object { [string]$_ } | Sort-Object)
+  if ($layoutSwfComponentNames.Count -ne $profileSwfComponentNames.Count) {
+    throw "$($variant.VariantName) layout/profile SWF component count differs."
+  }
+  for ($index = 0; $index -lt $profileSwfComponentNames.Count; $index++) {
+    if ($layoutSwfComponentNames[$index] -cne $profileSwfComponentNames[$index]) {
+      throw "$($variant.VariantName) layout/profile SWF component mismatch."
+    }
+  }
 
   if ([string]$variant.VariantKey -ceq "MIN") {
-    $radarIncludes = @($layout.SelectNodes('/venworksCUI/includes/include[@id="contact-radar"]'))
-    if ($radarIncludes.Count -ne 1 -or
-        [string]$radarIncludes[0].x -cne "-64" -or
-        [string]$radarIncludes[0].y -cne "-36" -or
-        @($layout.SelectNodes('/venworksCUI/includes/include[@id="faction-display"]')).Count -ne 0 -or
-        (Test-Path -LiteralPath (Join-Path $cuiPath "components\faction-display.xml"))) {
-      throw "Minimalist must omit the faction display and keep the contact radar in its former upper-left position."
+    $radarComponents = @($layout.SelectNodes('/venworksCUI/includes/swfComponent[@id="radar" and @name="radar"]'))
+    if ($radarComponents.Count -ne 1 -or
+        [string]$radarComponents[0].x -cne "-64" -or
+        [string]$radarComponents[0].y -cne "-36" -or
+        [string]$radarComponents[0].variant -cne "minimalist" -or
+        @($layout.SelectNodes('/venworksCUI/includes/swfComponent[@name="faction-icon" or @name="equipment-rail"]')).Count -ne 0 -or
+        (Test-Path -LiteralPath (Join-Path $cuiPath "components"))) {
+      throw "Minimalist must omit the faction icon and equipment rail, keep the radar in its former upper-left position, and ship no external component XML directory."
     }
-    $scannerText = [System.IO.File]::ReadAllText((Join-Path $cuiPath "components\environmental-hazard-scanner.xml"))
-    if ($scannerText -notmatch 'id="planet\.solar-transition" x="14" y="52" width="332" height="22"' -or
-        $scannerText -notmatch 'source="environment\.solarTransitionCountdown" format="raw"' -or
-        $scannerText -match '<panel\b') {
-      throw "Minimalist does not preserve the accepted dedicated solar-transition row."
+
+    $minimalistDefinitionFiles = @{
+      'player-data-panel' = 'CUISwfPlayerDataPanelDefinition.as'
+      'planet-data-panel' = 'CUISwfPlanetDataPanelDefinition.as'
+      'compass' = 'CUISwfCompassDefinition.as'
+      'quest-tracker' = 'CUISwfQuestTrackerDefinition.as'
+      'threat-meter' = 'CUISwfThreatMeterDefinition.as'
+      'radar' = 'CUISwfRadarDefinition.as'
+      'status-effect-screen' = 'CUISwfStatusEffectScreenDefinition.as'
+      'scanner-hash-panel' = 'CUISwfScannerHashPanelDefinition.as'
+      'scanner-data-panel' = 'CUISwfScannerDataPanelDefinition.as'
     }
+    $minimalistComponentDocuments = @{}
+    foreach ($componentName in @($variantBuildProfile.SwfComponentNames)) {
+      if (!$minimalistDefinitionFiles.ContainsKey([string]$componentName)) {
+        throw "Minimalist SWF component '$componentName' does not have a definition source contract."
+      }
+      $definitionRelativePath = [System.IO.Path]::Combine(
+        'venworks',
+        'cui',
+        'components',
+        'library',
+        [string]$minimalistDefinitionFiles[[string]$componentName]
+      )
+      $definitionSource = [string]$profiledActionScript[$definitionRelativePath]
+      $definitionMatch = [regex]::Match(
+        $definitionSource,
+        '(?s)if\(param1 == "minimalist"\)\s*\{\s*return\s+(?<Xml><venworksCUIFragment.*?</venworksCUIFragment>);\s*\}'
+      )
+      if (!$definitionMatch.Success) {
+        throw "Minimalist SWF component '$componentName' is missing its compiled minimalist E4X definition."
+      }
+      try {
+        [xml]$definitionDocument = $definitionMatch.Groups['Xml'].Value
+      }
+      catch {
+        throw "Minimalist SWF component '$componentName' does not contain well-formed compiled XML."
+      }
+      if ($definitionDocument.OuterXml -match '@palette\.') {
+        throw "Minimalist SWF component '$componentName' retains an external palette reference."
+      }
+      $minimalistComponentDocuments[[string]$componentName] = $definitionDocument
+    }
+
+    $planetDefinition = $minimalistComponentDocuments['planet-data-panel']
+    $solarTransitionRows = @($planetDefinition.SelectNodes('//text[@id="planet.solar-transition" and @x="14" and @y="52" and @width="332" and @height="22" and @source="environment.solarTransitionCountdown" and @format="raw"]'))
+    if ($solarTransitionRows.Count -ne 1 -or @($planetDefinition.SelectNodes('//panel')).Count -ne 0) {
+      throw "Minimalist does not preserve the accepted dedicated solar-transition row in its SWF planet-data-panel definition."
+    }
+
+    $scannerHashNodes = @($minimalistComponentDocuments['scanner-hash-panel'].SelectNodes('//scannerOverlay[@section="hash"]'))
+    $scannerDataNodes = @($minimalistComponentDocuments['scanner-data-panel'].SelectNodes('//scannerOverlay[@section="data"]'))
+    if ($scannerHashNodes.Count -ne 1 -or $scannerDataNodes.Count -ne 1) {
+      throw "Minimalist scanner hash and data definitions must remain independently addressable SWF components."
+    }
+
     $configurationText = @(
       Get-ChildItem -LiteralPath $cuiPath -Recurse -File -Filter "*.xml" |
         ForEach-Object { [System.IO.File]::ReadAllText($_.FullName) }
     ) -join "`n"
     if ($configurationText -match '(?i)<(?:svg|path|mask|icon|panel|providerSymbol)\b|\.svg\b|@palette\.|\bpalette="' -or
-        $configurationText -match '(?i)equipment-rail' -or
-        (Test-Path -LiteralPath (Join-Path $cuiPath "components\equipment-rail.xml")) -or
+        @($layout.SelectNodes('/venworksCUI/includes/include')).Count -ne 0 -or
         @(Get-ChildItem -LiteralPath $interfacePath -Recurse -File -Include "*.svg","*.dds","*.png","*.jpg","*.jpeg").Count -ne 0) {
-      throw "Minimalist contains a disabled XML capability, equipment rail, external palette, or image asset."
+      throw "Minimalist contains a disabled staged XML capability, legacy component include, external palette, or image asset."
     }
 
     $fittedBackingDefinitions = @(
-      [pscustomobject]@{ RelativePath = "layout.xml"; Id = "critical-health"; X = "0"; Y = "0"; Width = "320"; Height = "70"; Shape = "rectangle" }
-      [pscustomobject]@{ RelativePath = "layout.xml"; Id = "vehicle-exit"; X = "0"; Y = "0"; Width = "184"; Height = "36"; Shape = "rectangle" }
-      [pscustomobject]@{ RelativePath = "components\contact-radar.xml"; Id = "contact-radar"; X = "22"; Y = "21"; Width = "184"; Height = "184"; Shape = "ellipse" }
-      [pscustomobject]@{ RelativePath = "components\environmental-hazard-scanner.xml"; Id = "environmental-hazard"; X = "0"; Y = "0"; Width = "360"; Height = "254"; Shape = "rectangle" }
-      [pscustomobject]@{ RelativePath = "components\helmet-awareness.xml"; Id = "helmet.compass"; X = "0"; Y = "-58"; Width = "826"; Height = "48"; Shape = "rectangle" }
-      [pscustomobject]@{ RelativePath = "components\helmet-awareness.xml"; Id = "helmet.threat"; X = "253"; Y = "12"; Width = "320"; Height = "24"; Shape = "rectangle" }
-      [pscustomobject]@{ RelativePath = "components\player-status-scanner.xml"; Id = "player-status"; X = "0"; Y = "0"; Width = "360"; Height = "236"; Shape = "rectangle" }
-      [pscustomobject]@{ RelativePath = "components\quest-tracker.xml"; Id = "quest-tracker"; X = "0"; Y = "0"; Width = "447"; Height = "90"; Shape = "rectangle" }
+      [pscustomobject]@{ DocumentKey = "layout"; Id = "critical-health"; X = "0"; Y = "0"; Width = "320"; Height = "70"; Shape = "rectangle" }
+      [pscustomobject]@{ DocumentKey = "layout"; Id = "vehicle-exit"; X = "0"; Y = "0"; Width = "184"; Height = "36"; Shape = "rectangle" }
+      [pscustomobject]@{ DocumentKey = "radar"; Id = "contact-radar"; X = "22"; Y = "21"; Width = "184"; Height = "184"; Shape = "ellipse" }
+      [pscustomobject]@{ DocumentKey = "planet-data-panel"; Id = "environmental-hazard"; X = "0"; Y = "0"; Width = "360"; Height = "254"; Shape = "rectangle" }
+      [pscustomobject]@{ DocumentKey = "compass"; Id = "helmet.compass"; X = "0"; Y = "-58"; Width = "826"; Height = "48"; Shape = "rectangle" }
+      [pscustomobject]@{ DocumentKey = "threat-meter"; Id = "helmet.threat"; X = "253"; Y = "12"; Width = "320"; Height = "24"; Shape = "rectangle" }
+      [pscustomobject]@{ DocumentKey = "player-data-panel"; Id = "player-status"; X = "0"; Y = "0"; Width = "360"; Height = "236"; Shape = "rectangle" }
+      [pscustomobject]@{ DocumentKey = "quest-tracker"; Id = "quest-tracker"; X = "0"; Y = "0"; Width = "447"; Height = "90"; Shape = "rectangle" }
     )
-    $fittedBackingDocuments = @{}
+    $fittedBackingDocuments = @{ layout = $layout }
+    foreach ($componentName in $minimalistComponentDocuments.Keys) {
+      $fittedBackingDocuments[[string]$componentName] = $minimalistComponentDocuments[[string]$componentName]
+    }
     $fittedBackingNodeCount = 0
-    foreach ($relativePath in @($fittedBackingDefinitions.RelativePath | Sort-Object -Unique)) {
-      [xml]$backingDocument = Get-Content -LiteralPath (Join-Path $cuiPath $relativePath) -Raw
-      $fittedBackingDocuments[$relativePath] = $backingDocument
-      $fittedBackingNodeCount += @($backingDocument.SelectNodes('//shape[contains(@id,".backing.")]')).Count
+    foreach ($documentKey in @($fittedBackingDefinitions.DocumentKey | Sort-Object -Unique)) {
+      $fittedBackingNodeCount += @($fittedBackingDocuments[[string]$documentKey].SelectNodes('//shape[contains(@id,".backing.")]')).Count
     }
     if ($fittedBackingNodeCount -ne ($fittedBackingDefinitions.Count * 2)) {
       throw "Minimalist must contain exactly two fitted backing layers for each approved readout footprint."
     }
     foreach ($backing in $fittedBackingDefinitions) {
-      $backingDocument = $fittedBackingDocuments[[string]$backing.RelativePath]
+      $backingDocument = $fittedBackingDocuments[[string]$backing.DocumentKey]
       foreach ($layer in @(
         [pscustomobject]@{ Name = "base"; Z = "-2"; FillColor = "#0D1114"; FillOpacity = "0.28" },
         [pscustomobject]@{ Name = "tint"; Z = "-1"; FillColor = "#70CFE0"; FillOpacity = "0.10" }
@@ -1244,7 +1309,7 @@ foreach ($variant in $variants) {
         $backingId = "$($backing.Id).backing.$($layer.Name)"
         $backingNodes = @($backingDocument.SelectNodes("//shape[@id='$backingId']"))
         if ($backingNodes.Count -ne 1) {
-          throw "Minimalist fitted backing '$backingId' must appear exactly once in $($backing.RelativePath)."
+          throw "Minimalist fitted backing '$backingId' must appear exactly once in its layout or SWF component definition."
         }
         $backingNode = $backingNodes[0]
         $expectedAttributes = @{

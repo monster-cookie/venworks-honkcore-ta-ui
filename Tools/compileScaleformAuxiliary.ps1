@@ -482,7 +482,22 @@ function Assert-AuxiliaryMovie {
   if ($validationSource.Contains('VENWORKS AUX LOADED')) {
     throw 'Production auxiliary movie retains the marker-probe payload.'
   }
-  foreach ($requiredToken in @('CUIRuntime', 'CUILayoutImportLoader', 'CUIPlayerHudDataContext', 'CUIConditionContext') + @($SourceProfile.RequiredBytecodeTokens)) {
+  $requiredSwfComponentTokens = @(
+    'CUISwfComponentLibrary',
+    'CUISwfPlayerDataPanelDefinition',
+    'CUISwfPlanetDataPanelDefinition',
+    'CUISwfEquipmentRailDefinition',
+    'CUISwfFactionIconDefinition',
+    'CUISwfCompassDefinition',
+    'CUISwfQuestTrackerDefinition',
+    'CUISwfThreatMeterDefinition',
+    'CUISwfRadarDefinition',
+    'CUISwfStatusEffectScreenDefinition',
+    'CUISwfScannerHashPanelDefinition',
+    'CUISwfScannerDataPanelDefinition'
+  )
+  foreach ($requiredToken in @('CUIRuntime', 'CUILayoutImportLoader', 'CUIPlayerHudDataContext', 'CUIConditionContext') +
+      $requiredSwfComponentTokens + @($SourceProfile.RequiredBytecodeTokens)) {
     if (!$validationSource.Contains([string]$requiredToken)) {
       throw "Auxiliary profile '$($SourceProfile.Name)' is missing required bytecode token '$requiredToken'."
     }

@@ -1,16 +1,20 @@
 @{
   MovieProfile = 'shared'
   LayoutSource = 'Scaleform/shared/fixtures/chronomark-provider-probe.xml'
-  ComponentSourceDirectory = 'Scaleform/shared/fixtures/components'
-  ComponentFileNames = @(
-    'contact-radar.xml'
-    'faction-display.xml'
-    'equipment-rail.xml'
-    'environmental-hazard-scanner.xml'
-    'helmet-awareness.xml'
-    'player-status-scanner.xml'
-    'quest-tracker.xml'
-    'scanner-overlay.xml'
+  ComponentSourceDirectory = ''
+  ComponentFileNames = @()
+  SwfComponentNames = @(
+    'player-data-panel'
+    'planet-data-panel'
+    'equipment-rail'
+    'faction-icon'
+    'compass'
+    'quest-tracker'
+    'threat-meter'
+    'radar'
+    'status-effect-screen'
+    'scanner-hash-panel'
+    'scanner-data-panel'
   )
   AssetSourceDirectory = 'Scaleform/shared/assets'
   AssetFileNames = @(

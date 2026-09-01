@@ -82,26 +82,42 @@
   <source path="venworks/cui/components/CUIScannerOverlay.as">
     <replace>
       <find><![CDATA[         var panelShape:Shape = new Shape();
-         panelShape.graphics.lineStyle(1,scanningColor,0.86);
-         panelShape.graphics.beginFill(backgroundColor,0.76);
-         panelShape.graphics.drawRect(componentWidth / 2 - 112,0,224,26);
-         panelShape.graphics.endFill();
-         panelShape.graphics.lineStyle(1,contactColor,0.64);
-         panelShape.graphics.beginFill(backgroundColor,0.72);
-         panelShape.graphics.drawRect(componentWidth - 270,156,260,146);
-         panelShape.graphics.endFill();
+         if(showHash)
+         {
+            panelShape.graphics.lineStyle(1,scanningColor,0.86);
+            panelShape.graphics.beginFill(backgroundColor,0.76);
+            panelShape.graphics.drawRect(componentWidth / 2 - 112,0,224,26);
+            panelShape.graphics.endFill();
+         }
+         if(showData)
+         {
+            panelShape.graphics.lineStyle(1,contactColor,0.64);
+            panelShape.graphics.beginFill(backgroundColor,0.72);
+            panelShape.graphics.drawRect(componentWidth - 270,156,260,146);
+            panelShape.graphics.endFill();
+         }
          addChild(panelShape);]]></find>
       <with><![CDATA[         var panelShape:Shape = new Shape();
-         panelShape.graphics.beginFill(0x0D1114,0.28);
-         panelShape.graphics.drawRect(componentWidth / 2 - 112,0,224,26);
-         panelShape.graphics.drawRect(componentWidth - 270,156,260,146);
-         panelShape.graphics.endFill();
-         panelShape.graphics.beginFill(0x70CFE0,0.10);
-         panelShape.graphics.drawRect(componentWidth / 2 - 112,0,224,26);
-         panelShape.graphics.drawRect(componentWidth - 270,156,260,146);
-         panelShape.graphics.endFill();
-         this.drawCorners(panelShape,componentWidth / 2 - 112,0,224,26,scanningColor,0.86,18,7);
-         this.drawCorners(panelShape,componentWidth - 270,156,260,146,contactColor,0.64,22,12);
+         if(showHash)
+         {
+            panelShape.graphics.beginFill(0x0D1114,0.28);
+            panelShape.graphics.drawRect(componentWidth / 2 - 112,0,224,26);
+            panelShape.graphics.endFill();
+            panelShape.graphics.beginFill(0x70CFE0,0.10);
+            panelShape.graphics.drawRect(componentWidth / 2 - 112,0,224,26);
+            panelShape.graphics.endFill();
+            this.drawCorners(panelShape,componentWidth / 2 - 112,0,224,26,scanningColor,0.86,18,7);
+         }
+         if(showData)
+         {
+            panelShape.graphics.beginFill(0x0D1114,0.28);
+            panelShape.graphics.drawRect(componentWidth - 270,156,260,146);
+            panelShape.graphics.endFill();
+            panelShape.graphics.beginFill(0x70CFE0,0.10);
+            panelShape.graphics.drawRect(componentWidth - 270,156,260,146);
+            panelShape.graphics.endFill();
+            this.drawCorners(panelShape,componentWidth - 270,156,260,146,contactColor,0.64,22,12);
+         }
          addChild(panelShape);]]></with>
     </replace>
     <replace>

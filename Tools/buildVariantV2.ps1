@@ -498,7 +498,19 @@ try {
         -DestinationPath (Join-Path $diagnosticCuiOutputDirectory "layout.xml")
     }
     if ($hasCuiPayload) {
-      Assert-UniqueSafeFileNames -FileNames @($variantBuildProfile.ComponentFileNames) -Context "$($variant.VariantName) component profile"
+      $componentFileNames = @($variantBuildProfile.ComponentFileNames)
+      $swfComponentNames = if ($variantBuildProfile.ContainsKey('SwfComponentNames')) {
+        @($variantBuildProfile.SwfComponentNames | ForEach-Object { [string]$_ })
+      }
+      else {
+        @()
+      }
+      Assert-UniqueSafeFileNames -FileNames $componentFileNames -Context "$($variant.VariantName) component profile"
+      if ($swfComponentNames.Count -eq 0 -or
+          @($swfComponentNames | Select-Object -Unique).Count -ne $swfComponentNames.Count -or
+          @($swfComponentNames | Where-Object { $_ -cnotmatch '^[a-z][a-z0-9-]{0,63}$' }).Count -ne 0) {
+        throw "$($variant.VariantName) SWF component profile must declare unique safe component names."
+      }
       Assert-UniqueSafeFileNames -FileNames @($variantBuildProfile.AssetFileNames) -Context "$($variant.VariantName) asset profile"
       Assert-UniqueSafeFileNames -FileNames @($variantBuildProfile.PaletteFileNames) -Context "$($variant.VariantName) palette profile"
       Assert-UniqueSafeFileNames -FileNames @([string]$variant.PaletteFileName) -Context "$($variant.VariantName) selected palette"
@@ -506,13 +518,20 @@ try {
       $layoutSourcePath = Resolve-RequiredFile `
         -Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.LayoutSource) -Description "$($variant.VariantName) layout source") `
         -Description "$($variant.VariantName) layout source"
-      $componentSourceDirectory = Resolve-RequiredDirectory `
-        -Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.ComponentSourceDirectory) -Description "$($variant.VariantName) component source") `
-        -Description "$($variant.VariantName) component source directory"
+      $componentSourceDirectory = $null
+      if ($componentFileNames.Count -ne 0) {
+        $componentSourceDirectory = Resolve-RequiredDirectory `
+          -Path (Resolve-RepositoryPath -RelativePath ([string]$variantBuildProfile.ComponentSourceDirectory) -Description "$($variant.VariantName) component source") `
+          -Description "$($variant.VariantName) component source directory"
+      }
 
       $cuiOutputDirectory = Join-Path $interfaceOutputDirectory "VenworksCUI"
-      $componentOutputDirectory = Join-Path $cuiOutputDirectory "components"
-      New-Item -ItemType Directory -Force -Path $componentOutputDirectory | Out-Null
+      New-Item -ItemType Directory -Force -Path $cuiOutputDirectory | Out-Null
+      $componentOutputDirectory = $null
+      if ($componentFileNames.Count -ne 0) {
+        $componentOutputDirectory = Join-Path $cuiOutputDirectory "components"
+        New-Item -ItemType Directory -Force -Path $componentOutputDirectory | Out-Null
+      }
 
       $paletteMode = [string]$variantBuildProfile.PaletteMode
       $selectedPaletteFileName = [string]$variant.PaletteFileName
@@ -547,7 +566,7 @@ try {
       }
       Write-Utf8WithoutBom -Path (Join-Path $cuiOutputDirectory "layout.xml") -Text $layoutText
 
-      foreach ($componentFileName in @($variantBuildProfile.ComponentFileNames)) {
+      foreach ($componentFileName in $componentFileNames) {
         $componentSourcePath = Resolve-RequiredFile `
           -Path (Join-Path $componentSourceDirectory ([string]$componentFileName)) `
           -Description "$($variant.VariantName) component '$componentFileName'"
@@ -597,13 +616,25 @@ try {
       $includedComponentFileNames = @($stagedLayout.SelectNodes('/venworksCUI/includes/include') | ForEach-Object {
         [string]$_.src
       } | Sort-Object)
-      $profileComponentFileNames = @($variantBuildProfile.ComponentFileNames | ForEach-Object { [string]$_ } | Sort-Object)
+      $profileComponentFileNames = @($componentFileNames | ForEach-Object { [string]$_ } | Sort-Object)
       if ($includedComponentFileNames.Count -ne $profileComponentFileNames.Count) {
         throw "$($variant.VariantName) layout includes $($includedComponentFileNames.Count) component files; its profile declares $($profileComponentFileNames.Count)."
       }
       for ($index = 0; $index -lt $profileComponentFileNames.Count; $index++) {
         if ($includedComponentFileNames[$index] -cne $profileComponentFileNames[$index]) {
           throw "$($variant.VariantName) layout/profile component mismatch. Expected '$($profileComponentFileNames[$index])'; found '$($includedComponentFileNames[$index])'."
+        }
+      }
+      $layoutSwfComponentNames = @($stagedLayout.SelectNodes('/venworksCUI/includes/swfComponent') | ForEach-Object {
+        [string]$_.name
+      } | Sort-Object)
+      $profileSwfComponentNames = @($swfComponentNames | Sort-Object)
+      if ($layoutSwfComponentNames.Count -ne $profileSwfComponentNames.Count) {
+        throw "$($variant.VariantName) layout references $($layoutSwfComponentNames.Count) SWF components; its profile declares $($profileSwfComponentNames.Count)."
+      }
+      for ($index = 0; $index -lt $profileSwfComponentNames.Count; $index++) {
+        if ($layoutSwfComponentNames[$index] -cne $profileSwfComponentNames[$index]) {
+          throw "$($variant.VariantName) layout/profile SWF component mismatch. Expected '$($profileSwfComponentNames[$index])'; found '$($layoutSwfComponentNames[$index])'."
         }
       }
 
