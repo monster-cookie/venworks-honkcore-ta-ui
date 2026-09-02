@@ -13,7 +13,7 @@
 - All: Split the scanner overlay into independently placeable hash and data panel definitions while preserving their combined presentation in the shipped layouts.
 - Minimalist: Uses the same 11-component SWF registry as the four themed variants and instantiates the nine applicable definitions with literal Starfield colors.
 
-NOTE: This will be the last release until 2.1.0 release (in a week or 2), this new release will be based on Venworks Canvas which is a HTML and CSS Engine written in ActionScript and will have a Papyrus to Scaleform data layer.
+NOTE: This will be the last release until 2.1.0 release (in a week or 2), this new release will be based on Venworks Canvas which is a HTML and CSS Engine written in ActionScript and will have a Papyrus to Scaleform data layer. Also, I've had to disable PS5 there is no way to recover PS5 functionality without the Canvas changes. 
 
 ## Version 2.0.18 (August 31, 2026)
 
