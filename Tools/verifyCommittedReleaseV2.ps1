@@ -244,6 +244,13 @@ $assets = @(
   'trackers-alliance-logo.svg',
   'gallery-invalid.svg'
 )
+. (Join-Path $PSScriptRoot 'sharedCanvasConsumers.ps1')
+if (Test-CanvasConsumerVariant 'VWKS') {
+  & (Join-Path $PSScriptRoot 'verifyVariantV2.ps1') -Committed -PreArchiveMutation
+  & (Join-Path $PSScriptRoot 'verifyVariantV2.ps1') -Committed
+  Write-Host 'Verified Canvas consumers and the separate PS5 diagnostic through the shared release pipeline.'
+  return
+}
 $variants = @(
   [pscustomobject]@{ Name = 'Venworks'; Directory = 'Staging-VWKS'; Palette = 'venworks.xml' },
   [pscustomobject]@{ Name = 'Crimson Fleet'; Directory = 'Staging-CF'; Palette = 'crimson-fleet.xml' },

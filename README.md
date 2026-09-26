@@ -1,5 +1,7 @@
 # Venworks Customizable HUD
 
+> V2 migration: the five themes now build as Canvas HTML/CSS consumers. See [Canvas theme consumers](docs/CANVAS_MIGRATION.md) for dependencies, configuration, packaging and pending runtime acceptance. The legacy XML and standalone Scaleform descriptions below remain the v1 reference.
+
 Venworks Customizable HUD is my own customizable Starfield HUD, written from
 the ground up in Scaleform and ActionScript 3. It does not depend on HONKCORE
 and does not reuse HONKCORE code, bytecode, or configuration formats.

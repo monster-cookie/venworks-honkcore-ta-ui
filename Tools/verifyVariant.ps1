@@ -523,11 +523,8 @@ if ($releaseVariants.Count -eq 0) {
   throw "ReleaseVariants must contain at least one canonical plugin stub."
 }
 $canonicalPluginVariant = $releaseVariants[0]
-$canonicalPluginStagingPath = Resolve-RequiredDirectory `
-  -Path (Join-Path $repositoryRoot ([string]$canonicalPluginVariant.StagingFolderPath)) `
-  -Description "$($canonicalPluginVariant.VariantName) canonical plugin staging folder"
 $canonicalPluginPath = Resolve-RequiredFile `
-  -Path (Join-Path $canonicalPluginStagingPath "$($canonicalPluginVariant.PackageBaseName).esm") `
+  -Path (Join-Path $repositoryRoot 'Scaleform/shared/legacy-plugin.esm') `
   -Description "$($canonicalPluginVariant.VariantName) canonical plugin stub"
 Assert-NotGitLfsPointer `
   -Path $canonicalPluginPath `

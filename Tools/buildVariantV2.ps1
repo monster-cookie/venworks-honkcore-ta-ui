@@ -28,7 +28,13 @@ param(
 
   [switch]$Committed,
 
-  [switch]$AuxiliaryMarkerProbe
+  [switch]$AuxiliaryMarkerProbe,
+
+  [string]$CanvasProjectPath,
+
+  [string]$FlexSdkPath,
+
+  [string]$CanvasEnvironmentPath
 )
 
 $PSNativeCommandUseErrorActionPreference = $true
@@ -259,6 +265,28 @@ if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction Si
   -Description "Scaleform movie-profile helper")
 
 $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
+. (Join-Path $PSScriptRoot 'sharedCanvasConsumers.ps1')
+$canvasVariants = @($variants | Where-Object { Test-CanvasConsumerVariant $_.VariantKey })
+if ($canvasVariants.Count -gt 0) {
+  if ($AuxiliaryMarkerProbe) { throw 'Canvas consumers do not use the legacy auxiliary marker probe.' }
+  if ([string]::IsNullOrWhiteSpace($CanvasProjectPath) -or [string]::IsNullOrWhiteSpace($FlexSdkPath)) { throw 'Canvas consumers require -CanvasProjectPath and -FlexSdkPath.' }
+  if ([string]::IsNullOrWhiteSpace($CanvasEnvironmentPath)) { $CanvasEnvironmentPath = Join-Path $CanvasProjectPath '.env' }
+  $candidateRoot = Join-Path $repositoryRoot ('.work/canvas-consumers/'+[guid]::NewGuid().ToString('N'))
+  & (Join-Path $PSScriptRoot 'buildCanvasConsumers.ps1') -VariantKeys @($canvasVariants.VariantKey) -JavaPath $JavaPath -FlexSdkPath $FlexSdkPath -CanvasProjectPath $CanvasProjectPath -EnvironmentPath $CanvasEnvironmentPath -OutputDirectory $candidateRoot
+  foreach ($variant in $canvasVariants) {
+    $destination = [IO.Path]::GetFullPath((Join-Path $repositoryRoot $variant.StagingFolderPath))
+    if (!$Committed) {
+      $junction = Get-Item -LiteralPath $destination
+      $physical = [IO.Path]::GetFullPath($variant.PluginModulePath)
+      if ($junction.LinkType -ne 'Junction' -or @($junction.Target).Count -ne 1 -or [IO.Path]::GetFullPath([string]$junction.Target[0]) -ine $physical) { throw 'Staging junction does not match the configured module directory.' }
+      $destination = $physical
+    }
+    $key = [string]$variant.VariantKey
+    Publish-CanvasConsumerPayload $repositoryRoot $key (Join-Path $candidateRoot $key) $destination (Join-Path $candidateRoot "$key.build.json") (Join-Path $repositoryRoot "Canvas/build/expected/$key.json") -UpdateExpectedHashes:$UpdateExpectedHashes
+  }
+  $variants = @($variants | Where-Object { !(Test-CanvasConsumerVariant $_.VariantKey) })
+  if ($variants.Count -eq 0) { return }
+}
 if ($variants.Count -eq 0) {
   throw "At least one variant must be selected."
 }

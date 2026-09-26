@@ -1,5 +1,7 @@
 # Venworks Customizable HUD: Component Library
 
+> V2 migration: the five themes now build as Canvas HTML/CSS consumers. See [Canvas theme consumers](CANVAS_MIGRATION.md) for dependencies, configuration, packaging and pending runtime acceptance. The legacy XML and standalone Scaleform descriptions below remain the v1 reference.
+
 This page explains the reusable HUD pieces available to the layout system and the display filters that control when they appear. It is a player-friendly companion to the Player Configuration Guide and the Layout Configuration Reference.
 
 The Normal PC package exposes the main `layout.xml` file loose. The supplied reusable definitions are compiled into `Interface\venworkscui.swf`; the Fully Loose Files package exposes the remaining configurable Interface tree. Do not install both package shapes together.

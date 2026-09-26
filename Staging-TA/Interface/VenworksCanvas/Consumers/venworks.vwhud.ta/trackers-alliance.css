@@ -1,0 +1,54 @@
+.background-color-panel-background-0 { background-color: #100B0E00; }
+.background-color-panel-background-0-7 { background-color: #100B0EB2; }
+.background-color-panel-background-0-72 { background-color: #100B0EB8; }
+.background-color-panel-background-0-78 { background-color: #100B0EC7; }
+.color-accent-primary-1 { color: #D62D42; }
+.color-accent-secondary-1 { color: #F2F0EA; }
+.color-foreground-muted-1 { color: #C8B9BC; }
+.color-foreground-primary-1 { color: #F7F5F2; }
+.color-meter-boost-1 { color: #F2F0EA; }
+.color-meter-carbondioxide-1 { color: #E0A85B; }
+.color-meter-health-1 { color: #D62D42; }
+.color-meter-oxygen-1 { color: #70CFE0; }
+.color-state-caution-1 { color: #FFD800; }
+.color-state-clear-1 { color: #64E572; }
+.color-state-critical-1 { color: #FF3C54; }
+.fill-panel-background-1 { fill: #100B0E; }
+.paint-background-color-0d111400 { background-color: #0D111400; }
+.paint-background-color-0d1114b2 { background-color: #0D1114B2; }
+.paint-background-color-0d1114b8 { background-color: #0D1114B8; }
+.paint-background-color-0d1114c7 { background-color: #0D1114C7; }
+.paint-color-64e572 { color: #64E572; }
+.paint-color-70cfe0 { color: #70CFE0; }
+.paint-color-9eadb5 { color: #9EADB5; }
+.paint-color-a69ad8 { color: #A69AD8; }
+.paint-color-c6d0d6 { color: #C6D0D6; }
+.paint-color-d34a5b { color: #D34A5B; }
+.paint-color-e0a85b { color: #E0A85B; }
+.paint-color-e8f0f4 { color: #E8F0F4; }
+.paint-color-ff3c54 { color: #FF3C54; }
+.paint-color-ffd800 { color: #FFD800; }
+.paint-color-ffffff { color: #FFFFFF; }
+.paint-fill-0d1114 { fill: #0D1114; }
+.paint-fill-70cfe0 { fill: #70CFE0; }
+.paint-fill-none { fill: none; }
+.paint-stroke-d9e3e8 { stroke: #D9E3E8; }
+.paint-stroke-e8f0f4 { stroke: #E8F0F4; }
+.paint-stroke-ff3c54 { stroke: #FF3C54; }
+.stroke-accent-primary-1 { stroke: #D62D42; }
+.stroke-panel-border-1 { stroke: #B51F35; }
+.stroke-state-caution-1 { stroke: #FFD800; }
+.stroke-state-critical-1 { stroke: #FF3C54; }
+.accent { color: #D62D42; }
+.positive { color: #64E572; }
+.negative { color: #FF3C54; }
+.threat-clear { background-color: #100B0EC2; }
+.threat-clear .threat-stripe { background-color: #64E572F2; }
+.threat-caution { background-color: #100B0EC2; }
+.threat-caution .threat-stripe { background-color: #FFD800F2; }
+.threat-danger { background-color: #100B0EC2; }
+.threat-danger .threat-stripe { background-color: #FF7B21F2; }
+.threat-critical { background-color: #100B0EC2; }
+.threat-critical .threat-stripe { background-color: #FF3C54F2; }
+.scanner-heading-panel { background-color: #100B0EC2; }
+.scanner-data-panel { background-color: #100B0EB8; }

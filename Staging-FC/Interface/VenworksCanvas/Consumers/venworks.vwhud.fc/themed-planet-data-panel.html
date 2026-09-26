@@ -1,0 +1,38 @@
+<!DOCTYPE html><html><head><title>VWHUD</title></head><body>
+<div class="themed-node-16" data-vw-anchor="bottom-right" data-vw-visible="condition.always"><span class="themed-node-17 color-accent-primary-1">PLANET DATA</span>
+<span class="themed-node-18 color-foreground-muted-1">LOCAL</span>
+<span class="themed-node-19 color-foreground-primary-1" data-vw-template="{environment.localtime:time24}"></span>
+<span class="themed-node-20 color-foreground-primary-1" data-vw-template="{environment.solartransitioncountdown:raw}"></span>
+<svg class="themed-node-21 fill-panel-background-1 stroke-panel-border-1" viewBox="0 0 344 60" stroke-width="1" fill-opacity="0.58" stroke-opacity="0.35"><rect x="0" y="0" width="344" height="60"></rect></svg>
+<span class="themed-node-22 color-foreground-primary-1" data-vw-template="{location.name:raw}"></span>
+<span class="themed-node-23 color-foreground-muted-1">O2</span>
+<span class="themed-node-24 color-foreground-primary-1" data-vw-template="{environment.oxygenpercentage:percent}"></span>
+<span class="themed-node-25 color-foreground-muted-1">TEMP</span>
+<span class="themed-node-26 color-foreground-primary-1" data-vw-template="{environment.temperature:temperature}"></span>
+<span class="themed-node-27 color-foreground-muted-1">GRAV</span>
+<span class="themed-node-28 color-foreground-primary-1" data-vw-template="{environment.gravity:gravity}"></span>
+<span class="themed-node-29 color-accent-primary-1">ENVIRONMENTAL HAZARDS</span>
+<svg class="themed-node-30 paint-fill-none stroke-accent-primary-1" viewBox="0 0 344 1" stroke-width="1" fill-opacity="0" stroke-opacity="0.68"><path d="M 0 0 L 344 0"></path></svg>
+<svg class="themed-node-31 fill-panel-background-1 stroke-panel-border-1" viewBox="0 0 344 36" stroke-width="1" fill-opacity="0.72" stroke-opacity="0.45"><rect x="0" y="0" width="344" height="36"></rect></svg>
+<span class="themed-node-32 color-accent-primary-1">SUIT PROTECTION</span>
+<span class="themed-node-33 color-state-caution-1" data-vw-template="{environment.protectionstatus:raw}"></span>
+<span class="themed-node-34 color-foreground-primary-1" data-vw-template="{environment.protectionpercentage:percent}"></span>
+<vw-meter class="themed-node-35 color-accent-primary-1 background-color-panel-background-0-78" value="environment.protectionlevel" min="0" max="1" segments="16" gap="2" direction="right" partial="true"></vw-meter>
+<svg class="themed-node-36 fill-panel-background-1 stroke-panel-border-1" viewBox="0 0 344 79" stroke-width="1" fill-opacity="0.48" stroke-opacity="0.3"><rect x="0" y="0" width="344" height="79"></rect></svg>
+<svg class="themed-node-37 paint-fill-none stroke-panel-border-1" viewBox="0 0 1 71" stroke-width="1" fill-opacity="0" stroke-opacity="0.3"><path d="M 0 0 L 0 71"></path></svg>
+<svg class="themed-node-38 paint-fill-none stroke-panel-border-1" viewBox="0 0 1 71" stroke-width="1" fill-opacity="0" stroke-opacity="0.3"><path d="M 0 0 L 0 71"></path></svg>
+<svg class="themed-node-39 paint-fill-none stroke-panel-border-1" viewBox="0 0 1 71" stroke-width="1" fill-opacity="0" stroke-opacity="0.3"><path d="M 0 0 L 0 71"></path></svg>
+<span class="themed-node-40 color-accent-primary-1">AIR / WATER</span>
+<span class="themed-node-41 color-foreground-primary-1" data-vw-template="{environment.hazard.airwatershortstatus:raw}"></span>
+<vw-meter class="themed-node-42 color-accent-primary-1 background-color-panel-background-0-72" value="environment.hazard.airwaterexposurelevel" min="0" max="1" segments="8" gap="2" direction="up" partial="true"></vw-meter>
+<span class="themed-node-43 color-state-caution-1">THERMAL</span>
+<span class="themed-node-44 color-foreground-primary-1" data-vw-template="{environment.hazard.thermalshortstatus:raw}"></span>
+<vw-meter class="themed-node-45 color-state-caution-1 background-color-panel-background-0-72" value="environment.hazard.thermalexposurelevel" min="0" max="1" segments="8" gap="2" direction="up" partial="true"></vw-meter>
+<span class="themed-node-46 color-state-caution-1">CORROSIVE</span>
+<span class="themed-node-47 color-foreground-primary-1" data-vw-template="{environment.hazard.corrosiveshortstatus:raw}"></span>
+<vw-meter class="themed-node-48 color-state-caution-1 background-color-panel-background-0-72" value="environment.hazard.corrosiveexposurelevel" min="0" max="1" segments="8" gap="2" direction="up" partial="true"></vw-meter>
+<span class="themed-node-49 color-state-critical-1">RADIATION</span>
+<span class="themed-node-50 color-foreground-primary-1" data-vw-template="{environment.hazard.radiationshortstatus:raw}"></span>
+<vw-meter class="themed-node-51 color-state-critical-1 background-color-panel-background-0-72" value="environment.hazard.radiationexposurelevel" min="0" max="1" segments="8" gap="2" direction="up" partial="true"></vw-meter>
+</div>
+</body></html>

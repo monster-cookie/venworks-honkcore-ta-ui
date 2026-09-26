@@ -1,5 +1,7 @@
 # Venworks CUI Component Catalog
 
+> V2 migration: the five themes now build as Canvas HTML/CSS consumers. See [Canvas theme consumers](CANVAS_MIGRATION.md) for dependencies, configuration, packaging and pending runtime acceptance. The legacy XML and standalone Scaleform descriptions below remain the v1 reference.
+
 Date: 2026-08-19
 
 ## Purpose and evidence boundary

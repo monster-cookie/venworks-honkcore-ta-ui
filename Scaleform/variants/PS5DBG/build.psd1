@@ -9,5 +9,5 @@
   AuxiliaryMovieManifestPath = 'Scaleform/variants/PS5DBG/movies/venworkscui.build.xml'
   DiagnosticXmlSource = 'Scaleform/variants/PS5DBG/layout.xml'
   IncludeHudMessageMovies = $false
-  PluginSourcePath = 'Staging-TA/Venworks-CustomizableHUD-TrackersAlliance.esm'
+  PluginSourcePath = 'Scaleform/shared/legacy-plugin.esm'
 }

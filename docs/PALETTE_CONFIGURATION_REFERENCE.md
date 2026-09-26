@@ -1,5 +1,7 @@
 # Palette Configuration Reference
 
+> V2 migration: the five themes now build as Canvas HTML/CSS consumers. See [Canvas theme consumers](CANVAS_MIGRATION.md) for dependencies, configuration, packaging and pending runtime acceptance. The legacy XML and standalone Scaleform descriptions below remain the v1 reference.
+
 This is the complete reference for players who want to create custom colors, text styles, transparency, outlines, and faction artwork. It explains the required palette structure and the settings the HUD accepts.
 
 The structural contract is

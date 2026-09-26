@@ -71,14 +71,6 @@ jobs:
           lfs: true
           persist-credentials: false
 
-      - name: Verify PowerShell and committed V1 release payload
-        shell: pwsh
-        run: ./Tools/verifyCommittedRelease.ps1
-
-      - name: Verify five V1 variant movie and archive contracts
-        shell: pwsh
-        run: ./Tools/verifyVariant.ps1 -Committed
-
       - name: Verify committed V2 release payload
         shell: pwsh
         run: ./Tools/verifyCommittedReleaseV2.ps1
@@ -114,12 +106,7 @@ jobs:
           $PSNativeCommandUseErrorActionPreference = $false
           foreach ($variantKey in @('TA', 'PS5DBG')) {
             $variant = @(Get-ModuleVariants -VariantKeys $variantKey)[0]
-            $verifierPath = if ($variantKey -ceq 'PS5DBG') {
-              './Tools/verifyVariantV2.ps1'
-            }
-            else {
-              './Tools/verifyVariant.ps1'
-            }
+            $verifierPath = './Tools/verifyVariantV2.ps1'
             $unexpectedName = "codex-ci-$([System.Guid]::NewGuid().ToString('N')).esm"
             $unexpectedPath = Join-Path $variant.StagingFolderPath $unexpectedName
             if (Test-Path -LiteralPath $unexpectedPath) {
@@ -132,7 +119,7 @@ jobs:
               $outputLines = @(& pwsh -NoProfile -File $verifierPath -VariantKeys $variantKey -Committed 2>&1)
               $exitCode = $LASTEXITCODE
               $outputText = $outputLines -join "`n"
-              if ($exitCode -eq 0 -or $outputText -notmatch 'complete staging payload') {
+              if ($exitCode -eq 0 -or $outputText -notmatch 'complete staging payload|missing or competing files') {
                 $outputLines | ForEach-Object { Write-Host $_ }
                 throw "$variantKey verification did not reject an undeclared staging file through the shared inventory check."
               }
@@ -146,12 +133,12 @@ jobs:
           }
           $global:LASTEXITCODE = 0
 
-      - name: Verify committed V1 and V2 entry points without local environment
+      - name: Verify committed Canvas entry point without local environment
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
 
-          foreach ($checkPath in @('./Tools/checkRepo.ps1', './Tools/checkRepoV2.ps1')) {
+          foreach ($checkPath in @('./Tools/checkRepoV2.ps1')) {
             $outputLines = @(& pwsh -NoProfile -File $checkPath -Committed 2>&1)
             $exitCode = $LASTEXITCODE
             $outputLines | ForEach-Object { Write-Host $_ }
@@ -199,7 +186,7 @@ jobs:
       - name: Fetch release package LFS inputs
         shell: bash
         run: |
-          git lfs pull --include="Staging-*/*.ba2,Staging-*/*.esm" --exclude=""
+          git lfs pull --include="Staging-*/*.ba2,Staging-*/*.esm,Scaleform/shared/legacy-plugin.esm" --exclude=""
 
           for file in Staging-*/*.ba2 Staging-*/*.esm; do
             if grep -Fqx "version https://git-lfs.github.com/spec/v1" "$file"; then
@@ -246,9 +233,16 @@ jobs:
             $stagingPath = Join-Path $env:GITHUB_WORKSPACE $variant.StagingFolderPath
             $interfacePath = Join-Path $stagingPath 'Interface'
             $buildProfile = Import-PowerShellDataFile -LiteralPath (Join-Path $env:GITHUB_WORKSPACE "Scaleform/variants/$($variant.VariantKey)/build.psd1")
-            $movieProfile = Get-VariantScaleformMovieProfile `
-              -RepositoryRoot $env:GITHUB_WORKSPACE `
-              -VariantBuildProfile $buildProfile
+            $isCanvasConsumer = $buildProfile.ContainsKey('CanvasConsumer') -and $buildProfile.CanvasConsumer
+            $movieProfile = if ($isCanvasConsumer) {
+              $namespace = 'venworks.vwhud.' + $variant.VariantKey.ToLowerInvariant()
+              [pscustomobject]@{ DeploymentMovieDefinitions = @(
+                [pscustomobject]@{ FileName = "VenworksCanvas/Consumers/$namespace/normal.swf"; ExpectedSignature = 'CWS' }
+                [pscustomobject]@{ FileName = "VenworksCanvas/Consumers/$namespace/large.swf"; ExpectedSignature = 'CWS' }
+              ) }
+            } else {
+              Get-VariantScaleformMovieProfile -RepositoryRoot $env:GITHUB_WORKSPACE -VariantBuildProfile $buildProfile
+            }
             $expectedMovieNames = @($movieProfile.DeploymentMovieDefinitions.FileName | Sort-Object)
             $actualMovieNames = @(
               Get-ChildItem -LiteralPath $interfacePath -Recurse -File |
@@ -276,6 +270,12 @@ jobs:
                 Sort-Object
             )
             $windowsArchives = @("$baseName - Main.ba2")
+            if ($isCanvasConsumer) {
+              $looseEntries += "$baseName.esm"
+              $looseEntries += @(Get-ChildItem -LiteralPath (Join-Path $stagingPath 'Scripts') -Recurse -File | ForEach-Object {
+                [IO.Path]::GetRelativePath($stagingPath,$_.FullName).Replace('\','/')
+              })
+            }
             if (Test-Path -LiteralPath (Join-Path $stagingPath "$baseName - Textures.ba2") -PathType Leaf) {
               $windowsArchives += "$baseName - Textures.ba2"
             }
@@ -289,7 +289,7 @@ jobs:
             }
             foreach ($packageSuffix in @(Get-VariantReleasePackageSuffixes -Variant $variant)) {
               $expectedEntries = switch ($packageSuffix) {
-                'Nexus PC - Normal' { @("$baseName.esm") + $windowsArchives + @('Interface/VenworksCUI/layout.xml'); break }
+                'Nexus PC - Normal' { @("$baseName.esm") + $windowsArchives + @(if (!$isCanvasConsumer) { 'Interface/VenworksCUI/layout.xml' }); break }
                 'Nexus PC - Fully Loose Files' { $looseEntries; break }
                 'Bethesda PC' { @("$baseName.esm") + $windowsArchives; break }
                 'Bethesda Xbox' { @("$baseName.esm") + $xboxArchives; break }

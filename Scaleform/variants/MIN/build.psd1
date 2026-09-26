@@ -1,4 +1,5 @@
 @{
+  CanvasConsumer = $true
   MovieProfile = 'minimalist-live'
   AuxiliaryMovieManifestPath = 'Scaleform/variants/MIN/movies/venworkscui.build.xml'
   LayoutSource = 'Scaleform/variants/MIN/layout.xml'
@@ -20,5 +21,5 @@
   PaletteMode = 'Literal'
   PaletteSourceDirectory = 'Scaleform/shared/palettes'
   PaletteFileNames = @()
-  PluginSourcePath = 'Staging-TA/Venworks-CustomizableHUD-TrackersAlliance.esm'
+  PluginSourcePath = 'Scaleform/shared/legacy-plugin.esm'
 }

@@ -1,5 +1,7 @@
 # Venworks Customizable HUD: Player Guide
 
+> V2 migration: the five themes now build as Canvas HTML/CSS consumers. See [Canvas theme consumers](CANVAS_MIGRATION.md) for dependencies, configuration, packaging and pending runtime acceptance. The legacy XML and standalone Scaleform descriptions below remain the v1 reference.
+
 This guide is for players who want to customize the look, placement, visibility, and colors of the Venworks Customizable HUD. You do not need to change HUD movies or write code; edit the supplied root layout and palette XML files. The supplied reusable component definitions themselves are compiled into `venworkscui.swf`.
 
 For every supported XML element and attribute, use the

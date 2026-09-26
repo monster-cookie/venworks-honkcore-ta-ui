@@ -1,0 +1,164 @@
+.minimalist-node-2 { position: absolute; left: 22px; top: 21px; width: 184px; height: 184px; z-index: -2; }
+.minimalist-node-3 { position: absolute; left: 22px; top: 21px; width: 184px; height: 184px; z-index: -1; }
+.minimalist-node-4 { position: absolute; left: 0px; top: 0px; width: 36px; height: 1px; z-index: 0; }
+.minimalist-node-5 { position: absolute; left: 0px; top: 0px; width: 1px; height: 36px; z-index: 0; }
+.minimalist-node-6 { position: absolute; left: 192px; top: 0px; width: 36px; height: 1px; z-index: 0; }
+.minimalist-node-7 { position: absolute; left: 228px; top: 0px; width: 1px; height: 36px; z-index: 0; }
+.minimalist-node-8 { position: absolute; left: 0px; top: 226px; width: 36px; height: 1px; z-index: 0; }
+.minimalist-node-9 { position: absolute; left: 0px; top: 190px; width: 1px; height: 36px; z-index: 0; }
+.minimalist-node-10 { position: absolute; left: 192px; top: 226px; width: 36px; height: 1px; z-index: 0; }
+.minimalist-node-11 { position: absolute; left: 228px; top: 190px; width: 1px; height: 36px; z-index: 0; }
+.minimalist-node-12 { position: absolute; left: 22px; top: 21px; width: 184px; height: 184px; z-index: 1; }
+.minimalist-node-13 { position: absolute; left: 45px; top: 44px; width: 138px; height: 138px; z-index: 1; }
+.minimalist-node-14 { position: absolute; left: 68px; top: 67px; width: 92px; height: 92px; z-index: 1; }
+.minimalist-node-15 { position: absolute; left: 91px; top: 90px; width: 46px; height: 46px; z-index: 1; }
+.minimalist-node-16 { position: absolute; left: 30px; top: 113px; width: 168px; height: 1px; z-index: 1; }
+.minimalist-node-17 { position: absolute; left: 114px; top: 29px; width: 1px; height: 168px; z-index: 1; }
+.minimalist-node-18 { position: absolute; left: 22px; top: 21px; width: 184px; height: 184px; z-index: 2; }
+.minimalist-node-1 { position: absolute; left: -64px; top: -36px; width: 228px; height: 226px; z-index: 104; }
+.minimalist-node-20 { position: absolute; left: 0px; top: 0px; width: 447px; height: 90px; z-index: -2; }
+.minimalist-node-21 { position: absolute; left: 0px; top: 0px; width: 447px; height: 90px; z-index: -1; }
+.minimalist-node-22 { position: absolute; left: 0px; top: 0px; width: 54px; height: 1px; z-index: 0; }
+.minimalist-node-23 { position: absolute; left: 0px; top: 0px; width: 1px; height: 18px; z-index: 0; }
+.minimalist-node-24 { position: absolute; left: 393px; top: 0px; width: 54px; height: 1px; z-index: 0; }
+.minimalist-node-25 { position: absolute; left: 447px; top: 0px; width: 1px; height: 18px; z-index: 0; }
+.minimalist-node-26 { position: absolute; left: 0px; top: 90px; width: 54px; height: 1px; z-index: 0; }
+.minimalist-node-27 { position: absolute; left: 0px; top: 72px; width: 1px; height: 18px; z-index: 0; }
+.minimalist-node-28 { position: absolute; left: 393px; top: 90px; width: 54px; height: 1px; z-index: 0; }
+.minimalist-node-29 { position: absolute; left: 447px; top: 72px; width: 1px; height: 18px; z-index: 0; }
+.minimalist-node-30 { position: absolute; left: 18px; top: 12px; width: 411px; height: 66px; z-index: 1; font-family: $MAIN_Font_Bold; font-size: 16px; text-align: left; }
+.minimalist-node-19 { position: absolute; left: -64px; top: 190px; width: 447px; height: 90px; z-index: 102; }
+.minimalist-node-32 { position: absolute; left: 0px; top: 0px; width: 360px; height: 254px; z-index: -2; }
+.minimalist-node-33 { position: absolute; left: 0px; top: 0px; width: 360px; height: 254px; z-index: -1; }
+.minimalist-node-34 { position: absolute; left: 12px; top: 6px; width: 156px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 13px; text-align: left; }
+.minimalist-node-35 { position: absolute; left: 214px; top: 8px; width: 68px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 8px; text-align: right; }
+.minimalist-node-36 { position: absolute; left: 288px; top: 6px; width: 58px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 10px; text-align: right; }
+.minimalist-node-37 { position: absolute; left: 8px; top: 32px; width: 42px; height: 1px; z-index: 1; }
+.minimalist-node-38 { position: absolute; left: 8px; top: 32px; width: 1px; height: 14px; z-index: 1; }
+.minimalist-node-39 { position: absolute; left: 310px; top: 32px; width: 42px; height: 1px; z-index: 1; }
+.minimalist-node-40 { position: absolute; left: 352px; top: 32px; width: 1px; height: 14px; z-index: 1; }
+.minimalist-node-41 { position: absolute; left: 8px; top: 92px; width: 42px; height: 1px; z-index: 1; }
+.minimalist-node-42 { position: absolute; left: 8px; top: 78px; width: 1px; height: 14px; z-index: 1; }
+.minimalist-node-43 { position: absolute; left: 310px; top: 92px; width: 42px; height: 1px; z-index: 1; }
+.minimalist-node-44 { position: absolute; left: 352px; top: 78px; width: 1px; height: 14px; z-index: 1; }
+.minimalist-node-45 { position: absolute; left: 14px; top: 34px; width: 332px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 10px; text-align: left; }
+.minimalist-node-46 { position: absolute; left: 14px; top: 52px; width: 332px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 8px; text-align: left; font-weight: bold; }
+.minimalist-node-47 { position: absolute; left: 14px; top: 70px; width: 332px; height: 1px; z-index: 1; }
+.minimalist-node-48 { position: absolute; left: 14px; top: 70px; width: 20px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 9px; text-align: left; }
+.minimalist-node-49 { position: absolute; left: 36px; top: 70px; width: 48px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 9px; text-align: left; }
+.minimalist-node-50 { position: absolute; left: 94px; top: 70px; width: 36px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 9px; text-align: left; }
+.minimalist-node-51 { position: absolute; left: 132px; top: 70px; width: 58px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 9px; text-align: left; }
+.minimalist-node-52 { position: absolute; left: 200px; top: 70px; width: 36px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 9px; text-align: left; }
+.minimalist-node-53 { position: absolute; left: 238px; top: 70px; width: 72px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 9px; text-align: left; }
+.minimalist-node-54 { position: absolute; left: 12px; top: 98px; width: 336px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 13px; text-align: left; }
+.minimalist-node-55 { position: absolute; left: 8px; top: 119px; width: 344px; height: 1px; z-index: 1; }
+.minimalist-node-56 { position: absolute; left: 8px; top: 125px; width: 34px; height: 1px; z-index: 1; }
+.minimalist-node-57 { position: absolute; left: 8px; top: 125px; width: 1px; height: 10px; z-index: 1; }
+.minimalist-node-58 { position: absolute; left: 318px; top: 125px; width: 34px; height: 1px; z-index: 1; }
+.minimalist-node-59 { position: absolute; left: 352px; top: 125px; width: 1px; height: 10px; z-index: 1; }
+.minimalist-node-60 { position: absolute; left: 8px; top: 161px; width: 34px; height: 1px; z-index: 1; }
+.minimalist-node-61 { position: absolute; left: 8px; top: 151px; width: 1px; height: 10px; z-index: 1; }
+.minimalist-node-62 { position: absolute; left: 318px; top: 161px; width: 34px; height: 1px; z-index: 1; }
+.minimalist-node-63 { position: absolute; left: 352px; top: 151px; width: 1px; height: 10px; z-index: 1; }
+.minimalist-node-64 { position: absolute; left: 14px; top: 126px; width: 106px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 9px; text-align: left; }
+.minimalist-node-65 { position: absolute; left: 122px; top: 126px; width: 166px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 8px; text-align: right; }
+.minimalist-node-66 { position: absolute; left: 292px; top: 125px; width: 54px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 11px; text-align: right; }
+.minimalist-node-67 { position: absolute; left: 14px; top: 148px; width: 332px; height: 8px; z-index: 2; }
+.minimalist-node-68 { position: absolute; left: 8px; top: 167px; width: 38px; height: 1px; z-index: 1; }
+.minimalist-node-69 { position: absolute; left: 8px; top: 167px; width: 1px; height: 14px; z-index: 1; }
+.minimalist-node-70 { position: absolute; left: 314px; top: 167px; width: 38px; height: 1px; z-index: 1; }
+.minimalist-node-71 { position: absolute; left: 352px; top: 167px; width: 1px; height: 14px; z-index: 1; }
+.minimalist-node-72 { position: absolute; left: 8px; top: 246px; width: 38px; height: 1px; z-index: 1; }
+.minimalist-node-73 { position: absolute; left: 8px; top: 232px; width: 1px; height: 14px; z-index: 1; }
+.minimalist-node-74 { position: absolute; left: 314px; top: 246px; width: 38px; height: 1px; z-index: 1; }
+.minimalist-node-75 { position: absolute; left: 352px; top: 232px; width: 1px; height: 14px; z-index: 1; }
+.minimalist-node-76 { position: absolute; left: 94px; top: 171px; width: 1px; height: 71px; z-index: 2; }
+.minimalist-node-77 { position: absolute; left: 178px; top: 171px; width: 1px; height: 71px; z-index: 2; }
+.minimalist-node-78 { position: absolute; left: 262px; top: 171px; width: 1px; height: 71px; z-index: 2; }
+.minimalist-node-79 { position: absolute; left: 12px; top: 169px; width: 80px; height: 18px; z-index: 3; font-family: $MAIN_Font_Bold; font-size: 8px; text-align: center; }
+.minimalist-node-80 { position: absolute; left: 12px; top: 186px; width: 80px; height: 20px; z-index: 3; font-family: $MAIN_Font_Bold; font-size: 7px; text-align: center; }
+.minimalist-node-81 { position: absolute; left: 30px; top: 208px; width: 44px; height: 34px; z-index: 3; }
+.minimalist-node-82 { position: absolute; left: 96px; top: 169px; width: 80px; height: 18px; z-index: 3; font-family: $MAIN_Font_Bold; font-size: 8px; text-align: center; }
+.minimalist-node-83 { position: absolute; left: 96px; top: 186px; width: 80px; height: 20px; z-index: 3; font-family: $MAIN_Font_Bold; font-size: 7px; text-align: center; }
+.minimalist-node-84 { position: absolute; left: 114px; top: 208px; width: 44px; height: 34px; z-index: 3; }
+.minimalist-node-85 { position: absolute; left: 180px; top: 169px; width: 80px; height: 18px; z-index: 3; font-family: $MAIN_Font_Bold; font-size: 8px; text-align: center; }
+.minimalist-node-86 { position: absolute; left: 180px; top: 186px; width: 80px; height: 20px; z-index: 3; font-family: $MAIN_Font_Bold; font-size: 7px; text-align: center; }
+.minimalist-node-87 { position: absolute; left: 198px; top: 208px; width: 44px; height: 34px; z-index: 3; }
+.minimalist-node-88 { position: absolute; left: 264px; top: 169px; width: 80px; height: 18px; z-index: 3; font-family: $MAIN_Font_Bold; font-size: 8px; text-align: center; }
+.minimalist-node-89 { position: absolute; left: 264px; top: 186px; width: 80px; height: 20px; z-index: 3; font-family: $MAIN_Font_Bold; font-size: 7px; text-align: center; }
+.minimalist-node-90 { position: absolute; left: 282px; top: 208px; width: 44px; height: 34px; z-index: 3; }
+.minimalist-node-31 { position: absolute; left: 39px; top: 29px; width: 360px; height: 254px; z-index: 90; }
+.minimalist-node-92 { position: absolute; left: 0px; top: 0px; width: 360px; height: 236px; z-index: -2; }
+.minimalist-node-93 { position: absolute; left: 0px; top: 0px; width: 360px; height: 236px; z-index: -1; }
+.minimalist-node-94 { position: absolute; left: 12px; top: 6px; width: 156px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 13px; text-align: left; }
+.minimalist-node-95 { position: absolute; left: 218px; top: 8px; width: 60px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 8px; text-align: right; }
+.minimalist-node-96 { position: absolute; left: 282px; top: 6px; width: 72px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 10px; text-align: right; }
+.minimalist-node-97 { position: absolute; left: 8px; top: 32px; width: 38px; height: 1px; z-index: 1; }
+.minimalist-node-98 { position: absolute; left: 8px; top: 32px; width: 1px; height: 10px; z-index: 1; }
+.minimalist-node-99 { position: absolute; left: 314px; top: 32px; width: 38px; height: 1px; z-index: 1; }
+.minimalist-node-100 { position: absolute; left: 352px; top: 32px; width: 1px; height: 10px; z-index: 1; }
+.minimalist-node-101 { position: absolute; left: 8px; top: 71px; width: 38px; height: 1px; z-index: 1; }
+.minimalist-node-102 { position: absolute; left: 8px; top: 61px; width: 1px; height: 10px; z-index: 1; }
+.minimalist-node-103 { position: absolute; left: 314px; top: 71px; width: 38px; height: 1px; z-index: 1; }
+.minimalist-node-104 { position: absolute; left: 352px; top: 61px; width: 1px; height: 10px; z-index: 1; }
+.minimalist-node-105 { position: absolute; left: 14px; top: 35px; width: 42px; height: 20px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 8px; text-align: left; }
+.minimalist-node-106 { position: absolute; left: 58px; top: 34px; width: 288px; height: 20px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 8px; text-align: left; }
+.minimalist-node-107 { position: absolute; left: 14px; top: 53px; width: 160px; height: 20px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 8px; text-align: left; }
+.minimalist-node-108 { position: absolute; left: 176px; top: 53px; width: 170px; height: 20px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 8px; text-align: right; }
+.minimalist-node-109 { position: absolute; left: 8px; top: 76px; width: 344px; height: 1px; z-index: 1; }
+.minimalist-node-110 { position: absolute; left: 12px; top: 78px; width: 140px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 10px; text-align: left; }
+.minimalist-node-111 { position: absolute; left: 174px; top: 78px; width: 90px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 8px; text-align: right; }
+.minimalist-node-112 { position: absolute; left: 278px; top: 78px; width: 70px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 8px; text-align: right; }
+.minimalist-node-113 { position: absolute; left: 12px; top: 97px; width: 336px; height: 7px; z-index: 2; }
+.minimalist-node-114 { position: absolute; left: 8px; top: 107px; width: 344px; height: 1px; z-index: 1; }
+.minimalist-node-115 { position: absolute; left: 12px; top: 109px; width: 160px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 10px; text-align: left; }
+.minimalist-node-116 { position: absolute; left: 278px; top: 109px; width: 70px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 8px; text-align: right; }
+.minimalist-node-117 { position: absolute; left: 12px; top: 128px; width: 336px; height: 7px; z-index: 2; }
+.minimalist-node-118 { position: absolute; left: 8px; top: 138px; width: 344px; height: 1px; z-index: 1; }
+.minimalist-node-119 { position: absolute; left: 12px; top: 140px; width: 100px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 10px; text-align: left; }
+.minimalist-node-120 { position: absolute; left: 132px; top: 140px; width: 92px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 8px; text-align: right; }
+.minimalist-node-121 { position: absolute; left: 226px; top: 140px; width: 122px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 8px; text-align: right; }
+.minimalist-node-122 { position: absolute; left: 12px; top: 159px; width: 336px; height: 7px; z-index: 2; }
+.minimalist-node-123 { position: absolute; left: 12px; top: 159px; width: 336px; height: 7px; z-index: 3; }
+.minimalist-node-124 { position: absolute; left: 8px; top: 169px; width: 344px; height: 1px; z-index: 1; }
+.minimalist-node-125 { position: absolute; left: 12px; top: 171px; width: 160px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 10px; text-align: left; }
+.minimalist-node-126 { position: absolute; left: 278px; top: 171px; width: 70px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 8px; text-align: right; }
+.minimalist-node-127 { position: absolute; left: 12px; top: 190px; width: 336px; height: 7px; z-index: 2; }
+.minimalist-node-128 { position: absolute; left: 8px; top: 200px; width: 344px; height: 1px; z-index: 1; }
+.minimalist-node-129 { position: absolute; left: 12px; top: 202px; width: 112px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 10px; text-align: left; }
+.minimalist-node-130 { position: absolute; left: 126px; top: 202px; width: 146px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 8px; text-align: center; }
+.minimalist-node-131 { position: absolute; left: 278px; top: 202px; width: 70px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 8px; text-align: right; }
+.minimalist-node-132 { position: absolute; left: 12px; top: 221px; width: 336px; height: 7px; z-index: 2; }
+.minimalist-node-91 { position: absolute; left: -39px; top: 11px; width: 360px; height: 236px; z-index: 100; }
+.minimalist-node-134 { position: absolute; left: 0px; top: -58px; width: 826px; height: 48px; z-index: -2; }
+.minimalist-node-135 { position: absolute; left: 0px; top: -58px; width: 826px; height: 48px; z-index: -1; }
+.minimalist-node-136 { position: absolute; left: 0px; top: -58px; width: 826px; height: 48px; z-index: 3; overflow: hidden; }
+.minimalist-node-133 { position: absolute; left: 0px; top: 22px; width: 826px; height: 132px; z-index: 110; }
+.minimalist-node-138 { position: absolute; left: 253px; top: 12px; width: 320px; height: 24px; z-index: -2; }
+.minimalist-node-139 { position: absolute; left: 253px; top: 12px; width: 320px; height: 24px; z-index: -1; }
+.minimalist-node-140 { position: absolute; left: 253px; top: 12px; width: 320px; height: 24px; z-index: 2; }
+.minimalist-node-137 { position: absolute; left: 0px; top: 22px; width: 826px; height: 132px; z-index: 110; }
+.minimalist-node-142 { position: absolute; left: 53px; top: 76px; width: 720px; height: 56px; z-index: 1; }
+.minimalist-node-141 { position: absolute; left: 0px; top: 22px; width: 826px; height: 132px; z-index: 110; }
+.minimalist-node-144 { position: absolute; left: 0px; top: 0px; width: 900px; height: 520px; z-index: 0; }
+.minimalist-node-143 { position: absolute; left: 0px; top: 0px; width: 900px; height: 520px; z-index: 109; }
+.minimalist-node-146 { position: absolute; left: 0px; top: 0px; width: 900px; height: 520px; z-index: 0; }
+.minimalist-node-145 { position: absolute; left: 0px; top: 0px; width: 900px; height: 520px; z-index: 109; }
+.minimalist-node-148 { position: absolute; left: 0px; top: 0px; width: 320px; height: 70px; z-index: -2; }
+.minimalist-node-149 { position: absolute; left: 0px; top: 0px; width: 320px; height: 70px; z-index: -1; }
+.minimalist-node-150 { position: absolute; left: 0px; top: 0px; width: 46px; height: 1px; z-index: 0; }
+.minimalist-node-151 { position: absolute; left: 0px; top: 0px; width: 1px; height: 15px; z-index: 0; }
+.minimalist-node-152 { position: absolute; left: 274px; top: 0px; width: 46px; height: 1px; z-index: 0; }
+.minimalist-node-153 { position: absolute; left: 320px; top: 0px; width: 1px; height: 15px; z-index: 0; }
+.minimalist-node-154 { position: absolute; left: 0px; top: 70px; width: 46px; height: 1px; z-index: 0; }
+.minimalist-node-155 { position: absolute; left: 0px; top: 55px; width: 1px; height: 15px; z-index: 0; }
+.minimalist-node-156 { position: absolute; left: 274px; top: 70px; width: 46px; height: 1px; z-index: 0; }
+.minimalist-node-157 { position: absolute; left: 320px; top: 55px; width: 1px; height: 15px; z-index: 0; }
+.minimalist-node-158 { position: absolute; left: 12px; top: 7px; width: 296px; height: 24px; z-index: 1; font-family: $MAIN_Font_Bold; font-size: 12px; text-align: center; }
+.minimalist-node-159 { position: absolute; left: 12px; top: 32px; width: 296px; height: 28px; z-index: 1; font-family: $MAIN_Font_Bold; font-size: 15px; text-align: center; }
+.minimalist-node-147 { position: absolute; left: 0px; top: 166px; width: 320px; height: 70px; z-index: 120; }
+.minimalist-node-161 { position: absolute; left: 0px; top: 0px; width: 184px; height: 36px; z-index: -2; }
+.minimalist-node-162 { position: absolute; left: 0px; top: 0px; width: 184px; height: 36px; z-index: -1; }
+.minimalist-node-163 { position: absolute; left: 0px; top: 4px; width: 138px; height: 28px; z-index: 0; font-family: $MAIN_Font_Bold; font-size: 11px; text-align: right; }
+.minimalist-node-164 { position: absolute; left: 146px; top: 0px; width: 36px; height: 36px; z-index: 0; }
+.minimalist-node-160 { position: absolute; left: 0px; top: 36px; width: 184px; height: 36px; z-index: 103; }

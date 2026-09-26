@@ -532,6 +532,14 @@ if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction Si
   -Description "Scaleform movie-format helper")
 
 $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
+. (Join-Path $PSScriptRoot 'sharedCanvasConsumers.ps1')
+foreach ($variant in @($variants | Where-Object { Test-CanvasConsumerVariant $_.VariantKey })) {
+  $key = [string]$variant.VariantKey
+  $payload = [IO.Path]::GetFullPath((Join-Path $repositoryRoot $variant.StagingFolderPath))
+  Assert-CanvasConsumerPayload $repositoryRoot $key $payload (Join-Path $repositoryRoot "Canvas/build/expected/$key.json") -Archives:(!$PreArchiveMutation)
+}
+$variants = @($variants | Where-Object { !(Test-CanvasConsumerVariant $_.VariantKey) })
+if ($variants.Count -eq 0) { return }
 $archiveDefinitions = [ordered]@{
   "Main" = [pscustomobject]@{ FileSuffix = "Main.ba2"; Required = $true }
   "Textures" = [pscustomobject]@{ FileSuffix = "Textures.ba2"; Required = $false }
@@ -541,7 +549,7 @@ $archiveDefinitions = [ordered]@{
   "Textures_PS" = [pscustomobject]@{ FileSuffix = "Textures_PS.ba2"; Required = $false }
 }
 
-$releaseVariants = @($Global:ReleaseVariants)
+$releaseVariants = @($Global:ReleaseVariants | Where-Object { !(Test-CanvasConsumerVariant $_.VariantKey) })
 if ($releaseVariants.Count -eq 0) {
   throw "ReleaseVariants must contain at least one canonical plugin stub."
 }

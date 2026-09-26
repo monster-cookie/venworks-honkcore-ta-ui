@@ -1,0 +1,100 @@
+FormKey: 000800:Venworks-CustomizableHUD-Minimalist.esm
+EditorID: VWHUD_MINRegistrar
+FormVersion: 582
+VirtualMachineAdapter:
+  Scripts:
+  - Name: Venworks:CustomizableHUD:HudRegistrar
+    Properties:
+    - MutagenObjectType: ScriptObjectProperty
+      Name: BuffEffects
+      Object: 000801:Venworks-CustomizableHUD-Minimalist.esm
+    - MutagenObjectType: ScriptStringListProperty
+      Name: BuffLabels
+      Data:
+      - Fortify Carry Weight
+      - Fortify Melee Damage
+      - Well Rested
+      - Companion Affinity Increases Faster
+      - Improved Research Crit Chance
+      - Reduced Research Cost
+      - Heart+
+      - Fortify Power Recovery Rate
+      - Fortify Damage
+      - Fortify Damage
+      - Fortify O2 Recovery Rate
+      - Increased Weapon Accuracy
+      - Fortify Energy Damage Resistance
+      - Restore Health
+      - Fortify Movement Speed
+      - Fortify Physical Damage Resistance
+      - Addiction Suppression
+      - Fortify O2
+      - Fortify Jump Height
+      - Slow Time
+      - Reduce Movement Noise
+      - Fortify Ranged Damage
+      - Fortify Ranged Damage
+      - Fortify Melee Damage
+      - Fortify Melee Damage
+      - Fortify Damage
+      - Fortify Damage
+      - Increased Weapon Accuracy
+      - Increased Weapon Accuracy
+      - Fortify Persuasion
+      - Fed
+      - Hydrated
+      - Fed
+      - Hydrated
+      - Fed
+      - Hydrated
+    - MutagenObjectType: ScriptStringProperty
+      Name: StatusTopic
+      Data: venworks.vwhud.min.status
+    - MutagenObjectType: ScriptStringProperty
+      Name: ConsumerId
+      Data: 10cdba23-654d-41b2-ae20-df241407ae65
+    - MutagenObjectType: ScriptObjectProperty
+      Name: DebuffEffects
+      Object: 000802:Venworks-CustomizableHUD-Minimalist.esm
+    - MutagenObjectType: ScriptStringListProperty
+      Name: DebuffLabels
+      Data:
+      - Dehydrated
+      - Malnourished
+      - Malnourished
+      - Malnourished
+      - Dehydrated
+      - Dehydrated
+    - MutagenObjectType: ScriptIntProperty
+      Name: DescriptorVersion
+      Data: 1
+    - MutagenObjectType: ScriptStringProperty
+      Name: DisplayName
+      Data: VWHUD MIN
+    - MutagenObjectType: ScriptBoolProperty
+      Name: ExpectedRegistration
+      Data: True
+    - MutagenObjectType: ScriptFloatProperty
+      Name: InitialDelaySeconds
+    - MutagenObjectType: ScriptStringProperty
+      Name: LargeMoviePath
+      Data: VenworksCanvas/Consumers/venworks.vwhud.min/large.swf
+    - MutagenObjectType: ScriptStringProperty
+      Name: NormalMoviePath
+      Data: VenworksCanvas/Consumers/venworks.vwhud.min/normal.swf
+    - MutagenObjectType: ScriptObjectProperty
+      Name: Registry
+      Object: 000800:Venworks-Canvas.esm
+  Versioning:
+  - Break0
+  ExtraBindDataVersion: 0
+  Script:
+    Name: ''
+Name:
+  TargetLanguage: English
+  Value: VWHUD MIN Registrar
+Data:
+  Flags:
+  - StartGameEnabled
+  - StartsEnabled
+  Unused: 0x000000

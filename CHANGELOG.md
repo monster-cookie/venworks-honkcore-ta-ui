@@ -1,5 +1,13 @@
 # Venworks - Customizable HUD and Themes
 
+## Unreleased — Canvas consumer migration
+
+- Build all five existing themes as Canvas HTML/CSS/SVG consumers with independent effects publishers and preserved plugin identities.
+- Replace the old status renderer with paged effects snapshots following Canvas Example's event pattern.
+- Add v2 consumer payload, plugin, resource, archive and release checks while retaining the v1 pipeline and rollback payloads.
+- Synchronize Canvas agent guidance and skills; remove the obsolete repository .codex policies.
+- Archive-only PC and PS5 appearance, lifecycle and performance acceptance remains pending; see [migration guidance](docs/CANVAS_MIGRATION.md).
+
 - https://www.nexusmods.com/starfield/mods/17104
 - https://creations.bethesda.net/en/starfield/details/e8a7bdfa-7d88-4cf5-bba4-a5c4cad0d97f/Venworks_Customizable_HUD___Minimalist_Theme
 - https://creations.bethesda.net/en/starfield/details/1d693691-1b23-48fe-9cc9-06be4fe63ad8/Venworks_Customizable_HUD___Venworks_Theme

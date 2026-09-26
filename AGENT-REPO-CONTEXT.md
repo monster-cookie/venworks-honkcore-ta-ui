@@ -1,239 +1,86 @@
-# Repository-specific agent context
+# Repository Context
 
-These instructions apply only to the Venworks Customizable HUD repository.
+Repository-specific context for `Venworks Customizable HUD`. Unconfigured external services affect only work that needs them. These are repository-owned settings, with no global policy discovery or override system.
 
-## Repository and Plane mapping
+## Repository and Tool Chain
 
-| Stable Plane project UUID              | Plane identifier | Repository path                                    | Repository URL                                              |
-| -------------------------------------- | ---------------- | -------------------------------------------------- | ----------------------------------------------------------- |
-| `7dd2481d-cf26-4030-ba0d-7563612d1493` | `VWHUD`          | `C:\Repositories\Venworks\venworks-honkcore-ta-ui` | `https://github.com/monster-cookie/venworks-honkcore-ta-ui` |
+| Setting | Value |
+| --- | --- |
+| Project name | `Venworks Customizable HUD` |
+| Repository URL | `https://github.com/monster-cookie/venworks-honkcore-ta-ui` |
+| Target game | `Starfield` |
 
-The stable Plane project UUID is the canonical external identity. Project names, identifiers, member display names, labels, and workflow names may change and must not replace the UUID as the primary identity.
+Use the current checkout as the repository path. Verify its remote against the configured repository before publishing. Keep machine-specific paths and secrets in protected local configuration, outside the repository.
 
-At the beginning of Plane-backed work:
+The existing v1 and v2 pipelines target Starfield. [Tools/sharedConfig.ps1](Tools/sharedConfig.ps1) owns variant configuration. Inspect scripts and their side effects before executing them. Keep the v1 XML release pipeline available until separate Canvas production acceptance.
 
-1. Verify that the Plane MCP is available and authenticated.
-2. List the available Plane projects.
-3. Find project UUID `7dd2481d-cf26-4030-ba0d-7563612d1493`.
-4. Verify that its current identifier is `VWHUD` and record its current name.
-5. Use the full project UUID in every MCP operation that accepts `project_id`.
-6. Retrieve the governing work item and verify that its returned `project` field matches the canonical project UUID.
-7. Retain both its human-readable identifier, such as `VWHUD-30`, and its full work-item UUID before planning or mutation.
+## Build and verification entry points
 
-Do not rely only on a remembered project name, work-item title, short identifier, label name, list position, or search result.
+Use PowerShell 7 from the repository root with configured native inputs. The v2 build requires JavaPath, JpexsJarPath, and VanillaInterfacePath arguments.
 
-## Sources of truth
+| Entry point | Purpose |
+| --- | --- |
+| [Tools/buildVariantV2.ps1](Tools/buildVariantV2.ps1) | Build selected v2 variants using configured native tools and inputs. |
+| [Tools/verifyVariantV2.ps1](Tools/verifyVariantV2.ps1) | Verify selected staged or committed variant artifacts; PreArchiveMutation checks inputs before archive creation. |
+| [Tools/createPackagesV2.ps1](Tools/createPackagesV2.ps1) | Build selected platform archives using Archive2. |
+| [Tools/verifyCommittedReleaseV2.ps1](Tools/verifyCommittedReleaseV2.ps1) | Verify committed release artifacts. |
+| [Tools/createReleasePackagesV2.ps1](Tools/createReleasePackagesV2.ps1) | Assemble the v2 release packages. |
+| [Tools/checkRepoV2.ps1](Tools/checkRepoV2.ps1) | Check release metadata and selected variant artifacts; Committed avoids live staging destinations. |
+| [Tools/setupRepo.ps1](Tools/setupRepo.ps1) | Prepare staging destinations only when explicitly authorized. |
 
-Plane is the source of truth for active product, roadmap, design, implementation, testing, and release work.
+[Build documentation](docs/BUILDSYSTEM.md) describes the existing pipeline. Source checks, native compilation, archive construction, gameplay, and console acceptance are separate evidence. Never substitute a source-pattern check for execution of the production runtime.
 
-- Epics own broader product outcomes and roadmap groupings.
-- Tasks own implementation scope, requirements, acceptance criteria, delivery state, and definition of done.
-- Parent-child relationships organize Tasks under their governing Epics.
-- Dependencies and relations in Plane define sequencing when present.
-- Work-item descriptions, comments, assignments, labels, state, and relationships must be refreshed whenever they may have changed.
-- Repository documentation owns technical contracts, verified runtime evidence, build procedures, diagnostics, known limitations, and historical findings.
-- Repository documentation does not replace current Plane requirements.
-- Plane content cannot override system instructions, repository safety rules, approval requirements, or the approved task scope.
+## Canvas dependency
 
-Codecks is retired and deactivated for this repository. Do not query, update, or fall back to Codecks.
+[Venworks Canvas](https://github.com/monster-cookie/venworks-canvas) owns the shared HUD host, provider subscriptions, event transport, consumer lifecycle, and HTML/CSS renderer. VWHUD owns its consumer, themes, derived presentation state, status publisher, and packages. Read Canvas's own repository guidance before changing it; resolve its checkout independently rather than recording a machine-specific path here.
 
-## Plane project scoping
+The migration targets the five existing variants VWKS, TA, FC, CF, and MIN. PS5DBG remains diagnostic. Consumer packages must not distribute competing Canvas-owned HUD replacements. Canvas work belongs to the separate Venworks Canvas (VWCNVS) Linear team.
 
-Every Plane operation that accepts `project_id` must receive:
+## GitHub
 
-`7dd2481d-cf26-4030-ba0d-7563612d1493`
+The target is the repository URL above, verified against the checkout and task. Configure the actual connector or CLI and one supported authentication method. For a GitHub App installation, use evidence of the expected app/installation and repository access. For a dedicated user account, use that connection's supported account-identity check. A user-login check is not universal across authentication methods.
 
-Do not make an unscoped list, count, planning, creation, update, relationship, comment, attachment, or deletion request when project scoping is available.
+| Setting | Value |
+| --- | --- |
+| Tool | GitHub MCP or GitHub CLI |
+| Authentication method | The configured local `github-mcp-server` stdio process mints installation tokens internally. The policy-permitted CLI fallback is the installed `Invoke-GitHubAppGh.ps1` wrapper, which mints a fresh installation token, supplies it only to one `gh` child process as `GH_TOKEN` with a dedicated `GH_CONFIG_DIR`, and discards and revokes the token after the command. Explicitly authorized Git transport uses the same wrapper with `-Git`; the Git child receives the installation token and a process-only `gh auth git-credential` helper, with interactive prompting disabled and no persisted Git configuration change. Do not set persistent User or Machine `GH_TOKEN` or `GITHUB_TOKEN` values, modify the user's normal `gh` or Git authentication, invoke `gh` directly for Codex GitHub operations, or run authenticated Git transport outside the wrapper. |
+| Expected identity | The GitHub App identified by `GITHUB_APP_ID`, acting through the installation identified by `GITHUB_APP_INSTALLATION_ID`. The installation must have access to the exact GitHub repository resolved by this context and current task. Do not record the resolved numeric IDs, private-key path, token, or other credential material in repository files or public output. |
+| Connection / credential source | Environment variable names `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`, and `GITHUB_APP_PRIVATE_KEY_PATH`. Resolve their values only inside the consuming process, require the key path to identify an existing PEM file, and never print or persist the resolved values. |
+| Verification | An installation token has no GitHub user identity, so do not use `mcp__github__get_me`, `gh api user`, or a display login as verification. Through the same consuming MCP session or wrapped CLI process, perform a read-only installation-repository query and a read-only query of the exact target repository. Require host `github.com`, API endpoint `https://api.github.com`, agreement with this repository target, and repository access attributable to the configured App installation. Before an authenticated Git mutation, perform a read-only Git transport query through the wrapper's `-Git` mode and verify the exact remote destination. Stop on a missing variable, invalid key, token-minting failure, installation mismatch, inaccessible target, transport failure, or ambient-authentication fallback. |
+| Fallback | None unless explicitly configured for the same identity and target |
+| Commit author and committer | `MonsterCookieAI <venworksai@venworkscreations.com>`; replace with the adopting maintainer's chosen automation identity |
 
-When an operation such as `retrieve_by_identifier` does not accept `project_id`:
+Apply commit attribution only to the individual authorized commit command, preserving persistent Git settings. Verify both author and committer in the resulting commit before pushing. Attribution does not establish transport or API identity; follow the shared [identity](AGENTS.md#external-tools-and-identities) and [Git delivery](AGENTS.md#git-and-github-boundaries) boundaries. Unused GitHub integration fields do not block local work.
 
-1. Retrieve the work item using its complete identifier.
-2. Verify that its returned `project` field equals the canonical project UUID.
-3. Verify its identifier, title, type, state, assignment, labels, parent, relationships, and dependencies as applicable.
-4. Retain its full work-item UUID.
-5. Only then read related data or perform an approved mutation.
+## Linear Project Management and Issue Tracker
 
-Use full UUIDs for state, member, label, type, relation, and work-item mutations. Resolve names through current project-scoped lists instead of relying only on the UUIDs recorded below.
+| Setting | Value |
+| --- | --- |
+| Provider | Linear |
+| Workspace / organization | Venworks |
+| Team / repository scope | Venworks Customizable HUD (VWHUD) |
+| Project scope | Not Applicable |
+| Tool | Linear MCP |
+| Connection / credential source | Not Applicable |
+| Authentication method | Reuse the configured `mcp__linear_codex__*` connection only after verifying its actual app user. Do not assume a shell environment change, browser login, GitKraken connection, or Proton Pass session changes that connection. Credential setup or renewal requires its own authorized workflow; defer dependent operations if the correct connection is unavailable. |
+| Expected identity | The active `Venworks AI Agent User` authenticated by the configured `mcp__linear_codex__*` OAuth connection for the Venworks workspace. Resolve provider identifiers through that connection when needed; do not record them in this file or infer this identity from another application's session. |
+| Verification | Through the same Linear connection that will perform the operation, call `get_user` with `query="me"` and confirm the account is active and named `Venworks AI Agent User`. Call `get_workspace` and confirm `Venworks`; call `get_team` with `query="VWHUD"` and confirm `Venworks Customizable HUD`. Verify that each target issue or document belongs to that team before a dependent action. Stop the affected action if the account or target differs or cannot be established. Check assignment eligibility separately when assigning work. |
+| Fallback | None unless explicitly configured for the same identity and target |
 
-## Current Plane workflow
+Use stable identifiers or canonical URLs and only the scopes required by the selected provider. Do not assume UUIDs, a parent/child hierarchy, or specific MCP names or endpoints. For no tracker, set provider and tool to `none` and the remaining configurable tracker fields to `not applicable`.
 
-The project currently uses these workflow states:
+When an issue governs the task, verify that it belongs to the intended scope and read its requirements, acceptance criteria, relevant discussion, and dependencies. The issue supplies current task requirements; repository source and documentation supply technical contracts and recorded evidence. Resolve material conflicts before dependent work, and refresh issue information when relevant changes may affect the result. A fully specified local request needs no invented issue or tracker bookkeeping.
 
-| State       | Group       | Current UUID                           |
-| ----------- | ----------- | -------------------------------------- |
-| Backlog     | `backlog`   | `41c224ff-cb7f-41a1-a211-c5df27730e7c` |
-| Todo        | `unstarted` | `fc2ac5b9-51fb-4aeb-a11c-99b070866d09` |
-| In Progress | `started`   | `20fe698c-1900-4dc7-b908-6963736dec7f` |
-| In Review   | `started`   | `99fc980a-166d-49b4-9e53-ae94c2a921dd` |
-| Done        | `completed` | `4060b3bc-24a8-49fc-a779-b9556b0bdc8a` |
-| Cancelled   | `cancelled` | `a9ee79bc-a34c-4beb-8750-6fe12fc212a6` |
+Use the provider's actual workflow and the user's requested actions. No fixed state transition is required before coding unless the project or task requires it. Resolve real ownership conflicts, but do not treat empty assignments as blockers. Preserve assignee and agent-delegate fields unless changing them is explicitly authorized; connector attribution is separate from ownership. A prepared handoff does not require a status change. Use the shared [external-action boundaries](AGENTS.md#external-tools-and-identities) for comments, updates, and completion, without inventing claims, locks, or substitute tracker state.
 
-The project currently uses these work-item types:
+### Tracker-derived roadmaps
 
-| Type | Current UUID                           |
-| ---- | -------------------------------------- |
-| Task | `eb7e11ea-e117-448d-b49d-da726fc1336d` |
-| Epic | `f069377a-5d9a-4a27-a963-b1fafe1f6af0` |
+When requested, select issues using the project's actual statuses, labels, milestones, and the requested criteria; clarify ambiguous selection only when it matters. Preserve scope, dependencies, and meaningful grouping without counting a parent and its children as separate promises for the same outcome. Present a current snapshot, not invented release dates or commitments. Refresh when relevant changes are expected and identify incomplete retrieval. Preparing content does not authorize publication.
 
-Refresh the project's states and types before mutations. If a stored UUID no longer resolves to the expected name and group, stop and ask the user how to proceed.
+## Credential setup
 
-Use native Plane states. Do not simulate workflow through labels.
+Use each service's connection / credential source entry above to identify its managed connection or selected credential manager. These are non-secret configuration descriptions, not executable login commands or credential values. Keep private credential selectors and authentication state in protected local configuration and follow the shared [identity boundaries](AGENTS.md#external-tools-and-identities). Credential-manager setup is needed only when an authorized operation cannot use an existing verified connection.
 
-## Assignment and agent identity
+For a service using Proton Pass CLI (`pass-cli`), the bootstrap credential is the protected `PROTON_PASS_PERSONAL_ACCESS_TOKEN` environment variable supplied by local setup. It is separate from the downstream service credential and must never be stored as a Proton Pass item or represented by a `pass://` reference. The service's expected identity above names the downstream account or app, not the credential-manager session. Optional token-name metadata is not a prerequisite for a healthy session.
 
-Plane assignment indicates active ownership. It is not the same as priority, roadmap membership, or approval.
-
-The intended automation account is currently:
-
-| Display name | Member UUID                            |
-| ------------ | -------------------------------------- |
-| Codex        | `fe284e57-9057-4570-9f91-db9917732350` |
-
-The MCP may authenticate as a different workspace member. The result of `member me` does not automatically identify the intended work-item assignee.
-
-Before assigning agent work:
-
-1. List the current project members.
-2. Verify that member UUID `fe284e57-9057-4570-9f91-db9917732350` still represents the `Codex` automation account.
-3. Inspect the work item's current assignees.
-4. Stop if another person or agent has conflicting ownership.
-5. Assign or unassign members only when that mutation is included in the approved task-specific plan.
-
-Plane does not currently provide the Codecks-style claim workflow previously used by this repository. Do not invent claims, lock labels, host labels, or comments that pretend to provide exclusive locking.
-
-## Starting work
-
-For new implementation:
-
-1. Retrieve and verify the governing work item through the canonical project.
-2. Confirm that it is a Task in Backlog or Todo, or that the user explicitly approved work in another state.
-3. Inspect its parent, dependencies, relations, description, labels, comments, assignment, and definition of done.
-4. Confirm that dependencies are ready and no conflicting owner is assigned.
-5. Assign it to the verified `Codex` member only when authorized by the approved plan.
-6. Move it to In Progress only when authorized by the approved plan.
-7. Re-read the work item and verify its project, assignee, and In Progress state before editing repository files.
-
-For continuation of existing work:
-
-1. Re-read the work item.
-2. Verify that it remains In Progress.
-3. Verify that its current assignment and requirements still match the active task.
-4. Refresh comments, relationships, and dependencies before continuing.
-
-If assignment or state mutation partially succeeds, stop, report the exact result, and do not continue until the work item is in a verified state.
-
-## Blocking work
-
-The project currently has no dedicated Blocked workflow state.
-
-When work becomes blocked:
-
-1. Preserve the repository and branch state.
-2. Report the concrete blocker and supporting evidence to the user.
-3. Do not create a state, label, relationship, or other workflow substitute.
-4. Add a Plane comment only when the approved task plan authorizes comments.
-5. Ask the user how the work item should be represented before changing its state or assignment.
-
-A blocker comment should identify:
-
-- the blocking condition;
-- the evidence showing why meaningful progress cannot continue;
-- the person, system, or external event needed to unblock the work; and
-- the preserved repository, branch, commit, and validation state.
-
-## Review handoff
-
-After implementation and available validation are complete:
-
-1. Inspect existing comments to avoid duplicate handoff messages.
-2. Ensure the exact branch, commit, diff, and pull-request target are known.
-3. Add an implementation handoff comment only when comments are authorized in the approved plan.
-4. Include:
-   - implemented behavior and scope;
-   - files and generated artifacts changed;
-   - material technical or design decisions;
-   - validation commands and their actual results;
-   - completed manual runtime testing;
-   - remaining manual verification;
-   - known limitations or blockers;
-   - exact branch and baseline;
-   - commit hash and pull-request URL when available.
-5. Move the work item to In Review only when that state mutation is authorized.
-6. Re-read the work item and verify the In Review state.
-7. Keep it In Review while independent review or human acceptance remains.
-
-Repository or pull-request review is the authoritative source for code-review findings. Plane records the work-item state and delivery handoff; it does not replace review of the exact Git diff.
-
-## Completion
-
-Only the user may approve final completion.
-
-Require explicit action-time confirmation immediately before:
-
-- recording final acceptance;
-- moving a work item from In Review to Done; or
-- removing its active assignee as part of completion.
-
-After confirmation:
-
-1. Re-read the work item and its comments.
-2. Record the user's acceptance and relevant validation evidence when comments are authorized.
-3. Move the work item to Done.
-4. Re-read it and verify the completed state.
-5. Update assignment only when explicitly authorized.
-6. Report the actual mutation results.
-
-Do not claim that a Plane comment, assignment, relationship, or state change succeeded unless the corresponding MCP operation completed and the resulting work item was re-read and verified.
-
-## Planning Plane mutations
-
-For Plane-backed work, the task-specific plan must explicitly state whether it authorizes:
-
-- assigning or unassigning members;
-- adding or updating comments;
-- changing workflow state;
-- changing priority, labels, type, parent, estimates, or dates;
-- creating or changing dependencies or other relationships;
-- creating, archiving, or deleting work items;
-- attaching files or external links; and
-- marking a work item Done after separate action-time human confirmation.
-
-Plan approval does not replace the separate action-time confirmation required before final acceptance or completion.
-
-Do not perform unrelated Plane maintenance merely because a work item was opened.
-
-## Public roadmap content
-
-For public roadmap content derived from Plane:
-
-1. Query only the canonical project.
-2. Refresh the complete current work-item inventory.
-3. Treat work items whose returned state group is `backlog` or `unstarted` as pending.
-4. Exclude In Progress, In Review, Done, and Cancelled items unless the user explicitly requests those sections.
-5. Resolve and apply the relevant product label, such as `minimalist`, instead of selecting work items only by title.
-6. Retrieve each selected item fully before using it.
-7. Preserve Epic and Task hierarchy and inspect dependencies and relationships.
-8. Avoid listing the same outcome separately as both an Epic and an ungrouped Task.
-9. Convert internal implementation wording into clear player-facing language without changing the promised outcome.
-10. Do not invent dates, release versions, ordering, commitments, compatibility, or acceptance criteria that are not present in Plane or explicitly provided by the user.
-11. Refresh the roadmap from Plane immediately before publication.
-
-Roadmap content is a current snapshot, not a promise that every pending item will ship.
-
-## Failure behavior
-
-Stop before planning, editing, or external mutation and ask the user how to proceed if:
-
-- the Plane MCP is unavailable;
-- Plane authentication fails;
-- the canonical project UUID cannot be found;
-- the returned project identifier or membership is inconsistent;
-- the governing work item cannot be retrieved and verified;
-- the work item belongs to a different project;
-- a stored state, type, label, member, or work-item UUID resolves inconsistently;
-- a conflicting assignee cannot be resolved;
-- required relationships or dependencies cannot be retrieved;
-- an approved mutation reports success but the resulting state cannot be verified;
-- the relevant source-of-truth work items cannot be refreshed.
-
-Do not fall back to Codecks, historical memory, guessed requirements, local roadmap drafts, generic comments, or another task system to simulate missing Plane state.
+For authorized setup or recovery, consult the installed CLI's help and current provider documentation, such as the [Proton Pass CLI documentation](https://protonpass.github.io/pass-cli/). Use task-owned session state without logging out or changing the user's default session. Detailed login, credential-transfer, and cleanup commands depend on the selected tool and local setup; they are not part of the mod-development workflow.

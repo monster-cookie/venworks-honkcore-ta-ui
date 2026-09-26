@@ -1,4 +1,5 @@
 @{
+  CanvasConsumer = $true
   MovieProfile = 'shared'
   LayoutSource = 'Scaleform/shared/fixtures/chronomark-provider-probe.xml'
   ComponentSourceDirectory = ''
@@ -34,5 +35,5 @@
     'trackers-alliance.xml'
     'starfield.xml'
   )
-  PluginSourcePath = ''
+  PluginSourcePath = 'Scaleform/shared/legacy-plugin.esm'
 }

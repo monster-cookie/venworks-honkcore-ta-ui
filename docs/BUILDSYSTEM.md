@@ -1,5 +1,7 @@
 # Build system
 
+> V2 migration: the five themes now build as Canvas HTML/CSS consumers. See [Canvas theme consumers](CANVAS_MIGRATION.md) for dependencies, configuration, packaging and pending runtime acceptance. The legacy XML and standalone Scaleform descriptions below remain the v1 reference.
+
 ## PowerShell static analysis
 
 GitHub Actions runs PSScriptAnalyzer 1.25.0 against the PowerShell sources under `Tools/`. Install the same pinned module version and run the analyzer from the repository root to reproduce the check locally:

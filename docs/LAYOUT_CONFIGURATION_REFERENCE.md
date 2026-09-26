@@ -1,5 +1,7 @@
 # Layout Configuration Reference
 
+> V2 migration: the five themes now build as Canvas HTML/CSS consumers. See [Canvas theme consumers](CANVAS_MIGRATION.md) for dependencies, configuration, packaging and pending runtime acceptance. The legacy XML and standalone Scaleform descriptions below remain the v1 reference.
+
 This is the complete reference for advanced players who want to adjust HUD placement, visibility, live values, meters, icons, reusable sections, and display filters. The rules below explain what can be changed safely and what the HUD will reject.
 
 The structural contract is

@@ -22,6 +22,7 @@ if (!(Test-Path Variable:Global:SharedConfigurationLoaded) -or !$Global:SharedCo
   . "$PSScriptRoot/sharedConfig.ps1" -SkipEnvironment
 }
 Add-Type -AssemblyName System.IO.Compression.FileSystem
+. (Join-Path $PSScriptRoot 'sharedCanvasConsumers.ps1')
 
 function Assert-NotGitLfsPointer {
   param(
@@ -243,8 +244,10 @@ foreach ($variant in $variants) {
     if (!(Test-Path -LiteralPath $interfacePath -PathType Container)) {
       throw "$($variant.VariantName) is missing its Interface directory: $interfacePath"
     }
-    $layoutPath = Resolve-RequiredFile -Path (Join-Path (Join-Path $interfacePath "VenworksCUI") "layout.xml") -Description "$($variant.VariantName) loose layout"
-    $layoutFile = New-PackageFile -SourcePath $layoutPath -EntryName "Interface/VenworksCUI/layout.xml"
+    if (!(Test-CanvasConsumerVariant $variant.VariantKey)) {
+      $layoutPath = Resolve-RequiredFile -Path (Join-Path (Join-Path $interfacePath "VenworksCUI") "layout.xml") -Description "$($variant.VariantName) loose layout"
+      $layoutFile = New-PackageFile -SourcePath $layoutPath -EntryName "Interface/VenworksCUI/layout.xml"
+    }
     $looseFiles = @(
       Get-ChildItem -LiteralPath $interfacePath -Recurse -File -Force |
         Sort-Object -Property FullName |
@@ -253,12 +256,18 @@ foreach ($variant in $variants) {
           New-PackageFile -SourcePath $_.FullName -EntryName $relativePath
         }
     )
+    if (Test-CanvasConsumerVariant $variant.VariantKey) {
+      $looseFiles += @($pluginFile)
+      $looseFiles += @(Get-ChildItem -LiteralPath (Join-Path $stagingPath 'Scripts') -Recurse -File | ForEach-Object {
+        New-PackageFile -SourcePath $_.FullName -EntryName ([IO.Path]::GetRelativePath($stagingPath,$_.FullName))
+      })
+    }
   }
 
   $packages = @($packageSuffixes | ForEach-Object {
     $suffix = [string]$_
     $files = switch ($suffix) {
-      'Nexus PC - Normal' { @($pluginFile) + $windowsArchiveFiles + @($layoutFile); break }
+      'Nexus PC - Normal' { @($pluginFile) + $windowsArchiveFiles + @($layoutFile | Where-Object { $null -ne $_ }); break }
       'Nexus PC - Fully Loose Files' { $looseFiles; break }
       'Bethesda PC' { @($pluginFile) + $windowsArchiveFiles; break }
       'Bethesda Xbox' { @($pluginFile) + $xboxArchiveFiles; break }

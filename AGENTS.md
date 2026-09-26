@@ -1,127 +1,60 @@
-# Repository Agent Rules
+# Repository agent guidance
 
-These rules apply throughout the repository.
+Read [repository context](AGENT-REPO-CONTEXT.md) when establishing the task. It holds this repository's toolchain, integrations, and non-secret identity settings. Load an optional linked procedure only when the corresponding operation is needed.
 
-## Repository-specific context
+## Work on the requested outcome
 
-- Before asking task-specific clarifying questions, defining a goal, planning, using external project-management systems, or editing files, check for `AGENT-REPO-CONTEXT.md` in the repository root.
-- When present, read `AGENT-REPO-CONTEXT.md` completely and treat it as required repository-specific instructions, subordinate to this file and all higher-priority instructions.
-- Repository mappings, project identifiers, local paths, repository URLs, and external-system identities belong in `AGENT-REPO-CONTEXT.md`, not this shared instruction file.
-- Do not assume repository-specific rules, project identifiers, external systems, paths, or conventions from another repository.
-- If the repository-specific context declares an external source of truth, retrieve the relevant current information before planning or implementation.
-- If required repository context or its declared external source of truth cannot be read or verified, stop and ask the user how to proceed.
+- State the goal, intended changes, and relevant verification before edits. Scale the plan to the task; use a goal-tracking tool only when requested.
+- Use existing authorization. Ask when missing information changes correctness, scope, compatibility, or a consequential action; investigate routine implementation choices yourself. Analysis or a plan alone does not authorize implementation.
+- Inspect the real implementation and its consumers. Preserve established contracts and unrelated user changes. Include supporting changes necessary for a complete result, without speculative abstractions or unrelated cleanup.
+- Missing runtime access limits what can be validated. It does not by itself prevent a well-supported implementation. Stop dependent work only when missing requirements or technical evidence prevent a sound decision; continue independent work.
+- Retrieve current external requirements when they govern the task. A configured tracker alone does not make every local task tracker-dependent. Use the [configured tracker and conventions](AGENT-REPO-CONTEXT.md#linear-project-management-and-issue-tracker) when needed.
+- Propose changes to agent-instruction files before editing them; apply only explicitly approved changes. New third-party dependencies, frameworks, build tools, package managers, and CI actions also require explicit approval.
 
-## Questions, goals, and approval
+## Verification and communication
 
-- Before planning or editing files, ask the user clarifying questions to confirm the goal, scope, constraints, and definition of done.
-- State a concrete goal for the task. Use the available goal-tracking mechanism when one is available; otherwise include a clearly labeled goal in the response.
-- Always produce a plan and wait for explicit user approval before editing files.
-- Use `AGENT-PLAN-TEMPLATE.md` when present.
-- After approval, make only the approved edits.
-- Stop and ask before editing additional paths, changing the goal, or expanding the approved scope.
-- Stop and ask the user how to proceed when uncertain or before trying an approach that is new to the codebase. Explain the uncertainty or proposed approach and wait for explicit approval before continuing.
+Choose proportionate checks that can detect defects in the delivered implementation. Prefer existing tests and tools; add a regression test when it exercises the relevant production contract. Do not recreate production logic in another language merely to test the recreation. Ask whether the relevant production behavior could be broken while a proposed test still passes, and improve the assertion or narrow its claimed coverage. A source-pattern check establishes only that pattern; a separate model establishes only the model's behavior.
 
-## Repo-wide safety rules
+Run the narrowest relevant checks and expand for changed interactions, failures, or concrete uncovered risks. Reuse passing results while their inputs remain unchanged. Do not create a framework, fixture collection, or permanent report to satisfy a workflow stage.
 
-- Git and GitHub mutations are governed exclusively by the Git and GitHub boundaries section below.
-- Never edit `AGENTS.md`, `AGENTS.override.md`, `AGENT-PLAN-TEMPLATE.md`, or other agent-instruction files directly. Propose the changes and wait for explicit approval.
-- Keep changes surgical and consistent with existing patterns and naming.
-- Avoid unrelated formatting churn, project-wide cleanup, or broad rewrites.
-- Do not introduce new third-party dependencies, frameworks, build tools, package managers, or CI actions without explicit approval in the plan.
-- Do not claim build, test, packaging, migration, import, or validation success unless the command actually ran successfully.
-- If validation cannot run, report the exact command, the failure or blocker, and whether it appears environmental.
-- Do not add secrets, credentials, tokens, connection strings, private keys, personal paths, or machine-specific data to source files, documentation, test fixtures, logs, generated output, or workflow files.
+Report the result, relevant checks actually performed, and material limitations. Source inspection, compilation, packaging, runtime behavior, and platform acceptance establish different things. Never claim a check passed unless it ran successfully. When a check fails or cannot run, report the command or action and concrete reason. Give a supported manual scenario and expected observation when that helps resolve a runtime gap; do not invent commands or test names. A separate testing guide is useful only when the reader needs additional instructions.
 
-## Markdown line wrapping
+Describe the final behavior and actual validation in PRs using the repository's template when present. Use a small diagram with real component names only when it makes a relationship clearer than prose. Keep it aligned with the final implementation and use existing rendering tools when needed; a simple change does not need a diagram or a new rendering service.
 
-- Never hard-wrap Markdown prose at a fixed column width.
-- Keep each paragraph and list item on one physical line, regardless of length.
-- Let Markdown renderers wrap text responsively.
-- Use line breaks only for semantic structure, such as headings, separate paragraphs, lists, tables, and code blocks.
-- Do not reflow existing Markdown unless explicitly requested.
+Use `.work` for disposable project artifacts when practical. Keep secrets and authentication state out of the repository and reports.
+
+Before retrying an interrupted edit or external action, inspect the resulting state. An uncertain outcome is not evidence that nothing happened.
+
+## External tools and identities
+
+Use the service configuration in [repository context](AGENT-REPO-CONTEXT.md). Verify the intended target and expected identity through the actual consuming connection before authenticated operations; do not infer the expected account solely from the active session. Reuse a correct session and reverify after authentication or target changes or ambiguous failures. Ordinary local inspection does not require credential discovery, and unavailable access blocks only dependent work.
+
+Preserve personal browser, GitKraken, and ordinary CLI sessions. Use dedicated connections or process-scoped credentials for authorized setup and only explicitly permitted fallbacks with the same identity and target. Never silently switch to a personal account. Supply secrets through protected channels to the consumer, not through model-visible output, command arguments, logs, or repository files. A password-manager login does not verify a downstream account. Git authorship, Git transport, and hosting API authentication are separate boundaries; verify each when used.
+
+When injecting credentials into a child process, explicitly limit its environment to required settings and credentials; exclude unrelated secrets, credential references, and manager bootstrap tokens the consumer does not need. Output masking does not replace this isolation. Clean up only session state and temporary credentials owned by the task.
+
+Local editing permission does not authorize external messages, record updates, publication, or completion. Perform only the actions authorized by the request or approved plan, verify their target, and read back the result. Record completion only when authorized and its criteria are met; a build or PR alone does not establish human acceptance. Preserve unrelated ownership fields and settings. Pass relevant configuration and authorization to workers only when delegation is part of the task, without making them rediscover unrelated setup.
 
 ## Git and GitHub boundaries
 
-### Read-only inspection
+These boundaries govern repository Git delivery. Tool configuration supplies identity and target information, not additional authorization.
 
-- Clearly read-only Git and GitHub inspection commands are allowed without case-by-case approval when needed to understand repository state, history, tracked files, CI results, pull requests, or repository configuration.
-- Permitted read-only Git commands include:
-  - `git status`
-  - `git diff`
-  - `git log`
-  - `git show`
-  - `git blame`
-  - `git ls-files`
-  - `git rev-list`
-  - `git rev-parse`
-  - `git branch --show-current`
-  - `git symbolic-ref`
-  - `git cat-file`
-  - `git grep`
-  - `git remote -v`
-  - `git submodule status`
-- Permitted read-only GitHub operations include repository, workflow-run, check, issue, pull-request, ruleset, branch-protection, and security-setting queries. GitHub API calls must use read-only methods such as `GET`.
+- Read-only Git and GitHub inspection is allowed when relevant to the task.
+- Before Git or GitHub mutations, verify the current branch. Treat `main`, `master`, `trunk`, and the remote default branch as protected. Use `refs/remotes/origin/HEAD` to establish the default when available; if the branch or required destination cannot be established, stop the affected mutation.
+- Do not edit on a protected branch without explicit approval of that exceptional scope. Never commit or push directly to a protected branch.
+- Creating and switching to a working branch requires an approved task-specific plan naming the exact branch, intended base, and both operations. Verify the base commit, target branch, and working-tree state first. Prefer the `codex/` prefix and preserve unrelated changes.
+- Local editing does not authorize staging, committing, pushing, or PR operations. When the request or approved plan explicitly authorizes delivery, perform those steps without repeated confirmation on the selected non-protected branch.
+- Stage explicit task-owned paths or hunks. Inspect the full staged diff and status before committing; preserve unrelated staged, unstaged, and untracked work.
+- Push only the current working branch to the same-named branch on `origin`, setting its upstream only when authorized delivery needs it. Verify the destination is not protected. PRs must use that working branch as head and the protected default branch as base; create only ready-for-review PRs. Update only the task's PR within authorization.
+- Never force-push, push tags, delete remote refs, merge/close/approve PRs, or delete/rename branches. Do not create/delete tags or stashes, or modify remotes, persistent repository configuration, hooks, worktrees, submodules, branch protection, rulesets, secrets, releases, or repository settings.
+- Merge, rebase, cherry-pick, revert, reset, amend, restore, and file checkout require separate explicit approval in the task-specific plan. Do not use them to hide or discard unrelated work.
 
-### Protected branches
+For authorized delivery, inspect the base-to-head and outgoing history as well as the complete diff so unrelated commits are not published. Check the staged candidate with relevant tools; if unrelated local files could affect the result, resolve or report that limitation. Inspect the resulting commit and any hook changes, refreshing affected checks without bypassing required failures. If ownership or history cannot be separated within authorization, report the blocker rather than creating a worktree or rewriting history as a workaround.
 
-- Treat the repository's remote default branch as protected.
-- Always treat branches named `main`, `master`, and `trunk` as protected, even if one is not currently the remote default.
-- Before any Git or GitHub mutation, determine the current branch with `git branch --show-current`.
-- Determine the remote default branch from `refs/remotes/origin/HEAD` when available.
-- If the current branch is empty, detached, or cannot be determined confidently, do not perform mutations and stop for user direction.
-- If the current branch is protected, do not edit, commit to, or push it. The agent may create and switch to a non-protected working branch only when the exact branch name, intended base, and branch-creation steps are included in an approved task-specific plan.
-- Do not make implementation edits directly on a protected branch unless the user explicitly approves that exceptional scope. Even with approval to edit, never commit directly to or push directly to a protected branch.
+Verify the remote commit and the PR's head, base, URL, and ready status before reporting successful delivery. Report the commit, pushed branch, and PR link as applicable. Assign one delivery owner when multiple workers are involved. If delivery was not authorized, leave the result local; provide a suggested commit message when useful. Do not manufacture an empty commit or PR for a no-change result.
 
-### Allowed working-branch delivery
+## File and Markdown conventions
 
-- On a non-protected working branch that was either already selected or created and selected under an approved task-specific plan, the agent may perform the following operations only when they are listed in that plan:
-  - stage files within the approved task scope;
-  - create new commits containing only the approved changes;
-  - push the current branch to a same-named branch on `origin`;
-  - set the upstream for that same-named remote branch when necessary;
-  - create a draft pull request from the current working branch into the protected default branch;
-  - update the title or description of the pull request created for the current task.
-- Once the user approves a plan containing these delivery steps, no additional case-by-case confirmation is required for those listed operations.
-- Stage explicit approved paths. Do not use `git add .`, `git add -A`, or equivalent broad staging unless inspection confirms that every included change belongs to the approved task.
-- Before committing, inspect `git status --short` and the staged diff.
-- Before pushing, verify again that the destination is the same-named working branch and is not protected.
-- Before opening a pull request, verify that its head is the current working branch and its base is the protected default branch.
-- Create pull requests as drafts unless the user explicitly requests a ready-for-review pull request.
+When a source file grows beyond roughly 500 lines, consider decomposition by responsibility. Avoid mechanical splits of generated, data-heavy, or intentionally centralized files. Preserve behavior, APIs, and local structure.
 
-### Always prohibited
-
-- Never commit directly to, push directly to, or force-update a protected branch.
-- Never push the current commit to a differently named remote branch.
-- Never use `--force`, `--force-with-lease`, remote ref deletion, or tag pushing.
-- Never merge, close, or approve a pull request.
-- Never merge, rebase, cherry-pick, revert, reset, amend, restore, or check out files unless separately and explicitly approved in the task-specific plan.
-- The agent may create and switch to a non-protected working branch only when the exact branch name and both operations are listed in an approved task-specific plan. Before doing so, verify the current branch, remote default branch, intended base commit, target branch name, and worktree state; confirm the target is not protected; and preserve unrelated changes. Use the `codex/` prefix by default unless the user approves another name.
-- Never delete or rename branches.
-- Never create or delete tags or stashes.
-- Never modify remotes, repository configuration, hooks, worktrees, submodules, branch protection, rulesets, secrets, releases, or repository settings.
-- Preserve unrelated staged, unstaged, and untracked user changes.
-- If any required branch or destination check fails, stop before mutation and report the exact blocker.
-
-## Delivery and commit-message handoff
-
-- If the approved plan authorizes working-branch delivery, stage only approved paths, create the commit, push the same-named working branch, and create or update its draft pull request.
-- Report the resulting commit hash, pushed remote branch, and pull-request URL.
-- Do not claim that a commit, push, or pull request succeeded unless the corresponding command actually completed successfully.
-- If delivery is not authorized, provide a suggested Git commit title and body instead of staging or committing.
-- Use a concise imperative commit title that summarizes the goal.
-- In the body, summarize the major implementation, configuration, documentation, staging, and validation changes.
-- When providing a suggested commit message, format the title and body in separate code blocks for easy copying.
-
-## Planning requirements
-
-Before edits, produce a plan containing:
-
-- Scope and intent.
-- Exact file paths expected to change.
-- A code-level checklist.
-- UI impacts, if any. Exclude this when it does not apply.
-- Data model, persistence, or schema impacts, if any. Exclude this when it does not apply.
-- Configuration, environment variable, path, logging, dependency injection, or workflow impacts, if any. Exclude this when it does not apply.
-- Documentation impacts, or the exact statement: `Documentation impacts: None.`
-- Risks and rollback notes.
-- A validation plan with specific commands or manual checks.
+Keep Markdown paragraphs and list items on one physical line. Use line breaks for semantic structure, not fixed-width wrapping. Do not reflow unrelated prose.
