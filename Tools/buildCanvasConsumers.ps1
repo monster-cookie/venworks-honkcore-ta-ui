@@ -76,7 +76,7 @@ function CopyResources([string]$Entry,[string]$Destination) {
     [void](RequiredFile $source)
     $target = Join-Path $Destination $relative
     New-Item -ItemType Directory -Force ([IO.Path]::GetDirectoryName($target)) | Out-Null
-    Copy-Item -LiteralPath $source -Destination $target
+    [IO.File]::WriteAllBytes($target,(Get-CanvasResourceBytes $source))
     if ($relative.EndsWith('.html')) {
       $text = [IO.File]::ReadAllText($source)
       foreach ($match in [regex]::Matches($text,'(?:src|href|data-vw-assets)="([^"]+)"')) {

@@ -1,6 +1,12 @@
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
+function Get-CanvasResourceBytes([string]$Path) {
+  # Match the repository's LF resource contract even before Git normalizes a local edit.
+  $text = [IO.File]::ReadAllText($Path).Replace("`r`n","`n").Replace("`r","`n")
+  return ,([Text.UTF8Encoding]::new($false).GetBytes($text))
+}
+
 function Test-CanvasConsumerVariant([string]$Key) {
   $consumerProfilePath = Join-Path $PSScriptRoot "../Scaleform/variants/$Key/build.psd1"
   if (!(Test-Path -LiteralPath $consumerProfilePath)) { return $false }
@@ -112,7 +118,8 @@ function Assert-CanvasConsumerPayload([string]$RepositoryRoot,[string]$Key,[stri
     if (!(Test-Path -LiteralPath $path -PathType Leaf) -or (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash -cne $record.Files[$relative]) { throw "Consumer artifact differs from build evidence: $Key/$relative" }
   }
   foreach ($relative in $resources.Keys) {
-    if ((Get-FileHash -LiteralPath $resources[$relative] -Algorithm SHA256).Hash -cne $record.Files[$prefix+$relative]) { throw "Stale consumer resource: $Key/$relative" }
+    $sourceHash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData((Get-CanvasResourceBytes $resources[$relative])))
+    if ($sourceHash -cne $record.Files[$prefix+$relative]) { throw "Stale consumer resource: $Key/$relative" }
   }
   foreach ($movie in @('normal.swf','large.swf')) {
     $path = Join-Path $Payload ($prefix+$movie)
@@ -129,6 +136,8 @@ function Assert-CanvasConsumerPayload([string]$RepositoryRoot,[string]$Key,[stri
   $archiveNames = @()
   if ($Archives) {
     $archivePayload = @($expected | Where-Object { $_ -notlike '*.esm' })
+    $archiveSources = [Collections.Generic.Dictionary[string,string]]::new([StringComparer]::OrdinalIgnoreCase)
+    foreach ($relative in $archivePayload) { $archiveSources.Add($relative,(Join-Path $Payload $relative)) }
     foreach ($suffix in @('Main','Main_XBox','Main_PS')) {
       $archiveName = [IO.Path]::GetFileNameWithoutExtension($plugins[0])+" - $suffix.ba2"
       $archiveNames += $archiveName
@@ -138,7 +147,8 @@ function Assert-CanvasConsumerPayload([string]$RepositoryRoot,[string]$Key,[stri
       if (($wanted -join "`n") -cne ($actual -join "`n")) { throw "Consumer archive inventory mismatch: $Key/$suffix" }
       foreach ($entry in $entries) {
         if ($entry.PackedSize -ne 0) { throw "Consumer archives require uncompressed General entries: $Key/$suffix" }
-        $staged = Join-Path $Payload $entry.Name
+        # Archive2 lowercases names; use the declared path on case-sensitive checkouts.
+        $staged = $archiveSources[$entry.Name.Replace('\','/')]
         if ((Get-ByteArraySha256 -Bytes (Read-GeneralBa2EntryBytes -Entry $entry)) -cne (Get-FileHash -LiteralPath $staged -Algorithm SHA256).Hash) { throw "Consumer archive bytes differ: $Key/$suffix/$($entry.Name)" }
       }
     }
