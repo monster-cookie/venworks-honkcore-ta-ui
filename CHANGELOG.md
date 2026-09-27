@@ -22,6 +22,7 @@
 - Now requires Venworks Canvas 1.0.4 and Venworks Core Utilities 2.1.8.
 - Give the theme document a relative body so absolute panels have the containing block Canvas requires. A static body fails the theme with `absolute-containing-block-required`.
 - Publish favorite slots as `favorite.slot01` through `favorite.slot12`. The previous rewrite left the literal key `favorite.slot$1.hotkey`, which Canvas rejects.
+- Name the publish stage on a ready-callback failure. The chronomark shows `PUBLISH model`, `flags`, `effects`, `present`, or `setdata` with the Canvas access path.
 
 ## Version 2.0.19 (September 1, 2026)
 

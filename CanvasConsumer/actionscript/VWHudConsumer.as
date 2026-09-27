@@ -106,15 +106,36 @@ package
       private function publish() : void
       {
          if(this.bridge == null || this.model == null) return;
-         var data:Object = this.model.snapshot();
-         var flags:Object = this.conditions.snapshot();
-         var status:Object = this.effects.view();
-         for(var name:String in flags) data[name] = flags[name];
-         for(name in status) data[name] = status[name];
-         data["hudopacity"] = isFinite(this.conditions.hudOpacity) ? this.conditions.hudOpacity : 1;
-         data["theme.logo"] = VWHudVariant.LOGO;
-         VWHudPresentation.update(data,this.model.currentTacticalAwarenessData,this.model.currentCompassData,this.scannerStep);
-         this.bridge.setData(data);
+         var data:Object = null;
+         var flags:Object = null;
+         var status:Object = null;
+         try { data = this.model.snapshot(); }
+         catch(error:*) { throw this.stageError("model",error); }
+         try { flags = this.conditions.snapshot(); }
+         catch(error:*) { throw this.stageError("flags",error); }
+         try { status = this.effects.view(); }
+         catch(error:*) { throw this.stageError("effects",error); }
+         try
+         {
+            for(var name:String in flags) data[name] = flags[name];
+            for(name in status) data[name] = status[name];
+            data["hudopacity"] = isFinite(this.conditions.hudOpacity) ? this.conditions.hudOpacity : 1;
+            data["theme.logo"] = VWHudVariant.LOGO;
+            VWHudPresentation.update(data,this.model.currentTacticalAwarenessData,this.model.currentCompassData,this.scannerStep);
+         }
+         catch(error:*) { throw this.stageError("present",error); }
+         try { this.bridge.setData(data); }
+         catch(error:*) { throw this.stageError("setdata",error); }
+      }
+
+      private function stageError(stage:String, error:*) : Error
+      {
+         var text:String = "error";
+         try { text = String(error); }
+         catch(ignored:*) { text = "unprintable"; }
+         if((text.indexOf("1069 ") == 0 || text.indexOf("PUBLISH ") == 0) && error is Error) return error as Error;
+         if(text.length > 70) text = text.substr(0,67) + "...";
+         return new Error("PUBLISH " + stage + " | " + text);
       }
    }
 }
