@@ -1,0 +1,55 @@
+# Canvas theme consumers
+
+The five VWHUD themes are implemented as Canvas HTML/CSS/SVG consumers on `VWCANVAS_HTML/2`. The standalone XML/Scaleform runtime and PS5 diagnostic variant were unreleased development paths and have been removed. Every shipped theme now has one architecture and one release pipeline.
+
+## Ownership
+
+| Concern | Owner and source |
+| --- | --- |
+| Consumer registration, lifecycle, snapshots, and provider-derived presentation | [VWHudConsumer.as](../CanvasConsumer/actionscript/VWHudConsumer.as) and related classes under [CanvasConsumer/actionscript](../CanvasConsumer/actionscript) |
+| Effect discovery, catalogs, retry, refresh, and publication | [HudEffectsPublisher.psc](../Papyrus/Venworks/CustomizableHUD/HudEffectsPublisher.psc) |
+| Start-game registration quest and UI-load reconciliation | [HudRegistrar.psc](../Papyrus/Venworks/CustomizableHUD/HudRegistrar.psc) |
+| Theme entry documents and identity | [CanvasConsumer/variants](../CanvasConsumer/variants) |
+| Shared HTML, CSS, SVG, and artwork | [CanvasConsumer/resources](../CanvasConsumer/resources) |
+| Real theme plugin records | [Spriggit](../Spriggit) |
+| Shared hosts, provider acquisition, event transport, HUD targets, and rendering | External Venworks Canvas dependency |
+
+The local `CanvasConsumer` directory contains only VWHUD-owned consumer implementation. It does not copy Canvas's host, HTML parser, renderer, registry, Example content, ESM, or player/ship HUD replacements.
+
+## Runtime asset root
+
+Canvas currently requires every consumer to install beneath an isolated directory:
+
+```text
+Interface/VenworksCanvas/Consumers/<consumer-namespace>/
+```
+
+VWHUD uses `venworks.vwhud.<variant>`. The ESM's `NormalMoviePath` and `LargeMoviePath` omit the leading `Interface/` because the host resolves those URLs relative to Starfield's Interface directory. The BA2 and loose packages use the complete path.
+
+This prefix is an enforced Canvas loader contract rather than an indication of file ownership. Each namespace directory contains the add-on's own SWFs, HTML, CSS, SVG, and local assets. The isolated root makes relative resource resolution deterministic and prevents a document from escaping into another consumer's files. A different root would require a coordinated Canvas contract change; it cannot be selected by a VWHUD package alone.
+
+## Presentation and data
+
+The four full themes share `themed.html`; Minimalist uses `minimalist.html` and its reduced composition. Standard SVG elements and attributes define vector artwork. Canvas owns display objects and provider acquisition. VWHUD owns tactical meaning, theme selection, compact status pages, and the snapshots supplied to Canvas.
+
+The full themes retain 18 unique provider channels and Minimalist retains 14. Removing the earlier status renderer does not remove inputs still used for environment or threat calculations.
+
+## Status effects
+
+Each theme publishes complete `effects.state` snapshots to `venworks.vwhud.<variant>.status` using schema `1`, `ci-ascii`, `startup: "latest"`, and Canvas's 4,096-character framed-event limit. The display renders eight entries per page with a six-second rotation and explicit waiting, empty, and count states.
+
+Candidate effect entries and source references remain separate from the submitted snapshot. Only `EVENT_SUBMITTED` commits the entries, references, signature, and timestamp. Missing prerequisites, invalid or oversized datagrams, and rejected sends retain the last submitted state and use a bounded half-second retry budget. An independent 60-second refresh remains armed even if no send succeeds. Save/load revisions reject stale scans and publish completions.
+
+The consumer retains the newest complete valid status event before its HTML bridge is ready and reapplies it after readiness or bridge replacement. Malformed and foreign-topic events do not clear the last valid state. Final unload clears state and timers and ignores late events until a new lifecycle begins. `EVENT_SUBMITTED` proves registry acceptance only; it is not a delivery acknowledgement from the SWF.
+
+## HUD controls and updates
+
+Themes declaratively suppress the Canvas HUD targets they replace. Canvas combines requests from multiple consumers, releases only the departing consumer's requests, follows engine-hidden state, and leaves game actions and shared event ingress active. Named native symbols, including the vehicle-exit glyph, remain host-owned adapters rather than copied controls.
+
+Frequent updates are ordinary changing inputs such as health, heading, and contact positions. Canvas validates each complete snapshot, retains existing display objects where possible, updates affected bindings in place, and reconciles repeated subtrees when their structure changes. Rejected data preserves the last valid display. These are implementation contracts, not measured latency or frame-rate claims.
+
+## Verification and acceptance
+
+The build compiles five consumer SWFs, two Papyrus scripts, and five real ESMs. Packaging produces 15 Main BA2 archives and 25 release ZIP shapes. Verification checks exact inventories, source evidence, resource bytes, SWF contracts, archive bytes, and ZIP contents. The lifecycle diagnostic under [CanvasConsumer/diagnostics](../CanvasConsumer/diagnostics) compiles separately and is excluded from packages.
+
+Runtime acceptance remains separate. Each exact candidate package requires archive-only PC and PS5 testing for normal and large HUD modes, aiming and scanner transitions, health and oxygen, compass and radar response, status application/removal/recovery/paging, vehicle input and glyphs, ship visibility controls, menus, death/reload, save/load, 4K/8K, and representative ultrawide placement. Sustained activity must also confirm stable object and timer behavior. VWHUD-32 through VWHUD-36 track per-theme acceptance.

@@ -1,57 +1,21 @@
-# Nexus Mods Listing Metadata
+# Nexus Mods listing metadata
 
 ## Public listing
 
 - Title: `Venworks Customizable HUD`
-- Summary: `An XML-customizable Starfield HUD with tactical player, equipment, environment, scanner, objective, and contact-radar displays supporting multiple themes and color palettes.`
+- Summary: `Five Venworks Canvas HTML/CSS/SVG HUD themes with tactical player, equipment, environment, scanner, objective, contact-radar, and status-effect displays.`
 - Category: `User Interface`
 - Release status: `Beta`
-- Version: Set only after the release branch is merged and tagged.
+- Required mods: Venworks Core Library and Venworks Canvas
 
-## Requirements and compatibility metadata
+## Nexus file display names
 
-- Required mods: None.
-- Remove the obsolete HONKCORE hard requirement.
-- Remove the obsolete HUD Info Widget soft requirement.
-- State that HONKCORE and other mods replacing `hudmenu.gfx`,
-  `hudmenu_lrg.gfx`, `hudmessagesmenu.gfx`, or `hudmessagesmenu_lrg.gfx` are
-  incompatible unless a purpose-built patch combines the changes. Load order
-  only selects which mod's changes are discarded; it does not make the movies
-  compatible.
-- Retain the old HONKCORE theme downloads in the Files section as legacy files.
-  Do not mark them as files for the new customizable HUD, and do not tell users
-  to install a legacy HONKCORE file alongside a new theme.
+Each theme publishes a Normal and Fully Loose Files package:
 
-## New-release file display names
+- `Venworks - HUD - CF Theme (Normal)` and `Venworks - HUD - CF Theme (Loose)`
+- `Venworks - HUD - FC Theme (Normal)` and `Venworks - HUD - FC Theme (Loose)`
+- `Venworks - HUD - TA Theme (Normal)` and `Venworks - HUD - TA Theme (Loose)`
+- `Venworks - HUD - Venworks Theme (Normal)` and `Venworks - HUD - Venworks Theme (Loose)`
+- `Venworks - HUD - Minimalist (Normal)` and `Venworks - HUD - Minimalist (Loose)`
 
-Each theme publishes two Nexus files:
-
-1. `Venworks - HUD - CF Theme (Loose)`
-2. `Venworks - HUD - CF Theme (Normal)`
-3. `Venworks - HUD - FC Theme (Loose)`
-4. `Venworks - HUD - FC Theme (Normal)`
-5. `Venworks - HUD - TA Theme (Loose)`
-6. `Venworks - HUD - TA Theme (Normal)`
-7. `Venworks - HUD - Venworks Theme (Loose)`
-8. `Venworks - HUD - Venworks Theme (Normal)`
-
-Nexus Mods file display names must not exceed 50 characters.
-
-Every new-release file must select the matching starting palette and contain
-all five supported palette XML files, either inside the Normal package's BA2 or
-as files in the Fully Loose Files package. Assign file versions only after the
-release tag exists.
-
-## Publication prerequisites
-
-- Confirm the eight Nexus PC archives produced by the release system: Normal
-  and Fully Loose Files for each of the four themes.
-- Supply current, unedited in-game screenshots that show the final build and
-  correctly identify each theme.
-- Confirm the release tag and use it consistently for the listing and eight new
-  files.
-- Keep the release labeled as beta.
-- Do not remove the old HONKCORE files from the Files section.
-
-This file is a publication handoff. It does not authorize or perform a Nexus
-Mods website change, upload, or release action.
+Confirm current screenshots, exact candidate packages, dependency versions, and platform acceptance before publication. This file does not authorize publication.

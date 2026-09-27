@@ -1,0 +1,18 @@
+SpriggitSource:
+  PackageName: Spriggit.Yaml.Starfield
+  Version: 0.40.1
+ModKey: Venworks-CustomizableHUD-FreestarCollective.esm
+GameRelease: Starfield
+ModHeader:
+  Flags:
+  - Master
+  - Light
+  FormVersion: 582
+  Author: DEFAULT
+  MasterReferences:
+  - Master: Starfield.esm
+  - Master: sfbgs007.esm
+  - Master: Venworks-Core.esm
+  - Master: Venworks-Canvas.esm
+  Branch: Main
+  InteriorCellCount: 0

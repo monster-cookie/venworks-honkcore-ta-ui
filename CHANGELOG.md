@@ -1,5 +1,15 @@
 # Venworks - Customizable HUD and Themes
 
+## Unreleased — Canvas consumer migration
+
+- Build all five existing themes as Canvas HTML/CSS/SVG consumers with independent effects publishers and preserved plugin identities.
+- Replace the old status renderer with paged effects snapshots following Canvas Example's event pattern.
+- Make the Canvas consumer pipeline the only release path; remove the unreleased XML runtime, duplicate v1 scripts, generic plugin stub, and retired PS5 diagnostic variant.
+- Rename the VWHUD-owned source root to `CanvasConsumer` and promote the consumer build, verification, archive, and release scripts to their unsuffixed names.
+- Clarify that `Interface/VenworksCanvas/Consumers/<namespace>/` is Canvas's current isolated loader contract and contains consumer-owned assets rather than copied Canvas framework code.
+- Synchronize Canvas agent guidance and skills; remove the obsolete repository .codex policies.
+- Archive-only PC and PS5 appearance, lifecycle and performance acceptance remains pending; see [migration guidance](docs/CANVAS_MIGRATION.md).
+
 - https://www.nexusmods.com/starfield/mods/17104
 - https://creations.bethesda.net/en/starfield/details/e8a7bdfa-7d88-4cf5-bba4-a5c4cad0d97f/Venworks_Customizable_HUD___Minimalist_Theme
 - https://creations.bethesda.net/en/starfield/details/1d693691-1b23-48fe-9cc9-06be4fe63ad8/Venworks_Customizable_HUD___Venworks_Theme

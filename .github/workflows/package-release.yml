@@ -105,12 +105,12 @@ jobs:
           $ErrorActionPreference = 'Stop'
 
           $releaseRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts/release'
-          & "$env:GITHUB_WORKSPACE/Tools/createReleasePackagesV2.ps1" `
+          & "$env:GITHUB_WORKSPACE/Tools/createReleasePackages.ps1" `
             -OutputDirectory $releaseRoot
 
           $releaseFiles = @(Get-ChildItem -LiteralPath $releaseRoot -File -Filter '*.zip')
-          if ($releaseFiles.Count -ne 26) {
-            throw "Expected 26 release ZIPs; found $($releaseFiles.Count)."
+          if ($releaseFiles.Count -ne 25) {
+            throw "Expected 25 release ZIPs; found $($releaseFiles.Count)."
           }
 
           "release_root=$releaseRoot" >> $env:GITHUB_OUTPUT

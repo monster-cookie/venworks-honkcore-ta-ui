@@ -1,73 +1,17 @@
-# Bethesda Creations Publication Handoff
+# Bethesda Creations publication handoff
 
-This directory contains the publication copy for the five Venworks Customizable
-HUD Creations. `ListingMetadata.md` contains each listing's title, tagline, and
-description source. Each Creation file contains only the description Markdown
-so its complete contents can be copied directly into a Bethesda Creation
-listing.
+This directory contains description copy for the five VWHUD Canvas consumer Creations. Each theme requires Venworks Core and Venworks Canvas and keeps its own ESM identity and platform archive.
 
-## Description renderer contract
-
-Bethesda's current website renderer uses Markdown-it with named links and image
-rules disabled. Raw HTML is escaped. The Creation descriptions therefore use
-only:
-
-- `#` and `##` headings;
-- plain paragraphs;
-- `**bold**` emphasis;
-- `-` bulleted lists;
-- numbered lists;
-- backticks for inline code; and
-- plain URLs.
-
-Do not use raw HTML, `![image](URL)`, `[label](URL)`, blockquotes, or
-angle-bracket autolinks in a Creation description. Remote description images
-are unsupported. Upload the overview bar and other release images through
-Bethesda's supported preview or gallery image surfaces instead.
-
-Bethesda applies description markup on the website only. The in-game Creation
-description may show the Markdown characters as plain text, so the copy keeps
-formatting restrained and remains understandable without rendered markup.
-
-## Creation files
-
-| Public Creation title | Description source | Starting palette |
-| --- | --- | --- |
-| Venworks Customizable HUD - Venworks Theme | `Venworks-Theme.md` | `venworks.xml` |
-| Venworks Customizable HUD - Trackers Alliance Theme | `Trackers-Alliance-Theme.md` | `trackers-alliance.xml` |
-| Venworks Customizable HUD - Freestar Collective Theme | `Freestar-Collective-Theme.md` | `freestar-collective.xml` |
-| Venworks Customizable HUD - Crimson Fleet Theme | `Crimson-Fleet-Theme.md` | `crimson-fleet.xml` |
-| Venworks Customizable HUD - Minimalist | `Minimalist.md` | Literal Starfield colors; no palette file |
+The description files use headings, paragraphs, lists, bold text, inline code, and bare URLs so they remain understandable in Bethesda surfaces that do not render full Markdown.
 
 ## Before publication
 
-1. Merge and tag the release, then use that tag as the public version. The copy
-   deliberately contains no guessed version number.
-2. Confirm that each of the five Creations has separate PC, Xbox, and
-   PS5 packages. Each package must contain only the root ESM, its
-   platform-matching Main BA2, and any generated platform-matching Textures
-   BA2. Each themed Creation must select its matching starting palette and
-   include all five palettes inside the BA2 payload.
-3. Confirm that Minimalist's PC, Xbox, and PS5 packages each contain only the
-   root Minimalist ESM and the matching platform Main BA2, with no external
-   SVG, palette, DDS, or texture-archive content.
-4. Supply current, unedited in-game screenshots for all five Creations. The
-   `WIP_MinimalistTheme_Normal.png` and
-   `WIP_MinimalistTheme_Scanning.png` files are intentional work-in-progress
-   placeholders and are not final release evidence. Do not use other legacy
-   screenshots under `MarketingSites\Images` as evidence without confirming
-   that they show the final build.
-5. Upload the overview bar through a supported Bethesda image field; do not try
-   to embed its CDN URL in the description.
-6. Preview the plain GitHub and Discord URLs on the website before publication.
-7. Select PC, Xbox, and PS5 for every Creation.
-8. Keep the release marked as beta and request console testing until every
-   supported console build has direct runtime evidence.
-9. Publish only the matching package to each platform under a listing, and tell
-   players to enable only one HUD variant at a time because all five replace
-   the same interface files.
-10. Recheck every GitHub documentation link after the release reaches the
-   default branch.
+1. Merge and tag the release before assigning its public version.
+2. Confirm that Core and Canvas are listed as requirements in that order.
+3. Confirm that every theme has separate PC, Xbox, and PS5 packages containing its real ESM and matching Main BA2.
+4. Confirm that the BA2 contains only the theme's VWHUD consumer assets and scripts. Canvas host movies and framework files belong to the Canvas package.
+5. Supply current, unedited screenshots from the exact candidate package.
+6. Keep runtime acceptance claims separate by platform and HUD mode.
+7. Publish only one VWHUD theme per installed setup.
 
-These files prepare copy only. They do not authorize or perform any Bethesda
-upload, listing creation, package publication, or website change.
+These files prepare copy only. They do not authorize or perform publication.

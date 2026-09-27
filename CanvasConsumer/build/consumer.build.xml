@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<movieBuild name="vwhud-consumer" role="consumer" outputFile="normal.swf" documentClass="../actionscript/VWHudConsumer.as" className="VWHudConsumer" stageWidth="1920" stageHeight="1080" frameRate="30">
+  <requiredTokens>
+    <token>VWCANVAS_CONSUMER/3</token>
+    <token>VWCANVAS_HTML/2</token>
+    <token>getCanvasRegistration</token>
+    <token>getCanvasHtmlRegistration</token>
+    <token>handleLifecycle</token>
+    <token>handleUIData</token>
+    <token>handleCanvasEvent</token>
+    <token>effects.state</token>
+    <token>VWHudEffectsAdapter</token>
+  </requiredTokens>
+  <forbiddenTokens>
+    <token>BSUIDataManager</token>
+    <token>URLLoader</token>
+    <token>ExternalInterface</token>
+    <token>TextField</token>
+    <token>Graphics</token>
+    <token>XML</token>
+  </forbiddenTokens>
+</movieBuild>

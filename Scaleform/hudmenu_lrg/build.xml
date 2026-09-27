@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<scaleformBuild name="hudmenu_lrg"
-                mode="auxiliary-bootstrap"
-                inputFile="hudmenu_lrg.gfx"
-                outputFile="hudmenu_lrg.gfx"
-                vanillaHashFile="vanilla.sha256"
-                expectedHashFile="validation/expected.sha256"
-                actionScriptPatch="../shared/patches/cui-auxiliary-loader.xml" />

@@ -1,6 +1,14 @@
 # File types
 * text=auto
 *.psc	text eol=crlf
+*.pex -text
+CanvasConsumer/resources/**/*.html text eol=lf
+CanvasConsumer/resources/**/*.css text eol=lf
+CanvasConsumer/resources/**/*.svg text eol=lf
+CanvasConsumer/variants/**/*.html text eol=lf
+Staging-*/Interface/VenworksCanvas/**/*.html text eol=lf
+Staging-*/Interface/VenworksCanvas/**/*.css text eol=lf
+Staging-*/Interface/VenworksCanvas/**/*.svg text eol=lf
 #
 # Large Binary Types
 *.esm filter=lfs diff=lfs merge=lfs -text
