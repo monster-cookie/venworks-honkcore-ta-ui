@@ -14,6 +14,8 @@
 - Replaced the old status bar with a compact themed effects display featuring buff and debuff counts, eight effects per page, and automatic page rotation.
 - Improved status-effect recovery across startup, save loading, menu recreation, and temporarily unavailable HUD states.
 - Removed competing vanilla HUD movie replacements from VWHUD packages and isolated each theme’s assets within its own Canvas consumer namespace.
+- Added stable panel classes and a last-loaded `vwhud-overrides.css` file for PC color, placement, size, typography, and visibility overrides.
+- Changed build and release packaging to keep installed and committed staging archive-only while reconstructing the Nexus Fully Loose package from the verified Windows Main BA2.
 - Now requires Venworks Canvas 1.0.4 and Venworks Core Utilities 2.1.8.
 
 ## Version 2.0.19 (September 1, 2026)

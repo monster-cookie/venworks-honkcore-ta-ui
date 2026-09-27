@@ -49,7 +49,4 @@ with scanner-specific presentation:
 
 ## Duplication notes
 
-The screenshots are fidelity references, not pixel-perfect specifications. When
-the Customizable UI duplicates these elements, their data should come from the
-new provider and placeholder system, and their composition should remain driven
-by the new modular XML configuration files.
+The screenshots are fidelity references, not pixel-perfect specifications. The Canvas-based VWHUD themes recreate these elements with VWHUD-owned HTML, CSS, and SVG resources, while their live data comes through the VWHUD consumer and Canvas data layer.

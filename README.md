@@ -1,54 +1,71 @@
 # Venworks Customizable HUD
 
-Venworks Customizable HUD provides five separately packaged Starfield HUD themes: Venworks, Trackers Alliance, Freestar Collective, Crimson Fleet, and Minimalist. Each theme is a Venworks Canvas HTML/CSS/SVG consumer and retains its own plugin identity, registration quest, effect catalog, status publisher, and release packages.
+Venworks Customizable HUD provides five separately packaged Starfield HUD themes rendered through Venworks Canvas: Venworks, Trackers Alliance, Freestar Collective, Crimson Fleet, and Minimalist. The four full themes share the same tactical composition with different colors and artwork. Minimalist uses a reduced holographic composition without the faction crest or equipment rail.
 
-## Requirements
+## Requirements and installation
 
-Install the current compatible versions in this order:
+Install and enable these packages in order:
 
-1. Venworks Core Library
-2. Venworks Canvas
-3. Exactly one VWHUD theme
+1. Venworks Core Utilities 2.1.8 or newer.
+2. Venworks Canvas 1.0.4 or newer.
+3. Exactly one VWHUD theme.
 
-Canvas owns the shared player and ship HUD hosts, provider acquisition, event transport, lifecycle, and bounded HTML/CSS/SVG renderer. VWHUD owns theme presentation, derived HUD state, effects publication, and its five real ESMs. The separately distributed Canvas Example is not required.
+The optional Canvas Example and Component Gallery are not required to play with VWHUD. Remove an earlier standalone VWHUD installation before installing a Canvas-based release. Old loose Interface files can override current archives even when their plugin is disabled.
 
-Do not install an earlier standalone VWHUD HUD replacement beside a Canvas consumer package. Loose files can shadow archive contents even when the old plugin is disabled.
+When changing themes, remove the current VWHUD theme before installing the replacement and confirm that only one VWHUD ESM remains enabled.
 
-## Theme consumers
+## Features
 
-The four full themes share the same composition and select different CSS and SVG artwork. Minimalist keeps its reduced composition and holographic visual treatment. Theme source lives under [CanvasConsumer](CanvasConsumer), which contains only VWHUD-owned consumer code and resources; Canvas framework source and host movies remain in the Canvas project.
+- Compass heading, threat state, and compact status effects with eight entries per page.
+- Player health, oxygen, CO2, boost, carry mass, currency, time, and progression information.
+- Equipment, weapon, ammunition, explosive, and power information in the four full themes.
+- Environment panels for location, time, gravity, suit protection, and active hazards.
+- Tracked objective, acquired-contact radar, and forward scanner presentation.
+- Bethesda's current vehicle-exit glyph supplied through Canvas.
 
-Installed consumer assets use Canvas's current isolated loader contract:
+## Choose a package
+
+Each theme has five release package shapes:
+
+- **Nexus PC - Normal:** the theme ESM and Windows Main BA2. Use this for ordinary play or with a separate CSS override mod.
+- **Nexus PC - Fully Loose Files:** the same plugin with loose Scripts and Interface resources for complete PC customization. Do not install it beside the Normal package.
+- **Bethesda PC, Xbox, and PS5:** platform-specific ESM and Main BA2 packages with the shipped theme presentation.
+
+Installed Normal and Bethesda packages are archive-only. VWHUD's build process removes its generated loose payload after installing a verified BA2 so those files cannot shadow later Interface changes.
+
+## Customize a theme on PC
+
+Every theme loads `vwhud-overrides.css` after its base layout and palette. A small separate mod can supply that file at the selected consumer path to change colors, placement, size, typography, or panel visibility while leaving the VWHUD Normal package archive-only. Use the Fully Loose Files package for changes to HTML composition or SVG artwork.
+
+[Customizing VWHUD themes](docs/CUSTOMIZING_THEMES.md) lists every namespace, stable panel class, editable file, example override, update procedure, and reset procedure. Canvas's Component Gallery remains the authority for supported HTML, CSS, SVG, and Canvas component syntax.
+
+## Canvas and VWHUD ownership
+
+Canvas owns the shared player and ship HUD hosts, provider acquisition, event transport, lifecycle, and bounded HTML/CSS/SVG renderer. VWHUD owns its theme presentation, derived HUD state, status-effect publication, plugins, and packages. The local [CanvasConsumer](CanvasConsumer) directory contains VWHUD consumer code and resources; it does not contain a copy of the Canvas framework or host movies.
+
+Canvas loads each add-on from an isolated directory beneath:
 
 ```text
-Interface/VenworksCanvas/Consumers/venworks.vwhud.<variant>/
+Interface/VenworksCanvas/Consumers/<consumer-namespace>/
 ```
 
-That directory contains the theme's consumer SWFs, HTML, CSS, SVG, and local assets. Its name does not indicate that Canvas framework code is copied into VWHUD. Canvas fixes each consumer to one local resource root so relative resources resolve consistently and cannot escape into another consumer's files.
+VWHUD uses `venworks.vwhud.vwks`, `venworks.vwhud.ta`, `venworks.vwhud.fc`, `venworks.vwhud.cf`, and `venworks.vwhud.min`. The directory name describes Canvas's loader contract rather than ownership of the contained files.
 
-The plugin registration values omit the leading `Interface/` because Starfield resolves UI movie URLs relative to its Interface directory. The files stored in a BA2 or installed loose use the complete `Interface/VenworksCanvas/Consumers/...` path.
+## Troubleshooting
 
-## Status effects
+- Confirm that Core loads before Canvas and Canvas loads before the selected VWHUD theme.
+- Confirm that only one VWHUD theme is installed and enabled.
+- Remove old standalone VWHUD files and avoid combining the Normal and Fully Loose package shapes.
+- Disable a custom override mod and restart Starfield to determine whether the base theme loads normally.
+- Report the Canvas version, VWHUD theme and version, package source, platform, normal or large HUD mode, and whether the issue remains without overrides.
 
-Each theme publishes complete `effects.state` snapshots on `venworks.vwhud.<variant>.status`. The compact effects display shows eight entries per page and rotates every six seconds. Snapshot validation, bounded retry, recovery replay, scheduled refresh, save/load revision handling, and pre-ready latest-state retention are owned by VWHUD; Canvas supplies the event transport.
+## Maintainer documentation
 
-## Packages
-
-Each theme produces three Main BA2 archives and five release ZIP shapes:
-
-- Nexus PC - Normal
-- Nexus PC - Fully Loose Files
-- Bethesda PC
-- Bethesda Xbox
-- Bethesda PS5
-
-The repository therefore contains five real ESMs, fifteen platform archives, and a 25-ZIP release matrix. It does not contain the unreleased XML runtime, a generic plugin stub, or the retired PS5 diagnostic variant.
-
-Use [the build system](docs/BUILDSYSTEM.md) for commands and artifact contracts. [Canvas consumer architecture and acceptance](docs/CANVAS_MIGRATION.md) records ownership, status behavior, and remaining runtime evidence. [Visual references](docs/reference/) preserve clean-room presentation evidence, and [the changelog](CHANGELOG.md) preserves project history.
+[The build system](docs/BUILDSYSTEM.md) documents compilation, archive-only staging, packaging, and verification. [Canvas consumer architecture and acceptance](docs/CANVAS_MIGRATION.md) records ownership, status behavior, and remaining runtime evidence. [Visual references](docs/reference/) preserve clean-room presentation evidence, and [the changelog](CHANGELOG.md) preserves project history.
 
 ## Validation status
 
-Source inspection, compilation, committed-payload verification, BA2 verification, and ZIP verification are separate from Starfield runtime acceptance. Archive-only PC and PS5 gameplay acceptance remains required for each theme, including normal and large HUD modes, status recovery, vehicle glyphs, ship visibility, menus, save/load, high resolutions, and representative ultrawide layouts.
+Source inspection, compilation, archive verification, ZIP verification, and Starfield runtime acceptance are separate evidence. Archive-only PC and PS5 gameplay acceptance remains required for each theme, including normal and large HUD modes, status recovery, vehicle glyphs, ship visibility, menus, save/load, high resolutions, and representative ultrawide layouts.
 
 ## License
 

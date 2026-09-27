@@ -28,6 +28,7 @@ foreach ($relativeScriptPath in $trackedPowerShellScripts) {
 Write-Host "Validated PowerShell syntax for $($trackedPowerShellScripts.Count) tracked scripts."
 
 & (Join-Path $PSScriptRoot 'testCanvasResourceEncoding.ps1')
+& (Join-Path $PSScriptRoot 'testPackageTransactions.ps1')
 
 $archive2Owners = @(
   & git -C $repositoryRoot grep -l -E 'TOOL_PATH_ARCHIVER.*Archive2\.exe' -- 'Tools/*.ps1' |
@@ -51,7 +52,6 @@ if ($packageSource -match 'Textures(?:_XBox|_PS)?\.ba2') {
 }
 
 & (Join-Path $PSScriptRoot 'checkRepo.ps1') -Committed
-& (Join-Path $PSScriptRoot 'verifyVariant.ps1') -Committed -PreArchiveMutation
 & (Join-Path $PSScriptRoot 'verifyVariant.ps1') -Committed
 
 Write-Host 'Verified all five committed Canvas consumer variants and their fifteen platform archives.'
