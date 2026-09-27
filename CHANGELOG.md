@@ -23,6 +23,7 @@
 - Give the theme document a relative body so absolute panels have the containing block Canvas requires. A static body fails the theme with `absolute-containing-block-required`.
 - Publish favorite slots as `favorite.slot01` through `favorite.slot12`. The previous rewrite left the literal key `favorite.slot$1.hotkey`, which Canvas rejects.
 - Name the publish stage on a ready-callback failure. The chronomark shows `PUBLISH model`, `flags`, `effects`, `present`, or `setdata` with the Canvas access path.
+- Remove the full-screen helmet visor shapes. Themed panels now use the minimalist holographic plate: a dark rectangle, a theme-accent halo, and corner brackets.
 
 ## Version 2.0.19 (September 1, 2026)
 
