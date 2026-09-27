@@ -19,6 +19,7 @@ param(
 $PSNativeCommandUseErrorActionPreference = $true
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+if ($Committed) { Write-Verbose '-Committed is retained for command compatibility; builds always use isolated package inputs.' }
 $repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 
 if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction SilentlyContinue)) { . (Join-Path $PSScriptRoot 'sharedConfig.ps1') -SkipEnvironment }

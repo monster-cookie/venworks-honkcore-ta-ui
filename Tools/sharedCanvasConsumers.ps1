@@ -177,7 +177,6 @@ function Assert-CanvasConsumerPayload([string]$RepositoryRoot,[string]$Key,[stri
   $inventory = Get-CanvasConsumerBuildInventory $RepositoryRoot $Key $record
   $namespace = $inventory.Namespace
   $prefix = $inventory.Prefix
-  $resources = $inventory.Resources
   $expected = $inventory.Expected
   foreach ($relative in $expected) {
     $path = Join-Path $Payload $relative
