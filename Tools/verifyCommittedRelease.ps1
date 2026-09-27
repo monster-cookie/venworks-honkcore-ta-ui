@@ -29,6 +29,7 @@ Write-Host "Validated PowerShell syntax for $($trackedPowerShellScripts.Count) t
 
 & (Join-Path $PSScriptRoot 'testCanvasResourceEncoding.ps1')
 & (Join-Path $PSScriptRoot 'testCanvasCompatibility.ps1')
+& (Join-Path $PSScriptRoot 'testCanvasContainingBlocks.ps1')
 & (Join-Path $PSScriptRoot 'testPackageTransactions.ps1')
 
 $archive2Owners = @(

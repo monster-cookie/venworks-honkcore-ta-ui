@@ -20,6 +20,7 @@
 - Write every theme document with the lowercase `<!doctype html>` preamble Canvas requires, so the theme can parse and hide the Canvas watch.
 - Use the lowercase `currentcolor` paint keyword in theme marks and icons. Canvas rejects `currentColor`.
 - Now requires Venworks Canvas 1.0.4 and Venworks Core Utilities 2.1.8.
+- Give the theme document a relative body so absolute panels have the containing block Canvas requires. A static body fails the theme with `absolute-containing-block-required`.
 
 ## Version 2.0.19 (September 1, 2026)
 
