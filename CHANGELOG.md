@@ -1,21 +1,20 @@
 # Venworks - Customizable HUD and Themes
 
-## Unreleased — Canvas consumer migration
-
-- Build all five existing themes as Canvas HTML/CSS/SVG consumers with independent effects publishers and preserved plugin identities.
-- Replace the old status renderer with paged effects snapshots following Canvas Example's event pattern.
-- Make the Canvas consumer pipeline the only release path; remove the unreleased XML runtime, duplicate v1 scripts, generic plugin stub, and retired PS5 diagnostic variant.
-- Rename the VWHUD-owned source root to `CanvasConsumer` and promote the consumer build, verification, archive, and release scripts to their unsuffixed names.
-- Clarify that `Interface/VenworksCanvas/Consumers/<namespace>/` is Canvas's current isolated loader contract and contains consumer-owned assets rather than copied Canvas framework code.
-- Synchronize Canvas agent guidance and skills; remove the obsolete repository .codex policies.
-- Archive-only PC and PS5 appearance, lifecycle and performance acceptance remains pending; see [migration guidance](docs/CANVAS_MIGRATION.md).
-
 - https://www.nexusmods.com/starfield/mods/17104
 - https://creations.bethesda.net/en/starfield/details/e8a7bdfa-7d88-4cf5-bba4-a5c4cad0d97f/Venworks_Customizable_HUD___Minimalist_Theme
 - https://creations.bethesda.net/en/starfield/details/1d693691-1b23-48fe-9cc9-06be4fe63ad8/Venworks_Customizable_HUD___Venworks_Theme
 - https://creations.bethesda.net/en/starfield/details/80994b40-c426-4f3c-b157-7beaee0aa473/Venworks_Customizable_HUD___Trackers_Alliance_Them
 - https://creations.bethesda.net/en/starfield/details/03b616a3-1902-4b83-a109-fc176f658a69/Venworks_Customizable_HUD___Crimson_Fleet_Theme
 - https://creations.bethesda.net/en/starfield/details/9b635bf7-8c6b-4530-bdbd-0912903b336b/Venworks_Customizable_HUD___Freestar_Collective_Th
+
+## Version 2.1.0 (Unreleased)
+
+- Rebuilt all five VWHUD themes to run as Venworks Canvas consumers instead of replacing the vanilla HUD directly.
+- Migrated theme presentation to HTML, CSS, and standard SVG, making layouts and artwork easier for web developers and mod authors to understand.
+- Replaced the old status bar with a compact themed effects display featuring buff and debuff counts, eight effects per page, and automatic page rotation.
+- Improved status-effect recovery across startup, save loading, menu recreation, and temporarily unavailable HUD states.
+- Removed competing vanilla HUD movie replacements from VWHUD packages and isolated each theme’s assets within its own Canvas consumer namespace.
+- Now requires Venworks Canvas 1.0.4 and Venworks Core Utilities 2.1.8.
 
 ## Version 2.0.19 (September 1, 2026)
 
