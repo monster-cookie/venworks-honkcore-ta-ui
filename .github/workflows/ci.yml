@@ -73,6 +73,7 @@ jobs:
           . ./Tools/sharedConfig.ps1 -SkipEnvironment
           $variant = @(Get-ModuleVariants -VariantKeys TA)[0]
           $unexpectedPath = Join-Path $variant.StagingFolderPath "codex-ci-$([guid]::NewGuid().ToString('N')).esm"
+          $PSNativeCommandUseErrorActionPreference = $false
           try {
             [IO.File]::WriteAllText($unexpectedPath, 'unexpected staging payload')
             $output = @(& pwsh -NoProfile -File ./Tools/verifyVariant.ps1 -VariantKeys TA -Committed 2>&1)
