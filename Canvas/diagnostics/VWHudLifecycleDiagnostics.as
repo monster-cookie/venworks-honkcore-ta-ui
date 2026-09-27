@@ -57,7 +57,7 @@ package
 
       private static function detail(capture:Object) : Object
       {
-         return {features:["htmlRendering"],html:{setData:function(data:Object):void { capture.data = data; capture.calls++; },getUpdateState:function():Object { return {}; }}};
+         return {features:["htmlRendering"],html:{setData:function(data:Object):void { capture.data = data; capture.calls++; }}};
       }
 
       private static function body(payload:String) : String

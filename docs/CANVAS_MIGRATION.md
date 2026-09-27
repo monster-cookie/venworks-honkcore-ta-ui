@@ -4,7 +4,7 @@ The v2 pipeline now builds the five VWHUD themes as Canvas HTML/CSS consumers. T
 
 ## Installation and compatibility
 
-Install Venworks Core Library, the matching Canvas build with `VWCANVAS_HTML/3` support, and exactly one VWHUD theme. Load Core before Canvas and Canvas before the theme plugin. The plugin also declares `Starfield.esm` and `sfbgs007.esm` as masters, including the Core dependency's transitive master. The separately distributed Canvas Example is not required.
+Install Venworks Core Library, the matching Canvas build with the expanded `VWCANVAS_HTML/2` renderer, and exactly one VWHUD theme. Load Core before Canvas and Canvas before the theme plugin. The plugin also declares `Starfield.esm` and `sfbgs007.esm` as masters, including the Core dependency's transitive master. The separately distributed Canvas Example is not required.
 
 Keep each theme's existing ESM and archive names together. Do not install old VWHUD HUD replacement movies alongside the consumer package. Remove loose legacy HUD replacements when migrating; loose files can shadow the archives. Preserve your previous complete package and save backup before testing. Roll back the matching plugin and archive together, with the previous dependency versions when required.
 
@@ -46,7 +46,7 @@ The theme requests suppression of `player.meters` and `canvas.watch`. Canvas com
 
 For example, a vehicle exit glyph is a named host-owned presentation adapter. VWHUD can display that glyph without moving the original button or taking ownership of its input callback. A placement request is a bounded offset on a semantic target; removing the consumer restores the current native position, not an obsolete startup position. Unknown targets or unsupported symbol access produce a contained diagnostic.
 
-“Frequent updates” means inputs such as changing health, heading and contact positions during play. Under HTML/3, successive data snapshots before the next frame are coalesced. Unchanged panels retain their rendered objects; changed text and meter graphics update in place, and repeated subtrees reconcile when their structure changes. Invalid snapshots retain the last valid display. This is an implementation contract, not a measured frame-rate or latency claim; sustained gameplay measurements remain necessary.
+“Frequent updates” means inputs such as changing health, heading and contact positions during play. Each HTML/2 `setData()` call validates and applies a complete snapshot synchronously. Unchanged panels retain their rendered objects; changed text and meter graphics update in place, and repeated subtrees reconcile when their structure changes. Invalid snapshots retain the last valid display. This is an implementation contract, not a measured frame-rate or latency claim; sustained gameplay measurements remain necessary.
 
 ## Build and verification
 

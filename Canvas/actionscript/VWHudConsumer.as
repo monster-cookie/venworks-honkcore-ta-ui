@@ -26,15 +26,15 @@ package
 
       public function getCanvasHtmlRegistration() : Object
       {
-         return {contract:"VWCANVAS_HTML/3",entryDocument:"index.html"};
+         return {contract:"VWCANVAS_HTML/2",entryDocument:"index.html"};
       }
 
       public function handleLifecycle(state:String, detail:Object) : void
       {
          if(state == "unload") { this.dispose(); return; }
          if(state != "ready") return;
-         if(detail == null || detail.html == null || !(detail.features is Array) || detail.features.indexOf("htmlRendering") < 0 || !("setData" in detail.html) || !("getUpdateState" in detail.html))
-            throw new Error("VWHUD requires Canvas HTML/3");
+         if(detail == null || detail.html == null || !(detail.features is Array) || detail.features.indexOf("htmlRendering") < 0 || !("setData" in detail.html))
+            throw new Error("VWHUD requires Canvas HTML/2");
          this.teardownPresentation();
          this.disposed = false;
          this.bridge = detail.html;
