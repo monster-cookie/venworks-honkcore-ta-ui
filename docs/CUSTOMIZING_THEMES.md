@@ -10,7 +10,7 @@ Install and enable these dependencies in order:
 2. Venworks Canvas 1.0.4 or newer.
 3. Exactly one VWHUD theme.
 
-Remove an earlier standalone VWHUD installation before installing a Canvas-based theme. Disabled plugins do not prevent old loose Interface files from shadowing current archives.
+Remove an earlier standalone VWHUD installation before installing a Canvas-based theme. Remove loose files left by an older Canvas installation before reinstalling Canvas. Disabled plugins do not prevent old loose Interface or Script files from shadowing current archives.
 
 ## Choose a PC package
 
@@ -36,7 +36,7 @@ The directory contains VWHUD consumer files. It does not contain a private copy 
 
 ## Create a durable CSS override
 
-Every theme loads `vwhud-overrides.css` after its base layout and palette. With the Normal package, create a separate mod that supplies only this file at the selected theme's exact resource path. Keep the override mod after VWHUD in the mod manager so its loose file wins over the empty copy in the VWHUD BA2.
+Every theme loads `vwhud-overrides.css` after its base layout and palette. The Normal package keeps an empty copy inside its BA2 and installs no loose VWHUD files. If you want a CSS override, create a separate mod that supplies only this file at the selected theme's exact resource path. Keep the override mod after VWHUD in the mod manager so its one user-owned loose file wins over the empty copy in the VWHUD BA2. It does not unpack or replace VWHUD's HTML, SWF, scripts, or other resources. Users without an override mod remain fully archive-only.
 
 For example, a Venworks override mod contains:
 
@@ -108,3 +108,12 @@ Exit Starfield completely after changing a theme resource, then start it again. 
 After updating Canvas or VWHUD, test the selected theme once with the override mod disabled. Re-enable the override after confirming the base theme loads, then review any selectors or properties affected by the update.
 
 To restore the default presentation, disable or remove the separate override mod. For a Fully Loose installation, reinstall the unmodified package. Do not copy default resources out of the Canvas base package; VWHUD's theme resources come from the selected VWHUD package.
+
+## Recover from an older Canvas installation
+
+Two messages together identify an incompatible Canvas runtime rather than a theme CSS problem:
+
+- the Canvas display reports `UNSUPPORTED CONSUMER PROTOCOL`; and
+- the Papyrus log reports that `Venworks:Canvas:Registry.BuildCanvasDatagramBody` does not exist.
+
+Fully exit Starfield, purge loose Interface and Script files from the older Canvas installation through your mod manager or by removing the prior manual installation, then reinstall or redeploy Venworks Canvas 1.0.4 or newer. Restart Starfield after deployment so both the Canvas host movie and compiled Registry script reload. Disabling the old plugin alone does not remove loose files that take precedence over the current Canvas BA2.

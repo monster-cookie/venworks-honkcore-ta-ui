@@ -46,7 +46,7 @@ Canvas's current loader contract fixes a consumer namespace to `Interface/Venwor
   -UpdateExpectedHashes
 ```
 
-`-UpdateExpectedHashes` is required only when intentionally accepting newly built bytes or a changed source digest. The build uses a fresh directory beneath `.work/canvas-consumers`, validates the complete candidate, records accepted evidence, and publishes the selected complete package inputs beneath `.work/canvas-payloads`. It does not mutate installed or committed staging.
+`-UpdateExpectedHashes` is required only when intentionally accepting newly built bytes or a changed source digest. Before compilation, the build verifies that the selected Canvas checkout exposes `VWCANVAS_CONSUMER/3`, `VWCANVAS_HTML/2`, `Registry.BuildCanvasDatagramBody`, and `Registry.TryPublishCanvasDatagram`. The build then uses a fresh directory beneath `.work/canvas-consumers`, validates the complete candidate, records accepted evidence, and publishes the selected complete package inputs beneath `.work/canvas-payloads`. It does not mutate installed or committed staging.
 
 ## Verify and package
 

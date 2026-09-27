@@ -28,6 +28,7 @@ foreach ($relativeScriptPath in $trackedPowerShellScripts) {
 Write-Host "Validated PowerShell syntax for $($trackedPowerShellScripts.Count) tracked scripts."
 
 & (Join-Path $PSScriptRoot 'testCanvasResourceEncoding.ps1')
+& (Join-Path $PSScriptRoot 'testCanvasCompatibility.ps1')
 & (Join-Path $PSScriptRoot 'testPackageTransactions.ps1')
 
 $archive2Owners = @(

@@ -16,6 +16,7 @@
 - Removed competing vanilla HUD movie replacements from VWHUD packages and isolated each theme’s assets within its own Canvas consumer namespace.
 - Added stable panel classes and a last-loaded `vwhud-overrides.css` file for PC color, placement, size, typography, and visibility overrides.
 - Changed build and release packaging to keep installed and committed staging archive-only while reconstructing the Nexus Fully Loose package from the verified Windows Main BA2.
+- Added a Canvas contract preflight and recovery guidance for stale loose Canvas files that can override the current host and Registry archives.
 - Now requires Venworks Canvas 1.0.4 and Venworks Core Utilities 2.1.8.
 
 ## Version 2.0.19 (September 1, 2026)

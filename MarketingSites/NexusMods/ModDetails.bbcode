@@ -39,7 +39,7 @@ Theme assets are stored under Canvas's isolated consumer directory. They remain 
 
 [size=3][b][u]Customization on PC[/u][/b][/size]
 
-Every theme loads a VWHUD-owned [b]vwhud-overrides.css[/b] file after its base layout and palette. With the Normal package, install your override as a separate mod after VWHUD to change colors, placement, size, typography, or panel visibility while keeping the VWHUD package archive-only. Use the Fully Loose Files package for complete HTML, CSS, and SVG changes.
+Every theme loads a VWHUD-owned [b]vwhud-overrides.css[/b] file after its base layout and palette. The Normal package keeps an empty copy inside its BA2 and installs no loose VWHUD files. If you want CSS customization, install a separate mod after VWHUD that supplies only this one user-owned override file. Users without an override remain fully archive-only. Use the Fully Loose Files package for complete HTML, CSS, and SVG changes.
 
 The [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/docs/CUSTOMIZING_THEMES.md]VWHUD customization guide[/url] lists the exact theme paths, stable panel classes, examples, update procedure, and reset procedure. Canvas defines the supported HTML, CSS, SVG, and component syntax.
 
@@ -49,6 +49,7 @@ The [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/d
 [*]The radar displays contacts already supplied by Starfield; it is not a life-form detector.[/*]
 [*]Large-HUD, ultrawide, sustained-update, and console feedback remain valuable.[/*]
 [*]Compatibility with HUD replacements is governed by Venworks Canvas because Canvas owns the shared host movies.[/*]
+[*]If Canvas reports [b]UNSUPPORTED CONSUMER PROTOCOL[/b], fully exit Starfield, purge loose files from an older Canvas installation, reinstall or redeploy Canvas 1.0.4 or newer, and restart the game.[/*]
 [/list]
 
 [img]https://cdn.venworkscreations.com/NexusMods/description-divider-source-code-1600x120.png[/img]

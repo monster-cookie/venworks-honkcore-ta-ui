@@ -17,6 +17,7 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 $repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 . (Join-Path $PSScriptRoot 'sharedCanvasConsumers.ps1')
+. (Join-Path $PSScriptRoot 'sharedCanvasCompatibility.ps1')
 if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction SilentlyContinue)) {
   . (Join-Path $PSScriptRoot 'sharedConfig.ps1') -SkipEnvironment
 }
@@ -52,8 +53,9 @@ $playerglobal = RequiredFile (Join-Path $flex 'frameworks/libs/player/11.1/playe
 $compiler = Tool $settings.TOOL_PATH_PAPYRUS_COMPILER 'PapyrusCompiler.exe'
 $flags = Tool $settings.PAPYRUS_COMPILER_FLAGS 'Starfield_Papyrus_Flags.flg'
 $spriggit = Tool $settings.TOOL_PATH_SPRIGGIT 'Spriggit.CLI.exe'
-$canvasSources = Join-Path ([IO.Path]::GetFullPath($CanvasProjectPath)) 'Papyrus'
-[void](RequiredFile (Join-Path $canvasSources 'Venworks/Canvas/Registry.psc'))
+$canvasRoot = [IO.Path]::GetFullPath($CanvasProjectPath)
+$canvasSources = Join-Path $canvasRoot 'Papyrus'
+Assert-VWHudCanvasCompatibility -CanvasProjectPath $canvasRoot
 foreach ($directory in @($settings.PAPYRUS_SCRIPTS_SOURCE_PATH,$settings.STEAM_DATA_FOLDER)) {
   if (!(Test-Path -LiteralPath $directory -PathType Container)) { throw 'Configured game source/data directory does not exist.' }
 }

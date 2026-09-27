@@ -10,7 +10,7 @@ Install and enable these packages in order:
 2. Venworks Canvas 1.0.4 or newer.
 3. Exactly one VWHUD theme.
 
-The optional Canvas Example and Component Gallery are not required to play with VWHUD. Remove an earlier standalone VWHUD installation before installing a Canvas-based release. Old loose Interface files can override current archives even when their plugin is disabled.
+The optional Canvas Example and Component Gallery are not required to play with VWHUD. Remove an earlier standalone VWHUD installation before installing a Canvas-based release. Also remove loose files left by an older Canvas installation before reinstalling Canvas; loose Interface and Script files override current archives even when their associated plugin is disabled.
 
 When changing themes, remove the current VWHUD theme before installing the replacement and confirm that only one VWHUD ESM remains enabled.
 
@@ -35,7 +35,7 @@ Installed Normal and Bethesda packages are archive-only. VWHUD's build process r
 
 ## Customize a theme on PC
 
-Every theme loads `vwhud-overrides.css` after its base layout and palette. A small separate mod can supply that file at the selected consumer path to change colors, placement, size, typography, or panel visibility while leaving the VWHUD Normal package archive-only. Use the Fully Loose Files package for changes to HTML composition or SVG artwork.
+Every theme loads `vwhud-overrides.css` after its base layout and palette. The Normal VWHUD package contains an empty copy inside its BA2 and installs no loose VWHUD files. If you want CSS customization, create a separate, later-loading mod that supplies only `vwhud-overrides.css` at the selected consumer path. This intentionally adds one loose user-owned override file without unpacking or shadowing VWHUD's HTML, SWF, scripts, or other resources. Users who do not create an override remain fully archive-only. Use the Fully Loose Files package for changes to HTML composition or SVG artwork.
 
 [Customizing VWHUD themes](docs/CUSTOMIZING_THEMES.md) lists every namespace, stable panel class, editable file, example override, update procedure, and reset procedure. Canvas's Component Gallery remains the authority for supported HTML, CSS, SVG, and Canvas component syntax.
 
@@ -56,6 +56,7 @@ VWHUD uses `venworks.vwhud.vwks`, `venworks.vwhud.ta`, `venworks.vwhud.fc`, `ven
 - Confirm that Core loads before Canvas and Canvas loads before the selected VWHUD theme.
 - Confirm that only one VWHUD theme is installed and enabled.
 - Remove old standalone VWHUD files and avoid combining the Normal and Fully Loose package shapes.
+- If the Canvas display reports `UNSUPPORTED CONSUMER PROTOCOL`, or the Papyrus log reports that `Venworks:Canvas:Registry.BuildCanvasDatagramBody` is missing, fully exit Starfield, purge loose files from an older Canvas installation, and reinstall or redeploy Venworks Canvas 1.0.4 or newer. Disabling an old plugin is insufficient because its loose files can still override the current Canvas BA2.
 - Disable a custom override mod and restart Starfield to determine whether the base theme loads normally.
 - Report the Canvas version, VWHUD theme and version, package source, platform, normal or large HUD mode, and whether the issue remains without overrides.
 
