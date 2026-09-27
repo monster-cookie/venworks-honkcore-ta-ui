@@ -34,6 +34,12 @@ Each plugin owns its records, labels, catalogs and publisher. Its topic is `venw
 
 The compact display uses eight entries per page and a six-second page rotation, with waiting, empty and count states. The publisher carries the Example's application/removal tracking, sustenance precedence, save/load refresh, bounded retries, two-second recovery replay and scheduled 60-second refresh. Event submission is not an acknowledgement that the HUD received it. Example and VWHUD have separate namespaces and registrars while Canvas can share their provider subscriptions.
 
+Each scan builds candidate entries and source references separately from the last submitted snapshot. Only `EVENT_SUBMITTED` commits those entries, their source references, signature and timestamp together. Removal polling requests a scan without changing the submitted set. A save/load invalidates pending scans and publish receipts by revision; the last submitted state remains until a current snapshot succeeds. Registry calls run outside the publisher's short local-state guards.
+
+Startup arms the 60-second refresh independently of the first successful send. Missing prerequisites, invalid or oversized datagrams, and rejected sends retain the submitted state and use a shared budget of at most 20 half-second retries. Exhaustion leaves the periodic refresh armed; internal rebuilds and removal polling cannot reset that budget. Requests arriving during a scan or submission remain latched for reconciliation. Accepted and unchanged registrations both request UI loading, including after HUD opening; an inactive UI waits for that event rather than spinning indefinitely.
+
+The consumer retains the latest complete valid status snapshot even before its HTML bridge is ready. Replacing the bridge republishes that snapshot. Malformed events and events for other namespaces leave it unchanged. Final unload clears status and timers and ignores late events until a new `ready` lifecycle begins. No delivery acknowledgement or new replay protocol is implied.
+
 ## Native HUD controls and frequent updates
 
 The theme requests suppression of `player.meters` and `canvas.watch`. Canvas combines requests from all consumers: unloading one theme removes only its requests. Suppression never forces a game-hidden surface to become visible and does not disable game actions or event ingress. The custom watch's `disabled` flag also suspends its drawing and animation work. Vanilla scripts and timelines continue.
@@ -57,6 +63,20 @@ The consumer builder compiles the SWF and the two Papyrus scripts, assembles eac
 ```
 
 ## Acceptance still required
+
+[VWHudLifecycleDiagnostics.as](../Canvas/diagnostics/VWHudLifecycleDiagnostics.as) calls the production consumer and effects adapter with a capturing bridge. It checks pre-ready latest-state retention, malformed messages, repeated readiness, namespace isolation, unload, empty states and eight-entry paging. Compile it as a separate movie using the consumer builder's Flex flags, adding `Canvas/diagnostics` to the source paths and selecting this file as the entry point. It is excluded from theme payloads. Compilation alone does not execute its assertions or test the host renderer, timer cadence, Papyrus VM, or game menus.
+
+For the lifecycle repairs, capture these runtime sequences and their observations against the exact candidate package:
+
+| Scenario | Required observation |
+| --- | --- |
+| Register with both HUD menus closed, then open each supported menu; repeat after save/load | An unchanged registration still calls the UI-load request. Confirm the applicable host mounts the consumer rather than treating registration acceptance as readiness. |
+| Reject a publish while effects stay unchanged; also exercise an empty or over-limit build in a controlled diagnostic | Submitted entries, signature and source references stay unchanged. Retries are bounded, and the 60-second refresh continues even if no send has yet succeeded. |
+| Remove an effect while its replacement snapshot is rejected | The last submitted display remains intact; the first subsequently submitted complete snapshot removes it. Removal polling must not pre-commit an unpublished set. |
+| Load a save while a scan or publish is outstanding | A receipt or scan from the old revision cannot commit over the new load's state. |
+| Deliver two valid status snapshots and an invalid snapshot before readiness, then replace the bridge | The newest valid snapshot appears on readiness and survives bridge replacement; invalid data does not clear it. Run the diagnostic movie and verify its displayed result. |
+
+The diagnostic movie must be executed in a compatible player, and the Papyrus sequences require game execution or an actual Papyrus VM diagnostic. Package inventories and source-pattern checks do not establish these observations.
 
 VWHUD-32 (Venworks), VWHUD-33 (Trackers Alliance), VWHUD-34 (Freestar Collective), VWHUD-35 (Crimson Fleet) and VWHUD-36 (Minimalist) each require their own exact-package appearance and runtime evidence. Native compilation and package verification are separate from this acceptance. Do not mark the PS5 startup issue complete from a PC build.
 

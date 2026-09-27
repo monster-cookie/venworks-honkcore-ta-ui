@@ -45,6 +45,23 @@ Spell[] ActiveSourceSpells
 String[] ActiveSourceSpellEntries
 String[] PendingEffectRemovals
 
+; Immutable metadata identifies the pending typed arrays. Papyrus structs cannot hold arrays.
+Struct EffectSnapshot
+  Int Revision
+  String Signature
+  String Payload
+  Bool RecoveryReplay
+EndStruct
+EffectSnapshot PendingSnapshot
+String[] PendingEntries
+MagicEffect[] PendingEffects
+String[] PendingSourceEffectEntries
+ENV_AfflictionScript[] PendingAfflictions
+String[] PendingAfflictionEntries
+Spell[] PendingSpells
+String[] PendingSpellEntries
+Bool EffectHeartbeatPending = False
+
 ; Bootstrap menu and player notifications and schedule the first bounded effect scan.
 Event OnInit()
   LogUserInformational(ModuleName, "OnInit", "EVENT_TRIGGERED | Registering HUD menus and effect events.")
@@ -62,7 +79,7 @@ Event OnMenuOpenCloseEvent(String menuName, Bool opening)
     LastHudOpenAt = Utility.GetCurrentRealTime()
     EnsurePlayerEventRegistrations()
     EnsureMagicEffectRegistrations(True)
-      RequestEffectRefresh(True)
+    RequestEffectRefresh(True)
     ScheduleActiveEffectCheck()
   EndIf
 EndEvent
@@ -74,26 +91,34 @@ EndEvent
 ; A saved game can load with effects already active; HUD opening provides a second path when this event is skipped.
 Event Actor.OnPlayerLoadGame(Actor akSender)
   LogUserInformational(ModuleName, "Actor.OnPlayerLoadGame", "EVENT_TRIGGERED | Sender=" + akSender)
-  EffectSourceRevision += 1
-  EffectPackets = None
-  EffectPacketIndex = 0
-  PendingEffectPayload = ""
-  PendingEffectNeedsRecoveryReplay = False
-  EffectRecoveryRefresh = False
-  EffectSnapshotBuilding = False
-  EffectChangedDuringPublication = False
-  ObservedEffectEntries = None
-  ActiveSourceEffects = None
-  ActiveSourceEffectEntries = None
-  ActiveSourceAfflictions = None
-  ActiveSourceAfflictionEntries = None
-  ActiveSourceSpells = None
-  ActiveSourceSpellEntries = None
-  PendingEffectRemovals = None
+  ; Cancel before invalidating ownership, so callbacks that start fresh work after
+  ; the guarded reset cannot have their new timers cancelled by this load handler.
   CancelTimer(31)
+  CancelTimer(32)
+  CancelTimer(33)
   CancelTimer(34)
   CancelTimer(35)
-  EffectRefreshPending = False
+  ; Fence scans and receipts from the previous load without publishing their state.
+  LockGuard EffectSnapshotGuard
+    EffectSourceRevision += 1
+    PendingSnapshot = None
+    PendingEntries = None
+    PendingEffects = None
+    PendingSourceEffectEntries = None
+    PendingAfflictions = None
+    PendingAfflictionEntries = None
+    PendingSpells = None
+    PendingSpellEntries = None
+    PendingEffectPayload = ""
+    PendingEffectSignature = ""
+    PendingEffectNeedsRecoveryReplay = False
+    EffectRecoveryRefresh = False
+    EffectSnapshotBuilding = False
+    EffectChangedDuringPublication = False
+    EffectRefreshPending = False
+    EffectHeartbeatPending = False
+    EffectRetryCount = 0
+  EndLockGuard
   MagicEffectEventRegistered = False
   EnsureMagicEffectRegistrations(True)
   RequestEffectRefresh(True)
@@ -127,15 +152,25 @@ EndFunction
 
 ; Registration, effect refresh, reconciliation, and packet publication use disjoint timer IDs.
 Event OnTimer(Int aiTimerID)
-  If (aiTimerID == 31 && EffectRefreshPending)
-    EffectRefreshPending = False
-    PrepareEffectSnapshot()
+  If (aiTimerID == 31)
+    Bool scan = False
+    LockGuard EffectSnapshotGuard
+      scan = EffectRefreshPending
+      EffectRefreshPending = False
+    EndLockGuard
+    If (scan)
+      PrepareEffectSnapshot()
+    EndIf
   ElseIf (aiTimerID == 32)
     CheckActiveEffectSources()
     ScheduleActiveEffectCheck()
   ElseIf (aiTimerID == 33)
     PublishNextEffectPacket()
   ElseIf (aiTimerID == 34)
+    LockGuard EffectSnapshotGuard
+      EffectHeartbeatPending = False
+      EffectRetryCount = 0
+    EndLockGuard
     RequestEffectRefresh(True)
   ElseIf (aiTimerID == 35)
     EffectRecoveryRefresh = True
@@ -176,14 +211,30 @@ EndFunction
 
 ; Coalesces load, HUD-ready, and apply requests while preserving a requested full resend.
 Function RequestEffectRefresh(Bool forceSnapshot)
-  If (forceSnapshot)
-    EffectForceRefresh = True
+  Bool schedule = False
+  Bool heartbeat = False
+  ; Local assignments only: registry calls and timer operations stay outside guards.
+  LockGuard EffectSnapshotGuard
+    If (!EffectHeartbeatPending)
+      EffectHeartbeatPending = True
+      heartbeat = True
+    EndIf
+    If (forceSnapshot)
+      EffectForceRefresh = True
+    EndIf
+    If (EffectSnapshotBuilding || PendingSnapshot != None)
+      EffectChangedDuringPublication = True
+    ElseIf (!EffectRefreshPending && EffectRetryCount <= 20)
+      EffectRefreshPending = True
+      schedule = True
+    EndIf
+  EndLockGuard
+  If (heartbeat)
+    StartTimer(60.0, 34)
   EndIf
-  If (EffectRefreshPending)
-    Return
+  If (schedule)
+    StartTimer(0.5, 31)
   EndIf
-  EffectRefreshPending = True
-  StartTimer(0.5, 31)
 EndFunction
 
 ; No removal deadline is available from the quest's base-effect event. Check only known-active sources.
@@ -196,8 +247,24 @@ EndFunction
 
 ; An expiry or cure has no quest-level finish event. Never send a removal from a guessed timer alone.
 Function CheckActiveEffectSources()
-  Int sourceRevision = EffectSourceRevision
-  String[] observedEntries = ObservedEffectEntries
+  Int sourceRevision
+  String[] observedEntries
+  MagicEffect[] effects
+  String[] effectEntries
+  ENV_AfflictionScript[] afflictions
+  String[] afflictionEntries
+  Spell[] spells
+  String[] spellEntries
+  LockGuard EffectSnapshotGuard
+    sourceRevision = EffectSourceRevision
+    observedEntries = ObservedEffectEntries
+    effects = ActiveSourceEffects
+    effectEntries = ActiveSourceEffectEntries
+    afflictions = ActiveSourceAfflictions
+    afflictionEntries = ActiveSourceAfflictionEntries
+    spells = ActiveSourceSpells
+    spellEntries = ActiveSourceSpellEntries
+  EndLockGuard
   If (observedEntries == None || observedEntries.Length == 0 || EffectSnapshotBuilding)
     Return
   EndIf
@@ -207,28 +274,28 @@ Function CheckActiveEffectSources()
   EndIf
   String[] stillActive = new String[0]
   Int index = 0
-  While (ActiveSourceEffects != None && index < ActiveSourceEffects.Length)
-    If (ActiveSourceEffects[index] != None && player.HasMagicEffect(ActiveSourceEffects[index]) && !ContainsEffectEntry(stillActive, ActiveSourceEffectEntries[index]))
-      stillActive.Add(ActiveSourceEffectEntries[index])
+  While (effects != None && index < effects.Length)
+    If (effects[index] != None && player.HasMagicEffect(effects[index]) && !ContainsEffectEntry(stillActive, effectEntries[index]))
+      stillActive.Add(effectEntries[index])
     EndIf
     index += 1
   EndWhile
   index = 0
-  While (ActiveSourceAfflictions != None && index < ActiveSourceAfflictions.Length)
-    If (HasAfflictionSpell(player, ActiveSourceAfflictions[index]) && !ContainsEffectEntry(stillActive, ActiveSourceAfflictionEntries[index]))
-      stillActive.Add(ActiveSourceAfflictionEntries[index])
+  While (afflictions != None && index < afflictions.Length)
+    If (HasAfflictionSpell(player, afflictions[index]) && !ContainsEffectEntry(stillActive, afflictionEntries[index]))
+      stillActive.Add(afflictionEntries[index])
     EndIf
     index += 1
   EndWhile
   index = 0
-  While (ActiveSourceSpells != None && index < ActiveSourceSpells.Length)
-    Bool namedStatusActive = ActiveSourceSpells[index] != None && player.HasSpell(ActiveSourceSpells[index])
-    If (namedStatusActive && ActiveSourceSpells[index] == Game.GetFormFromFile(0x08CB51, "Starfield.esm"))
+  While (spells != None && index < spells.Length)
+    Bool namedStatusActive = spells[index] != None && player.HasSpell(spells[index])
+    If (namedStatusActive && spells[index] == Game.GetFormFromFile(0x08CB51, "Starfield.esm"))
       MagicEffect corrosiveSoak = Game.GetFormFromFile(0x08CB47, "Starfield.esm") as MagicEffect
       namedStatusActive = corrosiveSoak != None && player.HasMagicEffect(corrosiveSoak)
     EndIf
-    If (namedStatusActive && !ContainsEffectEntry(stillActive, ActiveSourceSpellEntries[index]))
-      stillActive.Add(ActiveSourceSpellEntries[index])
+    If (namedStatusActive && !ContainsEffectEntry(stillActive, spellEntries[index]))
+      stillActive.Add(spellEntries[index])
     EndIf
     index += 1
   EndWhile
@@ -247,74 +314,65 @@ Function CheckActiveEffectSources()
   Bool removed = False
   TryLockGuard EffectSnapshotGuard
     If (!EffectSnapshotBuilding && EffectSourceRevision == sourceRevision && removedEntries.Length > 0)
-      ObservedEffectEntries = remaining
-      EffectSourceRevision += 1
       removed = True
     EndIf
   EndTryLockGuard
   If (removed)
-    RequestEffectRefresh(False)
+    RequestEffectRefresh(True)
     LogUserInformational(ModuleName, "CheckActiveEffectSources", "EFFECT_REMOVAL_DETECTED | Remaining=" + remaining.Length)
   EndIf
 EndFunction
 
 ; Builds one complete state payload; every submitted datagram is independently valid.
 Function PrepareEffectSnapshot()
+  Int expectedRevision = EffectSourceRevision
   If (Registry == None || BuffEffects == None || DebuffEffects == None)
     LogUserWarning(ModuleName, "PrepareEffectSnapshot", "EFFECT_SNAPSHOT_DEFERRED | Registry or catalog unavailable.")
+    RetryEffectBuild(expectedRevision)
     Return
   EndIf
   Actor player = Game.GetPlayer()
   If (player == None)
     LogUserWarning(ModuleName, "PrepareEffectSnapshot", "EFFECT_SNAPSHOT_DEFERRED | Player unavailable.")
+    RetryEffectBuild(expectedRevision)
     Return
   EndIf
-  Bool snapshotClaimed = False
-  Bool snapshotGuardAcquired = False
-  TryLockGuard EffectSnapshotGuard
-    snapshotGuardAcquired = True
-    If (EffectSnapshotBuilding || PendingEffectPayload != "")
+  EffectSnapshot candidate = new EffectSnapshot
+  Bool claimed = False
+  Bool forcedRefresh = False
+  Bool recoveryRefresh = False
+  LockGuard EffectSnapshotGuard
+    If (EffectSourceRevision != expectedRevision)
+      ; A load or another scan took ownership while prerequisites were queried.
+    ElseIf (EffectSnapshotBuilding || PendingSnapshot != None)
       EffectChangedDuringPublication = True
     Else
       EffectSnapshotBuilding = True
       EffectSourceRevision += 1
-      snapshotClaimed = True
+      candidate.Revision = EffectSourceRevision
+      forcedRefresh = EffectForceRefresh
+      EffectForceRefresh = False
+      recoveryRefresh = EffectRecoveryRefresh
+      EffectRecoveryRefresh = False
+      claimed = True
     EndIf
-  EndTryLockGuard
-  If (!snapshotClaimed)
-    If (!snapshotGuardAcquired)
-      RequestEffectRefresh(False)
-    EndIf
+  EndLockGuard
+  If (!claimed)
     Return
   EndIf
-  Bool recoveryRefresh = EffectRecoveryRefresh
-  EffectRecoveryRefresh = False
-  String[] previousEntries = ObservedEffectEntries
-  ActiveSourceEffects = new MagicEffect[0]
-  ActiveSourceEffectEntries = new String[0]
-  ActiveSourceAfflictions = new ENV_AfflictionScript[0]
-  ActiveSourceAfflictionEntries = new String[0]
-  ActiveSourceSpells = new Spell[0]
-  ActiveSourceSpellEntries = new String[0]
+  MagicEffect[] scanEffects = new MagicEffect[0]
+  String[] scanEffectEntries = new String[0]
+  ENV_AfflictionScript[] scanAfflictions = new ENV_AfflictionScript[0]
+  String[] scanAfflictionEntries = new String[0]
+  Spell[] scanSpells = new Spell[0]
+  String[] scanSpellEntries = new String[0]
   String[] entries = new String[0]
-  entries = AppendActiveEffects(entries, player, BuffEffects, BuffLabels, "B")
+  entries = AppendActiveEffects(entries, player, BuffEffects, BuffLabels, "B", scanEffects, scanEffectEntries)
   Int buffCount = entries.Length
-  entries = AppendActiveEffects(entries, player, DebuffEffects, DebuffLabels, "D")
-  entries = AppendActiveAfflictions(entries, player)
-  entries = AppendActiveEnvironmentalStatuses(entries, player)
+  entries = AppendActiveEffects(entries, player, DebuffEffects, DebuffLabels, "D", scanEffects, scanEffectEntries)
+  entries = AppendActiveAfflictions(entries, player, scanAfflictions, scanAfflictionEntries)
+  entries = AppendActiveEnvironmentalStatuses(entries, player, scanSpells, scanSpellEntries)
   Int debuffCount = entries.Length - buffCount
-  LastActiveEffectCount = entries.Length
-  If (previousEntries != None)
-    Int previousIndex = 0
-    While (previousIndex < previousEntries.Length)
-      If (!ContainsEffectEntry(entries, previousEntries[previousIndex]))
-        EffectForceRefresh = True
-      EndIf
-      previousIndex += 1
-    EndWhile
-  EndIf
-  ObservedEffectEntries = entries
-  ScheduleActiveEffectCheck()
   String signature = ""
   Int index = 0
   While (index < entries.Length)
@@ -323,45 +381,87 @@ Function PrepareEffectSnapshot()
   EndWhile
   Bool entriesChanged = signature != LastEffectSignature
   Float now = Utility.GetCurrentRealTime()
-  If (!EffectForceRefresh && !entriesChanged && now >= LastEffectSnapshotAt && now - LastEffectSnapshotAt < 60.0)
-    EffectSnapshotBuilding = False
-    If (EffectChangedDuringPublication)
-      EffectChangedDuringPublication = False
-      RequestEffectRefresh(False)
-    EndIf
+  If (!forcedRefresh && !entriesChanged && now >= LastEffectSnapshotAt && now - LastEffectSnapshotAt < 60.0)
+    FinishEffectBuild(candidate, False)
     Return
   EndIf
-  Bool forcedRefresh = EffectForceRefresh
-  EffectForceRefresh = False
+  String eventTopic = ResolveStatusTopic()
   String payload = buffCount + "|" + debuffCount + "|" + signature
   String datagram = Registry.BuildCanvasDatagramBody("effects.state", 1, "ci-ascii", payload)
-  String framedPacket = Registry.BuildCanvasEventPacket(ResolveStatusTopic(), datagram)
+  String framedPacket = Registry.BuildCanvasEventPacket(eventTopic, datagram)
   Int framedLength = Registry.GetCharacterCount(framedPacket)
-  If (datagram == "" || framedLength > 4096)
-    EffectSnapshotBuilding = False
-    EffectForceRefresh = True
-    PendingEffectNeedsRecoveryReplay = False
+  If (eventTopic == "" || datagram == "" || framedPacket == "" || framedLength > 4096)
     LogUserWarning(ModuleName, "PrepareEffectSnapshot", "EFFECT_DATAGRAM_REJECTED | Buffs=" + buffCount + " | Debuffs=" + debuffCount + " | Length=" + framedLength + " | Limit=4096")
+    FinishEffectBuild(candidate, True)
     Return
   EndIf
-  If (PendingEffectPayload != "")
-    EffectChangedDuringPublication = True
-    EffectSnapshotBuilding = False
-    Return
+  candidate.Signature = signature
+  candidate.Payload = payload
+  candidate.RecoveryReplay = !recoveryRefresh && (forcedRefresh || entriesChanged)
+  Bool queued = False
+  LockGuard EffectSnapshotGuard
+    If (EffectSnapshotBuilding && EffectSourceRevision == candidate.Revision)
+      PendingEntries = entries
+      PendingEffects = scanEffects
+      PendingSourceEffectEntries = scanEffectEntries
+      PendingAfflictions = scanAfflictions
+      PendingAfflictionEntries = scanAfflictionEntries
+      PendingSpells = scanSpells
+      PendingSpellEntries = scanSpellEntries
+      PendingSnapshot = candidate
+      PendingEffectSignature = signature
+      PendingEffectPayload = payload
+      PendingEffectNeedsRecoveryReplay = candidate.RecoveryReplay
+      EffectSnapshotBuilding = False
+      queued = True
+    EndIf
+  EndLockGuard
+  If (queued)
+    LogUserInformational(ModuleName, "PrepareEffectSnapshot", "EFFECT_DATAGRAM_QUEUED | Type=effects.state | Schema=1 | Buffs=" + buffCount + " | Debuffs=" + debuffCount + " | Length=" + framedLength)
+    StartTimer(0.1, 33)
   EndIf
-  ; Publish the payload last, after every field used by the send timer is ready.
-  PendingEffectSignature = signature
-  EffectRetryCount = 0
-  PendingEffectNeedsRecoveryReplay = !recoveryRefresh && (forcedRefresh || entriesChanged)
-  PendingEffectPayload = payload
-  EffectSnapshotBuilding = False
-  LogUserInformational(ModuleName, "PrepareEffectSnapshot", "EFFECT_DATAGRAM_QUEUED | Type=effects.state | Schema=1 | Buffs=" + buffCount + " | Debuffs=" + debuffCount + " | Length=" + framedLength)
-  StartTimer(0.1, 33)
+EndFunction
+
+; Missing prerequisites and rejected builds share the bounded budget; heartbeat survives exhaustion.
+Function RetryEffectBuild(Int expectedRevision)
+  Bool retry = False
+  LockGuard EffectSnapshotGuard
+    If (EffectSourceRevision == expectedRevision)
+      EffectForceRefresh = True
+      EffectRetryCount += 1
+      retry = EffectRetryCount <= 20
+    EndIf
+  EndLockGuard
+  If (retry)
+    RequestEffectRefresh(True)
+  EndIf
+EndFunction
+
+Function FinishEffectBuild(EffectSnapshot candidate, Bool rejected)
+  Bool retry = False
+  Bool refresh = False
+  LockGuard EffectSnapshotGuard
+    If (EffectSourceRevision == candidate.Revision && EffectSnapshotBuilding)
+      EffectSnapshotBuilding = False
+      refresh = EffectChangedDuringPublication
+      EffectChangedDuringPublication = False
+      If (rejected)
+        EffectForceRefresh = True
+        EffectRetryCount += 1
+        retry = EffectRetryCount <= 20
+        ; A coalesced request cannot bypass the exhausted retry budget.
+        refresh = False
+      EndIf
+    EndIf
+  EndLockGuard
+  If (retry || refresh)
+    RequestEffectRefresh(rejected)
+  EndIf
 EndFunction
 
 ; SQ_ENV owns injuries and infections separately from the magic-effect catalog. Its spells
 ; are the status-menu source of truth even when a console-applied spell did not set Active.
-String[] Function AppendActiveAfflictions(String[] entries, Actor player)
+String[] Function AppendActiveAfflictions(String[] entries, Actor player, ENV_AfflictionScript[] sources, String[] sourceEntries)
   SQ_ENV_AfflictionsScript afflictionQuest = Game.GetFormFromFile(0x00248D20, "Starfield.esm") as SQ_ENV_AfflictionsScript
   If (afflictionQuest == None || afflictionQuest.AfflictionData == None)
     Return entries
@@ -374,8 +474,8 @@ String[] Function AppendActiveAfflictions(String[] entries, Actor player)
       String label = ResolveAfflictionLabel(affliction.ID)
       String entry = "D:#" + affliction.GetFormID() + ":" + label
       entries.Add(entry)
-      ActiveSourceAfflictions.Add(affliction)
-      ActiveSourceAfflictionEntries.Add(entry)
+      sources.Add(affliction)
+      sourceEntries.Add(entry)
     EndIf
     index += 1
   EndWhile
@@ -399,7 +499,7 @@ Bool Function HasAfflictionSpell(Actor player, ENV_AfflictionScript affliction)
 EndFunction
 
 ; Only named source spells are used; shared airborne-hazard effects cannot identify toxic gas.
-String[] Function AppendActiveEnvironmentalStatuses(String[] entries, Actor player)
+String[] Function AppendActiveEnvironmentalStatuses(String[] entries, Actor player, Spell[] sources, String[] sourceEntries)
   Spell corrosiveEnvironment = Game.GetFormFromFile(0x08CB51, "Starfield.esm") as Spell
   MagicEffect corrosiveSoak = Game.GetFormFromFile(0x08CB47, "Starfield.esm") as MagicEffect
   Spell corrosiveRain = Game.GetFormFromFile(0x281ECB, "Starfield.esm") as Spell
@@ -407,20 +507,20 @@ String[] Function AppendActiveEnvironmentalStatuses(String[] entries, Actor play
   If (corrosiveEnvironment != None && corrosiveSoak != None && player.HasSpell(corrosiveEnvironment) && player.HasMagicEffect(corrosiveSoak))
     String entry = "D:#" + corrosiveEnvironment.GetFormID() + ":Corrosive Environment"
     entries.Add(entry)
-    ActiveSourceSpells.Add(corrosiveEnvironment)
-    ActiveSourceSpellEntries.Add(entry)
+    sources.Add(corrosiveEnvironment)
+    sourceEntries.Add(entry)
   EndIf
   If (corrosiveRain != None && player.HasSpell(corrosiveRain))
     String entry = "D:#" + corrosiveRain.GetFormID() + ":Corrosive Rain"
     entries.Add(entry)
-    ActiveSourceSpells.Add(corrosiveRain)
-    ActiveSourceSpellEntries.Add(entry)
+    sources.Add(corrosiveRain)
+    sourceEntries.Add(entry)
   EndIf
   If (toxicGas != None && player.HasSpell(toxicGas))
     String entry = "D:#" + toxicGas.GetFormID() + ":Toxic Gas Hazard"
     entries.Add(entry)
-    ActiveSourceSpells.Add(toxicGas)
-    ActiveSourceSpellEntries.Add(entry)
+    sources.Add(toxicGas)
+    sourceEntries.Add(entry)
   EndIf
   Return entries
 EndFunction
@@ -478,7 +578,7 @@ String Function ResolveAfflictionLabel(String afflictionId)
 EndFunction
 
 ; Only cataloged statuses are published. Multiple active sustenance modifiers describe one player-facing condition.
-String[] Function AppendActiveEffects(String[] entries, Actor player, FormList catalog, String[] labels, String category)
+String[] Function AppendActiveEffects(String[] entries, Actor player, FormList catalog, String[] labels, String category, MagicEffect[] sources, String[] sourceEntries)
   Int index = 0
   Int catalogSize = catalog.GetSize()
   While (index < catalogSize)
@@ -518,8 +618,8 @@ String[] Function AppendActiveEffects(String[] entries, Actor player, FormList c
       If ((!grouped || !ContainsEffectEntry(entries, entry)) && !suppressed)
         entries.Add(entry)
       EndIf
-      ActiveSourceEffects.Add(effect)
-      ActiveSourceEffectEntries.Add(entry)
+      sources.Add(effect)
+      sourceEntries.Add(entry)
     EndIf
     index += 1
   EndWhile
@@ -613,74 +713,77 @@ EndFunction
 
 ; Publishes one complete state datagram. EVENT_SUBMITTED acknowledges native submission only.
 Function PublishNextEffectPacket()
-  If (Registry == None)
+  EffectSnapshot candidate
+  LockGuard EffectSnapshotGuard
+    candidate = PendingSnapshot
+  EndLockGuard
+  If (candidate == None)
     Return
   EndIf
-  If (PendingEffectPayload == "")
-    Return
+  OperationResult result
+  If (Registry != None)
+    result = Registry.TryPublishCanvasDatagram(ResolveStatusTopic(), "effects.state", 1, "ci-ascii", candidate.Payload)
   EndIf
-  String payload = PendingEffectPayload
-  String signature = PendingEffectSignature
-  OperationResult result = Registry.TryPublishCanvasDatagram(ResolveStatusTopic(), "effects.state", 1, "ci-ascii", payload)
-  Float elapsed = -1.0
+  String status = "DEFERRED_REGISTRY_UNAVAILABLE"
+  If (result != None)
+    status = result.Status
+  EndIf
   Float now = Utility.GetCurrentRealTime()
-  If (LastHudOpenAt > 0.0 && now >= LastHudOpenAt)
-    elapsed = now - LastHudOpenAt
-  EndIf
-  LogUserInformational(ModuleName, "PublishNextEffectPacket", "EFFECT_DATAGRAM_ATTEMPT | Type=effects.state | Schema=1 | Length=" + Registry.GetCharacterCount(result.Packet) + " | Status=" + result.Status + " | SinceHudOpen=" + elapsed)
-  If (PendingEffectPayload != payload || PendingEffectSignature != signature)
-    Return
-  EndIf
-  If (result.Status == "EVENT_SUBMITTED")
-    Bool scheduleRecoveryReplay = PendingEffectNeedsRecoveryReplay
-    EffectRetryCount = 0
-    LastEffectSignature = signature
-    LastEffectSnapshotAt = Utility.GetCurrentRealTime()
-    PendingEffectPayload = ""
-    PendingEffectNeedsRecoveryReplay = False
-    CancelTimer(34)
-    StartTimer(60.0, 34)
-    If (scheduleRecoveryReplay)
-      CancelTimer(35)
+  Bool committed = False
+  Bool retry = False
+  Bool refresh = False
+  LockGuard EffectSnapshotGuard
+    ; A load or replacement invalidates even an otherwise identical payload receipt.
+    If (PendingSnapshot == candidate && EffectSourceRevision == candidate.Revision)
+      If (status == "EVENT_SUBMITTED")
+        ObservedEffectEntries = PendingEntries
+        ActiveSourceEffects = PendingEffects
+        ActiveSourceEffectEntries = PendingSourceEffectEntries
+        ActiveSourceAfflictions = PendingAfflictions
+        ActiveSourceAfflictionEntries = PendingAfflictionEntries
+        ActiveSourceSpells = PendingSpells
+        ActiveSourceSpellEntries = PendingSpellEntries
+        LastEffectSignature = candidate.Signature
+        LastActiveEffectCount = PendingEntries.Length
+        LastEffectSnapshotAt = now
+        EffectRetryCount = 0
+        committed = True
+        refresh = EffectChangedDuringPublication
+        EffectChangedDuringPublication = False
+      Else
+        EffectForceRefresh = True
+        EffectRetryCount += 1
+        retry = EffectRetryCount <= 20
+      EndIf
+      If (committed || !retry)
+        PendingSnapshot = None
+        PendingEntries = None
+        PendingEffects = None
+        PendingSourceEffectEntries = None
+        PendingAfflictions = None
+        PendingAfflictionEntries = None
+        PendingSpells = None
+        PendingSpellEntries = None
+        PendingEffectPayload = ""
+        PendingEffectSignature = ""
+        PendingEffectNeedsRecoveryReplay = False
+      EndIf
+    EndIf
+  EndLockGuard
+  LogUserInformational(ModuleName, "PublishNextEffectPacket", "EFFECT_DATAGRAM_ATTEMPT | Status=" + status + " | Revision=" + candidate.Revision + " | Committed=" + committed + " | Retry=" + retry)
+  If (committed)
+    ScheduleActiveEffectCheck()
+    If (candidate.RecoveryReplay)
       StartTimer(2.0, 35)
     EndIf
-    If (EffectChangedDuringPublication)
-      EffectChangedDuringPublication = False
+    If (refresh)
       RequestEffectRefresh(False)
     EndIf
-  ElseIf (result.Status == "REJECTED_EVENT_INACTIVE")
-    LogUserInformational(ModuleName, "PublishNextEffectPacket", "EFFECT_DATAGRAM_WAITING_FOR_HUD")
-    EffectRetryCount += 1
-    If (EffectRetryCount <= 20)
-      StartTimer(0.5, 33)
-    Else
-      LogUserWarning(ModuleName, "PublishNextEffectPacket", "EFFECT_DATAGRAM_RETRY_EXHAUSTED | Status=" + result.Status)
-      PendingEffectPayload = ""
-      PendingEffectNeedsRecoveryReplay = False
-      EffectForceRefresh = True
-      CancelTimer(34)
-      StartTimer(60.0, 34)
-    EndIf
-  ElseIf (IsDeferred(result.Status) || result.Status == "EVENT_CANCELLED_ACTIVATION")
-    EffectRetryCount += 1
-    If (EffectRetryCount <= 20)
-      StartTimer(0.5, 33)
-    Else
-      LogUserWarning(ModuleName, "PublishNextEffectPacket", "EFFECT_DATAGRAM_RETRY_EXHAUSTED | Status=" + result.Status)
-      PendingEffectPayload = ""
-      PendingEffectNeedsRecoveryReplay = False
-      EffectForceRefresh = True
-      CancelTimer(34)
-      StartTimer(60.0, 34)
-    EndIf
-  Else
-    LogUserWarning(ModuleName, "PublishNextEffectPacket", "EFFECT_DATAGRAM_REJECTED | Status=" + result.Status + " | Detail=" + result.Detail)
-    PendingEffectPayload = ""
-    PendingEffectNeedsRecoveryReplay = False
-    EffectForceRefresh = True
+  ElseIf (retry)
+    StartTimer(0.5, 33)
   EndIf
+  ; The independent timer 34 remains armed on every failure, including terminal rejection.
 EndFunction
-
 
 String Function ResolveStatusTopic()
   If (StatusTopic == "venworks.vwhud.vwks.status" || StatusTopic == "venworks.vwhud.ta.status" || StatusTopic == "venworks.vwhud.fc.status" || StatusTopic == "venworks.vwhud.cf.status" || StatusTopic == "venworks.vwhud.min.status")

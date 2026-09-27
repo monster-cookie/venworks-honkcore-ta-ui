@@ -15,6 +15,7 @@ package
       private var scannerTimer:Timer;
       private var scannerStep:int = 0;
       private var receiving:Boolean = false;
+      private var disposed:Boolean = false;
 
       public function getCanvasRegistration() : Object
       {
@@ -32,9 +33,10 @@ package
       {
          if(state == "unload") { this.dispose(); return; }
          if(state != "ready") return;
-         this.dispose();
          if(detail == null || detail.html == null || !(detail.features is Array) || detail.features.indexOf("htmlRendering") < 0 || !("setData" in detail.html) || !("getUpdateState" in detail.html))
             throw new Error("VWHUD requires Canvas HTML/3");
+         this.teardownPresentation();
+         this.disposed = false;
          this.bridge = detail.html;
          this.model = new VWHudViewModel();
          this.conditions = new VWHudConditions();
@@ -67,10 +69,18 @@ package
 
       public function handleCanvasEvent(topic:String, body:String) : void
       {
-         if(this.bridge != null && topic == VWHudVariant.NAMESPACE+".status" && this.effects.acceptDatagram(body)) this.publish();
+         if(!this.disposed && topic == VWHudVariant.NAMESPACE+".status" && this.effects.acceptDatagram(body)) this.publish();
       }
 
       public function dispose() : void
+      {
+         this.disposed = true;
+         this.teardownPresentation();
+         this.effects.reset();
+      }
+
+      // A replacement bridge receives the latest validated status, even before ready.
+      private function teardownPresentation() : void
       {
          if(this.pageTimer != null)
          {
@@ -87,7 +97,6 @@ package
             this.model.dispose(); this.model = null;
          }
          this.bridge = null; this.conditions = null; this.scannerStep = 0; this.receiving = false;
-         this.effects.reset();
       }
 
       private function onModelChange(event:Event) : void { if(!this.receiving) this.publish(); }
