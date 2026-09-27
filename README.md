@@ -56,7 +56,7 @@ VWHUD uses `venworks.vwhud.vwks`, `venworks.vwhud.ta`, `venworks.vwhud.fc`, `ven
 - Confirm that Core loads before Canvas and Canvas loads before the selected VWHUD theme.
 - Confirm that only one VWHUD theme is installed and enabled.
 - Remove old standalone VWHUD files and avoid combining the Normal and Fully Loose package shapes.
-- If the Canvas display reports `UNSUPPORTED CONSUMER PROTOCOL`, or the Papyrus log reports that `Venworks:Canvas:Registry.BuildCanvasDatagramBody` is missing, fully exit Starfield, purge loose files from an older Canvas installation, and reinstall or redeploy Venworks Canvas 1.0.4 or newer. Disabling an old plugin is insufficient because its loose files can still override the current Canvas BA2.
+- If the Canvas display reports `UNSUPPORTED CONSUMER PROTOCOL`, or the Papyrus log reports that `Venworks:Canvas:Registry.BuildCanvasDatagramBody` is missing, the Canvas code loaded by that game process does not expose the contract VWHUD expects. Fully exit Starfield, verify the deployed Canvas and VWHUD package versions, check for duplicate archives or loose files providing the same paths, redeploy Venworks Canvas 1.0.4 or newer, and restart the game. These messages identify a loaded-contract mismatch; by themselves they do not prove which package or deployment path supplied the conflicting file.
 - Disable a custom override mod and restart Starfield to determine whether the base theme loads normally.
 - Report the Canvas version, VWHUD theme and version, package source, platform, normal or large HUD mode, and whether the issue remains without overrides.
 

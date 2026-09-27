@@ -109,11 +109,11 @@ After updating Canvas or VWHUD, test the selected theme once with the override m
 
 To restore the default presentation, disable or remove the separate override mod. For a Fully Loose installation, reinstall the unmodified package. Do not copy default resources out of the Canvas base package; VWHUD's theme resources come from the selected VWHUD package.
 
-## Recover from an older Canvas installation
+## Recover from a Canvas contract mismatch
 
-Two messages together identify an incompatible Canvas runtime rather than a theme CSS problem:
+Two messages identify a loaded Canvas contract that is incompatible with VWHUD rather than a theme CSS problem:
 
 - the Canvas display reports `UNSUPPORTED CONSUMER PROTOCOL`; and
 - the Papyrus log reports that `Venworks:Canvas:Registry.BuildCanvasDatagramBody` does not exist.
 
-Fully exit Starfield, purge loose Interface and Script files from the older Canvas installation through your mod manager or by removing the prior manual installation, then reinstall or redeploy Venworks Canvas 1.0.4 or newer. Restart Starfield after deployment so both the Canvas host movie and compiled Registry script reload. Disabling the old plugin alone does not remove loose files that take precedence over the current Canvas BA2.
+Fully exit Starfield, verify the deployed Canvas and VWHUD versions, and inspect the mod manager for duplicate archives or loose Interface and Script files that provide the same paths. Reinstall or redeploy Venworks Canvas 1.0.4 or newer and restart Starfield so both the Canvas host movie and compiled Registry script reload. The two messages establish that the code loaded by that game process does not expose VWHUD's expected contract; they do not, without deployed-file evidence from the affected computer, distinguish a mixed package version, an overriding archive or loose file, or a process still holding previously loaded code.
