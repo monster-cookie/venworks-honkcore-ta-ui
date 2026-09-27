@@ -24,6 +24,7 @@
 - Publish favorite slots as `favorite.slot01` through `favorite.slot12`. The previous rewrite left the literal key `favorite.slot$1.hotkey`, which Canvas rejects.
 - Name the publish stage on a ready-callback failure. The chronomark shows `PUBLISH model`, `flags`, `effects`, `present`, or `setdata` with the Canvas access path.
 - Remove the full-screen helmet visor shapes. Themed panels now use the minimalist holographic plate: a dark rectangle, a theme-accent halo, and corner brackets.
+- Read compass and frequent environment fields only when the game object actually has them, so a missing property cannot abort the HUD update.
 
 ## Version 2.0.19 (September 1, 2026)
 

@@ -225,9 +225,35 @@ package
          return "unknown";
       }
 
+      public static function field(param1:Object, param2:String) : *
+      {
+         if(param1 == null || !(param2 in param1)) return null;
+         return param1[param2];
+      }
+
+      public static function collection(param1:Object, param2:String) : Array
+      {
+         var value:* = field(param1,param2);
+         if(value == null) return null;
+         if(value is Array) return value as Array;
+         if(!("length" in value)) return null;
+         var length:Number = Number(value.length);
+         if(!isFinite(length) || length <= 0) return null;
+         var copy:Array = [];
+         var count:int = int(Math.min(length,64));
+         var index:int = 0;
+         while(index < count)
+         {
+            try { copy.push(value[index]); }
+            catch(readError:*) { break; }
+            ++index;
+         }
+         return copy;
+      }
+
       public static function resolveTrackedObjective(param1:Object) : String
       {
-         var markers:Array = param1 == null ? null : param1.aMissionMarkers as Array;
+         var markers:Array = collection(param1,"aMissionMarkers");
          var marker:Object = null;
          var text:String = "";
          var fallback:String = "";
@@ -456,13 +482,16 @@ package
             this.notifyChanged();
             return;
          }
-         this.setFinite("environment.localtime",param1.data.fLocalPlanetTime);
-         this.updateSolarTransitionCountdown(param1.data.fLocalPlanetTime,param1.data.fLocalPlanetHoursPerDay);
-         this.setFinite("player.universaltime",param1.data.fGalacticStandardTime / 24);
+         var localTime:* = field(param1.data,"fLocalPlanetTime");
+         var hoursPerDay:* = field(param1.data,"fLocalPlanetHoursPerDay");
+         var galacticTime:* = field(param1.data,"fGalacticStandardTime");
+         this.setFinite("environment.localtime",localTime);
+         this.updateSolarTransitionCountdown(localTime,hoursPerDay);
+         if(galacticTime != null) this.setFinite("player.universaltime",Number(galacticTime) / 24);
          this.universalTimeDiagnostic = "UT: fGalacticStandardTime=" +
-            this.formatDiagnosticValue(param1.data.fGalacticStandardTime) +
-            " | fLocalPlanetTime=" + this.formatDiagnosticValue(param1.data.fLocalPlanetTime) +
-            " | fLocalPlanetHoursPerDay=" + this.formatDiagnosticValue(param1.data.fLocalPlanetHoursPerDay);
+            this.formatDiagnosticValue(galacticTime) +
+            " | fLocalPlanetTime=" + this.formatDiagnosticValue(localTime) +
+            " | fLocalPlanetHoursPerDay=" + this.formatDiagnosticValue(hoursPerDay);
          this.updatePlayerTimeInventoryDiagnostic();
          this.notifyChanged();
       }

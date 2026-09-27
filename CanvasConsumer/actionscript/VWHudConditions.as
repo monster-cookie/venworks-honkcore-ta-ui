@@ -148,7 +148,7 @@ package
       private function onCompassData(param1:Object) : void
       {
          var data:Object = param1 == null ? null : param1.data;
-         this.setValue("inscanner",data != null && Boolean(data.bIsHandscannerOpen));
+         this.setValue("inscanner",data != null && VWHudViewModel.field(data,"bIsHandscannerOpen") === true);
          this.notifyChanged();
       }
 

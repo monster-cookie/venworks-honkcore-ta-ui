@@ -90,7 +90,7 @@ package
          var markers:Array = this.collectCompassMarkers();
          var scannerTargets:Array = this.collectScannerTargets();
          var statuses:Array = this.collectStatusEffects();
-         var enemyMarkers:Array = compassData == null ? null : compassData.aEnemyMarkers as Array;
+         var enemyMarkers:Array = VWHudViewModel.collection(compassData,"aEnemyMarkers");
          var hostilePressure:Number = this.calculateNearbyPressure(
             enemyMarkers,
             5,
@@ -98,7 +98,7 @@ package
          );
          var nearestHostileDistance:Number = this.findNearestHostileDistance(enemyMarkers);
          var physicalHazardPressure:Number = this.calculateNearbyPressure(
-            compassData == null ? null : compassData.aMarkers as Array,
+            VWHudViewModel.collection(compassData,"aMarkers"),
             3,
             MIT_MARKER_HAZARD
          );
@@ -119,7 +119,7 @@ package
          {
             score = Math.max(score,SEVERE_HOSTILE_SCORE);
          }
-         var direction:Number = compassData == null ? 0 : Number(compassData.fDirection);
+         var direction:Number = compassData == null ? 0 : Number(VWHudViewModel.field(compassData,"fDirection"));
          if(!this.isFiniteNumber(direction))
          {
             direction = 0;
@@ -145,9 +145,9 @@ package
          {
             return result;
          }
-         this.appendScannerTargets(result,byHandle,compassData.aEnemyMarkers as Array);
-         this.appendScannerTargets(result,byHandle,compassData.aMissionMarkers as Array);
-         this.appendScannerTargets(result,byHandle,compassData.aMarkers as Array);
+         this.appendScannerTargets(result,byHandle,VWHudViewModel.collection(compassData,"aEnemyMarkers"));
+         this.appendScannerTargets(result,byHandle,VWHudViewModel.collection(compassData,"aMissionMarkers"));
+         this.appendScannerTargets(result,byHandle,VWHudViewModel.collection(compassData,"aMarkers"));
          return result;
       }
 
@@ -163,10 +163,10 @@ package
          while(param3 != null && index < param3.length && param1.length < MAX_SCANNER_TARGETS)
          {
             source = param3[index];
-            handle = source == null ? NaN : Number(source.uiHandle);
-            markerType = source == null ? NaN : Number(source.uiMarkerIconType);
-            heading = source == null ? NaN : Number(source.fHeading);
-            distance = source == null ? NaN : Number(source.fDistanceToPlayer);
+            handle = source == null ? NaN : Number(VWHudViewModel.field(source,"uiHandle"));
+            markerType = source == null ? NaN : Number(VWHudViewModel.field(source,"uiMarkerIconType"));
+            heading = source == null ? NaN : Number(VWHudViewModel.field(source,"fHeading"));
+            distance = source == null ? NaN : Number(VWHudViewModel.field(source,"fDistanceToPlayer"));
             key = String(handle);
             if(source != null && this.isFiniteNumber(handle) && handle != 0 && param2[key] !== true &&
                this.isFiniteNumber(markerType) && markerType == uint(markerType) &&
@@ -249,8 +249,8 @@ package
       {
          var result:Array = [];
          var byHandle:Object = {};
-         var general:Array = compassData == null ? null : compassData.aMarkers as Array;
-         var environmental:Array = environmentData == null ? null : environmentData.aEnvironmentEffects as Array;
+         var general:Array = VWHudViewModel.collection(compassData,"aMarkers");
+         var environmental:Array = VWHudViewModel.collection(environmentData,"aEnvironmentEffects");
          this.appendCompassMarkers(result,byHandle,general,false);
          this.appendCompassMarkers(result,byHandle,environmental,true);
          if(result.length > MAX_COMPASS_MARKERS)
@@ -270,7 +270,7 @@ package
          while(param3 != null && index < param3.length)
          {
             source = param3[index];
-            handle = source == null ? 0 : Number(source.uiHandle);
+            handle = source == null ? 0 : Number(VWHudViewModel.field(source,"uiHandle"));
             if(source != null && this.isFiniteNumber(handle) && handle != 0)
             {
                key = String(handle);
@@ -296,8 +296,8 @@ package
       {
          var result:Array = [];
          var seen:Object = {};
-         var personalEffects:Array = personalEffectsData == null ? null : personalEffectsData.aPersonalEffects as Array;
-         var environmentEffects:Array = environmentData == null ? null : environmentData.aEnvironmentEffects as Array;
+         var personalEffects:Array = VWHudViewModel.collection(personalEffectsData,"aPersonalEffects");
+         var environmentEffects:Array = VWHudViewModel.collection(environmentData,"aEnvironmentEffects");
          this.appendStatusEffects(result,seen,personalEffects,false,0);
          this.appendStatusEffects(result,seen,environmentEffects,true,1);
          result.sort(this.compareStatuses);
@@ -523,10 +523,15 @@ package
       private function copyFields(param1:Object, param2:Object) : void
       {
          var field:String = null;
-         for(field in param1)
+         try
          {
-            param2[field] = param1[field];
+            for(field in param1)
+            {
+               try { param2[field] = param1[field]; }
+               catch(fieldError:*) {}
+            }
          }
+         catch(enumerateError:*) {}
       }
 
       private function isFiniteNumber(param1:Number) : Boolean

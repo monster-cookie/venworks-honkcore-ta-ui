@@ -56,11 +56,11 @@ package
          {
             if(result.length >= 48 || ++checked > 256) break;
             if(source == null) continue;
-            var heading:Number = finite(source.fHeading,NaN);
+            var heading:Number = finite(VWHudViewModel.field(source,"fHeading"),NaN);
             var delta:Number = radians(heading-direction);
             if(!isFinite(delta) || Math.abs(delta) > Math.PI/3) continue;
-            result.push({x:413+delta/(Math.PI/3)*413,y:20,opacity:clamp(source.fDistanceAlpha,0,1,1),scale:clamp(source.fDistanceScale,0.5,1.5,1)*0.48,
-               marker:{type:integer(source.uiMarkerIconType,0,255),relative:integer(source.uiRelativeMarkerHeightType,0,3),subcategory:integer(source.uiMapMarkerSubCategoryType,0,3),locationtype:integer(source.uMapMarkerType,0,65535),locationcategory:integer(source.uMapMarkerCategory,0,65535),locationstate:integer(source.uLocationMarkerState,0,65535),effect:source.isEnvironmentEffect === true ? String(source.sEffectIcon).substr(0,96) : ""}});
+            result.push({x:413+delta/(Math.PI/3)*413,y:20,opacity:clamp(VWHudViewModel.field(source,"fDistanceAlpha"),0,1,1),scale:clamp(VWHudViewModel.field(source,"fDistanceScale"),0.5,1.5,1)*0.48,
+               marker:{type:integer(VWHudViewModel.field(source,"uiMarkerIconType"),0,255),relative:integer(VWHudViewModel.field(source,"uiRelativeMarkerHeightType"),0,3),subcategory:integer(VWHudViewModel.field(source,"uiMapMarkerSubCategoryType"),0,3),locationtype:integer(VWHudViewModel.field(source,"uMapMarkerType"),0,65535),locationcategory:integer(VWHudViewModel.field(source,"uMapMarkerCategory"),0,65535),locationstate:integer(VWHudViewModel.field(source,"uLocationMarkerState"),0,65535),effect:source.isEnvironmentEffect === true ? String(VWHudViewModel.field(source,"sEffectIcon")).substr(0,96) : ""}});
          }
          return result;
       }
@@ -69,8 +69,8 @@ package
       {
          var result:Array = [];
          if(compass == null) return result;
-         appendContacts(result,compass.aEnemyMarkers as Array,direction,true);
-         appendContacts(result,compass.aMarkers as Array,direction,false);
+         appendContacts(result,VWHudViewModel.collection(compass,"aEnemyMarkers"),direction,true);
+         appendContacts(result,VWHudViewModel.collection(compass,"aMarkers"),direction,false);
          return result;
       }
 
@@ -80,17 +80,17 @@ package
          for each(var source:Object in sources)
          {
             if(result.length >= 32 || ++checked > 256) break;
-            if(source == null || finite(source.uiHandle,0) == 0) continue;
-            var type:int = integer(source.uiMarkerIconType,0,255);
+            if(source == null || finite(VWHudViewModel.field(source,"uiHandle"),0) == 0) continue;
+            var type:int = integer(VWHudViewModel.field(source,"uiMarkerIconType"),0,255);
             if(!enemy && [8,10,13,14].indexOf(type) < 0) continue;
-            var distance:Number = finite(source.fDistanceToPlayer,NaN);
-            var heading:Number = finite(source.fHeading,NaN);
+            var distance:Number = finite(VWHudViewModel.field(source,"fDistanceToPlayer"),NaN);
+            var heading:Number = finite(VWHudViewModel.field(source,"fHeading"),NaN);
             if(!isFinite(distance+heading) || distance < 0 || distance > 200) continue;
             var angle:Number = Math.PI-direction;
             var vx:Number = -Math.sin(angle); var vy:Number = Math.cos(angle);
             var radius:Number = 92*distance/200;
             var structure:Boolean = !enemy && [10,13,14].indexOf(type) >= 0;
-            result.push({x:92+(Math.cos(heading)*vx-Math.sin(heading)*vy)*radius,y:92+(Math.sin(heading)*vx+Math.cos(heading)*vy)*radius,opacity:clamp(source.fDistanceAlpha,0,1,1),enemy:enemy,ally:!enemy && !structure,structure:structure});
+            result.push({x:92+(Math.cos(heading)*vx-Math.sin(heading)*vy)*radius,y:92+(Math.sin(heading)*vx+Math.cos(heading)*vy)*radius,opacity:clamp(VWHudViewModel.field(source,"fDistanceAlpha"),0,1,1),enemy:enemy,ally:!enemy && !structure,structure:structure});
          }
       }
 
