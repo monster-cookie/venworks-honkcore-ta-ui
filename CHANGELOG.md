@@ -17,6 +17,7 @@
 - Added stable panel classes and a last-loaded `vwhud-overrides.css` file for PC color, placement, size, typography, and visibility overrides.
 - Changed build and release packaging to keep installed and committed staging archive-only while reconstructing the Nexus Fully Loose package from the verified Windows Main BA2.
 - Added a Canvas contract preflight and recovery guidance for diagnosing a deployed Canvas/VWHUD contract mismatch.
+- Write every theme document with the lowercase `<!doctype html>` preamble Canvas requires, so the theme can parse and hide the Canvas watch.
 - Now requires Venworks Canvas 1.0.4 and Venworks Core Utilities 2.1.8.
 
 ## Version 2.0.19 (September 1, 2026)
