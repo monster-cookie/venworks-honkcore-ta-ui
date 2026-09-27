@@ -143,7 +143,12 @@ package
             if(key.indexOf("diagnostic.") == 0) continue;
             var value:Object = this.values[key];
             if(value != null && value.known === true)
-               result[key.replace(/favorite\.([0-9][0-9])\./,"favorite.slot$1.")] = value.value;
+            {
+               var published:String = key;
+               var favorite:Array = key.match(/^favorite\.([0-9][0-9])\.(name|detail|hotkey)$/);
+               if(favorite != null) published = "favorite.slot" + favorite[1] + "." + favorite[2];
+               result[published] = value.value;
+            }
          }
          return result;
       }
