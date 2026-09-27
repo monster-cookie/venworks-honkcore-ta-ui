@@ -1,152 +1,98 @@
 <#
 .SYNOPSIS
-Checks shared release metadata and verifies selected variant artifacts.
-
-.PARAMETER VariantKeys
-One or more keys from the five v1 release variants. Omit this parameter to process
-all five v1 variants. PS5DBG requires checkRepoV2.ps1. `VariantKey` remains a
-compatibility alias.
-
-.PARAMETER Committed
-Verifies the tracked staging directories instead of requiring local junctions.
+Checks release metadata and verifies selected VWHUD Canvas consumer payloads.
 #>
 [CmdletBinding()]
 param(
-  [Alias("VariantKey")]
-  [string[]]$VariantKeys,
-
+  [Alias('VariantKey')][string[]]$VariantKeys,
   [switch]$Committed
 )
 
 $PSNativeCommandUseErrorActionPreference = $true
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+$repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 
 if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction SilentlyContinue)) {
-  Write-Host -ForegroundColor Green "Importing Shared Configuration"
   if ($Committed) {
-    . "$PSScriptRoot\sharedConfig.ps1" -SkipEnvironment
+    . (Join-Path $PSScriptRoot 'sharedConfig.ps1') -SkipEnvironment
   }
   else {
-    . "$PSScriptRoot\sharedConfig.ps1"
+    . (Join-Path $PSScriptRoot 'sharedConfig.ps1')
   }
 }
+. (Join-Path $PSScriptRoot 'sharedCanvasConsumers.ps1')
 
-$repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 $releaseVariants = @($Global:ReleaseVariants)
-if ($releaseVariants.Count -ne 6) {
-  throw "ReleaseVariants must contain all six variants; found $($releaseVariants.Count)."
+$expectedKeys = @('CF', 'FC', 'MIN', 'TA', 'VWKS')
+$actualKeys = @($releaseVariants.VariantKey | Sort-Object)
+if ([string]::Join("`n", $actualKeys) -cne [string]::Join("`n", $expectedKeys)) {
+  throw "Release variants must be exactly: $($expectedKeys -join ', ')."
 }
 
-$requiredStringProperties = @(
-  "VariantKey",
-  "VariantName",
-  "ReleaseDisplayName",
-  "PackageBaseName",
-  "StagingFolderPath"
-)
-foreach ($propertyName in $requiredStringProperties) {
-  $values = @($releaseVariants | ForEach-Object { [string]$_.$propertyName })
+foreach ($property in @('VariantKey', 'VariantName', 'ReleaseDisplayName', 'NexusNormalDisplayName', 'NexusLooseDisplayName', 'PackageBaseName', 'StagingFolderPath')) {
+  $values = @($releaseVariants | ForEach-Object { [string]$_.$property })
   if (@($values | Where-Object { [string]::IsNullOrWhiteSpace($_) }).Count -ne 0) {
-    throw "Every release variant must define $propertyName."
+    throw "Every release variant must define $property."
   }
-  if ($propertyName -in @("VariantKey", "VariantName", "ReleaseDisplayName", "PackageBaseName", "StagingFolderPath") -and
-      @($values | Select-Object -Unique).Count -ne $values.Count) {
-    throw "Release variant property $propertyName must be unique."
+  if (@($values | Select-Object -Unique).Count -ne $values.Count) {
+    throw "Release variant property $property must be unique."
   }
 }
 
-$allowedArchiveTargets = @("Main", "Textures", "Main_XBox", "Textures_XBox", "Main_PS", "Textures_PS")
-$forbiddenProfileProperties = @(
-  "VariantKey",
-  "VariantName",
-  "ReleaseDisplayName",
-  "NexusNormalDisplayName",
-  "NexusLooseDisplayName",
-  "PackageBaseName",
-  "StagingFolderPath",
-  "PluginModulePath",
-  "PaletteFileName",
-  "ArchiveTargets"
-)
 foreach ($variant in $releaseVariants) {
-  $nexusNormalDisplayName = [string]$variant.NexusNormalDisplayName
-  $nexusLooseDisplayName = [string]$variant.NexusLooseDisplayName
-  if ([string]::IsNullOrWhiteSpace($nexusNormalDisplayName) -ne
-      [string]::IsNullOrWhiteSpace($nexusLooseDisplayName)) {
-    throw "Variant '$($variant.VariantKey)' must define both Nexus display names or neither."
+  $key = [string]$variant.VariantKey
+  if (!(Test-CanvasConsumerVariant -Key $key)) {
+    throw "Release variant '$key' is missing its Canvas consumer source."
   }
-  foreach ($nexusPropertyName in @("NexusNormalDisplayName", "NexusLooseDisplayName")) {
-    if (([string]$variant.$nexusPropertyName).Length -gt 50) {
-      throw "Variant '$($variant.VariantKey)' exceeds the Nexus display-name limit in $nexusPropertyName."
-    }
+  if (([string]$variant.NexusNormalDisplayName).Length -gt 50 -or ([string]$variant.NexusLooseDisplayName).Length -gt 50) {
+    throw "Variant '$key' exceeds the Nexus display-name limit."
   }
-
-  $archiveTargets = @($variant.ArchiveTargets)
-  if ($archiveTargets.Count -eq 0 -or
-      @($archiveTargets | Select-Object -Unique).Count -ne $archiveTargets.Count -or
-      @($archiveTargets | Where-Object { $_ -notin $allowedArchiveTargets }).Count -ne 0) {
-    throw "Variant '$($variant.VariantKey)' has invalid or repeated archive targets."
+  if ([string]::Join("`n", @($variant.ArchiveTargets)) -cne [string]::Join("`n", @('Main', 'Main_XBox', 'Main_PS'))) {
+    throw "Variant '$key' must publish exactly the PC, Xbox, and PS5 Main archives."
   }
-  $requiredMainTargets = if ([string]::IsNullOrWhiteSpace($nexusNormalDisplayName)) {
-    @("Main", "Main_PS")
-  }
-  else {
-    @("Main", "Main_XBox", "Main_PS")
-  }
-  foreach ($requiredMainTarget in $requiredMainTargets) {
-    if ($requiredMainTarget -notin $archiveTargets) {
-      throw "Variant '$($variant.VariantKey)' must publish the $requiredMainTarget archive."
-    }
-  }
-  if ([string]::IsNullOrWhiteSpace($nexusNormalDisplayName) -and
-      ([string]$variant.PaletteFileName).Length -ne 0) {
-    throw "Non-Nexus variant '$($variant.VariantKey)' must not declare a palette selection."
-  }
-  if (![string]::IsNullOrWhiteSpace($nexusNormalDisplayName) -and
-      [string]::IsNullOrWhiteSpace([string]$variant.PaletteFileName)) {
-    throw "Nexus variant '$($variant.VariantKey)' must declare a palette selection."
+  if (@(Get-VariantReleasePackageSuffixes -Variant $variant).Count -ne 5) {
+    throw "Variant '$key' must publish exactly five release package shapes."
   }
 
-  $profilePath = Join-Path $repositoryRoot "Scaleform\variants\$($variant.VariantKey)\build.psd1"
-  if (!(Test-Path -LiteralPath $profilePath -PathType Leaf)) {
-    throw "Variant '$($variant.VariantKey)' is missing its build profile: $profilePath"
+  $variantSource = Join-Path $repositoryRoot "CanvasConsumer/variants/$key/VWHudVariant.as"
+  $variantText = [IO.File]::ReadAllText($variantSource)
+  $expectedNamespace = 'venworks.vwhud.' + $key.ToLowerInvariant()
+  if (!$variantText.Contains("NAMESPACE:String = `"$expectedNamespace`"")) {
+    throw "Variant '$key' does not declare namespace '$expectedNamespace'."
   }
-  $variantBuildProfile = Import-PowerShellDataFile -LiteralPath $profilePath
-  foreach ($forbiddenProperty in $forbiddenProfileProperties) {
-    if ($variantBuildProfile.ContainsKey($forbiddenProperty)) {
-      throw "Variant '$($variant.VariantKey)' build profile duplicates shared property '$forbiddenProperty'."
-    }
+  $spriggitRoot = Join-Path $repositoryRoot "Spriggit/$($variant.PackageBaseName).esm"
+  if (!(Test-Path -LiteralPath $spriggitRoot -PathType Container)) {
+    throw "Variant '$key' is missing its real plugin source: $spriggitRoot"
   }
 }
 
-$profileKeys = @(
-  Get-ChildItem -LiteralPath (Join-Path $repositoryRoot "Scaleform\variants") -Directory |
+$variantDirectories = @(
+  Get-ChildItem -LiteralPath (Join-Path $repositoryRoot 'CanvasConsumer/variants') -Directory |
     Select-Object -ExpandProperty Name |
     Sort-Object
 )
-$releaseKeys = @($releaseVariants.VariantKey | Sort-Object)
-if ([string]::Join("`n", $profileKeys) -cne [string]::Join("`n", $releaseKeys)) {
-  throw "Scaleform profile directories must match the release variant definitions exactly."
+if ([string]::Join("`n", $variantDirectories) -cne [string]::Join("`n", $expectedKeys)) {
+  throw 'Canvas consumer source directories must match the five release variants exactly.'
 }
 
-$v1VariantKeys = @('TA', 'FC', 'CF', 'VWKS', 'MIN')
-if ($null -eq $VariantKeys -or $VariantKeys.Count -eq 0) {
-  $variants = @(Get-ModuleVariants -VariantKeys $v1VariantKeys)
-}
-else {
-  $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
-}
-if (@($variants | Where-Object { [string]$_.VariantKey -ceq 'PS5DBG' }).Count -ne 0) {
-  throw 'PS5DBG requires Tools/checkRepoV2.ps1; the v1 repository check supports only TA, FC, CF, VWKS, and MIN.'
+foreach ($retiredPath in @(
+  'Scaleform',
+  'Schemas',
+  'Staging-PS5DBG',
+  'Tools/buildVariantV2.ps1',
+  'Tools/verifyVariantV2.ps1',
+  'Tools/createPackagesV2.ps1',
+  'Tools/createReleasePackagesV2.ps1',
+  'Tools/verifyCommittedReleaseV2.ps1',
+  'Tools/checkRepoV2.ps1'
+)) {
+  if (Test-Path -LiteralPath (Join-Path $repositoryRoot $retiredPath)) {
+    throw "Retired v1 or PS5 diagnostic path remains: $retiredPath"
+  }
 }
 
-& (Join-Path $PSScriptRoot "verifyVariant.ps1") `
-  -VariantKeys @($variants.VariantKey) `
-  -Committed:$Committed
+$selected = @(Get-ModuleVariants -VariantKeys $VariantKeys)
+& (Join-Path $PSScriptRoot 'verifyVariant.ps1') -VariantKeys @($selected.VariantKey) -Committed:$Committed
 
-Write-Host -ForegroundColor Cyan "`n`n"
-Write-Host -ForegroundColor Cyan "**************************************************"
-Write-Host -ForegroundColor Cyan "**  Selected Variant Build Artifacts Are Valid  **"
-Write-Host -ForegroundColor Cyan "**************************************************"
-Write-Host -ForegroundColor Cyan "`n`n"
+Write-Host -ForegroundColor Cyan 'Selected Variant Build Artifacts Are Valid'

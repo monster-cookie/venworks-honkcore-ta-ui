@@ -3,9 +3,8 @@
 Creates configured platform archives for release variants.
 
 .PARAMETER VariantKeys
-One or more keys from the five v1 release variants. Omit this parameter to process
-all five v1 variants. PS5DBG requires createPackagesV2.ps1. `VariantKey` remains a
-compatibility alias.
+One or more keys from `$Global:ReleaseVariants`. Omit this parameter to process
+all release variants. `VariantKey` remains a compatibility alias.
 #>
 [CmdletBinding()]
 param(
@@ -20,7 +19,7 @@ $PSNativeCommandUseErrorActionPreference = $true
 $ErrorActionPreference = "Stop"
 
 # If not loaded already pull in the shared config
-if (!$Global:SharedConfigurationLoaded) {
+if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction SilentlyContinue)) {
   Write-Host -ForegroundColor Green "Importing Shared Configuration"
   if ($Committed) {
     . "$PSScriptRoot/sharedConfig.ps1" -SkipEnvironment
@@ -29,8 +28,6 @@ if (!$Global:SharedConfigurationLoaded) {
     . "$PSScriptRoot/sharedConfig.ps1"
   }
 }
-. (Join-Path $PSScriptRoot 'sharedScaleformProfiles.ps1')
-. (Join-Path $PSScriptRoot 'sharedScaleformMovies.ps1')
 
 $repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 
@@ -65,24 +62,6 @@ function Assert-NotGitLfsPointer {
   }
 }
 
-function Read-ExpectedSha256 {
-  param(
-    [Parameter(Mandatory = $true)]
-    [string]$Path
-  )
-
-  if (!(Test-Path -LiteralPath $Path -PathType Leaf)) {
-    throw "Expected SHA-256 file does not exist: $Path"
-  }
-  $hashLine = Get-Content -LiteralPath $Path | Where-Object {
-    $_ -match '^\s*[A-Fa-f0-9]{64}(?:\s|$)'
-  } | Select-Object -First 1
-  if (!$hashLine) {
-    throw "No SHA-256 value was found in $Path."
-  }
-  return ([regex]::Match($hashLine, '[A-Fa-f0-9]{64}').Value).ToUpperInvariant()
-}
-
 $archiveDefinitions = [ordered]@{
   "Main" = [pscustomobject]@{
     FileSuffix = "Main.ba2"
@@ -91,26 +70,12 @@ $archiveDefinitions = [ordered]@{
     FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
     Required = $true
   }
-  "Textures" = [pscustomobject]@{
-    FileSuffix = "Textures.ba2"
-    Format = "DDS"
-    Compression = "LZ4"
-    FilterArgument = '-includeFilters=.*\\.*\.dds'
-    Required = $false
-  }
   "Main_XBox" = [pscustomobject]@{
     FileSuffix = "Main_XBox.ba2"
     Format = "General"
     Compression = "None"
     FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
     Required = $true
-  }
-  "Textures_XBox" = [pscustomobject]@{
-    FileSuffix = "Textures_XBox.ba2"
-    Format = "XBoxDDS"
-    Compression = "LZ4"
-    FilterArgument = '-includeFilters=.*\\.*\.dds'
-    Required = $false
   }
   "Main_PS" = [pscustomobject]@{
     FileSuffix = "Main_PS.ba2"
@@ -119,25 +84,9 @@ $archiveDefinitions = [ordered]@{
     FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
     Required = $true
   }
-  "Textures_PS" = [pscustomobject]@{
-    FileSuffix = "Textures_PS.ba2"
-    Format = "DDS"
-    Compression = "LZ4"
-    FilterArgument = '-includeFilters=.*\\.*\.dds'
-    Required = $false
-  }
 }
 
-$v1VariantKeys = @('TA', 'FC', 'CF', 'VWKS', 'MIN')
-if ($null -eq $VariantKeys -or $VariantKeys.Count -eq 0) {
-  $variants = @(Get-ModuleVariants -VariantKeys $v1VariantKeys)
-}
-else {
-  $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
-}
-if (@($variants | Where-Object { [string]$_.VariantKey -ceq 'PS5DBG' }).Count -ne 0) {
-  throw 'PS5DBG requires Tools/createPackagesV2.ps1; the v1 packager supports only TA, FC, CF, VWKS, and MIN.'
-}
+$variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
 
 $preArchiveVariantKeys = @($variants | ForEach-Object { [string]$_.VariantKey })
 & (Join-Path $PSScriptRoot "verifyVariant.ps1") `

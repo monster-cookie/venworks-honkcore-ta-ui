@@ -3,9 +3,8 @@
 Assembles version-independent Nexus and Bethesda release ZIPs.
 
 .PARAMETER VariantKeys
-One or more keys from the five v1 release variants. Omit this parameter to process
-all five v1 variants. PS5DBG requires createReleasePackagesV2.ps1. `VariantKey`
-remains a compatibility alias.
+One or more keys from `$Global:ReleaseVariants`. Omit this parameter to process
+all release variants. `VariantKey` remains a compatibility alias.
 #>
 [CmdletBinding()]
 param(
@@ -82,28 +81,6 @@ function New-PackageFile {
     SourcePath = $SourcePath
     EntryName = $EntryName.Replace('\', '/')
   }
-}
-
-function Resolve-OptionalFile {
-  param(
-    [Parameter(Mandatory = $true)]
-    [string]$Path,
-
-    [Parameter(Mandatory = $true)]
-    [string]$Description
-  )
-
-  if (!(Test-Path -LiteralPath $Path -PathType Leaf)) {
-    return $null
-  }
-
-  $file = Get-Item -LiteralPath $Path
-  if ($file.Length -le 0) {
-    throw "$Description is empty: $Path"
-  }
-  Assert-NotGitLfsPointer -Path $file.FullName -Description $Description
-
-  return $file.FullName
 }
 
 function New-ReleaseZip {
@@ -190,16 +167,7 @@ function New-ReleaseZip {
 $resolvedOutputDirectory = [System.IO.Path]::GetFullPath($OutputDirectory)
 New-Item -ItemType Directory -Force -Path $resolvedOutputDirectory | Out-Null
 
-$v1VariantKeys = @('TA', 'FC', 'CF', 'VWKS', 'MIN')
-if ($null -eq $VariantKeys -or $VariantKeys.Count -eq 0) {
-  $variants = @(Get-ModuleVariants -VariantKeys $v1VariantKeys)
-}
-else {
-  $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
-}
-if (@($variants | Where-Object { [string]$_.VariantKey -ceq 'PS5DBG' }).Count -ne 0) {
-  throw 'PS5DBG requires Tools/createReleasePackagesV2.ps1; the v1 release packager supports only TA, FC, CF, VWKS, and MIN.'
-}
+$variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
 
 foreach ($variant in $variants) {
   $stagingPath = (Resolve-Path -LiteralPath $variant.StagingFolderPath).Path
@@ -210,11 +178,8 @@ foreach ($variant in $variants) {
 
   $pluginName = "$($variant.PackageBaseName).esm"
   $mainName = "$($variant.PackageBaseName) - Main.ba2"
-  $texturesName = "$($variant.PackageBaseName) - Textures.ba2"
   $mainXboxName = "$($variant.PackageBaseName) - Main_XBox.ba2"
-  $texturesXboxName = "$($variant.PackageBaseName) - Textures_XBox.ba2"
   $mainPsName = "$($variant.PackageBaseName) - Main_PS.ba2"
-  $texturesPsName = "$($variant.PackageBaseName) - Textures_PS.ba2"
 
   $pluginPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $pluginName) -Description "$($variant.VariantName) plugin"
   $pluginFile = New-PackageFile -SourcePath $pluginPath -EntryName $pluginName
@@ -222,39 +187,24 @@ foreach ($variant in $variants) {
   if (@($packageSuffixes | Where-Object { $_ -in @('Nexus PC - Normal', 'Bethesda PC') }).Count -ne 0) {
     $mainPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $mainName) -Description "$($variant.VariantName) Windows Main archive"
     $windowsArchiveFiles = @(New-PackageFile -SourcePath $mainPath -EntryName $mainName)
-    $texturesPath = Resolve-OptionalFile -Path (Join-Path $stagingPath $texturesName) -Description "$($variant.VariantName) Windows Textures archive"
-    if ($texturesPath) {
-      $windowsArchiveFiles += New-PackageFile -SourcePath $texturesPath -EntryName $texturesName
-    }
   }
   $xboxArchiveFiles = @()
   if ('Bethesda Xbox' -in $packageSuffixes) {
     $mainXboxPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $mainXboxName) -Description "$($variant.VariantName) Xbox Main archive"
     $xboxArchiveFiles = @(New-PackageFile -SourcePath $mainXboxPath -EntryName $mainXboxName)
-    $texturesXboxPath = Resolve-OptionalFile -Path (Join-Path $stagingPath $texturesXboxName) -Description "$($variant.VariantName) Xbox Textures archive"
-    if ($texturesXboxPath) {
-      $xboxArchiveFiles += New-PackageFile -SourcePath $texturesXboxPath -EntryName $texturesXboxName
-    }
   }
   $psArchiveFiles = @()
   if ('Bethesda PS5' -in $packageSuffixes) {
     $mainPsPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $mainPsName) -Description "$($variant.VariantName) PS5 Main archive"
     $psArchiveFiles = @(New-PackageFile -SourcePath $mainPsPath -EntryName $mainPsName)
-    $texturesPsPath = Resolve-OptionalFile -Path (Join-Path $stagingPath $texturesPsName) -Description "$($variant.VariantName) PS5 Textures archive"
-    if ($texturesPsPath) {
-      $psArchiveFiles += New-PackageFile -SourcePath $texturesPsPath -EntryName $texturesPsName
-    }
   }
 
-  $layoutFile = $null
   $looseFiles = @()
   if (@($packageSuffixes | Where-Object { $_ -like 'Nexus PC*' }).Count -ne 0) {
     $interfacePath = Join-Path $stagingPath "Interface"
     if (!(Test-Path -LiteralPath $interfacePath -PathType Container)) {
       throw "$($variant.VariantName) is missing its Interface directory: $interfacePath"
     }
-    $layoutPath = Resolve-RequiredFile -Path (Join-Path (Join-Path $interfacePath "VenworksCUI") "layout.xml") -Description "$($variant.VariantName) loose layout"
-    $layoutFile = New-PackageFile -SourcePath $layoutPath -EntryName "Interface/VenworksCUI/layout.xml"
     $looseFiles = @(
       Get-ChildItem -LiteralPath $interfacePath -Recurse -File -Force |
         Sort-Object -Property FullName |
@@ -263,12 +213,16 @@ foreach ($variant in $variants) {
           New-PackageFile -SourcePath $_.FullName -EntryName $relativePath
         }
     )
+    $looseFiles += @($pluginFile)
+    $looseFiles += @(Get-ChildItem -LiteralPath (Join-Path $stagingPath 'Scripts') -Recurse -File | ForEach-Object {
+      New-PackageFile -SourcePath $_.FullName -EntryName ([IO.Path]::GetRelativePath($stagingPath,$_.FullName))
+    })
   }
 
   $packages = @($packageSuffixes | ForEach-Object {
     $suffix = [string]$_
     $files = switch ($suffix) {
-      'Nexus PC - Normal' { @($pluginFile) + $windowsArchiveFiles + @($layoutFile); break }
+      'Nexus PC - Normal' { @($pluginFile) + $windowsArchiveFiles; break }
       'Nexus PC - Fully Loose Files' { $looseFiles; break }
       'Bethesda PC' { @($pluginFile) + $windowsArchiveFiles; break }
       'Bethesda Xbox' { @($pluginFile) + $xboxArchiveFiles; break }
@@ -310,7 +264,7 @@ foreach ($variant in $variants) {
 }
 
 if ($null -eq $VariantKeys -or $VariantKeys.Count -eq 0) {
-  Write-Host -ForegroundColor Cyan "Created every configured release package shape for all five v1 variants."
+  Write-Host -ForegroundColor Cyan "Created every configured release package shape for all variants."
 }
 else {
   Write-Host -ForegroundColor Cyan "Created the configured release package shapes for the selected variants."

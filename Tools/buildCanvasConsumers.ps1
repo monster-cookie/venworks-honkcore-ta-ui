@@ -2,7 +2,7 @@
 .SYNOPSIS
 Builds independent VWHUD Canvas consumers, scripts, and plugins into an isolated payload directory.
 .DESCRIPTION
-Uses the existing Flex, Starfield Papyrus, and Spriggit toolchains. The output contains no vanilla HUD movies or Canvas Example assets. Publishing or archiving is handled by the v2 pipeline after validation.
+Uses the existing Flex, Starfield Papyrus, and Spriggit toolchains. The output contains no vanilla HUD movies or Canvas Example assets. Publishing or archiving is handled by the consumer pipeline after validation.
 #>
 [CmdletBinding()]
 param(
@@ -17,6 +17,9 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 $repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 . (Join-Path $PSScriptRoot 'sharedCanvasConsumers.ps1')
+if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction SilentlyContinue)) {
+  . (Join-Path $PSScriptRoot 'sharedConfig.ps1') -SkipEnvironment
+}
 $workRoot = Join-Path $repositoryRoot '.work'
 $outputRoot = [IO.Path]::GetFullPath($OutputDirectory)
 if (!$outputRoot.StartsWith($workRoot + [IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)) {
@@ -67,7 +70,7 @@ function CopyResources([string]$Entry,[string]$Destination) {
   $pending = [Collections.Generic.Queue[string]]::new()
   $seen = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
   $pending.Enqueue('index.html')
-  $sourceRoot = Join-Path $repositoryRoot 'Canvas/resources'
+  $sourceRoot = Join-Path $repositoryRoot 'CanvasConsumer/resources'
   while ($pending.Count -gt 0) {
     $relative = $pending.Dequeue()
     if (!$seen.Add($relative)) { continue }
@@ -88,15 +91,15 @@ function CopyResources([string]$Entry,[string]$Destination) {
 }
 
 foreach ($key in $VariantKeys | Select-Object -Unique) {
-  $variantDirectory = Join-Path $repositoryRoot "Canvas/variants/$key"
-  $source = RequiredFile (Join-Path $repositoryRoot 'Canvas/actionscript/VWHudConsumer.as')
+  $variantDirectory = Join-Path $repositoryRoot "CanvasConsumer/variants/$key"
+  $source = RequiredFile (Join-Path $repositoryRoot 'CanvasConsumer/actionscript/VWHudConsumer.as')
   $variantText = [IO.File]::ReadAllText((RequiredFile (Join-Path $variantDirectory 'VWHudVariant.as')))
   $namespace = [regex]::Match($variantText,'NAMESPACE:String = "([a-z0-9.]+)"').Groups[1].Value
   if ($namespace -cne "venworks.vwhud.$($key.ToLowerInvariant())") { throw "Namespace mismatch: $key" }
   $payload = Join-Path $outputRoot $key
   $consumer = Join-Path $payload "Interface/VenworksCanvas/Consumers/$namespace"
   New-Item -ItemType Directory -Force $consumer | Out-Null
-  $arguments = @('-jar',$mxmlc,"-load-config=$flex/frameworks/flex-config.xml",'-compiler.library-path=',"-compiler.external-library-path=$playerglobal",'-compiler.source-path',"$repositoryRoot/Canvas/actionscript",$variantDirectory,'-compiler.debug=false','-compiler.optimize=true','-use-network=false','-target-player=11.1.0','-swf-version=12','-default-size=1920,1080','-default-frame-rate=30',"-output=$consumer/normal.swf",$source)
+  $arguments = @('-jar',$mxmlc,"-load-config=$flex/frameworks/flex-config.xml",'-compiler.library-path=',"-compiler.external-library-path=$playerglobal",'-compiler.source-path',"$repositoryRoot/CanvasConsumer/actionscript",$variantDirectory,'-compiler.debug=false','-compiler.optimize=true','-use-network=false','-target-player=11.1.0','-swf-version=12','-default-size=1920,1080','-default-frame-rate=30',"-output=$consumer/normal.swf",$source)
   Push-Location (Join-Path $flex 'frameworks')
   try { & $java @arguments; if ($LASTEXITCODE -ne 0) { throw "Consumer compilation failed: $key" } }
   finally { Pop-Location }
@@ -104,9 +107,9 @@ foreach ($key in $VariantKeys | Select-Object -Unique) {
   CopyResources (Join-Path $variantDirectory 'index.html') $consumer
   New-Item -ItemType Directory (Join-Path $payload 'Scripts') | Out-Null
   Copy-Item (Join-Path $scriptCandidate '*') (Join-Path $payload 'Scripts') -Recurse
-  $plugins = @(Get-ChildItem (Join-Path $repositoryRoot "Staging-$key") -Filter *.esm)
-  if ($plugins.Count -ne 1) { throw "Expected one existing plugin identity for $key" }
-  $pluginName = $plugins[0].Name
+  $variant = @(Get-ModuleVariants -VariantKeys $key)[0]
+  $pluginName = "$($variant.PackageBaseName).esm"
+  if (!(Test-Path -LiteralPath (Join-Path $repositoryRoot "Spriggit/$pluginName") -PathType Container)) { throw "Missing Spriggit source for $pluginName" }
   & $spriggit deserialize --InputPath (Join-Path $repositoryRoot "Spriggit/$pluginName") --OutputPath (Join-Path $payload $pluginName) --DataFolder $settings.STEAM_DATA_FOLDER
   if ($LASTEXITCODE -ne 0) { throw "Plugin assembly failed: $key" }
   $evidence = Join-Path $outputRoot "$key.build.json"

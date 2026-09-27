@@ -1,4 +1,4 @@
-# Exercise the production resource encoder against the Windows/Git checkout boundary.
+# Exercise the production consumer resource encoder against the Windows/Git checkout boundary.
 [CmdletBinding()]
 param()
 $ErrorActionPreference = 'Stop'

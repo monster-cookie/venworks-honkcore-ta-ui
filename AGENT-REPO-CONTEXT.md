@@ -12,20 +12,20 @@ Repository-specific context for `Venworks Customizable HUD`. Unconfigured extern
 
 Use the current checkout as the repository path. Verify its remote against the configured repository before publishing. Keep machine-specific paths and secrets in protected local configuration, outside the repository.
 
-The existing v1 and v2 pipelines target Starfield. [Tools/sharedConfig.ps1](Tools/sharedConfig.ps1) owns variant configuration. Inspect scripts and their side effects before executing them. Keep the v1 XML release pipeline available until separate Canvas production acceptance.
+The repository targets Starfield through five Canvas consumer variants. [Tools/sharedConfig.ps1](Tools/sharedConfig.ps1) owns variant configuration. The unreleased XML runtime and PS5 diagnostic pipeline have been removed. Inspect scripts and their side effects before executing them.
 
 ## Build and verification entry points
 
-Use PowerShell 7 from the repository root with configured native inputs. The v2 build requires JavaPath, JpexsJarPath, and VanillaInterfacePath arguments.
+Use PowerShell 7 from the repository root with configured native inputs. Consumer compilation requires Java, Flex, a compatible Canvas checkout and environment, the Starfield Papyrus compiler, and Spriggit. Archive construction additionally requires Archive2.
 
 | Entry point | Purpose |
 | --- | --- |
-| [Tools/buildVariantV2.ps1](Tools/buildVariantV2.ps1) | Build selected v2 variants using configured native tools and inputs. |
-| [Tools/verifyVariantV2.ps1](Tools/verifyVariantV2.ps1) | Verify selected staged or committed variant artifacts; PreArchiveMutation checks inputs before archive creation. |
-| [Tools/createPackagesV2.ps1](Tools/createPackagesV2.ps1) | Build selected platform archives using Archive2. |
-| [Tools/verifyCommittedReleaseV2.ps1](Tools/verifyCommittedReleaseV2.ps1) | Verify committed release artifacts. |
-| [Tools/createReleasePackagesV2.ps1](Tools/createReleasePackagesV2.ps1) | Assemble the v2 release packages. |
-| [Tools/checkRepoV2.ps1](Tools/checkRepoV2.ps1) | Check release metadata and selected variant artifacts; Committed avoids live staging destinations. |
+| [Tools/buildVariant.ps1](Tools/buildVariant.ps1) | Build selected Canvas consumers using configured native tools and inputs. |
+| [Tools/verifyVariant.ps1](Tools/verifyVariant.ps1) | Verify selected staged or committed variant artifacts; PreArchiveMutation checks inputs before archive creation. |
+| [Tools/createPackages.ps1](Tools/createPackages.ps1) | Build selected PC, Xbox, and PS5 Main archives using Archive2. |
+| [Tools/verifyCommittedRelease.ps1](Tools/verifyCommittedRelease.ps1) | Verify all committed release artifacts and repository contracts. |
+| [Tools/createReleasePackages.ps1](Tools/createReleasePackages.ps1) | Assemble the five release package shapes for each selected theme. |
+| [Tools/checkRepo.ps1](Tools/checkRepo.ps1) | Check five-theme release metadata and selected variant artifacts; Committed avoids live staging destinations. |
 | [Tools/setupRepo.ps1](Tools/setupRepo.ps1) | Prepare staging destinations only when explicitly authorized. |
 
 [Build documentation](docs/BUILDSYSTEM.md) describes the existing pipeline. Source checks, native compilation, archive construction, gameplay, and console acceptance are separate evidence. Never substitute a source-pattern check for execution of the production runtime.
@@ -34,7 +34,7 @@ Use PowerShell 7 from the repository root with configured native inputs. The v2 
 
 [Venworks Canvas](https://github.com/monster-cookie/venworks-canvas) owns the shared HUD host, provider subscriptions, event transport, consumer lifecycle, and HTML/CSS renderer. VWHUD owns its consumer, themes, derived presentation state, status publisher, and packages. Read Canvas's own repository guidance before changing it; resolve its checkout independently rather than recording a machine-specific path here.
 
-The migration targets the five existing variants VWKS, TA, FC, CF, and MIN. PS5DBG remains diagnostic. Consumer packages must not distribute competing Canvas-owned HUD replacements. Canvas work belongs to the separate Venworks Canvas (VWCNVS) Linear team.
+The five variants are VWKS, TA, FC, CF, and MIN. Consumer packages must not distribute competing Canvas-owned HUD replacements. The local `CanvasConsumer` source tree is VWHUD-owned and does not contain Canvas framework code. Canvas work belongs to the separate Venworks Canvas (VWCNVS) Linear team.
 
 ## GitHub
 

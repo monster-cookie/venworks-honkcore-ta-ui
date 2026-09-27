@@ -1,145 +1,54 @@
 # Venworks Customizable HUD
 
-> V2 migration: the five themes now build as Canvas HTML/CSS consumers. See [Canvas theme consumers](docs/CANVAS_MIGRATION.md) for dependencies, configuration, packaging and pending runtime acceptance. The legacy XML and standalone Scaleform descriptions below remain the v1 reference.
+Venworks Customizable HUD provides five separately packaged Starfield HUD themes: Venworks, Trackers Alliance, Freestar Collective, Crimson Fleet, and Minimalist. Each theme is a Venworks Canvas HTML/CSS/SVG consumer and retains its own plugin identity, registration quest, effect catalog, status publisher, and release packages.
 
-Venworks Customizable HUD is my own customizable Starfield HUD, written from
-the ground up in Scaleform and ActionScript 3. It does not depend on HONKCORE
-and does not reuse HONKCORE code, bytecode, or configuration formats.
+## Requirements
 
-All five HUD variants are driven by versioned XML files that control layout,
-visibility, colors, typography, meters, icons, and placements of reusable SWF-resident components.
-The runtime validates that configuration before displaying it and reports an
-on-screen diagnostic instead of partially applying an invalid layout.
+Install the current compatible versions in this order:
 
-## Current release
+1. Venworks Core Library
+2. Venworks Canvas
+3. Exactly one VWHUD theme
 
-The current release replaces the on-foot player HUD in both Starfield HUD
-movies while deliberately leaving engine-sensitive Bethesda surfaces under
-Bethesda's ownership.
+Canvas owns the shared player and ship HUD hosts, provider acquisition, event transport, lifecycle, and bounded HTML/CSS/SVG renderer. VWHUD owns theme presentation, derived HUD state, effects publication, and its five real ESMs. The separately distributed Canvas Example is not required.
 
-Current custom surfaces include:
+Do not install an earlier standalone VWHUD HUD replacement beside a Canvas consumer package. Loose files can shadow archive contents even when the old plugin is disabled.
 
-- a helmet frame with compass, threat state, and active status effects;
-- a persistent tracked-objective panel and bounded contact radar;
-- player status for level, experience, health, oxygen, CO2, boost, carry mass,
-  credits, digipicks, universal time, and a deterministic player serial;
-- environmental status for location, local time, oxygen, temperature, gravity,
-  suit protection, and exposure categories;
-- a passive equipment rail in the four themed variants for all 12 favorite
-  slots plus live weapon, ammunition, explosive, and power information;
-- a scanner-only heading, pulse grid, and bounded forward-contact display;
-- a faction crest selected by the active palette in all four themed variants; and
-- a localized vehicle-exit label with Bethesda's current keyboard or
-  controller glyph.
+## Theme consumers
 
-Bethesda continues to own enemy health and legendary state, stealth and
-detection presentation, hit and kill indicators, weapon reticles, crosshairs,
-and their associated lifecycle behavior. The custom HUD may read approved
-state from those systems for conditions, but it does not replace them.
+The four full themes share the same composition and select different CSS and SVG artwork. Minimalist keeps its reduced composition and holographic visual treatment. Theme source lives under [CanvasConsumer](CanvasConsumer), which contains only VWHUD-owned consumer code and resources; Canvas framework source and host movies remain in the Canvas project.
 
-## Release variants
+Installed consumer assets use Canvas's current isolated loader contract:
 
-Five separately distributed variants are available. All five use the same thin normal and large HUD bootstrap movies and the same HUD-message movies. The four themed variants share one standalone CUI runtime movie and include all five packaged palettes, so their active palette can be changed without reinstalling the HUD. Minimalist uses its own standalone CUI runtime movie, literal Starfield colors, fitted holographic readouts with pale-blue translucent native-shape backings, and the same complete XML, palette, SVG, path, panel, icon, and mask runtime. Its live profile retains the ten required value registrations, seven required condition registrations, and three intentional cross-context overlaps while omitting the providers used only by the removed equipment rail.
+```text
+Interface/VenworksCanvas/Consumers/venworks.vwhud.<variant>/
+```
 
-| Public release name | Default palette |
-|---|---|
-| Venworks Customizable HUD - Venworks Theme | `venworks.xml` |
-| Venworks Customizable HUD - Trackers Alliance Theme | `trackers-alliance.xml` |
-| Venworks Customizable HUD - Freestar Collective Theme | `freestar-collective.xml` |
-| Venworks Customizable HUD - Crimson Fleet Theme | `crimson-fleet.xml` |
-| Venworks Customizable HUD - Minimalist | Literal Starfield colors; no palette file |
+That directory contains the theme's consumer SWFs, HTML, CSS, SVG, and local assets. Its name does not indicate that Canvas framework code is copied into VWHUD. Canvas fixes each consumer to one local resource root so relative resources resolve consistently and cannot escape into another consumer's files.
 
-The four themed variants also include `starfield.xml` as a neutral palette option. The faction crest and equipment rail are available only in those four variants. Minimalist omits both from its shipped layout and also ships no SVG assets, palette files, helmet cutout paths, or active `svg`, `path`, `mask`, `icon`, `panel`, or `providerSymbol` elements. Those runtime capabilities are not compiled out of its standalone CUI movie.
+The plugin registration values omit the leading `Interface/` because Starfield resolves UI movie URLs relative to its Interface directory. The files stored in a BA2 or installed loose use the complete `Interface/VenworksCanvas/Consumers/...` path.
 
-Each installed variant carries nine Interface movies. The normal, large, and HUD-message `.gfx` files use independently compiled native GFX containers while their `.swf` partners use independently compiled CWS containers, matching Bethesda's extension and container split. `Interface\venworkscui.swf` contains the complete Venworks runtime and all 11 supplied reusable component definitions in one separately loaded ABC domain. The four themed layouts instantiate all 11 definitions; Minimalist uses the same registry and instantiates nine, omitting the faction icon and equipment rail. The normal and large HUD movies retain one Bethesda ABC apiece and load the auxiliary movie through a guarded asynchronous bootstrap. The auxiliary uses Bethesda's 1920-by-1080, 30-fps, one-frame stage contract; the bootstrap starts from the HUD constructor, initializes the child runtime at `Event.INIT`, and attaches the loaded child directly to the HUD at `Event.COMPLETE`.
+## Status effects
 
-Enable only one release variant at a time. The variants install the same HUD
-movie and configuration paths, so whichever package wins file conflicts also
-determines the starting configuration.
+Each theme publishes complete `effects.state` snapshots on `venworks.vwhud.<variant>.status`. The compact effects display shows eight entries per page and rotates every six seconds. Snapshot validation, bounded retry, recovery replay, scheduled refresh, save/load revision handling, and pre-ready latest-state retention are owned by VWHUD; Canvas supplies the event transport.
 
-## Installation
+## Packages
 
-Choose one variant and one PC package shape. The recommended Nexus PC - Normal package installs a root ESM, Windows BA2 archives, and one loose `Interface\VenworksCUI\layout.xml`. Enable the ESM and let the package win HUD conflicts. The official v2.0.10 release publishes both Nexus package shapes for all five variants while PS5 compatibility remains subject to end-user acceptance.
+Each theme produces three Main BA2 archives and five release ZIP shapes:
 
-The Nexus PC - Fully Loose Files package installs the complete `Interface` tree without an ESM or BA2. Use it when palettes and SVG assets in a themed variant, or a separately authored legacy external fragment, must remain loose. Do not install the normal and fully loose packages together. A Starfield-capable mod manager is strongly recommended for either package shape.
+- Nexus PC - Normal
+- Nexus PC - Fully Loose Files
+- Bethesda PC
+- Bethesda Xbox
+- Bethesda PS5
 
-Bethesda Creations use separate ESM-and-BA2-only packages for PC, Xbox, and
-PS5. Install only the package supplied for the current platform and enable only
-one release variant.
+The repository therefore contains five real ESMs, fifteen platform archives, and a 25-ZIP release matrix. It does not contain the unreleased XML runtime, a generic plugin stub, or the retired PS5 diagnostic variant.
 
-When replacing an experimental Creation with an official release, uninstall the experimental entry first and verify that only one Creation owning that ESM identity remains; Bethesda's manager can otherwise leave both entries competing to install, replace, or remove the same plugin and archives.
+Use [the build system](docs/BUILDSYSTEM.md) for commands and artifact contracts. [Canvas consumer architecture and acceptance](docs/CANVAS_MIGRATION.md) records ownership, status behavior, and remaining runtime evidence. [Visual references](docs/reference/) preserve clean-room presentation evidence, and [the changelog](CHANGELOG.md) preserves project history.
 
-This release has no HONKCORE dependency. It is incompatible with any mod that
-replaces `hudmenu.gfx`, `hudmenu_lrg.gfx`, `hudmessagesmenu.gfx`, or
-`hudmessagesmenu_lrg.gfx` unless a purpose-built compatibility patch combines
-their changes. Load order only selects which mod's changes are discarded; it
-does not make the movies compatible. This release does not ship Monocle menu
-overrides.
+## Validation status
 
-## Configuration
-
-Start with the [user configuration guide](docs/USER_CONFIGURATION.md) for
-backups, file locations, palette switching, moving or hiding sections, safe
-areas, vanilla HUD visibility, basic color changes, reload behavior, and
-troubleshooting.
-
-Configuration authors can use the complete references:
-
-- [Layout configuration reference](docs/LAYOUT_CONFIGURATION_REFERENCE.md)
-  covers the root document, supplied SWF-component references, legacy custom fragments, conditions, live values, templates,
-  components, composites, limits, and assets.
-- [Palette configuration reference](docs/PALETTE_CONFIGURATION_REFERENCE.md)
-  covers packaged themes, required semantic roles, custom palettes, and
-  `@palette.*` references.
-
-All five variants load their configuration files when the HUD movie starts.
-There is no live reload command; fully exit and restart Starfield after changing
-XML or SVG files.
-
-The normal Nexus package exposes only `layout.xml` as a loose file. Supplied component placement is configured there through `<swfComponent>` references. Custom external fragments, palette files, and SVG customization require the fully loose package or a separate loose override containing the additional changed files.
-
-## Current limitations and validation status
-
-- The configurable release currently covers the on-foot player HUD. Ship UI
-  remains outside the current release.
-- Configuration is strict and atomic. A missing, malformed, unsafe, or invalid
-  layout, SWF component reference, legacy custom fragment, palette, or SVG prevents the custom layer from loading and
-  displays a categorized diagnostic.
-- Direct PNG, JPEG, and DDS assets are unsupported by the Starfield Scaleform
-  runtime. All movie profiles support the documented local SVG subset;
-  Minimalist's shipped configuration simply does not use it.
-- Every platform package contains independently compiled native GFX movies at each `.gfx` path and independently compiled CWS movies at each `.swf` path.
-- Palette changes require a new HUD load; live switching is unsupported.
-- In the four themed variants, active-power highlighting for favorite slots
-  currently compares Bethesda's
-  localized favorite name with an English name mapped from the live HUD power
-  key. It is therefore reliable only in English until HUDMenu exposes a stable
-  language-independent favorite-power identifier.
-- The normal HUD has broader current in-game evidence than the large HUD and
-  ultrawide presentation. Final large-HUD, ultrawide, and contact-radar
-  startup/transition acceptance remains in progress; build and staging success
-  alone is not treated as gameplay acceptance.
-
-## Technical documentation
-
-- The [component catalog](docs/COMPONENT_CATALOG.md) records implemented
-  runtime components, provider ownership, evidence boundaries, and known
-  behavior.
-- The [build system](docs/BUILDSYSTEM.md) documents the Scaleform build and
-  staging pipeline.
-- The [Starfield Scaleform workflow](docs/STARFIELD_SCALEFORM_WORKFLOW.md) documents clean extraction, decompilation, modification, independent GFX/CWS recompilation, staging, packaging, and cross-platform validation.
-- The [Scaleform source guide](Scaleform/README.md) covers local build
-  requirements and authored source structure.
-- [Visual references](docs/reference/) preserve clean-room behavioral and
-  visual evidence.
-- [Release history](CHANGELOG.md) preserves the earlier release changelog.
-
-Current product intent, delivery state, and acceptance criteria are maintained
-in Plane project `VWKSHUD`. Repository documentation owns the technical
-configuration contract and verified runtime evidence.
-
-Repository-specific automation requirements are documented in
-[`AGENT-REPO-CONTEXT.md`](AGENT-REPO-CONTEXT.md).
+Source inspection, compilation, committed-payload verification, BA2 verification, and ZIP verification are separate from Starfield runtime acceptance. Archive-only PC and PS5 gameplay acceptance remains required for each theme, including normal and large HUD modes, status recovery, vehicle glyphs, ship visibility, menus, save/load, high resolutions, and representative ultrawide layouts.
 
 ## License
 

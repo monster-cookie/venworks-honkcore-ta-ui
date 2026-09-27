@@ -1,214 +1,66 @@
 # Build system
 
-> V2 migration: the five themes now build as Canvas HTML/CSS consumers. See [Canvas theme consumers](CANVAS_MIGRATION.md) for dependencies, configuration, packaging and pending runtime acceptance. The legacy XML and standalone Scaleform descriptions below remain the v1 reference.
+The repository builds five VWHUD Canvas consumers: `VWKS`, `TA`, `FC`, `CF`, and `MIN`. [Tools/sharedConfig.ps1](../Tools/sharedConfig.ps1) is the release-variant authority. Each variant owns one real ESM assembled from [Spriggit](../Spriggit), two identical consumer movie aliases, reachable HTML/CSS/SVG resources, and the two VWHUD Papyrus scripts.
 
-## PowerShell static analysis
+## Toolchain
 
-GitHub Actions runs PSScriptAnalyzer 1.25.0 against the PowerShell sources under `Tools/`. Install the same pinned module version and run the analyzer from the repository root to reproduce the check locally:
+The consumer build requires:
 
-```powershell
-$ErrorActionPreference = 'Stop'
+- Java and an Apache Flex SDK with the Flash Player 11.1 library;
+- a compatible Venworks Canvas checkout, used for the Registry Papyrus source dependency;
+- the Starfield Papyrus compiler, flags, source path, and game data path;
+- Spriggit CLI for ESM assembly; and
+- Archive2 for platform BA2 construction.
 
-Install-Module -Name PSScriptAnalyzer -RequiredVersion 1.25.0 -Repository PSGallery -Scope CurrentUser -Force
-Import-Module PSScriptAnalyzer -RequiredVersion 1.25.0 -Force
-$findings = @(
-  Invoke-ScriptAnalyzer `
-    -Path ./Tools `
-    -Recurse `
-    -Settings ./PSScriptAnalyzerSettings.psd1
-)
-if ($findings.Count -ne 0) {
-  $findings | Format-Table RuleName, Severity, ScriptName, Line, Message -Wrap
-  throw "PSScriptAnalyzer reported $($findings.Count) finding(s)."
-}
-```
+Machine-specific paths remain in ignored environment configuration. `buildCanvasConsumers.ps1` reads only the Papyrus, Spriggit, and Starfield data settings it needs from the selected Canvas environment file.
 
-A clean analysis produces no findings. CI reports each finding's rule, severity, script, line, and message, then fails when the configured Error or Warning severities are present. `PSScriptAnalyzerSettings.psd1` documents the repository-specific reasons for each intentional baseline exclusion.
+## Source and runtime ownership
 
-## Release artifact pipeline
+[CanvasConsumer](../CanvasConsumer) contains VWHUD-owned ActionScript, HTML, CSS, SVG, per-theme entry documents, expected build evidence, and the lifecycle diagnostic. It does not contain Canvas host, registry, renderer, or Example implementation files.
 
-`Tools/Setup-ScaleformEnvironment.ps1` is the single repository-local bootstrap for the ignored Scaleform toolchain. It installs or repairs pinned Eclipse Temurin 21.0.12.1+1, JPEXS 26.2.1, Apache Flex SDK 4.16.1, and the Flash Player 11.1 compiler library, then runs `Tools/Verify-ScaleformEnvironment.ps1`. Every remote archive has an immutable URL, expected byte length, and SHA-256 contract, and the extracted Player 11.1 SWC has its own SHA-256 and two-entry ZIP inventory. Pass `-ArtifactCachePath "C:\path\to\private\ScaleformArtifacts"` to share verified archives across worktrees. Installing or repairing the Adobe payload also requires `-AcceptAdobeLicense`. The private cache and adjacent checksum sidecars are convenience inputs only: the setup trusts its compiled-in hashes, keeps all tool bytes outside tracked source, and never records credentials or a private machine path.
+Canvas's current loader contract fixes a consumer namespace to `Interface/VenworksCanvas/Consumers/<namespace>/`. Registration properties use the same path without `Interface/`; BA2 and loose-file inventories include it. For VWHUD the namespaces are `venworks.vwhud.vwks`, `venworks.vwhud.ta`, `venworks.vwhud.fc`, `venworks.vwhud.cf`, and `venworks.vwhud.min`.
 
-The complete release build is a local Windows process followed by platform-neutral ZIP assembly in GitHub Actions. `Archive2.exe` is not installed or downloaded by the workflow. Before committing a release build, run these steps from the repository root:
+## Entry points
 
-1. Run `Tools/buildVariant.ps1` with the validated Java, JPEXS, and vanilla Interface inputs for the five player-facing variants, or run `Tools/buildVariantV2.ps1` for the complete six-variant pipeline that includes PS5 Debug. Each builder compiles a selected movie profile once and stages every selected profile independently.
-2. Run the matching `Tools/createPackages.ps1` or `Tools/createPackagesV2.ps1` entrypoint with the same optional variant selection. The script reads `TOOL_PATH_ARCHIVER` from `.env`, validates each variant's root ESM, and runs only that variant's configured platform archive targets.
-3. Run the matching variant and committed-release verifiers. V1 validates the five player-facing profiles; V2 validates those same contracts plus the PS5 Debug XHTML diagnostic contract.
-4. Review and commit the staged loose files, ESMs, and Git LFS-managed BA2 files together. A BA2 must be rebuilt whenever its staged source payload changes.
-5. After the change reaches `master`, create the release tag. The Ubuntu release workflow uses `Tools/createReleasePackagesV2.ps1` to assemble all 26 committed package shapes; it never invokes Archive2.
+| Command | Purpose |
+| --- | --- |
+| `Tools/buildVariant.ps1` | Compile selected consumers and Papyrus scripts, assemble their ESMs, and publish validated payloads. |
+| `Tools/verifyVariant.ps1` | Verify exact source evidence, staged files, SWF contracts, resources, and optionally BA2 contents. |
+| `Tools/createPackages.ps1` | Create the PC, Xbox, and PS5 uncompressed General BA2 archives after pre-archive verification. |
+| `Tools/createReleasePackages.ps1` | Create five release ZIP shapes per selected theme. |
+| `Tools/verifyCommittedRelease.ps1` | Validate scripts, repository contracts, resources, all five payloads, and all fifteen archives. |
+| `Tools/checkRepo.ps1` | Validate the five-theme configuration and selected payloads. |
+| `Tools/setupRepo.ps1` | Create local staging junctions for configured mod-manager destinations. |
 
-For repository-local regeneration without Vortex Junctions, use the deliberate `-Committed` mode on `buildVariant.ps1` and `createPackages.ps1`. Omitting `-VariantKeys` processes the five V1 keys: `TA`, `FC`, `CF`, `VWKS`, and `MIN`. Passing `PS5DBG` to a V1 entrypoint fails with a message naming the required V2 command. Pass a single player-facing key, such as `-VariantKeys MIN`, or an array, such as `-VariantKeys @("TA", "MIN")`, to process a subset. `-VariantKey` remains a compatibility alias for the plural parameter:
+`-Committed` selects the tracked `Staging-*` directories and bypasses local `.env` loading. Without it, build and packaging commands require the configured staging junctions and operate on their physical mod-manager destinations.
+
+## Build consumers
 
 ```powershell
 ./Tools/buildVariant.ps1 `
-  -JavaPath ".work/tools/java/bin/java.exe" `
-  -JpexsJarPath ".work/tools/jpexs/ffdec.jar" `
-  -VanillaInterfacePath "Scaleform/.work/vanilla-interface-extracted/interface" `
-  -Committed
-./Tools/createPackages.ps1 -Committed
+  -Committed `
+  -VariantKeys VWKS,TA,FC,CF,MIN `
+  -JavaPath <java.exe> `
+  -FlexSdkPath <flex-sdk> `
+  -CanvasProjectPath <venworks-canvas> `
+  -CanvasEnvironmentPath <venworks-canvas/.env> `
+  -UpdateExpectedHashes
+```
+
+`-UpdateExpectedHashes` is required only when intentionally accepting newly built bytes or a changed source digest. The build uses a fresh directory beneath `.work/canvas-consumers`, validates the complete candidate, preserves the previous destination beneath `.work/canvas-rollback`, and then publishes the complete replacement.
+
+## Verify and package
+
+```powershell
+./Tools/verifyVariant.ps1 -Committed -VariantKeys VWKS,TA,FC,CF,MIN -PreArchiveMutation
+./Tools/createPackages.ps1 -Committed -VariantKeys VWKS,TA,FC,CF,MIN
 ./Tools/verifyCommittedRelease.ps1
+./Tools/checkRepo.ps1 -Committed
+./Tools/createReleasePackages.ps1 -VariantKeys VWKS,TA,FC,CF,MIN -OutputDirectory .work/release-candidates
 ```
 
-Each variant uses one stable package base, such as `Venworks-CustomizableHUD-FreestarCollective`. `Tools/createPackages.ps1` creates these version-independent files from the matching staging root:
+The committed release contains three BA2 files per theme: `Main`, `Main_XBox`, and `Main_PS`. All are uncompressed General archives and contain the consumer Interface tree plus the two compiled VWHUD scripts. The real ESM remains beside the archive. The full matrix contains 15 BA2 files and 25 ZIP files.
 
-```text
-<PackageBase>.esm
-<PackageBase> - Main.ba2
-<PackageBase> - Textures.ba2
-<PackageBase> - Main_XBox.ba2
-<PackageBase> - Textures_XBox.ba2
-<PackageBase> - Main_PS.ba2
-<PackageBase> - Textures_PS.ba2
-```
+## Evidence boundaries
 
-The four themed profiles select all six archive targets shown above. Minimalist selects the three Main targets and produces no Textures archives. PS5 Debug is V2-only and selects Windows and PS5 Main targets so its diagnostic payload can be tested on PC before Creations submission, but only its PS5 archive is included in the release-package matrix. The Archive2 format, compression, maximum-size, include-filter, and exclude-filter arguments in the matching V1 or V2 package script are part of the platform packaging contract. Preserve them exactly. Every archive target selected by a variant must run even when a source category is currently empty. Archive2 does not create a texture BA2 when its include filter matches no files, so each platform package contains its Main BA2 plus a Textures BA2 only when the texture command produces one.
-
-The archive compression matrix follows Bethesda's shipped BA2s: every General Main target uses `None`, while every DDS or XBoxDDS Textures target uses `LZ4`. CWS movie compression remains internal to each SWF and is not changed by the outer BA2 setting. SVG assets currently follow the Main-archive filters. Moving SVGs into a texture archive is deferred until the generated console archives can be tested.
-
-## Variant build profiles
-
-`Tools/compileScaleform.ps1` is the lower-level HUD host compiler. It validates and writes one normal or large HUD movie declared by a build manifest while preserving that build input's GFX or CWS container and patching only Bethesda's existing ABC. A manifest may select one legacy patch or an ordered set of bounded patches; every mode preserves exactly one Bethesda ABC. `Tools/compileScaleformAuxiliary.ps1` compiles either the complete CUI runtime or a diagnostic bridge into a deterministic one-ABC CWS movie for profiles that declare an auxiliary movie. `Tools/sharedScaleformProfiles.ps1` resolves each variant's manifest-selected host movies, deployment mapping, optional HUD-message movies, auxiliary contract, and optional auxiliary source profile. `Tools/buildVariant.ps1` compiles each distinct host manifest set once, compiles shared HUD-message movies only for profiles that declare them, compiles each selected auxiliary profile once, and stages every selected profile from `Scaleform/variants/<KEY>/build.psd1` independently. Normal and large GFX outputs deploy to their `.gfx` paths while independently compiled CWS outputs deploy to their `.swf` paths. A variant profile owns its movie profile, optional auxiliary movie profile, optional layout source, SWF component name inventory, optional legacy external-fragment inventory, assets, palettes, palette mode, and optional stub-ESM source. Adding or removing one component reference or auxiliary behavior in one profile does not require making the other profiles match.
-
-The V1 entrypoints own only the five player-facing variants and reject `PS5DBG`. The `buildVariantV2.ps1`, `compileScaleformAuxiliaryV2.ps1`, `verifyVariantV2.ps1`, `createPackagesV2.ps1`, `createReleasePackagesV2.ps1`, `verifyCommittedReleaseV2.ps1`, and `checkRepoV2.ps1` chain retains those five production contracts and adds the v2.0.18 PS5 Debug XHTML diagnostic contract. It continues to share the stable host compiler, override compiler, configuration, movie, profile, and reference-cache helpers. CI validates both boundaries, and the tagged-release workflow uses the V2 ZIP assembler because it must emit the complete 26-package matrix.
-
-The four themed profiles currently share the production layout, all 11 supplied SWF component references, six SVG assets, five external palettes, and the shared live-data auxiliary movie profile. Minimalist independently declares its own layout, references the nine applicable names from the same 11-component registry, and selects the `minimalist-live` auxiliary profile. No player-facing profile stages duplicate supplied component XML. Those five variants share four base HUD bootstrap movies and four HUD-message movies, stage those eight Bethesda-path movies plus one profile-selected `venworkscui.swf`, and load the root layout and optional palettes or assets through the complete layout runtime. PS5 Debug instead selects four unique host manifests and a diagnostic-bridge auxiliary manifest. It stages its four one-ABC HUD hosts plus a one-ABC `venworkscui.swf` with exactly one dynamically resolved `PlayerData` subscription and one isolated diagnostic XML file, but no HUD-message, production XML loader, SVG, palette, asset, production provider context, or full CUI runtime payload.
-
-## PS5 Debug release variant
-
-`PS5DBG` is the sixth entry in the sole variant registry, `$Global:ReleaseVariants`, but it is owned exclusively by the V2 build, archive, verification, repository-check, and release-package entrypoints. Omitting `-VariantKeys` from a V2 command includes it; every V1 entrypoint excludes it by default and rejects an explicit `PS5DBG` selection. Its unique `Venworks-CustomizableHUD-PS5Debug.esm` filename prevents it from sharing plugin identity with another release variant. Empty Nexus display names keep it out of Nexus delivery, while its release profile contributes only a Bethesda PS5 ZIP to the 26-ZIP matrix.
-
-Configure its ignored local module path in `.env`:
-
-```text
-MODULE_VARIANT_PS5DBG_PATH=<absolute path to the PS5 Debug module folder>
-```
-
-For a normal tracked checkout, regenerate and package directly in the committed staging directory without loading `.env` or requiring a junction:
-
-```powershell
-.\Tools\buildVariantV2.ps1 `
-  -VariantKeys PS5DBG `
-  -JavaPath ".work/tools/java/bin/java.exe" `
-  -JpexsJarPath ".work/tools/jpexs/ffdec.jar" `
-  -VanillaInterfacePath "Scaleform/.work/vanilla-interface-extracted/interface" `
-  -Committed
-.\Tools\createPackagesV2.ps1 -VariantKeys PS5DBG -Committed
-.\Tools\verifyVariantV2.ps1 -VariantKeys PS5DBG -Committed
-.\Tools\createReleasePackagesV2.ps1 `
-  -VariantKeys PS5DBG `
-  -OutputDirectory ".work/ps5-debug-release"
-```
-
-For Vortex deployment, use the same deliberate manual conversion for any selected variant. First confirm that its tracked staging directory contains no work that must be preserved, then delete that directory, run `.\Tools\setupRepo.ps1 -VariantKeys PS5DBG` to create the configured local junction, and restore the deleted tracked files from the current commit through Git so the restored payload is written through the junction into the module folder. `setupRepo.ps1` never deletes or replaces a tracked staging directory itself. After the junction is populated, run the same build, package, and verification commands without `-Committed`. Ordinary mode continues to reject missing, non-junction, or incorrectly targeted staging paths; committed build, package, and verification mode operates on the tracked directory without converting it into a junction.
-
-The builder patches only Bethesda's existing `HUDMenu` class in each clean normal and large GFX/CWS source. Each resulting movie retains one Bethesda ABC, the original 1920-by-1080, 30-fps, one-frame metadata, and the original class inventory. The top-center pane reports constructor, added-to-stage, first-frame success, auxiliary load start, bridge initialization, auxiliary completion, and caught errors through the embedded `$MAIN_Font_Bold` font. Error states are latched before display so a later lifecycle phase cannot overwrite an error with false success, and auxiliary completion is latched so an older non-error host lifecycle callback cannot replace the terminal successful auxiliary phase. The shared production loader remains unchanged; a separate observer patch routes its existing phases into the PS5 Debug pane. The auxiliary still contains exactly one authored class, `VenworksCUIDiagnosticEntrypoint`, with its embedded class-inventory fingerprint and four untyped bridge methods. After its initial `venworkscui.swf loaded` status can render, the next frame dynamically resolves `Shared.AS3.Data.BSUIDataManager`, primes `PlayerData`, subscribes with a stored callback, and displays the sanitized, bounded `sName` value or a contained error. The accepted PlayerData callback keeps that result on a persistent PlayerData row, displays `PS5DBG-08 XHTML TEXT LOAD NEXT FRAME` on a separate XHTML row, and calls the isolated `VenworksCUI/layout.xml` loader on the following frame with `URLLoaderDataFormat.TEXT`. `PS5DBG-09 XHTML LOAD RETURNED` proves that call returned without a synchronous completion or error; later text receipt, bounded parse, render, success, and error phases update only the XHTML row. It has no compile-time Bethesda extern, production XML loader, Scaleform XML/E4X parsing, components, SVG, palette, asset, production provider context, or full Venworks CUI runtime.
-
-The exact staged payload is the unique ESM plus `hudmenu.gfx`, `hudmenu.swf`, `hudmenu_lrg.gfx`, `hudmenu_lrg.swf`, `venworkscui.swf`, and `VenworksCUI/layout.xml`. The diagnostic CUI directory contains only that XML file. The generic archive command creates only Windows `Main.ba2` and PlayStation `Main_PS.ba2`, both General archives with `compression=None`. Windows exists for the required PC diagnostic gate, while the generic release-packaging command emits only the Bethesda PS5 ZIP. It deliberately creates no Bethesda PC, Xbox, Nexus, or fully loose release package.
-
-`verifyVariantV2.ps1 -VariantKeys PS5DBG` rejects any extra file, archive, movie, ABC, unexpected runtime/provider token, compressed BA2 entry, mismatched hash, or noncanonical ESM bytes. It requires the diagnostic auxiliary's exact one-class inventory, bridge API, Starfield-font panes, allowlisted dynamic `PlayerData` and text-loading phases, expected movie/class hashes, and an exact UTF-8 no-BOM copy of the profile-selected layout using consistent LF or CRLF line endings. Because Git may materialize that text differently across operating systems, only the PS5Debug `layout.xml` BA2 entry may compare equal after LF/CRLF normalization; every other archive entry remains byte-exact. The layout must match the exact declaration and `html/head/title/body/section/h1/p` grammar accepted by the bounded parser, with text-only title, heading, and paragraph values that are not embedded in the ActionScript or compiled SWF. `verifyCommittedReleaseV2.ps1` verifies all six profiles through the same registry and profile resolver, while the V1 verifier remains limited to the five player-facing profiles. The v2.0.15 PS5 result closes the PlayerData gate. The v2.0.17 archive-only PC result passed, but the PS5 test produced no visible diagnostic and hard-rebooted the console. The v2.0.18 archive-only PC test displayed the correct PlayerData name, successful XHTML status, and expected native text pane; its PS5 result remains required.
-
-The v2.0.18 runtime receives at most 4096 characters as plain text and feeds them to an iterative cursor parser inside the existing diagnostic class. The parser accepts only the exact lowercase declaration and ordered `html`, `head`, `title`, `body`, `section`, `h1`, and `p` tags; ASCII whitespace is allowed only between structural tokens, while title, heading, and paragraph values must be non-empty, trimmed, single-line text of at most 80 characters. Attributes, namespaces, comments, CDATA, entities, self-closing tags, mixed content, extra elements, and trailing content are rejected. The diagnostic source and reopened movie must not contain Scaleform XML/E4X APIs, `htmlText`, `StyleSheet`, `ExternalInterface`, or navigation. It renders one additional fixed native `TextField`, assigns its ordinary `text` value, and applies separate heading and paragraph `TextFormat` ranges. This is a bounded XHTML experiment, not a browser, CSS engine, JavaScript host, general XML parser, or production CUI replacement.
-
-## Minimalist release
-
-The `MIN` variant is a work-in-progress PC, Xbox, and PS5 release profile with  no external SVG, palette, or DDS payload. Configure its ignored module path in `.env` for Junction-based local builds:
-
-```text
-MODULE_VARIANT_MIN_PATH=<absolute path to the Minimalist module folder>
-```
-
-Create only its staging Junction and build only its artifacts with:
-
-```powershell
-.\Tools\setupRepo.ps1 -VariantKeys MIN
-.\Tools\buildVariant.ps1 -VariantKeys MIN `
-  -JavaPath ".work/tools/java/bin/java.exe" `
-  -JpexsJarPath ".work/tools/jpexs/ffdec.jar" `
-  -VanillaInterfacePath "Scaleform/.work/vanilla-interface-extracted/interface"
-.\Tools\createPackages.ps1 -VariantKeys MIN
-.\Tools\verifyVariant.ps1 -VariantKeys MIN
-.\Tools\createReleasePackages.ps1 `
-  -VariantKeys MIN `
-  -OutputDirectory ".work/release-packages"
-```
-
-The shared themed movie profile validates the independent 10-provider condition context and 14-provider value context before and after compilation, including the six intentionally duplicated provider names, transactional startup, callback containment, deferred teardown, and bootstrap diagnostics. Both contexts start immediately when the auxiliary runtime initializes, before external XML, palettes, or assets load. Each guarded subscription primes its provider through `BSUIDataManager.GetDataFromClient()` before attaching the callback so a newly watched provider's synchronous first snapshot is replayed instead of being lost across the asynchronous movie boundary. The Minimalist live profile retains the same guarded lifecycle with exactly seven condition registrations, ten value registrations, and three intentionally duplicated provider names. It removes only `WeaponData`, `HUDStarbornPowersData`, `FavoritesData`, and `ControlMapData`, which serve the equipment rail that Minimalist does not ship.
-
-The Minimalist profile compiles the complete shared ActionScript tree into its standalone one-ABC CUI movie. It does not replace either data context. Its patch removes only the rail-specific subscription statements and applies the Minimalist-specific visual changes. The compiler verifies the exact provider inventory and the full layout, palette, asset, SVG, path, mask, panel, icon, provider-symbol, and composite class inventory after JPEXS reopens the auxiliary movie. The four themed variants share one auxiliary hash; Minimalist's `venworkscui.swf` hash is profile-specific. All five variants use the same thin normal and large bootstrap movie hashes.
-
-Minimalist resolves the `starfield.xml` color roles to literal XML colors, removes the palette selector, faction icon, helmet cutout paths, and complete equipment rail, and keeps the radar in the former faction-icon position. Its `minimalist` SWF definitions use fitted native rectangle and ellipse backings with a 28-percent dark base and 10-percent pale-blue tint beneath the existing corner brackets and divider strokes. The shipped XML contains no `svg`, `path`, `mask`, `icon`, `panel`, or `providerSymbol` nodes, and the build removes the `components`, `Assets`, and `palettes` directories. It stages only the literal-color `layout.xml` under `Interface\VenworksCUI`, alongside the nine-movie Interface payload, the renamed stub ESM, and the Windows, Xbox, and PS5 Main BA2s. The selected release-package command creates all five normal package shapes for Minimalist. Omitting `-VariantKeys` from a V1 command selects the five player-facing variants; omitting it from a V2 command additionally selects PS5 Debug.
-
-The provider-free v2.0.6 test produced no change in the reported PS5 crash, so Minimalist again retains its required live providers and provider-driven CUI events. Every Bethesda-path movie is built and deployed independently from the matching clean container: native `.gfx` inputs produce validated native GFX outputs, and ZLIB-compressed `.swf` inputs produce validated CWS outputs. The v2.0.10 byte-identical host alias experiment also produced no change in the reported PS5 crash, so the native Bethesda-style container split is restored. The separately authored auxiliary runtime is emitted as compressed CWS version 12. Native rectangle and ellipse fills remain in the fitted holographic backings.
-
-The release workflow produces five ZIP shapes for each of the five player-facing variants:
-
-| Package | Contents |
-|---|---|
-| Nexus PC - Normal | Root ESM, Windows Main BA2, any generated Windows Textures BA2, plus loose `Interface\VenworksCUI\layout.xml` only for an external-configuration profile |
-| Nexus PC - Fully Loose Files | Complete loose `Interface` tree, with no ESM or BA2 |
-| Bethesda PC | Root ESM, Windows Main BA2, and any generated Windows Textures BA2 only |
-| Bethesda Xbox | Root ESM, Xbox Main BA2, and any generated Xbox Textures BA2 only |
-| Bethesda PS5 | Root ESM, PS5 Main BA2, and any generated PS5 Textures BA2 only |
-
-Every player-facing platform Main archive packages the staged nine-movie inventory directly: native GFX plus independently compiled CWS for the normal, large, and HUD-message movie pairs, and the profile-selected `venworkscui.swf`. Windows, Xbox, and PlayStation use the same source inventory and Bethesda-style storage contract: General Main BA2s are uncompressed and DDS or XBoxDDS Textures BA2s use LZ4. Minimalist's platform packages contain its ESM and matching Main BA2 with no texture archive, while its fully loose Nexus package contains the nine movies plus the root layout. Generated XML and SVG payloads use UTF-8 without a byte-order mark and canonical LF line endings so committed BA2 contents remain byte-identical to clean checkouts on Windows and Linux. PS5 Debug adds one Bethesda PS5 ZIP containing its unique ESM and five-movie Main_PS BA2, for a complete 26-ZIP matrix. Every normal Nexus package leaves only `layout.xml` loose so the compiled HUD movies remain protected by the BA2. Users can move, hide, or condition supplied components by editing their `<swfComponent>` declarations in that layout; custom external fragments, palettes, or SVG assets require a fully loose package or separate loose override. The official v2.0.10 release enables the global and every player-facing variant-specific Nexus upload switch; PS5 Debug has no Nexus upload path. Do not install a normal and fully loose package together.
-
-## Persistent BGS reference cache
-
-`Tools/cacheBgsScaleform.ps1` maintains the curated vanilla reference set under the Git-ignored `Scaleform/.work/bgs-decompiled` directory. The checked-in `Scaleform/reference-cache.xml` manifest includes the normal/large on-foot HUD, Watch map-icon library, player HUD components, frequently consulted status, favorites, inventory, and galaxy-starmap consumers, the Ship HUD family, and the available ship/powers provider JSON fixtures. It does not decompile the complete Interface archive.
-
-Each movie cache entry contains stable `movie.xml`, `scripts`, and `cache.json` paths. Cache validity requires the same relative input name, source SHA-256, JPEXS JAR SHA-256, parseable SWF XML, and an exported-script directory. Provider fixtures are copied byte-identically and checked against their source hashes. Changing either a movie or JPEXS invalidates only the affected movie entry; `-ForceRefresh` deliberately regenerates the full manifest.
-
-Run the cache from the repository root with the same external Java, JPEXS, and extracted Interface paths used by the normal build:
-
-```powershell
-./Tools/cacheBgsScaleform.ps1 `
-  -JavaPath "C:\path\to\java.exe" `
-  -JpexsJarPath "C:\path\to\ffdec.jar" `
-  -VanillaInterfacePath "C:\path\to\extracted\interface"
-```
-
-`Tools/compileScaleform.ps1` requires its normal and large HUD inputs in this manifest and copies their cached vanilla XML into the build's GUID work directory. It still exports the patched timeline and reopened generated movie on every build because those exports enforce the patch-integrity, authored class, script-count, and single-domain contracts. Those validation directories remain temporary and are removed after a successful build unless `-KeepWork` is selected.
-
-Cache refreshes stage output below the resolved cache root and validate target paths before removing a stale, regenerable entry. Neither the cache nor its metadata records machine-specific absolute paths. Bethesda binaries, decompiled ActionScript, XML, and provider fixtures must remain ignored local references and must never be staged or committed.
-
-## Palette contract validation
-
-`Schemas/VenworksCUI/palette-v1.xsd` is the structural contract for palette files. `Schemas/VenworksCUI/layout-v1.xsd` permits a root layout to select one safe palette filename and permits the bounded `@palette.*` token form in attributes whose literal types would otherwise reject a reference. Runtime resolution remains the semantic gate for role existence, field/category compatibility, required roles, and asset allowlists.
-
-The normal build validates the positive palette contract and palette-layout unsafe paths to fail structurally, and keeps unknown-role and incompatible-role fixtures structurally valid for the runtime semantic gate. The runtime resolves each supplied `<swfComponent>` definition from its local registry, applies the same wrapper-prefix and placement path used by a legacy external fragment, lowers bounded composites, templates, repeaters, and states on a copy of the fully resolved layout, inserts the complete selected palette at the head of that runtime tree, and resolves semantic values only when the parser, asset manager, or components consume an attribute. No palette step rewrites or reparses the layout XML. The palette-composite fixture covers buttons, quick bars, information panels, warnings, palette-backed composite icons, every button state, and every warning severity. The build also verifies that the authored loader remains fixed to `VenworksCUI/palettes`, retains its size and path bounds, and that the ordering and semantic composite output survive the normal/large movie import and reopen cycle. The production layout selects `venworks.xml` by default. The build validates and stages `venworks.xml`, `crimson-fleet.xml`, `freestar-collective.xml`, and `trackers-alliance.xml`, plus the neutral `starfield.xml`, under `Interface/VenworksCUI/palettes` in all four themed release variants. Minimalist uses literal Starfield colors in its compiled component definitions and stages no palette directory. Repository checks enforce the exact five release-variant names, their corresponding selected palette filenames, the Venworks default selector, and byte-identical source and staged copies of all five user-selectable palette files.
-
-## Auxiliary movie domain boundary
-
-All cooperating Venworks CUI classes live in exactly one `DoABC` linkage domain inside `Interface\venworkscui.swf`. The normal and large Bethesda HUD movies retain exactly one Bethesda ABC apiece and contain only the guarded loader patch; they must not contain an injected CUI seed or any `venworks.cui.*` implementation. The loader uses the default child application domain, allowing the auxiliary runtime to resolve Bethesda definitions from its parent without explicitly selecting an `ApplicationDomain` or using `LoaderContext`. The normal and large hosts are compiled and validated from Bethesda's separate GFX and CWS inputs, but the current deployment contract deliberately uses the CWS host bytes for both runtime aliases. All four deployed host paths plus the auxiliary retain the observed 1920-by-1080, 30-fps, one-frame stage contract; `_lrg` is not authored as an ultrawide stage.
-
-The bootstrap retains one loader and one untyped bridge per HUD instance. The HUD constructor starts the request, `Event.INIT` resolves and initializes the child bridge against the host HUD, and `Event.COMPLETE` attaches the loaded auxiliary root directly to the HUD before reapplying placement and replaying any cached HUD-mode visibility. The runtime keeps the host owner used for lifecycle events and vanilla lookups separate from the auxiliary display owner used for custom layers. The bootstrap guards duplicate startup, contains initialization, complete, I/O, security, placement, visibility, and teardown failures, tolerates removal while loading, removes both lifecycle listeners, and disposes, detaches, and unloads idempotently. Its marker and load-error fields apply Starfield's embedded `$MAIN_Font_Bold` format rather than relying on an unavailable default font. The auxiliary root exposes only `initialize(owner)`, `reapplyVanillaPlacements()`, `updateVanillaHudModeVisibility(values)`, and `dispose()` to that bridge.
-
-This boundary is a mandatory build contract. Verification requires one ABC in each base HUD movie and no CUI runtime tokens in those base movies. Runtime-bridge auxiliaries require one ABC, the complete expected CUI/provider inventory, readable diagnostic formatting, current transformed-source and class-inventory fingerprints, and no release marker payload. Diagnostic-bridge auxiliaries instead require one exact document class, the four bridge methods, the expected pane text/font tokens, an embedded fingerprint matching that exact staged class inventory, and only the allowlisted dynamic `PlayerData` provider calls plus the isolated `URLLoader`, `URLRequest`, and E4X parse tokens; production runtime classes, provider contexts, and unrelated providers remain forbidden.
-
-Provider startup and live callback faults are terminal for the current auxiliary runtime instance. The runtime marks itself failed before scheduling deferred component teardown, cancels the layout, palette, and asset loaders, removes their listeners, and ignores any callback that arrives after cancellation. A synchronous provider failure also stops the remaining provider context and XML-loading stages instead of allowing partially initialized UI to continue.
-
-## Standalone CUI compiler
-
-For a runtime-bridge manifest, `Tools/compileScaleformAuxiliary.ps1` uses Apache Flex `compc.jar` to create a temporary external-library SWC from six compile-only Bethesda stubs under `Scaleform/venworkscui/externs` plus a generated `scaleform.gfx.Extensions` stub. It then uses `mxmlc.jar` to compile `VenworksCUIEntrypoint` and the selected profiled CUI source tree. The host SWC is external-only: none of its stub definitions may be embedded in the output. A diagnostic-bridge manifest compiles only its declared document class, forbids ActionScript source profiles and extern inputs, and embeds the fingerprint derived from its first compiled class inventory into its final staged movie.
-
-The compiler emits compressed CWS version 12 with manifest-validated 1920-by-1080 stage dimensions, a 30-fps frame rate, and one frame, removes nondeterministic Flex metadata and product tags through a JPEXS XML normalization pass, reopens the result, and requires exactly one ABC with the expected bridge, runtime classes, provider names, and profile restrictions. Runtime and diagnostic compilation both use two passes: the first derives the sorted compiled-definition fingerprint, while the second embeds that fingerprint and proves the definition inventory did not change; runtime bridges additionally embed the current transformed-source fingerprint. Each auxiliary manifest owns both an expected movie hash and an expected class-inventory hash. The four themed variants use `Scaleform/venworkscui/build.xml` and share those contracts. Minimalist uses `Scaleform/variants/MIN/movies/venworkscui.build.xml` and its own contracts.
-
-All SDKs, JARs, SWCs, decompiled data, cached third-party archives, and temporary compiler inputs remain ignored under `.work`, an explicitly supplied private local artifact cache, or an ephemeral build directory. Do not commit the Adobe Flex SDK archive, `playerglobal.swc`, the generated host extern SWC, Bethesda binaries, credentials, or machine-specific paths.
-
-`buildVariant.ps1 -AuxiliaryMarkerProbe` is a local-only loader check. It is accepted only with `-VariantKeys MIN`, cannot be combined with `-Committed` or `-UpdateExpectedHashes`, and emits a temporary one-ABC auxiliary movie containing `VENWORKS AUX LOADED`. Never package or commit the probe. A normal build overwrites it, release verification rejects the marker string, and `createPackages.ps1` rejects any inventory, hash, signature, or host-alias mismatch before any archive mutation.
-
-After any normal V1 bootstrap, host patch, CUI class, provider profile, or extern change, run the complete five-variant `Tools/buildVariant.ps1` command, `Tools/createPackages.ps1`, and `Tools/verifyCommittedRelease.ps1`. Run the matching V2 commands to validate the same five contracts plus the v2.0.18 PS5 Debug probe. A successful build must reopen and validate every generated movie and regenerate each selected platform Main archive from its profile-declared Interface inventory. Before a player-facing release, force one missing-auxiliary load to confirm the diagnostic is readable, then test at least Minimalist and one themed variant from an archive-only PC install containing only the selected ESM and Main BA2 with no loose Interface shadow. The v2.0.15 PlayerData PS5 gate has passed, while v2.0.17 passed on PC and hard-rebooted the PS5 before any diagnostic became visible. The v2.0.18 Windows Main BA2 has now passed its archive-only PC test with `PS5DBG-OK AUX COMPLETE`, the correct PlayerData name, `PS5DBG-OK XHTML | html/head/title/body/section/h1/p`, and the separate rendered heading-and-paragraph panel visible simultaneously. Repeat that acceptance sequence with the PS5 Main_PS BA2 before advancing the console gate. `PS5DBG-08 XHTML TEXT LOAD NEXT FRAME` identifies a load call that has not returned, `PS5DBG-09 XHTML LOAD RETURNED` proves the call returned while awaiting an event, `PS5DBG-10 XHTML TEXT RECEIVED` proves plain text arrived, `PS5DBG-11 XHTML PARSE NEXT FRAME` isolates the custom-parser boundary, `PS5DBG-12 BASIC XHTML RENDER` identifies native text-field creation, and `PS5DBG-OK XHTML | html/head/title/body/section/h1/p` proves the bounded translation completed. A contained `PS5DBG-ERR XHTML REQUEST`, `IO`, `SECURITY`, `TEXT`, `SIZE`, `PARSE`, or `RENDER` phase records the failing boundary. Confirm teardown without a late callback fault. Rollback restores the v2.0.17 diagnostic auxiliary and archives; the four diagnostic hosts and every player-facing movie and archive remain unchanged.
-
-## Component registration contract
-
-Components resolved from either a supplied SWF definition or a legacy included fragment pass through three independent runtime gates: `CUICompositionResolver` must accept the XML element, `CUILayoutParser` must validate its attributes, and `CUIRuntime` must construct the display component. Registering a component in only the parser and runtime is insufficient. The composition resolver processes resolved component groups first and reports an unknown element before layout parsing can reach its branch.
-
-Goal 8B initially shipped `contactRadar` without adding it to the composition resolver's leaf-component list. Both deployed HUD movies contained the new parser and runtime code, but the then-external radar definition failed at composition. The build now requires `contactRadar` registration to survive the movie import/reopen cycle in all three gates. Future component types, whether referenced from the SWF registry or authored in a legacy fragment, must extend this validation contract at the same time they are added.
-
-Starfield's Scaleform runtime can reduce `ReferenceError #1065` to its numeric identifier without naming the unresolved variable or class. The runtime therefore distinguishes layout validation, asset-manager initialization, and asset collection, while the parser retains the component type and ID currently being validated. Reopened-movie validation requires these checkpoint strings and the optional stack-trace request to survive compilation.
-
-## Goal 8 split-domain regression
-
-Goal 8 runtime diagnostics localized `ReferenceError #1065` to the first call to `CUISymbol.isAllowlisted`. The authored vehicle-exit symbol and `CUISymbol` implementation were unchanged, but Goal 8 seed regeneration replaced Goal 7's single lazy ABC with forty independent lazy ABC tags. A controlled terminal sentinel moved `CUISymbol` away from the final record; the same error remained with matching deployed hashes. That disproved terminal-record loss and confirmed that padding cannot repair the violated one-domain architecture.
-
-The first production correction restored one generated ABC containing the entire dynamic class inventory inside each base HUD movie. The current architecture preserves that one-domain rule while moving the single CUI ABC into `venworkscui.swf`. `compc` is now used only to produce a temporary external host-library SWC; do not embed that SWC, emit independent per-class ABC tags, add sentinel slots, or split cooperating CUI classes across domains.
+The verifiers establish exact file inventory, resource bytes, source digest, SWF encoding and bytecode tokens, platform archive ownership, archive entry bytes, and ZIP composition. Compilation proves that the selected source and toolchain can produce the candidate. Neither proves that Starfield mounted the consumer, delivered provider data, displayed the intended theme, or behaved correctly on PC or PS5.

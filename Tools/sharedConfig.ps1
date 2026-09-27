@@ -3,176 +3,71 @@ param(
   [switch]$SkipEnvironment
 )
 
-# Abort on first error
 $PSNativeCommandUseErrorActionPreference = $true
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = 'Stop'
 
 class ModuleVariant {
-    [string]$VariantKey
-    [string]$VariantName
-    [string]$ReleaseDisplayName
-    [string]$NexusNormalDisplayName
-    [string]$NexusLooseDisplayName
-    [string]$PackageBaseName
-    [string]$StagingFolderPath
-    [string]$PluginModulePath
-    [string]$PaletteFileName
-    [string[]]$ArchiveTargets
+  [string]$VariantKey
+  [string]$VariantName
+  [string]$ReleaseDisplayName
+  [string]$NexusNormalDisplayName
+  [string]$NexusLooseDisplayName
+  [string]$PackageBaseName
+  [string]$StagingFolderPath
+  [string]$PluginModulePath
+  [string[]]$ArchiveTargets
 
-    ModuleVariant(
-        [string]$variantKey,
-        [string]$variantName,
-        [string]$releaseDisplayName,
-        [string]$nexusNormalDisplayName,
-        [string]$nexusLooseDisplayName,
-        [string]$packageBaseName,
-        [string]$stagingFolderPath,
-        [string]$pluginModulePath,
-        [string]$paletteFileName,
-        [string[]]$archiveTargets
-    ) {
-        $this.VariantKey = $variantKey
-        $this.VariantName = $variantName
-        $this.ReleaseDisplayName = $releaseDisplayName
-        $this.NexusNormalDisplayName = $nexusNormalDisplayName
-        $this.NexusLooseDisplayName = $nexusLooseDisplayName
-        $this.PackageBaseName = $packageBaseName
-        $this.StagingFolderPath = $stagingFolderPath
-        $this.PluginModulePath = $pluginModulePath
-        $this.PaletteFileName = $paletteFileName
-        $this.ArchiveTargets = $archiveTargets
-    }
-}
-
-if ([System.IO.Directory]::Exists("./Staging")) {
-  if ((Get-Item -Path "./Staging").LinkType -ne "Junction") {
-    Write-Host -ForegroundColor Red "Staging is no longer a Junction. Please delete it and rerun the setupRepo script."
-    Exit
+  ModuleVariant(
+    [string]$variantKey,
+    [string]$variantName,
+    [string]$releaseDisplayName,
+    [string]$nexusNormalDisplayName,
+    [string]$nexusLooseDisplayName,
+    [string]$packageBaseName,
+    [string]$stagingFolderPath,
+    [string]$pluginModulePath,
+    [string[]]$archiveTargets
+  ) {
+    $this.VariantKey = $variantKey
+    $this.VariantName = $variantName
+    $this.ReleaseDisplayName = $releaseDisplayName
+    $this.NexusNormalDisplayName = $nexusNormalDisplayName
+    $this.NexusLooseDisplayName = $nexusLooseDisplayName
+    $this.PackageBaseName = $packageBaseName
+    $this.StagingFolderPath = $stagingFolderPath
+    $this.PluginModulePath = $pluginModulePath
+    $this.ArchiveTargets = $archiveTargets
   }
 }
 
 if (!$SkipEnvironment) {
-  If (![System.IO.File]::Exists(".env")) {
-    Write-Host -ForegroundColor Red "ERROR: .env file must be created and configured to run this."
-    Exit
+  if (![System.IO.File]::Exists('.env')) {
+    throw 'A configured .env file is required for local staging operations.'
   }
 
-  Write-Host -ForegroundColor Green "Importing ENV Settings from .env file"
-  Get-Content .env | ForEach-Object {
-    $name, $value = $_.split('=')
-    $name.trim() | Out-Null
-    if (!$name.StartsWith('#') || ![string]::IsNullOrWhitespace($name) || ![string]::IsNullOrWhitespace($value)) {
-      $value.trim() | Out-Null
-      Set-Item -Path "env:$name" -Value "$value"
+  foreach ($line in Get-Content -LiteralPath '.env') {
+    if ($line -notmatch '^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$') {
+      continue
     }
+    $name = $Matches[1]
+    $value = $Matches[2].Trim().Trim('"')
+    Set-Item -Path "env:$name" -Value $value
   }
-
-  Write-Host -ForegroundColor Yellow "`nSteam Settings:"
-  Write-Host -ForegroundColor Yellow "Starfield game folder is set to $ENV:STEAM_GAME_FOLDER."
-  Write-Host -ForegroundColor Yellow "Starfield data folder is set to $ENV:STEAM_DATA_FOLDER."
-
-  Write-Host -ForegroundColor Yellow "`nModule Settings:"
-  Write-Host -ForegroundColor Yellow "Trackers Alliance Variant Folder is $ENV:MODULE_VARIANT_TA_PATH"
-  Write-Host -ForegroundColor Yellow "Freestar Collective Variant Folder is $ENV:MODULE_VARIANT_FC_PATH"
-  Write-Host -ForegroundColor Yellow "Crimson Fleet Variant Folder is $ENV:MODULE_VARIANT_CF_PATH"
-  Write-Host -ForegroundColor Yellow "Venworks Variant Folder is $ENV:MODULE_VARIANT_VWKS_PATH"
-  Write-Host -ForegroundColor Yellow "Minimalist Variant Folder is $ENV:MODULE_VARIANT_MIN_PATH"
-  Write-Host -ForegroundColor Yellow "PS5 Debug Variant Folder is $ENV:MODULE_VARIANT_PS5DBG_PATH"
 }
 
-$releaseArchiveTargets = @(
-    "Main",
-    "Textures",
-    "Main_XBox",
-    "Textures_XBox",
-    "Main_PS",
-    "Textures_PS"
-)
-
+$archiveTargets = @('Main', 'Main_XBox', 'Main_PS')
 $Global:ReleaseVariants = @(
-    [ModuleVariant]::new(
-        "TA",
-        "Trackers Alliance",
-        "Venworks - Customizable HUD - Trackers Alliance Theme",
-        "Venworks - HUD - TA Theme (Normal)",
-        "Venworks - HUD - TA Theme (Loose)",
-        "Venworks-CustomizableHUD-TrackersAlliance",
-        "./Staging-TA",
-        "$ENV:MODULE_VARIANT_TA_PATH",
-        "trackers-alliance.xml",
-        $releaseArchiveTargets
-    )
-
-    [ModuleVariant]::new(
-        "FC",
-        "Freestar Collective",
-        "Venworks - Customizable HUD - Freestar Collective Theme",
-        "Venworks - HUD - FC Theme (Normal)",
-        "Venworks - HUD - FC Theme (Loose)",
-        "Venworks-CustomizableHUD-FreestarCollective",
-        "./Staging-FC",
-        "$ENV:MODULE_VARIANT_FC_PATH",
-        "freestar-collective.xml",
-        $releaseArchiveTargets
-    )
-
-    [ModuleVariant]::new(
-        "CF",
-        "Crimson Fleet",
-        "Venworks - Customizable HUD - Crimson Fleet Theme",
-        "Venworks - HUD - CF Theme (Normal)",
-        "Venworks - HUD - CF Theme (Loose)",
-        "Venworks-CustomizableHUD-CrimsonFleet",
-        "./Staging-CF",
-        "$ENV:MODULE_VARIANT_CF_PATH",
-        "crimson-fleet.xml",
-        $releaseArchiveTargets
-    )
-
-    [ModuleVariant]::new(
-        "VWKS",
-        "Venworks",
-        "Venworks - Customizable HUD - Venworks Theme",
-        "Venworks - HUD - Venworks Theme (Normal)",
-        "Venworks - HUD - Venworks Theme (Loose)",
-        "Venworks-CustomizableHUD-Venworks",
-        "./Staging-VWKS",
-        "$ENV:MODULE_VARIANT_VWKS_PATH",
-        "venworks.xml",
-        $releaseArchiveTargets
-    )
-
-    [ModuleVariant]::new(
-        "MIN",
-        "Minimalist",
-        "Venworks - Customizable HUD - Minimalist",
-        "Venworks - HUD - Minimalist (Normal)",
-        "Venworks - HUD - Minimalist (Loose)",
-        "Venworks-CustomizableHUD-Minimalist",
-        "./Staging-MIN",
-        "$ENV:MODULE_VARIANT_MIN_PATH",
-        "starfield.xml",
-        @("Main", "Main_XBox", "Main_PS")
-    )
-
-    [ModuleVariant]::new(
-        "PS5DBG",
-        "PS5 Debug",
-        "Venworks - Customizable HUD - PS5 Debug",
-        "",
-        "",
-        "Venworks-CustomizableHUD-PS5Debug",
-        "./Staging-PS5DBG",
-        "$ENV:MODULE_VARIANT_PS5DBG_PATH",
-        "",
-        @("Main", "Main_PS")
-    )
+  [ModuleVariant]::new('TA', 'Trackers Alliance', 'Venworks - Customizable HUD - Trackers Alliance Theme', 'Venworks - HUD - TA Theme (Normal)', 'Venworks - HUD - TA Theme (Loose)', 'Venworks-CustomizableHUD-TrackersAlliance', './Staging-TA', "$ENV:MODULE_VARIANT_TA_PATH", $archiveTargets)
+  [ModuleVariant]::new('FC', 'Freestar Collective', 'Venworks - Customizable HUD - Freestar Collective Theme', 'Venworks - HUD - FC Theme (Normal)', 'Venworks - HUD - FC Theme (Loose)', 'Venworks-CustomizableHUD-FreestarCollective', './Staging-FC', "$ENV:MODULE_VARIANT_FC_PATH", $archiveTargets)
+  [ModuleVariant]::new('CF', 'Crimson Fleet', 'Venworks - Customizable HUD - Crimson Fleet Theme', 'Venworks - HUD - CF Theme (Normal)', 'Venworks - HUD - CF Theme (Loose)', 'Venworks-CustomizableHUD-CrimsonFleet', './Staging-CF', "$ENV:MODULE_VARIANT_CF_PATH", $archiveTargets)
+  [ModuleVariant]::new('VWKS', 'Venworks', 'Venworks - Customizable HUD - Venworks Theme', 'Venworks - HUD - Venworks Theme (Normal)', 'Venworks - HUD - Venworks Theme (Loose)', 'Venworks-CustomizableHUD-Venworks', './Staging-VWKS', "$ENV:MODULE_VARIANT_VWKS_PATH", $archiveTargets)
+  [ModuleVariant]::new('MIN', 'Minimalist', 'Venworks - Customizable HUD - Minimalist', 'Venworks - HUD - Minimalist (Normal)', 'Venworks - HUD - Minimalist (Loose)', 'Venworks-CustomizableHUD-Minimalist', './Staging-MIN', "$ENV:MODULE_VARIANT_MIN_PATH", $archiveTargets)
 )
 
 function Global:Get-ModuleVariants {
   [CmdletBinding()]
   param(
-    [Alias("VariantKey")]
+    [Alias('VariantKey')]
     [string[]]$VariantKeys
   )
 
@@ -182,48 +77,42 @@ function Global:Get-ModuleVariants {
 
   $normalizedKeys = @($VariantKeys | ForEach-Object {
     if ([string]::IsNullOrWhiteSpace($_)) {
-      throw "Variant keys cannot be empty."
+      throw 'Variant keys cannot be empty.'
     }
     $_.Trim().ToUpperInvariant()
   })
   if (@($normalizedKeys | Select-Object -Unique).Count -ne $normalizedKeys.Count) {
-    throw "Variant keys cannot be repeated."
+    throw 'Variant keys cannot be repeated.'
   }
 
-  $selectedVariants = foreach ($normalizedKey in $normalizedKeys) {
-    $matchingVariants = @($Global:ReleaseVariants | Where-Object {
-      [string]$_.VariantKey -eq $normalizedKey
-    })
-    if ($matchingVariants.Count -ne 1) {
-      throw "Unknown module variant key '$normalizedKey'."
+  $selected = foreach ($key in $normalizedKeys) {
+    $matches = @($Global:ReleaseVariants | Where-Object { $_.VariantKey -ceq $key })
+    if ($matches.Count -ne 1) {
+      throw "Unknown module variant key '$key'."
     }
-    $matchingVariants[0]
+    $matches[0]
   }
-
-  return @($selectedVariants)
+  return @($selected)
 }
 
 function Global:Get-VariantReleasePackageSuffixes {
   [CmdletBinding()]
   param(
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory)]
     [ModuleVariant]$Variant
   )
 
-  $archiveTargets = @($Variant.ArchiveTargets)
-  $hasNexusPackages = ![string]::IsNullOrWhiteSpace($Variant.NexusNormalDisplayName) -and
-    ![string]::IsNullOrWhiteSpace($Variant.NexusLooseDisplayName)
-  if ($hasNexusPackages -and 'Main' -in $archiveTargets) {
+  if ('Main' -in $Variant.ArchiveTargets) {
     'Nexus PC - Normal'
     'Nexus PC - Fully Loose Files'
     'Bethesda PC'
   }
-  if ('Main_XBox' -in $archiveTargets) {
+  if ('Main_XBox' -in $Variant.ArchiveTargets) {
     'Bethesda Xbox'
   }
-  if ('Main_PS' -in $archiveTargets) {
+  if ('Main_PS' -in $Variant.ArchiveTargets) {
     'Bethesda PS5'
   }
 }
 
-$Global:SharedConfigurationLoaded=$true
+$Global:SharedConfigurationLoaded = $true

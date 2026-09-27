@@ -2,10 +2,10 @@
 * text=auto
 *.psc	text eol=crlf
 *.pex -text
-Canvas/resources/**/*.html text eol=lf
-Canvas/resources/**/*.css text eol=lf
-Canvas/resources/**/*.svg text eol=lf
-Canvas/variants/**/*.html text eol=lf
+CanvasConsumer/resources/**/*.html text eol=lf
+CanvasConsumer/resources/**/*.css text eol=lf
+CanvasConsumer/resources/**/*.svg text eol=lf
+CanvasConsumer/variants/**/*.html text eol=lf
 Staging-*/Interface/VenworksCanvas/**/*.html text eol=lf
 Staging-*/Interface/VenworksCanvas/**/*.css text eol=lf
 Staging-*/Interface/VenworksCanvas/**/*.svg text eol=lf

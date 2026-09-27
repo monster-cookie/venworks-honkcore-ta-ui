@@ -4,7 +4,9 @@
 
 - Build all five existing themes as Canvas HTML/CSS/SVG consumers with independent effects publishers and preserved plugin identities.
 - Replace the old status renderer with paged effects snapshots following Canvas Example's event pattern.
-- Add v2 consumer payload, plugin, resource, archive and release checks while retaining the v1 pipeline and rollback payloads.
+- Make the Canvas consumer pipeline the only release path; remove the unreleased XML runtime, duplicate v1 scripts, generic plugin stub, and retired PS5 diagnostic variant.
+- Rename the VWHUD-owned source root to `CanvasConsumer` and promote the consumer build, verification, archive, and release scripts to their unsuffixed names.
+- Clarify that `Interface/VenworksCanvas/Consumers/<namespace>/` is Canvas's current isolated loader contract and contains consumer-owned assets rather than copied Canvas framework code.
 - Synchronize Canvas agent guidance and skills; remove the obsolete repository .codex policies.
 - Archive-only PC and PS5 appearance, lifecycle and performance acceptance remains pending; see [migration guidance](docs/CANVAS_MIGRATION.md).
 

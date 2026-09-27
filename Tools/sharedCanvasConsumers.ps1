@@ -8,10 +8,9 @@ function Get-CanvasResourceBytes([string]$Path) {
 }
 
 function Test-CanvasConsumerVariant([string]$Key) {
-  $consumerProfilePath = Join-Path $PSScriptRoot "../Scaleform/variants/$Key/build.psd1"
-  if (!(Test-Path -LiteralPath $consumerProfilePath)) { return $false }
-  $configuration = Import-PowerShellDataFile -LiteralPath $consumerProfilePath
-  return $configuration.ContainsKey('CanvasConsumer') -and [bool]$configuration.CanvasConsumer
+  $normalizedKey = $Key.ToUpperInvariant()
+  if ($normalizedKey -notin @('VWKS', 'TA', 'FC', 'CF', 'MIN')) { return $false }
+  return Test-Path -LiteralPath (Join-Path $PSScriptRoot "../CanvasConsumer/variants/$normalizedKey") -PathType Container
 }
 
 function Get-CanvasConsumerSources([string]$RepositoryRoot,[string]$Key) {
@@ -22,7 +21,7 @@ function Get-CanvasConsumerSources([string]$RepositoryRoot,[string]$Key) {
     $relative = $pending.Dequeue()
     if ($result.Contains($relative)) { continue }
     if ($relative -notmatch '^[a-z0-9][a-z0-9./-]*\.(html|css|svg)$' -or $relative -match '(^|/)\.\.?(/|$)') { throw "Invalid Canvas resource path: $relative" }
-    $path = if ($relative -eq 'index.html') { Join-Path $RepositoryRoot "Canvas/variants/$Key/index.html" } else { Join-Path $RepositoryRoot "Canvas/resources/$relative" }
+    $path = if ($relative -eq 'index.html') { Join-Path $RepositoryRoot "CanvasConsumer/variants/$Key/index.html" } else { Join-Path $RepositoryRoot "CanvasConsumer/resources/$relative" }
     if (!(Test-Path -LiteralPath $path -PathType Leaf)) { throw "Missing Canvas resource: $relative" }
     $result[$relative] = $path
     if ($relative.EndsWith('.html')) {
@@ -37,10 +36,10 @@ function Get-CanvasConsumerSources([string]$RepositoryRoot,[string]$Key) {
 
 function Get-CanvasConsumerSourceDigest([string]$RepositoryRoot,[string]$Key) {
   $files = @(
-    Get-ChildItem (Join-Path $RepositoryRoot 'Canvas/actionscript') -File -Filter *.as
+    Get-ChildItem (Join-Path $RepositoryRoot 'CanvasConsumer/actionscript') -File -Filter *.as
     Get-ChildItem (Join-Path $RepositoryRoot 'Papyrus/Venworks/CustomizableHUD') -File -Filter *.psc
-    Get-Item (Join-Path $RepositoryRoot "Canvas/variants/$Key/VWHudVariant.as")
-    Get-Item (Join-Path $RepositoryRoot 'Canvas/build/consumer.build.xml')
+    Get-Item (Join-Path $RepositoryRoot "CanvasConsumer/variants/$Key/VWHudVariant.as")
+    Get-Item (Join-Path $RepositoryRoot 'CanvasConsumer/build/consumer.build.xml')
     Get-ChildItem (Join-Path $RepositoryRoot 'Spriggit') -Recurse -File
   )
   $lines = @($files | Sort-Object FullName | ForEach-Object {
@@ -128,7 +127,7 @@ function Assert-CanvasConsumerPayload([string]$RepositoryRoot,[string]$Key,[stri
     if ($metadata.StageWidth -ne 1920 -or $metadata.StageHeight -ne 1080 -or $metadata.FrameRate -ne 30) { throw "Unexpected consumer movie dimensions: $Key/$movie" }
     $inspection = Get-ScaleformMovieInspection -Path $path -Context "$Key/$movie"
     if ($inspection.AbcCount -ne 1) { throw "Unexpected consumer bytecode inventory: $Key/$movie" }
-    [xml]$manifest = Get-Content (Join-Path $RepositoryRoot 'Canvas/build/consumer.build.xml') -Raw
+    [xml]$manifest = Get-Content (Join-Path $RepositoryRoot 'CanvasConsumer/build/consumer.build.xml') -Raw
     foreach ($token in $manifest.movieBuild.requiredTokens.token) { if (!$inspection.Text.Contains([string]$token)) { throw "Missing consumer bytecode token: $token" } }
     foreach ($token in $manifest.movieBuild.forbiddenTokens.token) { if ($inspection.Text.Contains([string]$token)) { throw "Forbidden consumer bytecode token: $token" } }
     if (!$inspection.Text.Contains($namespace)) { throw "Consumer namespace mismatch: $Key" }
