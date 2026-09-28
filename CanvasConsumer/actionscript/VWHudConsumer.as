@@ -153,8 +153,10 @@ package
          if(this.compassTape == null || this.contactRadar == null || this.model == null) return;
          var tactical:Object = this.model.currentTacticalAwarenessData;
          var direction:Number = Number(VWHudViewModel.field(tactical,"direction"));
-         this.compassTape.update(direction,tactical == null ? null : tactical.markers as Array);
-         this.contactRadar.update(this.model.currentCompassData);
+         try { this.compassTape.update(direction,tactical == null ? null : tactical.markers as Array); }
+         catch(compassError:*) {}
+         try { this.contactRadar.update(this.model.currentCompassData); }
+         catch(radarError:*) {}
       }
 
       private function alignInstruments() : void

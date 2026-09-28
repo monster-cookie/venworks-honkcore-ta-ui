@@ -69,6 +69,7 @@ The Canvas chronomark can show ActionScript runtime error numbers when a HUD upd
 | 1034 | A value could not be converted to the expected type |
 | 1056 | Tried to create a property on a sealed object |
 | 1069 | Tried to read a property that the sealed object does not have |
+| 2077 | A method received an instance from another SWF. `BitmapData.draw` of a game clip does this |
 
 A sealed object is a class instance, including nearly every game UI clip. Reading a missing property throws 1069. A dynamic object returns `undefined` instead. The `in` operator checks for the property without throwing. Bracket access and dot access both throw.
 

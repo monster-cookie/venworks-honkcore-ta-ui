@@ -1,17 +1,16 @@
 package
 {
-   import flash.display.Bitmap;
-   import flash.display.BitmapData;
    import flash.display.DisplayObject;
+   import flash.display.InteractiveObject;
    import flash.display.MovieClip;
    import flash.display.Shape;
    import flash.display.Sprite;
-   import flash.geom.Matrix;
+   import flash.events.Event;
    import flash.text.TextField;
    import flash.text.TextFormat;
    import flash.utils.getDefinitionByName;
 
-   // The top-strip compass. It owns its ticks, labels, and game marker widgets. Canvas does not parent them.
+   // The top-strip compass. Ticks, labels, and the game marker widgets live on this strip.
    public final class VWHudCompassTape extends Sprite
    {
       private static const MARKERS:int = 48;
@@ -83,8 +82,9 @@ package
             var marker:DisplayObject = this.createMarker();
             var fallback:Shape = new Shape();
             fallback.visible = marker == null;
+            if(marker != null) markerHost.addChild(marker);
             markerHost.addChild(fallback);
-            this.entries.push({host:markerHost,marker:marker,fallback:fallback,pixels:null,bitmap:null});
+            this.entries.push({host:markerHost,marker:marker,fallback:fallback});
             addChild(markerHost);
             ++index;
          }
@@ -104,7 +104,18 @@ package
          var marker:DisplayObject = null;
          try { marker = new this.markerType() as DisplayObject; }
          catch(createError:*) { return null; }
+         if(marker == null) return null;
+         if(marker is InteractiveObject) InteractiveObject(marker).mouseEnabled = false;
+         if(marker is Sprite) Sprite(marker).mouseChildren = false;
+         // BitmapData.draw of this widget throws TypeError 2077. Its own added-to-stage listener throws ReferenceError 1069, so that listener is stopped and the widget stays on the strip.
+         marker.addEventListener(Event.ADDED_TO_STAGE,VWHudCompassTape.blockStageHook,true,10000,true);
+         marker.addEventListener(Event.ADDED_TO_STAGE,VWHudCompassTape.blockStageHook,false,10000,true);
          return marker;
+      }
+
+      private static function blockStageHook(event:Event) : void
+      {
+         event.stopImmediatePropagation();
       }
 
       private function drawTicks(direction:Number) : void
@@ -161,12 +172,19 @@ package
             {
                var entry:Object = this.entries[outputIndex];
                var host:Sprite = entry.host as Sprite;
-               host.x = this.widthPx / 2 + delta / (Math.PI / 3) * this.widthPx / 2;
-               host.y = 20;
-               host.alpha = this.clamp(VWHudViewModel.field(source,"fDistanceAlpha"),0,1,1);
-               host.scaleX = host.scaleY = 0.48 * this.clamp(VWHudViewModel.field(source,"fDistanceScale"),0.5,1.5,1);
-               this.paintMarker(entry,source);
-               host.visible = true;
+               try
+               {
+                  host.x = this.widthPx / 2 + delta / (Math.PI / 3) * this.widthPx / 2;
+                  host.y = 20;
+                  host.alpha = this.clamp(VWHudViewModel.field(source,"fDistanceAlpha"),0,1,1);
+                  host.scaleX = host.scaleY = 0.48 * this.clamp(VWHudViewModel.field(source,"fDistanceScale"),0.5,1.5,1);
+                  this.paintMarker(entry,source);
+                  host.visible = true;
+               }
+               catch(markerError:*)
+               {
+                  host.visible = false;
+               }
                ++outputIndex;
             }
             ++sourceIndex;
@@ -205,30 +223,9 @@ package
             }
             catch(paintError:*) { painted = false; }
          }
+         if(marker != null) marker.visible = painted;
          fallback.visible = !painted;
-         if(painted) this.redraw(entry);
-         else this.drawFallback(fallback,uint(this.number(VWHudViewModel.field(source,"uiMarkerIconType"))));
-      }
-
-      // The game widget stays off the display list. Placing it raises ReferenceError 1069 from its stage hook.
-      private function redraw(entry:Object) : void
-      {
-         var widget:DisplayObject = entry.marker as DisplayObject;
-         if(widget == null) return;
-         var pixels:BitmapData = entry.pixels as BitmapData;
-         if(pixels == null)
-         {
-            pixels = new BitmapData(96,96,true,0);
-            var bitmap:Bitmap = new Bitmap(pixels,"auto",true);
-            bitmap.x = -48;
-            bitmap.y = -48;
-            entry.pixels = pixels;
-            entry.bitmap = bitmap;
-            Sprite(entry.host).addChild(bitmap);
-         }
-         else pixels.fillRect(pixels.rect,0);
-         try { pixels.draw(widget,new Matrix(1,0,0,1,48,48),null,null,null,true); }
-         catch(drawError:*) { pixels.fillRect(pixels.rect,0); }
+         if(!painted) this.drawFallback(fallback,uint(this.number(VWHudViewModel.field(source,"uiMarkerIconType"))));
       }
 
       private function drawFallback(shape:Shape, type:uint) : void
