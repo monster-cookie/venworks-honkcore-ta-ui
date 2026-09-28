@@ -5,7 +5,7 @@ package
    {
       private static const HEADINGS:Array = ["N","NE","E","SE","S","SW","W","NW"];
 
-      public static function update(data:Object, tactical:Object, pulse:int) : void
+      public static function update(data:Object, tactical:Object, pulse:int, scanning:Boolean) : void
       {
          var direction:Number = tactical == null ? 0 : finite(tactical.direction,0);
          var score:int = tactical == null ? 0 : Math.max(0,Math.min(100,Math.round(finite(tactical.threatScore,0))));
@@ -14,10 +14,19 @@ package
          var state:int = Math.min(3,int(score/25));
          data["threat.label"] = "THREAT "+score+"%  "+states[state];
          for(var i:int = 0; i < states.length; i++) data["threat."+String(states[i]).toLowerCase()] = i == state;
-         var degrees:Number = normalizeDegrees(direction*180/Math.PI);
-         data["scanner.heading"] = "SCANNING // HDG "+pad(Math.round(degrees)%360,3)+" "+HEADINGS[int(Math.round(degrees/45))%8];
-         data["scanner.contacts"] = scanner(tactical == null ? null : tactical.scannerTargets as Array,direction);
-         data["scanner.grid"] = grid(pulse);
+         if(scanning)
+         {
+            var degrees:Number = normalizeDegrees(direction*180/Math.PI);
+            data["scanner.heading"] = "SCANNING // HDG "+pad(Math.round(degrees)%360,3)+" "+HEADINGS[int(Math.round(degrees/45))%8];
+            data["scanner.contacts"] = scanner(tactical == null ? null : tactical.scannerTargets as Array,direction);
+            data["scanner.grid"] = grid(pulse);
+         }
+         else
+         {
+            data["scanner.heading"] = "";
+            data["scanner.contacts"] = [{label:"NO VALID CONTACTS",hostile:false,friendly:true,y:0}];
+            data["scanner.grid"] = grid(0);
+         }
          var effects:Array = [];
          var row:Object;
          for each(row in data.buffrows) effects.push({label:row.label,positive:true,negative:false});

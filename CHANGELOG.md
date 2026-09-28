@@ -27,6 +27,7 @@
 - Read compass and frequent environment fields only when the game object actually has them, so a missing property cannot abort the HUD update.
 - Ask Canvas to hide the fake watch and the lower-right health and ammo cluster.
 - Draw the top compass strip and the contact radar as Scaleform objects in the VWHUD movie again. Their ticks, labels, POI markers, and contacts are no longer HTML elements. Each POI marker is the game compass widget, placed on the strip and moved as the player turns. Copying that widget into a bitmap raises TypeError 2077 and aborts the update. Its added-to-stage hook is stopped so it cannot subscribe to control data.
+- Rebuild the HTML panels only when a displayed value changes. Compass and environment packets still move the strip and radar on every update, without rebuilding the document for an unchanged clock or hazard set.
 
 ## Version 2.0.19 (September 1, 2026)
 

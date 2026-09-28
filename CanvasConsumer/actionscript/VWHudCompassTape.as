@@ -200,12 +200,14 @@ package
       {
          var marker:DisplayObject = entry.marker as DisplayObject;
          var fallback:Shape = entry.fallback as Shape;
+         var type:uint = uint(this.number(VWHudViewModel.field(source,"uiMarkerIconType")));
+         var stamp:String = String(this.number(VWHudViewModel.field(source,"uiHandle"))) + "|" + type + "|" + this.number(VWHudViewModel.field(source,"uMapMarkerType")) + "|" + this.number(VWHudViewModel.field(source,"uMapMarkerCategory")) + "|" + this.number(VWHudViewModel.field(source,"uLocationMarkerState")) + "|" + this.number(VWHudViewModel.field(source,"uiRelativeMarkerHeightType")) + "|" + this.number(VWHudViewModel.field(source,"uiMapMarkerSubCategoryType")) + "|" + (source.isEnvironmentEffect === true ? String(VWHudViewModel.field(source,"sEffectIcon")) : "");
+         if(stamp == entry.stamp) return;
          var painted:Boolean = marker != null && this.markerUtility != null;
          if(painted)
          {
             try
             {
-               var type:uint = uint(this.number(VWHudViewModel.field(source,"uiMarkerIconType")));
                var frame:String = String(this.markerUtility["GetMajorFrameFromMitMarkerType"](type));
                MovieClip(marker).gotoAndStop(frame);
                if(type == LOCATIONS && ("SetLocation" in marker)) Object(marker)["SetLocation"](uint(this.number(VWHudViewModel.field(source,"uMapMarkerType"))),uint(this.number(VWHudViewModel.field(source,"uMapMarkerCategory"))),uint(this.number(VWHudViewModel.field(source,"uLocationMarkerState"))));
@@ -225,7 +227,8 @@ package
          }
          if(marker != null) marker.visible = painted;
          fallback.visible = !painted;
-         if(!painted) this.drawFallback(fallback,uint(this.number(VWHudViewModel.field(source,"uiMarkerIconType"))));
+         if(!painted) this.drawFallback(fallback,type);
+         if(painted || marker == null) entry.stamp = stamp;
       }
 
       private function drawFallback(shape:Shape, type:uint) : void

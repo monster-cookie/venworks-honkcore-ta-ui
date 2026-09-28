@@ -22,6 +22,9 @@ package
       private var disposed:Boolean = false;
       private var compassTape:VWHudCompassTape;
       private var contactRadar:VWHudContactRadar;
+      private var sentHtmlKey:String = "";
+      private var compassSlot:DisplayObject;
+      private var radarSlot:DisplayObject;
 
       public function getCanvasRegistration() : Object
       {
@@ -109,6 +112,7 @@ package
          if(this.compassTape != null && this.compassTape.parent === this) removeChild(this.compassTape);
          if(this.contactRadar != null && this.contactRadar.parent === this) removeChild(this.contactRadar);
          this.compassTape = null; this.contactRadar = null;
+         this.compassSlot = null; this.radarSlot = null; this.sentHtmlKey = "";
          this.bridge = null; this.conditions = null; this.scannerStep = 0; this.receiving = false;
       }
 
@@ -134,10 +138,14 @@ package
             for(name in status) data[name] = status[name];
             data["hudopacity"] = isFinite(this.conditions.hudOpacity) ? this.conditions.hudOpacity : 1;
             data["theme.logo"] = VWHudVariant.LOGO;
-            VWHudPresentation.update(data,this.model.currentTacticalAwarenessData,this.scannerStep);
+            var scanning:Object = this.conditions.getValue("inscanner");
+            VWHudPresentation.update(data,this.model.currentTacticalAwarenessData,this.scannerStep,scanning != null && scanning.value === true);
             this.updateInstruments();
          }
          catch(error:*) { throw this.stageError("present",error); }
+         // Compass and environment packets arrive many times a second. Rebuilding the HTML document for an unchanged clock, threat, or hazard set is what drops the frame rate.
+         var key:String = this.htmlSignature(data);
+         if(key == this.sentHtmlKey) return;
          try { this.bridge.setData(data); }
          catch(error:*)
          {
@@ -146,6 +154,66 @@ package
             if(text.indexOf("#1069") < 0 && text.indexOf("1069 ") != 0) throw this.stageError("setdata",text);
          }
          finally { this.alignInstruments(); }
+         this.sentHtmlKey = key;
+      }
+
+      private function htmlSignature(data:Object) : String
+      {
+         var names:Array = [];
+         for(var name:String in data) names.push(name);
+         names.sort();
+         var parts:Array = [];
+         var index:int = 0;
+         while(index < names.length)
+         {
+            parts.push(names[index] + "=" + this.signValue(String(names[index]), data[names[index]], 0));
+            ++index;
+         }
+         return parts.join("\n");
+      }
+
+      private function signValue(key:String, value:*, depth:int) : String
+      {
+         if(value == null || depth > 4) return "";
+         if(value is Array)
+         {
+            var items:Array = value as Array;
+            var itemText:Array = [];
+            var index:int = 0;
+            var count:int = Math.min(items.length, 64);
+            while(index < count)
+            {
+               itemText.push(this.signValue("", items[index], depth + 1));
+               ++index;
+            }
+            return itemText.join(",");
+         }
+         var kind:String = typeof value;
+         if(kind == "number")
+         {
+            var number:Number = Number(value);
+            if(!isFinite(number)) return "nan";
+            if(key == "environment.localtime" || key == "player.universaltime")
+            {
+               var fraction:Number = number - Math.floor(number);
+               if(fraction < 0) fraction += 1;
+               return "m" + String(int(Math.floor(fraction * 1440 + 0.5)) % 1440);
+            }
+            return "n" + String(Math.round(number * 100));
+         }
+         if(kind == "boolean") return value === true ? "b1" : "b0";
+         if(kind == "string") return String(value);
+         var names:Array = [];
+         for(var name:String in value) names.push(name);
+         names.sort();
+         var fields:Array = [];
+         index = 0;
+         while(index < names.length)
+         {
+            fields.push(names[index] + ":" + this.signValue(String(names[index]), value[names[index]], depth + 1));
+            ++index;
+         }
+         return "{" + fields.join(";") + "}";
       }
 
       private function updateInstruments() : void
@@ -161,8 +229,10 @@ package
 
       private function alignInstruments() : void
       {
-         this.placeOver(this.compassTape,this.findSlot(this,true));
-         this.placeOver(this.contactRadar,this.findSlot(this,false));
+         if(this.compassSlot == null || this.compassSlot.parent == null) this.compassSlot = this.findSlot(this,true);
+         if(this.radarSlot == null || this.radarSlot.parent == null) this.radarSlot = this.findSlot(this,false);
+         this.placeOver(this.compassTape,this.compassSlot);
+         this.placeOver(this.contactRadar,this.radarSlot);
          if(this.compassTape != null && this.compassTape.parent === this) setChildIndex(this.compassTape,numChildren - 1);
          if(this.contactRadar != null && this.contactRadar.parent === this) setChildIndex(this.contactRadar,numChildren - 1);
       }
