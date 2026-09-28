@@ -1,7 +1,7 @@
 {
   "Schema": "VWHUD_CANVAS_BUILD/1",
   "Variant": "CF",
-  "SourceDigest": "914F0F944E771375B2BEB95A8FD7770169DA51E010CAEEE371888DF6010FA4FA",
+  "SourceDigest": "9CF5CD57444CC76DC382806DD0C98B7996496DEB0DB2E34AF36A2263D9CA78D9",
   "Files": {
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.cf/assets/cargo.svg": "74FC1C61971862326C570CB3608E76AFFA527D1938629D773534AFD85BEBA116",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.cf/assets/crimson-fleet-logo.svg": "3031FDDD5AFBF543D960CF59AB2DFEE7D232000F614EC8CC5BE6437DA9FF95AB",
@@ -16,8 +16,8 @@
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.cf/effects.html": "DCF5406BAAA6EB6D370FC7AF5095D8FFCBE09C7DF11E6449618B4D16F598DFF8",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.cf/hud.css": "06E052E5F6F9713E9B448B71F51094742CF40AFD260892DBC65F4B5730F2383F",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.cf/index.html": "DE4216211072D6374E203B82D39C45C6C016AFA37E218E181425C36573688038",
-    "Interface/VenworksCanvas/Consumers/venworks.vwhud.cf/large.swf": "68849D36D6B57D82F7D18A2C6DEEBD53E2C64AB77F7A578F0818FCEF536249E6",
-    "Interface/VenworksCanvas/Consumers/venworks.vwhud.cf/normal.swf": "68849D36D6B57D82F7D18A2C6DEEBD53E2C64AB77F7A578F0818FCEF536249E6",
+    "Interface/VenworksCanvas/Consumers/venworks.vwhud.cf/large.swf": "9806A81E74DFD1E5801245BE824BBA07553E328AF256AE377894FF9394941F09",
+    "Interface/VenworksCanvas/Consumers/venworks.vwhud.cf/normal.swf": "9806A81E74DFD1E5801245BE824BBA07553E328AF256AE377894FF9394941F09",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.cf/radar-content.html": "2AB74E4234D7B3793C55A1FD7136A9109A1CB278FAB00D9180F87D261F1ECAFD",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.cf/scanner-data.html": "DA82B1C9B4E6BF325B0A76977291641139E2027788A85AF4E20EB0BD92D7C53B",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.cf/scanner-hash.html": "ADD737300D732DBDA09DE7B2FD4E3DFAAC7426C5DCAADAB726B21345AA5CABF5",
