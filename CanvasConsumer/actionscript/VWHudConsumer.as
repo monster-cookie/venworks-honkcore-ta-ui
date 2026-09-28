@@ -1,7 +1,5 @@
 package
 {
-   import flash.display.DisplayObject;
-   import flash.display.DisplayObjectContainer;
    import flash.display.MovieClip;
    import flash.events.Event;
    import flash.events.TimerEvent;
@@ -18,9 +16,6 @@ package
       private var scannerStep:int = 0;
       private var receiving:Boolean = false;
       private var disposed:Boolean = false;
-      private var vanillaMeters:DisplayObject;
-      private var vanillaMetersVisible:Boolean = true;
-      private var holdingVanillaMeters:Boolean = false;
 
       public function getCanvasRegistration() : Object
       {
@@ -53,8 +48,6 @@ package
          this.scannerTimer = new Timer(140);
          this.scannerTimer.addEventListener(TimerEvent.TIMER,this.onScanner);
          this.publish();
-         if(this.stage != null) this.hideVanillaMeters();
-         else this.addEventListener(Event.ADDED_TO_STAGE,this.onAddedHideMeters,false,0,true);
       }
 
       public function handleUIData(channel:String, data:Object) : void
@@ -104,68 +97,6 @@ package
             this.model.dispose(); this.model = null;
          }
          this.bridge = null; this.conditions = null; this.scannerStep = 0; this.receiving = false;
-         this.removeEventListener(Event.ADDED_TO_STAGE,this.onAddedHideMeters);
-         this.releaseVanillaMeters();
-      }
-
-      private function onAddedHideMeters(event:Event) : void
-      {
-         if(event.target !== this) return;
-         this.removeEventListener(Event.ADDED_TO_STAGE,this.onAddedHideMeters);
-         this.hideVanillaMeters();
-      }
-
-      private function findVanillaMeters() : DisplayObject
-      {
-         var node:DisplayObject = this;
-         var hops:int = 0;
-         while(node != null && hops < 8)
-         {
-            var container:DisplayObjectContainer = node as DisplayObjectContainer;
-            if(container != null)
-            {
-               var meters:DisplayObject = container.getChildByName("RightMeters_mc");
-               if(meters != null) return meters;
-            }
-            node = node.parent;
-            hops++;
-         }
-         return null;
-      }
-
-      private function hideVanillaMeters() : void
-      {
-         if(this.disposed) return;
-         var meters:DisplayObject = this.findVanillaMeters();
-         if(meters == null) return;
-         if(this.vanillaMeters !== meters)
-         {
-            this.releaseVanillaMeters();
-            this.vanillaMeters = meters;
-            this.vanillaMetersVisible = meters.visible;
-         }
-         meters.visible = false;
-         if(!this.holdingVanillaMeters)
-         {
-            meters.addEventListener(Event.ENTER_FRAME,this.holdVanillaMeters,false,-1000,true);
-            this.holdingVanillaMeters = true;
-         }
-      }
-
-      private function holdVanillaMeters(event:Event) : void
-      {
-         if(this.vanillaMeters != null) this.vanillaMeters.visible = false;
-      }
-
-      private function releaseVanillaMeters() : void
-      {
-         if(this.vanillaMeters != null)
-         {
-            this.vanillaMeters.removeEventListener(Event.ENTER_FRAME,this.holdVanillaMeters);
-            this.vanillaMeters.visible = this.vanillaMetersVisible;
-         }
-         this.vanillaMeters = null;
-         this.holdingVanillaMeters = false;
       }
 
       private function onModelChange(event:Event) : void { if(!this.receiving) this.publish(); }
