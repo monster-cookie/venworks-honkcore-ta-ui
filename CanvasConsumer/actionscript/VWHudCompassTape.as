@@ -201,8 +201,8 @@ package
       {
          var marker:DisplayObject = entry.marker as DisplayObject;
          var fallback:Shape = entry.fallback as Shape;
-         var type:uint = uint(this.number(VWHudViewModel.field(source,"uiMarkerIconType")));
-         var stamp:String = String(this.number(VWHudViewModel.field(source,"uiHandle"))) + "|" + type + "|" + this.number(VWHudViewModel.field(source,"uMapMarkerType")) + "|" + this.number(VWHudViewModel.field(source,"uMapMarkerCategory")) + "|" + this.number(VWHudViewModel.field(source,"uLocationMarkerState")) + "|" + this.number(VWHudViewModel.field(source,"uiRelativeMarkerHeightType")) + "|" + this.number(VWHudViewModel.field(source,"uiMapMarkerSubCategoryType")) + "|" + (source.isEnvironmentEffect === true ? String(VWHudViewModel.field(source,"sEffectIcon")) : "");
+         var type:uint = uint(this.number(this.markerValue(source,"uiMarkerIconType")));
+         var stamp:String = String(this.number(this.markerValue(source,"uiHandle"))) + "|" + type + "|" + this.number(this.markerValue(source,"uMapMarkerType")) + "|" + this.number(this.markerValue(source,"uMapMarkerCategory")) + "|" + this.number(this.markerValue(source,"uLocationMarkerState")) + "|" + this.number(this.markerValue(source,"uiRelativeMarkerHeightType")) + "|" + this.number(this.markerValue(source,"uiMapMarkerSubCategoryType")) + "|" + (source.isEnvironmentEffect === true ? String(this.markerValue(source,"sEffectIcon")) : "");
          if(stamp == entry.stamp) return;
          var painted:Boolean = marker != null && this.markerUtility != null && type != 0;
          if(painted)
@@ -213,17 +213,18 @@ package
                var clip:MovieClip = MovieClip(marker);
                clip.gotoAndStop(frame);
                if(frame.length == 0 || frame == "null" || frame == "undefined") painted = false;
-               this.hideMarkerChrome(clip);
-               if(type == LOCATIONS && ("SetLocation" in marker)) Object(marker)["SetLocation"](uint(this.number(VWHudViewModel.field(source,"uMapMarkerType"))),uint(this.number(VWHudViewModel.field(source,"uMapMarkerCategory"))),uint(this.number(VWHudViewModel.field(source,"uLocationMarkerState"))));
-               else if("ClearLocation" in marker) Object(marker)["ClearLocation"]();
-               var relative:int = int(this.number(VWHudViewModel.field(source,"uiRelativeMarkerHeightType")));
-               if(relative > 0 && relative < RELATIVE.length && ("SetFrame" in marker)) Object(marker)["SetFrame"](RELATIVE[relative],false);
-               var category:int = int(this.number(VWHudViewModel.field(source,"uiMapMarkerSubCategoryType")));
-               if(category > 0 && category < CATEGORY.length && ("SetFrame" in marker)) Object(marker)["SetFrame"](CATEGORY[category],true);
-               var effect:String = source.isEnvironmentEffect === true ? String(VWHudViewModel.field(source,"sEffectIcon")) : "";
-               if(effect.length > 0 && ("MarkerIcon_mc" in marker))
+               // The in operator misses sealed widget methods, so the location icon never replaced the generic dot.
+               var widget:Object = marker;
+               if(type == LOCATIONS && widget["SetLocation"] is Function) widget["SetLocation"](uint(this.number(this.markerValue(source,"uMapMarkerType"))),uint(this.number(this.markerValue(source,"uMapMarkerCategory"))),uint(this.number(this.markerValue(source,"uLocationMarkerState"))));
+               else if(widget["ClearLocation"] is Function) widget["ClearLocation"]();
+               var relative:int = int(this.number(this.markerValue(source,"uiRelativeMarkerHeightType")));
+               if(relative > 0 && relative < RELATIVE.length && widget["SetFrame"] is Function) widget["SetFrame"](RELATIVE[relative],false);
+               var category:int = int(this.number(this.markerValue(source,"uiMapMarkerSubCategoryType")));
+               if(category > 0 && category < CATEGORY.length && widget["SetFrame"] is Function) widget["SetFrame"](CATEGORY[category],true);
+               var effect:String = source.isEnvironmentEffect === true ? String(this.markerValue(source,"sEffectIcon")) : "";
+               if(effect.length > 0)
                {
-                  var icon:MovieClip = marker["MarkerIcon_mc"] as MovieClip;
+                  var icon:MovieClip = widget["MarkerIcon_mc"] as MovieClip;
                   if(icon != null) icon.gotoAndStop(effect.substr(0,96));
                }
             }
@@ -235,16 +236,16 @@ package
          if(painted || marker == null) entry.stamp = stamp;
       }
 
-      private function hideMarkerChrome(clip:MovieClip) : void
+      private function markerValue(source:Object, name:String) : *
       {
-         var index:int = 0;
-         while(index < clip.numChildren)
+         if(source == null) return null;
+         try
          {
-            var child:DisplayObject = clip.getChildAt(index);
-            var name:String = child.name == null ? "" : child.name.toLowerCase();
-            if(name.indexOf("button") >= 0 || name.indexOf("hint") >= 0 || name.indexOf("prompt") >= 0 || name.indexOf("key") >= 0 || name.indexOf("pause") >= 0) child.visible = false;
-            ++index;
+            var value:* = source[name];
+            if(value != null) return value;
          }
+         catch(readError:*) {}
+         return VWHudViewModel.field(source,name);
       }
 
       private function drawFallback(shape:Shape, type:uint) : void
