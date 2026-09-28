@@ -10,13 +10,13 @@
     <token>handleCanvasEvent</token>
     <token>effects.state</token>
     <token>VWHudEffectsAdapter</token>
+    <token>VWHudCompassTape</token>
+    <token>VWHudContactRadar</token>
   </requiredTokens>
   <forbiddenTokens>
     <token>BSUIDataManager</token>
     <token>URLLoader</token>
     <token>ExternalInterface</token>
-    <token>TextField</token>
-    <token>Graphics</token>
     <token>XML</token>
   </forbiddenTokens>
 </movieBuild>

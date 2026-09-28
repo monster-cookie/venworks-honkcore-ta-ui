@@ -1,8 +1,12 @@
 package
 {
+   import flash.display.DisplayObject;
+   import flash.display.DisplayObjectContainer;
    import flash.display.MovieClip;
+   import flash.display.Sprite;
    import flash.events.Event;
    import flash.events.TimerEvent;
+   import flash.geom.Point;
    import flash.utils.Timer;
 
    public final class VWHudConsumer extends MovieClip
@@ -16,6 +20,8 @@ package
       private var scannerStep:int = 0;
       private var receiving:Boolean = false;
       private var disposed:Boolean = false;
+      private var compassTape:VWHudCompassTape;
+      private var contactRadar:VWHudContactRadar;
 
       public function getCanvasRegistration() : Object
       {
@@ -40,6 +46,10 @@ package
          this.bridge = detail.html;
          this.model = new VWHudViewModel();
          this.conditions = new VWHudConditions();
+         this.compassTape = new VWHudCompassTape(826,48);
+         this.contactRadar = new VWHudContactRadar(184);
+         addChild(this.compassTape);
+         addChild(this.contactRadar);
          this.model.addEventListener(VWHudViewModel.VALUE_CHANGE,this.onModelChange);
          this.model.addEventListener(VWHudViewModel.TACTICAL_AWARENESS_CHANGE,this.onModelChange);
          this.pageTimer = new Timer(6000);
@@ -96,6 +106,9 @@ package
             this.model.removeEventListener(VWHudViewModel.TACTICAL_AWARENESS_CHANGE,this.onModelChange);
             this.model.dispose(); this.model = null;
          }
+         if(this.compassTape != null && this.compassTape.parent === this) removeChild(this.compassTape);
+         if(this.contactRadar != null && this.contactRadar.parent === this) removeChild(this.contactRadar);
+         this.compassTape = null; this.contactRadar = null;
          this.bridge = null; this.conditions = null; this.scannerStep = 0; this.receiving = false;
       }
 
@@ -121,11 +134,59 @@ package
             for(name in status) data[name] = status[name];
             data["hudopacity"] = isFinite(this.conditions.hudOpacity) ? this.conditions.hudOpacity : 1;
             data["theme.logo"] = VWHudVariant.LOGO;
-            VWHudPresentation.update(data,this.model.currentTacticalAwarenessData,this.model.currentCompassData,this.scannerStep);
+            VWHudPresentation.update(data,this.model.currentTacticalAwarenessData,this.scannerStep);
+            this.updateInstruments();
          }
          catch(error:*) { throw this.stageError("present",error); }
          try { this.bridge.setData(data); }
          catch(error:*) { throw this.stageError("setdata",error); }
+         this.alignInstruments();
+      }
+
+      private function updateInstruments() : void
+      {
+         if(this.compassTape == null || this.contactRadar == null || this.model == null) return;
+         var tactical:Object = this.model.currentTacticalAwarenessData;
+         var direction:Number = Number(VWHudViewModel.field(tactical,"direction"));
+         this.compassTape.update(direction,tactical == null ? null : tactical.markers as Array);
+         this.contactRadar.update(this.model.currentCompassData);
+      }
+
+      private function alignInstruments() : void
+      {
+         this.placeOver(this.compassTape,this.findSlot(this,true));
+         this.placeOver(this.contactRadar,this.findSlot(this,false));
+         if(this.compassTape != null && this.compassTape.parent === this) setChildIndex(this.compassTape,numChildren - 1);
+         if(this.contactRadar != null && this.contactRadar.parent === this) setChildIndex(this.contactRadar,numChildren - 1);
+      }
+
+      private function placeOver(overlay:DisplayObject, slot:DisplayObject) : void
+      {
+         if(overlay == null || slot == null) return;
+         var local:Point = globalToLocal(slot.localToGlobal(new Point(0,0)));
+         overlay.x = local.x;
+         overlay.y = local.y;
+      }
+
+      private function findSlot(root:DisplayObject, compass:Boolean) : DisplayObject
+      {
+         var container:DisplayObjectContainer = root as DisplayObjectContainer;
+         if(container == null || root === this.compassTape || root === this.contactRadar) return null;
+         var index:int = 0;
+         while(index < container.numChildren)
+         {
+            var child:DisplayObject = container.getChildAt(index);
+            if(child !== this.compassTape && child !== this.contactRadar)
+            {
+               var sprite:Sprite = child as Sprite;
+               if(compass && sprite != null && sprite.scrollRect != null && Math.abs(sprite.scrollRect.width - 826) < 1 && Math.abs(sprite.scrollRect.height - 48) < 1) return sprite;
+               if(!compass && Math.abs(child.width - 184) < 2 && Math.abs(child.height - 184) < 2) return child;
+               var nested:DisplayObject = this.findSlot(child,compass);
+               if(nested != null) return nested;
+            }
+            ++index;
+         }
+         return null;
       }
 
       private function stageError(stage:String, error:*) : Error
