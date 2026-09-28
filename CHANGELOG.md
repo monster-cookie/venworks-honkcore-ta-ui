@@ -26,7 +26,7 @@
 - Remove the full-screen helmet visor shapes. Themed panels now use the minimalist holographic plate: a dark rectangle, a theme-accent halo, and corner brackets.
 - Read compass and frequent environment fields only when the game object actually has them, so a missing property cannot abort the HUD update.
 - Ask Canvas to hide the fake watch and the lower-right health and ammo cluster.
-- Draw the top compass strip and the contact radar as Scaleform objects in the VWHUD movie again. Their ticks, labels, POI markers, and contacts are no longer HTML elements.
+- Draw the top compass strip and the contact radar as Scaleform objects in the VWHUD movie again. Their ticks, labels, POI markers, and contacts are no longer HTML elements. The POI widget stays off the display list and is painted into the strip, so its stage hook cannot abort compass or environment updates.
 
 ## Version 2.0.19 (September 1, 2026)
 

@@ -139,8 +139,13 @@ package
          }
          catch(error:*) { throw this.stageError("present",error); }
          try { this.bridge.setData(data); }
-         catch(error:*) { throw this.stageError("setdata",error); }
-         this.alignInstruments();
+         catch(error:*)
+         {
+            var text:String = "error";
+            try { text = String(error); } catch(ignored:*) { text = "unprintable"; }
+            if(text.indexOf("#1069") < 0 && text.indexOf("1069 ") != 0) throw this.stageError("setdata",text);
+         }
+         finally { this.alignInstruments(); }
       }
 
       private function updateInstruments() : void
