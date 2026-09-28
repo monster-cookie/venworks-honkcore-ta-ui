@@ -32,6 +32,7 @@
 - Darken the panel plates so the text can be read over bright ground.
 - Read game data fields by name when the presence check misses them, so health, level, credits, suit protection, and hazard rows reach the panels. Copy compass marker fields the same way, and hide a marker whose frame is not the requested POI icon.
 - Show the game POI icon on the top compass strip. The strip calls the compass widget's location and frame methods the same way the pre-Canvas tape did, instead of leaving the generic dot in place.
+- Load each location icon after its compass frame is selected, and keep requesting it until the map-icon library finishes. The sealed-method test was skipping that call, so location markers stayed on the empty frame.
 - Replace the generated Venworks crest with a trace of the canonical Venworks mark and wordmark. Each path stays under Canvas's 4096-character attribute limit so the logo cannot unload the HUD.
 
 ## Version 2.0.19 (September 1, 2026)

@@ -201,9 +201,22 @@ package
       {
          var marker:DisplayObject = entry.marker as DisplayObject;
          var fallback:Shape = entry.fallback as Shape;
+         var widget:Object = marker;
          var type:uint = uint(this.number(this.markerValue(source,"uiMarkerIconType")));
          var stamp:String = String(this.number(this.markerValue(source,"uiHandle"))) + "|" + type + "|" + this.number(this.markerValue(source,"uMapMarkerType")) + "|" + this.number(this.markerValue(source,"uMapMarkerCategory")) + "|" + this.number(this.markerValue(source,"uLocationMarkerState")) + "|" + this.number(this.markerValue(source,"uiRelativeMarkerHeightType")) + "|" + this.number(this.markerValue(source,"uiMapMarkerSubCategoryType")) + "|" + (source.isEnvironmentEffect === true ? String(this.markerValue(source,"sEffectIcon")) : "");
-         if(stamp == entry.stamp) return;
+         var waiting:Boolean = false;
+         if(type == LOCATIONS && widget != null)
+         {
+            try { waiting = Boolean(widget.needsLocationLoaded); }
+            catch(waitError:*) { waiting = true; }
+         }
+         // Location art arrives after the frame is current. A sealed-method test skips SetLocation, and the empty Location frame is the dot left on the strip.
+         if(stamp != entry.stamp || waiting) this.paintMarkerFrame(entry,source,marker,fallback,widget,type,stamp);
+         this.placeLocationIcon(widget,source,type);
+      }
+
+      private function paintMarkerFrame(entry:Object, source:Object, marker:DisplayObject, fallback:Shape, widget:Object, type:uint, stamp:String) : void
+      {
          var painted:Boolean = marker != null && this.markerUtility != null && type != 0;
          if(painted)
          {
@@ -211,29 +224,56 @@ package
             {
                var frame:String = String(this.markerUtility["GetMajorFrameFromMitMarkerType"](type));
                var clip:MovieClip = MovieClip(marker);
-               clip.gotoAndStop(frame);
                if(frame.length == 0 || frame == "null" || frame == "undefined") painted = false;
-               // The in operator misses sealed widget methods, so the location icon never replaced the generic dot.
-               var widget:Object = marker;
-               if(type == LOCATIONS && widget["SetLocation"] is Function) widget["SetLocation"](uint(this.number(this.markerValue(source,"uMapMarkerType"))),uint(this.number(this.markerValue(source,"uMapMarkerCategory"))),uint(this.number(this.markerValue(source,"uLocationMarkerState"))));
-               else if(widget["ClearLocation"] is Function) widget["ClearLocation"]();
-               var relative:int = int(this.number(this.markerValue(source,"uiRelativeMarkerHeightType")));
-               if(relative > 0 && relative < RELATIVE.length && widget["SetFrame"] is Function) widget["SetFrame"](RELATIVE[relative],false);
-               var category:int = int(this.number(this.markerValue(source,"uiMapMarkerSubCategoryType")));
-               if(category > 0 && category < CATEGORY.length && widget["SetFrame"] is Function) widget["SetFrame"](CATEGORY[category],true);
-               var effect:String = source.isEnvironmentEffect === true ? String(this.markerValue(source,"sEffectIcon")) : "";
-               if(effect.length > 0)
+               else if(clip.currentFrameLabel != frame) clip.gotoAndStop(frame);
+            }
+            catch(frameError:*) { painted = false; }
+         }
+         if(painted && type != LOCATIONS)
+         {
+            try
+            {
+               if(widget.PoiIcon_mc != null) widget.ClearLocation();
+            }
+            catch(clearError:*) {}
+         }
+         if(painted)
+         {
+            var relative:int = int(this.number(this.markerValue(source,"uiRelativeMarkerHeightType")));
+            if(relative > 0 && relative < RELATIVE.length) this.callMarker(widget,"SetFrame",RELATIVE[relative],false,null);
+            var category:int = int(this.number(this.markerValue(source,"uiMapMarkerSubCategoryType")));
+            if(category > 0 && category < CATEGORY.length) this.callMarker(widget,"SetFrame",CATEGORY[category],true,null);
+            var effect:String = source.isEnvironmentEffect === true ? String(this.markerValue(source,"sEffectIcon")) : "";
+            if(effect.length > 0)
+            {
+               try
                {
-                  var icon:MovieClip = widget["MarkerIcon_mc"] as MovieClip;
+                  var icon:MovieClip = widget.MarkerIcon_mc as MovieClip;
                   if(icon != null) icon.gotoAndStop(effect.substr(0,96));
                }
+               catch(effectError:*) {}
             }
-            catch(paintError:*) { painted = false; }
          }
          if(marker != null) marker.visible = painted;
          fallback.visible = !painted;
          if(!painted) this.drawFallback(fallback,type);
          if(painted || marker == null) entry.stamp = stamp;
+      }
+
+      private function placeLocationIcon(widget:Object, source:Object, type:uint) : void
+      {
+         if(widget == null || type != LOCATIONS) return;
+         this.callMarker(widget,"SetLocation",uint(this.number(this.markerValue(source,"uMapMarkerType"))),uint(this.number(this.markerValue(source,"uMapMarkerCategory"))),uint(this.number(this.markerValue(source,"uLocationMarkerState"))));
+      }
+
+      private function callMarker(widget:Object, name:String, arg1:*, arg2:*, arg3:*) : void
+      {
+         try
+         {
+            if(name == "SetLocation") widget.SetLocation(arg1,arg2,arg3);
+            else if(name == "SetFrame") widget.SetFrame(arg1,arg2);
+         }
+         catch(callError:*) {}
       }
 
       private function markerValue(source:Object, name:String) : *
