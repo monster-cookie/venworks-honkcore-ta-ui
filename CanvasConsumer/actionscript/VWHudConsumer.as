@@ -73,6 +73,7 @@ package
             this.conditions.receive(channel,data);
             this.conditions.updateCriticalHealth(this.model.getValue("player.healthpercentage"));
          }
+         catch(receiveError:*) {}
          finally { this.receiving = false; }
          var scanner:Object = this.conditions.getValue("inscanner");
          if(scanner != null && scanner.value === true) this.scannerTimer.start();

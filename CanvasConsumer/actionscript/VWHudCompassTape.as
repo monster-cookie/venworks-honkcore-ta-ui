@@ -105,6 +105,7 @@ package
          try { marker = new this.markerType() as DisplayObject; }
          catch(createError:*) { return null; }
          if(marker == null) return null;
+         marker.visible = false;
          if(marker is InteractiveObject) InteractiveObject(marker).mouseEnabled = false;
          if(marker is Sprite) Sprite(marker).mouseChildren = false;
          // BitmapData.draw of this widget throws TypeError 2077. Its own added-to-stage listener throws ReferenceError 1069, so that listener is stopped and the widget stays on the strip.
@@ -203,13 +204,16 @@ package
          var type:uint = uint(this.number(VWHudViewModel.field(source,"uiMarkerIconType")));
          var stamp:String = String(this.number(VWHudViewModel.field(source,"uiHandle"))) + "|" + type + "|" + this.number(VWHudViewModel.field(source,"uMapMarkerType")) + "|" + this.number(VWHudViewModel.field(source,"uMapMarkerCategory")) + "|" + this.number(VWHudViewModel.field(source,"uLocationMarkerState")) + "|" + this.number(VWHudViewModel.field(source,"uiRelativeMarkerHeightType")) + "|" + this.number(VWHudViewModel.field(source,"uiMapMarkerSubCategoryType")) + "|" + (source.isEnvironmentEffect === true ? String(VWHudViewModel.field(source,"sEffectIcon")) : "");
          if(stamp == entry.stamp) return;
-         var painted:Boolean = marker != null && this.markerUtility != null;
+         var painted:Boolean = marker != null && this.markerUtility != null && type != 0;
          if(painted)
          {
             try
             {
                var frame:String = String(this.markerUtility["GetMajorFrameFromMitMarkerType"](type));
-               MovieClip(marker).gotoAndStop(frame);
+               var clip:MovieClip = MovieClip(marker);
+               clip.gotoAndStop(frame);
+               if(frame.length == 0 || frame == "null" || frame == "undefined") painted = false;
+               this.hideMarkerChrome(clip);
                if(type == LOCATIONS && ("SetLocation" in marker)) Object(marker)["SetLocation"](uint(this.number(VWHudViewModel.field(source,"uMapMarkerType"))),uint(this.number(VWHudViewModel.field(source,"uMapMarkerCategory"))),uint(this.number(VWHudViewModel.field(source,"uLocationMarkerState"))));
                else if("ClearLocation" in marker) Object(marker)["ClearLocation"]();
                var relative:int = int(this.number(VWHudViewModel.field(source,"uiRelativeMarkerHeightType")));
@@ -229,6 +233,18 @@ package
          fallback.visible = !painted;
          if(!painted) this.drawFallback(fallback,type);
          if(painted || marker == null) entry.stamp = stamp;
+      }
+
+      private function hideMarkerChrome(clip:MovieClip) : void
+      {
+         var index:int = 0;
+         while(index < clip.numChildren)
+         {
+            var child:DisplayObject = clip.getChildAt(index);
+            var name:String = child.name == null ? "" : child.name.toLowerCase();
+            if(name.indexOf("button") >= 0 || name.indexOf("hint") >= 0 || name.indexOf("prompt") >= 0 || name.indexOf("key") >= 0 || name.indexOf("pause") >= 0) child.visible = false;
+            ++index;
+         }
       }
 
       private function drawFallback(shape:Shape, type:uint) : void

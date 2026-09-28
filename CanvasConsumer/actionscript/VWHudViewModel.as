@@ -227,8 +227,18 @@ package
 
       public static function field(param1:Object, param2:String) : *
       {
-         if(param1 == null || !(param2 in param1)) return null;
-         return param1[param2];
+         if(param1 == null) return null;
+         var present:Boolean = false;
+         try { present = param2 in param1; }
+         catch(checkError:*) { present = false; }
+         if(present)
+         {
+            try { return param1[param2]; }
+            catch(readError:*) { return null; }
+         }
+         // Some game data objects report a field as absent to the in operator and still return it by name.
+         try { return param1[param2]; }
+         catch(missingError:*) { return null; }
       }
 
       public static function collection(param1:Object, param2:String) : Array

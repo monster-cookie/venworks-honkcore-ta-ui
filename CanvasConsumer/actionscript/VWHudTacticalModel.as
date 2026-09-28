@@ -520,18 +520,29 @@ package
          return result;
       }
 
+      private static const MARKER_FIELDS:Array = ["uiHandle","fHeading","fDistance","fDistanceAlpha","fDistanceScale","uiMarkerIconType","uMapMarkerType","uMapMarkerCategory","uLocationMarkerState","uiRelativeMarkerHeightType","uiMapMarkerSubCategoryType","sEffectIcon"];
+
       private function copyFields(param1:Object, param2:Object) : void
       {
-         var field:String = null;
+         var fieldName:String = null;
+         var value:* = null;
+         var index:int = 0;
          try
          {
-            for(field in param1)
+            for(fieldName in param1)
             {
-               try { param2[field] = param1[field]; }
+               try { param2[fieldName] = param1[fieldName]; }
                catch(fieldError:*) {}
             }
          }
          catch(enumerateError:*) {}
+         while(index < MARKER_FIELDS.length)
+         {
+            fieldName = String(MARKER_FIELDS[index]);
+            value = VWHudViewModel.field(param1,fieldName);
+            if(value != null) param2[fieldName] = value;
+            ++index;
+         }
       }
 
       private function isFiniteNumber(param1:Number) : Boolean

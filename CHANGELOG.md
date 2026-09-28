@@ -30,6 +30,7 @@
 - Rebuild the HTML panels only when a displayed value changes. Compass and environment packets still move the strip and radar on every update, without rebuilding the document for an unchanged clock or hazard set.
 - Read player, inventory, favorite, and environment-effect fields only when the game object has them, matching the component gallery. A missing field was aborting the update, so health, level, credits, suit protection, and hazard rows stayed on their initial text.
 - Darken the panel plates so the text can be read over bright ground.
+- Read game data fields by name when the presence check misses them, so health, level, credits, suit protection, and hazard rows reach the panels. Copy compass marker fields the same way, and hide a marker whose frame is not the requested POI icon.
 
 ## Version 2.0.19 (September 1, 2026)
 
