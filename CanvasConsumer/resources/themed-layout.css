@@ -82,6 +82,7 @@
 .themed-node-83 { position: absolute; left: 278px; top: 202px; width: 70px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 8px; text-align: right; }
 .themed-node-84 { position: absolute; left: 12px; top: 221px; width: 336px; height: 7px; z-index: 2; }
 .themed-node-52 { position: absolute; left: -39px; top: 11px; width: 360px; height: 236px; z-index: 100; }
+.themed-node-52-plate { position: absolute; left: 0px; top: 0px; width: 360px; height: 236px; z-index: 0; }
 .themed-node-86 { position: absolute; left: 312px; top: 0px; width: 408px; height: 747px; z-index: 0; }
 .themed-node-87 { position: absolute; left: 420px; top: 8px; width: 280px; height: 24px; z-index: 3; font-family: $MAIN_Font_Bold; font-size: 10px; text-align: right; }
 .themed-node-88 { position: absolute; left: 332px; top: 34px; width: 12px; height: 22px; z-index: 4; font-family: $MAIN_Font_Bold; font-size: 12px; text-align: center; font-weight: bold; }
