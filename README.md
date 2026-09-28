@@ -60,6 +60,18 @@ VWHUD uses `venworks.vwhud.vwks`, `venworks.vwhud.ta`, `venworks.vwhud.fc`, `ven
 - Disable a custom override mod and restart Starfield to determine whether the base theme loads normally.
 - Report the Canvas version, VWHUD theme and version, package source, platform, normal or large HUD mode, and whether the issue remains without overrides.
 
+The Canvas chronomark can show ActionScript runtime error numbers when a HUD update fails. Scaleform's `ReferenceError` text omits the property name, so Canvas also prints the value it was reading, such as `symbol.marker.location` or `data.compass.ticks[0]`.
+
+| Number | Meaning |
+| --- | --- |
+| 1009 | Called a method on `null` |
+| 1010 | Called a method on `undefined` |
+| 1034 | A value could not be converted to the expected type |
+| 1056 | Tried to create a property on a sealed object |
+| 1069 | Tried to read a property that the sealed object does not have |
+
+A sealed object is a class instance, including nearly every game UI clip. Reading a missing property throws 1069. A dynamic object returns `undefined` instead. The `in` operator checks for the property without throwing. Bracket access and dot access both throw.
+
 ## Maintainer documentation
 
 [The build system](docs/BUILDSYSTEM.md) documents compilation, archive-only staging, packaging, and verification. [Canvas consumer architecture and acceptance](docs/CANVAS_MIGRATION.md) records ownership, status behavior, and remaining runtime evidence. [Visual references](docs/reference/) preserve clean-room presentation evidence, and [the changelog](CHANGELOG.md) preserves project history.
