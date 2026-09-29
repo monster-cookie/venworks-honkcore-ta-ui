@@ -1,6 +1,7 @@
 package
 {
    import flash.display.DisplayObject;
+   import flash.display.DisplayObjectContainer;
    import flash.display.InteractiveObject;
    import flash.display.Loader;
    import flash.display.LoaderInfo;
@@ -14,8 +15,6 @@ package
    import flash.net.URLRequest;
    import flash.system.ApplicationDomain;
    import flash.system.LoaderContext;
-   import flash.text.TextField;
-   import flash.text.TextFormat;
    import flash.utils.getDefinitionByName;
 
    // The top-strip compass. Ticks, labels, and the game marker widgets live on this strip.
@@ -27,7 +26,6 @@ package
       private static const RELATIVE:Array = ["","BelowPlayer","LevelWithPlayer","AbovePlayer"];
       private static const CATEGORY:Array = ["","Undiscovered","Discovered","Targeted"];
       private static const HEADINGS:Array = ["N","NE","E","SE","S","SW","W","NW"];
-      private static const ICON_URLS:Array = ["../../../MapIcons.swf","MapIcons.swf","Interface/MapIcons.swf"];
 
       private var ticks:Shape;
       private var labels:Array;
@@ -39,7 +37,9 @@ package
       private var iconLoader:Loader;
       private var iconContent:DisplayObject;
       private var iconDomain:ApplicationDomain;
+      private var iconUrls:Array;
       private var iconAttempt:int;
+      private var iconWait:int;
 
       public function VWHudCompassTape(width:Number, height:Number)
       {
@@ -54,23 +54,19 @@ package
          catch(defineError:*) { this.markerType = null; }
          try { this.markerUtility = getDefinitionByName("Shared.MapMarkerUtils") as Class; }
          catch(utilityError:*) { this.markerUtility = null; }
+         var plate:Shape = new Shape();
+         plate.graphics.beginFill(0x0D1114,0.88);
+         plate.graphics.drawRect(0,0,width,height);
+         plate.graphics.endFill();
+         addChild(plate);
          this.ticks = new Shape();
          addChild(this.ticks);
          var index:int = 0;
          while(index < LABELS)
          {
-            var field:TextField = new TextField();
-            field.width = 36;
-            field.height = 16;
-            field.selectable = false;
-            field.mouseEnabled = false;
-            field.embedFonts = false;
-            var format:TextFormat = new TextFormat("$MAIN_Font_Bold",11,0xF4FBFF,true);
-            format.align = "center";
-            field.defaultTextFormat = format;
-            field.text = "";
+            var mark:Shape = new Shape();
             var host:Sprite = new Sprite();
-            host.addChild(field);
+            host.addChild(mark);
             host.visible = false;
             host.mouseEnabled = false;
             host.mouseChildren = false;
@@ -155,9 +151,10 @@ package
                if(major && labelIndex < this.labels.length)
                {
                   var host:Sprite = this.labels[labelIndex] as Sprite;
-                  host.x = x - 18;
-                  host.y = this.heightPx - 28;
-                  TextField(host.getChildAt(0)).text = HEADINGS[int(Math.round(absolute / 45)) % 8];
+                  var headingName:String = String(HEADINGS[int(Math.round(absolute / 45)) % 8]);
+                  this.drawHeading(Shape(host.getChildAt(0)),headingName);
+                  host.x = x - (headingName.length > 1 ? 7 : 3);
+                  host.y = this.heightPx - 12;
                   host.visible = true;
                   ++labelIndex;
                }
@@ -223,7 +220,6 @@ package
             try { waiting = Boolean(widget.needsLocationLoaded); }
             catch(waitError:*) { waiting = true; }
          }
-         // Location art arrives after the frame is current. The widget's own library request is relative to this consumer movie and does not find MapIcons.swf.
          if(stamp != entry.stamp || waiting) this.paintMarkerFrame(entry,source,marker,fallback,widget,type,stamp);
          this.placeLocationIcon(entry,marker,fallback,widget,source,type);
       }
@@ -283,25 +279,38 @@ package
          var mapType:uint = uint(this.number(this.markerValue(source,"uMapMarkerType")));
          var category:uint = uint(this.number(this.markerValue(source,"uMapMarkerCategory")));
          var state:uint = uint(this.number(this.markerValue(source,"uLocationMarkerState")));
+         var sub:int = int(this.number(this.markerValue(source,"uiMapMarkerSubCategoryType")));
          this.callMarker(widget,"SetLocation",mapType,category,state);
-         var waiting:Boolean = true;
-         try { waiting = Boolean(widget.needsLocationLoaded); }
-         catch(waitError:*) { waiting = true; }
-         if(!waiting)
+         if(sub > 0 && sub < CATEGORY.length) this.callMarker(widget,"SetFrame",CATEGORY[sub],true,null);
+         if(this.poiHasArt(widget))
          {
             this.clearOwnIcon(entry);
+            if(marker != null) marker.visible = true;
+            fallback.visible = false;
             return;
          }
-         var icon:MovieClip = this.ownIcon(entry,this.iconName(mapType,category,state),state,int(this.number(this.markerValue(source,"uiMapMarkerSubCategoryType"))));
-         if(icon == null) return;
+         var icon:MovieClip = this.ownIcon(entry,this.iconName(mapType,category,state),state,sub,widget);
+         if(icon == null)
+         {
+            this.pumpIconLoad();
+            return;
+         }
          var host:Sprite = entry.host as Sprite;
          if(icon.parent !== host) host.addChild(icon);
-         var bounds:Rectangle = icon.getBounds(icon);
-         if(!bounds.isEmpty() && bounds.width >= 1 && bounds.height >= 1)
+         if(marker != null) marker.visible = false;
+         fallback.visible = false;
+      }
+
+      private function poiHasArt(widget:Object) : Boolean
+      {
+         var hasArt:Boolean = false;
+         try
          {
-            if(marker != null) marker.visible = false;
-            fallback.visible = false;
+            var poi:DisplayObjectContainer = widget.PoiIcon_mc as DisplayObjectContainer;
+            hasArt = poi != null && poi.numChildren > 0;
          }
+         catch(artError:*) { hasArt = false; }
+         return hasArt;
       }
 
       private function iconName(mapType:uint, category:uint, state:uint) : String
@@ -320,12 +329,12 @@ package
          return name;
       }
 
-      private function ownIcon(entry:Object, name:String, state:uint, category:int) : MovieClip
+      private function ownIcon(entry:Object, name:String, state:uint, category:int, widget:Object) : MovieClip
       {
          if(name == null || name.length == 0 || name == "null" || name == "undefined") return null;
          var current:MovieClip = entry.ownIcon as MovieClip;
          if(current != null && entry.iconName == name) return current;
-         var type:Class = this.iconClass(name);
+         var type:Class = this.iconClass(name,widget);
          if(type == null) return null;
          var created:MovieClip = null;
          try { created = new type() as MovieClip; }
@@ -340,39 +349,115 @@ package
             try { if(created.currentFrameLabel != frame) created.gotoAndStop(frame); }
             catch(frameError:*) {}
          }
+         var bounds:Rectangle = created.getBounds(created);
+         if(!bounds.isEmpty() && bounds.width >= 1 && bounds.height >= 1)
+         {
+            var fit:Number = 36 / Math.max(bounds.width,bounds.height);
+            created.scaleX = created.scaleY = fit;
+            created.x = -(bounds.x + bounds.width * 0.5) * fit;
+            created.y = -(bounds.y + bounds.height * 0.5) * fit;
+         }
          this.clearOwnIcon(entry);
          entry.ownIcon = created;
          entry.iconName = name;
          return created;
       }
 
-      private function iconClass(name:String) : Class
+      private function iconClass(name:String, widget:Object) : Class
       {
-         var type:Class = null;
-         try { type = getDefinitionByName(name) as Class; }
-         catch(defineError:*) { type = null; }
-         if(type == null && this.iconDomain != null)
-         {
-            try { type = this.iconDomain.getDefinition(name) as Class; }
-            catch(domainError:*) { type = null; }
-         }
-         if(type == null) this.ensureIconLibrary();
+         var type:Class = this.definition(ApplicationDomain.currentDomain,name);
+         if(type == null && this.iconDomain != null) type = this.definition(this.iconDomain,name);
+         if(type == null) type = this.definitionChain(widget,name);
+         if(type == null) this.ensureIconLibrary(widget);
          return type;
       }
 
-      private function ensureIconLibrary() : void
+      private function definition(domain:ApplicationDomain, name:String) : Class
       {
-         if(this.iconContent != null || this.iconLoader != null || this.iconAttempt >= ICON_URLS.length) return;
-         var url:String = String(ICON_URLS[this.iconAttempt]);
+         if(domain == null) return null;
+         try { if(domain.hasDefinition(name)) return domain.getDefinition(name) as Class; }
+         catch(defineError:*) {}
+         return null;
+      }
+
+      private function definitionChain(widget:Object, name:String) : Class
+      {
+         var domain:ApplicationDomain = null;
+         try { if(widget != null) domain = widget.loaderInfo.applicationDomain; }
+         catch(domainError:*) { domain = null; }
+         var guard:int = 0;
+         while(domain != null && guard < 6)
+         {
+            var type:Class = this.definition(domain,name);
+            if(type != null) return type;
+            try { domain = domain.parentDomain; }
+            catch(parentError:*) { domain = null; }
+            ++guard;
+         }
+         return null;
+      }
+
+      private function ensureIconLibrary(widget:Object) : void
+      {
+         if(this.iconContent != null || this.iconLoader != null) return;
+         if(this.iconUrls == null) this.iconUrls = this.buildIconUrls(widget);
+         if(this.iconAttempt >= this.iconUrls.length) return;
+         var url:String = String(this.iconUrls[this.iconAttempt]);
          ++this.iconAttempt;
+         this.iconWait = 0;
          var loader:Loader = new Loader();
+         loader.alpha = 0;
+         loader.mouseEnabled = false;
+         loader.mouseChildren = false;
          this.iconLoader = loader;
+         addChild(loader);
          var info:LoaderInfo = loader.contentLoaderInfo;
          info.addEventListener(Event.COMPLETE,this.onIconLoad);
          info.addEventListener(IOErrorEvent.IO_ERROR,this.onIconError);
          info.addEventListener(SecurityErrorEvent.SECURITY_ERROR,this.onIconError);
          try { loader.load(new URLRequest(url),new LoaderContext(false,ApplicationDomain.currentDomain)); }
          catch(loadError:*) { this.onIconError(null); }
+      }
+
+      private function buildIconUrls(widget:Object) : Array
+      {
+         var urls:Array = [];
+         this.pushIconUrl(urls,this.siblingIconUrl(widget));
+         this.pushIconUrl(urls,"MapIcons.swf");
+         this.pushIconUrl(urls,"../../../MapIcons.swf");
+         this.pushIconUrl(urls,"/MapIcons.swf");
+         return urls;
+      }
+
+      private function siblingIconUrl(widget:Object) : String
+      {
+         var url:String = "";
+         try { if(widget != null) url = String(widget.loaderInfo.url); }
+         catch(urlError:*) { return ""; }
+         var slash:int = url.lastIndexOf("/");
+         var back:int = url.lastIndexOf("\\");
+         var cut:int = slash > back ? slash : back;
+         if(cut < 0 || url.length == 0) return "";
+         return url.substring(0,cut + 1) + "MapIcons.swf";
+      }
+
+      private function pushIconUrl(urls:Array, url:String) : void
+      {
+         if(url == null || url.length == 0) return;
+         var index:int = 0;
+         while(index < urls.length)
+         {
+            if(String(urls[index]) == url) return;
+            ++index;
+         }
+         urls.push(url);
+      }
+
+      private function pumpIconLoad() : void
+      {
+         if(this.iconLoader == null || this.iconContent != null) return;
+         ++this.iconWait;
+         if(this.iconWait > 20) this.onIconError(null);
       }
 
       private function onIconLoad(event:Event) : void
@@ -382,29 +467,31 @@ package
          {
             this.iconContent = info.content as DisplayObject;
             this.iconDomain = info.applicationDomain;
+            if(this.iconContent != null) this.iconContent.alpha = 0;
          }
-         this.releaseIconLoader();
+         this.iconWait = 0;
       }
 
       private function onIconError(event:Event) : void
       {
-         this.releaseIconLoader();
-         this.ensureIconLibrary();
-      }
-
-      private function releaseIconLoader() : void
-      {
          var loader:Loader = this.iconLoader;
          this.iconLoader = null;
-         if(loader == null) return;
-         try
+         this.iconContent = null;
+         this.iconWait = 0;
+         if(loader != null)
          {
-            var info:LoaderInfo = loader.contentLoaderInfo;
-            info.removeEventListener(Event.COMPLETE,this.onIconLoad);
-            info.removeEventListener(IOErrorEvent.IO_ERROR,this.onIconError);
-            info.removeEventListener(SecurityErrorEvent.SECURITY_ERROR,this.onIconError);
+            try
+            {
+               var info:LoaderInfo = loader.contentLoaderInfo;
+               info.removeEventListener(Event.COMPLETE,this.onIconLoad);
+               info.removeEventListener(IOErrorEvent.IO_ERROR,this.onIconError);
+               info.removeEventListener(SecurityErrorEvent.SECURITY_ERROR,this.onIconError);
+               if(loader.parent != null) loader.parent.removeChild(loader);
+               loader.unload();
+            }
+            catch(releaseError:*) {}
          }
-         catch(releaseError:*) {}
+         this.ensureIconLibrary(null);
       }
 
       private function clearOwnIcon(entry:Object) : void
@@ -414,6 +501,27 @@ package
          entry.ownIcon = null;
          entry.iconName = null;
          if(icon != null && icon.parent != null) icon.parent.removeChild(icon);
+      }
+
+      private function drawHeading(shape:Shape, label:String) : void
+      {
+         shape.graphics.clear();
+         shape.graphics.lineStyle(1.25,0xF4FBFF,1);
+         var index:int = 0;
+         while(index < label.length)
+         {
+            this.drawLetter(shape,label.charAt(index),index * 8);
+            ++index;
+         }
+      }
+
+      private function drawLetter(shape:Shape, letter:String, x:Number) : void
+      {
+         var g:* = shape.graphics;
+         if(letter == "N") { g.moveTo(x,9); g.lineTo(x,0); g.lineTo(x + 6,9); g.lineTo(x + 6,0); }
+         else if(letter == "E") { g.moveTo(x + 6,0); g.lineTo(x,0); g.lineTo(x,9); g.lineTo(x + 6,9); g.moveTo(x,4.5); g.lineTo(x + 4,4.5); }
+         else if(letter == "S") { g.moveTo(x + 6,1); g.lineTo(x + 1,1); g.lineTo(x + 1,4.5); g.lineTo(x + 5,4.5); g.lineTo(x + 5,8); g.lineTo(x,8); }
+         else if(letter == "W") { g.moveTo(x,0); g.lineTo(x + 1.5,9); g.lineTo(x + 3,4); g.lineTo(x + 4.5,9); g.lineTo(x + 6,0); }
       }
 
       private function callMarker(widget:Object, name:String, arg1:*, arg2:*, arg3:*) : void
