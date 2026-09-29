@@ -5,7 +5,7 @@ package
    {
       private static const HEADINGS:Array = ["N","NE","E","SE","S","SW","W","NW"];
 
-      public static function update(data:Object, tactical:Object, compass:Object, pulse:int) : void
+      public static function update(data:Object, tactical:Object, pulse:int, scanning:Boolean) : void
       {
          var direction:Number = tactical == null ? 0 : finite(tactical.direction,0);
          var score:int = tactical == null ? 0 : Math.max(0,Math.min(100,Math.round(finite(tactical.threatScore,0))));
@@ -14,13 +14,19 @@ package
          var state:int = Math.min(3,int(score/25));
          data["threat.label"] = "THREAT "+score+"%  "+states[state];
          for(var i:int = 0; i < states.length; i++) data["threat."+String(states[i]).toLowerCase()] = i == state;
-         var degrees:Number = normalizeDegrees(direction*180/Math.PI);
-         data["scanner.heading"] = "SCANNING // HDG "+pad(Math.round(degrees)%360,3)+" "+HEADINGS[int(Math.round(degrees/45))%8];
-         data["compass.ticks"] = ticks(degrees);
-         data["compass.markers"] = markers(tactical == null ? null : tactical.markers as Array,direction);
-         data["radar.contacts"] = contacts(compass,direction);
-         data["scanner.contacts"] = scanner(tactical == null ? null : tactical.scannerTargets as Array,direction);
-         data["scanner.grid"] = grid(pulse);
+         if(scanning)
+         {
+            var degrees:Number = normalizeDegrees(direction*180/Math.PI);
+            data["scanner.heading"] = "SCANNING // HDG "+pad(Math.round(degrees)%360,3)+" "+HEADINGS[int(Math.round(degrees/45))%8];
+            data["scanner.contacts"] = scanner(tactical == null ? null : tactical.scannerTargets as Array,direction);
+            data["scanner.grid"] = grid(pulse);
+         }
+         else
+         {
+            data["scanner.heading"] = "";
+            data["scanner.contacts"] = [{label:"NO VALID CONTACTS",hostile:false,friendly:true,y:0}];
+            data["scanner.grid"] = grid(0);
+         }
          var effects:Array = [];
          var row:Object;
          for each(row in data.buffrows) effects.push({label:row.label,positive:true,negative:false});
@@ -31,67 +37,6 @@ package
             effects[i].y = int(i/4)*18;
          }
          data["effectrows"] = effects;
-      }
-
-      private static function ticks(center:Number) : Array
-      {
-         var result:Array = [];
-         for(var heading:Number = Math.floor((center-60)/5)*5; heading <= center+65; heading += 5)
-         {
-            var delta:Number = signedDegrees(heading-center);
-            if(Math.abs(delta) > 60) continue;
-            var absolute:int = Math.round(normalizeDegrees(heading));
-            var major:Boolean = absolute%45 == 0;
-            var medium:Boolean = absolute%15 == 0;
-            result.push({x:413+delta/60*413,y:major ? 38 : medium ? 41 : 44,major:major,medium:!major && medium,minor:!major && !medium,label:major ? HEADINGS[int(Math.round(absolute/45))%8] : ""});
-         }
-         return result;
-      }
-
-      private static function markers(sources:Array, direction:Number) : Array
-      {
-         var result:Array = [];
-         var checked:int = 0;
-         for each(var source:Object in sources)
-         {
-            if(result.length >= 48 || ++checked > 256) break;
-            if(source == null) continue;
-            var heading:Number = finite(source.fHeading,NaN);
-            var delta:Number = radians(heading-direction);
-            if(!isFinite(delta) || Math.abs(delta) > Math.PI/3) continue;
-            result.push({x:413+delta/(Math.PI/3)*413,y:20,opacity:clamp(source.fDistanceAlpha,0,1,1),scale:clamp(source.fDistanceScale,0.5,1.5,1)*0.48,
-               marker:{type:integer(source.uiMarkerIconType,0,255),relative:integer(source.uiRelativeMarkerHeightType,0,3),subcategory:integer(source.uiMapMarkerSubCategoryType,0,3),locationtype:integer(source.uMapMarkerType,0,65535),locationcategory:integer(source.uMapMarkerCategory,0,65535),locationstate:integer(source.uLocationMarkerState,0,65535),effect:source.isEnvironmentEffect === true ? String(source.sEffectIcon).substr(0,96) : ""}});
-         }
-         return result;
-      }
-
-      private static function contacts(compass:Object, direction:Number) : Array
-      {
-         var result:Array = [];
-         if(compass == null) return result;
-         appendContacts(result,compass.aEnemyMarkers as Array,direction,true);
-         appendContacts(result,compass.aMarkers as Array,direction,false);
-         return result;
-      }
-
-      private static function appendContacts(result:Array, sources:Array, direction:Number, enemy:Boolean) : void
-      {
-         var checked:int = 0;
-         for each(var source:Object in sources)
-         {
-            if(result.length >= 32 || ++checked > 256) break;
-            if(source == null || finite(source.uiHandle,0) == 0) continue;
-            var type:int = integer(source.uiMarkerIconType,0,255);
-            if(!enemy && [8,10,13,14].indexOf(type) < 0) continue;
-            var distance:Number = finite(source.fDistanceToPlayer,NaN);
-            var heading:Number = finite(source.fHeading,NaN);
-            if(!isFinite(distance+heading) || distance < 0 || distance > 200) continue;
-            var angle:Number = Math.PI-direction;
-            var vx:Number = -Math.sin(angle); var vy:Number = Math.cos(angle);
-            var radius:Number = 92*distance/200;
-            var structure:Boolean = !enemy && [10,13,14].indexOf(type) >= 0;
-            result.push({x:92+(Math.cos(heading)*vx-Math.sin(heading)*vy)*radius,y:92+(Math.sin(heading)*vx+Math.cos(heading)*vy)*radius,opacity:clamp(source.fDistanceAlpha,0,1,1),enemy:enemy,ally:!enemy && !structure,structure:structure});
-         }
       }
 
       private static function scanner(sources:Array, direction:Number) : Array

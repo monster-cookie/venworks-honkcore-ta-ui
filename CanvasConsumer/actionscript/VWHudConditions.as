@@ -148,7 +148,7 @@ package
       private function onCompassData(param1:Object) : void
       {
          var data:Object = param1 == null ? null : param1.data;
-         this.setValue("inscanner",data != null && Boolean(data.bIsHandscannerOpen));
+         this.setValue("inscanner",data != null && VWHudViewModel.field(data,"bIsHandscannerOpen") === true);
          this.notifyChanged();
       }
 
@@ -192,7 +192,7 @@ package
       private function onFavoritesData(param1:Object) : void
       {
          var favorites:Array = param1 == null || param1.data == null ? null :
-            param1.data.aFavoriteItems as Array;
+            VWHudViewModel.collection(param1.data,"aFavoriteItems");
          var item:Object = null;
          var index:int = 0;
          var limit:int = 0;
@@ -209,9 +209,9 @@ package
                item = favorites[index];
                slotLabel = this.formatFavoriteSlot(index + 1);
                populated = item != null;
-               isPower = populated && Boolean(item.bIsPower);
-               isWeapon = populated && !isPower && this.cleanName(item.sAmmoName).length != 0;
-               favoriteNames[index] = populated ? this.cleanName(item.sName) : "";
+               isPower = populated && VWHudViewModel.field(item,"bIsPower") === true;
+               isWeapon = populated && !isPower && this.cleanName(VWHudViewModel.field(item,"sAmmoName")).length != 0;
+               favoriteNames[index] = populated ? this.cleanName(VWHudViewModel.field(item,"sName")) : "";
                favoritePowers[index] = isPower;
                favoriteWeapons[index] = isWeapon;
                this.setValue("favorite" + slotLabel + "populated",populated);
@@ -227,7 +227,7 @@ package
 
       private function onJetpackData(param1:Object) : void
       {
-         var charge:Number = Number(param1.data.fJetpackCharge);
+         var charge:Number = Number(VWHudViewModel.field(param1.data,"fJetpackCharge"));
          if(isNaN(charge) || !isFinite(charge))
          {
             return;
@@ -245,7 +245,7 @@ package
       private function hasDigipicks(param1:Object) : Boolean
       {
          var items:Array = param1 == null || param1.data == null ? null :
-            param1.data.aItems as Array;
+            VWHudViewModel.collection(param1.data,"aItems");
          var item:Object = null;
          var formId:Number = NaN;
          var editorId:String = "";
@@ -263,14 +263,14 @@ package
             item = items[index];
             if(item != null)
             {
-               formId = Number(item.uFormID);
-               editorId = item.sEditorID !== undefined && item.sEditorID !== null ? String(item.sEditorID) :
-                  (item.EditorID !== undefined && item.EditorID !== null ? String(item.EditorID) : "");
-               name = item.sName !== undefined && item.sName !== null ? String(item.sName) : "";
+               formId = Number(VWHudViewModel.field(item,"uFormID"));
+               editorId = VWHudViewModel.field(item,"sEditorID") != null ? String(VWHudViewModel.field(item,"sEditorID")) :
+                  (VWHudViewModel.field(item,"EditorID") != null ? String(VWHudViewModel.field(item,"EditorID")) : "");
+               name = VWHudViewModel.field(item,"sName") != null ? String(VWHudViewModel.field(item,"sName")) : "";
                if((!isNaN(formId) && isFinite(formId) && formId == DIGIPICK_FORM_ID) ||
                   editorId.toLowerCase() == "digipick" || name.toLowerCase() == "digipick")
                {
-                  count = Number(item.uCount);
+                  count = Number(VWHudViewModel.field(item,"uCount"));
                   if(!isNaN(count) && isFinite(count) && count > 0)
                   {
                      return true;

@@ -3,8 +3,8 @@ Venworks Customizable HUD provides five separately packaged Starfield HUD themes
 
 [size=3][b][u]Requirements[/u][/b][/size]
 [list=1]
-[*]Install Venworks Core Library.[/*]
-[*]Install Venworks Canvas.[/*]
+[*]Install [url=https://www.nexusmods.com/starfield/mods/7097]Venworks - Core Utilities[/url] version 2.1.8 or newer.[/*]
+[*]Install Venworks Canvas version 1.0.4 or newer.[/*]
 [*]Install exactly one VWHUD theme.[/*]
 [/list]
 
@@ -37,13 +37,20 @@ Nexus PC - Normal contains the theme's real ESM and Windows Main BA2. Nexus PC -
 
 Theme assets are stored under Canvas's isolated consumer directory. They remain VWHUD-owned files; the theme packages do not copy Canvas framework code or host movies.
 
+[size=3][b][u]Customization on PC[/u][/b][/size]
+
+Every theme loads a VWHUD-owned [b]vwhud-overrides.css[/b] file after its base layout and palette. The Normal package keeps an empty copy inside its BA2 and installs no loose VWHUD files. If you want CSS customization, install a separate mod after VWHUD that supplies only this one user-owned override file. Users without an override remain fully archive-only. Use the Fully Loose Files package for complete HTML, CSS, and SVG changes.
+
+The [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/docs/CUSTOMIZING_THEMES.md]VWHUD customization guide[/url] lists the exact theme paths, stable panel classes, examples, update procedure, and reset procedure. Canvas defines the supported HTML, CSS, SVG, and component syntax.
+
 [img]https://cdn.venworkscreations.com/NexusMods/description-divider-known-issues-1600x120.png[/img]
 [list]
 [*]This release remains beta until exact-package PC and console acceptance is complete.[/*]
 [*]The radar displays contacts already supplied by Starfield; it is not a life-form detector.[/*]
 [*]Large-HUD, ultrawide, sustained-update, and console feedback remain valuable.[/*]
 [*]Compatibility with HUD replacements is governed by Venworks Canvas because Canvas owns the shared host movies.[/*]
+[*]If Canvas reports [b]UNSUPPORTED CONSUMER PROTOCOL[/b], fully exit Starfield, verify that the deployed Canvas and VWHUD packages are the required versions without duplicate providers, redeploy Canvas 1.0.4 or newer, and restart the game.[/*]
 [/list]
 
 [img]https://cdn.venworkscreations.com/NexusMods/description-divider-source-code-1600x120.png[/img]
-Source, build documentation, and validation boundaries are available at [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui]GitHub[/url].
+Source, user documentation, build documentation, and validation boundaries are available at [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui]GitHub[/url].

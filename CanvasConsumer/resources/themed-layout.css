@@ -82,7 +82,8 @@
 .themed-node-83 { position: absolute; left: 278px; top: 202px; width: 70px; height: 22px; z-index: 2; font-family: $MAIN_Font_Bold; font-size: 8px; text-align: right; }
 .themed-node-84 { position: absolute; left: 12px; top: 221px; width: 336px; height: 7px; z-index: 2; }
 .themed-node-52 { position: absolute; left: -39px; top: 11px; width: 360px; height: 236px; z-index: 100; }
-.themed-node-86 { position: absolute; left: 0px; top: 0px; width: 720px; height: 747px; z-index: 0; }
+.themed-node-52-plate { position: absolute; left: 0px; top: 0px; width: 360px; height: 236px; z-index: 0; }
+.themed-node-86 { position: absolute; left: 312px; top: 0px; width: 408px; height: 747px; z-index: 0; }
 .themed-node-87 { position: absolute; left: 420px; top: 8px; width: 280px; height: 24px; z-index: 3; font-family: $MAIN_Font_Bold; font-size: 10px; text-align: right; }
 .themed-node-88 { position: absolute; left: 332px; top: 34px; width: 12px; height: 22px; z-index: 4; font-family: $MAIN_Font_Bold; font-size: 12px; text-align: center; font-weight: bold; }
 .themed-node-89 { position: absolute; left: 348px; top: 36px; width: 38px; height: 18px; z-index: 3; font-family: $MAIN_Font_Bold; font-size: 9px; text-align: center; }
@@ -205,9 +206,6 @@
 .themed-node-204 { position: absolute; left: 0px; top: 0px; width: 900px; height: 520px; z-index: 109; }
 .themed-node-207 { position: absolute; left: 0px; top: 0px; width: 900px; height: 520px; z-index: 0; }
 .themed-node-206 { position: absolute; left: 0px; top: 0px; width: 900px; height: 520px; z-index: 109; }
-.themed-node-208 { position: absolute; left: -64px; top: 36px; width: 1920px; height: 293px; z-index: 80; }
-.themed-node-209 { position: absolute; left: -64px; top: -36px; width: 1920px; height: 126px; z-index: 80; }
-.themed-node-210 { position: absolute; left: 0px; top: 22px; width: 320px; height: 48px; z-index: 81; }
 .themed-node-212 { position: absolute; left: 0px; top: 0px; width: 320px; height: 70px; z-index: 0; }
 .themed-node-213 { position: absolute; left: 12px; top: 7px; width: 296px; height: 24px; z-index: 1; font-family: $MAIN_Font_Bold; font-size: 12px; text-align: center; }
 .themed-node-214 { position: absolute; left: 12px; top: 32px; width: 296px; height: 28px; z-index: 1; font-family: $MAIN_Font_Bold; font-size: 15px; text-align: center; }
@@ -215,3 +213,19 @@
 .themed-node-216 { position: absolute; left: 0px; top: 4px; width: 138px; height: 28px; z-index: 0; font-family: $MAIN_Font_Bold; font-size: 11px; text-align: right; }
 .themed-node-217 { position: absolute; left: 146px; top: 0px; width: 36px; height: 36px; z-index: 0; }
 .themed-node-215 { position: absolute; left: 0px; top: 36px; width: 184px; height: 36px; z-index: 103; }
+.themed-node-218 { position: absolute; left: 0px; top: 0px; width: 40px; height: 1px; z-index: 2; }
+.themed-node-219 { position: absolute; left: 0px; top: 0px; width: 1px; height: 16px; z-index: 2; }
+.themed-node-220 { position: absolute; left: 180px; top: 0px; width: 40px; height: 1px; z-index: 2; }
+.themed-node-221 { position: absolute; left: 219px; top: 0px; width: 1px; height: 16px; z-index: 2; }
+.themed-node-222 { position: absolute; left: 0px; top: 225px; width: 40px; height: 1px; z-index: 2; }
+.themed-node-223 { position: absolute; left: 0px; top: 210px; width: 1px; height: 16px; z-index: 2; }
+.themed-node-224 { position: absolute; left: 180px; top: 225px; width: 40px; height: 1px; z-index: 2; }
+.themed-node-225 { position: absolute; left: 219px; top: 210px; width: 1px; height: 16px; z-index: 2; }
+.themed-node-226 { position: absolute; left: 0px; top: 0px; width: 54px; height: 1px; z-index: 2; }
+.themed-node-227 { position: absolute; left: 0px; top: 0px; width: 1px; height: 18px; z-index: 2; }
+.themed-node-228 { position: absolute; left: 393px; top: 0px; width: 54px; height: 1px; z-index: 2; }
+.themed-node-229 { position: absolute; left: 446px; top: 0px; width: 1px; height: 18px; z-index: 2; }
+.themed-node-230 { position: absolute; left: 0px; top: 89px; width: 54px; height: 1px; z-index: 2; }
+.themed-node-231 { position: absolute; left: 0px; top: 72px; width: 1px; height: 18px; z-index: 2; }
+.themed-node-232 { position: absolute; left: 393px; top: 89px; width: 54px; height: 1px; z-index: 2; }
+.themed-node-233 { position: absolute; left: 446px; top: 72px; width: 1px; height: 18px; z-index: 2; }

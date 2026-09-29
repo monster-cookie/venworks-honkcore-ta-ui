@@ -2,10 +2,11 @@
 
 ## Shared requirements
 
-- Venworks Core Library
-- Venworks Canvas
+- Venworks Core Library, version `2.1.8` or newer
+- Venworks Canvas, version `1.0.4` or newer
 - Load Core before Canvas and Canvas before the selected VWHUD theme.
 - Enable exactly one VWHUD theme.
+- PC customization guide: `https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/docs/CUSTOMIZING_THEMES.md`
 
 ## Listings
 

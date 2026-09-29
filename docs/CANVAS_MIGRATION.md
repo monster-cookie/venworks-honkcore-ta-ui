@@ -32,6 +32,8 @@ This prefix is an enforced Canvas loader contract rather than an indication of f
 
 The four full themes share `themed.html`; Minimalist uses `minimalist.html` and its reduced composition. Standard SVG elements and attributes define vector artwork. Canvas owns display objects and provider acquisition. VWHUD owns tactical meaning, theme selection, compact status pages, and the snapshots supplied to Canvas.
 
+Each entry document loads `vwhud-overrides.css` last and exposes stable `vwhud-panel-*` classes on its outer panels. [Customizing VWHUD themes](CUSTOMIZING_THEMES.md) documents the supported PC override surface and keeps Canvas's Component Gallery authoritative for the renderer's HTML, CSS, and SVG subset.
+
 The full themes retain 18 unique provider channels and Minimalist retains 14. Removing the earlier status renderer does not remove inputs still used for environment or threat calculations.
 
 ## Status effects
@@ -50,6 +52,8 @@ Frequent updates are ordinary changing inputs such as health, heading, and conta
 
 ## Verification and acceptance
 
-The build compiles five consumer SWFs, two Papyrus scripts, and five real ESMs. Packaging produces 15 Main BA2 archives and 25 release ZIP shapes. Verification checks exact inventories, source evidence, resource bytes, SWF contracts, archive bytes, and ZIP contents. The lifecycle diagnostic under [CanvasConsumer/diagnostics](../CanvasConsumer/diagnostics) compiles separately and is excluded from packages.
+The build compiles five consumer SWFs, two Papyrus scripts, and five real ESMs into isolated package inputs. Transactional packaging produces 15 Main BA2 archives, installs archive-only staging, and removes exact loose Interface and Script targets after successful verification. The Fully Loose Nexus ZIP is reconstructed from the verified Windows Main BA2 rather than loose staging. Verification checks exact inventories, source evidence, resource bytes, SWF contracts, archive bytes, and ZIP contents. The lifecycle diagnostic under [CanvasConsumer/diagnostics](../CanvasConsumer/diagnostics) compiles separately and is excluded from packages.
 
 Runtime acceptance remains separate. Each exact candidate package requires archive-only PC and PS5 testing for normal and large HUD modes, aiming and scanner transitions, health and oxygen, compass and radar response, status application/removal/recovery/paging, vehicle input and glyphs, ship visibility controls, menus, death/reload, save/load, 4K/8K, and representative ultrawide placement. Sustained activity must also confirm stable object and timer behavior. VWHUD-32 through VWHUD-36 track per-theme acceptance.
+
+VWHUD requires Canvas's `VWCANVAS_CONSUMER/3` host support and the Registry's `BuildCanvasDatagramBody` and `TryPublishCanvasDatagram` methods while continuing to render through `VWCANVAS_HTML/2`. The consumer build now rejects a Canvas source checkout missing any of those contracts. At runtime, the combination of `UNSUPPORTED CONSUMER PROTOCOL` in the Canvas display and a missing `BuildCanvasDatagramBody` Papyrus method establishes that the Canvas code loaded by that game process does not expose VWHUD's expected contract. It does not, without evidence from the affected installation, distinguish mixed package versions, overriding archives or loose files, or code retained by a process that was not restarted. Fully stop the game, verify the deployed Canvas and VWHUD bytes and their providers, redeploy Canvas 1.0.4 or newer, and restart before retesting. Downgrading the VWHUD consumer protocol would bypass required event and rendering behavior and is not a compatible repair.

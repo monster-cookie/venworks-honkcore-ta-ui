@@ -1,6 +1,8 @@
 <#
 .SYNOPSIS
-Builds and stages one or more VWHUD Canvas consumer variants.
+Builds one or more VWHUD Canvas consumer variants into isolated package inputs.
+.PARAMETER Committed
+Retained for command compatibility. Builds never mutate installed or committed staging.
 #>
 [CmdletBinding()]
 param(
@@ -8,6 +10,7 @@ param(
   [Parameter(Mandatory)][string]$FlexSdkPath,
   [Parameter(Mandatory)][string]$CanvasProjectPath,
   [string]$CanvasEnvironmentPath,
+  [string]$PayloadRoot,
   [Alias('VariantKey')][string[]]$VariantKeys,
   [switch]$UpdateExpectedHashes,
   [switch]$Committed
@@ -16,16 +19,10 @@ param(
 $PSNativeCommandUseErrorActionPreference = $true
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+if ($Committed) { Write-Verbose '-Committed is retained for command compatibility; builds always use isolated package inputs.' }
 $repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 
-if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction SilentlyContinue)) {
-  if ($Committed) {
-    . (Join-Path $PSScriptRoot 'sharedConfig.ps1') -SkipEnvironment
-  }
-  else {
-    . (Join-Path $PSScriptRoot 'sharedConfig.ps1')
-  }
-}
+if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction SilentlyContinue)) { . (Join-Path $PSScriptRoot 'sharedConfig.ps1') -SkipEnvironment }
 . (Join-Path $PSScriptRoot 'sharedCanvasConsumers.ps1')
 
 $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)
@@ -33,6 +30,10 @@ if ([string]::IsNullOrWhiteSpace($CanvasEnvironmentPath)) {
   $CanvasEnvironmentPath = Join-Path $CanvasProjectPath '.env'
 }
 $candidateRoot = Join-Path $repositoryRoot ('.work/canvas-consumers/' + [guid]::NewGuid().ToString('N'))
+if ([string]::IsNullOrWhiteSpace($PayloadRoot)) { $PayloadRoot = Join-Path $repositoryRoot '.work/canvas-payloads' }
+$payloadRootPath = [IO.Path]::GetFullPath($PayloadRoot)
+$workRoot = [IO.Path]::GetFullPath((Join-Path $repositoryRoot '.work')).TrimEnd([IO.Path]::DirectorySeparatorChar,[IO.Path]::AltDirectorySeparatorChar)
+if (!$payloadRootPath.StartsWith($workRoot+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)) { throw 'Consumer payload output must be beneath the repository .work directory.' }
 & (Join-Path $PSScriptRoot 'buildCanvasConsumers.ps1') `
   -VariantKeys @($variants.VariantKey) `
   -JavaPath $JavaPath `
@@ -42,28 +43,27 @@ $candidateRoot = Join-Path $repositoryRoot ('.work/canvas-consumers/' + [guid]::
   -OutputDirectory $candidateRoot
 
 foreach ($variant in $variants) {
-  $destination = [IO.Path]::GetFullPath((Join-Path $repositoryRoot $variant.StagingFolderPath))
-  if (!$Committed) {
-    if (!(Test-Path -LiteralPath $destination -PathType Container)) {
-      throw "$($variant.VariantName) staging junction is missing: $destination"
-    }
-    $junction = Get-Item -LiteralPath $destination
-    $physical = [IO.Path]::GetFullPath($variant.PluginModulePath)
-    if ($junction.LinkType -ne 'Junction' -or @($junction.Target).Count -ne 1 -or [IO.Path]::GetFullPath([string]$junction.Target[0]) -ine $physical) {
-      throw "$($variant.VariantName) staging junction does not match its configured module directory."
-    }
-    $destination = $physical
-  }
-
   $key = [string]$variant.VariantKey
-  Publish-CanvasConsumerPayload `
-    -RepositoryRoot $repositoryRoot `
-    -Key $key `
-    -Payload (Join-Path $candidateRoot $key) `
-    -Destination $destination `
-    -Evidence (Join-Path $candidateRoot "$key.build.json") `
-    -ExpectedEvidence (Join-Path $repositoryRoot "CanvasConsumer/build/expected/$key.json") `
-    -UpdateExpectedHashes:$UpdateExpectedHashes
+  $candidatePayload = Join-Path $candidateRoot $key
+  $candidateEvidence = Join-Path $candidateRoot "$key.build.json"
+  $expectedEvidence = Join-Path $repositoryRoot "CanvasConsumer/build/expected/$key.json"
+  Assert-CanvasConsumerPayload $repositoryRoot $key $candidatePayload $candidateEvidence
+  if ($UpdateExpectedHashes) {
+    Copy-Item -LiteralPath $candidateEvidence -Destination $expectedEvidence -Force
+  }
+  elseif (!(Test-Path -LiteralPath $expectedEvidence -PathType Leaf) -or [IO.File]::ReadAllText($expectedEvidence) -cne [IO.File]::ReadAllText($candidateEvidence)) {
+    throw "Consumer build differs from approved expected hashes; use -UpdateExpectedHashes to record the new local build: $key"
+  }
+  $destination = Join-Path $payloadRootPath $key
+  if (Test-Path -LiteralPath $destination) {
+    $resolvedDestination = [IO.Path]::GetFullPath($destination)
+    if (!$resolvedDestination.StartsWith($payloadRootPath.TrimEnd('\','/')+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)) { throw 'Consumer payload cleanup escaped its work root.' }
+    Remove-Item -LiteralPath $resolvedDestination -Recurse -Force
+  }
+  New-Item -ItemType Directory -Force -Path $destination | Out-Null
+  foreach ($item in Get-ChildItem -LiteralPath $candidatePayload -Force) { Copy-Item -LiteralPath $item.FullName -Destination $destination -Recurse -Force }
+  Assert-CanvasConsumerPayload $repositoryRoot $key $destination $expectedEvidence
+  Write-Host "Prepared validated package input: $destination"
 }
 
-Write-Host -ForegroundColor Cyan 'Built and staged the selected Canvas consumer variants.'
+Write-Host -ForegroundColor Cyan 'Built the selected Canvas consumer variants into isolated package inputs.'

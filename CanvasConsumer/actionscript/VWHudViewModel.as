@@ -143,7 +143,12 @@ package
             if(key.indexOf("diagnostic.") == 0) continue;
             var value:Object = this.values[key];
             if(value != null && value.known === true)
-               result[key.replace(/favorite\.([0-9][0-9])\./,"favorite.slot$1.")] = value.value;
+            {
+               var published:String = key;
+               var favorite:Array = key.match(/^favorite\.([0-9][0-9])\.(name|detail|hotkey)$/);
+               if(favorite != null) published = "favorite.slot" + favorite[1] + "." + favorite[2];
+               result[published] = value.value;
+            }
          }
          return result;
       }
@@ -220,9 +225,45 @@ package
          return "unknown";
       }
 
+      public static function field(param1:Object, param2:String) : *
+      {
+         if(param1 == null) return null;
+         var present:Boolean = false;
+         try { present = param2 in param1; }
+         catch(checkError:*) { present = false; }
+         if(present)
+         {
+            try { return param1[param2]; }
+            catch(readError:*) { return null; }
+         }
+         // Some game data objects report a field as absent to the in operator and still return it by name.
+         try { return param1[param2]; }
+         catch(missingError:*) { return null; }
+      }
+
+      public static function collection(param1:Object, param2:String) : Array
+      {
+         var value:* = field(param1,param2);
+         if(value == null) return null;
+         if(value is Array) return value as Array;
+         if(!("length" in value)) return null;
+         var length:Number = Number(value.length);
+         if(!isFinite(length) || length <= 0) return null;
+         var copy:Array = [];
+         var count:int = int(Math.min(length,64));
+         var index:int = 0;
+         while(index < count)
+         {
+            try { copy.push(value[index]); }
+            catch(readError:*) { break; }
+            ++index;
+         }
+         return copy;
+      }
+
       public static function resolveTrackedObjective(param1:Object) : String
       {
-         var markers:Array = param1 == null ? null : param1.aMissionMarkers as Array;
+         var markers:Array = collection(param1,"aMissionMarkers");
          var marker:Object = null;
          var text:String = "";
          var fallback:String = "";
@@ -286,10 +327,10 @@ package
             this.notifyChanged();
             return;
          }
-         this.setText("location.name",param1.data.sLocationName);
-         this.setFinite("environment.oxygenpercentage",param1.data.fOxygenPercent);
-         this.setFinite("environment.temperature",param1.data.fTemperature);
-         this.setFinite("environment.gravity",param1.data.fGravity);
+         this.setText("location.name",field(param1.data,"sLocationName"));
+         this.setFinite("environment.oxygenpercentage",this.readFinite(param1.data,"fOxygenPercent"));
+         this.setFinite("environment.temperature",this.readFinite(param1.data,"fTemperature"));
+         this.setFinite("environment.gravity",this.readFinite(param1.data,"fGravity"));
          this.setText("diagnostic.localenvironmentfields","LOCAL ENV ROOT: " + this.listFieldNames(param1.data,MAX_DIAGNOSTIC_FIELDS));
          this.notifyChanged();
       }
@@ -300,16 +341,14 @@ package
          {
             return;
          }
-         var effects:Array = param1.data.aEnvironmentEffects as Array;
+         var effects:Array = collection(param1.data,"aEnvironmentEffects");
          var activeEffects:Array = [false,false,false,false];
          var effect:Object = null;
          var icon:String = "";
          var normalizedIcon:String = "";
-         var soakProtection:Number = Number(param1.data.fSoakDamagePct);
+         var soakProtection:Number = this.readFinite(param1.data,"fSoakDamagePct");
          var normalizedProtection:Number = 0;
-         var fullSoak:Boolean = param1.data.bShouldPlayAlertAtFullSoak !== undefined &&
-            param1.data.bShouldPlayAlertAtFullSoak !== null &&
-            Boolean(param1.data.bShouldPlayAlertAtFullSoak);
+         var fullSoak:Boolean = field(param1.data,"bShouldPlayAlertAtFullSoak") === true;
          var index:int = 0;
          var diagnosticIndex:int = 0;
          this.resetEnvironmentalHazards();
@@ -322,8 +361,8 @@ package
          this.setText("diagnostic.environmentfields","ENVIRONMENT ROOT: " + this.listFieldNames(param1.data,MAX_DIAGNOSTIC_FIELDS));
          this.setText("diagnostic.environmentcandidates","PULSE / AGGREGATE CANDIDATES: " +
             this.listCandidateFields(param1.data,["pulse","speed","threat","severity","exposure","soak"],8));
-         this.setFinite("environment.soakcandidate",param1.data.fSoakDamagePct);
-         this.setBoolean("environment.fullsoakalertcandidate",param1.data.bShouldPlayAlertAtFullSoak);
+         this.setFinite("environment.soakcandidate",soakProtection);
+         this.setBoolean("environment.fullsoakalertcandidate",fullSoak);
          this.currentFullSoak = fullSoak;
          this.protectionKnown = false;
          if(!isNaN(soakProtection) && isFinite(soakProtection))
@@ -360,9 +399,9 @@ package
                         diagnosticIndex.toString() + ": " + this.describeObject(effect,8));
                      ++diagnosticIndex;
                   }
-                  if(effect.sEffectIcon !== undefined && effect.sEffectIcon !== null)
+                  icon = field(effect,"sEffectIcon") == null ? "" : String(field(effect,"sEffectIcon"));
+                  if(icon.length > 0)
                   {
-                     icon = String(effect.sEffectIcon);
                      normalizedIcon = icon.toLowerCase();
                      if(normalizedIcon.indexOf("airborne") >= 0)
                      {
@@ -451,13 +490,16 @@ package
             this.notifyChanged();
             return;
          }
-         this.setFinite("environment.localtime",param1.data.fLocalPlanetTime);
-         this.updateSolarTransitionCountdown(param1.data.fLocalPlanetTime,param1.data.fLocalPlanetHoursPerDay);
-         this.setFinite("player.universaltime",param1.data.fGalacticStandardTime / 24);
+         var localTime:* = field(param1.data,"fLocalPlanetTime");
+         var hoursPerDay:* = field(param1.data,"fLocalPlanetHoursPerDay");
+         var galacticTime:* = field(param1.data,"fGalacticStandardTime");
+         this.setFinite("environment.localtime",localTime);
+         this.updateSolarTransitionCountdown(localTime,hoursPerDay);
+         if(galacticTime != null) this.setFinite("player.universaltime",Number(galacticTime) / 24);
          this.universalTimeDiagnostic = "UT: fGalacticStandardTime=" +
-            this.formatDiagnosticValue(param1.data.fGalacticStandardTime) +
-            " | fLocalPlanetTime=" + this.formatDiagnosticValue(param1.data.fLocalPlanetTime) +
-            " | fLocalPlanetHoursPerDay=" + this.formatDiagnosticValue(param1.data.fLocalPlanetHoursPerDay);
+            this.formatDiagnosticValue(galacticTime) +
+            " | fLocalPlanetTime=" + this.formatDiagnosticValue(localTime) +
+            " | fLocalPlanetHoursPerDay=" + this.formatDiagnosticValue(hoursPerDay);
          this.updatePlayerTimeInventoryDiagnostic();
          this.notifyChanged();
       }
@@ -531,23 +573,23 @@ package
          {
             return;
          }
-         if(tacticalAwareness.updateCombatState(Boolean(param1.data.bIsInCombat)))
+         if(tacticalAwareness.updateCombatState(field(param1.data,"bIsInCombat") === true))
          {
             dispatchEvent(new Event(TACTICAL_AWARENESS_CHANGE));
          }
-         this.setFinite("player.level",param1.data.uLevel);
-         this.setFinite("player.levelxp",param1.data.fLevelXP);
-         this.setFinite("player.nextlevelxp",param1.data.fNextLevelXP);
-         this.setRatio("player.xppercentage",param1.data.fLevelXP,param1.data.fNextLevelXP);
+         this.setFinite("player.level",this.readFinite(param1.data,"uLevel"));
+         this.setFinite("player.levelxp",this.readFinite(param1.data,"fLevelXP"));
+         this.setFinite("player.nextlevelxp",this.readFinite(param1.data,"fNextLevelXP"));
+         this.setRatio("player.xppercentage",this.readFinite(param1.data,"fLevelXP"),this.readFinite(param1.data,"fNextLevelXP"));
          this.setText("diagnostic.playerfields","PLAYERDATA ROOT: " +
             this.listFieldNames(param1.data,MAX_PLAYER_DIAGNOSTIC_FIELDS));
          this.setText("diagnostic.playertargets","PLAYER TARGETS: sName=" +
-            this.formatDiagnosticValue(param1.data.sName) + " | uLevel=" +
-            this.formatDiagnosticValue(param1.data.uLevel) + " | fLevelXP=" +
-            this.formatDiagnosticValue(param1.data.fLevelXP) + " | fNextLevelXP=" +
-            this.formatDiagnosticValue(param1.data.fNextLevelXP) + " | VWKS_PlayerLevel=" +
-            this.formatDiagnosticValue(param1.data["VWKS_PlayerLevel"]));
-         this.updatePlayerSerialDiagnostic(param1.data.sName);
+            this.formatDiagnosticValue(field(param1.data,"sName")) + " | uLevel=" +
+            this.formatDiagnosticValue(field(param1.data,"uLevel")) + " | fLevelXP=" +
+            this.formatDiagnosticValue(field(param1.data,"fLevelXP")) + " | fNextLevelXP=" +
+            this.formatDiagnosticValue(field(param1.data,"fNextLevelXP")) + " | VWKS_PlayerLevel=" +
+            this.formatDiagnosticValue(field(param1.data,"VWKS_PlayerLevel")));
+         this.updatePlayerSerialDiagnostic(field(param1.data,"sName"));
          this.notifyChanged();
       }
 
@@ -557,18 +599,18 @@ package
          {
             return;
          }
-         this.setFinite("player.health",param1.data.fHealth);
-         this.setFinite("player.maxhealth",param1.data.fMaxHealth);
-         this.setRatio("player.healthpercentage",param1.data.fHealth,param1.data.fMaxHealth);
-         this.setFinite("player.oxygen",param1.data.fOxygen);
-         this.setFinite("player.maxoxygen",param1.data.fMaxO2CO2);
-         this.setRatio("player.oxygenpercentage",param1.data.fOxygen,param1.data.fMaxO2CO2);
-         this.setFinite("player.carbondioxide",param1.data.fCarbonDioxide);
-         this.setRatio("player.carbondioxidepercentage",param1.data.fCarbonDioxide,param1.data.fMaxO2CO2);
-         this.setFinite("power.current",param1.data.fStarPower);
-         this.setFinite("power.maximum",param1.data.fMaxStarPower);
-         this.setRatio("power.percentage",param1.data.fStarPower,param1.data.fMaxStarPower);
-         this.captureOxygenActivity(param1.data.fOxygen,param1.data.fMaxO2CO2);
+         this.setFinite("player.health",this.readFinite(param1.data,"fHealth"));
+         this.setFinite("player.maxhealth",this.readFinite(param1.data,"fMaxHealth"));
+         this.setRatio("player.healthpercentage",this.readFinite(param1.data,"fHealth"),this.readFinite(param1.data,"fMaxHealth"));
+         this.setFinite("player.oxygen",this.readFinite(param1.data,"fOxygen"));
+         this.setFinite("player.maxoxygen",this.readFinite(param1.data,"fMaxO2CO2"));
+         this.setRatio("player.oxygenpercentage",this.readFinite(param1.data,"fOxygen"),this.readFinite(param1.data,"fMaxO2CO2"));
+         this.setFinite("player.carbondioxide",this.readFinite(param1.data,"fCarbonDioxide"));
+         this.setRatio("player.carbondioxidepercentage",this.readFinite(param1.data,"fCarbonDioxide"),this.readFinite(param1.data,"fMaxO2CO2"));
+         this.setFinite("power.current",this.readFinite(param1.data,"fStarPower"));
+         this.setFinite("power.maximum",this.readFinite(param1.data,"fMaxStarPower"));
+         this.setRatio("power.percentage",this.readFinite(param1.data,"fStarPower"),this.readFinite(param1.data,"fMaxStarPower"));
+         this.captureOxygenActivity(this.readFinite(param1.data,"fOxygen"),this.readFinite(param1.data,"fMaxO2CO2"));
          this.updateActivityDiagnostic();
          this.notifyChanged();
       }
@@ -579,20 +621,20 @@ package
          {
             return;
          }
-         var clip:Number = Number(param1.data.uClipAmmo);
-         var total:Number = Number(param1.data.uTotalAmmo);
-         var explosiveCount:Number = Number(param1.data.uExplosiveCount);
-         var explosiveType:Number = Number(param1.data.uExplosiveIndicatorType);
-         this.setText("weapon.name",param1.data.sWeaponName);
-         this.setText("weapon.icon",param1.data.sIconLinkageName);
+         var clip:Number = this.readFinite(param1.data,"uClipAmmo");
+         var total:Number = this.readFinite(param1.data,"uTotalAmmo");
+         var explosiveCount:Number = this.readFinite(param1.data,"uExplosiveCount");
+         var explosiveType:Number = this.readFinite(param1.data,"uExplosiveIndicatorType");
+         this.setText("weapon.name",field(param1.data,"sWeaponName"));
+         this.setText("weapon.icon",field(param1.data,"sIconLinkageName"));
          this.setFinite("weapon.clipammo",clip);
          this.setFinite("weapon.totalammo",total);
          if(!isNaN(clip) && isFinite(clip) && !isNaN(total) && isFinite(total))
          {
             this.setFinite("weapon.reserveammo",Math.max(0,total - clip));
          }
-         this.setBoolean("weapon.displayammo",param1.data.bDisplayAmmo);
-         this.setBoolean("weapon.ammoaspercent",param1.data.bShowAmmoAsPercent);
+         this.setBoolean("weapon.displayammo",field(param1.data,"bDisplayAmmo") === true);
+         this.setBoolean("weapon.ammoaspercent",field(param1.data,"bShowAmmoAsPercent") === true);
          this.setFinite("weapon.explosivecount",explosiveCount);
          this.setFinite("weapon.explosivetype",explosiveType);
          if(!isNaN(explosiveCount) && isFinite(explosiveCount) && explosiveCount > 0)
@@ -613,7 +655,7 @@ package
          {
             return;
          }
-         var charge:Number = Number(param1.data.fJetpackCharge);
+         var charge:Number = this.readFinite(param1.data,"fJetpackCharge");
          if(!isNaN(charge) && isFinite(charge))
          {
             charge = Math.max(0,Math.min(1,charge));
@@ -631,7 +673,7 @@ package
          {
             return;
          }
-         var items:Array = param1.data.aItems as Array;
+         var items:Array = collection(param1.data,"aItems");
          var item:Object = null;
          var weaponInfo:Object = null;
          var ammoType:String = "";
@@ -644,10 +686,10 @@ package
          this.clearValue("carry.percentage");
          this.clearValue("credits");
          this.setText("diagnostic.armorresistance","EQUIPPED ARMOR RESISTANCE FIELDS NOT PRESENT");
-         this.setFinite("carry.current",param1.data.fEncumbrance);
-         this.setFinite("carry.maximum",param1.data.fMaxEncumbrance);
-         this.setRatio("carry.percentage",param1.data.fEncumbrance,param1.data.fMaxEncumbrance);
-         this.setFinite("credits",param1.data.uCoin);
+         this.setFinite("carry.current",this.readFinite(param1.data,"fEncumbrance"));
+         this.setFinite("carry.maximum",this.readFinite(param1.data,"fMaxEncumbrance"));
+         this.setRatio("carry.percentage",this.readFinite(param1.data,"fEncumbrance"),this.readFinite(param1.data,"fMaxEncumbrance"));
+         this.setFinite("credits",this.readFinite(param1.data,"uCoin"));
          this.updateDigipickDiagnostic(items);
          if(items == null)
          {
@@ -659,26 +701,26 @@ package
          while(index < items.length)
          {
             item = items[index];
-            if(item != null && Boolean(item.bIsEquipped) && item.WeaponInfo != null)
+            if(item != null && field(item,"bIsEquipped") === true && field(item,"WeaponInfo") != null)
             {
-               weaponInfo = item.WeaponInfo;
+               weaponInfo = field(item,"WeaponInfo");
                ++equippedWeaponCount;
-               if(ammoType.length == 0 && weaponInfo.sAmmoType !== undefined && weaponInfo.sAmmoType !== null)
+               if(ammoType.length == 0 && field(weaponInfo,"sAmmoType") != null)
                {
-                  ammoType = String(weaponInfo.sAmmoType);
+                  ammoType = String(field(weaponInfo,"sAmmoType"));
                   if(ammoType.replace(/\s/g,"").length == 0)
                   {
                      ammoType = "";
                   }
                }
             }
-            if(item != null && Boolean(item.bIsEquipped) && item.ArmorInfo != null && armorResistance.length < 4)
+            if(item != null && field(item,"bIsEquipped") === true && field(item,"ArmorInfo") != null && armorResistance.length < 4)
             {
-               armorInfo = item.ArmorInfo;
-               armorResistance.push("T=" + this.formatDiagnosticValue(armorInfo.fThermalResist) +
-                  " A=" + this.formatDiagnosticValue(armorInfo.fAirborneResist) +
-                  " C=" + this.formatDiagnosticValue(armorInfo.fCorrosiveResist) +
-                  " R=" + this.formatDiagnosticValue(armorInfo.fRadiationResist));
+               armorInfo = field(item,"ArmorInfo");
+               armorResistance.push("T=" + this.formatDiagnosticValue(field(armorInfo,"fThermalResist")) +
+                  " A=" + this.formatDiagnosticValue(field(armorInfo,"fAirborneResist")) +
+                  " C=" + this.formatDiagnosticValue(field(armorInfo,"fCorrosiveResist")) +
+                  " R=" + this.formatDiagnosticValue(field(armorInfo,"fRadiationResist")));
             }
             ++index;
          }
@@ -722,7 +764,7 @@ package
             this.notifyChanged();
             return;
          }
-         favorites = data.aFavoriteItems as Array;
+         favorites = collection(data,"aFavoriteItems");
          if(favorites == null)
          {
             this.notifyChanged();
@@ -735,12 +777,12 @@ package
             slotLabel = this.formatFavoriteSlot(index + 1);
             if(item != null)
             {
-               name = this.cleanFavoriteText(item.sName);
-               ammoName = this.cleanFavoriteText(item.sAmmoName);
-               ammoCount = Number(item.uAmmoCount);
-               count = Number(item.uCount);
+               name = this.cleanFavoriteText(field(item,"sName"));
+               ammoName = this.cleanFavoriteText(field(item,"sAmmoName"));
+               ammoCount = this.readFinite(item,"uAmmoCount");
+               count = this.readFinite(item,"uCount");
                detail = "";
-               if(Boolean(item.bIsPower))
+               if(field(item,"bIsPower") === true)
                {
                   detail = "";
                }
@@ -928,6 +970,13 @@ package
                this.markChanged(source);
             }
          }
+      }
+
+      private function readFinite(param1:Object, param2:String) : Number
+      {
+         var value:* = field(param1,param2);
+         var number:Number = Number(value);
+         return value != null && isFinite(number) ? number : NaN;
       }
 
       private function setFinite(param1:String, param2:Object) : void
@@ -1321,15 +1370,15 @@ package
             item = param1[index];
             if(item != null)
             {
-               formId = Number(item.uFormID);
-               editorId = item.sEditorID !== undefined && item.sEditorID !== null ? String(item.sEditorID) :
-                  (item.EditorID !== undefined && item.EditorID !== null ? String(item.EditorID) : "");
-               name = item.sName !== undefined && item.sName !== null ? String(item.sName) : "";
+               formId = this.readFinite(item,"uFormID");
+               editorId = field(item,"sEditorID") != null ? String(field(item,"sEditorID")) :
+                  (field(item,"EditorID") != null ? String(field(item,"EditorID")) : "");
+               name = field(item,"sName") != null ? String(field(item,"sName")) : "";
                if(!isNaN(formId) && isFinite(formId) && formId == DIGIPICK_FORM_ID)
                {
                   match = item;
                   matchRoute = "FORM 00000A";
-                  this.setFinite("player.digipicks",item.uCount);
+                  this.setFinite("player.digipicks",this.readFinite(item,"uCount"));
                   break;
                }
                if(match == null && editorId.toLowerCase() == "digipick")

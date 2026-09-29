@@ -13,9 +13,15 @@ Venworks Customizable HUD - Venworks Theme presents the full tactical HUD with t
 
 # Requirements and installation
 
-Install Venworks Core Library, then Venworks Canvas, then this theme. Enable exactly one VWHUD theme. The Canvas Example is not required.
+Install Venworks Core Library version 2.1.8 or newer, then Venworks Canvas version 1.0.4 or newer, then this theme. Enable exactly one VWHUD theme. The Canvas Example is not required.
 
 This package contains VWHUD-owned consumer files under Canvas's isolated consumer directory. It does not include or copy the Canvas framework. Do not combine it with an earlier standalone VWHUD HUD replacement.
+
+# Customization
+
+This Creation provides the shipped preconfigured theme. Xbox and PlayStation 5 do not use the Nexus PC loose-file customization workflow. PC mod authors can find the VWHUD theme paths, stable CSS classes, editable files, and Canvas documentation links here:
+
+https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/docs/CUSTOMIZING_THEMES.md
 
 # Validation status
 

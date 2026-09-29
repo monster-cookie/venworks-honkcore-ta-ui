@@ -24,21 +24,20 @@ Canvas's current loader contract fixes a consumer namespace to `Interface/Venwor
 
 | Command | Purpose |
 | --- | --- |
-| `Tools/buildVariant.ps1` | Compile selected consumers and Papyrus scripts, assemble their ESMs, and publish validated payloads. |
-| `Tools/verifyVariant.ps1` | Verify exact source evidence, staged files, SWF contracts, resources, and optionally BA2 contents. |
-| `Tools/createPackages.ps1` | Create the PC, Xbox, and PS5 uncompressed General BA2 archives after pre-archive verification. |
-| `Tools/createReleasePackages.ps1` | Create five release ZIP shapes per selected theme. |
-| `Tools/verifyCommittedRelease.ps1` | Validate scripts, repository contracts, resources, all five payloads, and all fifteen archives. |
+| `Tools/buildVariant.ps1` | Compile selected consumers and Papyrus scripts, assemble their ESMs, and write validated package inputs beneath `.work/canvas-payloads`. |
+| `Tools/verifyVariant.ps1` | Verify isolated pre-archive inputs or archive-only installed and committed payloads. |
+| `Tools/createPackages.ps1` | Transactionally create and install the PC, Xbox, and PS5 uncompressed General BA2 archives, then remove exact archive-shadowing loose files. |
+| `Tools/createReleasePackages.ps1` | Create five release ZIP shapes per selected theme, extracting the Fully Loose payload from the verified Windows Main BA2. |
+| `Tools/verifyCommittedRelease.ps1` | Validate scripts, repository contracts, resources, all five archive-only payloads, and all fifteen archives. |
 | `Tools/checkRepo.ps1` | Validate the five-theme configuration and selected payloads. |
 | `Tools/setupRepo.ps1` | Create local staging junctions for configured mod-manager destinations. |
 
-`-Committed` selects the tracked `Staging-*` directories and bypasses local `.env` loading. Without it, build and packaging commands require the configured staging junctions and operate on their physical mod-manager destinations.
+`-Committed` on packaging and verification selects the tracked `Staging-*` directories and bypasses local `.env` loading. Without it, packaging and installed-payload verification require the configured staging junctions and operate on their physical mod-manager destinations. Compilation always writes isolated inputs beneath `.work`; it does not place loose files in either destination.
 
 ## Build consumers
 
 ```powershell
 ./Tools/buildVariant.ps1 `
-  -Committed `
   -VariantKeys VWKS,TA,FC,CF,MIN `
   -JavaPath <java.exe> `
   -FlexSdkPath <flex-sdk> `
@@ -47,19 +46,21 @@ Canvas's current loader contract fixes a consumer namespace to `Interface/Venwor
   -UpdateExpectedHashes
 ```
 
-`-UpdateExpectedHashes` is required only when intentionally accepting newly built bytes or a changed source digest. The build uses a fresh directory beneath `.work/canvas-consumers`, validates the complete candidate, preserves the previous destination beneath `.work/canvas-rollback`, and then publishes the complete replacement.
+`-UpdateExpectedHashes` is required only when intentionally accepting newly built bytes or a changed source digest. Before compilation, the build verifies that the selected Canvas checkout exposes `VWCANVAS_CONSUMER/3`, `VWCANVAS_HTML/2`, `Registry.BuildCanvasDatagramBody`, and `Registry.TryPublishCanvasDatagram`. The build then uses a fresh directory beneath `.work/canvas-consumers`, validates the complete candidate, records accepted evidence, and publishes the selected complete package inputs beneath `.work/canvas-payloads`. It does not mutate installed or committed staging.
 
 ## Verify and package
 
 ```powershell
-./Tools/verifyVariant.ps1 -Committed -VariantKeys VWKS,TA,FC,CF,MIN -PreArchiveMutation
+./Tools/verifyVariant.ps1 -VariantKeys VWKS,TA,FC,CF,MIN -PreArchiveMutation
 ./Tools/createPackages.ps1 -Committed -VariantKeys VWKS,TA,FC,CF,MIN
 ./Tools/verifyCommittedRelease.ps1
 ./Tools/checkRepo.ps1 -Committed
 ./Tools/createReleasePackages.ps1 -VariantKeys VWKS,TA,FC,CF,MIN -OutputDirectory .work/release-candidates
 ```
 
-The committed release contains three BA2 files per theme: `Main`, `Main_XBox`, and `Main_PS`. All are uncompressed General archives and contain the consumer Interface tree plus the two compiled VWHUD scripts. The real ESM remains beside the archive. The full matrix contains 15 BA2 files and 25 ZIP files.
+`createPackages.ps1` creates and verifies every archive candidate before installation. It backs up existing managed artifacts and exact loose payload targets, installs the verified ESM and archives, removes only the loose files represented in the archives, and verifies that none remain. A failed transaction restores the prior managed and loose files and retains recovery material beneath `.work/package-transactions`; another package run stops until that retained transaction is inspected and removed. A successful transaction removes its isolated inputs and transaction directory.
+
+The committed release contains three BA2 files per theme: `Main`, `Main_XBox`, and `Main_PS`. All are uncompressed General archives and contain the consumer Interface tree plus the two compiled VWHUD scripts. The real ESM remains beside the archives, and no matching Interface or Script payload remains loose in `Staging-*`. `createReleasePackages.ps1` reads the verified Main BA2 entries when producing the Nexus Fully Loose Files ZIP, so release assembly does not require loose staging files. The full matrix contains 15 BA2 files and 25 ZIP files.
 
 ## Evidence boundaries
 

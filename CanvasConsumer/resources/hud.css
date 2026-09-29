@@ -1,4 +1,4 @@
-body { width: 1920px; height: 1080px; color: #F4FBFF; font-family: $MAIN_Font_Bold; font-size: 10px; }
+body { position: relative; width: 1920px; height: 1080px; color: #F4FBFF; font-family: $MAIN_Font_Bold; font-size: 10px; }
 .effects-count { position: absolute; left: 0px; top: 0px; width: 600px; height: 18px; font-size: 10px; }
 .effects-page { position: absolute; left: 640px; top: 0px; width: 80px; height: 18px; text-align: right; }
 .effects-message { position: absolute; left: 0px; top: 20px; width: 720px; height: 20px; }

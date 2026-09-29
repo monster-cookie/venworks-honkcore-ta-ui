@@ -16,11 +16,13 @@ param(
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
+$repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 
 if (!(Test-Path Variable:Global:SharedConfigurationLoaded) -or !$Global:SharedConfigurationLoaded) {
   Write-Host -ForegroundColor Green "Importing release variant configuration"
   . "$PSScriptRoot/sharedConfig.ps1" -SkipEnvironment
 }
+. (Join-Path $PSScriptRoot 'sharedCanvasConsumers.ps1')
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 function Assert-NotGitLfsPointer {
@@ -70,15 +72,21 @@ function Resolve-RequiredFile {
 
 function New-PackageFile {
   param(
-    [Parameter(Mandatory = $true)]
     [string]$SourcePath,
+
+    [byte[]]$Bytes,
 
     [Parameter(Mandatory = $true)]
     [string]$EntryName
   )
 
+  if ([string]::IsNullOrWhiteSpace($SourcePath) -eq ($null -eq $Bytes)) {
+    throw "Package file '$EntryName' must use exactly one source."
+  }
+
   return [pscustomobject]@{
     SourcePath = $SourcePath
+    Bytes = $Bytes
     EntryName = $EntryName.Replace('\', '/')
   }
 }
@@ -122,12 +130,20 @@ function New-ReleaseZip {
   )
   try {
     foreach ($file in $Files) {
-      [void][System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
-        $archive,
-        [string]$file.SourcePath,
-        [string]$file.EntryName,
-        [System.IO.Compression.CompressionLevel]::Optimal
-      )
+      if ($null -ne $file.Bytes) {
+        $entry = $archive.CreateEntry([string]$file.EntryName,[System.IO.Compression.CompressionLevel]::Optimal)
+        $stream = $entry.Open()
+        try { $stream.Write([byte[]]$file.Bytes,0,([byte[]]$file.Bytes).Length) }
+        finally { $stream.Dispose() }
+      }
+      else {
+        [void][System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
+          $archive,
+          [string]$file.SourcePath,
+          [string]$file.EntryName,
+          [System.IO.Compression.CompressionLevel]::Optimal
+        )
+      }
     }
   }
   finally {
@@ -183,6 +199,7 @@ foreach ($variant in $variants) {
 
   $pluginPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $pluginName) -Description "$($variant.VariantName) plugin"
   $pluginFile = New-PackageFile -SourcePath $pluginPath -EntryName $pluginName
+  $evidence = Join-Path $repositoryRoot "CanvasConsumer/build/expected/$($variant.VariantKey).json"
   $windowsArchiveFiles = @()
   if (@($packageSuffixes | Where-Object { $_ -in @('Nexus PC - Normal', 'Bethesda PC') }).Count -ne 0) {
     $mainPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $mainName) -Description "$($variant.VariantName) Windows Main archive"
@@ -201,22 +218,10 @@ foreach ($variant in $variants) {
 
   $looseFiles = @()
   if (@($packageSuffixes | Where-Object { $_ -like 'Nexus PC*' }).Count -ne 0) {
-    $interfacePath = Join-Path $stagingPath "Interface"
-    if (!(Test-Path -LiteralPath $interfacePath -PathType Container)) {
-      throw "$($variant.VariantName) is missing its Interface directory: $interfacePath"
-    }
-    $looseFiles = @(
-      Get-ChildItem -LiteralPath $interfacePath -Recurse -File -Force |
-        Sort-Object -Property FullName |
-        ForEach-Object {
-          $relativePath = $_.FullName.Substring($stagingPath.Length + 1)
-          New-PackageFile -SourcePath $_.FullName -EntryName $relativePath
-        }
-    )
-    $looseFiles += @($pluginFile)
-    $looseFiles += @(Get-ChildItem -LiteralPath (Join-Path $stagingPath 'Scripts') -Recurse -File | ForEach-Object {
-      New-PackageFile -SourcePath $_.FullName -EntryName ([IO.Path]::GetRelativePath($stagingPath,$_.FullName))
+    $looseFiles = @(Get-CanvasConsumerLoosePackageFiles -RepositoryRoot $repositoryRoot -Key ([string]$variant.VariantKey) -Payload $stagingPath -Evidence $evidence | ForEach-Object {
+      New-PackageFile -Bytes ([byte[]]$_.Bytes) -EntryName ([string]$_.EntryName)
     })
+    $looseFiles += @($pluginFile)
   }
 
   $packages = @($packageSuffixes | ForEach-Object {
