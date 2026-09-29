@@ -177,9 +177,10 @@ package
          {
             ++checked;
             var source:Object = markers[sourceIndex];
-            var heading:Number = this.number(VWHudViewModel.field(source,"fHeading"));
+            var rawHeading:* = VWHudViewModel.field(source,"fHeading");
+            var heading:Number = Number(rawHeading);
             var delta:Number = this.radians(heading - direction);
-            if(source != null && isFinite(delta) && Math.abs(delta) <= Math.PI / 3)
+            if(source != null && rawHeading != null && isFinite(heading) && isFinite(delta) && Math.abs(delta) <= Math.PI / 3)
             {
                var entry:Object = this.entries[outputIndex];
                var host:Sprite = entry.host as Sprite;
@@ -332,8 +333,15 @@ package
       private function ownIcon(entry:Object, name:String, state:uint, category:int, widget:Object) : MovieClip
       {
          if(name == null || name.length == 0 || name == "null" || name == "undefined") return null;
+         var frame:String = state == 2 ? "Discovered" : "";
+         if(category > 0 && category < CATEGORY.length) frame = String(CATEGORY[category]);
          var current:MovieClip = entry.ownIcon as MovieClip;
-         if(current != null && entry.iconName == name) return current;
+         if(current != null && entry.iconName == name)
+         {
+            this.showIconFrame(current,frame);
+            entry.iconFrame = frame;
+            return current;
+         }
          var type:Class = this.iconClass(name,widget);
          if(type == null) return null;
          var created:MovieClip = null;
@@ -342,13 +350,7 @@ package
          if(created == null) return null;
          created.mouseEnabled = false;
          created.mouseChildren = false;
-         var frame:String = state == 2 ? "Discovered" : "";
-         if(category > 0 && category < CATEGORY.length) frame = String(CATEGORY[category]);
-         if(frame.length > 0)
-         {
-            try { if(created.currentFrameLabel != frame) created.gotoAndStop(frame); }
-            catch(frameError:*) {}
-         }
+         this.showIconFrame(created,frame);
          var bounds:Rectangle = created.getBounds(created);
          if(!bounds.isEmpty() && bounds.width >= 1 && bounds.height >= 1)
          {
@@ -360,7 +362,15 @@ package
          this.clearOwnIcon(entry);
          entry.ownIcon = created;
          entry.iconName = name;
+         entry.iconFrame = frame;
          return created;
+      }
+
+      private function showIconFrame(icon:MovieClip, frame:String) : void
+      {
+         if(icon == null || frame == null || frame.length == 0) return;
+         try { if(icon.currentFrameLabel != frame) icon.gotoAndStop(frame); }
+         catch(frameError:*) {}
       }
 
       private function iconClass(name:String, widget:Object) : Class
@@ -500,6 +510,7 @@ package
          var icon:DisplayObject = entry.ownIcon as DisplayObject;
          entry.ownIcon = null;
          entry.iconName = null;
+         entry.iconFrame = null;
          if(icon != null && icon.parent != null) icon.parent.removeChild(icon);
       }
 

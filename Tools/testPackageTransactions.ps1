@@ -55,7 +55,22 @@ try {
   try { Assert-VWHudNoRetainedPackageTransactions -TransactionRoot $retainedRoot }
   catch { $retainedRejected = $_.Exception.Message -match 'fixture \[Failed\]' }
   if (!$retainedRejected) { throw 'Retained transaction fixture was not rejected with its status.' }
-  Write-Host 'Package transaction helper cleanup, preservation, recovery, traversal, and retained-transaction checks passed.'
+  $outside = Join-Path $testRoot 'outside'
+  New-Item -ItemType Directory -Path $outside -Force | Out-Null
+  $secret = Join-Path $outside 'secret.txt'
+  [IO.File]::WriteAllText($secret,'secret',[Text.UTF8Encoding]::new($false))
+  $nested = Join-Path $installRoot 'InterfaceLink'
+  New-Item -ItemType Junction -Path $nested -Target $outside | Out-Null
+  $reparseRejected = $false
+  try { Remove-VWHudLoosePayloads -Operation ([pscustomobject]@{Key='TEST';InstallPath=$installRoot;LooseTargets=@('InterfaceLink/secret.txt')}) }
+  catch { $reparseRejected = $_.Exception.Message -match 'reparse point' }
+  if (!$reparseRejected) { throw 'Nested junction fixture was not rejected.' }
+  if ([IO.File]::ReadAllText($secret) -cne 'secret') { throw 'Nested junction fixture deleted the outside file.' }
+  $stagingRoot = Join-Path $testRoot 'staging-root'
+  New-Item -ItemType Junction -Path $stagingRoot -Target $installRoot | Out-Null
+  $throughRoot = Resolve-VWHudPackageTarget -Root $stagingRoot -Target 'notes/keep.txt'
+  if ([IO.File]::ReadAllText($throughRoot) -cne 'unrelated') { throw 'Module-root junction did not resolve inside the module.' }
+  Write-Host 'Package transaction helper cleanup, preservation, recovery, traversal, reparse-point, and retained-transaction checks passed.'
 }
 finally {
   $resolvedTestRoot = [IO.Path]::GetFullPath($testRoot)

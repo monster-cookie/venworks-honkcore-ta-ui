@@ -147,7 +147,11 @@ package
          // Compass and environment packets arrive many times a second. Rebuilding the HTML document for an unchanged clock, threat, or hazard set is what drops the frame rate.
          var key:String = this.htmlSignature(data);
          if(key == this.sentHtmlKey) return;
-         try { this.bridge.setData(data); }
+         try
+         {
+            this.bridge.setData(data);
+            this.sentHtmlKey = key;
+         }
          catch(error:*)
          {
             var text:String = "error";
@@ -155,7 +159,6 @@ package
             if(text.indexOf("#1069") < 0 && text.indexOf("1069 ") != 0) throw this.stageError("setdata",text);
          }
          finally { this.alignInstruments(); }
-         this.sentHtmlKey = key;
       }
 
       private function htmlSignature(data:Object) : String
@@ -234,6 +237,8 @@ package
          if(this.radarSlot == null || this.radarSlot.parent == null) this.radarSlot = this.findSlot(this,false);
          this.placeOver(this.compassTape,this.compassSlot);
          this.placeOver(this.contactRadar,this.radarSlot);
+         this.applySlotVisibility(this.compassTape,this.compassSlot);
+         this.applySlotVisibility(this.contactRadar,this.radarSlot);
          if(this.compassTape != null && this.compassTape.parent === this) setChildIndex(this.compassTape,numChildren - 1);
          if(this.contactRadar != null && this.contactRadar.parent === this) setChildIndex(this.contactRadar,numChildren - 1);
       }
@@ -244,6 +249,19 @@ package
          var local:Point = globalToLocal(slot.localToGlobal(new Point(0,0)));
          overlay.x = local.x;
          overlay.y = local.y;
+      }
+
+      private function applySlotVisibility(overlay:DisplayObject, slot:DisplayObject) : void
+      {
+         if(overlay == null) return;
+         var visibleSlot:Boolean = slot != null && slot.parent != null;
+         var current:DisplayObject = slot;
+         while(visibleSlot && current != null && current !== this)
+         {
+            if(!current.visible) visibleSlot = false;
+            current = current.parent;
+         }
+         overlay.visible = visibleSlot;
       }
 
       private function findSlot(root:DisplayObject, compass:Boolean) : DisplayObject

@@ -164,11 +164,11 @@ try {
   }
 
   Write-VWHudPackageJournal -TransactionPath $transactionPath -TransactionId $transactionId -Status Complete -VariantKeys @($variants.VariantKey)
-  $completed = $true
   foreach ($operation in $operations) {
     $pendingPayload = [IO.Path]::GetFullPath($operation.SourcePayload)
     if ($pendingPayload.StartsWith($payloadRootPath+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase) -and (Test-Path -LiteralPath $pendingPayload -PathType Container)) { Remove-Item -LiteralPath $pendingPayload -Recurse -Force }
   }
+  $completed = $true
 }
 catch {
   $packageError = $_

@@ -36,6 +36,8 @@
 - Load the game map-icon library from the Interface folder when the compass widget's own request does not finish, and draw that icon on the strip. The widget request looks beside the consumer movie, so cave, ship, and structure markers stayed on the empty frame.
 - Draw compass headings as shapes on a dark strip. The consumer movie has no `$MAIN_Font_Bold`, so NW and NE were missing-glyph bars, and the white map icons sat on the open sky. A location icon is kept when the widget frame has no loaded child.
 - Replace the generated Venworks crest with a trace of the canonical Venworks mark and wordmark. Each path stays under Canvas's 4096-character attribute limit so the logo cannot unload the HUD.
+- Hide the Scaleform compass strip and contact radar when their panel is missing or hidden. Skip a compass marker whose heading is missing or not a finite number, and reapply a cached location icon's frame when its state changes. Record a HUD update as sent only after Canvas accepts it.
+- Reject package cleanup that follows a junction nested under the module, and keep the package backup until payload cleanup finishes.
 
 ## Version 2.0.19 (September 1, 2026)
 

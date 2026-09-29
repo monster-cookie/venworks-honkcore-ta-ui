@@ -20,7 +20,45 @@ function Resolve-VWHudPackageTarget {
   if (!$resolved.StartsWith($resolvedRoot+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)) {
     throw "Package target escapes its root: $Target"
   }
-  return $resolved
+  if (!(Test-Path -LiteralPath $resolvedRoot)) { return $resolved }
+  $finalRoot = Resolve-VWHudFinalDirectory $resolvedRoot
+  $relative = $resolved.Substring($resolvedRoot.Length).TrimStart([IO.Path]::DirectorySeparatorChar,[IO.Path]::AltDirectorySeparatorChar)
+  $cursor = $finalRoot
+  if (![string]::IsNullOrEmpty($relative)) {
+    foreach ($part in $relative.Split([string[]]@('\','/'),[StringSplitOptions]::RemoveEmptyEntries)) {
+      $cursor = [IO.Path]::GetFullPath((Join-Path $cursor $part))
+      if (!$cursor.StartsWith($finalRoot+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)) {
+        throw "Package target escapes its root: $Target"
+      }
+      if (Test-Path -LiteralPath $cursor) {
+        $child = Get-Item -LiteralPath $cursor -Force
+        if ($child.Attributes.HasFlag([IO.FileAttributes]::ReparsePoint)) {
+          throw "Package target crosses a reparse point: $Target"
+        }
+      }
+    }
+  }
+  return $cursor
+}
+
+function Resolve-VWHudFinalDirectory {
+  param([Parameter(Mandatory)][string]$Path)
+  $current = [IO.Path]::GetFullPath($Path).TrimEnd([IO.Path]::DirectorySeparatorChar,[IO.Path]::AltDirectorySeparatorChar)
+  for ($hop = 0; $hop -lt 8; $hop++) {
+    $item = Get-Item -LiteralPath $current -Force
+    if (!$item.Attributes.HasFlag([IO.FileAttributes]::ReparsePoint)) {
+      return $item.FullName.TrimEnd([IO.Path]::DirectorySeparatorChar,[IO.Path]::AltDirectorySeparatorChar)
+    }
+    $target = [string](@($item.Target) | Select-Object -First 1)
+    if ([string]::IsNullOrWhiteSpace($target)) { throw "Package root reparse point has no target: $current" }
+    if (![IO.Path]::IsPathRooted($target)) {
+      $target = [IO.Path]::GetFullPath((Join-Path ([IO.Path]::GetDirectoryName($item.FullName)) $target))
+    }
+    $next = [IO.Path]::GetFullPath($target).TrimEnd([IO.Path]::DirectorySeparatorChar,[IO.Path]::AltDirectorySeparatorChar)
+    if ($next -eq $current) { throw "Package root reparse point loops: $current" }
+    $current = $next
+  }
+  throw "Package root reparse point chain is too deep: $Path"
 }
 
 function Copy-VWHudVerifiedFile {
