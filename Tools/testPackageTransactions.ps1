@@ -16,6 +16,20 @@ $candidateRoot = Join-Path $testRoot 'candidate'
 $backupRoot = Join-Path $testRoot 'backup'
 New-Item -ItemType Directory -Path $installRoot,$candidateRoot,$backupRoot -Force | Out-Null
 
+function New-TestDirectoryLink([string]$Path,[string]$Target) {
+  # Junction creation on Linux returns success and leaves no link. Use a directory symlink there.
+  $itemType = 'Junction'
+  if (![System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Windows)) {
+    $itemType = 'SymbolicLink'
+  }
+  New-Item -ItemType $itemType -Path $Path -Target $Target | Out-Null
+  $created = Get-Item -LiteralPath $Path -Force
+  $linkType = [string]$created.LinkType
+  if ($linkType -ne 'Junction' -and $linkType -ne 'SymbolicLink' -and !$created.Attributes.HasFlag([IO.FileAttributes]::ReparsePoint)) {
+    throw "Directory link fixture was not created: $Path"
+  }
+}
+
 function Write-TestFile([string]$Root,[string]$Relative,[string]$Value) {
   $path = Resolve-VWHudPackageTarget -Root $Root -Target $Relative
   New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($path)) | Out-Null
@@ -60,14 +74,14 @@ try {
   $secret = Join-Path $outside 'secret.txt'
   [IO.File]::WriteAllText($secret,'secret',[Text.UTF8Encoding]::new($false))
   $nested = Join-Path $installRoot 'InterfaceLink'
-  New-Item -ItemType Junction -Path $nested -Target $outside | Out-Null
+  New-TestDirectoryLink $nested $outside
   $reparseRejected = $false
   try { Remove-VWHudLoosePayloads -Operation ([pscustomobject]@{Key='TEST';InstallPath=$installRoot;LooseTargets=@('InterfaceLink/secret.txt')}) }
   catch { $reparseRejected = $_.Exception.Message -match 'reparse point' }
   if (!$reparseRejected) { throw 'Nested junction fixture was not rejected.' }
   if ([IO.File]::ReadAllText($secret) -cne 'secret') { throw 'Nested junction fixture deleted the outside file.' }
   $stagingRoot = Join-Path $testRoot 'staging-root'
-  New-Item -ItemType Junction -Path $stagingRoot -Target $installRoot | Out-Null
+  New-TestDirectoryLink $stagingRoot $installRoot
   $throughRoot = Resolve-VWHudPackageTarget -Root $stagingRoot -Target 'notes/keep.txt'
   if ([IO.File]::ReadAllText($throughRoot) -cne 'unrelated') { throw 'Module-root junction did not resolve inside the module.' }
   Write-Host 'Package transaction helper cleanup, preservation, recovery, traversal, reparse-point, and retained-transaction checks passed.'

@@ -7,6 +7,15 @@ function Get-VWHudFileSha256 {
   return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash
 }
 
+function Test-VWHudReparsePoint {
+  param([Parameter(Mandatory)][string]$Path)
+  if (!(Test-Path -LiteralPath $Path)) { return $false }
+  $item = Get-Item -LiteralPath $Path -Force
+  $linkType = [string]$item.LinkType
+  if ($linkType -eq 'Junction' -or $linkType -eq 'SymbolicLink') { return $true }
+  return $item.Attributes.HasFlag([IO.FileAttributes]::ReparsePoint)
+}
+
 function Resolve-VWHudPackageTarget {
   param(
     [Parameter(Mandatory)][string]$Root,
@@ -30,11 +39,8 @@ function Resolve-VWHudPackageTarget {
       if (!$cursor.StartsWith($finalRoot+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)) {
         throw "Package target escapes its root: $Target"
       }
-      if (Test-Path -LiteralPath $cursor) {
-        $child = Get-Item -LiteralPath $cursor -Force
-        if ($child.Attributes.HasFlag([IO.FileAttributes]::ReparsePoint)) {
-          throw "Package target crosses a reparse point: $Target"
-        }
+      if (Test-VWHudReparsePoint $cursor) {
+        throw "Package target crosses a reparse point: $Target"
       }
     }
   }
@@ -46,7 +52,7 @@ function Resolve-VWHudFinalDirectory {
   $current = [IO.Path]::GetFullPath($Path).TrimEnd([IO.Path]::DirectorySeparatorChar,[IO.Path]::AltDirectorySeparatorChar)
   for ($hop = 0; $hop -lt 8; $hop++) {
     $item = Get-Item -LiteralPath $current -Force
-    if (!$item.Attributes.HasFlag([IO.FileAttributes]::ReparsePoint)) {
+    if (!(Test-VWHudReparsePoint $current)) {
       return $item.FullName.TrimEnd([IO.Path]::DirectorySeparatorChar,[IO.Path]::AltDirectorySeparatorChar)
     }
     $target = [string](@($item.Target) | Select-Object -First 1)
