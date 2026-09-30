@@ -39,6 +39,8 @@ Bool WeatherSpellsReady = False
 Keyword CachedSandstormKeyword
 Keyword CachedSnowKeyword
 Bool WeatherKeywordsReady = False
+Spell[] CachedIncomingWeatherSpells
+Bool IncomingWeatherSpellsReady = False
 Int[] CachedMagicEffectIds
 MagicEffect[] CachedMagicEffects
 SQ_ENV_AfflictionsScript CachedAfflictionQuest
@@ -138,6 +140,8 @@ Event Actor.OnPlayerLoadGame(Actor akSender)
   WeatherKeywordsReady = False
   CachedSandstormKeyword = None
   CachedSnowKeyword = None
+  IncomingWeatherSpellsReady = False
+  CachedIncomingWeatherSpells = None
   CachedMagicEffectIds = None
   CachedMagicEffects = None
   AfflictionQuestCached = False
@@ -441,6 +445,7 @@ Function PrepareEffectSnapshot()
   EndLockGuard
   If (queued)
     LogUserInformational(ModuleName, "PrepareEffectSnapshot", "EFFECT_DATAGRAM_QUEUED | Type=effects.state | Schema=1 | Buffs=" + buffCount + " | Debuffs=" + debuffCount + " | Length=" + framedLength)
+    CancelTimer(33)
     StartTimer(0.1, 33)
   EndIf
 EndFunction
@@ -524,6 +529,7 @@ EndFunction
 ; Named weather spells are the status-menu rows. Snow and sandstorm are also read from the current weather, because those spells are added after the hazard is already visible.
 String[] Function AppendActiveEnvironmentalStatuses(String[] entries, Actor player, Spell[] sources, String[] sourceEntries)
   entries = AppendNamedWeatherStatuses(entries, player, sources, sourceEntries)
+  entries = AppendIncomingWeather(entries, player, sources, sourceEntries)
   entries = AppendLiveWeatherConditions(entries, player)
   Spell toxicGas = Game.GetFormFromFile(0x245B6B, "Starfield.esm") as Spell
   If (toxicGas != None && player.HasSpell(toxicGas))
@@ -790,6 +796,7 @@ Function PublishNextEffectPacket()
       RequestEffectRefresh(False)
     EndIf
   ElseIf (retry)
+    CancelTimer(33)
     StartTimer(0.5, 33)
   EndIf
   ; The independent timer 34 remains armed on every failure, including terminal rejection.
@@ -984,7 +991,78 @@ String Function WeatherSignature(Actor player)
   If (HasMagicEffectId(player, 0x00302A70))
     signature += "D:ColdDamage;"
   EndIf
+  If (FirstIncomingWeatherSpell(player) != None)
+    signature += "D:Incoming Weather;"
+  EndIf
   Return signature
+EndFunction
+
+; These are the status-menu spells named Incoming Weather. They can be on before the named hazard spell sticks.
+Function EnsureIncomingWeatherSpells()
+  If (IncomingWeatherSpellsReady)
+    Return
+  EndIf
+  Spell[] spells = new Spell[4]
+  spells[0] = Game.GetFormFromFile(0x00281ED2, "Starfield.esm") as Spell
+  spells[1] = Game.GetFormFromFile(0x001639EE, "Starfield.esm") as Spell
+  spells[2] = Game.GetFormFromFile(0x00281ECF, "Starfield.esm") as Spell
+  spells[3] = Game.GetFormFromFile(0x00163FE0, "Starfield.esm") as Spell
+  CachedIncomingWeatherSpells = spells
+  Int index = 0
+  Bool complete = True
+  While (index < spells.Length)
+    If (spells[index] == None)
+      complete = False
+    EndIf
+    index += 1
+  EndWhile
+  IncomingWeatherSpellsReady = complete
+EndFunction
+
+Spell Function FirstIncomingWeatherSpell(Actor player)
+  EnsureIncomingWeatherSpells()
+  If (player == None || CachedIncomingWeatherSpells == None)
+    Return None
+  EndIf
+  Int index = 0
+  While (index < CachedIncomingWeatherSpells.Length)
+    Spell warning = CachedIncomingWeatherSpells[index]
+    If (warning != None && player.HasSpell(warning))
+      Return warning
+    EndIf
+    index += 1
+  EndWhile
+  Return None
+EndFunction
+
+Bool Function HasNamedWeatherSpellRow(String[] entries)
+  EnsureWeatherSpells()
+  If (entries == None || CachedWeatherSpells == None || CachedWeatherLabels == None)
+    Return False
+  EndIf
+  Int index = 0
+  While (index < CachedWeatherSpells.Length && index < CachedWeatherLabels.Length)
+    Spell weatherSpell = CachedWeatherSpells[index]
+    If (weatherSpell != None && ContainsEffectEntry(entries, "D:#" + weatherSpell.GetFormID() + ":" + CachedWeatherLabels[index]))
+      Return True
+    EndIf
+    index += 1
+  EndWhile
+  Return False
+EndFunction
+
+String[] Function AppendIncomingWeather(String[] entries, Actor player, Spell[] sources, String[] sourceEntries)
+  Spell warning = FirstIncomingWeatherSpell(player)
+  If (warning == None || HasNamedWeatherSpellRow(entries))
+    Return entries
+  EndIf
+  String entry = "D:#" + warning.GetFormID() + ":Incoming Weather"
+  If (!ContainsEffectEntry(entries, entry))
+    entries.Add(entry)
+    sources.Add(warning)
+    sourceEntries.Add(entry)
+  EndIf
+  Return entries
 EndFunction
 
 String[] Function AppendNamedWeatherStatuses(String[] entries, Actor player, Spell[] sources, String[] sourceEntries)

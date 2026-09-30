@@ -203,6 +203,8 @@ package
                if(fraction < 0) fraction += 1;
                return "m" + String(int(Math.floor(fraction * 1440 + 0.5)) % 1440);
             }
+            // Percent text, health, and the 8- and 16-segment meters rebuild the whole document when this signature changes.
+            number = VWHudViewModel.quantizeDisplay(key,number);
             return "n" + String(Math.round(number * 100));
          }
          if(kind == "boolean") return value === true ? "b1" : "b0";

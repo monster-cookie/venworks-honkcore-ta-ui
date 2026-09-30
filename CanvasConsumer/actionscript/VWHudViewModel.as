@@ -979,6 +979,27 @@ package
          return value != null && isFinite(number) ? number : NaN;
       }
 
+      public static function quantizeDisplay(key:String, value:Number) : Number
+      {
+         if(key.indexOf("exposurelevel") >= 0) return Math.round(value * 8) / 8;
+         if(key == "environment.protectionlevel" || key == "boost.charge") return Math.round(value * 16) / 16;
+         if(key == "environment.gravity" || key == "environment.soakcandidate") return Math.round(value * 100) / 100;
+         if(key.indexOf("percentage") >= 0 || key == "environment.temperature" ||
+            key == "player.health" || key == "player.maxhealth" ||
+            key == "player.oxygen" || key == "player.maxoxygen" || key == "player.carbondioxide" ||
+            key == "player.level" || key == "player.digipicks" || key == "credits" ||
+            key == "carry.current" || key == "carry.maximum" ||
+            key == "power.current" || key == "power.maximum" ||
+            key == "weapon.clipammo" || key == "weapon.totalammo" || key == "weapon.reserveammo" ||
+            key == "weapon.explosivecount" || key == "environment.hazard.effectcount" ||
+            key == "environment.hazard.airwaterlevel" || key == "environment.hazard.thermallevel" ||
+            key == "environment.hazard.corrosivelevel" || key == "environment.hazard.radiationlevel")
+         {
+            return Math.round(value);
+         }
+         return value;
+      }
+
       private function setFinite(param1:String, param2:Object) : void
       {
          var source:String = null;
@@ -986,6 +1007,7 @@ package
          if(!isNaN(value) && isFinite(value))
          {
             source = normalizeSource(param1);
+            value = quantizeDisplay(source,value);
             if(!this.valueMatches(source,value))
             {
                values[source] = { known:true, value:value };
@@ -1161,7 +1183,7 @@ package
          var index:int = 0;
          var previousActivity:Number = this.oxygenActivity;
          var drainDetected:Boolean = this.oxygenDrainDetected;
-         var changed:Boolean = drainDetected || this.oxygenActivity > 0;
+         var changed:Boolean = false;
          this.oxygenDrainDetected = false;
          if(drainDetected)
          {
@@ -1206,8 +1228,10 @@ package
                   }
                   this.exposureCurrent[index] = current;
                }
-               this.setFinite(String(EXPOSURE_SOURCES[index]),Number(this.exposureCurrent[index]));
-               changed = true;
+               var exposureSource:String = normalizeSource(String(EXPOSURE_SOURCES[index]));
+               var exposureStep:Number = quantizeDisplay(exposureSource,Number(this.exposureCurrent[index]));
+               if(!this.valueMatches(exposureSource,exposureStep)) changed = true;
+               this.setFinite(exposureSource,exposureStep);
             }
             ++index;
          }

@@ -471,6 +471,7 @@ package
          var activeCount:int = 0;
          var maximum:Number = 0;
          var index:int = 0;
+         var level:Number = 0;
          if(environmentCritical)
          {
             return 1;
@@ -480,7 +481,8 @@ package
             if(Boolean(exposureActive[index]))
             {
                ++activeCount;
-               maximum = Math.max(maximum,Number(exposureLevels[index]));
+               level = Number(exposureLevels[index]);
+               if(this.isFiniteNumber(level)) maximum = Math.max(maximum,Math.round(level * 8) / 8);
             }
             ++index;
          }
