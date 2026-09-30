@@ -43,7 +43,7 @@ package
          "Fed":"fed","Hydrated":"hydrated","Well Rested":"rested","Malnourished":"malnourished","Dehydrated":"dehydrated",
          "Bleeding":"bleed","Poisoning":"poison","Radiation Poisoning":"radiation","Corrosive Environment":"corrosive","Corrosive Rain":"corrosive",
          "Corrosive Particulates":"corrosive","Corrosive Vapor":"corrosive","Freezing Cold and Snow":"cold","Freezing Rain":"cold","Freezing Vapor":"cold",
-         "Intense Heat":"thermal","Scalding Rain":"thermal","Scalding Vapor":"thermal","Poor Air Quality":"gas",
+         "Intense Heat":"thermal","Scalding Rain":"thermal","Scalding Vapor":"thermal","Poor Air Quality":"gas","Sandstorm":"sandstorm","Cold":"cold",
          "Burns":"thermal","Heatstroke":"thermal","Frostbite":"cold","Hypothermia":"cold",
          "Lacerations":"injury","Puncture Wounds":"injury","Contusions":"injury","Torn Muscle":"injury","Sprain":"injury","Dislocated Limb":"injury","Fractured Limb":"injury","Fractured Skull":"injury","Concussion":"injury","Brain Injury":"injury","Hernia":"injury",
          "Bone Infection":"infection","Brain Infection":"infection","Intestinal Infection":"infection","Lung Infection":"infection","Tissue Infection":"infection",

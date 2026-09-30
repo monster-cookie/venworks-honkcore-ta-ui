@@ -36,6 +36,9 @@ String LastGenericEffectSignature = ""
 Spell[] CachedWeatherSpells
 String[] CachedWeatherLabels
 Bool WeatherSpellsReady = False
+Keyword CachedSandstormKeyword
+Keyword CachedSnowKeyword
+Bool WeatherKeywordsReady = False
 Int[] CachedMagicEffectIds
 MagicEffect[] CachedMagicEffects
 SQ_ENV_AfflictionsScript CachedAfflictionQuest
@@ -132,6 +135,9 @@ Event Actor.OnPlayerLoadGame(Actor akSender)
   WeatherSpellsReady = False
   CachedWeatherSpells = None
   CachedWeatherLabels = None
+  WeatherKeywordsReady = False
+  CachedSandstormKeyword = None
+  CachedSnowKeyword = None
   CachedMagicEffectIds = None
   CachedMagicEffects = None
   AfflictionQuestCached = False
@@ -313,6 +319,7 @@ Function CheckActiveEffectSources()
     EndIf
     index += 1
   EndWhile
+  stillActive = AppendLiveWeatherConditions(stillActive, player)
   String[] remaining = new String[0]
   String[] removedEntries = new String[0]
   index = 0
@@ -514,9 +521,10 @@ Bool Function HasAfflictionSpell(Actor player, ENV_AfflictionScript affliction)
   Return False
 EndFunction
 
-; Named weather spells are the status-menu rows. The corrosive soak pair stays on after the meter clears.
+; Named weather spells are the status-menu rows. Snow and sandstorm are also read from the current weather, because those spells are added after the hazard is already visible.
 String[] Function AppendActiveEnvironmentalStatuses(String[] entries, Actor player, Spell[] sources, String[] sourceEntries)
   entries = AppendNamedWeatherStatuses(entries, player, sources, sourceEntries)
+  entries = AppendLiveWeatherConditions(entries, player)
   Spell toxicGas = Game.GetFormFromFile(0x245B6B, "Starfield.esm") as Spell
   If (toxicGas != None && player.HasSpell(toxicGas))
     String entry = "D:#" + toxicGas.GetFormID() + ":Toxic Gas Hazard"
@@ -966,6 +974,16 @@ String Function WeatherSignature(Actor player)
     EndIf
     index += 1
   EndWhile
+  EnsureWeatherKeywords()
+  If (CurrentWeatherHas(CachedSandstormKeyword))
+    signature += "D:Sandstorm;"
+  EndIf
+  If (CurrentWeatherHas(CachedSnowKeyword))
+    signature += "D:Snow;"
+  EndIf
+  If (HasMagicEffectId(player, 0x00302A70))
+    signature += "D:ColdDamage;"
+  EndIf
   Return signature
 EndFunction
 
@@ -985,6 +1003,73 @@ String[] Function AppendNamedWeatherStatuses(String[] entries, Actor player, Spe
     index += 1
   EndWhile
   Return entries
+EndFunction
+
+; WeatherName_Sandstorm is 0x00281DF6 and WeatherName_Snow is 0x00281DF7. A miss is not cached.
+Function EnsureWeatherKeywords()
+  If (WeatherKeywordsReady)
+    Return
+  EndIf
+  CachedSandstormKeyword = Game.GetFormFromFile(0x00281DF6, "Starfield.esm") as Keyword
+  CachedSnowKeyword = Game.GetFormFromFile(0x00281DF7, "Starfield.esm") as Keyword
+  WeatherKeywordsReady = CachedSandstormKeyword != None && CachedSnowKeyword != None
+EndFunction
+
+Bool Function CurrentWeatherHas(Keyword nameKeyword)
+  If (nameKeyword == None)
+    Return False
+  EndIf
+  Weather current = Weather.GetCurrentWeather()
+  If (current == None)
+    Return False
+  EndIf
+  Return current.HasKeyword(nameKeyword)
+EndFunction
+
+; One cold icon is enough once a freezing spell row is already present. Sandstorm stays beside Intense Heat.
+String[] Function AppendLiveWeatherConditions(String[] entries, Actor player)
+  EnsureWeatherKeywords()
+  Weather current = Weather.GetCurrentWeather()
+  If (CurrentWeatherHas(CachedSandstormKeyword) && current != None)
+    String sandstorm = "D:#" + current.GetFormID() + ":Sandstorm"
+    If (!ContainsEffectEntry(entries, sandstorm))
+      entries.Add(sandstorm)
+    EndIf
+  EndIf
+  If (!HasNamedColdRow(entries) && (CurrentWeatherHas(CachedSnowKeyword) || HasMagicEffectId(player, 0x00302A70)))
+    String coldEntry = ""
+    If (CurrentWeatherHas(CachedSnowKeyword) && current != None)
+      coldEntry = "D:#" + current.GetFormID() + ":Cold"
+    Else
+      MagicEffect coldDamage = ResolveMagicEffect(0x00302A70)
+      If (coldDamage != None)
+        coldEntry = "D:#" + coldDamage.GetFormID() + ":Cold"
+      EndIf
+    EndIf
+    If (coldEntry != "" && !ContainsEffectEntry(entries, coldEntry))
+      entries.Add(coldEntry)
+    EndIf
+  EndIf
+  Return entries
+EndFunction
+
+Bool Function HasNamedColdRow(String[] entries)
+  If (entries == None)
+    Return False
+  EndIf
+  EnsureWeatherSpells()
+  Int index = 0
+  While (CachedWeatherSpells != None && CachedWeatherLabels != None && index < CachedWeatherSpells.Length && index < CachedWeatherLabels.Length)
+    String label = CachedWeatherLabels[index]
+    Spell coldSpell = CachedWeatherSpells[index]
+    If (coldSpell != None && (label == "Freezing Rain" || label == "Freezing Cold and Snow" || label == "Freezing Vapor"))
+      If (ContainsEffectEntry(entries, "D:#" + coldSpell.GetFormID() + ":" + label))
+        Return True
+      EndIf
+    EndIf
+    index += 1
+  EndWhile
+  Return False
 EndFunction
 
 ; Catalog membership is not required. Keys match the rows already published for this set.

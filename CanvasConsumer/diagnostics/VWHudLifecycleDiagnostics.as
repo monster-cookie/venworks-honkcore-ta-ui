@@ -63,6 +63,9 @@ package
          var weather:Object = {buffrows:[],debuffrows:[{label:"FREEZING COLD AND SNOW"},{label:"Dehydrated"},{label:"Malnourished"}]};
          VWHudPresentation.update(weather,null,0,false);
          require(weather.effectrows[0].icon == "assets/effect-cold.svg" && weather.effectrows[1].icon == "assets/effect-dehydrated.svg" && weather.effectrows[2].icon == "assets/effect-malnourished.svg","weather and sustenance rows use their class icons");
+         var storm:Object = {buffrows:[],debuffrows:[{label:"Sandstorm"},{label:"Cold"}]};
+         VWHudPresentation.update(storm,null,0,false);
+         require(storm.effectrows[0].icon == "assets/effect-sandstorm.svg" && storm.effectrows[1].icon == "assets/effect-cold.svg","sandstorm and cold use their weather icons");
          return "PASS: VWHUD consumer lifecycle and effects adapter assertions";
       }
 
