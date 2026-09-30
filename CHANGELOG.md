@@ -9,6 +9,7 @@
 
 ## Version 2.1.0 (Unreleased)
 
+- Stop rebuilding an unchanged status list on the live-weather poll, so the same icons no longer hitch the game every few seconds.
 - Rebuilt all five VWHUD themes to run as Venworks Canvas consumers instead of replacing the vanilla HUD directly.
 - Migrated theme presentation to HTML, CSS, and standard SVG, making layouts and artwork easier for web developers and mod authors to understand.
 - Replaced the old status bar with a compact themed effects display featuring buff and debuff counts, eight effects per page, and automatic page rotation.

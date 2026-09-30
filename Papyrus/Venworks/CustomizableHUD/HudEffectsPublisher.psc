@@ -41,6 +41,13 @@ Keyword CachedSnowKeyword
 Bool WeatherKeywordsReady = False
 Spell[] CachedIncomingWeatherSpells
 Bool IncomingWeatherSpellsReady = False
+; Live weather is sampled at most once every five seconds. The one-second poll reads these flags only.
+Float LastWeatherSampleAt = 0.0
+Bool WeatherSampleReady = False
+Bool CachedSandstormActive = False
+Bool CachedSnowActive = False
+Bool CachedColdDamageActive = False
+Int[] WeatherOffStreaks
 Int[] CachedMagicEffectIds
 MagicEffect[] CachedMagicEffects
 SQ_ENV_AfflictionsScript CachedAfflictionQuest
@@ -142,6 +149,12 @@ Event Actor.OnPlayerLoadGame(Actor akSender)
   CachedSnowKeyword = None
   IncomingWeatherSpellsReady = False
   CachedIncomingWeatherSpells = None
+  WeatherSampleReady = False
+  LastWeatherSampleAt = 0.0
+  CachedSandstormActive = False
+  CachedSnowActive = False
+  CachedColdDamageActive = False
+  WeatherOffStreaks = None
   CachedMagicEffectIds = None
   CachedMagicEffects = None
   AfflictionQuestCached = False
@@ -199,8 +212,16 @@ Event OnTimer(Int aiTimerID)
       EffectHeartbeatPending = False
       EffectRetryCount = 0
     EndLockGuard
-    ; Unchanged rows keep the 60-second signature skip. A real difference still publishes.
-    RequestEffectRefresh(False)
+    ; Re-arm only while the last payload is inside the 60-second window. Building it again was a full catalog scan with nothing to publish.
+    Float heartbeatNow = Utility.GetCurrentRealTime()
+    If (LastEffectSnapshotAt <= 0.0 || heartbeatNow < LastEffectSnapshotAt || heartbeatNow - LastEffectSnapshotAt >= 60.0)
+      RequestEffectRefresh(False)
+    Else
+      LockGuard EffectSnapshotGuard
+        EffectHeartbeatPending = True
+      EndLockGuard
+      StartTimer(15.0, 34)
+    EndIf
   ElseIf (aiTimerID == 35)
     EffectRecoveryRefresh = True
     RequestEffectRefresh(True)
@@ -259,7 +280,7 @@ Function RequestEffectRefresh(Bool forceSnapshot)
     EndIf
   EndLockGuard
   If (heartbeat)
-    ; Timer 34 calls this without forcing, so an unchanged list waits out the 60-second skip.
+    ; Timer 34 re-arms this. It only scans after the 60-second window, so an unchanged list is not rebuilt every 15 seconds.
     StartTimer(15.0, 34)
   EndIf
   If (schedule)
@@ -323,7 +344,8 @@ Function CheckActiveEffectSources()
     EndIf
     index += 1
   EndWhile
-  stillActive = AppendLiveWeatherConditions(stillActive, player)
+  ; Cached flags only. Sampling weather here was a GetCurrentWeather call every second, and a flickering form id looked like a removal.
+  stillActive = AppendCachedLiveWeatherRows(stillActive)
   String[] remaining = new String[0]
   String[] removedEntries = new String[0]
   index = 0
@@ -424,7 +446,8 @@ Function PrepareEffectSnapshot()
   EndIf
   candidate.Signature = signature
   candidate.Payload = payload
-  candidate.RecoveryReplay = !recoveryRefresh && (forcedRefresh || entriesChanged)
+  ; An unchanged forced scan must not schedule another one. Recovery is only for a payload the UI has not seen.
+  candidate.RecoveryReplay = !recoveryRefresh && entriesChanged
   Bool queued = False
   LockGuard EffectSnapshotGuard
     If (EffectSnapshotBuilding && EffectSourceRevision == candidate.Revision)
@@ -526,7 +549,7 @@ Bool Function HasAfflictionSpell(Actor player, ENV_AfflictionScript affliction)
   Return False
 EndFunction
 
-; Named weather spells are the status-menu rows. Snow and sandstorm are also read from the current weather, because those spells are added after the hazard is already visible.
+; Named weather spells are the status-menu rows and stay on the one-second poll. Snow and sandstorm use the five-second weather sample, because those spells are added after the hazard is already visible.
 String[] Function AppendActiveEnvironmentalStatuses(String[] entries, Actor player, Spell[] sources, String[] sourceEntries)
   entries = AppendNamedWeatherStatuses(entries, player, sources, sourceEntries)
   entries = AppendIncomingWeather(entries, player, sources, sourceEntries)
@@ -712,19 +735,19 @@ Bool Function IsSuppressedSustenanceEntry(String[] entries, String candidate)
 EndFunction
 
 Bool Function IsSustenanceFoodEffect(MagicEffect effect)
-  Return effect == Game.GetFormFromFile(0x31326D, "Starfield.esm") || effect == Game.GetFormFromFile(0x31326E, "Starfield.esm") || effect == Game.GetFormFromFile(0x31326F, "Starfield.esm")
+  Return effect == ResolveMagicEffect(0x31326D) || effect == ResolveMagicEffect(0x31326E) || effect == ResolveMagicEffect(0x31326F)
 EndFunction
 
 Bool Function IsSustenanceDrinkEffect(MagicEffect effect)
-  Return effect == Game.GetFormFromFile(0x31327B, "Starfield.esm") || effect == Game.GetFormFromFile(0x31329B, "Starfield.esm") || effect == Game.GetFormFromFile(0x2EDFDA, "Starfield.esm")
+  Return effect == ResolveMagicEffect(0x31327B) || effect == ResolveMagicEffect(0x31329B) || effect == ResolveMagicEffect(0x2EDFDA)
 EndFunction
 
 Bool Function IsSustenanceHydratedEffect(MagicEffect effect)
-  Return effect == Game.GetFormFromFile(0x313260, "Starfield.esm") || effect == Game.GetFormFromFile(0x2EDFDC, "Starfield.esm") || effect == Game.GetFormFromFile(0x2EFD74, "Starfield.esm")
+  Return effect == ResolveMagicEffect(0x313260) || effect == ResolveMagicEffect(0x2EDFDC) || effect == ResolveMagicEffect(0x2EFD74)
 EndFunction
 
 Bool Function IsSustenanceFedEffect(MagicEffect effect)
-  Return effect == Game.GetFormFromFile(0x2EDFE1, "Starfield.esm") || effect == Game.GetFormFromFile(0x2EDFD5, "Starfield.esm") || effect == Game.GetFormFromFile(0x313251, "Starfield.esm")
+  Return effect == ResolveMagicEffect(0x2EDFE1) || effect == ResolveMagicEffect(0x2EDFD5) || effect == ResolveMagicEffect(0x313251)
 EndFunction
 
 ; Publishes one complete state datagram. EVENT_SUBMITTED acknowledges native submission only.
@@ -970,28 +993,33 @@ Function EnsureWeatherSpells()
   WeatherSpellsReady = complete
 EndFunction
 
+; Named spell rows stay on the one-second poll. Live weather flags are a five-second sample, and they are omitted when the snapshot would suppress that row.
 String Function WeatherSignature(Actor player)
   EnsureWeatherSpells()
+  EnsureWeatherSample(player)
   String signature = ""
+  Bool namedWeather = False
+  Bool namedCold = False
   Int index = 0
   While (CachedWeatherSpells != None && index < CachedWeatherSpells.Length)
     Spell weatherSpell = CachedWeatherSpells[index]
     If (weatherSpell != None && player.HasSpell(weatherSpell))
-      signature += "D:" + CachedWeatherLabels[index] + ";"
+      String label = CachedWeatherLabels[index]
+      signature += "D:" + label + ";"
+      namedWeather = True
+      If (label == "Freezing Rain" || label == "Freezing Cold and Snow" || label == "Freezing Vapor")
+        namedCold = True
+      EndIf
     EndIf
     index += 1
   EndWhile
-  EnsureWeatherKeywords()
-  If (CurrentWeatherHas(CachedSandstormKeyword))
+  If (CachedSandstormActive)
     signature += "D:Sandstorm;"
   EndIf
-  If (CurrentWeatherHas(CachedSnowKeyword))
-    signature += "D:Snow;"
+  If (!namedCold && (CachedSnowActive || CachedColdDamageActive))
+    signature += "D:Cold;"
   EndIf
-  If (HasMagicEffectId(player, 0x00302A70))
-    signature += "D:ColdDamage;"
-  EndIf
-  If (FirstIncomingWeatherSpell(player) != None)
+  If (!namedWeather && FirstIncomingWeatherSpell(player) != None)
     signature += "D:Incoming Weather;"
   EndIf
   Return signature
@@ -1093,40 +1121,58 @@ Function EnsureWeatherKeywords()
   WeatherKeywordsReady = CachedSandstormKeyword != None && CachedSnowKeyword != None
 EndFunction
 
-Bool Function CurrentWeatherHas(Keyword nameKeyword)
-  If (nameKeyword == None)
+; GetCurrentWeather and HasKeyword hitch if they run on the one-second poll. A miss does not clear a row until the next sample agrees.
+Function EnsureWeatherSample(Actor player)
+  Float now = Utility.GetCurrentRealTime()
+  If (WeatherSampleReady && now >= LastWeatherSampleAt && now - LastWeatherSampleAt < 5.0)
+    Return
+  EndIf
+  EnsureWeatherKeywords()
+  Weather current = None
+  If (CachedSandstormKeyword != None || CachedSnowKeyword != None)
+    current = Weather.GetCurrentWeather()
+  EndIf
+  Bool sandstorm = current != None && CachedSandstormKeyword != None && current.HasKeyword(CachedSandstormKeyword)
+  Bool snow = current != None && CachedSnowKeyword != None && current.HasKeyword(CachedSnowKeyword)
+  CachedSandstormActive = CommitWeatherActive(CachedSandstormActive, sandstorm, 0)
+  CachedSnowActive = CommitWeatherActive(CachedSnowActive, snow, 1)
+  CachedColdDamageActive = CommitWeatherActive(CachedColdDamageActive, HasMagicEffectId(player, 0x00302A70), 2)
+  LastWeatherSampleAt = now
+  WeatherSampleReady = True
+EndFunction
+
+Bool Function CommitWeatherActive(Bool active, Bool sampled, Int slot)
+  If (WeatherOffStreaks == None || WeatherOffStreaks.Length < 3)
+    WeatherOffStreaks = new Int[3]
+  EndIf
+  If (sampled)
+    WeatherOffStreaks[slot] = 0
+    Return True
+  EndIf
+  Int streak = WeatherOffStreaks[slot] + 1
+  WeatherOffStreaks[slot] = streak
+  If (streak >= 2)
     Return False
   EndIf
-  Weather current = Weather.GetCurrentWeather()
-  If (current == None)
-    Return False
-  EndIf
-  Return current.HasKeyword(nameKeyword)
+  Return active
 EndFunction
 
 ; One cold icon is enough once a freezing spell row is already present. Sandstorm stays beside Intense Heat.
+; Keys stay stable so a different current-weather form cannot look like a new status or a removal.
 String[] Function AppendLiveWeatherConditions(String[] entries, Actor player)
-  EnsureWeatherKeywords()
-  Weather current = Weather.GetCurrentWeather()
-  If (CurrentWeatherHas(CachedSandstormKeyword) && current != None)
-    String sandstorm = "D:#" + current.GetFormID() + ":Sandstorm"
-    If (!ContainsEffectEntry(entries, sandstorm))
-      entries.Add(sandstorm)
-    EndIf
+  EnsureWeatherSample(player)
+  Return AppendCachedLiveWeatherRows(entries)
+EndFunction
+
+String[] Function AppendCachedLiveWeatherRows(String[] entries)
+  If (entries == None)
+    Return entries
   EndIf
-  If (!HasNamedColdRow(entries) && (CurrentWeatherHas(CachedSnowKeyword) || HasMagicEffectId(player, 0x00302A70)))
-    String coldEntry = ""
-    If (CurrentWeatherHas(CachedSnowKeyword) && current != None)
-      coldEntry = "D:#" + current.GetFormID() + ":Cold"
-    Else
-      MagicEffect coldDamage = ResolveMagicEffect(0x00302A70)
-      If (coldDamage != None)
-        coldEntry = "D:#" + coldDamage.GetFormID() + ":Cold"
-      EndIf
-    EndIf
-    If (coldEntry != "" && !ContainsEffectEntry(entries, coldEntry))
-      entries.Add(coldEntry)
-    EndIf
+  If (CachedSandstormActive && !ContainsEffectEntry(entries, "D:Sandstorm"))
+    entries.Add("D:Sandstorm")
+  EndIf
+  If (!HasNamedColdRow(entries) && (CachedSnowActive || CachedColdDamageActive) && !ContainsEffectEntry(entries, "D:Cold"))
+    entries.Add("D:Cold")
   EndIf
   Return entries
 EndFunction
@@ -1154,7 +1200,7 @@ EndFunction
 String[] Function AppendDirectGenericBuffs(String[] entries, Actor player, MagicEffect[] sources, String[] sourceEntries)
   entries = AppendGroupedMagicEffects(entries, player, sources, sourceEntries, "B:Fed", 0x2EDFE1, 0x2EDFD5, 0x313251)
   entries = AppendGroupedMagicEffects(entries, player, sources, sourceEntries, "B:Hydrated", 0x313260, 0x2EDFDC, 0x2EFD74)
-  MagicEffect rested = Game.GetFormFromFile(0x05C527, "Starfield.esm") as MagicEffect
+  MagicEffect rested = ResolveMagicEffect(0x05C527)
   If (rested != None && player.HasMagicEffect(rested))
     String entry = "B:#" + rested.GetFormID() + ":Well Rested"
     If (!ContainsEffectEntry(entries, entry) && !IsSuppressedSustenanceEntry(entries, entry))
@@ -1191,7 +1237,7 @@ Bool Function RememberMagicEffect(Actor player, MagicEffect[] sources, String[] 
   If (player == None || formId == 0)
     Return False
   EndIf
-  MagicEffect effect = Game.GetFormFromFile(formId, "Starfield.esm") as MagicEffect
+  MagicEffect effect = ResolveMagicEffect(formId)
   If (effect == None || !player.HasMagicEffect(effect))
     Return False
   EndIf
