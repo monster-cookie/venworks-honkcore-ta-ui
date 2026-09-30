@@ -4,7 +4,9 @@ body { position: relative; width: 1920px; height: 1080px; color: #F4FBFF; font-f
 .effects-message { position: absolute; left: 0px; top: 20px; width: 720px; height: 20px; }
 .effects-list { position: absolute; left: 0px; top: 20px; width: 720px; height: 36px; }
 .effect-row { position: absolute; width: 176px; height: 18px; }
-.effect-label { position: absolute; width: 176px; height: 18px; font-size: 9px; overflow: hidden; }
+.effect-icon { position: absolute; left: 0px; top: 1px; width: 16px; height: 16px; }
+.effect-glyph { position: absolute; left: 0px; top: 0px; width: 16px; height: 16px; }
+.effect-label { position: absolute; left: 18px; top: 0px; width: 158px; height: 18px; font-size: 9px; overflow: hidden; }
 .compass-tick { position: absolute; width: 1px; height: 10px; }
 .tick-major { position: absolute; width: 1px; height: 10px; }
 .tick-medium { position: absolute; width: 1px; height: 7px; }

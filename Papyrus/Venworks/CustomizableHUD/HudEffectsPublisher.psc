@@ -31,6 +31,8 @@ Int LastActiveEffectCount = 0
 Float LastEffectSnapshotAt = 0.0
 Float LastHudOpenAt = 0.0
 String LastEffectSignature = ""
+; Presence bits for the small generic set. This is not a second effects.state payload.
+String LastGenericEffectSignature = ""
 String PendingEffectSignature = ""
 String[] EffectPackets
 String PendingEffectPayload = ""
@@ -117,6 +119,7 @@ Event Actor.OnPlayerLoadGame(Actor akSender)
     EffectChangedDuringPublication = False
     EffectRefreshPending = False
     EffectHeartbeatPending = False
+    LastGenericEffectSignature = ""
     EffectRetryCount = 0
   EndLockGuard
   MagicEffectEventRegistered = False
@@ -162,6 +165,7 @@ Event OnTimer(Int aiTimerID)
       PrepareEffectSnapshot()
     EndIf
   ElseIf (aiTimerID == 32)
+    CheckGenericEffectSignature()
     CheckActiveEffectSources()
     ScheduleActiveEffectCheck()
   ElseIf (aiTimerID == 33)
@@ -230,19 +234,18 @@ Function RequestEffectRefresh(Bool forceSnapshot)
     EndIf
   EndLockGuard
   If (heartbeat)
-    StartTimer(60.0, 34)
+    ; Forced by OnTimer 34, so the 60-second unchanged-signature skip does not apply.
+    StartTimer(15.0, 34)
   EndIf
   If (schedule)
     StartTimer(0.5, 31)
   EndIf
 EndFunction
 
-; No removal deadline is available from the quest's base-effect event. Check only known-active sources.
+; Keep the one-second poll armed while this quest is running, including when no row is published.
 Function ScheduleActiveEffectCheck()
   CancelTimer(32)
-  If (ObservedEffectEntries != None && ObservedEffectEntries.Length > 0)
-    StartTimer(1.0, 32)
-  EndIf
+  StartTimer(1.0, 32)
 EndFunction
 
 ; An expiry or cure has no quest-level finish event. Never send a removal from a guessed timer alone.
@@ -368,8 +371,10 @@ Function PrepareEffectSnapshot()
   String[] scanSpellEntries = new String[0]
   String[] entries = new String[0]
   entries = AppendActiveEffects(entries, player, BuffEffects, BuffLabels, "B", scanEffects, scanEffectEntries)
+  entries = AppendDirectGenericBuffs(entries, player, scanEffects, scanEffectEntries)
   Int buffCount = entries.Length
   entries = AppendActiveEffects(entries, player, DebuffEffects, DebuffLabels, "D", scanEffects, scanEffectEntries)
+  entries = AppendDirectGenericDebuffs(entries, player, scanEffects, scanEffectEntries)
   entries = AppendActiveAfflictions(entries, player, scanAfflictions, scanAfflictionEntries)
   entries = AppendActiveEnvironmentalStatuses(entries, player, scanSpells, scanSpellEntries)
   Int debuffCount = entries.Length - buffCount
@@ -783,6 +788,162 @@ Function PublishNextEffectPacket()
     StartTimer(0.5, 33)
   EndIf
   ; The independent timer 34 remains armed on every failure, including terminal rejection.
+EndFunction
+
+; One true check per generic icon. A change wakes one forced snapshot; it does not publish a payload.
+Function CheckGenericEffectSignature()
+  Actor player = Game.GetPlayer()
+  If (player == None)
+    Return
+  EndIf
+  String signature = BuildGenericEffectSignature(player)
+  If (signature == LastGenericEffectSignature)
+    Return
+  EndIf
+  LastGenericEffectSignature = signature
+  RequestEffectRefresh(True)
+EndFunction
+
+String Function BuildGenericEffectSignature(Actor player)
+  Bool bleeding = HasAnyMagicEffect(player, 0x23E9BF, 0x2E8148, 0)
+  Bool poisoning = False
+  Bool radiation = False
+  Bool thermal = False
+  Bool cold = False
+  SQ_ENV_AfflictionsScript afflictionQuest = Game.GetFormFromFile(0x00248D20, "Starfield.esm") as SQ_ENV_AfflictionsScript
+  If (afflictionQuest != None && afflictionQuest.AfflictionData != None)
+    ENV_AfflictionScript[] afflictions = afflictionQuest.AfflictionData
+    Int index = 0
+    While (index < afflictions.Length)
+      ENV_AfflictionScript affliction = afflictions[index]
+      If (affliction != None)
+        String afflictionId = affliction.ID
+        If (afflictionId == "Poisoning")
+          poisoning = HasAfflictionSpell(player, affliction)
+        ElseIf (afflictionId == "RadiationPoisoning")
+          radiation = HasAfflictionSpell(player, affliction)
+        ElseIf (afflictionId == "Burns" || afflictionId == "Heatstroke")
+          If (HasAfflictionSpell(player, affliction))
+            thermal = True
+          EndIf
+        ElseIf (afflictionId == "Frostbite" || afflictionId == "Hypothermia")
+          If (HasAfflictionSpell(player, affliction))
+            cold = True
+          EndIf
+        EndIf
+      EndIf
+      index += 1
+    EndWhile
+  EndIf
+  Spell corrosiveEnvironment = Game.GetFormFromFile(0x08CB51, "Starfield.esm") as Spell
+  MagicEffect corrosiveSoak = Game.GetFormFromFile(0x08CB47, "Starfield.esm") as MagicEffect
+  Spell corrosiveRain = Game.GetFormFromFile(0x281ECB, "Starfield.esm") as Spell
+  Bool corrosive = corrosiveEnvironment != None && corrosiveSoak != None && player.HasSpell(corrosiveEnvironment) && player.HasMagicEffect(corrosiveSoak)
+  If (corrosiveRain != None && player.HasSpell(corrosiveRain))
+    corrosive = True
+  EndIf
+  Bool malnourished = HasAnyMagicEffect(player, 0x31326D, 0x31326E, 0x31326F)
+  Bool dehydrated = HasAnyMagicEffect(player, 0x31327B, 0x31329B, 0x2EDFDA)
+  Bool fed = HasAnyMagicEffect(player, 0x2EDFE1, 0x2EDFD5, 0x313251)
+  Bool hydrated = HasAnyMagicEffect(player, 0x313260, 0x2EDFDC, 0x2EFD74)
+  Bool rested = HasAnyMagicEffect(player, 0x05C527, 0, 0)
+  String signature = ""
+  If (bleeding)
+    signature += "D:Bleeding;"
+  EndIf
+  If (poisoning)
+    signature += "D:Poisoning;"
+  EndIf
+  If (radiation)
+    signature += "D:Radiation;"
+  EndIf
+  If (corrosive)
+    signature += "D:Corrosive;"
+  EndIf
+  If (thermal)
+    signature += "D:Thermal;"
+  EndIf
+  If (cold)
+    signature += "D:Cold;"
+  EndIf
+  If (malnourished)
+    signature += "D:Malnourished;"
+  EndIf
+  If (dehydrated)
+    signature += "D:Dehydrated;"
+  EndIf
+  If (fed)
+    signature += "B:Fed;"
+  EndIf
+  If (hydrated)
+    signature += "B:Hydrated;"
+  EndIf
+  If (rested)
+    signature += "B:Well Rested;"
+  EndIf
+  Return signature
+EndFunction
+
+Bool Function HasAnyMagicEffect(Actor player, Int formIdA, Int formIdB, Int formIdC)
+  Return HasMagicEffectId(player, formIdA) || HasMagicEffectId(player, formIdB) || HasMagicEffectId(player, formIdC)
+EndFunction
+
+Bool Function HasMagicEffectId(Actor player, Int formId)
+  If (player == None || formId == 0)
+    Return False
+  EndIf
+  MagicEffect effect = Game.GetFormFromFile(formId, "Starfield.esm") as MagicEffect
+  Return effect != None && player.HasMagicEffect(effect)
+EndFunction
+
+; Catalog membership is not required. Keys match the rows already published for this set.
+String[] Function AppendDirectGenericBuffs(String[] entries, Actor player, MagicEffect[] sources, String[] sourceEntries)
+  entries = AppendGroupedMagicEffects(entries, player, sources, sourceEntries, "B:Fed", 0x2EDFE1, 0x2EDFD5, 0x313251)
+  entries = AppendGroupedMagicEffects(entries, player, sources, sourceEntries, "B:Hydrated", 0x313260, 0x2EDFDC, 0x2EFD74)
+  MagicEffect rested = Game.GetFormFromFile(0x05C527, "Starfield.esm") as MagicEffect
+  If (rested != None && player.HasMagicEffect(rested))
+    String entry = "B:#" + rested.GetFormID() + ":Well Rested"
+    If (!ContainsEffectEntry(entries, entry) && !IsSuppressedSustenanceEntry(entries, entry))
+      entries.Add(entry)
+    EndIf
+    sources.Add(rested)
+    sourceEntries.Add(entry)
+  EndIf
+  Return entries
+EndFunction
+
+String[] Function AppendDirectGenericDebuffs(String[] entries, Actor player, MagicEffect[] sources, String[] sourceEntries)
+  entries = AppendGroupedMagicEffects(entries, player, sources, sourceEntries, "D:Malnourished", 0x31326D, 0x31326E, 0x31326F)
+  entries = AppendGroupedMagicEffects(entries, player, sources, sourceEntries, "D:Dehydrated", 0x31327B, 0x31329B, 0x2EDFDA)
+  entries = AppendGroupedMagicEffects(entries, player, sources, sourceEntries, "D:Bleeding", 0x23E9BF, 0x2E8148, 0)
+  Return entries
+EndFunction
+
+String[] Function AppendGroupedMagicEffects(String[] entries, Actor player, MagicEffect[] sources, String[] sourceEntries, String entry, Int formIdA, Int formIdB, Int formIdC)
+  Bool present = RememberMagicEffect(player, sources, sourceEntries, entry, formIdA)
+  If (RememberMagicEffect(player, sources, sourceEntries, entry, formIdB))
+    present = True
+  EndIf
+  If (RememberMagicEffect(player, sources, sourceEntries, entry, formIdC))
+    present = True
+  EndIf
+  If (present && !ContainsEffectEntry(entries, entry) && !IsSuppressedSustenanceEntry(entries, entry))
+    entries.Add(entry)
+  EndIf
+  Return entries
+EndFunction
+
+Bool Function RememberMagicEffect(Actor player, MagicEffect[] sources, String[] sourceEntries, String entry, Int formId)
+  If (player == None || formId == 0)
+    Return False
+  EndIf
+  MagicEffect effect = Game.GetFormFromFile(formId, "Starfield.esm") as MagicEffect
+  If (effect == None || !player.HasMagicEffect(effect))
+    Return False
+  EndIf
+  sources.Add(effect)
+  sourceEntries.Add(entry)
+  Return True
 EndFunction
 
 String Function ResolveStatusTopic()

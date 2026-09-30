@@ -29,14 +29,37 @@ package
          }
          var effects:Array = [];
          var row:Object;
-         for each(row in data.buffrows) effects.push({label:row.label,positive:true,negative:false});
-         for each(row in data.debuffrows) effects.push({label:row.label,positive:false,negative:true});
+         for each(row in data.buffrows) effects.push(effectRow(row,true));
+         for each(row in data.debuffrows) effects.push(effectRow(row,false));
          for(i = 0; i < effects.length; i++)
          {
             effects[i].x = (i%4)*180;
             effects[i].y = int(i/4)*18;
          }
          data["effectrows"] = effects;
+      }
+
+      private static const EFFECT_ICONS:Object = {
+         "Fed":"fed","Hydrated":"hydrated","Well Rested":"rested","Malnourished":"malnourished","Dehydrated":"dehydrated",
+         "Bleeding":"bleed","Poisoning":"poison","Radiation Poisoning":"radiation","Corrosive Environment":"corrosive","Corrosive Rain":"corrosive",
+         "Burns":"thermal","Heatstroke":"thermal","Frostbite":"cold","Hypothermia":"cold",
+         "Lacerations":"injury","Puncture Wounds":"injury","Contusions":"injury","Torn Muscle":"injury","Sprain":"injury","Dislocated Limb":"injury","Fractured Limb":"injury","Fractured Skull":"injury","Concussion":"injury","Brain Injury":"injury","Hernia":"injury",
+         "Bone Infection":"infection","Brain Infection":"infection","Intestinal Infection":"infection","Lung Infection":"infection","Tissue Infection":"infection",
+         "Lung Damage":"lungs","Fortify O2":"lungs","Fortify O2 Recovery Rate":"lungs","Toxic Gas Hazard":"gas",
+         "Restore Health":"health","Heart+":"health","Fortify Carry Weight":"weight","Fortify Movement Speed":"speed","Fortify Jump Height":"speed",
+         "Fortify Physical Damage Resistance":"shield","Fortify Energy Damage Resistance":"shield","Increased Weapon Accuracy":"accuracy","Reduce Movement Noise":"stealth","Slow Time":"time",
+         "Fortify Damage":"damage","Fortify Melee Damage":"damage","Fortify Ranged Damage":"damage","Improved Research Crit Chance":"research","Reduced Research Cost":"research",
+         "Fortify Persuasion":"persuasion","Companion Affinity Increases Faster":"companion","Addiction Suppression":"addiction","Fortify Power Recovery Rate":"power"
+      };
+
+      private static function effectRow(row:Object, positive:Boolean) : Object
+      {
+         var label:String = String(row.label);
+         var known:* = EFFECT_ICONS[label];
+         var icon:String = known == null ? (positive ? "fallbackbuff" : "fallbackdebuff") : String(known);
+         var item:Object = {label:label,positive:positive,negative:!positive,icon:icon};
+         item["icon"+icon] = true;
+         return item;
       }
 
       private static function scanner(sources:Array, direction:Number) : Array
