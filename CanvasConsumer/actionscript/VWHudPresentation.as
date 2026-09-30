@@ -33,8 +33,8 @@ package
          for each(row in data.debuffrows) effects.push(effectRow(row,false));
          for(i = 0; i < effects.length; i++)
          {
-            effects[i].x = (i%4)*180;
-            effects[i].y = int(i/4)*18;
+            effects[i].x = (i%8)*40;
+            effects[i].y = 0;
          }
          data["effectrows"] = effects;
       }
@@ -42,6 +42,8 @@ package
       private static const EFFECT_ICONS:Object = {
          "Fed":"fed","Hydrated":"hydrated","Well Rested":"rested","Malnourished":"malnourished","Dehydrated":"dehydrated",
          "Bleeding":"bleed","Poisoning":"poison","Radiation Poisoning":"radiation","Corrosive Environment":"corrosive","Corrosive Rain":"corrosive",
+         "Corrosive Particulates":"corrosive","Corrosive Vapor":"corrosive","Freezing Cold and Snow":"cold","Freezing Rain":"cold","Freezing Vapor":"cold",
+         "Intense Heat":"thermal","Scalding Rain":"thermal","Scalding Vapor":"thermal","Poor Air Quality":"gas",
          "Burns":"thermal","Heatstroke":"thermal","Frostbite":"cold","Hypothermia":"cold",
          "Lacerations":"injury","Puncture Wounds":"injury","Contusions":"injury","Torn Muscle":"injury","Sprain":"injury","Dislocated Limb":"injury","Fractured Limb":"injury","Fractured Skull":"injury","Concussion":"injury","Brain Injury":"injury","Hernia":"injury",
          "Bone Infection":"infection","Brain Infection":"infection","Intestinal Infection":"infection","Lung Infection":"infection","Tissue Infection":"infection",
@@ -52,14 +54,24 @@ package
          "Fortify Persuasion":"persuasion","Companion Affinity Increases Faster":"companion","Addiction Suppression":"addiction","Fortify Power Recovery Rate":"power"
       };
 
+      private static var foldedIcons:Object = null;
+
       private static function effectRow(row:Object, positive:Boolean) : Object
       {
-         var label:String = String(row.label);
-         var known:* = EFFECT_ICONS[label];
+         var label:String = row == null || row.label == null ? "" : String(row.label);
+         var known:* = iconId(label);
          var icon:String = known == null ? (positive ? "fallbackbuff" : "fallbackdebuff") : String(known);
-         var item:Object = {label:label,positive:positive,negative:!positive,icon:icon};
-         item["icon"+icon] = true;
-         return item;
+         return {label:label,positive:positive,negative:!positive,icon:"assets/effect-"+icon+".svg"};
+      }
+
+      private static function iconId(label:String) : *
+      {
+         if(foldedIcons == null)
+         {
+            foldedIcons = {};
+            for(var name:String in EFFECT_ICONS) foldedIcons[name.toLowerCase()] = EFFECT_ICONS[name];
+         }
+         return foldedIcons[label.toLowerCase()];
       }
 
       private static function scanner(sources:Array, direction:Number) : Array

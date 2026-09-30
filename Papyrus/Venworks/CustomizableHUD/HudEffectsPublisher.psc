@@ -33,6 +33,13 @@ Float LastHudOpenAt = 0.0
 String LastEffectSignature = ""
 ; Presence bits for the small generic set. This is not a second effects.state payload.
 String LastGenericEffectSignature = ""
+Spell[] CachedWeatherSpells
+String[] CachedWeatherLabels
+Bool WeatherSpellsReady = False
+Int[] CachedMagicEffectIds
+MagicEffect[] CachedMagicEffects
+SQ_ENV_AfflictionsScript CachedAfflictionQuest
+Bool AfflictionQuestCached = False
 String PendingEffectSignature = ""
 String[] EffectPackets
 String PendingEffectPayload = ""
@@ -122,6 +129,13 @@ Event Actor.OnPlayerLoadGame(Actor akSender)
     LastGenericEffectSignature = ""
     EffectRetryCount = 0
   EndLockGuard
+  WeatherSpellsReady = False
+  CachedWeatherSpells = None
+  CachedWeatherLabels = None
+  CachedMagicEffectIds = None
+  CachedMagicEffects = None
+  AfflictionQuestCached = False
+  CachedAfflictionQuest = None
   MagicEffectEventRegistered = False
   EnsureMagicEffectRegistrations(True)
   RequestEffectRefresh(True)
@@ -175,7 +189,8 @@ Event OnTimer(Int aiTimerID)
       EffectHeartbeatPending = False
       EffectRetryCount = 0
     EndLockGuard
-    RequestEffectRefresh(True)
+    ; Unchanged rows keep the 60-second signature skip. A real difference still publishes.
+    RequestEffectRefresh(False)
   ElseIf (aiTimerID == 35)
     EffectRecoveryRefresh = True
     RequestEffectRefresh(True)
@@ -234,7 +249,7 @@ Function RequestEffectRefresh(Bool forceSnapshot)
     EndIf
   EndLockGuard
   If (heartbeat)
-    ; Forced by OnTimer 34, so the 60-second unchanged-signature skip does not apply.
+    ; Timer 34 calls this without forcing, so an unchanged list waits out the 60-second skip.
     StartTimer(15.0, 34)
   EndIf
   If (schedule)
@@ -293,10 +308,6 @@ Function CheckActiveEffectSources()
   index = 0
   While (spells != None && index < spells.Length)
     Bool namedStatusActive = spells[index] != None && player.HasSpell(spells[index])
-    If (namedStatusActive && spells[index] == Game.GetFormFromFile(0x08CB51, "Starfield.esm"))
-      MagicEffect corrosiveSoak = Game.GetFormFromFile(0x08CB47, "Starfield.esm") as MagicEffect
-      namedStatusActive = corrosiveSoak != None && player.HasMagicEffect(corrosiveSoak)
-    EndIf
     If (namedStatusActive && !ContainsEffectEntry(stillActive, spellEntries[index]))
       stillActive.Add(spellEntries[index])
     EndIf
@@ -467,7 +478,7 @@ EndFunction
 ; SQ_ENV owns injuries and infections separately from the magic-effect catalog. Its spells
 ; are the status-menu source of truth even when a console-applied spell did not set Active.
 String[] Function AppendActiveAfflictions(String[] entries, Actor player, ENV_AfflictionScript[] sources, String[] sourceEntries)
-  SQ_ENV_AfflictionsScript afflictionQuest = Game.GetFormFromFile(0x00248D20, "Starfield.esm") as SQ_ENV_AfflictionsScript
+  SQ_ENV_AfflictionsScript afflictionQuest = ResolveAfflictionQuest()
   If (afflictionQuest == None || afflictionQuest.AfflictionData == None)
     Return entries
   EndIf
@@ -503,24 +514,10 @@ Bool Function HasAfflictionSpell(Actor player, ENV_AfflictionScript affliction)
   Return False
 EndFunction
 
-; Only named source spells are used; shared airborne-hazard effects cannot identify toxic gas.
+; Named weather spells are the status-menu rows. The corrosive soak pair stays on after the meter clears.
 String[] Function AppendActiveEnvironmentalStatuses(String[] entries, Actor player, Spell[] sources, String[] sourceEntries)
-  Spell corrosiveEnvironment = Game.GetFormFromFile(0x08CB51, "Starfield.esm") as Spell
-  MagicEffect corrosiveSoak = Game.GetFormFromFile(0x08CB47, "Starfield.esm") as MagicEffect
-  Spell corrosiveRain = Game.GetFormFromFile(0x281ECB, "Starfield.esm") as Spell
+  entries = AppendNamedWeatherStatuses(entries, player, sources, sourceEntries)
   Spell toxicGas = Game.GetFormFromFile(0x245B6B, "Starfield.esm") as Spell
-  If (corrosiveEnvironment != None && corrosiveSoak != None && player.HasSpell(corrosiveEnvironment) && player.HasMagicEffect(corrosiveSoak))
-    String entry = "D:#" + corrosiveEnvironment.GetFormID() + ":Corrosive Environment"
-    entries.Add(entry)
-    sources.Add(corrosiveEnvironment)
-    sourceEntries.Add(entry)
-  EndIf
-  If (corrosiveRain != None && player.HasSpell(corrosiveRain))
-    String entry = "D:#" + corrosiveRain.GetFormID() + ":Corrosive Rain"
-    entries.Add(entry)
-    sources.Add(corrosiveRain)
-    sourceEntries.Add(entry)
-  EndIf
   If (toxicGas != None && player.HasSpell(toxicGas))
     String entry = "D:#" + toxicGas.GetFormID() + ":Toxic Gas Hazard"
     entries.Add(entry)
@@ -810,7 +807,7 @@ String Function BuildGenericEffectSignature(Actor player)
   Bool radiation = False
   Bool thermal = False
   Bool cold = False
-  SQ_ENV_AfflictionsScript afflictionQuest = Game.GetFormFromFile(0x00248D20, "Starfield.esm") as SQ_ENV_AfflictionsScript
+  SQ_ENV_AfflictionsScript afflictionQuest = ResolveAfflictionQuest()
   If (afflictionQuest != None && afflictionQuest.AfflictionData != None)
     ENV_AfflictionScript[] afflictions = afflictionQuest.AfflictionData
     Int index = 0
@@ -835,13 +832,6 @@ String Function BuildGenericEffectSignature(Actor player)
       index += 1
     EndWhile
   EndIf
-  Spell corrosiveEnvironment = Game.GetFormFromFile(0x08CB51, "Starfield.esm") as Spell
-  MagicEffect corrosiveSoak = Game.GetFormFromFile(0x08CB47, "Starfield.esm") as MagicEffect
-  Spell corrosiveRain = Game.GetFormFromFile(0x281ECB, "Starfield.esm") as Spell
-  Bool corrosive = corrosiveEnvironment != None && corrosiveSoak != None && player.HasSpell(corrosiveEnvironment) && player.HasMagicEffect(corrosiveSoak)
-  If (corrosiveRain != None && player.HasSpell(corrosiveRain))
-    corrosive = True
-  EndIf
   Bool malnourished = HasAnyMagicEffect(player, 0x31326D, 0x31326E, 0x31326F)
   Bool dehydrated = HasAnyMagicEffect(player, 0x31327B, 0x31329B, 0x2EDFDA)
   Bool fed = HasAnyMagicEffect(player, 0x2EDFE1, 0x2EDFD5, 0x313251)
@@ -856,9 +846,6 @@ String Function BuildGenericEffectSignature(Actor player)
   EndIf
   If (radiation)
     signature += "D:Radiation;"
-  EndIf
-  If (corrosive)
-    signature += "D:Corrosive;"
   EndIf
   If (thermal)
     signature += "D:Thermal;"
@@ -881,7 +868,7 @@ String Function BuildGenericEffectSignature(Actor player)
   If (rested)
     signature += "B:Well Rested;"
   EndIf
-  Return signature
+  Return signature + WeatherSignature(player)
 EndFunction
 
 Bool Function HasAnyMagicEffect(Actor player, Int formIdA, Int formIdB, Int formIdC)
@@ -892,8 +879,112 @@ Bool Function HasMagicEffectId(Actor player, Int formId)
   If (player == None || formId == 0)
     Return False
   EndIf
-  MagicEffect effect = Game.GetFormFromFile(formId, "Starfield.esm") as MagicEffect
+  MagicEffect effect = ResolveMagicEffect(formId)
   Return effect != None && player.HasMagicEffect(effect)
+EndFunction
+
+; Resolved forms are kept for the session. A miss is not cached, so a later load can resolve it.
+MagicEffect Function ResolveMagicEffect(Int formId)
+  If (formId == 0)
+    Return None
+  EndIf
+  If (CachedMagicEffectIds == None)
+    CachedMagicEffectIds = new Int[0]
+    CachedMagicEffects = new MagicEffect[0]
+  EndIf
+  Int index = 0
+  While (index < CachedMagicEffectIds.Length)
+    If (CachedMagicEffectIds[index] == formId)
+      Return CachedMagicEffects[index]
+    EndIf
+    index += 1
+  EndWhile
+  MagicEffect effect = Game.GetFormFromFile(formId, "Starfield.esm") as MagicEffect
+  If (effect != None)
+    CachedMagicEffectIds.Add(formId)
+    CachedMagicEffects.Add(effect)
+  EndIf
+  Return effect
+EndFunction
+
+SQ_ENV_AfflictionsScript Function ResolveAfflictionQuest()
+  If (!AfflictionQuestCached)
+    CachedAfflictionQuest = Game.GetFormFromFile(0x00248D20, "Starfield.esm") as SQ_ENV_AfflictionsScript
+    AfflictionQuestCached = CachedAfflictionQuest != None
+  EndIf
+  Return CachedAfflictionQuest
+EndFunction
+
+; These spell records are the named rows on the character status screen.
+Function EnsureWeatherSpells()
+  If (WeatherSpellsReady)
+    Return
+  EndIf
+  Spell[] spells = new Spell[10]
+  String[] labels = new String[10]
+  spells[0] = Game.GetFormFromFile(0x001639EB, "Starfield.esm") as Spell
+  labels[0] = "Freezing Rain"
+  spells[1] = Game.GetFormFromFile(0x00163A02, "Starfield.esm") as Spell
+  labels[1] = "Freezing Cold and Snow"
+  spells[2] = Game.GetFormFromFile(0x001639F9, "Starfield.esm") as Spell
+  labels[2] = "Freezing Vapor"
+  spells[3] = Game.GetFormFromFile(0x00281ECD, "Starfield.esm") as Spell
+  labels[3] = "Scalding Rain"
+  spells[4] = Game.GetFormFromFile(0x00163A03, "Starfield.esm") as Spell
+  labels[4] = "Intense Heat"
+  spells[5] = Game.GetFormFromFile(0x00163A00, "Starfield.esm") as Spell
+  labels[5] = "Scalding Vapor"
+  spells[6] = Game.GetFormFromFile(0x00281ECB, "Starfield.esm") as Spell
+  labels[6] = "Corrosive Rain"
+  spells[7] = Game.GetFormFromFile(0x00163A05, "Starfield.esm") as Spell
+  labels[7] = "Corrosive Particulates"
+  spells[8] = Game.GetFormFromFile(0x001639F8, "Starfield.esm") as Spell
+  labels[8] = "Corrosive Vapor"
+  spells[9] = Game.GetFormFromFile(0x00163FE7, "Starfield.esm") as Spell
+  labels[9] = "Poor Air Quality"
+  CachedWeatherSpells = spells
+  CachedWeatherLabels = labels
+  Int index = 0
+  Bool complete = True
+  While (index < spells.Length)
+    If (spells[index] == None)
+      complete = False
+    EndIf
+    index += 1
+  EndWhile
+  WeatherSpellsReady = complete
+EndFunction
+
+String Function WeatherSignature(Actor player)
+  EnsureWeatherSpells()
+  String signature = ""
+  Int index = 0
+  While (CachedWeatherSpells != None && index < CachedWeatherSpells.Length)
+    Spell weatherSpell = CachedWeatherSpells[index]
+    If (weatherSpell != None && player.HasSpell(weatherSpell))
+      signature += "D:" + CachedWeatherLabels[index] + ";"
+    EndIf
+    index += 1
+  EndWhile
+  Return signature
+EndFunction
+
+String[] Function AppendNamedWeatherStatuses(String[] entries, Actor player, Spell[] sources, String[] sourceEntries)
+  EnsureWeatherSpells()
+  Int index = 0
+  While (CachedWeatherSpells != None && index < CachedWeatherSpells.Length)
+    Spell weatherSpell = CachedWeatherSpells[index]
+    If (weatherSpell != None && player.HasSpell(weatherSpell))
+      String entry = "D:#" + weatherSpell.GetFormID() + ":" + CachedWeatherLabels[index]
+      If (!ContainsEffectEntry(entries, entry))
+        entries.Add(entry)
+        sources.Add(weatherSpell)
+        sourceEntries.Add(entry)
+      EndIf
+    EndIf
+    index += 1
+  EndWhile
+  Return entries
 EndFunction
 
 ; Catalog membership is not required. Keys match the rows already published for this set.

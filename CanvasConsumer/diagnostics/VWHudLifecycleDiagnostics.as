@@ -28,10 +28,10 @@ package
             consumer.handleCanvasEvent(topic,"malformed");
             consumer.handleLifecycle("ready",detail(first));
             require(first.calls == 1 && first.data.waiting === false && first.data.buffrows[0].label == "Fed","valid pre-ready snapshot survives malformed event");
-            require(first.data.effectrows[0].label == "Fed" && first.data.effectrows[0].icon == "fed" && first.data.effectrows[0].iconfed === true,"fed row carries its icon");
+            require(first.data.effectrows[0].label == "Fed" && first.data.effectrows[0].icon == "assets/effect-fed.svg","fed row carries its icon");
             consumer.handleCanvasEvent(topic,body("0|1|D:Burns;"));
             require(first.data.debuffrows[0].label == "Burns" && first.data.buffcount == 0,"replacement snapshot");
-            require(first.data.effectrows[0].label == "Burns" && first.data.effectrows[0].icon == "thermal" && first.data.effectrows[0].iconthermal === true,"burns row carries the thermal icon");
+            require(first.data.effectrows[0].label == "Burns" && first.data.effectrows[0].icon == "assets/effect-thermal.svg","burns row carries the thermal icon");
             consumer.handleCanvasEvent(topic,body("0|2|D:Burns;"));
             require(first.data.debuffcount == 1,"invalid counts preserve last state");
             var calls:int = first.calls;
@@ -56,10 +56,13 @@ package
          require(adapter.acceptDatagram(body("0|0|")) && adapter.view().empty === true && adapter.view().page == 1,"empty snapshot resets page");
          var icons:Object = {buffrows:[{label:"Fortify Carry Weight"},{label:"Uncatalogued Buff"}],debuffrows:[{label:"Bleeding"},{label:"Uncatalogued Debuff"}]};
          VWHudPresentation.update(icons,null,0,false);
-         require(icons.effectrows[0].icon == "weight" && icons.effectrows[0].iconweight === true,"carry weight uses the weight icon");
-         require(icons.effectrows[1].icon == "fallbackbuff" && icons.effectrows[1].iconfallbackbuff === true,"unknown buff uses the fallback icon");
-         require(icons.effectrows[2].icon == "bleed" && icons.effectrows[2].iconbleed === true,"bleeding uses the bleed icon");
-         require(icons.effectrows[3].icon == "fallbackdebuff" && icons.effectrows[3].iconfallbackdebuff === true,"unknown debuff uses the fallback icon");
+         require(icons.effectrows[0].icon == "assets/effect-weight.svg" && icons.effectrows[0].x == 0,"carry weight uses the weight icon");
+         require(icons.effectrows[1].icon == "assets/effect-fallbackbuff.svg","unknown buff uses the fallback icon");
+         require(icons.effectrows[2].icon == "assets/effect-bleed.svg","bleeding uses the bleed icon");
+         require(icons.effectrows[3].icon == "assets/effect-fallbackdebuff.svg","unknown debuff uses the fallback icon");
+         var weather:Object = {buffrows:[],debuffrows:[{label:"FREEZING COLD AND SNOW"},{label:"Dehydrated"},{label:"Malnourished"}]};
+         VWHudPresentation.update(weather,null,0,false);
+         require(weather.effectrows[0].icon == "assets/effect-cold.svg" && weather.effectrows[1].icon == "assets/effect-dehydrated.svg" && weather.effectrows[2].icon == "assets/effect-malnourished.svg","weather and sustenance rows use their class icons");
          return "PASS: VWHUD consumer lifecycle and effects adapter assertions";
       }
 
