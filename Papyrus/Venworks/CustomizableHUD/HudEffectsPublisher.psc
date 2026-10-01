@@ -87,6 +87,10 @@ Bool EffectHeartbeatPending = False
 ; The FormList walk is a multi-second VM stall. It runs only after a listed effect can change, a few entries per timer, so HUD registration is not stuck behind it.
 Bool CatalogDirty = True
 Bool CatalogScanActive = False
+; HUD registration uses the same watch-alert pump. Do not start the catalog walk until those alerts have been quiet.
+Float CatalogScanNotBefore = 0.0
+; Bounds skipped stale datagrams so a list that keeps changing still reaches the HUD.
+Int StaleDatagramSkips = 0
 Int CatalogScanPhase = 0
 Int CatalogScanIndex = 0
 Int CatalogSliceRevision = 0
@@ -113,6 +117,8 @@ Event OnInit()
   EnsurePlayerEventRegistrations()
   EnsureMagicEffectRegistrations(True)
   ; CatalogDirty starts true. Force only means publish the finished snapshot; the walk itself yields between slices.
+  ; Registration submits watch alerts in this same second. Hold the walk until that pump has been quiet.
+  CatalogScanNotBefore = Utility.GetCurrentRealTime() + 6.0
   RequestEffectRefresh(True)
 EndEvent
 
@@ -216,6 +222,9 @@ Event Actor.OnPlayerLoadGame(Actor akSender)
   ToxicGasSpellResolved = False
   CachedToxicGasSpell = None
   EnsureMagicEffectRegistrations(True)
+  StaleDatagramSkips = 0
+  ; A load retriggers HUD registration. Do not walk the catalog on top of those watch alerts.
+  CatalogScanNotBefore = Utility.GetCurrentRealTime() + 6.0
   RequestEffectRefresh(True)
   ScheduleActiveEffectCheck()
 EndEvent
@@ -342,7 +351,7 @@ Function RequestEffectRefresh(Bool forceSnapshot)
     If (forceSnapshot)
       EffectForceRefresh = True
     EndIf
-    If (EffectSnapshotBuilding || PendingSnapshot != None)
+    If (EffectSnapshotBuilding || PendingSnapshot != None || CatalogScanActive)
       EffectChangedDuringPublication = True
     ElseIf (!EffectRefreshPending && EffectRetryCount <= 20)
       EffectRefreshPending = True
@@ -354,8 +363,39 @@ Function RequestEffectRefresh(Bool forceSnapshot)
     StartTimer(15.0, 34)
   EndIf
   If (schedule)
-    StartTimer(0.5, 31)
+    StartTimer(CatalogScanStartDelay(), 31)
   EndIf
+EndFunction
+
+; Registration retries and UI-load requests call this so the catalog walk stays behind the watch-alert pump.
+Function NoteHudUiLoadAttempt()
+  Float now = Utility.GetCurrentRealTime()
+  Float quietUntil = now + 4.0
+  Bool pending = False
+  If (quietUntil > CatalogScanNotBefore)
+    CatalogScanNotBefore = quietUntil
+  EndIf
+  LockGuard EffectSnapshotGuard
+    pending = EffectRefreshPending && !EffectSnapshotBuilding && PendingSnapshot == None
+  EndLockGuard
+  If (pending && !CatalogScanActive)
+    CancelTimer(31)
+    StartTimer(CatalogScanStartDelay(), 31)
+  EndIf
+EndFunction
+
+; The first scan waits out HUD registration. Later refreshes keep the short coalesce delay.
+Float Function CatalogScanStartDelay()
+  Float delay = 0.5
+  Float now = Utility.GetCurrentRealTime()
+  Float remaining = 0.0
+  If (CatalogScanNotBefore > now)
+    remaining = CatalogScanNotBefore - now
+    If (remaining > delay)
+      delay = remaining
+    EndIf
+  EndIf
+  Return delay
 EndFunction
 
 ; Keep the one-second poll armed while this quest is running, including when no row is published.
@@ -374,6 +414,9 @@ Function CheckActiveEffectSources()
   String[] afflictionEntries
   Spell[] spells
   String[] spellEntries
+  If (CatalogScanActive || EffectSnapshotBuilding || PendingSnapshot != None || CatalogScanNotBefore > Utility.GetCurrentRealTime())
+    Return
+  EndIf
   LockGuard EffectSnapshotGuard
     sourceRevision = EffectSourceRevision
     observedEntries = ObservedEffectEntries
@@ -442,6 +485,9 @@ EndFunction
 
 ; Builds one complete state payload; every submitted datagram is independently valid.
 Function PrepareEffectSnapshot()
+  If (HoldCatalogScanForUiLoad())
+    Return
+  EndIf
   Int expectedRevision = EffectSourceRevision
   If (Registry == None || BuffEffects == None || DebuffEffects == None)
     LogUserWarning(ModuleName, "PrepareEffectSnapshot", "EFFECT_SNAPSHOT_DEFERRED | Registry or catalog unavailable.")
@@ -496,6 +542,27 @@ Function PrepareEffectSnapshot()
   entries = AppendActiveAfflictions(entries, player, scanAfflictions, scanAfflictionEntries)
   entries = AppendActiveEnvironmentalStatuses(entries, player, scanSpells, scanSpellEntries)
   QueueBuiltSnapshot(candidate, entries, scanEffects, scanEffectEntries, scanAfflictions, scanAfflictionEntries, scanSpells, scanSpellEntries, forcedRefresh, recoveryRefresh)
+EndFunction
+
+; Timer 31 already cleared the pending flag. Put it back so the walk starts after the watch-alert pump is quiet.
+Bool Function HoldCatalogScanForUiLoad()
+  Float now = Utility.GetCurrentRealTime()
+  Float delay = 0.0
+  If (CatalogScanActive || CatalogScanNotBefore <= now)
+    Return False
+  EndIf
+  LockGuard EffectSnapshotGuard
+    If (!EffectSnapshotBuilding && PendingSnapshot == None)
+      EffectRefreshPending = True
+    EndIf
+  EndLockGuard
+  delay = CatalogScanNotBefore - now
+  If (delay < 0.5)
+    delay = 0.5
+  EndIf
+  LogUserInformational(ModuleName, "PrepareEffectSnapshot", "CATALOG_SCAN_HELD | Remaining=" + delay)
+  StartTimer(delay, 31)
+  Return True
 EndFunction
 
 ; Missing prerequisites and rejected builds share the bounded budget; heartbeat survives exhaustion.
@@ -785,10 +852,40 @@ EndFunction
 ; Publishes one complete state datagram. EVENT_SUBMITTED acknowledges native submission only.
 Function PublishNextEffectPacket()
   EffectSnapshot candidate
+  Bool stale = False
+  Bool canRebuild = False
   LockGuard EffectSnapshotGuard
     candidate = PendingSnapshot
+    stale = EffectChangedDuringPublication
   EndLockGuard
   If (candidate == None)
+    Return
+  EndIf
+  canRebuild = CatalogDirty
+  If (!canRebuild && ActiveSourceEffects != None)
+    canRebuild = ActiveSourceEffects.Length > 0
+  EndIf
+  ; The native watch-alert call can stall for seconds. A datagram that is already stale is not worth that call.
+  If (stale && canRebuild && StaleDatagramSkips < 2)
+    StaleDatagramSkips += 1
+    LockGuard EffectSnapshotGuard
+      If (PendingSnapshot == candidate)
+        PendingSnapshot = None
+        PendingEntries = None
+        PendingEffects = None
+        PendingSourceEffectEntries = None
+        PendingAfflictions = None
+        PendingAfflictionEntries = None
+        PendingSpells = None
+        PendingSpellEntries = None
+        PendingEffectPayload = ""
+        PendingEffectSignature = ""
+        PendingEffectNeedsRecoveryReplay = False
+        EffectChangedDuringPublication = False
+      EndIf
+    EndLockGuard
+    LogUserInformational(ModuleName, "PublishNextEffectPacket", "EFFECT_DATAGRAM_COALESCED | Revision=" + candidate.Revision + " | Skips=" + StaleDatagramSkips)
+    RequestEffectRefresh(True)
     Return
   EndIf
   OperationResult result
@@ -819,6 +916,7 @@ Function PublishNextEffectPacket()
         LastActiveEffectCount = PendingEntries.Length
         LastEffectSnapshotAt = now
         EffectRetryCount = 0
+        StaleDatagramSkips = 0
         committed = True
         refresh = EffectChangedDuringPublication
         EffectChangedDuringPublication = False
@@ -861,7 +959,8 @@ EndFunction
 ; One true check per generic icon. A change wakes one forced snapshot; it does not publish a payload.
 Function CheckGenericEffectSignature()
   Actor player = Game.GetPlayer()
-  If (player == None)
+  ; Building this signature calls HasMagicEffect. Doing that during a walk, a pending datagram, or HUD registration dirtied a second watch-alert submit.
+  If (player == None || CatalogScanActive || EffectSnapshotBuilding || PendingSnapshot != None || CatalogScanNotBefore > Utility.GetCurrentRealTime())
     Return
   EndIf
   Float now = Utility.GetCurrentRealTime()
@@ -1441,6 +1540,9 @@ EndFunction
 
 Function FinishCatalogScan(Actor player)
   CatalogScanActive = False
+  ; Seed the poll cache from this walk so the first post-publish check does not look like a new list and submit again.
+  LastGenericEffectSignature = BuildGenericEffectSignature(player)
+  LastGenericSignatureAt = Utility.GetCurrentRealTime()
   CatalogSliceEntries = AppendDirectGenericDebuffs(CatalogSliceEntries, player, CatalogSliceEffects, CatalogSliceEffectEntries)
   CatalogSliceEntries = AppendActiveAfflictions(CatalogSliceEntries, player, CatalogSliceAfflictions, CatalogSliceAfflictionEntries)
   CatalogSliceEntries = AppendActiveEnvironmentalStatuses(CatalogSliceEntries, player, CatalogSliceSpells, CatalogSliceSpellEntries)
