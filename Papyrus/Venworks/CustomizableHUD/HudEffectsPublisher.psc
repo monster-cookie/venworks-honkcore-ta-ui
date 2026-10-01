@@ -115,11 +115,15 @@ Event OnInit()
   RegisterForMenuOpenCloseEvent("HUDMenu")
   RegisterForMenuOpenCloseEvent("SpaceshipHudMenu")
   EnsurePlayerEventRegistrations()
-  EnsureMagicEffectRegistrations(True)
-  ; CatalogDirty starts true. Force only means publish the finished snapshot; the walk itself yields between slices.
-  ; Registration submits watch alerts in this same second. Hold the walk until that pump has been quiet.
-  CatalogScanNotBefore = Utility.GetCurrentRealTime() + 6.0
-  RequestEffectRefresh(True)
+  If (StatusDatagramsEnabled())
+    EnsureMagicEffectRegistrations(True)
+    ; CatalogDirty starts true. Force only means publish the finished snapshot; the walk itself yields between slices.
+    ; Registration submits watch alerts in this same second. Hold the walk until that pump has been quiet.
+    CatalogScanNotBefore = Utility.GetCurrentRealTime() + 6.0
+    RequestEffectRefresh(True)
+  Else
+    SuppressStatusDatagramWork()
+  EndIf
 EndEvent
 
 ; HUD opening schedules a bounded sequence; there is no saved active latch or wait in this event.
@@ -128,6 +132,9 @@ Event OnMenuOpenCloseEvent(String menuName, Bool opening)
   If (opening)
     LastHudOpenAt = Utility.GetCurrentRealTime()
     EnsurePlayerEventRegistrations()
+    If (!StatusDatagramsEnabled())
+      Return
+    EndIf
     EnsureMagicEffectRegistrations(True)
     ; A recreated HUD needs the last payload, not another native catalog walk. The first load has no payload yet and uses the scan OnInit already scheduled.
     If (LastEffectPayload != "" && !CatalogScanActive && !EffectSnapshotBuilding && PendingSnapshot == None)
@@ -221,12 +228,16 @@ Event Actor.OnPlayerLoadGame(Actor akSender)
   LastEffectPayload = ""
   ToxicGasSpellResolved = False
   CachedToxicGasSpell = None
-  EnsureMagicEffectRegistrations(True)
   StaleDatagramSkips = 0
-  ; A load retriggers HUD registration. Do not walk the catalog on top of those watch alerts.
-  CatalogScanNotBefore = Utility.GetCurrentRealTime() + 6.0
-  RequestEffectRefresh(True)
-  ScheduleActiveEffectCheck()
+  If (StatusDatagramsEnabled())
+    EnsureMagicEffectRegistrations(True)
+    ; A load retriggers HUD registration. Do not walk the catalog on top of those watch alerts.
+    CatalogScanNotBefore = Utility.GetCurrentRealTime() + 6.0
+    RequestEffectRefresh(True)
+    ScheduleActiveEffectCheck()
+  Else
+    SuppressStatusDatagramWork()
+  EndIf
 EndEvent
 
 ; Saved quests enter this path through their existing menu registration after a script update.
@@ -256,6 +267,9 @@ EndFunction
 
 ; Registration, effect refresh, reconciliation, and packet publication use disjoint timer IDs.
 Event OnTimer(Int aiTimerID)
+  If (!StatusDatagramsEnabled() && aiTimerID >= 31 && aiTimerID <= 36)
+    Return
+  EndIf
   If (aiTimerID == 31)
     Bool scan = False
     LockGuard EffectSnapshotGuard
@@ -307,8 +321,13 @@ EndEvent
 
 ; Re-register after each one-shot apply notification. Repeating ship and environment effects are not catalog rows and must not schedule a scan.
 Event OnMagicEffectApply(ObjectReference akTarget, ObjectReference akCaster, MagicEffect akEffect)
-  Bool playerTarget = akTarget == Game.GetPlayer()
-  Bool catalogApply = playerTarget && EffectMayNeedCatalogScan(akEffect)
+  Bool playerTarget = False
+  Bool catalogApply = False
+  If (!StatusDatagramsEnabled())
+    Return
+  EndIf
+  playerTarget = akTarget == Game.GetPlayer()
+  catalogApply = playerTarget && EffectMayNeedCatalogScan(akEffect)
   If (catalogApply && !EffectRefreshPending)
     LogUserInformational(ModuleName, "OnMagicEffectApply", "EVENT_TRIGGERED | Target=" + akTarget + " | Effect=" + akEffect)
   EndIf
@@ -322,10 +341,17 @@ EndEvent
 
 ; This one-shot registration is unfiltered so newly applied, cataloged effects cannot be missed.
 Function EnsureMagicEffectRegistrations(Bool reportRegistration)
+  Actor player = Game.GetPlayer()
+  If (!StatusDatagramsEnabled())
+    If (player != None)
+      UnregisterForAllMagicEffectApplyEvents(player)
+    EndIf
+    MagicEffectEventRegistered = True
+    Return
+  EndIf
   If (MagicEffectEventRegistered)
     Return
   EndIf
-  Actor player = Game.GetPlayer()
   If (player == None)
     LogUserWarning(ModuleName, "EnsureMagicEffectRegistrations", "EFFECT_EVENT_REGISTRATION_DEFERRED | Player unavailable.")
     Return
@@ -338,10 +364,30 @@ Function EnsureMagicEffectRegistrations(Bool reportRegistration)
   EndIf
 EndFunction
 
+; Diagnostic gate. False keeps ShowCustomWatchAlert for HUD registration only.
+Bool Function StatusDatagramsEnabled()
+  Return False
+EndFunction
+
+; Drops a saved scan, poll, or datagram timer so a loaded game cannot submit a status watch alert.
+Function SuppressStatusDatagramWork()
+  CancelTimer(31)
+  CancelTimer(32)
+  CancelTimer(33)
+  CancelTimer(34)
+  CancelTimer(35)
+  CancelTimer(36)
+  EnsureMagicEffectRegistrations(False)
+  LogUserInformational(ModuleName, "SuppressStatusDatagramWork", "STATUS_DATAGRAMS_DISABLED | Watch alerts remain for HUD registration only.")
+EndFunction
+
 ; Coalesces load, HUD-ready, and apply requests while preserving a requested full resend.
 Function RequestEffectRefresh(Bool forceSnapshot)
   Bool schedule = False
   Bool heartbeat = False
+  If (!StatusDatagramsEnabled())
+    Return
+  EndIf
   ; Local assignments only: registry calls and timer operations stay outside guards.
   LockGuard EffectSnapshotGuard
     If (!EffectHeartbeatPending)
@@ -369,9 +415,14 @@ EndFunction
 
 ; Registration retries and UI-load requests call this so the catalog walk stays behind the watch-alert pump.
 Function NoteHudUiLoadAttempt()
-  Float now = Utility.GetCurrentRealTime()
-  Float quietUntil = now + 4.0
+  Float now = 0.0
+  Float quietUntil = 0.0
   Bool pending = False
+  If (!StatusDatagramsEnabled())
+    Return
+  EndIf
+  now = Utility.GetCurrentRealTime()
+  quietUntil = now + 4.0
   If (quietUntil > CatalogScanNotBefore)
     CatalogScanNotBefore = quietUntil
   EndIf
@@ -400,6 +451,9 @@ EndFunction
 
 ; Keep the one-second poll armed while this quest is running, including when no row is published.
 Function ScheduleActiveEffectCheck()
+  If (!StatusDatagramsEnabled())
+    Return
+  EndIf
   CancelTimer(32)
   StartTimer(1.0, 32)
 EndFunction
@@ -854,6 +908,9 @@ Function PublishNextEffectPacket()
   EffectSnapshot candidate
   Bool stale = False
   Bool canRebuild = False
+  If (!StatusDatagramsEnabled())
+    Return
+  EndIf
   LockGuard EffectSnapshotGuard
     candidate = PendingSnapshot
     stale = EffectChangedDuringPublication
@@ -1447,15 +1504,21 @@ EndFunction
 
 ; The HUD movie may have been recreated. Resend the last payload; do not walk the catalogs.
 Function RepublishCachedEffects()
+  String publishTopic = ""
+  OperationResult result
+  String status = ""
+  If (!StatusDatagramsEnabled())
+    Return
+  EndIf
   If (LastEffectPayload == "" || Registry == None || CatalogScanActive || EffectSnapshotBuilding || PendingSnapshot != None)
     Return
   EndIf
-  String publishTopic = ResolveStatusTopic()
+  publishTopic = ResolveStatusTopic()
   If (publishTopic == "")
     Return
   EndIf
-  OperationResult result = Registry.TryPublishCanvasDatagram(publishTopic, "effects.state", 1, "ci-ascii", LastEffectPayload)
-  String status = "DEFERRED_REGISTRY_UNAVAILABLE"
+  result = Registry.TryPublishCanvasDatagram(publishTopic, "effects.state", 1, "ci-ascii", LastEffectPayload)
+  status = "DEFERRED_REGISTRY_UNAVAILABLE"
   If (result != None)
     status = result.Status
   EndIf
