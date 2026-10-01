@@ -33,6 +33,8 @@ Float LastHudOpenAt = 0.0
 String LastEffectSignature = ""
 ; Presence bits for the small generic set. This is not a second effects.state payload.
 String LastGenericEffectSignature = ""
+; The generic signature walks afflictions and weather spells. Sample it at most every five seconds.
+Float LastGenericSignatureAt = 0.0
 Spell[] CachedWeatherSpells
 String[] CachedWeatherLabels
 Bool WeatherSpellsReady = False
@@ -170,6 +172,7 @@ Event Actor.OnPlayerLoadGame(Actor akSender)
     EffectRefreshPending = False
     EffectHeartbeatPending = False
     LastGenericEffectSignature = ""
+    LastGenericSignatureAt = 0.0
     LastEffectSignature = ""
     LastEffectSnapshotAt = 0.0
     EffectRetryCount = 0
@@ -260,20 +263,30 @@ Event OnTimer(Int aiTimerID)
   ElseIf (aiTimerID == 33)
     PublishNextEffectPacket()
   ElseIf (aiTimerID == 34)
+    ; A scan still walking, or a datagram still waiting on the watch alert, is not a missed publish. Dirtying it here made the commit start another full walk.
+    Bool scanInFlight = CatalogScanActive
     LockGuard EffectSnapshotGuard
-      EffectHeartbeatPending = False
-      EffectRetryCount = 0
-    EndLockGuard
-    ; Re-arm only while the last payload is inside the 60-second window. Building it again was a full catalog scan with nothing to publish.
-    Float heartbeatNow = Utility.GetCurrentRealTime()
-    If (LastEffectSnapshotAt <= 0.0 || heartbeatNow < LastEffectSnapshotAt || heartbeatNow - LastEffectSnapshotAt >= 60.0)
-      CatalogDirty = True
-      RequestEffectRefresh(False)
-    Else
-      LockGuard EffectSnapshotGuard
+      scanInFlight = scanInFlight || EffectSnapshotBuilding || PendingSnapshot != None
+      If (scanInFlight)
         EffectHeartbeatPending = True
-      EndLockGuard
+      Else
+        EffectHeartbeatPending = False
+        EffectRetryCount = 0
+      EndIf
+    EndLockGuard
+    If (scanInFlight)
       StartTimer(15.0, 34)
+    Else
+      Float heartbeatNow = Utility.GetCurrentRealTime()
+      If (LastEffectSnapshotAt <= 0.0 || heartbeatNow < LastEffectSnapshotAt || heartbeatNow - LastEffectSnapshotAt >= 60.0)
+        CatalogDirty = True
+        RequestEffectRefresh(False)
+      Else
+        LockGuard EffectSnapshotGuard
+          EffectHeartbeatPending = True
+        EndLockGuard
+        StartTimer(15.0, 34)
+      EndIf
     EndIf
   ElseIf (aiTimerID == 35)
     ; The UI may have missed the packet. Resend the cached payload; do not walk the catalogs again.
@@ -851,6 +864,11 @@ Function CheckGenericEffectSignature()
   If (player == None)
     Return
   EndIf
+  Float now = Utility.GetCurrentRealTime()
+  If (LastGenericSignatureAt > 0.0 && now >= LastGenericSignatureAt && now - LastGenericSignatureAt < 5.0)
+    Return
+  EndIf
+  LastGenericSignatureAt = now
   String signature = BuildGenericEffectSignature(player)
   If (signature == LastGenericEffectSignature)
     Return
@@ -1364,7 +1382,7 @@ Function BeginCatalogScan(Actor player, EffectSnapshot candidate, Bool forcedRef
   CatalogSliceSpellEntries = new String[0]
   LogUserInformational(ModuleName, "BeginCatalogScan", "CATALOG_SCAN_STARTED | Revision=" + candidate.Revision + " | Player=" + player)
   CancelTimer(36)
-  StartTimer(0.05, 36)
+  StartTimer(0.1, 36)
 EndFunction
 
 Function ContinueCatalogScan()
@@ -1382,23 +1400,30 @@ Function ContinueCatalogScan()
     FinishEffectBuild(CatalogSliceCandidate, True)
     Return
   EndIf
-  Int budget = 6
+  ; Afflictions and weather spells are their own tick. They must not share a frame with the last catalog entry.
+  If (CatalogScanPhase >= 2)
+    FinishCatalogScan(player)
+    Return
+  EndIf
+  Int budget = 1
   If (CatalogScanPhase == 0)
     budget = ConsumeCatalogSlice(player, BuffEffects, BuffLabels, "B", budget)
     If (CatalogScanIndex >= BuffEffects.GetSize())
       CatalogSliceEntries = AppendDirectGenericBuffs(CatalogSliceEntries, player, CatalogSliceEffects, CatalogSliceEffectEntries)
       CatalogScanPhase = 1
       CatalogScanIndex = 0
+      budget = 0
     EndIf
   EndIf
   If (CatalogScanPhase == 1 && budget > 0)
     budget = ConsumeCatalogSlice(player, DebuffEffects, DebuffLabels, "D", budget)
     If (CatalogScanIndex >= DebuffEffects.GetSize())
-      FinishCatalogScan(player)
+      CatalogScanPhase = 2
+      StartTimer(0.1, 36)
       Return
     EndIf
   EndIf
-  StartTimer(0.05, 36)
+  StartTimer(0.1, 36)
 EndFunction
 
 Int Function ConsumeCatalogSlice(Actor player, FormList catalog, String[] labels, String category, Int budget)

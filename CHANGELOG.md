@@ -10,6 +10,7 @@
 ## Version 2.1.0 (Unreleased)
 
 - Walk the status catalog a few entries at a time, ignore repeating effects that are not status rows, and republish the last payload when the HUD opens, so an unchanged list no longer freezes the game or delays the HUD.
+- Do not start another status-catalog scan while one is still walking or its datagram is waiting to publish, and sample the generic status signature at most every five seconds, so the heartbeat cannot chain full scans and watch-alert submits.
 - Stop rebuilding an unchanged status list on the live-weather poll, so the same icons no longer hitch the game every few seconds.
 - Rebuilt all five VWHUD themes to run as Venworks Canvas consumers instead of replacing the vanilla HUD directly.
 - Migrated theme presentation to HTML, CSS, and standard SVG, making layouts and artwork easier for web developers and mod authors to understand.
