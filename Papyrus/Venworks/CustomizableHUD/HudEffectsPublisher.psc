@@ -82,6 +82,26 @@ String[] PendingAfflictionEntries
 Spell[] PendingSpells
 String[] PendingSpellEntries
 Bool EffectHeartbeatPending = False
+; The FormList walk is a multi-second VM stall. It runs only after a listed effect can change, a few entries per timer, so HUD registration is not stuck behind it.
+Bool CatalogDirty = True
+Bool CatalogScanActive = False
+Int CatalogScanPhase = 0
+Int CatalogScanIndex = 0
+Int CatalogSliceRevision = 0
+Bool CatalogSliceForced = False
+Bool CatalogSliceRecovery = False
+String[] CatalogSliceEntries
+MagicEffect[] CatalogSliceEffects
+String[] CatalogSliceEffectEntries
+ENV_AfflictionScript[] CatalogSliceAfflictions
+String[] CatalogSliceAfflictionEntries
+Spell[] CatalogSliceSpells
+String[] CatalogSliceSpellEntries
+Int[] IgnoredApplyEffectIds
+String LastEffectPayload = ""
+Spell CachedToxicGasSpell
+Bool ToxicGasSpellResolved = False
+EffectSnapshot CatalogSliceCandidate
 
 ; Bootstrap menu and player notifications and schedule the first bounded effect scan.
 Event OnInit()
@@ -90,6 +110,7 @@ Event OnInit()
   RegisterForMenuOpenCloseEvent("SpaceshipHudMenu")
   EnsurePlayerEventRegistrations()
   EnsureMagicEffectRegistrations(True)
+  ; CatalogDirty starts true. Force only means publish the finished snapshot; the walk itself yields between slices.
   RequestEffectRefresh(True)
 EndEvent
 
@@ -100,7 +121,16 @@ Event OnMenuOpenCloseEvent(String menuName, Bool opening)
     LastHudOpenAt = Utility.GetCurrentRealTime()
     EnsurePlayerEventRegistrations()
     EnsureMagicEffectRegistrations(True)
-    RequestEffectRefresh(True)
+    ; A recreated HUD needs the last payload, not another native catalog walk. The first load has no payload yet and uses the scan OnInit already scheduled.
+    If (LastEffectPayload != "" && !CatalogScanActive && !EffectSnapshotBuilding && PendingSnapshot == None)
+      RepublishCachedEffects()
+    ElseIf (!EffectRefreshPending && !CatalogScanActive && !EffectSnapshotBuilding)
+      ; A script update has no cached payload. Scan once, then later opens replay that payload.
+      If (LastEffectPayload == "")
+        CatalogDirty = True
+      EndIf
+      RequestEffectRefresh(LastEffectPayload == "")
+    EndIf
     ScheduleActiveEffectCheck()
   EndIf
 EndEvent
@@ -119,6 +149,7 @@ Event Actor.OnPlayerLoadGame(Actor akSender)
   CancelTimer(33)
   CancelTimer(34)
   CancelTimer(35)
+  CancelTimer(36)
   ; Fence scans and receipts from the previous load without publishing their state.
   LockGuard EffectSnapshotGuard
     EffectSourceRevision += 1
@@ -139,6 +170,8 @@ Event Actor.OnPlayerLoadGame(Actor akSender)
     EffectRefreshPending = False
     EffectHeartbeatPending = False
     LastGenericEffectSignature = ""
+    LastEffectSignature = ""
+    LastEffectSnapshotAt = 0.0
     EffectRetryCount = 0
   EndLockGuard
   WeatherSpellsReady = False
@@ -160,6 +193,25 @@ Event Actor.OnPlayerLoadGame(Actor akSender)
   AfflictionQuestCached = False
   CachedAfflictionQuest = None
   MagicEffectEventRegistered = False
+  CatalogDirty = True
+  CatalogScanActive = False
+  CatalogScanPhase = 0
+  CatalogScanIndex = 0
+  CatalogSliceRevision = 0
+  CatalogSliceForced = False
+  CatalogSliceRecovery = False
+  CatalogSliceEntries = None
+  CatalogSliceEffects = None
+  CatalogSliceEffectEntries = None
+  CatalogSliceAfflictions = None
+  CatalogSliceAfflictionEntries = None
+  CatalogSliceSpells = None
+  CatalogSliceSpellEntries = None
+  CatalogSliceCandidate = None
+  IgnoredApplyEffectIds = None
+  LastEffectPayload = ""
+  ToxicGasSpellResolved = False
+  CachedToxicGasSpell = None
   EnsureMagicEffectRegistrations(True)
   RequestEffectRefresh(True)
   ScheduleActiveEffectCheck()
@@ -215,6 +267,7 @@ Event OnTimer(Int aiTimerID)
     ; Re-arm only while the last payload is inside the 60-second window. Building it again was a full catalog scan with nothing to publish.
     Float heartbeatNow = Utility.GetCurrentRealTime()
     If (LastEffectSnapshotAt <= 0.0 || heartbeatNow < LastEffectSnapshotAt || heartbeatNow - LastEffectSnapshotAt >= 60.0)
+      CatalogDirty = True
       RequestEffectRefresh(False)
     Else
       LockGuard EffectSnapshotGuard
@@ -223,20 +276,24 @@ Event OnTimer(Int aiTimerID)
       StartTimer(15.0, 34)
     EndIf
   ElseIf (aiTimerID == 35)
-    EffectRecoveryRefresh = True
-    RequestEffectRefresh(True)
+    ; The UI may have missed the packet. Resend the cached payload; do not walk the catalogs again.
+    RepublishCachedEffects()
+  ElseIf (aiTimerID == 36)
+    ContinueCatalogScan()
   EndIf
 EndEvent
 
-; Re-register after each one-shot apply notification, then scan after the effect can become active.
+; Re-register after each one-shot apply notification. Repeating ship and environment effects are not catalog rows and must not schedule a scan.
 Event OnMagicEffectApply(ObjectReference akTarget, ObjectReference akCaster, MagicEffect akEffect)
-  Bool reportApply = akTarget == Game.GetPlayer() && !EffectRefreshPending
-  If (reportApply)
+  Bool playerTarget = akTarget == Game.GetPlayer()
+  Bool catalogApply = playerTarget && EffectMayNeedCatalogScan(akEffect)
+  If (catalogApply && !EffectRefreshPending)
     LogUserInformational(ModuleName, "OnMagicEffectApply", "EVENT_TRIGGERED | Target=" + akTarget + " | Effect=" + akEffect)
   EndIf
   MagicEffectEventRegistered = False
-  EnsureMagicEffectRegistrations(reportApply)
-  If (akTarget == Game.GetPlayer())
+  EnsureMagicEffectRegistrations(catalogApply)
+  If (catalogApply)
+    CatalogDirty = True
     RequestEffectRefresh(False)
   EndIf
 EndEvent
@@ -365,7 +422,7 @@ Function CheckActiveEffectSources()
     EndIf
   EndTryLockGuard
   If (removed)
-    RequestEffectRefresh(True)
+    RequestEffectRefresh(False)
     LogUserInformational(ModuleName, "CheckActiveEffectSources", "EFFECT_REMOVAL_DETECTED | Remaining=" + remaining.Length)
   EndIf
 EndFunction
@@ -407,6 +464,10 @@ Function PrepareEffectSnapshot()
   If (!claimed)
     Return
   EndIf
+  If (CatalogDirty)
+    BeginCatalogScan(player, candidate, forcedRefresh, recoveryRefresh)
+    Return
+  EndIf
   MagicEffect[] scanEffects = new MagicEffect[0]
   String[] scanEffectEntries = new String[0]
   ENV_AfflictionScript[] scanAfflictions = new ENV_AfflictionScript[0]
@@ -414,63 +475,14 @@ Function PrepareEffectSnapshot()
   Spell[] scanSpells = new Spell[0]
   String[] scanSpellEntries = new String[0]
   String[] entries = new String[0]
-  entries = AppendActiveEffects(entries, player, BuffEffects, BuffLabels, "B", scanEffects, scanEffectEntries)
+  ; Same order as a catalog scan: buffs, then debuffs, so Fed and Hydrated still suppress Malnourished and Dehydrated.
+  entries = AppendStillActiveCatalogSources(entries, player, scanEffects, scanEffectEntries, "B:")
   entries = AppendDirectGenericBuffs(entries, player, scanEffects, scanEffectEntries)
-  Int buffCount = entries.Length
-  entries = AppendActiveEffects(entries, player, DebuffEffects, DebuffLabels, "D", scanEffects, scanEffectEntries)
+  entries = AppendStillActiveCatalogSources(entries, player, scanEffects, scanEffectEntries, "D:")
   entries = AppendDirectGenericDebuffs(entries, player, scanEffects, scanEffectEntries)
   entries = AppendActiveAfflictions(entries, player, scanAfflictions, scanAfflictionEntries)
   entries = AppendActiveEnvironmentalStatuses(entries, player, scanSpells, scanSpellEntries)
-  Int debuffCount = entries.Length - buffCount
-  String signature = ""
-  Int index = 0
-  While (index < entries.Length)
-    signature += entries[index] + ";"
-    index += 1
-  EndWhile
-  Bool entriesChanged = signature != LastEffectSignature
-  Float now = Utility.GetCurrentRealTime()
-  If (!forcedRefresh && !entriesChanged && now >= LastEffectSnapshotAt && now - LastEffectSnapshotAt < 60.0)
-    FinishEffectBuild(candidate, False)
-    Return
-  EndIf
-  String eventTopic = ResolveStatusTopic()
-  String payload = buffCount + "|" + debuffCount + "|" + signature
-  String datagram = Registry.BuildCanvasDatagramBody("effects.state", 1, "ci-ascii", payload)
-  String framedPacket = Registry.BuildCanvasEventPacket(eventTopic, datagram)
-  Int framedLength = Registry.GetCharacterCount(framedPacket)
-  If (eventTopic == "" || datagram == "" || framedPacket == "" || framedLength > 4096)
-    LogUserWarning(ModuleName, "PrepareEffectSnapshot", "EFFECT_DATAGRAM_REJECTED | Buffs=" + buffCount + " | Debuffs=" + debuffCount + " | Length=" + framedLength + " | Limit=4096")
-    FinishEffectBuild(candidate, True)
-    Return
-  EndIf
-  candidate.Signature = signature
-  candidate.Payload = payload
-  ; An unchanged forced scan must not schedule another one. Recovery is only for a payload the UI has not seen.
-  candidate.RecoveryReplay = !recoveryRefresh && entriesChanged
-  Bool queued = False
-  LockGuard EffectSnapshotGuard
-    If (EffectSnapshotBuilding && EffectSourceRevision == candidate.Revision)
-      PendingEntries = entries
-      PendingEffects = scanEffects
-      PendingSourceEffectEntries = scanEffectEntries
-      PendingAfflictions = scanAfflictions
-      PendingAfflictionEntries = scanAfflictionEntries
-      PendingSpells = scanSpells
-      PendingSpellEntries = scanSpellEntries
-      PendingSnapshot = candidate
-      PendingEffectSignature = signature
-      PendingEffectPayload = payload
-      PendingEffectNeedsRecoveryReplay = candidate.RecoveryReplay
-      EffectSnapshotBuilding = False
-      queued = True
-    EndIf
-  EndLockGuard
-  If (queued)
-    LogUserInformational(ModuleName, "PrepareEffectSnapshot", "EFFECT_DATAGRAM_QUEUED | Type=effects.state | Schema=1 | Buffs=" + buffCount + " | Debuffs=" + debuffCount + " | Length=" + framedLength)
-    CancelTimer(33)
-    StartTimer(0.1, 33)
-  EndIf
+  QueueBuiltSnapshot(candidate, entries, scanEffects, scanEffectEntries, scanAfflictions, scanAfflictionEntries, scanSpells, scanSpellEntries, forcedRefresh, recoveryRefresh)
 EndFunction
 
 ; Missing prerequisites and rejected builds share the bounded budget; heartbeat survives exhaustion.
@@ -554,7 +566,7 @@ String[] Function AppendActiveEnvironmentalStatuses(String[] entries, Actor play
   entries = AppendNamedWeatherStatuses(entries, player, sources, sourceEntries)
   entries = AppendIncomingWeather(entries, player, sources, sourceEntries)
   entries = AppendLiveWeatherConditions(entries, player)
-  Spell toxicGas = Game.GetFormFromFile(0x245B6B, "Starfield.esm") as Spell
+  Spell toxicGas = ResolveToxicGasSpell()
   If (toxicGas != None && player.HasSpell(toxicGas))
     String entry = "D:#" + toxicGas.GetFormID() + ":Toxic Gas Hazard"
     entries.Add(entry)
@@ -621,47 +633,54 @@ String[] Function AppendActiveEffects(String[] entries, Actor player, FormList c
   Int index = 0
   Int catalogSize = catalog.GetSize()
   While (index < catalogSize)
-    MagicEffect effect = catalog.GetAt(index) as MagicEffect
-    If (effect != None && player.HasMagicEffect(effect))
-      String label = ""
-      Bool grouped = False
-      If (IsSustenanceFoodEffect(effect))
-        label = "Malnourished"
-        grouped = True
-      ElseIf (IsSustenanceDrinkEffect(effect))
-        label = "Dehydrated"
-        grouped = True
-      ElseIf (IsSustenanceHydratedEffect(effect))
-        label = "Hydrated"
-        grouped = True
-      ElseIf (IsSustenanceFedEffect(effect))
-        label = "Fed"
-        grouped = True
-      ElseIf (labels != None && labels.Length == catalogSize && index < labels.Length && labels[index] != "")
-        label = labels[index]
-      Else
-        ; Existing saves can retain the old broad VMAD label arrays after the FormLists are updated.
-        label = ResolveKnownBuffLabel(effect)
-      EndIf
-      If (label == "")
-        label = "EFFECT " + effect.GetFormID()
-      EndIf
-      String entry = category + ":#" + effect.GetFormID() + ":" + label
-      If (grouped)
-        entry = category + ":" + label
-      EndIf
-      ; Starfield can retain a negative sustenance modifier while its positive
-      ; player-facing state is active. Buffs are assembled first, so keep one
-      ; visible state per food or drink family.
-      Bool suppressed = IsSuppressedSustenanceEntry(entries, entry)
-      If ((!grouped || !ContainsEffectEntry(entries, entry)) && !suppressed)
-        entries.Add(entry)
-      EndIf
-      sources.Add(effect)
-      sourceEntries.Add(entry)
-    EndIf
+    entries = AppendOneCatalogEffect(entries, player, catalog, labels, category, sources, sourceEntries, index, catalogSize)
     index += 1
   EndWhile
+  Return entries
+EndFunction
+
+; One catalog slot. The sliced scan and the full walk must publish the same entry text.
+String[] Function AppendOneCatalogEffect(String[] entries, Actor player, FormList catalog, String[] labels, String category, MagicEffect[] sources, String[] sourceEntries, Int index, Int catalogSize)
+  MagicEffect effect = catalog.GetAt(index) as MagicEffect
+  If (effect == None || player == None || !player.HasMagicEffect(effect))
+    Return entries
+  EndIf
+  String label = ""
+  Bool grouped = False
+  If (IsSustenanceFoodEffect(effect))
+    label = "Malnourished"
+    grouped = True
+  ElseIf (IsSustenanceDrinkEffect(effect))
+    label = "Dehydrated"
+    grouped = True
+  ElseIf (IsSustenanceHydratedEffect(effect))
+    label = "Hydrated"
+    grouped = True
+  ElseIf (IsSustenanceFedEffect(effect))
+    label = "Fed"
+    grouped = True
+  ElseIf (labels != None && labels.Length == catalogSize && index < labels.Length && labels[index] != "")
+    label = labels[index]
+  Else
+    ; Existing saves can retain the old broad VMAD label arrays after the FormLists are updated.
+    label = ResolveKnownBuffLabel(effect)
+  EndIf
+  If (label == "")
+    label = "EFFECT " + effect.GetFormID()
+  EndIf
+  String entry = category + ":#" + effect.GetFormID() + ":" + label
+  If (grouped)
+    entry = category + ":" + label
+  EndIf
+  ; Starfield can retain a negative sustenance modifier while its positive
+  ; player-facing state is active. Buffs are assembled first, so keep one
+  ; visible state per food or drink family.
+  Bool suppressed = IsSuppressedSustenanceEntry(entries, entry)
+  If ((!grouped || !ContainsEffectEntry(entries, entry)) && !suppressed)
+    entries.Add(entry)
+  EndIf
+  sources.Add(effect)
+  sourceEntries.Add(entry)
   Return entries
 EndFunction
 
@@ -783,6 +802,7 @@ Function PublishNextEffectPacket()
         ActiveSourceSpells = PendingSpells
         ActiveSourceSpellEntries = PendingSpellEntries
         LastEffectSignature = candidate.Signature
+        LastEffectPayload = candidate.Payload
         LastActiveEffectCount = PendingEntries.Length
         LastEffectSnapshotAt = now
         EffectRetryCount = 0
@@ -836,11 +856,12 @@ Function CheckGenericEffectSignature()
     Return
   EndIf
   LastGenericEffectSignature = signature
-  RequestEffectRefresh(True)
+  RequestEffectRefresh(False)
 EndFunction
 
 String Function BuildGenericEffectSignature(Actor player)
   Bool bleeding = HasAnyMagicEffect(player, 0x23E9BF, 0x2E8148, 0)
+  String afflictionSignature = ""
   Bool poisoning = False
   Bool radiation = False
   Bool thermal = False
@@ -851,20 +872,17 @@ String Function BuildGenericEffectSignature(Actor player)
     Int index = 0
     While (index < afflictions.Length)
       ENV_AfflictionScript affliction = afflictions[index]
-      If (affliction != None)
+      If (affliction != None && HasAfflictionSpell(player, affliction))
         String afflictionId = affliction.ID
+        afflictionSignature += afflictionId + ";"
         If (afflictionId == "Poisoning")
-          poisoning = HasAfflictionSpell(player, affliction)
+          poisoning = True
         ElseIf (afflictionId == "RadiationPoisoning")
-          radiation = HasAfflictionSpell(player, affliction)
+          radiation = True
         ElseIf (afflictionId == "Burns" || afflictionId == "Heatstroke")
-          If (HasAfflictionSpell(player, affliction))
-            thermal = True
-          EndIf
+          thermal = True
         ElseIf (afflictionId == "Frostbite" || afflictionId == "Hypothermia")
-          If (HasAfflictionSpell(player, affliction))
-            cold = True
-          EndIf
+          cold = True
         EndIf
       EndIf
       index += 1
@@ -906,7 +924,7 @@ String Function BuildGenericEffectSignature(Actor player)
   If (rested)
     signature += "B:Well Rested;"
   EndIf
-  Return signature + WeatherSignature(player)
+  Return afflictionSignature + signature + WeatherSignature(player)
 EndFunction
 
 Bool Function HasAnyMagicEffect(Actor player, Int formIdA, Int formIdB, Int formIdC)
@@ -1241,6 +1259,9 @@ Bool Function RememberMagicEffect(Actor player, MagicEffect[] sources, String[] 
   If (effect == None || !player.HasMagicEffect(effect))
     Return False
   EndIf
+  If (HasMagicEffectInSources(sources, effect))
+    Return True
+  EndIf
   sources.Add(effect)
   sourceEntries.Add(entry)
   Return True
@@ -1251,4 +1272,289 @@ String Function ResolveStatusTopic()
     Return StatusTopic
   EndIf
   Return ""
+EndFunction
+
+; Repeating ship and environment effects are not catalog rows. Cache their runtime ids after one miss so they cannot schedule a walk.
+Bool Function EffectMayNeedCatalogScan(MagicEffect effect)
+  If (effect == None)
+    Return False
+  EndIf
+  Int effectId = effect.GetFormID()
+  If (HasIgnoredApplyEffect(effectId) || HasActiveSourceEffect(effect))
+    Return False
+  EndIf
+  If (BuffEffects != None && BuffEffects.Find(effect) >= 0)
+    Return True
+  EndIf
+  If (DebuffEffects != None && DebuffEffects.Find(effect) >= 0)
+    Return True
+  EndIf
+  RememberIgnoredApplyEffect(effectId)
+  Return False
+EndFunction
+
+Bool Function HasIgnoredApplyEffect(Int effectId)
+  If (IgnoredApplyEffectIds == None)
+    Return False
+  EndIf
+  Int index = 0
+  While (index < IgnoredApplyEffectIds.Length)
+    If (IgnoredApplyEffectIds[index] == effectId)
+      Return True
+    EndIf
+    index += 1
+  EndWhile
+  Return False
+EndFunction
+
+Function RememberIgnoredApplyEffect(Int effectId)
+  If (IgnoredApplyEffectIds == None)
+    IgnoredApplyEffectIds = new Int[0]
+  EndIf
+  IgnoredApplyEffectIds.Add(effectId)
+EndFunction
+
+Bool Function HasActiveSourceEffect(MagicEffect effect)
+  If (effect == None || ActiveSourceEffects == None)
+    Return False
+  EndIf
+  Int index = 0
+  While (index < ActiveSourceEffects.Length)
+    If (ActiveSourceEffects[index] == effect)
+      Return True
+    EndIf
+    index += 1
+  EndWhile
+  Return False
+EndFunction
+
+; The HUD movie may have been recreated. Resend the last payload; do not walk the catalogs.
+Function RepublishCachedEffects()
+  If (LastEffectPayload == "" || Registry == None || CatalogScanActive || EffectSnapshotBuilding || PendingSnapshot != None)
+    Return
+  EndIf
+  String publishTopic = ResolveStatusTopic()
+  If (publishTopic == "")
+    Return
+  EndIf
+  OperationResult result = Registry.TryPublishCanvasDatagram(publishTopic, "effects.state", 1, "ci-ascii", LastEffectPayload)
+  String status = "DEFERRED_REGISTRY_UNAVAILABLE"
+  If (result != None)
+    status = result.Status
+  EndIf
+  LogUserInformational(ModuleName, "RepublishCachedEffects", "EFFECT_CACHE_REPLAY | Status=" + status)
+EndFunction
+
+; Claimed by PrepareEffectSnapshot. Return immediately so HUD registration can run, then walk a few entries per timer.
+Function BeginCatalogScan(Actor player, EffectSnapshot candidate, Bool forcedRefresh, Bool recoveryRefresh)
+  CatalogDirty = False
+  CatalogScanActive = True
+  CatalogScanPhase = 0
+  CatalogScanIndex = 0
+  CatalogSliceRevision = candidate.Revision
+  CatalogSliceForced = forcedRefresh
+  CatalogSliceRecovery = recoveryRefresh
+  CatalogSliceCandidate = candidate
+  CatalogSliceEntries = new String[0]
+  CatalogSliceEffects = new MagicEffect[0]
+  CatalogSliceEffectEntries = new String[0]
+  CatalogSliceAfflictions = new ENV_AfflictionScript[0]
+  CatalogSliceAfflictionEntries = new String[0]
+  CatalogSliceSpells = new Spell[0]
+  CatalogSliceSpellEntries = new String[0]
+  LogUserInformational(ModuleName, "BeginCatalogScan", "CATALOG_SCAN_STARTED | Revision=" + candidate.Revision + " | Player=" + player)
+  CancelTimer(36)
+  StartTimer(0.05, 36)
+EndFunction
+
+Function ContinueCatalogScan()
+  If (!CatalogScanActive)
+    Return
+  EndIf
+  If (EffectSourceRevision != CatalogSliceRevision || CatalogSliceCandidate == None)
+    CatalogScanActive = False
+    Return
+  EndIf
+  Actor player = Game.GetPlayer()
+  If (player == None || BuffEffects == None || DebuffEffects == None)
+    CatalogDirty = True
+    CatalogScanActive = False
+    FinishEffectBuild(CatalogSliceCandidate, True)
+    Return
+  EndIf
+  Int budget = 6
+  If (CatalogScanPhase == 0)
+    budget = ConsumeCatalogSlice(player, BuffEffects, BuffLabels, "B", budget)
+    If (CatalogScanIndex >= BuffEffects.GetSize())
+      CatalogSliceEntries = AppendDirectGenericBuffs(CatalogSliceEntries, player, CatalogSliceEffects, CatalogSliceEffectEntries)
+      CatalogScanPhase = 1
+      CatalogScanIndex = 0
+    EndIf
+  EndIf
+  If (CatalogScanPhase == 1 && budget > 0)
+    budget = ConsumeCatalogSlice(player, DebuffEffects, DebuffLabels, "D", budget)
+    If (CatalogScanIndex >= DebuffEffects.GetSize())
+      FinishCatalogScan(player)
+      Return
+    EndIf
+  EndIf
+  StartTimer(0.05, 36)
+EndFunction
+
+Int Function ConsumeCatalogSlice(Actor player, FormList catalog, String[] labels, String category, Int budget)
+  If (catalog == None || budget <= 0)
+    Return budget
+  EndIf
+  Int catalogSize = catalog.GetSize()
+  While (budget > 0 && CatalogScanIndex < catalogSize)
+    CatalogSliceEntries = AppendOneCatalogEffect(CatalogSliceEntries, player, catalog, labels, category, CatalogSliceEffects, CatalogSliceEffectEntries, CatalogScanIndex, catalogSize)
+    CatalogScanIndex += 1
+    budget -= 1
+  EndWhile
+  Return budget
+EndFunction
+
+Function FinishCatalogScan(Actor player)
+  CatalogScanActive = False
+  CatalogSliceEntries = AppendDirectGenericDebuffs(CatalogSliceEntries, player, CatalogSliceEffects, CatalogSliceEffectEntries)
+  CatalogSliceEntries = AppendActiveAfflictions(CatalogSliceEntries, player, CatalogSliceAfflictions, CatalogSliceAfflictionEntries)
+  CatalogSliceEntries = AppendActiveEnvironmentalStatuses(CatalogSliceEntries, player, CatalogSliceSpells, CatalogSliceSpellEntries)
+  QueueBuiltSnapshot(CatalogSliceCandidate, CatalogSliceEntries, CatalogSliceEffects, CatalogSliceEffectEntries, CatalogSliceAfflictions, CatalogSliceAfflictionEntries, CatalogSliceSpells, CatalogSliceSpellEntries, CatalogSliceForced, CatalogSliceRecovery)
+EndFunction
+
+; Starfield has no StringUtil. Character codes are enough to keep B: and D: rows in scan order.
+Bool Function EntryHasPrefix(String entry, String prefix)
+  If (entry == "" || prefix == "")
+    Return False
+  EndIf
+  Int[] entryChars = Utility.SplitStringChars(entry)
+  Int[] prefixChars = Utility.SplitStringChars(prefix)
+  If (entryChars == None || prefixChars == None || entryChars.Length < prefixChars.Length)
+    Return False
+  EndIf
+  Int index = 0
+  While (index < prefixChars.Length)
+    If (entryChars[index] != prefixChars[index])
+      Return False
+    EndIf
+    index += 1
+  EndWhile
+  Return True
+EndFunction
+
+; Carries catalog rows that are still active so a removal or generic change does not walk both FormLists.
+String[] Function AppendStillActiveCatalogSources(String[] entries, Actor player, MagicEffect[] sources, String[] sourceEntries, String prefix)
+  If (player == None || ActiveSourceEffects == None || ActiveSourceEffectEntries == None || prefix == "")
+    Return entries
+  EndIf
+  Int index = 0
+  While (index < ActiveSourceEffects.Length && index < ActiveSourceEffectEntries.Length)
+    MagicEffect effect = ActiveSourceEffects[index]
+    String entry = ActiveSourceEffectEntries[index]
+    If (effect != None && entry != "" && EntryHasPrefix(entry, prefix) && player.HasMagicEffect(effect))
+      Bool suppressed = IsSuppressedSustenanceEntry(entries, entry)
+      If (!ContainsEffectEntry(entries, entry) && !suppressed)
+        entries.Add(entry)
+      EndIf
+      If (!HasMagicEffectInSources(sources, effect))
+        sources.Add(effect)
+        sourceEntries.Add(entry)
+      EndIf
+    EndIf
+    index += 1
+  EndWhile
+  Return entries
+EndFunction
+
+Bool Function HasMagicEffectInSources(MagicEffect[] sources, MagicEffect effect)
+  If (sources == None || effect == None)
+    Return False
+  EndIf
+  Int index = 0
+  While (index < sources.Length)
+    If (sources[index] == effect)
+      Return True
+    EndIf
+    index += 1
+  EndWhile
+  Return False
+EndFunction
+
+Spell Function ResolveToxicGasSpell()
+  If (ToxicGasSpellResolved)
+    Return CachedToxicGasSpell
+  EndIf
+  CachedToxicGasSpell = Game.GetFormFromFile(0x245B6B, "Starfield.esm") as Spell
+  ToxicGasSpellResolved = CachedToxicGasSpell != None
+  Return CachedToxicGasSpell
+EndFunction
+
+; Both the fast path and the finished catalog scan publish through this so the payload format stays one implementation.
+Function QueueBuiltSnapshot(EffectSnapshot candidate, String[] entries, MagicEffect[] scanEffects, String[] scanEffectEntries, ENV_AfflictionScript[] scanAfflictions, String[] scanAfflictionEntries, Spell[] scanSpells, String[] scanSpellEntries, Bool forcedRefresh, Bool recoveryRefresh)
+  Int buffCount = 0
+  Int countIndex = 0
+  While (entries != None && countIndex < entries.Length)
+    If (entries[countIndex] != "" && EntryHasPrefix(entries[countIndex], "B:"))
+      buffCount += 1
+    EndIf
+    countIndex += 1
+  EndWhile
+  Int debuffCount = 0
+  If (entries != None)
+    debuffCount = entries.Length - buffCount
+  EndIf
+  String signature = ""
+  Int index = 0
+  While (entries != None && index < entries.Length)
+    signature += entries[index] + ";"
+    index += 1
+  EndWhile
+  Bool entriesChanged = signature != LastEffectSignature
+  Float now = Utility.GetCurrentRealTime()
+  If (!forcedRefresh && !entriesChanged && now >= LastEffectSnapshotAt && now - LastEffectSnapshotAt < 60.0)
+    FinishEffectBuild(candidate, False)
+    Return
+  EndIf
+  String eventTopic = ResolveStatusTopic()
+  String payload = buffCount + "|" + debuffCount + "|" + signature
+  String datagram = ""
+  String framedPacket = ""
+  Int framedLength = 0
+  If (Registry != None)
+    datagram = Registry.BuildCanvasDatagramBody("effects.state", 1, "ci-ascii", payload)
+    framedPacket = Registry.BuildCanvasEventPacket(eventTopic, datagram)
+    framedLength = Registry.GetCharacterCount(framedPacket)
+  EndIf
+  If (eventTopic == "" || datagram == "" || framedPacket == "" || framedLength > 4096)
+    LogUserWarning(ModuleName, "PrepareEffectSnapshot", "EFFECT_DATAGRAM_REJECTED | Buffs=" + buffCount + " | Debuffs=" + debuffCount + " | Length=" + framedLength + " | Limit=4096")
+    FinishEffectBuild(candidate, True)
+    Return
+  EndIf
+  candidate.Signature = signature
+  candidate.Payload = payload
+  ; An unchanged forced scan must not schedule another one. Recovery is only for a payload the UI has not seen.
+  candidate.RecoveryReplay = !recoveryRefresh && entriesChanged
+  Bool queued = False
+  LockGuard EffectSnapshotGuard
+    If (EffectSnapshotBuilding && EffectSourceRevision == candidate.Revision)
+      PendingEntries = entries
+      PendingEffects = scanEffects
+      PendingSourceEffectEntries = scanEffectEntries
+      PendingAfflictions = scanAfflictions
+      PendingAfflictionEntries = scanAfflictionEntries
+      PendingSpells = scanSpells
+      PendingSpellEntries = scanSpellEntries
+      PendingSnapshot = candidate
+      PendingEffectSignature = signature
+      PendingEffectPayload = payload
+      PendingEffectNeedsRecoveryReplay = candidate.RecoveryReplay
+      EffectSnapshotBuilding = False
+      queued = True
+    EndIf
+  EndLockGuard
+  If (queued)
+    LogUserInformational(ModuleName, "PrepareEffectSnapshot", "EFFECT_DATAGRAM_QUEUED | Type=effects.state | Schema=1 | Buffs=" + buffCount + " | Debuffs=" + debuffCount + " | Length=" + framedLength)
+    CancelTimer(33)
+    StartTimer(0.1, 33)
+  EndIf
 EndFunction
