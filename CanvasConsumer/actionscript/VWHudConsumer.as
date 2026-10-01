@@ -8,6 +8,7 @@ package
    import flash.events.TimerEvent;
    import flash.geom.Point;
    import flash.utils.Timer;
+   import flash.utils.getTimer;
 
    public final class VWHudConsumer extends MovieClip
    {
@@ -25,6 +26,10 @@ package
       private var sentHtmlKey:String = "";
       private var compassSlot:DisplayObject;
       private var radarSlot:DisplayObject;
+      private var traceCause:String = "ready";
+      private var slowInstrumentAt:int = -500;
+      private var pulseTimer:Timer;
+      private var lastPulseAt:int = 0;
 
       public function getCanvasRegistration() : Object
       {
@@ -60,7 +65,13 @@ package
          this.pageTimer.start();
          this.scannerTimer = new Timer(140);
          this.scannerTimer.addEventListener(TimerEvent.TIMER,this.onScanner);
+         this.traceCause = "ready";
+         trace("VWHUD TRACE | ready | t=" + getTimer());
          this.publish();
+         this.lastPulseAt = getTimer();
+         this.pulseTimer = new Timer(1000);
+         this.pulseTimer.addEventListener(TimerEvent.TIMER,this.onPulse);
+         this.pulseTimer.start();
       }
 
       public function handleUIData(channel:String, data:Object) : void
@@ -78,12 +89,17 @@ package
          var scanner:Object = this.conditions.getValue("inscanner");
          if(scanner != null && scanner.value === true) this.scannerTimer.start();
          else { this.scannerTimer.stop(); this.scannerStep = 0; }
+         this.traceCause = channel;
          this.publish();
       }
 
       public function handleCanvasEvent(topic:String, body:String) : void
       {
-         if(!this.disposed && topic == VWHudVariant.NAMESPACE+".status" && this.effects.acceptDatagram(body)) this.publish();
+         if(!this.disposed && topic == VWHudVariant.NAMESPACE+".status" && this.effects.acceptDatagram(body))
+         {
+            this.traceCause = "status";
+            this.publish();
+         }
       }
 
       public function dispose() : void
@@ -104,6 +120,10 @@ package
          {
             this.scannerTimer.stop(); this.scannerTimer.removeEventListener(TimerEvent.TIMER,this.onScanner); this.scannerTimer = null;
          }
+         if(this.pulseTimer != null)
+         {
+            this.pulseTimer.stop(); this.pulseTimer.removeEventListener(TimerEvent.TIMER,this.onPulse); this.pulseTimer = null;
+         }
          if(this.model != null)
          {
             this.model.removeEventListener(VWHudViewModel.VALUE_CHANGE,this.onModelChange);
@@ -114,12 +134,13 @@ package
          if(this.contactRadar != null && this.contactRadar.parent === this) removeChild(this.contactRadar);
          this.compassTape = null; this.contactRadar = null;
          this.compassSlot = null; this.radarSlot = null; this.sentHtmlKey = "";
+         this.traceCause = "ready"; this.slowInstrumentAt = -500; this.lastPulseAt = 0;
          this.bridge = null; this.conditions = null; this.scannerStep = 0; this.receiving = false;
       }
 
-      private function onModelChange(event:Event) : void { if(!this.receiving) this.publish(); }
-      private function onPage(event:TimerEvent) : void { if(this.effects.advancePage()) this.publish(); }
-      private function onScanner(event:TimerEvent) : void { this.scannerStep = (this.scannerStep+1)%7; this.publish(); }
+      private function onModelChange(event:Event) : void { if(!this.receiving) { this.traceCause = "model"; this.publish(); } }
+      private function onPage(event:TimerEvent) : void { if(this.effects.advancePage()) { this.traceCause = "page"; this.publish(); } }
+      private function onScanner(event:TimerEvent) : void { this.scannerStep = (this.scannerStep+1)%7; this.traceCause = "scanner"; this.publish(); }
 
       private function publish() : void
       {
@@ -141,12 +162,18 @@ package
             data["theme.logo"] = VWHudVariant.LOGO;
             var scanning:Object = this.conditions.getValue("inscanner");
             VWHudPresentation.update(data,this.model.currentTacticalAwarenessData,this.scannerStep,scanning != null && scanning.value === true);
+            var instrumentStarted:int = getTimer();
             this.updateInstruments();
+            this.noteSlowInstruments(instrumentStarted);
          }
          catch(error:*) { throw this.stageError("present",error); }
          // Compass and environment packets arrive many times a second. Rebuilding the HTML document for an unchanged clock, threat, or hazard set is what drops the frame rate.
          var key:String = this.htmlSignature(data);
          if(key == this.sentHtmlKey) return;
+         var started:int = getTimer();
+         var fields:String = "unlisted";
+         try { fields = this.changedFields(this.sentHtmlKey,key); } catch(ignoredFields:*) {}
+         trace("VWHUD TRACE | setData begin | t=" + started + " | cause=" + this.traceCause + " | " + fields);
          try
          {
             this.bridge.setData(data);
@@ -158,7 +185,59 @@ package
             try { text = String(error); } catch(ignored:*) { text = "unprintable"; }
             if(text.indexOf("#1069") < 0 && text.indexOf("1069 ") != 0) throw this.stageError("setdata",text);
          }
-         finally { this.alignInstruments(); }
+         finally
+         {
+            var finished:int = getTimer();
+            trace("VWHUD TRACE | setData end | t=" + finished + " | ms=" + (finished - started) + " | cause=" + this.traceCause);
+            this.alignInstruments();
+         }
+      }
+
+      // One line a second. gap is getTimer since the previous pulse, so a frozen movie shows up as one large gap when it resumes.
+      private function onPulse(event:TimerEvent) : void
+      {
+         var now:int = getTimer();
+         var gap:int = now - this.lastPulseAt;
+         this.lastPulseAt = now;
+         trace("VWHUD TRACE | pulse | t=" + now + " | gap=" + gap);
+      }
+
+      // SFSE Scaleform logging writes trace() to sfse.txt. Unchanged packets stay silent.
+      private function noteSlowInstruments(started:int) : void
+      {
+         var elapsed:int = getTimer() - started;
+         if(elapsed < 16) return;
+         var now:int = getTimer();
+         if(now - this.slowInstrumentAt < 500) return;
+         this.slowInstrumentAt = now;
+         trace("VWHUD TRACE | instruments | t=" + now + " | ms=" + elapsed + " | cause=" + this.traceCause);
+      }
+
+      private function changedFields(previous:String, next:String) : String
+      {
+         if(previous == null || previous.length == 0) return "initial";
+         var before:Object = {};
+         var lines:Array = previous.split("\n");
+         var index:int = 0;
+         while(index < lines.length)
+         {
+            var line:String = String(lines[index]);
+            var cut:int = line.indexOf("=");
+            if(cut >= 0) before[line.substr(0,cut)] = line;
+            ++index;
+         }
+         var names:Array = [];
+         lines = next.split("\n");
+         index = 0;
+         while(index < lines.length && names.length < 8)
+         {
+            line = String(lines[index]);
+            cut = line.indexOf("=");
+            var name:String = cut < 0 ? line : line.substr(0,cut);
+            if(before[name] != line) names.push(name);
+            ++index;
+         }
+         return names.length == 0 ? "removed" : names.join(",");
       }
 
       private function htmlSignature(data:Object) : String

@@ -9,6 +9,7 @@
 
 ## Version 2.1.0 (Unreleased)
 
+- Record Scaleform timings for the frame-rate drop. With SFSE Scaleform logging enabled, `sfse.txt` shows whether a stall is the HTML rebuild, the compass and radar, or outside this movie.
 - Stop publishing status datagrams, so ShowCustomWatchAlert is used for HUD registration only while we check whether those datagrams are the frame-rate drop.
 - Hold the first status-catalog walk until HUD registration watch alerts have been quiet, skip a datagram that is already stale, and do not let the generic-signature poll dirty an in-flight scan, so load publishes the effect list once instead of stacking scans on the watch-alert pump.
 - Walk the status catalog a few entries at a time, ignore repeating effects that are not status rows, and republish the last payload when the HUD opens, so an unchanged list no longer freezes the game or delays the HUD.
