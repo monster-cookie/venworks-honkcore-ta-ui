@@ -79,7 +79,9 @@ package
 
       public function handleUIData(channel:String, data:Object) : void
       {
-         if(this.model == null || data == null) return;
+         if(this.model == null) return;
+         if(this.statusProbe != null) this.statusProbe.noteWatch(channel,data);
+         if(data == null) return;
          this.receiving = true;
          try
          {

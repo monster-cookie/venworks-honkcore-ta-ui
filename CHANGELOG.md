@@ -13,6 +13,7 @@
 - Record Scaleform timings for the frame-rate drop. With SFSE Scaleform logging enabled, `sfse.txt` shows whether a stall is the HTML rebuild, a status datagram, the compass and radar, or outside this movie.
 - Publish the status buff and debuff list again. Each status datagram is timed in that Scaleform log, including a snapshot that does not change the list.
 - Trace a direct PlayerStatusData subscription from the HUD movie. The log records the manager lookup, GetDataFromClient, Subscribe, and a short payload summary. The quest snapshot still writes the status rows.
+- Log the watch's reduced effect payloads, PersonalEffectsData and EnvironmentEffectsData, with each row's icon and any name or timer field.
 - Hold the first status-catalog walk until HUD registration watch alerts have been quiet, skip a datagram that is already stale, and do not let the generic-signature poll dirty an in-flight scan, so load publishes the effect list once instead of stacking scans on the watch-alert pump.
 - Walk the status catalog a few entries at a time, ignore repeating effects that are not status rows, and republish the last payload when the HUD opens, so an unchanged list no longer freezes the game or delays the HUD.
 - Do not start another status-catalog scan while one is still walking or its datagram is waiting to publish, and sample the generic status signature at most every five seconds, so the heartbeat cannot chain full scans and watch-alert submits.

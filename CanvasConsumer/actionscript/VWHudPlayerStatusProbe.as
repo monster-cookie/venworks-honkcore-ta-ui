@@ -24,6 +24,7 @@ package
       private var lastPayload:String = "";
       private var lastPayloadAt:int = 0;
       private var lastWaitAt:int = 0;
+      private var lastWatch:Object = {};
 
       public function VWHudPlayerStatusProbe(host:DisplayObject)
       {
@@ -263,6 +264,83 @@ package
          {
             var letter:String = text.charAt(index);
             cleaned += (letter == "\n" || letter == "\r" || letter == "|") ? " " : letter;
+            index++;
+         }
+         return cleaned;
+      }
+
+      // PersonalEffectsData and EnvironmentEffectsData are the watch's reduced effect list. Heading churn is left out of the summary.
+      public function noteWatch(channel:String, data:Object) : void
+      {
+         if(this.stopped || (channel != "PersonalEffectsData" && channel != "EnvironmentEffectsData")) return;
+         try
+         {
+            var summary:String = this.watchSummary(channel,data);
+            if(summary == this.lastWatch[channel]) return;
+            this.lastWatch[channel] = summary;
+            trace("VWHUD TRACE | watchdata | t=" + getTimer() + " | " + summary);
+         }
+         catch(watchError:*)
+         {
+            trace("VWHUD TRACE | watchdata | t=" + getTimer() + " | channel=" + channel + " | error=" + this.errorText(watchError));
+         }
+      }
+
+      private function watchSummary(channel:String, data:Object) : String
+      {
+         if(data == null) return "channel=" + channel + " | data=null";
+         var rows:Object = this.readNamed(data,"aPersonalEffects");
+         if(!(rows is Array)) rows = this.readNamed(data,"aEnvironmentEffects");
+         var icons:Array = [];
+         var names:Array = [];
+         var times:Array = [];
+         var rowKeys:String = "";
+         if(rows is Array)
+         {
+            var index:int = 0;
+            while(index < (rows as Array).length && index < 8)
+            {
+               var row:Object = (rows as Array)[index];
+               if(rowKeys == "" && row != null) rowKeys = this.keyList(row);
+               var icon:String = this.valueText(this.readNamed(row,"sEffectIcon"));
+               if(icon != "") icons.push(icon);
+               var label:String = this.valueText(this.readNamed(row,"sName"));
+               if(label == "") label = this.valueText(this.readNamed(row,"sDescription"));
+               if(label != "") names.push(label);
+               var remaining:* = this.readNamed(row,"fTimeRemaining");
+               if(remaining == null) remaining = this.readNamed(row,"fDuration");
+               if(remaining != null && isFinite(Number(remaining))) times.push(String(int(Math.round(Number(remaining)))));
+               index++;
+            }
+         }
+         return "channel=" + channel + " | count=" + (rows is Array ? (rows as Array).length : -1) + " | root=" + this.keyList(data) + " | rowkeys=" + rowKeys + " | icons=" + icons.join(",") + " | names=" + names.join(",") + " | times=" + times.join(",");
+      }
+
+      private function readNamed(source:Object, name:String) : *
+      {
+         if(source == null) return null;
+         try { return source[name]; }
+         catch(readError:*) { return null; }
+      }
+
+      private function valueText(value:*) : String
+      {
+         if(value == null) return "";
+         var kind:String = typeof value;
+         if(kind == "string") return this.clip(String(value));
+         if(kind == "boolean") return value === true ? "1" : "0";
+         if(kind == "number") return isFinite(Number(value)) ? String(Number(value)) : "";
+         return "";
+      }
+
+      private function clip(text:String) : String
+      {
+         var cleaned:String = "";
+         var index:int = 0;
+         while(index < text.length && cleaned.length < 40)
+         {
+            var letter:String = text.charAt(index);
+            cleaned += (letter == "\n" || letter == "\r" || letter == "|" || letter == ",") ? " " : letter;
             index++;
          }
          return cleaned;
