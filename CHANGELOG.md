@@ -9,6 +9,7 @@
 
 ## Version 2.1.0 (Unreleased)
 
+- Show a new status effect from the rows already known to be active. Food, drink, rest, bleeding, and a newly applied chem update without waiting for a walk of the whole effect catalog. Effects that were already active when the HUD loaded can still appear a moment later, after that walk finishes.
 - Rebuild the theme when health, oxygen, CO2, or boost crosses a meter segment, not on every point. The raw point values stay off that rebuild, and the critical-health number still updates while that banner is up.
 - Record Scaleform timings for the frame-rate drop. With SFSE Scaleform logging enabled, `sfse.txt` shows whether a stall is the HTML rebuild, a status datagram, the compass and radar, or outside this movie.
 - Publish the status buff and debuff list again. Each status datagram is timed in that Scaleform log, including a snapshot that does not change the list.

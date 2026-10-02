@@ -84,8 +84,14 @@ String[] PendingAfflictionEntries
 Spell[] PendingSpells
 String[] PendingSpellEntries
 Bool EffectHeartbeatPending = False
-; The FormList walk is a multi-second VM stall. It runs only after a listed effect can change, a few entries per timer, so HUD registration is not stuck behind it.
+; The FormList walk yields between slices so it cannot stall the VM. It reconciles chems that were already active. A new effect publishes from the known rows and does not wait for that walk.
 Bool CatalogDirty = True
+; Set only for the follow-up that walks. The first prepare after a dirty request publishes the fast snapshot first.
+Bool CatalogWalkReady = False
+Bool CatalogReconcilePending = False
+; True only while the datagram waiting to publish came from the catalog walk.
+Bool CatalogWalkQueued = False
+MagicEffect[] DiscoveredCatalogEffects
 Bool CatalogScanActive = False
 ; HUD registration uses the same watch-alert pump. Do not start the catalog walk until those alerts have been quiet.
 Float CatalogScanNotBefore = 0.0
@@ -210,6 +216,10 @@ Event Actor.OnPlayerLoadGame(Actor akSender)
   CachedAfflictionQuest = None
   MagicEffectEventRegistered = False
   CatalogDirty = True
+  CatalogWalkReady = False
+  CatalogReconcilePending = False
+  CatalogWalkQueued = False
+  DiscoveredCatalogEffects = None
   CatalogScanActive = False
   CatalogScanPhase = 0
   CatalogScanIndex = 0
@@ -319,22 +329,35 @@ Event OnTimer(Int aiTimerID)
   EndIf
 EndEvent
 
-; Re-register after each one-shot apply notification. Repeating ship and environment effects are not catalog rows and must not schedule a scan.
+; Re-register after each one-shot apply notification. A known row refreshes immediately. Repeating ship and environment effects are not catalog rows and must not schedule a walk.
 Event OnMagicEffectApply(ObjectReference akTarget, ObjectReference akCaster, MagicEffect akEffect)
   Bool playerTarget = False
+  Bool fastApply = False
   Bool catalogApply = False
   If (!StatusDatagramsEnabled())
     Return
   EndIf
   playerTarget = akTarget == Game.GetPlayer()
-  catalogApply = playerTarget && EffectMayNeedCatalogScan(akEffect)
-  If (catalogApply && !EffectRefreshPending)
-    LogUserInformational(ModuleName, "OnMagicEffectApply", "EVENT_TRIGGERED | Target=" + akTarget + " | Effect=" + akEffect)
+  If (playerTarget && akEffect != None && !HasActiveSourceEffect(akEffect))
+    ; Food, drink, rest, and bleeding already have a direct check. Remember any other catalog row so the fast snapshot can add it.
+    fastApply = EffectNeedsImmediateRefresh(akEffect)
+    If (!fastApply)
+      catalogApply = EffectMayNeedCatalogScan(akEffect)
+    EndIf
+  EndIf
+  If ((fastApply || catalogApply) && !EffectRefreshPending)
+    String applyPath = "fast"
+    If (catalogApply)
+      applyPath = "discovered"
+    EndIf
+    LogUserInformational(ModuleName, "OnMagicEffectApply", "EVENT_TRIGGERED | Target=" + akTarget + " | Effect=" + akEffect + " | Path=" + applyPath)
   EndIf
   MagicEffectEventRegistered = False
-  EnsureMagicEffectRegistrations(catalogApply)
+  EnsureMagicEffectRegistrations(fastApply || catalogApply)
   If (catalogApply)
-    CatalogDirty = True
+    RememberDiscoveredCatalogEffect(akEffect)
+  EndIf
+  If (fastApply || catalogApply)
     RequestEffectRefresh(False)
   EndIf
 EndEvent
@@ -409,7 +432,11 @@ Function RequestEffectRefresh(Bool forceSnapshot)
     StartTimer(15.0, 34)
   EndIf
   If (schedule)
-    StartTimer(CatalogScanStartDelay(), 31)
+    Float delay = CatalogScanStartDelay()
+    If (delay >= 1.0)
+      LogUserInformational(ModuleName, "RequestEffectRefresh", "EFFECT_REFRESH_HELD | Delay=" + delay)
+    EndIf
+    StartTimer(delay, 31)
   EndIf
 EndFunction
 
@@ -577,10 +604,14 @@ Function PrepareEffectSnapshot()
   If (!claimed)
     Return
   EndIf
-  If (CatalogDirty)
+  ; The follow-up walk is the only path that visits every catalog form. A dirty request publishes the known rows first.
+  If (CatalogDirty && CatalogWalkReady)
+    CatalogWalkReady = False
     BeginCatalogScan(player, candidate, forcedRefresh, recoveryRefresh)
     Return
   EndIf
+  Bool reconcileCatalog = CatalogDirty
+  CatalogDirty = False
   MagicEffect[] scanEffects = new MagicEffect[0]
   String[] scanEffectEntries = new String[0]
   ENV_AfflictionScript[] scanAfflictions = new ENV_AfflictionScript[0]
@@ -591,11 +622,18 @@ Function PrepareEffectSnapshot()
   ; Same order as a catalog scan: buffs, then debuffs, so Fed and Hydrated still suppress Malnourished and Dehydrated.
   entries = AppendStillActiveCatalogSources(entries, player, scanEffects, scanEffectEntries, "B:")
   entries = AppendDirectGenericBuffs(entries, player, scanEffects, scanEffectEntries)
+  entries = AppendDiscoveredCatalogEffects(entries, player, scanEffects, scanEffectEntries, "B")
   entries = AppendStillActiveCatalogSources(entries, player, scanEffects, scanEffectEntries, "D:")
   entries = AppendDirectGenericDebuffs(entries, player, scanEffects, scanEffectEntries)
+  entries = AppendDiscoveredCatalogEffects(entries, player, scanEffects, scanEffectEntries, "D")
   entries = AppendActiveAfflictions(entries, player, scanAfflictions, scanAfflictionEntries)
   entries = AppendActiveEnvironmentalStatuses(entries, player, scanSpells, scanSpellEntries)
+  CompactDiscoveredCatalogEffects(player)
+  If (reconcileCatalog)
+    CatalogReconcilePending = True
+  EndIf
   QueueBuiltSnapshot(candidate, entries, scanEffects, scanEffectEntries, scanAfflictions, scanAfflictionEntries, scanSpells, scanSpellEntries, forcedRefresh, recoveryRefresh)
+  StartCatalogReconcileIfIdle()
 EndFunction
 
 ; Timer 31 already cleared the pending flag. Put it back so the walk starts after the watch-alert pump is quiet.
@@ -942,6 +980,11 @@ Function PublishNextEffectPacket()
       EndIf
     EndLockGuard
     LogUserInformational(ModuleName, "PublishNextEffectPacket", "EFFECT_DATAGRAM_COALESCED | Revision=" + candidate.Revision + " | Skips=" + StaleDatagramSkips)
+    If (CatalogWalkQueued)
+      ; The dropped datagram was the catalog reconciliation. Publish the newer rows first, then walk again.
+      CatalogWalkQueued = False
+      CatalogReconcilePending = True
+    EndIf
     RequestEffectRefresh(True)
     Return
   EndIf
@@ -999,11 +1042,20 @@ Function PublishNextEffectPacket()
   EndLockGuard
   LogUserInformational(ModuleName, "PublishNextEffectPacket", "EFFECT_DATAGRAM_ATTEMPT | Status=" + status + " | Revision=" + candidate.Revision + " | Committed=" + committed + " | Retry=" + retry)
   If (committed)
+    CatalogWalkQueued = False
+    ReleaseCommittedDiscoveries()
     ScheduleActiveEffectCheck()
     If (candidate.RecoveryReplay)
       StartTimer(2.0, 35)
     EndIf
     If (refresh)
+      ; A row changed while this datagram was waiting. Publish that snapshot before spending time on the catalog walk.
+      RequestEffectRefresh(False)
+    ElseIf (CatalogReconcilePending)
+      ; The fast datagram is already submitted. The walk may add a chem that was active before this script saw an apply event.
+      CatalogReconcilePending = False
+      CatalogDirty = True
+      CatalogWalkReady = True
       RequestEffectRefresh(False)
     EndIf
   ElseIf (retry)
@@ -1448,6 +1500,134 @@ String Function ResolveStatusTopic()
   Return ""
 EndFunction
 
+; Food, drink, rest, and bleeding publish through the direct checks. They must not mark the whole catalog dirty.
+Bool Function EffectNeedsImmediateRefresh(MagicEffect effect)
+  If (effect == None)
+    Return False
+  EndIf
+  If (IsSustenanceFoodEffect(effect) || IsSustenanceDrinkEffect(effect) || IsSustenanceFedEffect(effect) || IsSustenanceHydratedEffect(effect))
+    Return True
+  EndIf
+  If (IsListedMagicEffect(effect, 0x23E9BF, 0x2E8148, 0))
+    Return True
+  EndIf
+  If (IsListedMagicEffect(effect, 0x05C527, 0, 0))
+    Return True
+  EndIf
+  Return False
+EndFunction
+
+Bool Function IsListedMagicEffect(MagicEffect effect, Int formIdA, Int formIdB, Int formIdC)
+  If (effect == None)
+    Return False
+  EndIf
+  If (formIdA != 0 && effect == ResolveMagicEffect(formIdA))
+    Return True
+  EndIf
+  If (formIdB != 0 && effect == ResolveMagicEffect(formIdB))
+    Return True
+  EndIf
+  If (formIdC != 0 && effect == ResolveMagicEffect(formIdC))
+    Return True
+  EndIf
+  Return False
+EndFunction
+
+Function RememberDiscoveredCatalogEffect(MagicEffect effect)
+  If (effect == None)
+    Return
+  EndIf
+  If (DiscoveredCatalogEffects == None)
+    DiscoveredCatalogEffects = new MagicEffect[0]
+  EndIf
+  Int index = 0
+  While (index < DiscoveredCatalogEffects.Length)
+    If (DiscoveredCatalogEffects[index] == effect)
+      Return
+    EndIf
+    index += 1
+  EndWhile
+  DiscoveredCatalogEffects.Add(effect)
+EndFunction
+
+; Inserts one newly applied catalog row. The full walk remains the backstop for effects that were already active.
+String[] Function AppendDiscoveredCatalogEffects(String[] entries, Actor player, MagicEffect[] sources, String[] sourceEntries, String category)
+  Int index = 0
+  Int listIndex = 0
+  MagicEffect effect = None
+  If (player == None || DiscoveredCatalogEffects == None || category == "")
+    Return entries
+  EndIf
+  While (index < DiscoveredCatalogEffects.Length)
+    effect = DiscoveredCatalogEffects[index]
+    listIndex = -1
+    If (effect != None && player.HasMagicEffect(effect) && !HasMagicEffectInSources(sources, effect))
+      If (category == "B" && BuffEffects != None)
+        listIndex = BuffEffects.Find(effect)
+        If (listIndex >= 0)
+          entries = AppendOneCatalogEffect(entries, player, BuffEffects, BuffLabels, "B", sources, sourceEntries, listIndex, BuffEffects.GetSize())
+        EndIf
+      ElseIf (category == "D" && DebuffEffects != None)
+        listIndex = DebuffEffects.Find(effect)
+        If (listIndex >= 0)
+          entries = AppendOneCatalogEffect(entries, player, DebuffEffects, DebuffLabels, "D", sources, sourceEntries, listIndex, DebuffEffects.GetSize())
+        EndIf
+      EndIf
+    EndIf
+    index += 1
+  EndWhile
+  Return entries
+EndFunction
+
+Function CompactDiscoveredCatalogEffects(Actor player)
+  If (DiscoveredCatalogEffects == None)
+    Return
+  EndIf
+  MagicEffect[] stillPending = new MagicEffect[0]
+  Int index = 0
+  While (index < DiscoveredCatalogEffects.Length)
+    MagicEffect effect = DiscoveredCatalogEffects[index]
+    If (effect != None && player != None && player.HasMagicEffect(effect))
+      stillPending.Add(effect)
+    EndIf
+    index += 1
+  EndWhile
+  DiscoveredCatalogEffects = stillPending
+EndFunction
+
+; A committed snapshot now owns these rows. Keep an effect that arrived after that snapshot was built.
+Function ReleaseCommittedDiscoveries()
+  If (DiscoveredCatalogEffects == None)
+    Return
+  EndIf
+  MagicEffect[] stillPending = new MagicEffect[0]
+  Int index = 0
+  While (index < DiscoveredCatalogEffects.Length)
+    MagicEffect effect = DiscoveredCatalogEffects[index]
+    If (effect != None && !HasActiveSourceEffect(effect))
+      stillPending.Add(effect)
+    EndIf
+    index += 1
+  EndWhile
+  DiscoveredCatalogEffects = stillPending
+EndFunction
+
+; The fast snapshot was not queued. Start the catalog walk on the next timer instead of publishing the same rows again.
+Function StartCatalogReconcileIfIdle()
+  If (!CatalogReconcilePending || CatalogScanActive || EffectSnapshotBuilding || PendingSnapshot != None)
+    Return
+  EndIf
+  CatalogReconcilePending = False
+  CatalogDirty = True
+  CatalogWalkReady = True
+  RequestEffectRefresh(False)
+EndFunction
+
+; One slice stays near the cost of the generic signature check, which already runs without a frame drop.
+Int Function CatalogEntriesPerSlice()
+  Return 8
+EndFunction
+
 ; Repeating ship and environment effects are not catalog rows. Cache their runtime ids after one miss so they cannot schedule a walk.
 Bool Function EffectMayNeedCatalogScan(MagicEffect effect)
   If (effect == None)
@@ -1528,6 +1708,9 @@ EndFunction
 ; Claimed by PrepareEffectSnapshot. Return immediately so HUD registration can run, then walk a few entries per timer.
 Function BeginCatalogScan(Actor player, EffectSnapshot candidate, Bool forcedRefresh, Bool recoveryRefresh)
   CatalogDirty = False
+  CatalogWalkReady = False
+  CatalogReconcilePending = False
+  CatalogWalkQueued = False
   CatalogScanActive = True
   CatalogScanPhase = 0
   CatalogScanIndex = 0
@@ -1542,7 +1725,7 @@ Function BeginCatalogScan(Actor player, EffectSnapshot candidate, Bool forcedRef
   CatalogSliceAfflictionEntries = new String[0]
   CatalogSliceSpells = new Spell[0]
   CatalogSliceSpellEntries = new String[0]
-  LogUserInformational(ModuleName, "BeginCatalogScan", "CATALOG_SCAN_STARTED | Revision=" + candidate.Revision + " | Player=" + player)
+  LogUserInformational(ModuleName, "BeginCatalogScan", "CATALOG_SCAN_STARTED | Revision=" + candidate.Revision + " | Buffs=" + BuffEffects.GetSize() + " | Debuffs=" + DebuffEffects.GetSize() + " | Budget=" + CatalogEntriesPerSlice() + " | Player=" + player)
   CancelTimer(36)
   StartTimer(0.1, 36)
 EndFunction
@@ -1558,6 +1741,7 @@ Function ContinueCatalogScan()
   Actor player = Game.GetPlayer()
   If (player == None || BuffEffects == None || DebuffEffects == None)
     CatalogDirty = True
+    CatalogWalkReady = True
     CatalogScanActive = False
     FinishEffectBuild(CatalogSliceCandidate, True)
     Return
@@ -1567,7 +1751,7 @@ Function ContinueCatalogScan()
     FinishCatalogScan(player)
     Return
   EndIf
-  Int budget = 1
+  Int budget = CatalogEntriesPerSlice()
   If (CatalogScanPhase == 0)
     budget = ConsumeCatalogSlice(player, BuffEffects, BuffLabels, "B", budget)
     If (CatalogScanIndex >= BuffEffects.GetSize())
@@ -1606,10 +1790,18 @@ Function FinishCatalogScan(Actor player)
   ; Seed the poll cache from this walk so the first post-publish check does not look like a new list and submit again.
   LastGenericEffectSignature = BuildGenericEffectSignature(player)
   LastGenericSignatureAt = Utility.GetCurrentRealTime()
+  ; A generic or discovered row can appear after its slice. Check both sides again before publishing.
+  CatalogSliceEntries = AppendDirectGenericBuffs(CatalogSliceEntries, player, CatalogSliceEffects, CatalogSliceEffectEntries)
+  CatalogSliceEntries = AppendDiscoveredCatalogEffects(CatalogSliceEntries, player, CatalogSliceEffects, CatalogSliceEffectEntries, "B")
   CatalogSliceEntries = AppendDirectGenericDebuffs(CatalogSliceEntries, player, CatalogSliceEffects, CatalogSliceEffectEntries)
+  CatalogSliceEntries = AppendDiscoveredCatalogEffects(CatalogSliceEntries, player, CatalogSliceEffects, CatalogSliceEffectEntries, "D")
+  CompactDiscoveredCatalogEffects(player)
   CatalogSliceEntries = AppendActiveAfflictions(CatalogSliceEntries, player, CatalogSliceAfflictions, CatalogSliceAfflictionEntries)
   CatalogSliceEntries = AppendActiveEnvironmentalStatuses(CatalogSliceEntries, player, CatalogSliceSpells, CatalogSliceSpellEntries)
   QueueBuiltSnapshot(CatalogSliceCandidate, CatalogSliceEntries, CatalogSliceEffects, CatalogSliceEffectEntries, CatalogSliceAfflictions, CatalogSliceAfflictionEntries, CatalogSliceSpells, CatalogSliceSpellEntries, CatalogSliceForced, CatalogSliceRecovery)
+  If (PendingSnapshot != None)
+    CatalogWalkQueued = True
+  EndIf
 EndFunction
 
 ; Starfield has no StringUtil. Character codes are enough to keep B: and D: rows in scan order.
