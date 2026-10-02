@@ -9,6 +9,7 @@ The five VWHUD themes are implemented as Canvas HTML/CSS/SVG consumers on `VWCAN
 | Consumer registration, lifecycle, snapshots, and provider-derived presentation | [VWHudConsumer.as](../CanvasConsumer/actionscript/VWHudConsumer.as) and related classes under [CanvasConsumer/actionscript](../CanvasConsumer/actionscript) |
 | Effect discovery, catalogs, retry, refresh, and publication | [HudEffectsPublisher.psc](../Papyrus/Venworks/CustomizableHUD/HudEffectsPublisher.psc) |
 | Start-game registration quest and UI-load reconciliation | [HudRegistrar.psc](../Papyrus/Venworks/CustomizableHUD/HudRegistrar.psc) |
+| Playtest console probe that applies one generic buff or debuff per class | [HudStatusProbe.psc](../Papyrus/Venworks/CustomizableHUD/HudStatusProbe.psc) |
 | Theme entry documents and identity | [CanvasConsumer/variants](../CanvasConsumer/variants) |
 | Shared HTML, CSS, SVG, and artwork | [CanvasConsumer/resources](../CanvasConsumer/resources) |
 | Real theme plugin records | [Spriggit](../Spriggit) |
@@ -52,7 +53,7 @@ Frequent updates are ordinary changing inputs such as health, heading, and conta
 
 ## Verification and acceptance
 
-The build compiles five consumer SWFs, two Papyrus scripts, and five real ESMs into isolated package inputs. Transactional packaging produces 15 Main BA2 archives, installs archive-only staging, and removes exact loose Interface and Script targets after successful verification. The Fully Loose Nexus ZIP is reconstructed from the verified Windows Main BA2 rather than loose staging. Verification checks exact inventories, source evidence, resource bytes, SWF contracts, archive bytes, and ZIP contents. The lifecycle diagnostic under [CanvasConsumer/diagnostics](../CanvasConsumer/diagnostics) compiles separately and is excluded from packages.
+The build compiles five consumer SWFs, three Papyrus scripts, and five real ESMs into isolated package inputs. Transactional packaging produces 15 Main BA2 archives, installs archive-only staging, and removes exact loose Interface and Script targets after successful verification. The Fully Loose Nexus ZIP is reconstructed from the verified Windows Main BA2 rather than loose staging. Verification checks exact inventories, source evidence, resource bytes, SWF contracts, archive bytes, and ZIP contents. The lifecycle diagnostic under [CanvasConsumer/diagnostics](../CanvasConsumer/diagnostics) compiles separately and is excluded from packages.
 
 Runtime acceptance remains separate. Each exact candidate package requires archive-only PC and PS5 testing for normal and large HUD modes, aiming and scanner transitions, health and oxygen, compass and radar response, status application/removal/recovery/paging, vehicle input and glyphs, ship visibility controls, menus, death/reload, save/load, 4K/8K, and representative ultrawide placement. Sustained activity must also confirm stable object and timer behavior. VWHUD-32 through VWHUD-36 track per-theme acceptance.
 
