@@ -9,6 +9,7 @@
 
 ## Version 2.1.0 (Unreleased)
 
+- Show a new or cleared generic status on the next one-second check. That check reads the affliction Active flag, or one cached ability spell when the flag is clear, and publishes on that tick. It does not walk every rank of every affliction.
 - Publish one HUD row per generic class. Thermal, cold, poisoning, radiation, bleeding, infection, injury, corrosive, and gas each stay a single row, checked with the ability spell rather than a walk of every magic effect. Food, drink, and rest stay as they are. Specific chem names such as Fortify Carry Weight are not HUD rows.
 - Add a playtest console command that applies one of each generic buff and debuff. Run `cgf "Venworks:CustomizableHUD:HudStatusProbe.ApplyGenericSet"`, then read the PersonalEffectsData line in `sfse.txt`. `cgf "Venworks:CustomizableHUD:HudStatusProbe.ClearGenericSet"` removes the ability spells. Fed and Hydrated are consumed potions and wear off on their own.
 - Rebuild the theme when health, oxygen, CO2, or boost crosses a meter segment, not on every point. The raw point values stay off that rebuild, and the critical-health number still updates while that banner is up.
@@ -17,7 +18,7 @@
 - Trace a direct PlayerStatusData subscription from the HUD movie. The log records the manager lookup, GetDataFromClient, Subscribe, and a short payload summary. The quest snapshot still writes the status rows.
 - Log the watch's reduced effect payloads, PersonalEffectsData and EnvironmentEffectsData, with each row's icon and any name or timer field.
 - Hold the first generic status snapshot until HUD registration watch alerts have been quiet, and skip a datagram that is already stale, so load publishes the effect list once.
-- Check the generic status classes once a second. The full magic-effect catalog walk is not scheduled.
+- Check the generic status classes once a second and publish from that check. The full magic-effect catalog walk is not scheduled.
 - Republish the last payload when the HUD opens, so an unchanged list no longer freezes the game or delays the HUD.
 - Stop rebuilding an unchanged status list on the live-weather poll, so the same icons no longer hitch the game every few seconds.
 - Rebuilt all five VWHUD themes to run as Venworks Canvas consumers instead of replacing the vanilla HUD directly.

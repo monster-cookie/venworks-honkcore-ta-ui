@@ -54,6 +54,19 @@ Int[] CachedMagicEffectIds
 MagicEffect[] CachedMagicEffects
 SQ_ENV_AfflictionsScript CachedAfflictionQuest
 Bool AfflictionQuestCached = False
+; Resolved once per load. The one-second poll reads Active or one probe spell. It does not walk every rank.
+Bool ClassListsReady = False
+ENV_AfflictionScript[] CachedClassAfflictions
+String[] CachedClassEntries
+Spell[] CachedClassSpells
+Int[] CachedClassSpellOwners
+Spell CachedThermalProbe
+Spell CachedColdProbe
+Spell CachedPoisonProbe
+Spell CachedRadiationProbe
+Spell CachedInfectionProbe
+Spell CachedInjuryProbe
+Spell CachedLungProbe
 String PendingEffectSignature = ""
 String[] EffectPackets
 String PendingEffectPayload = ""
@@ -211,6 +224,18 @@ Event Actor.OnPlayerLoadGame(Actor akSender)
   CachedMagicEffects = None
   AfflictionQuestCached = False
   CachedAfflictionQuest = None
+  ClassListsReady = False
+  CachedClassAfflictions = None
+  CachedClassEntries = None
+  CachedClassSpells = None
+  CachedClassSpellOwners = None
+  CachedThermalProbe = None
+  CachedColdProbe = None
+  CachedPoisonProbe = None
+  CachedRadiationProbe = None
+  CachedInfectionProbe = None
+  CachedInjuryProbe = None
+  CachedLungProbe = None
   MagicEffectEventRegistered = False
   CatalogDirty = True
   CatalogWalkReady = False
@@ -287,8 +312,8 @@ Event OnTimer(Int aiTimerID)
       PrepareEffectSnapshot()
     EndIf
   ElseIf (aiTimerID == 32)
+    ; The signature publishes the change itself. A second source walk on this tick was the multi-second stall.
     CheckGenericEffectSignature()
-    CheckActiveEffectSources()
     ScheduleActiveEffectCheck()
   ElseIf (aiTimerID == 33)
     PublishNextEffectPacket()
@@ -446,9 +471,9 @@ Function NoteHudUiLoadAttempt()
   EndIf
 EndFunction
 
-; The first scan waits out HUD registration. Later refreshes keep the short coalesce delay.
+; The first scan waits out HUD registration. Later refreshes keep a short coalesce so one burst is one snapshot.
 Float Function CatalogScanStartDelay()
-  Float delay = 0.5
+  Float delay = 0.1
   Float now = Utility.GetCurrentRealTime()
   Float remaining = 0.0
   If (CatalogScanNotBefore > now)
@@ -469,7 +494,8 @@ Function ScheduleActiveEffectCheck()
   StartTimer(1.0, 32)
 EndFunction
 
-; An expiry or cure has no quest-level finish event. Never send a removal from a guessed timer alone.
+; Retained so a source-only cure can compare stored rows. Timer 32 does not call it.
+; A generic row clears when the one-second signature drops that class. Never send a removal from a guessed timer alone.
 Function CheckActiveEffectSources()
   Int sourceRevision
   String[] observedEntries
@@ -664,24 +690,29 @@ Function FinishEffectBuild(EffectSnapshot candidate, Bool rejected)
   EndIf
 EndFunction
 
-; SQ_ENV spell lists are the generic classes. One row per class, and every present list stays a removal source.
+; SQ_ENV spell lists are the generic classes. One row per class. Presence is the Active flag or one probe spell.
 String[] Function AppendActiveAfflictions(String[] entries, Actor player, ENV_AfflictionScript[] sources, String[] sourceEntries)
-  SQ_ENV_AfflictionsScript afflictionQuest = ResolveAfflictionQuest()
-  If (afflictionQuest == None || afflictionQuest.AfflictionData == None)
+  entries = AppendOneClassAffliction(entries, player, sources, sourceEntries, "D:Thermal")
+  entries = AppendOneClassAffliction(entries, player, sources, sourceEntries, "D:Cold")
+  entries = AppendOneClassAffliction(entries, player, sources, sourceEntries, "D:Poisoning")
+  entries = AppendOneClassAffliction(entries, player, sources, sourceEntries, "D:Radiation")
+  entries = AppendOneClassAffliction(entries, player, sources, sourceEntries, "D:Infection")
+  entries = AppendOneClassAffliction(entries, player, sources, sourceEntries, "D:Injury")
+  entries = AppendOneClassAffliction(entries, player, sources, sourceEntries, "D:Lung Damage")
+  Return entries
+EndFunction
+
+String[] Function AppendOneClassAffliction(String[] entries, Actor player, ENV_AfflictionScript[] sources, String[] sourceEntries, String entry)
+  If (!ClassIsPresent(player, entry))
     Return entries
   EndIf
-  ENV_AfflictionScript[] afflictions = afflictionQuest.AfflictionData
+  If (!ContainsEffectEntry(entries, entry))
+    entries.Add(entry)
+  EndIf
   Int index = 0
-  While (index < afflictions.Length)
-    ENV_AfflictionScript affliction = afflictions[index]
-    String entry = ""
-    If (affliction != None)
-      entry = AfflictionClassEntry(affliction.ID)
-    EndIf
-    If (entry != "" && HasAfflictionSpell(player, affliction))
-      If (!ContainsEffectEntry(entries, entry))
-        entries.Add(entry)
-      EndIf
+  While (CachedClassAfflictions != None && CachedClassEntries != None && index < CachedClassAfflictions.Length && index < CachedClassEntries.Length)
+    ENV_AfflictionScript affliction = CachedClassAfflictions[index]
+    If (CachedClassEntries[index] == entry && affliction != None && affliction.Active)
       sources.Add(affliction)
       sourceEntries.Add(entry)
     EndIf
@@ -1054,10 +1085,138 @@ Function PublishNextEffectPacket()
   ; The independent timer 34 remains armed on every failure, including terminal rejection.
 EndFunction
 
-; One true check per generic icon, on the one-second source timer. A change wakes one snapshot.
+; Resolves SQ_ENV rank spells once. Later polls do not call FormList.GetAt.
+Function EnsureClassLists()
+  SQ_ENV_AfflictionsScript afflictionQuest
+  ENV_AfflictionScript[] afflictions
+  If (ClassListsReady)
+    Return
+  EndIf
+  If (CachedThermalProbe == None)
+    CachedThermalProbe = Game.GetFormFromFile(0x002BDD19, "Starfield.esm") as Spell
+  EndIf
+  If (CachedColdProbe == None)
+    CachedColdProbe = Game.GetFormFromFile(0x002BDD1F, "Starfield.esm") as Spell
+  EndIf
+  If (CachedPoisonProbe == None)
+    CachedPoisonProbe = Game.GetFormFromFile(0x002BDD25, "Starfield.esm") as Spell
+  EndIf
+  If (CachedRadiationProbe == None)
+    CachedRadiationProbe = Game.GetFormFromFile(0x002BDD27, "Starfield.esm") as Spell
+  EndIf
+  If (CachedInfectionProbe == None)
+    CachedInfectionProbe = Game.GetFormFromFile(0x002BDD13, "Starfield.esm") as Spell
+  EndIf
+  If (CachedInjuryProbe == None)
+    CachedInjuryProbe = Game.GetFormFromFile(0x002BDD23, "Starfield.esm") as Spell
+  EndIf
+  afflictionQuest = ResolveAfflictionQuest()
+  If (afflictionQuest == None || afflictionQuest.AfflictionData == None)
+    Return
+  EndIf
+  CachedClassAfflictions = new ENV_AfflictionScript[0]
+  CachedClassEntries = new String[0]
+  CachedClassSpells = new Spell[0]
+  CachedClassSpellOwners = new Int[0]
+  afflictions = afflictionQuest.AfflictionData
+  Int index = 0
+  While (index < afflictions.Length)
+    RememberClassAffliction(afflictions[index])
+    index += 1
+  EndWhile
+  ClassListsReady = True
+  LogUserInformational(ModuleName, "EnsureClassLists", "CLASS_LISTS_CACHED | Afflictions=" + CachedClassAfflictions.Length + " | Spells=" + CachedClassSpells.Length)
+EndFunction
+
+Function RememberClassAffliction(ENV_AfflictionScript affliction)
+  String entry = ""
+  FormList spellList
+  Int owner = 0
+  Int index = 0
+  Int size = 0
+  If (affliction == None)
+    Return
+  EndIf
+  entry = AfflictionClassEntry(affliction.ID)
+  If (entry == "")
+    Return
+  EndIf
+  owner = CachedClassAfflictions.Length
+  CachedClassAfflictions.Add(affliction)
+  CachedClassEntries.Add(entry)
+  spellList = affliction.AfflictionSpellList
+  If (spellList == None)
+    Return
+  EndIf
+  size = spellList.GetSize()
+  While (index < size)
+    Spell rankSpell = spellList.GetAt(index) as Spell
+    If (rankSpell != None)
+      CachedClassSpells.Add(rankSpell)
+      CachedClassSpellOwners.Add(owner)
+      If (entry == "D:Lung Damage" && CachedLungProbe == None)
+        CachedLungProbe = rankSpell
+      EndIf
+    EndIf
+    index += 1
+  EndWhile
+EndFunction
+
+; Gameplay sets Active on gain and clears it on cure, including higher ranks. A direct AddSpell leaves Active clear, so the probe spells cover that path.
+Bool Function ClassIsPresent(Actor player, String entry)
+  Int index = 0
+  If (player == None || entry == "")
+    Return False
+  EndIf
+  EnsureClassLists()
+  While (CachedClassAfflictions != None && CachedClassEntries != None && index < CachedClassAfflictions.Length && index < CachedClassEntries.Length)
+    ENV_AfflictionScript affliction = CachedClassAfflictions[index]
+    If (CachedClassEntries[index] == entry && affliction != None && affliction.Active && AfflictionStillHasSpell(player, index))
+      Return True
+    EndIf
+    index += 1
+  EndWhile
+  Return ProbeIsPresent(player, entry)
+EndFunction
+
+Bool Function AfflictionStillHasSpell(Actor player, Int owner)
+  Int index = 0
+  While (CachedClassSpells != None && CachedClassSpellOwners != None && index < CachedClassSpells.Length && index < CachedClassSpellOwners.Length)
+    If (CachedClassSpellOwners[index] == owner)
+      Spell rankSpell = CachedClassSpells[index]
+      If (rankSpell != None && player.HasSpell(rankSpell))
+        Return True
+      EndIf
+    EndIf
+    index += 1
+  EndWhile
+  Return False
+EndFunction
+
+Bool Function ProbeIsPresent(Actor player, String entry)
+  Spell probe = None
+  If (entry == "D:Thermal")
+    probe = CachedThermalProbe
+  ElseIf (entry == "D:Cold")
+    probe = CachedColdProbe
+  ElseIf (entry == "D:Poisoning")
+    probe = CachedPoisonProbe
+  ElseIf (entry == "D:Radiation")
+    probe = CachedRadiationProbe
+  ElseIf (entry == "D:Infection")
+    probe = CachedInfectionProbe
+  ElseIf (entry == "D:Injury")
+    probe = CachedInjuryProbe
+  ElseIf (entry == "D:Lung Damage")
+    probe = CachedLungProbe
+  EndIf
+  Return probe != None && player.HasSpell(probe)
+EndFunction
+
+; One presence check per generic class. A change publishes on this tick instead of waiting out another walk.
 Function CheckGenericEffectSignature()
   Actor player = Game.GetPlayer()
-  ; Building this signature calls HasSpell. Doing that during a pending datagram or HUD registration dirtied a second watch-alert submit.
+  ; HasSpell during a pending datagram or HUD registration dirtied a second watch-alert submit.
   If (player == None || CatalogScanActive || EffectSnapshotBuilding || PendingSnapshot != None || CatalogScanNotBefore > Utility.GetCurrentRealTime())
     Return
   EndIf
@@ -1068,47 +1227,23 @@ Function CheckGenericEffectSignature()
     Return
   EndIf
   LastGenericEffectSignature = signature
-  RequestEffectRefresh(False)
+  LogUserInformational(ModuleName, "CheckGenericEffectSignature", "GENERIC_SIGNATURE_CHANGED")
+  CancelTimer(31)
+  LockGuard EffectSnapshotGuard
+    EffectRefreshPending = False
+  EndLockGuard
+  PrepareEffectSnapshot()
 EndFunction
 
 String Function BuildGenericEffectSignature(Actor player)
   Bool bleeding = HasAnyMagicEffect(player, 0x23E9BF, 0x2E8148, 0)
-  Bool poisoning = False
-  Bool radiation = False
-  Bool thermal = False
-  Bool cold = False
-  Bool infection = False
-  Bool injury = False
-  Bool lungDamage = False
-  String classEntry = ""
-  SQ_ENV_AfflictionsScript afflictionQuest = ResolveAfflictionQuest()
-  If (afflictionQuest != None && afflictionQuest.AfflictionData != None)
-    ENV_AfflictionScript[] afflictions = afflictionQuest.AfflictionData
-    Int index = 0
-    While (index < afflictions.Length)
-      ENV_AfflictionScript affliction = afflictions[index]
-      classEntry = ""
-      If (affliction != None)
-        classEntry = AfflictionClassEntry(affliction.ID)
-      EndIf
-      If (classEntry == "D:Thermal" && !thermal && HasAfflictionSpell(player, affliction))
-        thermal = True
-      ElseIf (classEntry == "D:Cold" && !cold && HasAfflictionSpell(player, affliction))
-        cold = True
-      ElseIf (classEntry == "D:Poisoning" && !poisoning && HasAfflictionSpell(player, affliction))
-        poisoning = True
-      ElseIf (classEntry == "D:Radiation" && !radiation && HasAfflictionSpell(player, affliction))
-        radiation = True
-      ElseIf (classEntry == "D:Infection" && !infection && HasAfflictionSpell(player, affliction))
-        infection = True
-      ElseIf (classEntry == "D:Injury" && !injury && HasAfflictionSpell(player, affliction))
-        injury = True
-      ElseIf (classEntry == "D:Lung Damage" && !lungDamage && HasAfflictionSpell(player, affliction))
-        lungDamage = True
-      EndIf
-      index += 1
-    EndWhile
-  EndIf
+  Bool poisoning = ClassIsPresent(player, "D:Poisoning")
+  Bool radiation = ClassIsPresent(player, "D:Radiation")
+  Bool thermal = ClassIsPresent(player, "D:Thermal")
+  Bool cold = ClassIsPresent(player, "D:Cold")
+  Bool infection = ClassIsPresent(player, "D:Infection")
+  Bool injury = ClassIsPresent(player, "D:Injury")
+  Bool lungDamage = ClassIsPresent(player, "D:Lung Damage")
   Bool malnourished = HasAnyMagicEffect(player, 0x31326D, 0x31326E, 0x31326F)
   Bool dehydrated = HasAnyMagicEffect(player, 0x31327B, 0x31329B, 0x2EDFDA)
   Bool fed = HasAnyMagicEffect(player, 0x2EDFE1, 0x2EDFD5, 0x313251)
