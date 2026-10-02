@@ -364,9 +364,9 @@ Function EnsureMagicEffectRegistrations(Bool reportRegistration)
   EndIf
 EndFunction
 
-; Diagnostic gate. False keeps ShowCustomWatchAlert for HUD registration only.
+; Status buff and debuff snapshots publish through the same watch-alert pump as HUD registration.
 Bool Function StatusDatagramsEnabled()
-  Return False
+  Return True
 EndFunction
 
 ; Drops a saved scan, poll, or datagram timer so a loaded game cannot submit a status watch alert.

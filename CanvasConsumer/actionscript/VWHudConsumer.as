@@ -95,7 +95,15 @@ package
 
       public function handleCanvasEvent(topic:String, body:String) : void
       {
-         if(!this.disposed && topic == VWHudVariant.NAMESPACE+".status" && this.effects.acceptDatagram(body))
+         if(this.disposed || topic != VWHudVariant.NAMESPACE+".status") return;
+         // An unchanged snapshot returns false and does not rebuild. The line still records that the datagram arrived.
+         var started:int = getTimer();
+         var accepted:Boolean = this.effects.acceptDatagram(body);
+         var elapsed:int = getTimer() - started;
+         var view:Object = this.effects.view();
+         var bytes:int = body == null ? 0 : body.length;
+         trace("VWHUD TRACE | status | t=" + getTimer() + " | ms=" + elapsed + " | accepted=" + (accepted ? "1" : "0") + " | bytes=" + bytes + " | buffs=" + int(view.buffcount) + " | debuffs=" + int(view.debuffcount) + " | waiting=" + (view.waiting === true ? "1" : "0"));
+         if(accepted)
          {
             this.traceCause = "status";
             this.publish();
