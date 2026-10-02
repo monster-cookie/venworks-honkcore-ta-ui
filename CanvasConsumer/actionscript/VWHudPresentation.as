@@ -41,12 +41,12 @@ package
 
       private static const EFFECT_ICONS:Object = {
          "Fed":"fed","Hydrated":"hydrated","Well Rested":"rested","Malnourished":"malnourished","Dehydrated":"dehydrated",
-         "Bleeding":"bleed","Poisoning":"poison","Radiation Poisoning":"radiation","Corrosive Environment":"corrosive","Corrosive Rain":"corrosive",
+         "Bleeding":"bleed","Poisoning":"poison","Radiation":"radiation","Radiation Poisoning":"radiation","Corrosive":"corrosive","Corrosive Environment":"corrosive","Corrosive Rain":"corrosive",
          "Corrosive Particulates":"corrosive","Corrosive Vapor":"corrosive","Freezing Cold and Snow":"cold","Freezing Rain":"cold","Freezing Vapor":"cold",
-         "Intense Heat":"thermal","Scalding Rain":"thermal","Scalding Vapor":"thermal","Poor Air Quality":"gas","Sandstorm":"sandstorm","Cold":"cold","Incoming Weather":"fallbackdebuff",
+         "Intense Heat":"thermal","Scalding Rain":"thermal","Scalding Vapor":"thermal","Thermal":"thermal","Poor Air Quality":"gas","Gas":"gas","Sandstorm":"sandstorm","Cold":"cold","Incoming Weather":"fallbackdebuff",
          "Burns":"thermal","Heatstroke":"thermal","Frostbite":"cold","Hypothermia":"cold",
-         "Lacerations":"injury","Puncture Wounds":"injury","Contusions":"injury","Torn Muscle":"injury","Sprain":"injury","Dislocated Limb":"injury","Fractured Limb":"injury","Fractured Skull":"injury","Concussion":"injury","Brain Injury":"injury","Hernia":"injury",
-         "Bone Infection":"infection","Brain Infection":"infection","Intestinal Infection":"infection","Lung Infection":"infection","Tissue Infection":"infection",
+         "Injury":"injury","Lacerations":"injury","Puncture Wounds":"injury","Contusions":"injury","Torn Muscle":"injury","Sprain":"injury","Dislocated Limb":"injury","Fractured Limb":"injury","Fractured Skull":"injury","Concussion":"injury","Brain Injury":"injury","Hernia":"injury",
+         "Infection":"infection","Bone Infection":"infection","Brain Infection":"infection","Intestinal Infection":"infection","Lung Infection":"infection","Tissue Infection":"infection",
          "Lung Damage":"lungs","Fortify O2":"lungs","Fortify O2 Recovery Rate":"lungs","Toxic Gas Hazard":"gas",
          "Restore Health":"health","Heart+":"health","Fortify Carry Weight":"weight","Fortify Movement Speed":"speed","Fortify Jump Height":"speed",
          "Fortify Physical Damage Resistance":"shield","Fortify Energy Damage Resistance":"shield","Increased Weapon Accuracy":"accuracy","Reduce Movement Noise":"stealth","Slow Time":"time",

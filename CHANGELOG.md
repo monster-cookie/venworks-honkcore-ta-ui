@@ -9,16 +9,16 @@
 
 ## Version 2.1.0 (Unreleased)
 
+- Publish one HUD row per generic class. Thermal, cold, poisoning, radiation, bleeding, infection, injury, corrosive, and gas each stay a single row, checked with the ability spell rather than a walk of every magic effect. Food, drink, and rest stay as they are. Specific chem names such as Fortify Carry Weight are not HUD rows.
 - Add a playtest console command that applies one of each generic buff and debuff. Run `cgf "Venworks:CustomizableHUD:HudStatusProbe.ApplyGenericSet"`, then read the PersonalEffectsData line in `sfse.txt`. `cgf "Venworks:CustomizableHUD:HudStatusProbe.ClearGenericSet"` removes the ability spells. Fed and Hydrated are consumed potions and wear off on their own.
-- Show a new status effect from the rows already known to be active. Food, drink, rest, bleeding, and a newly applied chem update without waiting for a walk of the whole effect catalog. Effects that were already active when the HUD loaded can still appear a moment later, after that walk finishes.
 - Rebuild the theme when health, oxygen, CO2, or boost crosses a meter segment, not on every point. The raw point values stay off that rebuild, and the critical-health number still updates while that banner is up.
 - Record Scaleform timings for the frame-rate drop. With SFSE Scaleform logging enabled, `sfse.txt` shows whether a stall is the HTML rebuild, a status datagram, the compass and radar, or outside this movie.
 - Publish the status buff and debuff list again. Each status datagram is timed in that Scaleform log, including a snapshot that does not change the list.
 - Trace a direct PlayerStatusData subscription from the HUD movie. The log records the manager lookup, GetDataFromClient, Subscribe, and a short payload summary. The quest snapshot still writes the status rows.
 - Log the watch's reduced effect payloads, PersonalEffectsData and EnvironmentEffectsData, with each row's icon and any name or timer field.
-- Hold the first status-catalog walk until HUD registration watch alerts have been quiet, skip a datagram that is already stale, and do not let the generic-signature poll dirty an in-flight scan, so load publishes the effect list once instead of stacking scans on the watch-alert pump.
-- Walk the status catalog a few entries at a time, ignore repeating effects that are not status rows, and republish the last payload when the HUD opens, so an unchanged list no longer freezes the game or delays the HUD.
-- Do not start another status-catalog scan while one is still walking or its datagram is waiting to publish, and sample the generic status signature at most every five seconds, so the heartbeat cannot chain full scans and watch-alert submits.
+- Hold the first generic status snapshot until HUD registration watch alerts have been quiet, and skip a datagram that is already stale, so load publishes the effect list once.
+- Check the generic status classes once a second. The full magic-effect catalog walk is not scheduled.
+- Republish the last payload when the HUD opens, so an unchanged list no longer freezes the game or delays the HUD.
 - Stop rebuilding an unchanged status list on the live-weather poll, so the same icons no longer hitch the game every few seconds.
 - Rebuilt all five VWHUD themes to run as Venworks Canvas consumers instead of replacing the vanilla HUD directly.
 - Migrated theme presentation to HTML, CSS, and standard SVG, making layouts and artwork easier for web developers and mod authors to understand.
