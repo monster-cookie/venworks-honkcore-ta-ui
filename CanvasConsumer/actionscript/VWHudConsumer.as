@@ -30,6 +30,7 @@ package
       private var slowInstrumentAt:int = -500;
       private var pulseTimer:Timer;
       private var lastPulseAt:int = 0;
+      private var statusProbe:VWHudPlayerStatusProbe;
 
       public function getCanvasRegistration() : Object
       {
@@ -72,6 +73,8 @@ package
          this.pulseTimer = new Timer(1000);
          this.pulseTimer.addEventListener(TimerEvent.TIMER,this.onPulse);
          this.pulseTimer.start();
+         this.statusProbe = new VWHudPlayerStatusProbe(this);
+         this.statusProbe.start();
       }
 
       public function handleUIData(channel:String, data:Object) : void
@@ -131,6 +134,10 @@ package
          if(this.pulseTimer != null)
          {
             this.pulseTimer.stop(); this.pulseTimer.removeEventListener(TimerEvent.TIMER,this.onPulse); this.pulseTimer = null;
+         }
+         if(this.statusProbe != null)
+         {
+            this.statusProbe.stop(); this.statusProbe = null;
          }
          if(this.model != null)
          {
