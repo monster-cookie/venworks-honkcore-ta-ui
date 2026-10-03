@@ -14,6 +14,7 @@
 - Publish one HUD row per generic class. Thermal, cold, poisoning, radiation, bleeding, infection, injury, corrosive, and gas each stay a single row, checked with the ability spell rather than a walk of every magic effect. Food, drink, and rest stay as they are. Specific chem names such as Fortify Carry Weight are not HUD rows.
 - Add a playtest console command that applies one of each generic buff and debuff. Run `cgf "Venworks:CustomizableHUD:HudStatusProbe.ApplyGenericSet"`. `cgf "Venworks:CustomizableHUD:HudStatusProbe.ClearGenericSet"` removes the ability spells. Fed and Hydrated are consumed potions and wear off on their own.
 - Remove the STATUS buff and debuff count from beside the threat meter.
+- Remove the status page number. A longer list still rotates on the same lines.
 - Rebuild the theme when health, oxygen, CO2, or boost crosses a meter segment, not on every point. The raw point values stay off that rebuild, and the critical-health number still updates while that banner is up.
 - Publish the status buff and debuff list again.
 - Hold the first generic status snapshot until HUD registration watch alerts have been quiet, and skip a datagram that is already stale, so load publishes the effect list once.

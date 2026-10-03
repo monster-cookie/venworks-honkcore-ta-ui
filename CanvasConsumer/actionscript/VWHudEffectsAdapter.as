@@ -68,9 +68,6 @@ package
             "hasdebuffs":visibleDebuffs.length > 0,
             "buffcount":this.buffs.length,
             "debuffcount":this.debuffs.length,
-            "page":this.page + 1,
-            "pagecount":this.pageCount(),
-            "showpages":this.hasSnapshot && this.pageCount() > 1,
             "buffrows":visibleBuffs,
             "debuffrows":visibleDebuffs
          };

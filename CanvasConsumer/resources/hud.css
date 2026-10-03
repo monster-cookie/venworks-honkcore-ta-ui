@@ -1,6 +1,5 @@
 body { position: relative; width: 1920px; height: 1080px; color: #F4FBFF; font-family: $MAIN_Font_Bold; font-size: 10px; }
 /* Three 36px lines at a 35px pitch start just under the threat meter and stop at the critical-health alert. */
-.effects-page { position: absolute; left: 640px; top: -62px; width: 80px; height: 18px; text-align: right; }
 .effects-message { position: absolute; left: 0px; top: -38px; width: 720px; height: 20px; }
 .effects-list { position: absolute; left: 0px; top: -38px; width: 720px; height: 106px; }
 .effect-row { position: absolute; width: 36px; height: 36px; }
