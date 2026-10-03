@@ -8,8 +8,6 @@ package
 
       private static const MAX_EFFECTS:int = 2000;
 
-      private static const PAGE_SIZE:int = 8;
-
       private var buffs:Array = [];
 
       private var debuffs:Array = [];
@@ -61,23 +59,8 @@ package
 
       public function view() : Object
       {
-         var visibleBuffs:Array = [];
-         var visibleDebuffs:Array = [];
-         var start:int = this.page * PAGE_SIZE;
-         var end:int = Math.min(start + PAGE_SIZE,this.buffs.length + this.debuffs.length);
-         for(var index:int = start; index < end; index++)
-         {
-            var entry:Object = index < this.buffs.length ? this.buffs[index] : this.debuffs[index - this.buffs.length];
-            var row:Object = {"label":entry.label};
-            if(index < this.buffs.length)
-            {
-               visibleBuffs.push(row);
-            }
-            else
-            {
-               visibleDebuffs.push(row);
-            }
-         }
+         var visibleBuffs:Array = this.slice(this.buffs,this.page * VWHudPresentation.BUFF_COLUMNS,VWHudPresentation.BUFF_COLUMNS);
+         var visibleDebuffs:Array = this.slice(this.debuffs,this.page * this.debuffPageSize(),this.debuffPageSize());
          return {
             "waiting":!this.hasSnapshot,
             "empty":this.hasSnapshot && this.buffs.length + this.debuffs.length == 0,
@@ -85,9 +68,6 @@ package
             "hasdebuffs":visibleDebuffs.length > 0,
             "buffcount":this.buffs.length,
             "debuffcount":this.debuffs.length,
-            "page":this.page + 1,
-            "pagecount":this.pageCount(),
-            "showpages":this.hasSnapshot && this.pageCount() > 1,
             "buffrows":visibleBuffs,
             "debuffrows":visibleDebuffs
          };
@@ -178,9 +158,24 @@ package
          return label == "" ? null : {"key":encoded.toLowerCase(),"category":category,"label":label};
       }
 
+      private function debuffPageSize() : int
+      {
+         return VWHudPresentation.DEBUFF_COLUMNS * VWHudPresentation.DEBUFF_ROWS;
+      }
+
+      private function slice(entries:Array, start:int, count:int) : Array
+      {
+         var visible:Array = [];
+         var end:int = Math.min(start + count,entries.length);
+         for(var index:int = start; index < end; index++) visible.push({"label":entries[index].label});
+         return visible;
+      }
+
       private function pageCount() : int
       {
-         return Math.max(1,Math.ceil((this.buffs.length + this.debuffs.length) / PAGE_SIZE));
+         var buffPages:int = Math.ceil(this.buffs.length / VWHudPresentation.BUFF_COLUMNS);
+         var debuffPages:int = Math.ceil(this.debuffs.length / this.debuffPageSize());
+         return Math.max(1,Math.max(buffPages,debuffPages));
       }
 
       private function clampPage() : void

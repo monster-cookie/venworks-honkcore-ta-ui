@@ -16,7 +16,7 @@ When changing themes, remove the current VWHUD theme before installing the repla
 
 ## Features
 
-- Compass heading, threat state, and compact status effects with eight entries per page.
+- Compass heading, threat state, and status icons with buffs on one line and debuffs on the two lines below.
 - Player health, oxygen, CO2, boost, carry mass, currency, time, and progression information.
 - Equipment, weapon, ammunition, explosive, and power information in the four full themes.
 - Environment panels for location, time, gravity, suit protection, and active hazards.

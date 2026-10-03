@@ -55,6 +55,7 @@ Bool Function ProcessAttempt(Int attempt)
   ReportAttempt(result)
   Bool retryUi = IsDeferred(result.UiLoad) && result.UiLoad != "DEFERRED_UI_INACTIVE"
   If (IsDeferred(result.Status) || retryUi)
+    NoteHudUiLoadAttempt()
     If (attempt < 20)
       StartTimer(0.5, attempt + 1)
     Else
@@ -190,6 +191,7 @@ Function RequestRegisteredUi(OperationResult result)
     OperationResult loadResult = Registry.TryRequestUiLoad(Self, result.ConsumerId)
     result.UiLoad = loadResult.Status
     Registry.LogOperation(loadResult)
+    NoteHudUiLoadAttempt()
   EndIf
 EndFunction
 

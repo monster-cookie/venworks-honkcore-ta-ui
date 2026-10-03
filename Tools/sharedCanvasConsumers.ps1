@@ -65,7 +65,7 @@ function Get-CanvasConsumerBuildInventory([string]$RepositoryRoot,[string]$Key,[
   $resources = Get-CanvasConsumerSources $RepositoryRoot $Key
   $plugins = @($Record.Files.Keys | Where-Object { $_ -match '^[^/]+\.esm$' })
   if ($plugins.Count -ne 1) { throw "Invalid plugin evidence: $Key" }
-  $expected = @($resources.Keys | ForEach-Object { $prefix+$_ }) + @(($prefix+'normal.swf'),($prefix+'large.swf'),'Scripts/Venworks/CustomizableHUD/HudRegistrar.pex','Scripts/Venworks/CustomizableHUD/HudEffectsPublisher.pex') + $plugins
+  $expected = @($resources.Keys | ForEach-Object { $prefix+$_ }) + @(($prefix+'normal.swf'),($prefix+'large.swf'),'Scripts/Venworks/CustomizableHUD/HudRegistrar.pex','Scripts/Venworks/CustomizableHUD/HudEffectsPublisher.pex','Scripts/Venworks/CustomizableHUD/HudStatusProbe.pex') + $plugins
   if ((($Record.Files.Keys | Sort-Object) -join "`n") -cne (($expected | Sort-Object) -join "`n")) { throw "Unexpected consumer build inventory: $Key" }
   foreach ($relative in $resources.Keys) {
     $sourceHash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData((Get-CanvasResourceBytes $resources[$relative])))

@@ -5,6 +5,17 @@ package
    {
       private static const HEADINGS:Array = ["N","NE","E","SE","S","SW","W","NW"];
 
+      // One 720px line holds 18 icons. Debuffs occupy the next two lines. The 35px pitch keeps the third line above the critical-health alert.
+      public static const BUFF_COLUMNS:int = 18;
+
+      public static const DEBUFF_COLUMNS:int = 18;
+
+      public static const DEBUFF_ROWS:int = 2;
+
+      public static const COLUMN_STRIDE:int = 40;
+
+      public static const ROW_STRIDE:int = 35;
+
       public static function update(data:Object, tactical:Object, pulse:int, scanning:Boolean) : void
       {
          var direction:Number = tactical == null ? 0 : finite(tactical.direction,0);
@@ -29,14 +40,61 @@ package
          }
          var effects:Array = [];
          var row:Object;
-         for each(row in data.buffrows) effects.push({label:row.label,positive:true,negative:false});
-         for each(row in data.debuffrows) effects.push({label:row.label,positive:false,negative:true});
-         for(i = 0; i < effects.length; i++)
+         var column:int = 0;
+         for each(row in data.buffrows)
          {
-            effects[i].x = (i%4)*180;
-            effects[i].y = int(i/4)*18;
+            var buff:Object = effectRow(row,true);
+            buff.x = column * COLUMN_STRIDE;
+            buff.y = 0;
+            effects.push(buff);
+            column++;
+         }
+         column = 0;
+         for each(row in data.debuffrows)
+         {
+            var debuff:Object = effectRow(row,false);
+            var line:int = int(column / DEBUFF_COLUMNS);
+            debuff.x = (column % DEBUFF_COLUMNS) * COLUMN_STRIDE;
+            debuff.y = (1 + line) * ROW_STRIDE;
+            effects.push(debuff);
+            column++;
          }
          data["effectrows"] = effects;
+      }
+
+      private static const EFFECT_ICONS:Object = {
+         "Fed":"fed","Hydrated":"hydrated","Well Rested":"rested","Malnourished":"malnourished","Dehydrated":"dehydrated",
+         "Bleeding":"bleed","Poisoning":"poison","Radiation":"radiation","Radiation Poisoning":"radiation","Corrosive":"corrosive","Corrosive Environment":"corrosive","Corrosive Rain":"corrosive",
+         "Corrosive Particulates":"corrosive","Corrosive Vapor":"corrosive","Freezing Cold and Snow":"cold","Freezing Rain":"cold","Freezing Vapor":"cold",
+         "Intense Heat":"thermal","Scalding Rain":"thermal","Scalding Vapor":"thermal","Thermal":"thermal","Poor Air Quality":"gas","Gas":"gas","Sandstorm":"sandstorm","Cold":"cold","Incoming Weather":"fallbackdebuff",
+         "Burns":"thermal","Heatstroke":"thermal","Frostbite":"cold","Hypothermia":"cold",
+         "Injury":"injury","Lacerations":"injury","Puncture Wounds":"injury","Contusions":"injury","Torn Muscle":"injury","Sprain":"injury","Dislocated Limb":"injury","Fractured Limb":"injury","Fractured Skull":"injury","Concussion":"injury","Brain Injury":"injury","Hernia":"injury",
+         "Infection":"infection","Bone Infection":"infection","Brain Infection":"infection","Intestinal Infection":"infection","Lung Infection":"infection","Tissue Infection":"infection",
+         "Lung Damage":"lungs","Fortify O2":"lungs","Fortify O2 Recovery Rate":"lungs","Toxic Gas Hazard":"gas",
+         "Restore Health":"health","Heart+":"health","Fortify Carry Weight":"weight","Fortify Movement Speed":"speed","Fortify Jump Height":"speed",
+         "Fortify Physical Damage Resistance":"shield","Fortify Energy Damage Resistance":"shield","Increased Weapon Accuracy":"accuracy","Reduce Movement Noise":"stealth","Slow Time":"time",
+         "Fortify Damage":"damage","Fortify Melee Damage":"damage","Fortify Ranged Damage":"damage","Improved Research Crit Chance":"research","Reduced Research Cost":"research",
+         "Fortify Persuasion":"persuasion","Companion Affinity Increases Faster":"companion","Addiction Suppression":"addiction","Fortify Power Recovery Rate":"power"
+      };
+
+      private static var foldedIcons:Object = null;
+
+      private static function effectRow(row:Object, positive:Boolean) : Object
+      {
+         var label:String = row == null || row.label == null ? "" : String(row.label);
+         var known:* = iconId(label);
+         var icon:String = known == null ? (positive ? "fallbackbuff" : "fallbackdebuff") : String(known);
+         return {label:label,positive:positive,negative:!positive,icon:"assets/effect-"+icon+".svg"};
+      }
+
+      private static function iconId(label:String) : *
+      {
+         if(foldedIcons == null)
+         {
+            foldedIcons = {};
+            for(var name:String in EFFECT_ICONS) foldedIcons[name.toLowerCase()] = EFFECT_ICONS[name];
+         }
+         return foldedIcons[label.toLowerCase()];
       }
 
       private static function scanner(sources:Array, direction:Number) : Array

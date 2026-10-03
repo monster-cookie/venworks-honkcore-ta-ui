@@ -1,6 +1,6 @@
 # Build system
 
-The repository builds five VWHUD Canvas consumers: `VWKS`, `TA`, `FC`, `CF`, and `MIN`. [Tools/sharedConfig.ps1](../Tools/sharedConfig.ps1) is the release-variant authority. Each variant owns one real ESM assembled from [Spriggit](../Spriggit), two identical consumer movie aliases, reachable HTML/CSS/SVG resources, and the two VWHUD Papyrus scripts.
+The repository builds five VWHUD Canvas consumers: `VWKS`, `TA`, `FC`, `CF`, and `MIN`. [Tools/sharedConfig.ps1](../Tools/sharedConfig.ps1) is the release-variant authority. Each variant owns one real ESM assembled from [Spriggit](../Spriggit), two identical consumer movie aliases, reachable HTML/CSS/SVG resources, and the three VWHUD Papyrus scripts.
 
 ## Toolchain
 

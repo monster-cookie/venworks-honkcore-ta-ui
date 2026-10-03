@@ -83,7 +83,8 @@ package
 
       public function handleCanvasEvent(topic:String, body:String) : void
       {
-         if(!this.disposed && topic == VWHudVariant.NAMESPACE+".status" && this.effects.acceptDatagram(body)) this.publish();
+         if(this.disposed || topic != VWHudVariant.NAMESPACE+".status") return;
+         if(this.effects.acceptDatagram(body)) this.publish();
       }
 
       public function dispose() : void
@@ -170,10 +171,19 @@ package
          var index:int = 0;
          while(index < names.length)
          {
-            parts.push(names[index] + "=" + this.signValue(String(names[index]), data[names[index]], 0));
+            if(this.signsHtml(String(names[index]), data))
+               parts.push(names[index] + "=" + this.signValue(String(names[index]), data[names[index]], 0));
             ++index;
          }
          return parts.join("\n");
+      }
+
+      // The theme prints percentages and 16-segment meters. The raw point values are not on screen, except the critical-health banner.
+      private function signsHtml(key:String, data:Object) : Boolean
+      {
+         if(key == "player.oxygen" || key == "player.maxoxygen" || key == "player.carbondioxide" || key == "boost.charge") return false;
+         if(key == "player.health" || key == "player.maxhealth") return data["condition.criticalhealth"] === true;
+         return true;
       }
 
       private function signValue(key:String, value:*, depth:int) : String
@@ -202,6 +212,14 @@ package
                var fraction:Number = number - Math.floor(number);
                if(fraction < 0) fraction += 1;
                return "m" + String(int(Math.floor(fraction * 1440 + 0.5)) % 1440);
+            }
+            // A one-point change used to rebuild the whole theme. Suit meters are 16 segments, so sign that step.
+            number = VWHudViewModel.quantizeDisplay(key,number);
+            if(key == "player.healthpercentage" || key == "player.oxygenpercentage" || key == "player.carbondioxidepercentage" || key == "boost.percentage")
+            {
+               var segment:int = int(Math.floor(Math.max(0,Math.min(100,number)) * 16 / 100));
+               if(number >= 100) segment = 16;
+               return "seg" + String(segment);
             }
             return "n" + String(Math.round(number * 100));
          }

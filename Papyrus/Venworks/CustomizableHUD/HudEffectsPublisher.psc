@@ -31,6 +31,42 @@ Int LastActiveEffectCount = 0
 Float LastEffectSnapshotAt = 0.0
 Float LastHudOpenAt = 0.0
 String LastEffectSignature = ""
+; Presence bits for the small generic set. This is not a second effects.state payload.
+String LastGenericEffectSignature = ""
+; The generic signature checks class presence. The one-second source timer reads it.
+Float LastGenericSignatureAt = 0.0
+Spell[] CachedWeatherSpells
+String[] CachedWeatherLabels
+Bool WeatherSpellsReady = False
+Keyword CachedSandstormKeyword
+Keyword CachedSnowKeyword
+Bool WeatherKeywordsReady = False
+Spell[] CachedIncomingWeatherSpells
+Bool IncomingWeatherSpellsReady = False
+; Live weather is sampled at most once every five seconds. The one-second poll reads these flags only.
+Float LastWeatherSampleAt = 0.0
+Bool WeatherSampleReady = False
+Bool CachedSandstormActive = False
+Bool CachedSnowActive = False
+Bool CachedColdDamageActive = False
+Int[] WeatherOffStreaks
+Int[] CachedMagicEffectIds
+MagicEffect[] CachedMagicEffects
+SQ_ENV_AfflictionsScript CachedAfflictionQuest
+Bool AfflictionQuestCached = False
+; Resolved once per load. The one-second poll reads Active or one probe spell. It does not walk every rank.
+Bool ClassListsReady = False
+ENV_AfflictionScript[] CachedClassAfflictions
+String[] CachedClassEntries
+Spell[] CachedClassSpells
+Int[] CachedClassSpellOwners
+Spell CachedThermalProbe
+Spell CachedColdProbe
+Spell CachedPoisonProbe
+Spell CachedRadiationProbe
+Spell CachedInfectionProbe
+Spell CachedInjuryProbe
+Spell CachedLungProbe
 String PendingEffectSignature = ""
 String[] EffectPackets
 String PendingEffectPayload = ""
@@ -61,6 +97,34 @@ String[] PendingAfflictionEntries
 Spell[] PendingSpells
 String[] PendingSpellEntries
 Bool EffectHeartbeatPending = False
+; Retained so a loaded save can clear an in-flight walk. PrepareEffectSnapshot does not schedule another one.
+Bool CatalogDirty = True
+Bool CatalogWalkReady = False
+Bool CatalogReconcilePending = False
+Bool CatalogWalkQueued = False
+MagicEffect[] DiscoveredCatalogEffects
+Bool CatalogScanActive = False
+; HUD registration uses the same watch-alert pump. Hold the first generic snapshot until those alerts have been quiet.
+Float CatalogScanNotBefore = 0.0
+; Bounds skipped stale datagrams so a list that keeps changing still reaches the HUD.
+Int StaleDatagramSkips = 0
+Int CatalogScanPhase = 0
+Int CatalogScanIndex = 0
+Int CatalogSliceRevision = 0
+Bool CatalogSliceForced = False
+Bool CatalogSliceRecovery = False
+String[] CatalogSliceEntries
+MagicEffect[] CatalogSliceEffects
+String[] CatalogSliceEffectEntries
+ENV_AfflictionScript[] CatalogSliceAfflictions
+String[] CatalogSliceAfflictionEntries
+Spell[] CatalogSliceSpells
+String[] CatalogSliceSpellEntries
+Int[] IgnoredApplyEffectIds
+String LastEffectPayload = ""
+Spell CachedToxicGasSpell
+Bool ToxicGasSpellResolved = False
+EffectSnapshot CatalogSliceCandidate
 
 ; Bootstrap menu and player notifications and schedule the first bounded effect scan.
 Event OnInit()
@@ -68,8 +132,14 @@ Event OnInit()
   RegisterForMenuOpenCloseEvent("HUDMenu")
   RegisterForMenuOpenCloseEvent("SpaceshipHudMenu")
   EnsurePlayerEventRegistrations()
-  EnsureMagicEffectRegistrations(True)
-  RequestEffectRefresh(True)
+  If (StatusDatagramsEnabled())
+    EnsureMagicEffectRegistrations(True)
+    ; Force publishes one generic snapshot. Registration submits watch alerts in this same second, so hold that snapshot until the pump has been quiet.
+    CatalogScanNotBefore = Utility.GetCurrentRealTime() + 6.0
+    RequestEffectRefresh(True)
+  Else
+    SuppressStatusDatagramWork()
+  EndIf
 EndEvent
 
 ; HUD opening schedules a bounded sequence; there is no saved active latch or wait in this event.
@@ -78,8 +148,20 @@ Event OnMenuOpenCloseEvent(String menuName, Bool opening)
   If (opening)
     LastHudOpenAt = Utility.GetCurrentRealTime()
     EnsurePlayerEventRegistrations()
+    If (!StatusDatagramsEnabled())
+      Return
+    EndIf
     EnsureMagicEffectRegistrations(True)
-    RequestEffectRefresh(True)
+    ; A recreated HUD needs the last payload, not another native catalog walk. The first load has no payload yet and uses the scan OnInit already scheduled.
+    If (LastEffectPayload != "" && !CatalogScanActive && !EffectSnapshotBuilding && PendingSnapshot == None)
+      RepublishCachedEffects()
+    ElseIf (!EffectRefreshPending && !CatalogScanActive && !EffectSnapshotBuilding)
+      ; A script update has no cached payload. Publish the generic rows once, then later opens replay that payload.
+      If (LastEffectPayload == "")
+        CatalogDirty = True
+      EndIf
+      RequestEffectRefresh(LastEffectPayload == "")
+    EndIf
     ScheduleActiveEffectCheck()
   EndIf
 EndEvent
@@ -98,6 +180,7 @@ Event Actor.OnPlayerLoadGame(Actor akSender)
   CancelTimer(33)
   CancelTimer(34)
   CancelTimer(35)
+  CancelTimer(36)
   ; Fence scans and receipts from the previous load without publishing their state.
   LockGuard EffectSnapshotGuard
     EffectSourceRevision += 1
@@ -117,12 +200,76 @@ Event Actor.OnPlayerLoadGame(Actor akSender)
     EffectChangedDuringPublication = False
     EffectRefreshPending = False
     EffectHeartbeatPending = False
+    LastGenericEffectSignature = ""
+    LastGenericSignatureAt = 0.0
+    LastEffectSignature = ""
+    LastEffectSnapshotAt = 0.0
     EffectRetryCount = 0
   EndLockGuard
+  WeatherSpellsReady = False
+  CachedWeatherSpells = None
+  CachedWeatherLabels = None
+  WeatherKeywordsReady = False
+  CachedSandstormKeyword = None
+  CachedSnowKeyword = None
+  IncomingWeatherSpellsReady = False
+  CachedIncomingWeatherSpells = None
+  WeatherSampleReady = False
+  LastWeatherSampleAt = 0.0
+  CachedSandstormActive = False
+  CachedSnowActive = False
+  CachedColdDamageActive = False
+  WeatherOffStreaks = None
+  CachedMagicEffectIds = None
+  CachedMagicEffects = None
+  AfflictionQuestCached = False
+  CachedAfflictionQuest = None
+  ClassListsReady = False
+  CachedClassAfflictions = None
+  CachedClassEntries = None
+  CachedClassSpells = None
+  CachedClassSpellOwners = None
+  CachedThermalProbe = None
+  CachedColdProbe = None
+  CachedPoisonProbe = None
+  CachedRadiationProbe = None
+  CachedInfectionProbe = None
+  CachedInjuryProbe = None
+  CachedLungProbe = None
   MagicEffectEventRegistered = False
-  EnsureMagicEffectRegistrations(True)
-  RequestEffectRefresh(True)
-  ScheduleActiveEffectCheck()
+  CatalogDirty = True
+  CatalogWalkReady = False
+  CatalogReconcilePending = False
+  CatalogWalkQueued = False
+  DiscoveredCatalogEffects = None
+  CatalogScanActive = False
+  CatalogScanPhase = 0
+  CatalogScanIndex = 0
+  CatalogSliceRevision = 0
+  CatalogSliceForced = False
+  CatalogSliceRecovery = False
+  CatalogSliceEntries = None
+  CatalogSliceEffects = None
+  CatalogSliceEffectEntries = None
+  CatalogSliceAfflictions = None
+  CatalogSliceAfflictionEntries = None
+  CatalogSliceSpells = None
+  CatalogSliceSpellEntries = None
+  CatalogSliceCandidate = None
+  IgnoredApplyEffectIds = None
+  LastEffectPayload = ""
+  ToxicGasSpellResolved = False
+  CachedToxicGasSpell = None
+  StaleDatagramSkips = 0
+  If (StatusDatagramsEnabled())
+    EnsureMagicEffectRegistrations(True)
+    ; A load retriggers HUD registration. Do not walk the catalog on top of those watch alerts.
+    CatalogScanNotBefore = Utility.GetCurrentRealTime() + 6.0
+    RequestEffectRefresh(True)
+    ScheduleActiveEffectCheck()
+  Else
+    SuppressStatusDatagramWork()
+  EndIf
 EndEvent
 
 ; Saved quests enter this path through their existing menu registration after a script update.
@@ -152,6 +299,9 @@ EndFunction
 
 ; Registration, effect refresh, reconciliation, and packet publication use disjoint timer IDs.
 Event OnTimer(Int aiTimerID)
+  If (!StatusDatagramsEnabled() && aiTimerID >= 31 && aiTimerID <= 36)
+    Return
+  EndIf
   If (aiTimerID == 31)
     Bool scan = False
     LockGuard EffectSnapshotGuard
@@ -162,41 +312,78 @@ Event OnTimer(Int aiTimerID)
       PrepareEffectSnapshot()
     EndIf
   ElseIf (aiTimerID == 32)
-    CheckActiveEffectSources()
+    ; The signature publishes the change itself. A second source walk on this tick was the multi-second stall.
+    CheckGenericEffectSignature()
     ScheduleActiveEffectCheck()
   ElseIf (aiTimerID == 33)
     PublishNextEffectPacket()
   ElseIf (aiTimerID == 34)
+    ; A datagram still waiting on the watch alert is not a missed publish. This heartbeat only requests another generic snapshot.
+    Bool scanInFlight = CatalogScanActive
     LockGuard EffectSnapshotGuard
-      EffectHeartbeatPending = False
-      EffectRetryCount = 0
+      scanInFlight = scanInFlight || EffectSnapshotBuilding || PendingSnapshot != None
+      If (scanInFlight)
+        EffectHeartbeatPending = True
+      Else
+        EffectHeartbeatPending = False
+        EffectRetryCount = 0
+      EndIf
     EndLockGuard
-    RequestEffectRefresh(True)
+    If (scanInFlight)
+      StartTimer(15.0, 34)
+    Else
+      Float heartbeatNow = Utility.GetCurrentRealTime()
+      If (LastEffectSnapshotAt <= 0.0 || heartbeatNow < LastEffectSnapshotAt || heartbeatNow - LastEffectSnapshotAt >= 60.0)
+        RequestEffectRefresh(False)
+      Else
+        LockGuard EffectSnapshotGuard
+          EffectHeartbeatPending = True
+        EndLockGuard
+        StartTimer(15.0, 34)
+      EndIf
+    EndIf
   ElseIf (aiTimerID == 35)
-    EffectRecoveryRefresh = True
-    RequestEffectRefresh(True)
+    ; The UI may have missed the packet. Resend the cached payload; do not walk the catalogs again.
+    RepublishCachedEffects()
+  ElseIf (aiTimerID == 36)
+    ContinueCatalogScan()
   EndIf
 EndEvent
 
-; Re-register after each one-shot apply notification, then scan after the effect can become active.
+; Re-register after each one-shot apply notification. Food, drink, rest, and bleeding refresh immediately. Other chems are not HUD rows.
 Event OnMagicEffectApply(ObjectReference akTarget, ObjectReference akCaster, MagicEffect akEffect)
-  Bool reportApply = akTarget == Game.GetPlayer() && !EffectRefreshPending
-  If (reportApply)
-    LogUserInformational(ModuleName, "OnMagicEffectApply", "EVENT_TRIGGERED | Target=" + akTarget + " | Effect=" + akEffect)
+  Bool playerTarget = False
+  Bool fastApply = False
+  If (!StatusDatagramsEnabled())
+    Return
+  EndIf
+  playerTarget = akTarget == Game.GetPlayer()
+  If (playerTarget && akEffect != None && !HasActiveSourceEffect(akEffect))
+    fastApply = EffectNeedsImmediateRefresh(akEffect)
+  EndIf
+  If (fastApply && !EffectRefreshPending)
+    LogUserInformational(ModuleName, "OnMagicEffectApply", "EVENT_TRIGGERED | Target=" + akTarget + " | Effect=" + akEffect + " | Path=fast")
   EndIf
   MagicEffectEventRegistered = False
-  EnsureMagicEffectRegistrations(reportApply)
-  If (akTarget == Game.GetPlayer())
+  EnsureMagicEffectRegistrations(fastApply)
+  If (fastApply)
     RequestEffectRefresh(False)
   EndIf
 EndEvent
 
 ; This one-shot registration is unfiltered so newly applied, cataloged effects cannot be missed.
 Function EnsureMagicEffectRegistrations(Bool reportRegistration)
+  Actor player = Game.GetPlayer()
+  If (!StatusDatagramsEnabled())
+    If (player != None)
+      UnregisterForAllMagicEffectApplyEvents(player)
+    EndIf
+    MagicEffectEventRegistered = True
+    Return
+  EndIf
   If (MagicEffectEventRegistered)
     Return
   EndIf
-  Actor player = Game.GetPlayer()
   If (player == None)
     LogUserWarning(ModuleName, "EnsureMagicEffectRegistrations", "EFFECT_EVENT_REGISTRATION_DEFERRED | Player unavailable.")
     Return
@@ -209,10 +396,30 @@ Function EnsureMagicEffectRegistrations(Bool reportRegistration)
   EndIf
 EndFunction
 
+; Status buff and debuff snapshots publish through the same watch-alert pump as HUD registration.
+Bool Function StatusDatagramsEnabled()
+  Return True
+EndFunction
+
+; Drops a saved scan, poll, or datagram timer so a loaded game cannot submit a status watch alert.
+Function SuppressStatusDatagramWork()
+  CancelTimer(31)
+  CancelTimer(32)
+  CancelTimer(33)
+  CancelTimer(34)
+  CancelTimer(35)
+  CancelTimer(36)
+  EnsureMagicEffectRegistrations(False)
+  LogUserInformational(ModuleName, "SuppressStatusDatagramWork", "STATUS_DATAGRAMS_DISABLED | Watch alerts remain for HUD registration only.")
+EndFunction
+
 ; Coalesces load, HUD-ready, and apply requests while preserving a requested full resend.
 Function RequestEffectRefresh(Bool forceSnapshot)
   Bool schedule = False
   Bool heartbeat = False
+  If (!StatusDatagramsEnabled())
+    Return
+  EndIf
   ; Local assignments only: registry calls and timer operations stay outside guards.
   LockGuard EffectSnapshotGuard
     If (!EffectHeartbeatPending)
@@ -222,7 +429,7 @@ Function RequestEffectRefresh(Bool forceSnapshot)
     If (forceSnapshot)
       EffectForceRefresh = True
     EndIf
-    If (EffectSnapshotBuilding || PendingSnapshot != None)
+    If (EffectSnapshotBuilding || PendingSnapshot != None || CatalogScanActive)
       EffectChangedDuringPublication = True
     ElseIf (!EffectRefreshPending && EffectRetryCount <= 20)
       EffectRefreshPending = True
@@ -230,22 +437,65 @@ Function RequestEffectRefresh(Bool forceSnapshot)
     EndIf
   EndLockGuard
   If (heartbeat)
-    StartTimer(60.0, 34)
+    ; Timer 34 re-arms this. It only scans after the 60-second window, so an unchanged list is not rebuilt every 15 seconds.
+    StartTimer(15.0, 34)
   EndIf
   If (schedule)
-    StartTimer(0.5, 31)
+    Float delay = CatalogScanStartDelay()
+    If (delay >= 1.0)
+      LogUserInformational(ModuleName, "RequestEffectRefresh", "EFFECT_REFRESH_HELD | Delay=" + delay)
+    EndIf
+    StartTimer(delay, 31)
   EndIf
 EndFunction
 
-; No removal deadline is available from the quest's base-effect event. Check only known-active sources.
+; Registration retries and UI-load requests call this so the first generic snapshot stays behind the watch-alert pump.
+Function NoteHudUiLoadAttempt()
+  Float now = 0.0
+  Float quietUntil = 0.0
+  Bool pending = False
+  If (!StatusDatagramsEnabled())
+    Return
+  EndIf
+  now = Utility.GetCurrentRealTime()
+  quietUntil = now + 4.0
+  If (quietUntil > CatalogScanNotBefore)
+    CatalogScanNotBefore = quietUntil
+  EndIf
+  LockGuard EffectSnapshotGuard
+    pending = EffectRefreshPending && !EffectSnapshotBuilding && PendingSnapshot == None
+  EndLockGuard
+  If (pending && !CatalogScanActive)
+    CancelTimer(31)
+    StartTimer(CatalogScanStartDelay(), 31)
+  EndIf
+EndFunction
+
+; The first scan waits out HUD registration. Later refreshes keep a short coalesce so one burst is one snapshot.
+Float Function CatalogScanStartDelay()
+  Float delay = 0.1
+  Float now = Utility.GetCurrentRealTime()
+  Float remaining = 0.0
+  If (CatalogScanNotBefore > now)
+    remaining = CatalogScanNotBefore - now
+    If (remaining > delay)
+      delay = remaining
+    EndIf
+  EndIf
+  Return delay
+EndFunction
+
+; Keep the one-second poll armed while this quest is running, including when no row is published.
 Function ScheduleActiveEffectCheck()
-  CancelTimer(32)
-  If (ObservedEffectEntries != None && ObservedEffectEntries.Length > 0)
-    StartTimer(1.0, 32)
+  If (!StatusDatagramsEnabled())
+    Return
   EndIf
+  CancelTimer(32)
+  StartTimer(1.0, 32)
 EndFunction
 
-; An expiry or cure has no quest-level finish event. Never send a removal from a guessed timer alone.
+; Retained so a source-only cure can compare stored rows. Timer 32 does not call it.
+; A generic row clears when the one-second signature drops that class. Never send a removal from a guessed timer alone.
 Function CheckActiveEffectSources()
   Int sourceRevision
   String[] observedEntries
@@ -255,6 +505,9 @@ Function CheckActiveEffectSources()
   String[] afflictionEntries
   Spell[] spells
   String[] spellEntries
+  If (CatalogScanActive || EffectSnapshotBuilding || PendingSnapshot != None || CatalogScanNotBefore > Utility.GetCurrentRealTime())
+    Return
+  EndIf
   LockGuard EffectSnapshotGuard
     sourceRevision = EffectSourceRevision
     observedEntries = ObservedEffectEntries
@@ -290,15 +543,13 @@ Function CheckActiveEffectSources()
   index = 0
   While (spells != None && index < spells.Length)
     Bool namedStatusActive = spells[index] != None && player.HasSpell(spells[index])
-    If (namedStatusActive && spells[index] == Game.GetFormFromFile(0x08CB51, "Starfield.esm"))
-      MagicEffect corrosiveSoak = Game.GetFormFromFile(0x08CB47, "Starfield.esm") as MagicEffect
-      namedStatusActive = corrosiveSoak != None && player.HasMagicEffect(corrosiveSoak)
-    EndIf
     If (namedStatusActive && !ContainsEffectEntry(stillActive, spellEntries[index]))
       stillActive.Add(spellEntries[index])
     EndIf
     index += 1
   EndWhile
+  ; Cached flags only. Sampling weather here was a GetCurrentWeather call every second, and a flickering form id looked like a removal.
+  stillActive = AppendCachedLiveWeatherRows(stillActive)
   String[] remaining = new String[0]
   String[] removedEntries = new String[0]
   index = 0
@@ -318,13 +569,16 @@ Function CheckActiveEffectSources()
     EndIf
   EndTryLockGuard
   If (removed)
-    RequestEffectRefresh(True)
+    RequestEffectRefresh(False)
     LogUserInformational(ModuleName, "CheckActiveEffectSources", "EFFECT_REMOVAL_DETECTED | Remaining=" + remaining.Length)
   EndIf
 EndFunction
 
 ; Builds one complete state payload; every submitted datagram is independently valid.
 Function PrepareEffectSnapshot()
+  If (HoldCatalogScanForUiLoad())
+    Return
+  EndIf
   Int expectedRevision = EffectSourceRevision
   If (Registry == None || BuffEffects == None || DebuffEffects == None)
     LogUserWarning(ModuleName, "PrepareEffectSnapshot", "EFFECT_SNAPSHOT_DEFERRED | Registry or catalog unavailable.")
@@ -360,6 +614,9 @@ Function PrepareEffectSnapshot()
   If (!claimed)
     Return
   EndIf
+  CatalogDirty = False
+  CatalogWalkReady = False
+  CatalogReconcilePending = False
   MagicEffect[] scanEffects = new MagicEffect[0]
   String[] scanEffectEntries = new String[0]
   ENV_AfflictionScript[] scanAfflictions = new ENV_AfflictionScript[0]
@@ -367,59 +624,33 @@ Function PrepareEffectSnapshot()
   Spell[] scanSpells = new Spell[0]
   String[] scanSpellEntries = new String[0]
   String[] entries = new String[0]
-  entries = AppendActiveEffects(entries, player, BuffEffects, BuffLabels, "B", scanEffects, scanEffectEntries)
-  Int buffCount = entries.Length
-  entries = AppendActiveEffects(entries, player, DebuffEffects, DebuffLabels, "D", scanEffects, scanEffectEntries)
+  ; Buffs first, so Fed and Hydrated still suppress Malnourished and Dehydrated. The FormList walk is not scheduled.
+  entries = AppendDirectGenericBuffs(entries, player, scanEffects, scanEffectEntries)
+  entries = AppendDirectGenericDebuffs(entries, player, scanEffects, scanEffectEntries)
   entries = AppendActiveAfflictions(entries, player, scanAfflictions, scanAfflictionEntries)
   entries = AppendActiveEnvironmentalStatuses(entries, player, scanSpells, scanSpellEntries)
-  Int debuffCount = entries.Length - buffCount
-  String signature = ""
-  Int index = 0
-  While (index < entries.Length)
-    signature += entries[index] + ";"
-    index += 1
-  EndWhile
-  Bool entriesChanged = signature != LastEffectSignature
+  QueueBuiltSnapshot(candidate, entries, scanEffects, scanEffectEntries, scanAfflictions, scanAfflictionEntries, scanSpells, scanSpellEntries, forcedRefresh, recoveryRefresh)
+EndFunction
+
+; Timer 31 already cleared the pending flag. Put it back so the walk starts after the watch-alert pump is quiet.
+Bool Function HoldCatalogScanForUiLoad()
   Float now = Utility.GetCurrentRealTime()
-  If (!forcedRefresh && !entriesChanged && now >= LastEffectSnapshotAt && now - LastEffectSnapshotAt < 60.0)
-    FinishEffectBuild(candidate, False)
-    Return
+  Float delay = 0.0
+  If (CatalogScanActive || CatalogScanNotBefore <= now)
+    Return False
   EndIf
-  String eventTopic = ResolveStatusTopic()
-  String payload = buffCount + "|" + debuffCount + "|" + signature
-  String datagram = Registry.BuildCanvasDatagramBody("effects.state", 1, "ci-ascii", payload)
-  String framedPacket = Registry.BuildCanvasEventPacket(eventTopic, datagram)
-  Int framedLength = Registry.GetCharacterCount(framedPacket)
-  If (eventTopic == "" || datagram == "" || framedPacket == "" || framedLength > 4096)
-    LogUserWarning(ModuleName, "PrepareEffectSnapshot", "EFFECT_DATAGRAM_REJECTED | Buffs=" + buffCount + " | Debuffs=" + debuffCount + " | Length=" + framedLength + " | Limit=4096")
-    FinishEffectBuild(candidate, True)
-    Return
-  EndIf
-  candidate.Signature = signature
-  candidate.Payload = payload
-  candidate.RecoveryReplay = !recoveryRefresh && (forcedRefresh || entriesChanged)
-  Bool queued = False
   LockGuard EffectSnapshotGuard
-    If (EffectSnapshotBuilding && EffectSourceRevision == candidate.Revision)
-      PendingEntries = entries
-      PendingEffects = scanEffects
-      PendingSourceEffectEntries = scanEffectEntries
-      PendingAfflictions = scanAfflictions
-      PendingAfflictionEntries = scanAfflictionEntries
-      PendingSpells = scanSpells
-      PendingSpellEntries = scanSpellEntries
-      PendingSnapshot = candidate
-      PendingEffectSignature = signature
-      PendingEffectPayload = payload
-      PendingEffectNeedsRecoveryReplay = candidate.RecoveryReplay
-      EffectSnapshotBuilding = False
-      queued = True
+    If (!EffectSnapshotBuilding && PendingSnapshot == None)
+      EffectRefreshPending = True
     EndIf
   EndLockGuard
-  If (queued)
-    LogUserInformational(ModuleName, "PrepareEffectSnapshot", "EFFECT_DATAGRAM_QUEUED | Type=effects.state | Schema=1 | Buffs=" + buffCount + " | Debuffs=" + debuffCount + " | Length=" + framedLength)
-    StartTimer(0.1, 33)
+  delay = CatalogScanNotBefore - now
+  If (delay < 0.5)
+    delay = 0.5
   EndIf
+  LogUserInformational(ModuleName, "PrepareEffectSnapshot", "CATALOG_SCAN_HELD | Remaining=" + delay)
+  StartTimer(delay, 31)
+  Return True
 EndFunction
 
 ; Missing prerequisites and rejected builds share the bounded budget; heartbeat survives exhaustion.
@@ -459,27 +690,55 @@ Function FinishEffectBuild(EffectSnapshot candidate, Bool rejected)
   EndIf
 EndFunction
 
-; SQ_ENV owns injuries and infections separately from the magic-effect catalog. Its spells
-; are the status-menu source of truth even when a console-applied spell did not set Active.
+; SQ_ENV spell lists are the generic classes. One row per class. Presence is the Active flag or one probe spell.
 String[] Function AppendActiveAfflictions(String[] entries, Actor player, ENV_AfflictionScript[] sources, String[] sourceEntries)
-  SQ_ENV_AfflictionsScript afflictionQuest = Game.GetFormFromFile(0x00248D20, "Starfield.esm") as SQ_ENV_AfflictionsScript
-  If (afflictionQuest == None || afflictionQuest.AfflictionData == None)
+  entries = AppendOneClassAffliction(entries, player, sources, sourceEntries, "D:Thermal")
+  entries = AppendOneClassAffliction(entries, player, sources, sourceEntries, "D:Cold")
+  entries = AppendOneClassAffliction(entries, player, sources, sourceEntries, "D:Poisoning")
+  entries = AppendOneClassAffliction(entries, player, sources, sourceEntries, "D:Radiation")
+  entries = AppendOneClassAffliction(entries, player, sources, sourceEntries, "D:Infection")
+  entries = AppendOneClassAffliction(entries, player, sources, sourceEntries, "D:Injury")
+  entries = AppendOneClassAffliction(entries, player, sources, sourceEntries, "D:Lung Damage")
+  Return entries
+EndFunction
+
+String[] Function AppendOneClassAffliction(String[] entries, Actor player, ENV_AfflictionScript[] sources, String[] sourceEntries, String entry)
+  If (!ClassIsPresent(player, entry))
     Return entries
   EndIf
-  ENV_AfflictionScript[] afflictions = afflictionQuest.AfflictionData
+  If (!ContainsEffectEntry(entries, entry))
+    entries.Add(entry)
+  EndIf
   Int index = 0
-  While (index < afflictions.Length)
-    ENV_AfflictionScript affliction = afflictions[index]
-    If (HasAfflictionSpell(player, affliction))
-      String label = ResolveAfflictionLabel(affliction.ID)
-      String entry = "D:#" + affliction.GetFormID() + ":" + label
-      entries.Add(entry)
+  While (CachedClassAfflictions != None && CachedClassEntries != None && index < CachedClassAfflictions.Length && index < CachedClassEntries.Length)
+    ENV_AfflictionScript affliction = CachedClassAfflictions[index]
+    If (CachedClassEntries[index] == entry && affliction != None && affliction.Active)
       sources.Add(affliction)
       sourceEntries.Add(entry)
     EndIf
     index += 1
   EndWhile
   Return entries
+EndFunction
+
+; Burns and heatstroke share one row. The same collapse covers cold, poison, radiation, infection, and injury.
+String Function AfflictionClassEntry(String afflictionId)
+  If (afflictionId == "Burns" || afflictionId == "Heatstroke")
+    Return "D:Thermal"
+  ElseIf (afflictionId == "Frostbite" || afflictionId == "Hypothermia")
+    Return "D:Cold"
+  ElseIf (afflictionId == "Poisoning")
+    Return "D:Poisoning"
+  ElseIf (afflictionId == "RadiationPoisoning")
+    Return "D:Radiation"
+  ElseIf (afflictionId == "BoneInfection" || afflictionId == "BrainInfection" || afflictionId == "IntestinalInfection" || afflictionId == "LungInfection" || afflictionId == "TissueInfection")
+    Return "D:Infection"
+  ElseIf (afflictionId == "BrainInjury" || afflictionId == "Concussion" || afflictionId == "Contusions" || afflictionId == "DislocatedLimb" || afflictionId == "FracturedLimb" || afflictionId == "FracturedSkull" || afflictionId == "Hernia" || afflictionId == "Lacerations" || afflictionId == "PunctureWounds" || afflictionId == "Sprain" || afflictionId == "TornMuscle")
+    Return "D:Injury"
+  ElseIf (afflictionId == "LungDamage")
+    Return "D:Lung Damage"
+  EndIf
+  Return ""
 EndFunction
 
 Bool Function HasAfflictionSpell(Actor player, ENV_AfflictionScript affliction)
@@ -498,27 +757,17 @@ Bool Function HasAfflictionSpell(Actor player, ENV_AfflictionScript affliction)
   Return False
 EndFunction
 
-; Only named source spells are used; shared airborne-hazard effects cannot identify toxic gas.
+; Named weather spells are the status-menu rows and stay on the one-second poll. Snow and sandstorm use the five-second weather sample, because those spells are added after the hazard is already visible.
 String[] Function AppendActiveEnvironmentalStatuses(String[] entries, Actor player, Spell[] sources, String[] sourceEntries)
-  Spell corrosiveEnvironment = Game.GetFormFromFile(0x08CB51, "Starfield.esm") as Spell
-  MagicEffect corrosiveSoak = Game.GetFormFromFile(0x08CB47, "Starfield.esm") as MagicEffect
-  Spell corrosiveRain = Game.GetFormFromFile(0x281ECB, "Starfield.esm") as Spell
-  Spell toxicGas = Game.GetFormFromFile(0x245B6B, "Starfield.esm") as Spell
-  If (corrosiveEnvironment != None && corrosiveSoak != None && player.HasSpell(corrosiveEnvironment) && player.HasMagicEffect(corrosiveSoak))
-    String entry = "D:#" + corrosiveEnvironment.GetFormID() + ":Corrosive Environment"
-    entries.Add(entry)
-    sources.Add(corrosiveEnvironment)
-    sourceEntries.Add(entry)
-  EndIf
-  If (corrosiveRain != None && player.HasSpell(corrosiveRain))
-    String entry = "D:#" + corrosiveRain.GetFormID() + ":Corrosive Rain"
-    entries.Add(entry)
-    sources.Add(corrosiveRain)
-    sourceEntries.Add(entry)
-  EndIf
+  entries = AppendNamedWeatherStatuses(entries, player, sources, sourceEntries)
+  entries = AppendIncomingWeather(entries, player, sources, sourceEntries)
+  entries = AppendLiveWeatherConditions(entries, player)
+  Spell toxicGas = ResolveToxicGasSpell()
   If (toxicGas != None && player.HasSpell(toxicGas))
-    String entry = "D:#" + toxicGas.GetFormID() + ":Toxic Gas Hazard"
-    entries.Add(entry)
+    String entry = "D:Gas"
+    If (!ContainsEffectEntry(entries, entry))
+      entries.Add(entry)
+    EndIf
     sources.Add(toxicGas)
     sourceEntries.Add(entry)
   EndIf
@@ -582,47 +831,54 @@ String[] Function AppendActiveEffects(String[] entries, Actor player, FormList c
   Int index = 0
   Int catalogSize = catalog.GetSize()
   While (index < catalogSize)
-    MagicEffect effect = catalog.GetAt(index) as MagicEffect
-    If (effect != None && player.HasMagicEffect(effect))
-      String label = ""
-      Bool grouped = False
-      If (IsSustenanceFoodEffect(effect))
-        label = "Malnourished"
-        grouped = True
-      ElseIf (IsSustenanceDrinkEffect(effect))
-        label = "Dehydrated"
-        grouped = True
-      ElseIf (IsSustenanceHydratedEffect(effect))
-        label = "Hydrated"
-        grouped = True
-      ElseIf (IsSustenanceFedEffect(effect))
-        label = "Fed"
-        grouped = True
-      ElseIf (labels != None && labels.Length == catalogSize && index < labels.Length && labels[index] != "")
-        label = labels[index]
-      Else
-        ; Existing saves can retain the old broad VMAD label arrays after the FormLists are updated.
-        label = ResolveKnownBuffLabel(effect)
-      EndIf
-      If (label == "")
-        label = "EFFECT " + effect.GetFormID()
-      EndIf
-      String entry = category + ":#" + effect.GetFormID() + ":" + label
-      If (grouped)
-        entry = category + ":" + label
-      EndIf
-      ; Starfield can retain a negative sustenance modifier while its positive
-      ; player-facing state is active. Buffs are assembled first, so keep one
-      ; visible state per food or drink family.
-      Bool suppressed = IsSuppressedSustenanceEntry(entries, entry)
-      If ((!grouped || !ContainsEffectEntry(entries, entry)) && !suppressed)
-        entries.Add(entry)
-      EndIf
-      sources.Add(effect)
-      sourceEntries.Add(entry)
-    EndIf
+    entries = AppendOneCatalogEffect(entries, player, catalog, labels, category, sources, sourceEntries, index, catalogSize)
     index += 1
   EndWhile
+  Return entries
+EndFunction
+
+; One catalog slot. The sliced scan and the full walk must publish the same entry text.
+String[] Function AppendOneCatalogEffect(String[] entries, Actor player, FormList catalog, String[] labels, String category, MagicEffect[] sources, String[] sourceEntries, Int index, Int catalogSize)
+  MagicEffect effect = catalog.GetAt(index) as MagicEffect
+  If (effect == None || player == None || !player.HasMagicEffect(effect))
+    Return entries
+  EndIf
+  String label = ""
+  Bool grouped = False
+  If (IsSustenanceFoodEffect(effect))
+    label = "Malnourished"
+    grouped = True
+  ElseIf (IsSustenanceDrinkEffect(effect))
+    label = "Dehydrated"
+    grouped = True
+  ElseIf (IsSustenanceHydratedEffect(effect))
+    label = "Hydrated"
+    grouped = True
+  ElseIf (IsSustenanceFedEffect(effect))
+    label = "Fed"
+    grouped = True
+  ElseIf (labels != None && labels.Length == catalogSize && index < labels.Length && labels[index] != "")
+    label = labels[index]
+  Else
+    ; Existing saves can retain the old broad VMAD label arrays after the FormLists are updated.
+    label = ResolveKnownBuffLabel(effect)
+  EndIf
+  If (label == "")
+    label = "EFFECT " + effect.GetFormID()
+  EndIf
+  String entry = category + ":#" + effect.GetFormID() + ":" + label
+  If (grouped)
+    entry = category + ":" + label
+  EndIf
+  ; Starfield can retain a negative sustenance modifier while its positive
+  ; player-facing state is active. Buffs are assembled first, so keep one
+  ; visible state per food or drink family.
+  Bool suppressed = IsSuppressedSustenanceEntry(entries, entry)
+  If ((!grouped || !ContainsEffectEntry(entries, entry)) && !suppressed)
+    entries.Add(entry)
+  EndIf
+  sources.Add(effect)
+  sourceEntries.Add(entry)
   Return entries
 EndFunction
 
@@ -696,28 +952,66 @@ Bool Function IsSuppressedSustenanceEntry(String[] entries, String candidate)
 EndFunction
 
 Bool Function IsSustenanceFoodEffect(MagicEffect effect)
-  Return effect == Game.GetFormFromFile(0x31326D, "Starfield.esm") || effect == Game.GetFormFromFile(0x31326E, "Starfield.esm") || effect == Game.GetFormFromFile(0x31326F, "Starfield.esm")
+  Return effect == ResolveMagicEffect(0x31326D) || effect == ResolveMagicEffect(0x31326E) || effect == ResolveMagicEffect(0x31326F)
 EndFunction
 
 Bool Function IsSustenanceDrinkEffect(MagicEffect effect)
-  Return effect == Game.GetFormFromFile(0x31327B, "Starfield.esm") || effect == Game.GetFormFromFile(0x31329B, "Starfield.esm") || effect == Game.GetFormFromFile(0x2EDFDA, "Starfield.esm")
+  Return effect == ResolveMagicEffect(0x31327B) || effect == ResolveMagicEffect(0x31329B) || effect == ResolveMagicEffect(0x2EDFDA)
 EndFunction
 
 Bool Function IsSustenanceHydratedEffect(MagicEffect effect)
-  Return effect == Game.GetFormFromFile(0x313260, "Starfield.esm") || effect == Game.GetFormFromFile(0x2EDFDC, "Starfield.esm") || effect == Game.GetFormFromFile(0x2EFD74, "Starfield.esm")
+  Return effect == ResolveMagicEffect(0x313260) || effect == ResolveMagicEffect(0x2EDFDC) || effect == ResolveMagicEffect(0x2EFD74)
 EndFunction
 
 Bool Function IsSustenanceFedEffect(MagicEffect effect)
-  Return effect == Game.GetFormFromFile(0x2EDFE1, "Starfield.esm") || effect == Game.GetFormFromFile(0x2EDFD5, "Starfield.esm") || effect == Game.GetFormFromFile(0x313251, "Starfield.esm")
+  Return effect == ResolveMagicEffect(0x2EDFE1) || effect == ResolveMagicEffect(0x2EDFD5) || effect == ResolveMagicEffect(0x313251)
 EndFunction
 
 ; Publishes one complete state datagram. EVENT_SUBMITTED acknowledges native submission only.
 Function PublishNextEffectPacket()
   EffectSnapshot candidate
+  Bool stale = False
+  Bool canRebuild = False
+  If (!StatusDatagramsEnabled())
+    Return
+  EndIf
   LockGuard EffectSnapshotGuard
     candidate = PendingSnapshot
+    stale = EffectChangedDuringPublication
   EndLockGuard
   If (candidate == None)
+    Return
+  EndIf
+  canRebuild = CatalogDirty
+  If (!canRebuild && ActiveSourceEffects != None)
+    canRebuild = ActiveSourceEffects.Length > 0
+  EndIf
+  ; The native watch-alert call can stall for seconds. A datagram that is already stale is not worth that call.
+  If (stale && canRebuild && StaleDatagramSkips < 2)
+    StaleDatagramSkips += 1
+    LockGuard EffectSnapshotGuard
+      If (PendingSnapshot == candidate)
+        PendingSnapshot = None
+        PendingEntries = None
+        PendingEffects = None
+        PendingSourceEffectEntries = None
+        PendingAfflictions = None
+        PendingAfflictionEntries = None
+        PendingSpells = None
+        PendingSpellEntries = None
+        PendingEffectPayload = ""
+        PendingEffectSignature = ""
+        PendingEffectNeedsRecoveryReplay = False
+        EffectChangedDuringPublication = False
+      EndIf
+    EndLockGuard
+    LogUserInformational(ModuleName, "PublishNextEffectPacket", "EFFECT_DATAGRAM_COALESCED | Revision=" + candidate.Revision + " | Skips=" + StaleDatagramSkips)
+    If (CatalogWalkQueued)
+      ; The dropped datagram was the catalog reconciliation. Publish the newer rows first, then walk again.
+      CatalogWalkQueued = False
+      CatalogReconcilePending = True
+    EndIf
+    RequestEffectRefresh(True)
     Return
   EndIf
   OperationResult result
@@ -744,9 +1038,11 @@ Function PublishNextEffectPacket()
         ActiveSourceSpells = PendingSpells
         ActiveSourceSpellEntries = PendingSpellEntries
         LastEffectSignature = candidate.Signature
+        LastEffectPayload = candidate.Payload
         LastActiveEffectCount = PendingEntries.Length
         LastEffectSnapshotAt = now
         EffectRetryCount = 0
+        StaleDatagramSkips = 0
         committed = True
         refresh = EffectChangedDuringPublication
         EffectChangedDuringPublication = False
@@ -772,17 +1068,598 @@ Function PublishNextEffectPacket()
   EndLockGuard
   LogUserInformational(ModuleName, "PublishNextEffectPacket", "EFFECT_DATAGRAM_ATTEMPT | Status=" + status + " | Revision=" + candidate.Revision + " | Committed=" + committed + " | Retry=" + retry)
   If (committed)
+    CatalogWalkQueued = False
+    ReleaseCommittedDiscoveries()
     ScheduleActiveEffectCheck()
     If (candidate.RecoveryReplay)
       StartTimer(2.0, 35)
     EndIf
     If (refresh)
+      ; A row changed while this datagram was waiting. Publish that generic snapshot.
       RequestEffectRefresh(False)
     EndIf
   ElseIf (retry)
+    CancelTimer(33)
     StartTimer(0.5, 33)
   EndIf
   ; The independent timer 34 remains armed on every failure, including terminal rejection.
+EndFunction
+
+; Resolves SQ_ENV rank spells once. Later polls do not call FormList.GetAt.
+Function EnsureClassLists()
+  SQ_ENV_AfflictionsScript afflictionQuest
+  ENV_AfflictionScript[] afflictions
+  If (ClassListsReady)
+    Return
+  EndIf
+  If (CachedThermalProbe == None)
+    CachedThermalProbe = Game.GetFormFromFile(0x002BDD19, "Starfield.esm") as Spell
+  EndIf
+  If (CachedColdProbe == None)
+    CachedColdProbe = Game.GetFormFromFile(0x002BDD1F, "Starfield.esm") as Spell
+  EndIf
+  If (CachedPoisonProbe == None)
+    CachedPoisonProbe = Game.GetFormFromFile(0x002BDD25, "Starfield.esm") as Spell
+  EndIf
+  If (CachedRadiationProbe == None)
+    CachedRadiationProbe = Game.GetFormFromFile(0x002BDD27, "Starfield.esm") as Spell
+  EndIf
+  If (CachedInfectionProbe == None)
+    CachedInfectionProbe = Game.GetFormFromFile(0x002BDD13, "Starfield.esm") as Spell
+  EndIf
+  If (CachedInjuryProbe == None)
+    CachedInjuryProbe = Game.GetFormFromFile(0x002BDD23, "Starfield.esm") as Spell
+  EndIf
+  afflictionQuest = ResolveAfflictionQuest()
+  If (afflictionQuest == None || afflictionQuest.AfflictionData == None)
+    Return
+  EndIf
+  CachedClassAfflictions = new ENV_AfflictionScript[0]
+  CachedClassEntries = new String[0]
+  CachedClassSpells = new Spell[0]
+  CachedClassSpellOwners = new Int[0]
+  afflictions = afflictionQuest.AfflictionData
+  Int index = 0
+  While (index < afflictions.Length)
+    RememberClassAffliction(afflictions[index])
+    index += 1
+  EndWhile
+  ClassListsReady = True
+  LogUserInformational(ModuleName, "EnsureClassLists", "CLASS_LISTS_CACHED | Afflictions=" + CachedClassAfflictions.Length + " | Spells=" + CachedClassSpells.Length)
+EndFunction
+
+Function RememberClassAffliction(ENV_AfflictionScript affliction)
+  String entry = ""
+  FormList spellList
+  Int owner = 0
+  Int index = 0
+  Int size = 0
+  If (affliction == None)
+    Return
+  EndIf
+  entry = AfflictionClassEntry(affliction.ID)
+  If (entry == "")
+    Return
+  EndIf
+  owner = CachedClassAfflictions.Length
+  CachedClassAfflictions.Add(affliction)
+  CachedClassEntries.Add(entry)
+  spellList = affliction.AfflictionSpellList
+  If (spellList == None)
+    Return
+  EndIf
+  size = spellList.GetSize()
+  While (index < size)
+    Spell rankSpell = spellList.GetAt(index) as Spell
+    If (rankSpell != None)
+      CachedClassSpells.Add(rankSpell)
+      CachedClassSpellOwners.Add(owner)
+      If (entry == "D:Lung Damage" && CachedLungProbe == None)
+        CachedLungProbe = rankSpell
+      EndIf
+    EndIf
+    index += 1
+  EndWhile
+EndFunction
+
+; Gameplay sets Active on gain and clears it on cure, including higher ranks. A direct AddSpell leaves Active clear, so the probe spells cover that path.
+Bool Function ClassIsPresent(Actor player, String entry)
+  Int index = 0
+  If (player == None || entry == "")
+    Return False
+  EndIf
+  EnsureClassLists()
+  While (CachedClassAfflictions != None && CachedClassEntries != None && index < CachedClassAfflictions.Length && index < CachedClassEntries.Length)
+    ENV_AfflictionScript affliction = CachedClassAfflictions[index]
+    If (CachedClassEntries[index] == entry && affliction != None && affliction.Active && AfflictionStillHasSpell(player, index))
+      Return True
+    EndIf
+    index += 1
+  EndWhile
+  Return ProbeIsPresent(player, entry)
+EndFunction
+
+Bool Function AfflictionStillHasSpell(Actor player, Int owner)
+  Int index = 0
+  While (CachedClassSpells != None && CachedClassSpellOwners != None && index < CachedClassSpells.Length && index < CachedClassSpellOwners.Length)
+    If (CachedClassSpellOwners[index] == owner)
+      Spell rankSpell = CachedClassSpells[index]
+      If (rankSpell != None && player.HasSpell(rankSpell))
+        Return True
+      EndIf
+    EndIf
+    index += 1
+  EndWhile
+  Return False
+EndFunction
+
+Bool Function ProbeIsPresent(Actor player, String entry)
+  Spell probe = None
+  If (entry == "D:Thermal")
+    probe = CachedThermalProbe
+  ElseIf (entry == "D:Cold")
+    probe = CachedColdProbe
+  ElseIf (entry == "D:Poisoning")
+    probe = CachedPoisonProbe
+  ElseIf (entry == "D:Radiation")
+    probe = CachedRadiationProbe
+  ElseIf (entry == "D:Infection")
+    probe = CachedInfectionProbe
+  ElseIf (entry == "D:Injury")
+    probe = CachedInjuryProbe
+  ElseIf (entry == "D:Lung Damage")
+    probe = CachedLungProbe
+  EndIf
+  Return probe != None && player.HasSpell(probe)
+EndFunction
+
+; One presence check per generic class. A change publishes on this tick instead of waiting out another walk.
+Function CheckGenericEffectSignature()
+  Actor player = Game.GetPlayer()
+  ; HasSpell during a pending datagram or HUD registration dirtied a second watch-alert submit.
+  If (player == None || CatalogScanActive || EffectSnapshotBuilding || PendingSnapshot != None || CatalogScanNotBefore > Utility.GetCurrentRealTime())
+    Return
+  EndIf
+  Float now = Utility.GetCurrentRealTime()
+  LastGenericSignatureAt = now
+  String signature = BuildGenericEffectSignature(player)
+  If (signature == LastGenericEffectSignature)
+    Return
+  EndIf
+  LastGenericEffectSignature = signature
+  LogUserInformational(ModuleName, "CheckGenericEffectSignature", "GENERIC_SIGNATURE_CHANGED")
+  CancelTimer(31)
+  LockGuard EffectSnapshotGuard
+    EffectRefreshPending = False
+  EndLockGuard
+  PrepareEffectSnapshot()
+EndFunction
+
+String Function BuildGenericEffectSignature(Actor player)
+  Bool bleeding = HasAnyMagicEffect(player, 0x23E9BF, 0x2E8148, 0)
+  Bool poisoning = ClassIsPresent(player, "D:Poisoning")
+  Bool radiation = ClassIsPresent(player, "D:Radiation")
+  Bool thermal = ClassIsPresent(player, "D:Thermal")
+  Bool cold = ClassIsPresent(player, "D:Cold")
+  Bool infection = ClassIsPresent(player, "D:Infection")
+  Bool injury = ClassIsPresent(player, "D:Injury")
+  Bool lungDamage = ClassIsPresent(player, "D:Lung Damage")
+  Bool malnourished = HasAnyMagicEffect(player, 0x31326D, 0x31326E, 0x31326F)
+  Bool dehydrated = HasAnyMagicEffect(player, 0x31327B, 0x31329B, 0x2EDFDA)
+  Bool fed = HasAnyMagicEffect(player, 0x2EDFE1, 0x2EDFD5, 0x313251)
+  Bool hydrated = HasAnyMagicEffect(player, 0x313260, 0x2EDFDC, 0x2EFD74)
+  Bool rested = HasAnyMagicEffect(player, 0x05C527, 0, 0)
+  String signature = ""
+  If (bleeding)
+    signature += "D:Bleeding;"
+  EndIf
+  If (poisoning)
+    signature += "D:Poisoning;"
+  EndIf
+  If (radiation)
+    signature += "D:Radiation;"
+  EndIf
+  If (thermal)
+    signature += "D:Thermal;"
+  EndIf
+  If (cold)
+    signature += "D:Cold;"
+  EndIf
+  If (infection)
+    signature += "D:Infection;"
+  EndIf
+  If (injury)
+    signature += "D:Injury;"
+  EndIf
+  If (lungDamage)
+    signature += "D:Lung Damage;"
+  EndIf
+  If (malnourished)
+    signature += "D:Malnourished;"
+  EndIf
+  If (dehydrated)
+    signature += "D:Dehydrated;"
+  EndIf
+  If (fed)
+    signature += "B:Fed;"
+  EndIf
+  If (hydrated)
+    signature += "B:Hydrated;"
+  EndIf
+  If (rested)
+    signature += "B:Well Rested;"
+  EndIf
+  Return signature + WeatherSignature(player)
+EndFunction
+
+Bool Function HasAnyMagicEffect(Actor player, Int formIdA, Int formIdB, Int formIdC)
+  Return HasMagicEffectId(player, formIdA) || HasMagicEffectId(player, formIdB) || HasMagicEffectId(player, formIdC)
+EndFunction
+
+Bool Function HasMagicEffectId(Actor player, Int formId)
+  If (player == None || formId == 0)
+    Return False
+  EndIf
+  MagicEffect effect = ResolveMagicEffect(formId)
+  Return effect != None && player.HasMagicEffect(effect)
+EndFunction
+
+; Resolved forms are kept for the session. A miss is not cached, so a later load can resolve it.
+MagicEffect Function ResolveMagicEffect(Int formId)
+  If (formId == 0)
+    Return None
+  EndIf
+  If (CachedMagicEffectIds == None)
+    CachedMagicEffectIds = new Int[0]
+    CachedMagicEffects = new MagicEffect[0]
+  EndIf
+  Int index = 0
+  While (index < CachedMagicEffectIds.Length)
+    If (CachedMagicEffectIds[index] == formId)
+      Return CachedMagicEffects[index]
+    EndIf
+    index += 1
+  EndWhile
+  MagicEffect effect = Game.GetFormFromFile(formId, "Starfield.esm") as MagicEffect
+  If (effect != None)
+    CachedMagicEffectIds.Add(formId)
+    CachedMagicEffects.Add(effect)
+  EndIf
+  Return effect
+EndFunction
+
+SQ_ENV_AfflictionsScript Function ResolveAfflictionQuest()
+  If (!AfflictionQuestCached)
+    CachedAfflictionQuest = Game.GetFormFromFile(0x00248D20, "Starfield.esm") as SQ_ENV_AfflictionsScript
+    AfflictionQuestCached = CachedAfflictionQuest != None
+  EndIf
+  Return CachedAfflictionQuest
+EndFunction
+
+; These spell records are the named rows on the character status screen.
+Function EnsureWeatherSpells()
+  If (WeatherSpellsReady)
+    Return
+  EndIf
+  Spell[] spells = new Spell[10]
+  String[] labels = new String[10]
+  spells[0] = Game.GetFormFromFile(0x001639EB, "Starfield.esm") as Spell
+  labels[0] = "Freezing Rain"
+  spells[1] = Game.GetFormFromFile(0x00163A02, "Starfield.esm") as Spell
+  labels[1] = "Freezing Cold and Snow"
+  spells[2] = Game.GetFormFromFile(0x001639F9, "Starfield.esm") as Spell
+  labels[2] = "Freezing Vapor"
+  spells[3] = Game.GetFormFromFile(0x00281ECD, "Starfield.esm") as Spell
+  labels[3] = "Scalding Rain"
+  spells[4] = Game.GetFormFromFile(0x00163A03, "Starfield.esm") as Spell
+  labels[4] = "Intense Heat"
+  spells[5] = Game.GetFormFromFile(0x00163A00, "Starfield.esm") as Spell
+  labels[5] = "Scalding Vapor"
+  spells[6] = Game.GetFormFromFile(0x00281ECB, "Starfield.esm") as Spell
+  labels[6] = "Corrosive Rain"
+  spells[7] = Game.GetFormFromFile(0x00163A05, "Starfield.esm") as Spell
+  labels[7] = "Corrosive Particulates"
+  spells[8] = Game.GetFormFromFile(0x001639F8, "Starfield.esm") as Spell
+  labels[8] = "Corrosive Vapor"
+  spells[9] = Game.GetFormFromFile(0x00163FE7, "Starfield.esm") as Spell
+  labels[9] = "Poor Air Quality"
+  CachedWeatherSpells = spells
+  CachedWeatherLabels = labels
+  Int index = 0
+  Bool complete = True
+  While (index < spells.Length)
+    If (spells[index] == None)
+      complete = False
+    EndIf
+    index += 1
+  EndWhile
+  WeatherSpellsReady = complete
+EndFunction
+
+; Named spell rows stay on the one-second poll. Live weather flags are a five-second sample, and they are omitted when the snapshot would suppress that row.
+String Function WeatherSignature(Actor player)
+  EnsureWeatherSpells()
+  EnsureWeatherSample(player)
+  String signature = ""
+  Bool namedWeather = False
+  Bool thermal = False
+  Bool cold = False
+  Bool corrosive = False
+  Bool gas = False
+  Int index = 0
+  Spell toxicGas = None
+  Spell weatherSpell = None
+  String classEntry = ""
+  While (CachedWeatherSpells != None && index < CachedWeatherSpells.Length)
+    weatherSpell = CachedWeatherSpells[index]
+    classEntry = ""
+    If (weatherSpell != None && player.HasSpell(weatherSpell))
+      classEntry = WeatherSpellClassEntry(CachedWeatherLabels[index])
+      namedWeather = True
+      If (classEntry == "D:Thermal")
+        thermal = True
+      ElseIf (classEntry == "D:Cold")
+        cold = True
+      ElseIf (classEntry == "D:Corrosive")
+        corrosive = True
+      ElseIf (classEntry == "D:Gas")
+        gas = True
+      EndIf
+    EndIf
+    index += 1
+  EndWhile
+  toxicGas = ResolveToxicGasSpell()
+  If (toxicGas != None && player.HasSpell(toxicGas))
+    gas = True
+  EndIf
+  If (thermal)
+    signature += "D:Thermal;"
+  EndIf
+  If (cold)
+    signature += "D:Cold;"
+  EndIf
+  If (corrosive)
+    signature += "D:Corrosive;"
+  EndIf
+  If (gas)
+    signature += "D:Gas;"
+  EndIf
+  If (CachedSandstormActive)
+    signature += "D:Sandstorm;"
+  EndIf
+  If (!cold && (CachedSnowActive || CachedColdDamageActive))
+    signature += "D:Cold;"
+  EndIf
+  If (!namedWeather && FirstIncomingWeatherSpell(player) != None)
+    signature += "D:Incoming Weather;"
+  EndIf
+  Return signature
+EndFunction
+
+; Heat, cold, corrosive, and poor air each collapse to one HUD row. Sandstorm stays its own row.
+String Function WeatherSpellClassEntry(String label)
+  If (label == "Freezing Rain" || label == "Freezing Cold and Snow" || label == "Freezing Vapor")
+    Return "D:Cold"
+  ElseIf (label == "Scalding Rain" || label == "Intense Heat" || label == "Scalding Vapor")
+    Return "D:Thermal"
+  ElseIf (label == "Corrosive Rain" || label == "Corrosive Particulates" || label == "Corrosive Vapor")
+    Return "D:Corrosive"
+  ElseIf (label == "Poor Air Quality")
+    Return "D:Gas"
+  EndIf
+  Return ""
+EndFunction
+
+; These are the status-menu spells named Incoming Weather. They can be on before the named hazard spell sticks.
+Function EnsureIncomingWeatherSpells()
+  If (IncomingWeatherSpellsReady)
+    Return
+  EndIf
+  Spell[] spells = new Spell[4]
+  spells[0] = Game.GetFormFromFile(0x00281ED2, "Starfield.esm") as Spell
+  spells[1] = Game.GetFormFromFile(0x001639EE, "Starfield.esm") as Spell
+  spells[2] = Game.GetFormFromFile(0x00281ECF, "Starfield.esm") as Spell
+  spells[3] = Game.GetFormFromFile(0x00163FE0, "Starfield.esm") as Spell
+  CachedIncomingWeatherSpells = spells
+  Int index = 0
+  Bool complete = True
+  While (index < spells.Length)
+    If (spells[index] == None)
+      complete = False
+    EndIf
+    index += 1
+  EndWhile
+  IncomingWeatherSpellsReady = complete
+EndFunction
+
+Spell Function FirstIncomingWeatherSpell(Actor player)
+  EnsureIncomingWeatherSpells()
+  If (player == None || CachedIncomingWeatherSpells == None)
+    Return None
+  EndIf
+  Int index = 0
+  While (index < CachedIncomingWeatherSpells.Length)
+    Spell warning = CachedIncomingWeatherSpells[index]
+    If (warning != None && player.HasSpell(warning))
+      Return warning
+    EndIf
+    index += 1
+  EndWhile
+  Return None
+EndFunction
+
+Bool Function HasNamedWeatherSpell(Actor player)
+  EnsureWeatherSpells()
+  Int index = 0
+  If (player == None || CachedWeatherSpells == None)
+    Return False
+  EndIf
+  While (index < CachedWeatherSpells.Length)
+    Spell weatherSpell = CachedWeatherSpells[index]
+    If (weatherSpell != None && player.HasSpell(weatherSpell))
+      Return True
+    EndIf
+    index += 1
+  EndWhile
+  Return False
+EndFunction
+
+String[] Function AppendIncomingWeather(String[] entries, Actor player, Spell[] sources, String[] sourceEntries)
+  Spell warning = FirstIncomingWeatherSpell(player)
+  If (warning == None || HasNamedWeatherSpell(player))
+    Return entries
+  EndIf
+  String entry = "D:#" + warning.GetFormID() + ":Incoming Weather"
+  If (!ContainsEffectEntry(entries, entry))
+    entries.Add(entry)
+    sources.Add(warning)
+    sourceEntries.Add(entry)
+  EndIf
+  Return entries
+EndFunction
+
+String[] Function AppendNamedWeatherStatuses(String[] entries, Actor player, Spell[] sources, String[] sourceEntries)
+  EnsureWeatherSpells()
+  Int index = 0
+  While (CachedWeatherSpells != None && index < CachedWeatherSpells.Length)
+    Spell weatherSpell = CachedWeatherSpells[index]
+    String entry = ""
+    If (weatherSpell != None && player.HasSpell(weatherSpell))
+      entry = WeatherSpellClassEntry(CachedWeatherLabels[index])
+      If (entry != "")
+        If (!ContainsEffectEntry(entries, entry))
+          entries.Add(entry)
+        EndIf
+        sources.Add(weatherSpell)
+        sourceEntries.Add(entry)
+      EndIf
+    EndIf
+    index += 1
+  EndWhile
+  Return entries
+EndFunction
+
+; WeatherName_Sandstorm is 0x00281DF6 and WeatherName_Snow is 0x00281DF7. A miss is not cached.
+Function EnsureWeatherKeywords()
+  If (WeatherKeywordsReady)
+    Return
+  EndIf
+  CachedSandstormKeyword = Game.GetFormFromFile(0x00281DF6, "Starfield.esm") as Keyword
+  CachedSnowKeyword = Game.GetFormFromFile(0x00281DF7, "Starfield.esm") as Keyword
+  WeatherKeywordsReady = CachedSandstormKeyword != None && CachedSnowKeyword != None
+EndFunction
+
+; GetCurrentWeather and HasKeyword hitch if they run on the one-second poll. A miss does not clear a row until the next sample agrees.
+Function EnsureWeatherSample(Actor player)
+  Float now = Utility.GetCurrentRealTime()
+  If (WeatherSampleReady && now >= LastWeatherSampleAt && now - LastWeatherSampleAt < 5.0)
+    Return
+  EndIf
+  EnsureWeatherKeywords()
+  Weather current = None
+  If (CachedSandstormKeyword != None || CachedSnowKeyword != None)
+    current = Weather.GetCurrentWeather()
+  EndIf
+  Bool sandstorm = current != None && CachedSandstormKeyword != None && current.HasKeyword(CachedSandstormKeyword)
+  Bool snow = current != None && CachedSnowKeyword != None && current.HasKeyword(CachedSnowKeyword)
+  CachedSandstormActive = CommitWeatherActive(CachedSandstormActive, sandstorm, 0)
+  CachedSnowActive = CommitWeatherActive(CachedSnowActive, snow, 1)
+  CachedColdDamageActive = CommitWeatherActive(CachedColdDamageActive, HasMagicEffectId(player, 0x00302A70), 2)
+  LastWeatherSampleAt = now
+  WeatherSampleReady = True
+EndFunction
+
+Bool Function CommitWeatherActive(Bool active, Bool sampled, Int slot)
+  If (WeatherOffStreaks == None || WeatherOffStreaks.Length < 3)
+    WeatherOffStreaks = new Int[3]
+  EndIf
+  If (sampled)
+    WeatherOffStreaks[slot] = 0
+    Return True
+  EndIf
+  Int streak = WeatherOffStreaks[slot] + 1
+  WeatherOffStreaks[slot] = streak
+  If (streak >= 2)
+    Return False
+  EndIf
+  Return active
+EndFunction
+
+; One cold icon is enough once a freezing spell row is already present. Sandstorm stays beside Intense Heat.
+; Keys stay stable so a different current-weather form cannot look like a new status or a removal.
+String[] Function AppendLiveWeatherConditions(String[] entries, Actor player)
+  EnsureWeatherSample(player)
+  Return AppendCachedLiveWeatherRows(entries)
+EndFunction
+
+String[] Function AppendCachedLiveWeatherRows(String[] entries)
+  If (entries == None)
+    Return entries
+  EndIf
+  If (CachedSandstormActive && !ContainsEffectEntry(entries, "D:Sandstorm"))
+    entries.Add("D:Sandstorm")
+  EndIf
+  If (!HasNamedColdRow(entries) && (CachedSnowActive || CachedColdDamageActive) && !ContainsEffectEntry(entries, "D:Cold"))
+    entries.Add("D:Cold")
+  EndIf
+  Return entries
+EndFunction
+
+Bool Function HasNamedColdRow(String[] entries)
+  Return ContainsEffectEntry(entries, "D:Cold")
+EndFunction
+
+; Catalog membership is not required. Keys match the rows already published for this set.
+String[] Function AppendDirectGenericBuffs(String[] entries, Actor player, MagicEffect[] sources, String[] sourceEntries)
+  entries = AppendGroupedMagicEffects(entries, player, sources, sourceEntries, "B:Fed", 0x2EDFE1, 0x2EDFD5, 0x313251)
+  entries = AppendGroupedMagicEffects(entries, player, sources, sourceEntries, "B:Hydrated", 0x313260, 0x2EDFDC, 0x2EFD74)
+  MagicEffect rested = ResolveMagicEffect(0x05C527)
+  If (rested != None && player.HasMagicEffect(rested))
+    String entry = "B:#" + rested.GetFormID() + ":Well Rested"
+    If (!ContainsEffectEntry(entries, entry) && !IsSuppressedSustenanceEntry(entries, entry))
+      entries.Add(entry)
+    EndIf
+    sources.Add(rested)
+    sourceEntries.Add(entry)
+  EndIf
+  Return entries
+EndFunction
+
+String[] Function AppendDirectGenericDebuffs(String[] entries, Actor player, MagicEffect[] sources, String[] sourceEntries)
+  entries = AppendGroupedMagicEffects(entries, player, sources, sourceEntries, "D:Malnourished", 0x31326D, 0x31326E, 0x31326F)
+  entries = AppendGroupedMagicEffects(entries, player, sources, sourceEntries, "D:Dehydrated", 0x31327B, 0x31329B, 0x2EDFDA)
+  entries = AppendGroupedMagicEffects(entries, player, sources, sourceEntries, "D:Bleeding", 0x23E9BF, 0x2E8148, 0)
+  Return entries
+EndFunction
+
+String[] Function AppendGroupedMagicEffects(String[] entries, Actor player, MagicEffect[] sources, String[] sourceEntries, String entry, Int formIdA, Int formIdB, Int formIdC)
+  Bool present = RememberMagicEffect(player, sources, sourceEntries, entry, formIdA)
+  If (RememberMagicEffect(player, sources, sourceEntries, entry, formIdB))
+    present = True
+  EndIf
+  If (RememberMagicEffect(player, sources, sourceEntries, entry, formIdC))
+    present = True
+  EndIf
+  If (present && !ContainsEffectEntry(entries, entry) && !IsSuppressedSustenanceEntry(entries, entry))
+    entries.Add(entry)
+  EndIf
+  Return entries
+EndFunction
+
+Bool Function RememberMagicEffect(Actor player, MagicEffect[] sources, String[] sourceEntries, String entry, Int formId)
+  If (player == None || formId == 0)
+    Return False
+  EndIf
+  MagicEffect effect = ResolveMagicEffect(formId)
+  If (effect == None || !player.HasMagicEffect(effect))
+    Return False
+  EndIf
+  If (HasMagicEffectInSources(sources, effect))
+    Return True
+  EndIf
+  sources.Add(effect)
+  sourceEntries.Add(entry)
+  Return True
 EndFunction
 
 String Function ResolveStatusTopic()
@@ -790,4 +1667,445 @@ String Function ResolveStatusTopic()
     Return StatusTopic
   EndIf
   Return ""
+EndFunction
+
+; Food, drink, rest, and bleeding publish through the direct checks. They must not mark the whole catalog dirty.
+Bool Function EffectNeedsImmediateRefresh(MagicEffect effect)
+  If (effect == None)
+    Return False
+  EndIf
+  If (IsSustenanceFoodEffect(effect) || IsSustenanceDrinkEffect(effect) || IsSustenanceFedEffect(effect) || IsSustenanceHydratedEffect(effect))
+    Return True
+  EndIf
+  If (IsListedMagicEffect(effect, 0x23E9BF, 0x2E8148, 0))
+    Return True
+  EndIf
+  If (IsListedMagicEffect(effect, 0x05C527, 0, 0))
+    Return True
+  EndIf
+  Return False
+EndFunction
+
+Bool Function IsListedMagicEffect(MagicEffect effect, Int formIdA, Int formIdB, Int formIdC)
+  If (effect == None)
+    Return False
+  EndIf
+  If (formIdA != 0 && effect == ResolveMagicEffect(formIdA))
+    Return True
+  EndIf
+  If (formIdB != 0 && effect == ResolveMagicEffect(formIdB))
+    Return True
+  EndIf
+  If (formIdC != 0 && effect == ResolveMagicEffect(formIdC))
+    Return True
+  EndIf
+  Return False
+EndFunction
+
+Function RememberDiscoveredCatalogEffect(MagicEffect effect)
+  If (effect == None)
+    Return
+  EndIf
+  If (DiscoveredCatalogEffects == None)
+    DiscoveredCatalogEffects = new MagicEffect[0]
+  EndIf
+  Int index = 0
+  While (index < DiscoveredCatalogEffects.Length)
+    If (DiscoveredCatalogEffects[index] == effect)
+      Return
+    EndIf
+    index += 1
+  EndWhile
+  DiscoveredCatalogEffects.Add(effect)
+EndFunction
+
+; Inserts one newly applied catalog row. The full walk remains the backstop for effects that were already active.
+String[] Function AppendDiscoveredCatalogEffects(String[] entries, Actor player, MagicEffect[] sources, String[] sourceEntries, String category)
+  Int index = 0
+  Int listIndex = 0
+  MagicEffect effect = None
+  If (player == None || DiscoveredCatalogEffects == None || category == "")
+    Return entries
+  EndIf
+  While (index < DiscoveredCatalogEffects.Length)
+    effect = DiscoveredCatalogEffects[index]
+    listIndex = -1
+    If (effect != None && player.HasMagicEffect(effect) && !HasMagicEffectInSources(sources, effect))
+      If (category == "B" && BuffEffects != None)
+        listIndex = BuffEffects.Find(effect)
+        If (listIndex >= 0)
+          entries = AppendOneCatalogEffect(entries, player, BuffEffects, BuffLabels, "B", sources, sourceEntries, listIndex, BuffEffects.GetSize())
+        EndIf
+      ElseIf (category == "D" && DebuffEffects != None)
+        listIndex = DebuffEffects.Find(effect)
+        If (listIndex >= 0)
+          entries = AppendOneCatalogEffect(entries, player, DebuffEffects, DebuffLabels, "D", sources, sourceEntries, listIndex, DebuffEffects.GetSize())
+        EndIf
+      EndIf
+    EndIf
+    index += 1
+  EndWhile
+  Return entries
+EndFunction
+
+Function CompactDiscoveredCatalogEffects(Actor player)
+  If (DiscoveredCatalogEffects == None)
+    Return
+  EndIf
+  MagicEffect[] stillPending = new MagicEffect[0]
+  Int index = 0
+  While (index < DiscoveredCatalogEffects.Length)
+    MagicEffect effect = DiscoveredCatalogEffects[index]
+    If (effect != None && player != None && player.HasMagicEffect(effect))
+      stillPending.Add(effect)
+    EndIf
+    index += 1
+  EndWhile
+  DiscoveredCatalogEffects = stillPending
+EndFunction
+
+; A committed snapshot now owns these rows. Keep an effect that arrived after that snapshot was built.
+Function ReleaseCommittedDiscoveries()
+  If (DiscoveredCatalogEffects == None)
+    Return
+  EndIf
+  MagicEffect[] stillPending = new MagicEffect[0]
+  Int index = 0
+  While (index < DiscoveredCatalogEffects.Length)
+    MagicEffect effect = DiscoveredCatalogEffects[index]
+    If (effect != None && !HasActiveSourceEffect(effect))
+      stillPending.Add(effect)
+    EndIf
+    index += 1
+  EndWhile
+  DiscoveredCatalogEffects = stillPending
+EndFunction
+
+; The fast snapshot was not queued. Start the catalog walk on the next timer instead of publishing the same rows again.
+Function StartCatalogReconcileIfIdle()
+  If (!CatalogReconcilePending || CatalogScanActive || EffectSnapshotBuilding || PendingSnapshot != None)
+    Return
+  EndIf
+  CatalogReconcilePending = False
+  CatalogDirty = True
+  CatalogWalkReady = True
+  RequestEffectRefresh(False)
+EndFunction
+
+; One slice stays near the cost of the generic signature check, which already runs without a frame drop.
+Int Function CatalogEntriesPerSlice()
+  Return 8
+EndFunction
+
+; Repeating ship and environment effects are not catalog rows. Cache their runtime ids after one miss so they cannot schedule a walk.
+Bool Function EffectMayNeedCatalogScan(MagicEffect effect)
+  If (effect == None)
+    Return False
+  EndIf
+  Int effectId = effect.GetFormID()
+  If (HasIgnoredApplyEffect(effectId) || HasActiveSourceEffect(effect))
+    Return False
+  EndIf
+  If (BuffEffects != None && BuffEffects.Find(effect) >= 0)
+    Return True
+  EndIf
+  If (DebuffEffects != None && DebuffEffects.Find(effect) >= 0)
+    Return True
+  EndIf
+  RememberIgnoredApplyEffect(effectId)
+  Return False
+EndFunction
+
+Bool Function HasIgnoredApplyEffect(Int effectId)
+  If (IgnoredApplyEffectIds == None)
+    Return False
+  EndIf
+  Int index = 0
+  While (index < IgnoredApplyEffectIds.Length)
+    If (IgnoredApplyEffectIds[index] == effectId)
+      Return True
+    EndIf
+    index += 1
+  EndWhile
+  Return False
+EndFunction
+
+Function RememberIgnoredApplyEffect(Int effectId)
+  If (IgnoredApplyEffectIds == None)
+    IgnoredApplyEffectIds = new Int[0]
+  EndIf
+  IgnoredApplyEffectIds.Add(effectId)
+EndFunction
+
+Bool Function HasActiveSourceEffect(MagicEffect effect)
+  If (effect == None || ActiveSourceEffects == None)
+    Return False
+  EndIf
+  Int index = 0
+  While (index < ActiveSourceEffects.Length)
+    If (ActiveSourceEffects[index] == effect)
+      Return True
+    EndIf
+    index += 1
+  EndWhile
+  Return False
+EndFunction
+
+; The HUD movie may have been recreated. Resend the last payload; do not walk the catalogs.
+Function RepublishCachedEffects()
+  String publishTopic = ""
+  OperationResult result
+  String status = ""
+  If (!StatusDatagramsEnabled())
+    Return
+  EndIf
+  If (LastEffectPayload == "" || Registry == None || CatalogScanActive || EffectSnapshotBuilding || PendingSnapshot != None)
+    Return
+  EndIf
+  publishTopic = ResolveStatusTopic()
+  If (publishTopic == "")
+    Return
+  EndIf
+  result = Registry.TryPublishCanvasDatagram(publishTopic, "effects.state", 1, "ci-ascii", LastEffectPayload)
+  status = "DEFERRED_REGISTRY_UNAVAILABLE"
+  If (result != None)
+    status = result.Status
+  EndIf
+  LogUserInformational(ModuleName, "RepublishCachedEffects", "EFFECT_CACHE_REPLAY | Status=" + status)
+EndFunction
+
+; Claimed by PrepareEffectSnapshot. Return immediately so HUD registration can run, then walk a few entries per timer.
+Function BeginCatalogScan(Actor player, EffectSnapshot candidate, Bool forcedRefresh, Bool recoveryRefresh)
+  CatalogDirty = False
+  CatalogWalkReady = False
+  CatalogReconcilePending = False
+  CatalogWalkQueued = False
+  CatalogScanActive = True
+  CatalogScanPhase = 0
+  CatalogScanIndex = 0
+  CatalogSliceRevision = candidate.Revision
+  CatalogSliceForced = forcedRefresh
+  CatalogSliceRecovery = recoveryRefresh
+  CatalogSliceCandidate = candidate
+  CatalogSliceEntries = new String[0]
+  CatalogSliceEffects = new MagicEffect[0]
+  CatalogSliceEffectEntries = new String[0]
+  CatalogSliceAfflictions = new ENV_AfflictionScript[0]
+  CatalogSliceAfflictionEntries = new String[0]
+  CatalogSliceSpells = new Spell[0]
+  CatalogSliceSpellEntries = new String[0]
+  LogUserInformational(ModuleName, "BeginCatalogScan", "CATALOG_SCAN_STARTED | Revision=" + candidate.Revision + " | Buffs=" + BuffEffects.GetSize() + " | Debuffs=" + DebuffEffects.GetSize() + " | Budget=" + CatalogEntriesPerSlice() + " | Player=" + player)
+  CancelTimer(36)
+  StartTimer(0.1, 36)
+EndFunction
+
+Function ContinueCatalogScan()
+  If (!CatalogScanActive)
+    Return
+  EndIf
+  If (EffectSourceRevision != CatalogSliceRevision || CatalogSliceCandidate == None)
+    CatalogScanActive = False
+    Return
+  EndIf
+  Actor player = Game.GetPlayer()
+  If (player == None || BuffEffects == None || DebuffEffects == None)
+    CatalogDirty = True
+    CatalogWalkReady = True
+    CatalogScanActive = False
+    FinishEffectBuild(CatalogSliceCandidate, True)
+    Return
+  EndIf
+  ; Afflictions and weather spells are their own tick. They must not share a frame with the last catalog entry.
+  If (CatalogScanPhase >= 2)
+    FinishCatalogScan(player)
+    Return
+  EndIf
+  Int budget = CatalogEntriesPerSlice()
+  If (CatalogScanPhase == 0)
+    budget = ConsumeCatalogSlice(player, BuffEffects, BuffLabels, "B", budget)
+    If (CatalogScanIndex >= BuffEffects.GetSize())
+      CatalogSliceEntries = AppendDirectGenericBuffs(CatalogSliceEntries, player, CatalogSliceEffects, CatalogSliceEffectEntries)
+      CatalogScanPhase = 1
+      CatalogScanIndex = 0
+      budget = 0
+    EndIf
+  EndIf
+  If (CatalogScanPhase == 1 && budget > 0)
+    budget = ConsumeCatalogSlice(player, DebuffEffects, DebuffLabels, "D", budget)
+    If (CatalogScanIndex >= DebuffEffects.GetSize())
+      CatalogScanPhase = 2
+      StartTimer(0.1, 36)
+      Return
+    EndIf
+  EndIf
+  StartTimer(0.1, 36)
+EndFunction
+
+Int Function ConsumeCatalogSlice(Actor player, FormList catalog, String[] labels, String category, Int budget)
+  If (catalog == None || budget <= 0)
+    Return budget
+  EndIf
+  Int catalogSize = catalog.GetSize()
+  While (budget > 0 && CatalogScanIndex < catalogSize)
+    CatalogSliceEntries = AppendOneCatalogEffect(CatalogSliceEntries, player, catalog, labels, category, CatalogSliceEffects, CatalogSliceEffectEntries, CatalogScanIndex, catalogSize)
+    CatalogScanIndex += 1
+    budget -= 1
+  EndWhile
+  Return budget
+EndFunction
+
+Function FinishCatalogScan(Actor player)
+  CatalogScanActive = False
+  ; Seed the poll cache from this walk so the first post-publish check does not look like a new list and submit again.
+  LastGenericEffectSignature = BuildGenericEffectSignature(player)
+  LastGenericSignatureAt = Utility.GetCurrentRealTime()
+  ; A generic or discovered row can appear after its slice. Check both sides again before publishing.
+  CatalogSliceEntries = AppendDirectGenericBuffs(CatalogSliceEntries, player, CatalogSliceEffects, CatalogSliceEffectEntries)
+  CatalogSliceEntries = AppendDiscoveredCatalogEffects(CatalogSliceEntries, player, CatalogSliceEffects, CatalogSliceEffectEntries, "B")
+  CatalogSliceEntries = AppendDirectGenericDebuffs(CatalogSliceEntries, player, CatalogSliceEffects, CatalogSliceEffectEntries)
+  CatalogSliceEntries = AppendDiscoveredCatalogEffects(CatalogSliceEntries, player, CatalogSliceEffects, CatalogSliceEffectEntries, "D")
+  CompactDiscoveredCatalogEffects(player)
+  CatalogSliceEntries = AppendActiveAfflictions(CatalogSliceEntries, player, CatalogSliceAfflictions, CatalogSliceAfflictionEntries)
+  CatalogSliceEntries = AppendActiveEnvironmentalStatuses(CatalogSliceEntries, player, CatalogSliceSpells, CatalogSliceSpellEntries)
+  QueueBuiltSnapshot(CatalogSliceCandidate, CatalogSliceEntries, CatalogSliceEffects, CatalogSliceEffectEntries, CatalogSliceAfflictions, CatalogSliceAfflictionEntries, CatalogSliceSpells, CatalogSliceSpellEntries, CatalogSliceForced, CatalogSliceRecovery)
+  If (PendingSnapshot != None)
+    CatalogWalkQueued = True
+  EndIf
+EndFunction
+
+; Starfield has no StringUtil. Character codes are enough to keep B: and D: rows in scan order.
+Bool Function EntryHasPrefix(String entry, String prefix)
+  If (entry == "" || prefix == "")
+    Return False
+  EndIf
+  Int[] entryChars = Utility.SplitStringChars(entry)
+  Int[] prefixChars = Utility.SplitStringChars(prefix)
+  If (entryChars == None || prefixChars == None || entryChars.Length < prefixChars.Length)
+    Return False
+  EndIf
+  Int index = 0
+  While (index < prefixChars.Length)
+    If (entryChars[index] != prefixChars[index])
+      Return False
+    EndIf
+    index += 1
+  EndWhile
+  Return True
+EndFunction
+
+; Carries catalog rows that are still active so a removal or generic change does not walk both FormLists.
+String[] Function AppendStillActiveCatalogSources(String[] entries, Actor player, MagicEffect[] sources, String[] sourceEntries, String prefix)
+  If (player == None || ActiveSourceEffects == None || ActiveSourceEffectEntries == None || prefix == "")
+    Return entries
+  EndIf
+  Int index = 0
+  While (index < ActiveSourceEffects.Length && index < ActiveSourceEffectEntries.Length)
+    MagicEffect effect = ActiveSourceEffects[index]
+    String entry = ActiveSourceEffectEntries[index]
+    If (effect != None && entry != "" && EntryHasPrefix(entry, prefix) && player.HasMagicEffect(effect))
+      Bool suppressed = IsSuppressedSustenanceEntry(entries, entry)
+      If (!ContainsEffectEntry(entries, entry) && !suppressed)
+        entries.Add(entry)
+      EndIf
+      If (!HasMagicEffectInSources(sources, effect))
+        sources.Add(effect)
+        sourceEntries.Add(entry)
+      EndIf
+    EndIf
+    index += 1
+  EndWhile
+  Return entries
+EndFunction
+
+Bool Function HasMagicEffectInSources(MagicEffect[] sources, MagicEffect effect)
+  If (sources == None || effect == None)
+    Return False
+  EndIf
+  Int index = 0
+  While (index < sources.Length)
+    If (sources[index] == effect)
+      Return True
+    EndIf
+    index += 1
+  EndWhile
+  Return False
+EndFunction
+
+Spell Function ResolveToxicGasSpell()
+  If (ToxicGasSpellResolved)
+    Return CachedToxicGasSpell
+  EndIf
+  CachedToxicGasSpell = Game.GetFormFromFile(0x245B6B, "Starfield.esm") as Spell
+  ToxicGasSpellResolved = CachedToxicGasSpell != None
+  Return CachedToxicGasSpell
+EndFunction
+
+; Both the fast path and the finished catalog scan publish through this so the payload format stays one implementation.
+Function QueueBuiltSnapshot(EffectSnapshot candidate, String[] entries, MagicEffect[] scanEffects, String[] scanEffectEntries, ENV_AfflictionScript[] scanAfflictions, String[] scanAfflictionEntries, Spell[] scanSpells, String[] scanSpellEntries, Bool forcedRefresh, Bool recoveryRefresh)
+  Int buffCount = 0
+  Int countIndex = 0
+  While (entries != None && countIndex < entries.Length)
+    If (entries[countIndex] != "" && EntryHasPrefix(entries[countIndex], "B:"))
+      buffCount += 1
+    EndIf
+    countIndex += 1
+  EndWhile
+  Int debuffCount = 0
+  If (entries != None)
+    debuffCount = entries.Length - buffCount
+  EndIf
+  String signature = ""
+  Int index = 0
+  While (entries != None && index < entries.Length)
+    signature += entries[index] + ";"
+    index += 1
+  EndWhile
+  Bool entriesChanged = signature != LastEffectSignature
+  Float now = Utility.GetCurrentRealTime()
+  If (!forcedRefresh && !entriesChanged && now >= LastEffectSnapshotAt && now - LastEffectSnapshotAt < 60.0)
+    FinishEffectBuild(candidate, False)
+    Return
+  EndIf
+  String eventTopic = ResolveStatusTopic()
+  String payload = buffCount + "|" + debuffCount + "|" + signature
+  String datagram = ""
+  String framedPacket = ""
+  Int framedLength = 0
+  If (Registry != None)
+    datagram = Registry.BuildCanvasDatagramBody("effects.state", 1, "ci-ascii", payload)
+    framedPacket = Registry.BuildCanvasEventPacket(eventTopic, datagram)
+    framedLength = Registry.GetCharacterCount(framedPacket)
+  EndIf
+  If (eventTopic == "" || datagram == "" || framedPacket == "" || framedLength > 4096)
+    LogUserWarning(ModuleName, "PrepareEffectSnapshot", "EFFECT_DATAGRAM_REJECTED | Buffs=" + buffCount + " | Debuffs=" + debuffCount + " | Length=" + framedLength + " | Limit=4096")
+    FinishEffectBuild(candidate, True)
+    Return
+  EndIf
+  candidate.Signature = signature
+  candidate.Payload = payload
+  ; An unchanged forced scan must not schedule another one. Recovery is only for a payload the UI has not seen.
+  candidate.RecoveryReplay = !recoveryRefresh && entriesChanged
+  Bool queued = False
+  LockGuard EffectSnapshotGuard
+    If (EffectSnapshotBuilding && EffectSourceRevision == candidate.Revision)
+      PendingEntries = entries
+      PendingEffects = scanEffects
+      PendingSourceEffectEntries = scanEffectEntries
+      PendingAfflictions = scanAfflictions
+      PendingAfflictionEntries = scanAfflictionEntries
+      PendingSpells = scanSpells
+      PendingSpellEntries = scanSpellEntries
+      PendingSnapshot = candidate
+      PendingEffectSignature = signature
+      PendingEffectPayload = payload
+      PendingEffectNeedsRecoveryReplay = candidate.RecoveryReplay
+      EffectSnapshotBuilding = False
+      queued = True
+    EndIf
+  EndLockGuard
+  If (queued)
+    LogUserInformational(ModuleName, "PrepareEffectSnapshot", "EFFECT_DATAGRAM_QUEUED | Type=effects.state | Schema=1 | Buffs=" + buffCount + " | Debuffs=" + debuffCount + " | Length=" + framedLength)
+    CancelTimer(33)
+    StartTimer(0.1, 33)
+  EndIf
 EndFunction

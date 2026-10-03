@@ -1,12 +1,10 @@
 <!doctype html><html><head><title>VWHUD effects</title></head><body>
-<span class="effects-count accent" data-vw-template="STATUS  +{buffcount:integer} / -{debuffcount:integer}"></span>
-<span class="effects-page" data-vw-visible="showpages" data-vw-template="{page:integer}/{pagecount:integer}"></span>
 <span class="effects-message" data-vw-visible="waiting">WAITING FOR STATUS</span>
 <span class="effects-message" data-vw-visible="empty">NO ACTIVE EFFECTS</span>
 <div class="effects-list">
   <div class="effect-row" data-vw-for-each="effectrows" data-vw-x="x" data-vw-y="y">
-    <span class="effect-label positive" data-vw-visible="positive" data-vw-template="+ {label:raw}"></span>
-    <span class="effect-label negative" data-vw-visible="negative" data-vw-template="- {label:raw}"></span>
+    <img class="effect-icon positive" data-vw-visible="positive" src="assets/effect-fallbackbuff.svg" alt="buff" data-vw-asset="icon" data-vw-assets="assets/effect-fed.svg assets/effect-hydrated.svg assets/effect-rested.svg assets/effect-health.svg assets/effect-weight.svg assets/effect-speed.svg assets/effect-shield.svg assets/effect-accuracy.svg assets/effect-stealth.svg assets/effect-time.svg assets/effect-damage.svg assets/effect-research.svg assets/effect-persuasion.svg assets/effect-companion.svg assets/effect-addiction.svg assets/effect-power.svg assets/effect-fallbackbuff.svg assets/effect-lungs.svg"></img>
+    <img class="effect-icon negative" data-vw-visible="negative" src="assets/effect-fallbackdebuff.svg" alt="debuff" data-vw-asset="icon" data-vw-assets="assets/effect-bleed.svg assets/effect-poison.svg assets/effect-radiation.svg assets/effect-corrosive.svg assets/effect-thermal.svg assets/effect-cold.svg assets/effect-sandstorm.svg assets/effect-malnourished.svg assets/effect-dehydrated.svg assets/effect-injury.svg assets/effect-infection.svg assets/effect-gas.svg assets/effect-fallbackdebuff.svg assets/effect-lungs.svg"></img>
   </div>
 </div>
 </body></html>
