@@ -54,8 +54,9 @@ package
          for(var buffIndex:int = 1; buffIndex <= 19; buffIndex++) buffPayload += "B:B" + buffIndex + ";";
          require(adapter.acceptDatagram(body(buffPayload)),"paged snapshot accepted");
          require(adapter.view().buffrows.length == 18 && adapter.advancePage() && adapter.view().buffrows.length == 1 && adapter.view().buffrows[0].label == "B19","buffs page one line at a time");
-         require(!adapter.acceptDatagram(body("1|0|B:Invalid;B:Extra;")) && adapter.view().page == 2,"rejected snapshot preserves page");
-         require(adapter.acceptDatagram(body("0|0|")) && adapter.view().empty === true && adapter.view().page == 1,"empty snapshot resets page");
+         require(!adapter.acceptDatagram(body("1|0|B:Invalid;B:Extra;")) && adapter.view().buffrows.length == 1 && adapter.view().buffrows[0].label == "B19","rejected snapshot keeps the second buff page");
+         require(adapter.acceptDatagram(body("0|0|")) && adapter.view().empty === true && adapter.view().buffrows.length == 0,"empty snapshot clears the paged rows");
+         require(adapter.acceptDatagram(body(buffPayload)) && adapter.view().buffrows.length == 18 && adapter.view().buffrows[0].label == "B1","empty snapshot returns to the first buff page");
          var debuffAdapter:VWHudEffectsAdapter = new VWHudEffectsAdapter();
          var debuffPayload:String = "0|37|";
          for(var debuffIndex:int = 1; debuffIndex <= 37; debuffIndex++) debuffPayload += "D:D" + debuffIndex + ";";
