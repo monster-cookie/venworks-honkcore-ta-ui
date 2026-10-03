@@ -1,8 +1,9 @@
 body { position: relative; width: 1920px; height: 1080px; color: #F4FBFF; font-family: $MAIN_Font_Bold; font-size: 10px; }
-.effects-count { position: absolute; left: 0px; top: 0px; width: 600px; height: 18px; font-size: 10px; }
-.effects-page { position: absolute; left: 640px; top: 0px; width: 80px; height: 18px; text-align: right; }
-.effects-message { position: absolute; left: 0px; top: 20px; width: 720px; height: 20px; }
-.effects-list { position: absolute; left: 0px; top: 20px; width: 720px; height: 36px; }
+/* The count sits beside the threat meter. Three 36px lines at a 35px pitch start just under it and stop at the critical-health alert. */
+.effects-count { position: absolute; left: 0px; top: -62px; width: 190px; height: 18px; font-size: 10px; }
+.effects-page { position: absolute; left: 640px; top: -62px; width: 80px; height: 18px; text-align: right; }
+.effects-message { position: absolute; left: 0px; top: -38px; width: 720px; height: 20px; }
+.effects-list { position: absolute; left: 0px; top: -38px; width: 720px; height: 106px; }
 .effect-row { position: absolute; width: 36px; height: 36px; }
 .effect-icon { position: absolute; left: 2px; top: 2px; width: 32px; height: 32px; }
 .compass-tick { position: absolute; width: 1px; height: 10px; }

@@ -9,6 +9,7 @@
 
 ## Version 2.1.0 (Unreleased)
 
+- Stack status icons in three lines. Buffs stay on the top line. Debuffs use the two lines under it.
 - Show a new or cleared generic status on the next one-second check. That check reads the affliction Active flag, or one cached ability spell when the flag is clear, and publishes on that tick. It does not walk every rank of every affliction.
 - Publish one HUD row per generic class. Thermal, cold, poisoning, radiation, bleeding, infection, injury, corrosive, and gas each stay a single row, checked with the ability spell rather than a walk of every magic effect. Food, drink, and rest stay as they are. Specific chem names such as Fortify Carry Weight are not HUD rows.
 - Add a playtest console command that applies one of each generic buff and debuff. Run `cgf "Venworks:CustomizableHUD:HudStatusProbe.ApplyGenericSet"`, then read the PersonalEffectsData line in `sfse.txt`. `cgf "Venworks:CustomizableHUD:HudStatusProbe.ClearGenericSet"` removes the ability spells. Fed and Hydrated are consumed potions and wear off on their own.

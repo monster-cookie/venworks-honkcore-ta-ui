@@ -5,6 +5,17 @@ package
    {
       private static const HEADINGS:Array = ["N","NE","E","SE","S","SW","W","NW"];
 
+      // One 720px line holds 18 icons. Debuffs occupy the next two lines. The 35px pitch keeps the third line above the critical-health alert.
+      public static const BUFF_COLUMNS:int = 18;
+
+      public static const DEBUFF_COLUMNS:int = 18;
+
+      public static const DEBUFF_ROWS:int = 2;
+
+      public static const COLUMN_STRIDE:int = 40;
+
+      public static const ROW_STRIDE:int = 35;
+
       public static function update(data:Object, tactical:Object, pulse:int, scanning:Boolean) : void
       {
          var direction:Number = tactical == null ? 0 : finite(tactical.direction,0);
@@ -29,12 +40,24 @@ package
          }
          var effects:Array = [];
          var row:Object;
-         for each(row in data.buffrows) effects.push(effectRow(row,true));
-         for each(row in data.debuffrows) effects.push(effectRow(row,false));
-         for(i = 0; i < effects.length; i++)
+         var column:int = 0;
+         for each(row in data.buffrows)
          {
-            effects[i].x = (i%8)*40;
-            effects[i].y = 0;
+            var buff:Object = effectRow(row,true);
+            buff.x = column * COLUMN_STRIDE;
+            buff.y = 0;
+            effects.push(buff);
+            column++;
+         }
+         column = 0;
+         for each(row in data.debuffrows)
+         {
+            var debuff:Object = effectRow(row,false);
+            var line:int = int(column / DEBUFF_COLUMNS);
+            debuff.x = (column % DEBUFF_COLUMNS) * COLUMN_STRIDE;
+            debuff.y = (1 + line) * ROW_STRIDE;
+            effects.push(debuff);
+            column++;
          }
          data["effectrows"] = effects;
       }
