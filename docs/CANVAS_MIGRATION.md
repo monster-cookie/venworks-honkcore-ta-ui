@@ -39,7 +39,7 @@ The full themes retain 18 unique provider channels and Minimalist retains 14. Re
 
 ## Status effects
 
-Each theme publishes complete `effects.state` snapshots to `venworks.vwhud.<variant>.status` using schema `1`, `ci-ascii`, `startup: "latest"`, and Canvas's 4,096-character framed-event limit. The display puts buffs on one line and debuffs on the next two lines, eighteen icons to a line, and rotates a longer list every six seconds. Waiting, empty, and count states stay explicit.
+Each theme publishes complete `effects.state` snapshots to `venworks.vwhud.<variant>.status` using schema `1`, `ci-ascii`, `startup: "latest"`, and Canvas's 4,096-character framed-event limit. The display puts buffs on one line and debuffs on the next two lines, eighteen icons to a line, and rotates a longer list every six seconds. Waiting and empty states stay explicit. A page indicator appears only when a line has more than one page.
 
 Candidate effect entries and source references remain separate from the submitted snapshot. Only `EVENT_SUBMITTED` commits the entries, references, signature, and timestamp. Missing prerequisites, invalid or oversized datagrams, and rejected sends retain the last submitted state and use a bounded half-second retry budget. An independent 60-second refresh remains armed even if no send succeeds. Save/load revisions reject stale scans and publish completions.
 

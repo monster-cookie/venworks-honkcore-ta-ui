@@ -1,7 +1,7 @@
 {
   "Schema": "VWHUD_CANVAS_BUILD/1",
   "Variant": "VWKS",
-  "SourceDigest": "4E0A14AFCFF471051A981A3478B868719F54A1358EAA427C45AE746B3E9AD440",
+  "SourceDigest": "CF11FB29D6A28A0C740684307551931F2203EC3C17B1455B043E0045B372E401",
   "Files": {
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.vwks/assets/cargo.svg": "74FC1C61971862326C570CB3608E76AFFA527D1938629D773534AFD85BEBA116",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.vwks/assets/crimson-fleet-logo.svg": "3031FDDD5AFBF543D960CF59AB2DFEE7D232000F614EC8CC5BE6437DA9FF95AB",
@@ -43,11 +43,11 @@
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.vwks/assets/warning.svg": "42065DC6EAB559F50895A88E592D8F381B42DB47F48A2B583623645CF7C9642F",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.vwks/assets/weapon.svg": "D28C5C33F338DBF19F1EDD701E807A8F6CAFFF6EED1D6FDD7169414B9939C73F",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.vwks/compass-content.html": "5DA3A7C24CB8B2A40D038618062096B8906A5C5CE9120E600B57F7BCB30E8E87",
-    "Interface/VenworksCanvas/Consumers/venworks.vwhud.vwks/effects.html": "5327DE44874F09A99132BC1F0FA24BFC51AFBCB9DF8C17254228F8D0D44354BE",
-    "Interface/VenworksCanvas/Consumers/venworks.vwhud.vwks/hud.css": "613FD4B3C8B3DBE97F29E51E6C5AE506257CC76FF037CF3A04B3DD7B829B5ADD",
+    "Interface/VenworksCanvas/Consumers/venworks.vwhud.vwks/effects.html": "40CD112370376BABB4A4C99F9AD748363441FB38EE7AFA70D0ABD5D21479F5F3",
+    "Interface/VenworksCanvas/Consumers/venworks.vwhud.vwks/hud.css": "80D79CB0D7D6291F5F3B58BC34794485B41A68D1CA1EED8473786D9ABB23F0F2",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.vwks/index.html": "5B53DD8752011BCA98CEF0DD60925A40BE858BD71CC8F217A6101093AED9CCCB",
-    "Interface/VenworksCanvas/Consumers/venworks.vwhud.vwks/large.swf": "D7508FD1FE2DB7679D12CDF26C768A3B3C9FB6692E20B09ACD15BC348BC4D3BF",
-    "Interface/VenworksCanvas/Consumers/venworks.vwhud.vwks/normal.swf": "D7508FD1FE2DB7679D12CDF26C768A3B3C9FB6692E20B09ACD15BC348BC4D3BF",
+    "Interface/VenworksCanvas/Consumers/venworks.vwhud.vwks/large.swf": "86D94064F7B5B9347C61B0B2F8E5D6872911D0566ADB5ADA89E3DE9E27F568BE",
+    "Interface/VenworksCanvas/Consumers/venworks.vwhud.vwks/normal.swf": "86D94064F7B5B9347C61B0B2F8E5D6872911D0566ADB5ADA89E3DE9E27F568BE",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.vwks/radar-content.html": "A5A49AA8C695610BF840E7521A60BB3E78FBEC04C00CE7E22D1E1479484339C8",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.vwks/scanner-data.html": "DA82B1C9B4E6BF325B0A76977291641139E2027788A85AF4E20EB0BD92D7C53B",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.vwks/scanner-hash.html": "ADD737300D732DBDA09DE7B2FD4E3DFAAC7426C5DCAADAB726B21345AA5CABF5",
@@ -67,9 +67,9 @@
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.vwks/threat-content.html": "71DA0CB324D0522C75D4A02859F896F0B761B4FF4DEF9C16807DA463BDAB898E",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.vwks/venworks.css": "733BE0D5431AA57DB37CF0E180717B95475B2209DA4569AFBF96E04A3654D85F",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.vwks/vwhud-overrides.css": "73AF0337F5DCF737142D997A51FDEC1F876161473697D979F9A99AB9A2A00CCF",
-    "Scripts/Venworks/CustomizableHUD/HudEffectsPublisher.pex": "B1F2F6672B606AC94F9F52ACD0AAAFD5A1C3D0DEF3D77D87DC7F57C1981E578E",
-    "Scripts/Venworks/CustomizableHUD/HudRegistrar.pex": "CF9692731771971675113FEB3C5E6D7C704E5D9C58457DBAC16285114F43CE47",
-    "Scripts/Venworks/CustomizableHUD/HudStatusProbe.pex": "8D893A4E916DB0B7C78DB7BD9DF05707316D0B12733F716339F9AF8A67137583",
+    "Scripts/Venworks/CustomizableHUD/HudEffectsPublisher.pex": "C533873773BDCDC2BA026F324A89E2F424703E54EED7014F2FA48F7CD5A9A496",
+    "Scripts/Venworks/CustomizableHUD/HudRegistrar.pex": "98F71B78EC0102A578FCDCEE267ABD38DAE64B00F7F44FFB9F324B57883AC718",
+    "Scripts/Venworks/CustomizableHUD/HudStatusProbe.pex": "CAFD20005EC4CFD82B93AB2BFA11428A598BBFA9A0A663624122DBAEB56E425C",
     "Venworks-CustomizableHUD-Venworks.esm": "1D5250D9184DB4D505F0816B98C6BAF0A9C5DD562F534C28EC4BDF9CE109CB10"
   }
 }

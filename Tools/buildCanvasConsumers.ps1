@@ -101,8 +101,7 @@ foreach ($key in $VariantKeys | Select-Object -Unique) {
   $payload = Join-Path $outputRoot $key
   $consumer = Join-Path $payload "Interface/VenworksCanvas/Consumers/$namespace"
   New-Item -ItemType Directory -Force $consumer | Out-Null
-  # flex-config.xml sets omit-trace-statements, which would delete the hitch logs before SFSE can record them.
-  $arguments = @('-jar',$mxmlc,"-load-config=$flex/frameworks/flex-config.xml",'-compiler.library-path=',"-compiler.external-library-path=$playerglobal",'-compiler.source-path',"$repositoryRoot/CanvasConsumer/actionscript",$variantDirectory,'-compiler.debug=false','-compiler.optimize=true','-compiler.omit-trace-statements=false','-use-network=false','-target-player=11.1.0','-swf-version=12','-default-size=1920,1080','-default-frame-rate=30',"-output=$consumer/normal.swf",$source)
+  $arguments = @('-jar',$mxmlc,"-load-config=$flex/frameworks/flex-config.xml",'-compiler.library-path=',"-compiler.external-library-path=$playerglobal",'-compiler.source-path',"$repositoryRoot/CanvasConsumer/actionscript",$variantDirectory,'-compiler.debug=false','-compiler.optimize=true','-use-network=false','-target-player=11.1.0','-swf-version=12','-default-size=1920,1080','-default-frame-rate=30',"-output=$consumer/normal.swf",$source)
   Push-Location (Join-Path $flex 'frameworks')
   try { & $java @arguments; if ($LASTEXITCODE -ne 0) { throw "Consumer compilation failed: $key" } }
   finally { Pop-Location }
