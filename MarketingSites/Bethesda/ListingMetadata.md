@@ -4,9 +4,10 @@
 
 - Venworks Core Library, version `2.1.8` or newer
 - Venworks Canvas, version `1.0.4` or newer
-- Load Core before Canvas and Canvas before the selected VWHUD theme.
-- Enable exactly one VWHUD theme.
+- Load Core, then Canvas, then the HUD theme.
+- Enable one HUD theme.
 - PC customization guide: `https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/docs/CUSTOMIZING_THEMES.md`
+- PC equipment-rail guide: `https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/docs/REMOVING_EQUIPRAIL.md`
 
 ## Listings
 
@@ -18,4 +19,4 @@
 | Venworks Customizable HUD - Crimson Fleet Theme | `Crimson-Fleet-Theme.md` |
 | Venworks Customizable HUD - Minimalist Theme | `Minimalist.md` |
 
-Use the summary: `A Venworks Canvas HTML/CSS/SVG HUD theme with tactical player, equipment, environment, scanner, objective, contact-radar, and compact status-effect displays.`
+Use the summary: `A tactical helmet HUD for player stats, equipment, the planet around you, your mission, contacts, and status effects.`

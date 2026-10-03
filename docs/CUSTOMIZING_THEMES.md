@@ -1,30 +1,30 @@
-# Customizing VWHUD themes
+# Customizing themes
 
-Venworks Customizable HUD uses local HTML, CSS, and SVG resources rendered by Venworks Canvas. Canvas defines the supported rendering language; VWHUD defines the five shipped themes, their panels, their data model, and the files described here.
+You can recolor, move, or hide parts of Venworks Customizable HUD on PC. The five themes are Venworks, Trackers Alliance, Freestar Collective, Crimson Fleet, and Minimalist.
 
-## Requirements
+Xbox and PlayStation play the theme as it was published. The steps below are for a PC install from Nexus Mods.
 
-Install and enable these dependencies in order:
+## What to install first
+
+Enable these in this order:
 
 1. Venworks Core Utilities 2.1.8 or newer.
 2. Venworks Canvas 1.0.4 or newer.
-3. Exactly one VWHUD theme.
+3. One HUD theme.
 
-Remove an earlier standalone VWHUD installation before installing a Canvas-based theme. Remove loose files left by an older Canvas installation before reinstalling Canvas. Disabled plugins do not prevent old loose Interface or Script files from shadowing current archives.
+Turn off any older copy of this HUD before you enable the new one. If an old copy left loose files behind, remove those too. A disabled plugin can still leave old files in the way.
 
-## Choose a PC package
+You do not need the Canvas Example.
 
-The **Normal** Nexus package installs the theme's ESM and Main BA2. Use it for ordinary play and for a small CSS override installed as a separate mod.
+## Which Nexus download to use
 
-The **Fully Loose Files** Nexus package installs the same plugin with loose Scripts and Interface resources. Use it when you need to change HTML composition or SVG artwork as well as CSS. Do not install the Normal and Fully Loose package shapes together.
+**Normal** is the one most people want. It installs the theme plugin and one archive. Use it for playing, and for color and layout changes that live in a small style file.
 
-Bethesda Creations packages are preconfigured archive packages for PC, Xbox, and PlayStation 5. The local-file workflow in this guide is for Nexus PC installations and mod authors.
+**Fully Loose Files** unpacks the theme's pictures and pages into normal folders. Use it when you want to change the art or the page layout itself. Install Normal or Fully Loose, not both.
 
-## Find the selected theme
+## Where your theme lives
 
-Canvas loads each theme from its isolated VWHUD-owned resource directory:
-
-| Theme | Resource directory beneath the Starfield Data directory |
+| Theme | Folder under the game's `Data` directory |
 | --- | --- |
 | Venworks | `Interface/VenworksCanvas/Consumers/venworks.vwhud.vwks/` |
 | Trackers Alliance | `Interface/VenworksCanvas/Consumers/venworks.vwhud.ta/` |
@@ -32,13 +32,11 @@ Canvas loads each theme from its isolated VWHUD-owned resource directory:
 | Crimson Fleet | `Interface/VenworksCanvas/Consumers/venworks.vwhud.cf/` |
 | Minimalist | `Interface/VenworksCanvas/Consumers/venworks.vwhud.min/` |
 
-The directory contains VWHUD consumer files. It does not contain a private copy of the Canvas host, renderer, registry, or player HUD movies.
+## Change colors, size, and placement
 
-## Create a durable CSS override
+Every theme reads a file named `vwhud-overrides.css` last. The Normal download keeps a blank copy inside the archive.
 
-Every theme loads `vwhud-overrides.css` after its base layout and palette. The Normal package keeps an empty copy inside its BA2 and installs no loose VWHUD files. If you want a CSS override, create a separate mod that supplies only this file at the selected theme's exact resource path. Keep the override mod after VWHUD in the mod manager so its one user-owned loose file wins over the empty copy in the VWHUD BA2. It does not unpack or replace VWHUD's HTML, SWF, scripts, or other resources. Users without an override mod remain fully archive-only.
-
-For example, a Venworks override mod contains:
+Make a separate mod that contains only your copy of that file, and load the mod after the HUD. A Venworks example looks like this:
 
 ```text
 Interface/
@@ -48,7 +46,7 @@ Interface/
         vwhud-overrides.css
 ```
 
-This changes the main accent and moves the radar within Canvas's 1920 x 1080 design space:
+This example turns the main accent gold and nudges the radar. Positions use a 1920 by 1080 layout. The game scales that layout to your screen.
 
 ```css
 .color-accent-primary-1 {
@@ -65,7 +63,7 @@ This changes the main accent and moves the radar within Canvas's 1920 x 1080 des
 }
 ```
 
-This hides the equipment rail in any of the four full themes:
+To hide the equipment rail, use [Removing the equipment rail](REMOVING_EQUIPRAIL.md). The short version is:
 
 ```css
 .vwhud-panel-equipment {
@@ -73,47 +71,51 @@ This hides the equipment rail in any of the four full themes:
 }
 ```
 
-VWHUD supplies these stable outer-panel classes:
+These names are safe to keep using after updates:
 
-- `.vwhud-panel-faction` and `.vwhud-panel-equipment` in the four full themes.
-- `.vwhud-panel-radar`, `.vwhud-panel-objective`, `.vwhud-panel-environment`, `.vwhud-panel-player`, `.vwhud-panel-compass`, `.vwhud-panel-threat`, `.vwhud-panel-effects`, `.vwhud-panel-scanner-hash`, and `.vwhud-panel-scanner-data` in all themes.
-- `.vwhud-alert-critical-health` and `.vwhud-prompt-vehicle-exit` for the shared alert and vehicle prompt.
-- `.vwhud-theme-venworks`, `.vwhud-theme-trackers-alliance`, `.vwhud-theme-freestar-collective`, `.vwhud-theme-crimson-fleet`, or `.vwhud-theme-minimalist` on the root document.
+- `.vwhud-panel-faction` and `.vwhud-panel-equipment` on the four full themes.
+- `.vwhud-panel-radar`, `.vwhud-panel-objective`, `.vwhud-panel-environment`, `.vwhud-panel-player`, `.vwhud-panel-compass`, `.vwhud-panel-threat`, `.vwhud-panel-effects`, `.vwhud-panel-scanner-hash`, and `.vwhud-panel-scanner-data` on every theme.
+- `.vwhud-alert-critical-health` and `.vwhud-prompt-vehicle-exit`.
+- `.vwhud-theme-venworks`, `.vwhud-theme-trackers-alliance`, `.vwhud-theme-freestar-collective`, `.vwhud-theme-crimson-fleet`, or `.vwhud-theme-minimalist` on the whole page.
 
-Generated classes such as `.themed-node-4` and `.minimalist-node-31` describe the shipped layout and may change when the theme is regenerated. Do not use them as long-lived override selectors.
+Names such as `.themed-node-4` belong to the generated layout. They can change when the theme is rebuilt. Use the `vwhud-panel` names in a style you want to keep.
 
-## Edit the complete theme
+## Change the art or the page
 
-The Fully Loose Files package exposes the complete presentation. Back up or place your edits in a separate mod-manager project because updating VWHUD can replace files in the VWHUD module.
+The Fully Loose download is the one to edit for that. Keep your edits in their own mod when you can. Updating the HUD can replace files that sit in the HUD's own folder.
 
-| File | Purpose |
+| File | What it is |
 | --- | --- |
-| `vwhud-overrides.css` | User color, placement, size, typography, and visibility overrides loaded last. |
-| `venworks.css`, `trackers-alliance.css`, `freestar-collective.css`, `crimson-fleet.css`, or `starfield.css` | Shipped theme palette. |
-| `themed-layout.css` or `minimalist-layout.css` | Generated base placement and sizing. Direct edits are upgrade-sensitive. |
-| `themed.html` or `minimalist.html` | Top-level composition and Canvas HUD-target suppression. |
-| `themed-*.html`, `minimalist-*.html`, and shared content fragments | Individual VWHUD panels and bindings. |
-| `assets/*.svg` | Packaged vector artwork and icons. |
-| `normal.swf` and `large.swf` | Compiled lifecycle, registration, and view-model bridge. Source changes require a rebuild. |
-| ESM and compiled PEX files | Registration quest and status publication. Source changes require a rebuild. |
+| `vwhud-overrides.css` | Your colors, placement, text size, and hidden panels. Loaded last. |
+| `venworks.css`, `trackers-alliance.css`, `freestar-collective.css`, `crimson-fleet.css`, or `starfield.css` | The theme's colors. |
+| `themed-layout.css` or `minimalist-layout.css` | The shipped sizes and positions. Edits here are easy to lose on update. |
+| `themed.html` or `minimalist.html` | The main page. |
+| `themed-*.html` and `minimalist-*.html` | Each panel. |
+| `assets/*.svg` | Icons and logos. |
+| `normal.swf` and `large.swf` | The theme program. Changing those means a full rebuild. |
+| The plugin and script files | Same. Leave them unless you are rebuilding the mod. |
 
-Do not remove or rename a `data-vw-*` binding unless the VWHUD consumer supplies the replacement data. Do not copy Canvas framework files or host movies into a VWHUD theme.
+Leave `data-vw-*` names in place. Those names are how the page receives health, location, and the rest of the live info.
 
-Canvas supports a bounded subset of HTML, CSS, and SVG rather than browser HTML. Every theme document, including included fragments, must start with `<!doctype html>`, and every element name must be lowercase. `<!DOCTYPE html>` and tags such as `<Div>` fail to parse. Paint keywords are lowercase too: use `currentcolor`, not `currentColor`. An element with `position: absolute` is placed against the nearest ancestor whose position is `relative` or `absolute`. When every ancestor is static, Canvas uses the viewport. The shipped `body` rule is `position: relative`, so the theme panels use that 1920×1080 box. Older Canvas builds reject a static parent with `absolute-containing-block-required` and do not render the document. Use the [Canvas Component Gallery](https://github.com/monster-cookie/venworks-canvas/blob/master/Documentation/CanvasComponentGallery.md) for supported syntax. Use [Create a Canvas plugin from scratch](https://github.com/monster-cookie/venworks-canvas/blob/master/Documentation/CreatingACanvasPlugin.md) when creating another consumer or changing registration and data ownership instead of customizing an existing VWHUD presentation.
+Canvas draws a simpler page than a web browser. A few habits keep a custom page on screen:
 
-## Apply, update, and reset changes
+- Start every page, including each panel file, with `<!doctype html>` in lowercase letters.
+- Write tag names in lowercase.
+- Write `currentcolor` in lowercase.
+- Give the page body `position: relative` so the panels have a box to sit in.
 
-Exit Starfield completely after changing a theme resource, then start it again. VWHUD does not promise browser-style hot reload.
+The [Canvas Component Gallery](https://github.com/monster-cookie/venworks-canvas/blob/master/Documentation/CanvasComponentGallery.md) shows which tags and styles work. [Create a Canvas plugin from scratch](https://github.com/monster-cookie/venworks-canvas/blob/master/Documentation/CreatingACanvasPlugin.md) is for a brand-new Canvas mod, not for recoloring this HUD.
 
-After updating Canvas or VWHUD, test the selected theme once with the override mod disabled. Re-enable the override after confirming the base theme loads, then review any selectors or properties affected by the update.
+## See the change, or go back
 
-To restore the default presentation, disable or remove the separate override mod. For a Fully Loose installation, reinstall the unmodified package. Do not copy default resources out of the Canvas base package; VWHUD's theme resources come from the selected VWHUD package.
+Quit Starfield completely, then start it again. The HUD reads these files at startup.
 
-## Recover from a Canvas contract mismatch
+After you update Canvas or the HUD, start once with your override mod turned off. When the plain theme looks right, turn the override back on and check anything you moved or recolored.
 
-Two messages identify a loaded Canvas contract that is incompatible with VWHUD rather than a theme CSS problem:
+To restore the default look, disable or delete the override mod. On a Fully Loose install, reinstall the clean package. The theme files come from the HUD download, not from the Canvas download.
 
-- the Canvas display reports `UNSUPPORTED CONSUMER PROTOCOL`; and
-- the Papyrus log reports that `Venworks:Canvas:Registry.BuildCanvasDatagramBody` does not exist.
+## If the HUD says the versions do not match
 
-Fully exit Starfield, verify the deployed Canvas and VWHUD versions, and inspect the mod manager for duplicate archives or loose Interface and Script files that provide the same paths. Reinstall or redeploy Venworks Canvas 1.0.4 or newer and restart Starfield so both the Canvas host movie and compiled Registry script reload. The two messages establish that the code loaded by that game process does not expose VWHUD's expected contract; they do not, without deployed-file evidence from the affected computer, distinguish a mixed package version, an overriding archive or loose file, or a process still holding previously loaded code.
+You may see **UNSUPPORTED CONSUMER PROTOCOL** on the Canvas screen. The Papyrus log may also say `Venworks:Canvas:Registry.BuildCanvasDatagramBody` does not exist.
+
+Quit Starfield completely. In your mod manager, check that Canvas is 1.0.4 or newer, this HUD is the current theme, and you do not have two copies of either mod. Look for leftover loose files under `Interface` and `Scripts` from an older install. Deploy again, then start the game fresh.

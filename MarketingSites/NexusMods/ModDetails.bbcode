@@ -1,23 +1,21 @@
 [img]https://cdn.venworkscreations.com/NexusMods/description-divider-overview-1600x120.png[/img]
-Venworks Customizable HUD provides five separately packaged Starfield HUD themes rendered through Venworks Canvas. The themes use HTML, CSS, and SVG presentation while retaining their own plugins, status-effect catalogs, and tactical display behavior.
+Venworks Customizable HUD is a set of five Starfield helmet HUDs. Pick the look you want. Each theme is its own download, and it draws through Venworks Canvas.
 
 [size=3][b][u]Requirements[/u][/b][/size]
 [list=1]
 [*]Install [url=https://www.nexusmods.com/starfield/mods/7097]Venworks - Core Utilities[/url] version 2.1.8 or newer.[/*]
-[*]Install Venworks Canvas version 1.0.4 or newer.[/*]
-[*]Install exactly one VWHUD theme.[/*]
+[*]Install [url=https://www.nexusmods.com/starfield/mods/18327]Venworks Canvas[/url] version 1.0.4 or newer.[/*]
+[*]Install one HUD theme.[/*]
 [/list]
-
-The Canvas Example is not required. Do not install an earlier standalone VWHUD HUD replacement alongside a Canvas consumer package.
 
 [img]https://cdn.venworkscreations.com/NexusMods/description-divider-features-1600x120.png[/img]
 [list]
-[*]Compass heading, threat state, and compact paged status effects.[/*]
-[*]Player health, oxygen, CO2, boost, carry mass, currency, time, and progression information.[/*]
-[*]Equipment, weapon, ammunition, explosive, and power information in the four full themes.[/*]
-[*]Environment panels for location, time, gravity, suit protection, and active hazards.[/*]
-[*]Tracked objective, acquired-contact radar, and forward scanner presentation.[/*]
-[*]Bethesda's current vehicle-exit glyph through Canvas's native symbol adapter.[/*]
+[*]Compass, threat warning, and a short row of status icons. Helpful effects sit on the top line. Harmful effects use the two lines under it.[/*]
+[*]Health, oxygen, CO2, boost, carry weight, credits, local time, and level.[/*]
+[*]Favorites, weapon, ammo, explosives, and powers on the equipment rail. Minimalist leaves this rail off.[/*]
+[*]Where you are, the local clock, gravity, suit protection, and hazards.[/*]
+[*]Your tracked mission, a radar of known contacts, and a scanner view when you scan.[/*]
+[*]The game's own button prompt when you are ready to leave a vehicle.[/*]
 [/list]
 
 [size=3][b][u]Themes[/u][/b][/size]
@@ -29,28 +27,59 @@ The Canvas Example is not required. Do not install an earlier standalone VWHUD H
 [*]Minimalist[/*]
 [/list]
 
-Minimalist uses a reduced holographic composition without the faction crest or equipment rail. Enable only one theme at a time.
+Minimalist is the smaller pale-blue layout, with no faction crest and no equipment rail. Please only enable one theme at a time.
 
-[size=3][b][u]Packages[/u][/b][/size]
+[size=3][b][u]Which file to download[/u][/b][/size]
 
-Nexus PC - Normal contains the theme's real ESM and Windows Main BA2. Nexus PC - Fully Loose Files contains the same plugin, compiled scripts, and complete consumer Interface tree for inspection or controlled customization. Do not install both package shapes together.
+[b]Normal[/b] is the usual install. It is the theme plugin plus one archive.
 
-Theme assets are stored under Canvas's isolated consumer directory. They remain VWHUD-owned files; the theme packages do not copy Canvas framework code or host movies.
+[b]Fully Loose Files[/b] is for people who want to edit the pages and art. Install Normal or Fully Loose, not both.
 
-[size=3][b][u]Customization on PC[/u][/b][/size]
+[size=3][b][u]Make it yours on PC[/u][/b][/size]
 
-Every theme loads a VWHUD-owned [b]vwhud-overrides.css[/b] file after its base layout and palette. The Normal package keeps an empty copy inside its BA2 and installs no loose VWHUD files. If you want CSS customization, install a separate mod after VWHUD that supplies only this one user-owned override file. Users without an override remain fully archive-only. Use the Fully Loose Files package for complete HTML, CSS, and SVG changes.
+You can recolor, move, resize, or hide panels with one small style file named [b]vwhud-overrides.css[/b]. Put that file in its own mod and load it after the HUD. Everyone else can leave the theme archived.
 
-The [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/docs/CUSTOMIZING_THEMES.md]VWHUD customization guide[/url] lists the exact theme paths, stable panel classes, examples, update procedure, and reset procedure. Canvas defines the supported HTML, CSS, SVG, and component syntax.
+The [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/docs/CUSTOMIZING_THEMES.md]customization guide[/url] shows the folder for each theme and a few examples.
+
+To hide or remove the equipment rail, follow [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/docs/REMOVING_EQUIPRAIL.md]Removing the equipment rail[/url].
 
 [img]https://cdn.venworkscreations.com/NexusMods/description-divider-known-issues-1600x120.png[/img]
 [list]
-[*]This release remains beta until exact-package PC and console acceptance is complete.[/*]
-[*]The radar displays contacts already supplied by Starfield; it is not a life-form detector.[/*]
-[*]Large-HUD, ultrawide, sustained-update, and console feedback remain valuable.[/*]
-[*]Compatibility with HUD replacements is governed by Venworks Canvas because Canvas owns the shared host movies.[/*]
-[*]If Canvas reports [b]UNSUPPORTED CONSUMER PROTOCOL[/b], fully exit Starfield, verify that the deployed Canvas and VWHUD packages are the required versions without duplicate providers, redeploy Canvas 1.0.4 or newer, and restart the game.[/*]
+[*]This release is still in beta while more people try it.[/*]
+[*]The radar shows contacts the game already knows about. It does not hunt for life on its own.[/*]
+[*]Notes from large HUD mode, ultrawide screens, and consoles help a lot.[/*]
+[*]Other HUD mods share the screen through Venworks Canvas.[/*]
+[*]If you see [b]UNSUPPORTED CONSUMER PROTOCOL[/b], quit Starfield completely, update Canvas to 1.0.4 or newer, clear out any duplicate or leftover copy, and start the game again.[/*]
+[/list]
+
+[size=3][b][u]Credits[/u][/b][/size]
+[list]
+[*]Big thanks to beepcmyk for both addons and for tolerating all the SVG abuse I give them.[/*]
+[*]Thanks to Targeteron for the helpful hints.[/*]
+[/list]
+
+[img]https://cdn.venworkscreations.com/NexusMods/description-divider-my-other-creations-1600x120.png[/img]
+[b][u]Modding Tools[/u][/b]
+[list]
+[*][url=https://www.nexusmods.com/site/mods/1999]Creations Forge[/url]: A cross-platform desktop and command-line application for importing, browsing, and comparing Bethesda plugin records for Fallout 4, Skyrim, and Starfield.[/*]
+[/list]
+[size=3][b][u]Starfield[/u][/b][/size]
+[list]
+[*][url=https://www.nexusmods.com/starfield/mods/7097]Venworks - Core Utilities[/url]: A utility library all my creations share[/*]
+[*][url=https://www.nexusmods.com/starfield/mods/18327]Venworks Canvas[/url]: A shared Player UI and HUD framework for HTML/CSS Starfield UI add-ons.[/*]
+[*][url=https://www.nexusmods.com/starfield/mods/17104]Venworks Customizable HUD[/url]: Provides multiple faction themes built on Venworks Canvas[/*]
+[*][url=https://www.nexusmods.com/starfield/mods/17685]Venworks - Dynamic Scenes Engine[/url]: A framework creating dynamic and replayable content in Creation Kit[/*]
+[*][url=https://www.nexusmods.com/starfield/mods/8050]Venworks - Encounters Overhaul[/url]: Fixes the open world caves and encounters that do not spawn enemies unless you are on a rare random encounter quest so are completely empty most of the time[/*]
+[*][url=https://www.nexusmods.com/starfield/mods/8411]Fix for Walter Vanishing in MQ101 and blocking quests[/url]: If certain level lists are overridden Walter stops functioning and vanishes, this stops that[/*]
+[/list]
+
+[img]https://cdn.venworkscreations.com/NexusMods/description-divider-social-presence-1600x120.png[/img]
+[list]
+[*]Join the [url=https://discord.gg/DTbmrJDMxZ]Venworks Discord Community[/url] for discussion, support, and beta feedback.[/*]
+[*]I can also usually be found in the [url=https://discord.gg/quarteronion]Quarter Onion Games Discord Server[/url].[/*]
+[*]Follow me on X as [url=https://x.com/monstercookiebd]@monstercookiebd[/url].[/*]
+[*]Follow me on Threads as [url=https://www.threads.net/@monstercookiebd]@monstercookiebd[/url].[/*]
 [/list]
 
 [img]https://cdn.venworkscreations.com/NexusMods/description-divider-source-code-1600x120.png[/img]
-Source, user documentation, build documentation, and validation boundaries are available at [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui]GitHub[/url].
+Guides and project files are on GitHub at [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui]Venworks Customizable HUD[/url] repository.

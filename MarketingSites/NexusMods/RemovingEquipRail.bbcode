@@ -1,0 +1,44 @@
+[size=3][b][u]Removing the equipment rail[/u][/b][/size]
+The equipment rail is the tall panel on the right of the four full themes. It shows your favorites, weapon, ammo, explosives, and powers. Minimalist does not include this panel.
+
+This is a PC change. Xbox and PlayStation use the theme as it was published.
+
+Quit Starfield all the way, including the launcher, before you add or remove the file. Start the game again when you are done. A reload inside the game will not pick up the new file.
+
+[size=3][b][u]Hide it with a small style file[/u][/b][/size]
+This is the easiest way. The rest of the theme stays in the archive you installed.
+
+1. Create a new empty mod in Vortex or Mod Organizer 2, and load it after Venworks Customizable HUD.
+2. Inside that mod, create the folder for the theme you play. The folders are listed in [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/docs/CUSTOMIZING_THEMES.md]Customizing themes[/url].
+3. In that folder, add a text file named [b]vwhud-overrides.css[/b] with these lines:
+
+[code].vwhud-panel-equipment {
+  display: none;
+}[/code]
+
+4. Deploy the mod and start Starfield. The rail is hidden. Delete the file, or disable the mod, to bring it back.
+
+[size=3][b][u]Take the panel out of the theme file[/u][/b][/size]
+Use this when you want the theme to stop loading the rail.
+
+1. Open the theme page on GitHub and save the file: [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/CanvasConsumer/resources/themed.html]themed.html[/url]. Use [b]Download raw file[/b], or open [b]Raw[/b] and save the page as [b]themed.html[/b]. Keep that exact name.
+2. Open [b]themed.html[/b] in Notepad. Delete this whole line, and leave the lines around it:
+
+[code]<vw-include src="themed-equipment-rail.html"></vw-include>[/code]
+
+3. Save the file. Put only this [b]themed.html[/b] in your theme folder, in a mod that loads after Venworks Customizable HUD.
+
+[list]
+[*][b]Venworks[/b] — [code]Interface/VenworksCanvas/Consumers/venworks.vwhud.vwks/[/code][/*]
+[*][b]Trackers Alliance[/b] — [code]Interface/VenworksCanvas/Consumers/venworks.vwhud.ta/[/code][/*]
+[*][b]Freestar Collective[/b] — [code]Interface/VenworksCanvas/Consumers/venworks.vwhud.fc/[/code][/*]
+[*][b]Crimson Fleet[/b] — [code]Interface/VenworksCanvas/Consumers/venworks.vwhud.cf/[/code][/*]
+[/list]
+
+If you already installed the [b]Fully Loose Files[/b] package, edit the [b]themed.html[/b] that package placed in that same folder. You can skip the GitHub download.
+
+4. Start Starfield. The right-side loadout panel is gone. Compass, player, planet, mission, radar, and status icons stay.
+
+After a HUD update, download [b]themed.html[/b] again and remove that same line. An old copy can miss new panels from the update.
+
+To restore the rail, delete your loose [b]themed.html[/b] and start the game again. The installed theme supplies the original page.

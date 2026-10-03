@@ -1,60 +1,50 @@
-# Canvas theme consumers
+# What the Canvas update means
 
-The five VWHUD themes are implemented as Canvas HTML/CSS/SVG consumers on `VWCANVAS_HTML/2`. The standalone XML/Scaleform runtime and PS5 diagnostic variant were unreleased development paths and have been removed. Every shipped theme now has one architecture and one release pipeline.
+Version 2.1.0 draws the HUD with Venworks Canvas. The themes are still Venworks, Trackers Alliance, Freestar Collective, Crimson Fleet, and Minimalist. They look like the same tactical helmet display, with a cleaner plate behind each panel and a shorter status area.
 
-## Ownership
+You need two other mods, in this order:
 
-| Concern | Owner and source |
-| --- | --- |
-| Consumer registration, lifecycle, snapshots, and provider-derived presentation | [VWHudConsumer.as](../CanvasConsumer/actionscript/VWHudConsumer.as) and related classes under [CanvasConsumer/actionscript](../CanvasConsumer/actionscript) |
-| Effect discovery, catalogs, retry, refresh, and publication | [HudEffectsPublisher.psc](../Papyrus/Venworks/CustomizableHUD/HudEffectsPublisher.psc) |
-| Start-game registration quest and UI-load reconciliation | [HudRegistrar.psc](../Papyrus/Venworks/CustomizableHUD/HudRegistrar.psc) |
-| Playtest console probe that applies one generic buff or debuff per class | [HudStatusProbe.psc](../Papyrus/Venworks/CustomizableHUD/HudStatusProbe.psc) |
-| Theme entry documents and identity | [CanvasConsumer/variants](../CanvasConsumer/variants) |
-| Shared HTML, CSS, SVG, and artwork | [CanvasConsumer/resources](../CanvasConsumer/resources) |
-| Real theme plugin records | [Spriggit](../Spriggit) |
-| Shared hosts, provider acquisition, event transport, HUD targets, and rendering | External Venworks Canvas dependency |
+1. Venworks Core Utilities 2.1.8 or newer.
+2. Venworks Canvas 1.0.4 or newer.
 
-The local `CanvasConsumer` directory contains only VWHUD-owned consumer implementation. It does not copy Canvas's host, HTML parser, renderer, registry, Example content, ESM, or player/ship HUD replacements.
+Then enable one theme. The Canvas Example is optional and this HUD does not need it.
 
-## Runtime asset root
+Remove an older copy of this HUD before you enable 2.1.0. The new themes no longer replace the vanilla HUD movie. Canvas shares the screen with the game, and each theme keeps its own files.
 
-Canvas currently requires every consumer to install beneath an isolated directory:
+## What you will see
 
-```text
-Interface/VenworksCanvas/Consumers/<consumer-namespace>/
-```
+- Helpful status icons sit on one line. Harmful icons use the two lines under them. A long list rotates on those lines. There is no page number and no buff count next to the threat meter.
+- Heat, cold, poison, radiation, bleeding, infection, injury, corrosive damage, and gas each get one icon. Food, drink, and rest still get their own icons. A single chem, such as Fortify Carry Weight, does not get an icon.
+- A new or cleared condition shows up within about a second.
+- The compass uses the game's own heading marks and location icons. The contact radar is the familiar sweep. Both stay hidden if you hide that panel.
+- The wristwatch and the vanilla health and ammo cluster in the lower right stay hidden.
+- Health, oxygen, CO2, and boost move by bar segment. The critical-health number still updates while that warning is up.
+- The full-screen visor shape is gone. Panels are a dark plate, a soft accent glow, and corner brackets, so the text stays readable over bright ground.
 
-VWHUD uses `venworks.vwhud.<variant>`. The ESM's `NormalMoviePath` and `LargeMoviePath` omit the leading `Interface/` because the host resolves those URLs relative to Starfield's Interface directory. The BA2 and loose packages use the complete path.
+Minimalist keeps the smaller layout: no faction crest and no equipment rail. The other four themes still have the rail. On PC you can hide or remove it. See [Removing the equipment rail](REMOVING_EQUIPRAIL.md).
 
-This prefix is an enforced Canvas loader contract rather than an indication of file ownership. Each namespace directory contains the add-on's own SWFs, HTML, CSS, SVG, and local assets. The isolated root makes relative resource resolution deterministic and prevents a document from escaping into another consumer's files. A different root would require a coordinated Canvas contract change; it cannot be selected by a VWHUD package alone.
+## Making it yours on PC
 
-## Presentation and data
+Colors, placement, text size, and hidden panels go in `vwhud-overrides.css`. The steps, folder names, and examples are in [Customizing themes](CUSTOMIZING_THEMES.md).
 
-The four full themes share `themed.html`; Minimalist uses `minimalist.html` and its reduced composition. Standard SVG elements and attributes define vector artwork. Canvas owns display objects and provider acquisition. VWHUD owns tactical meaning, theme selection, compact status pages, and the snapshots supplied to Canvas.
+Nexus **Normal** is enough for that style file. **Fully Loose Files** is for people who want to edit the pages and art. Install one package shape, not both.
 
-Each entry document loads `vwhud-overrides.css` last and exposes stable `vwhud-panel-*` classes on its outer panels. [Customizing VWHUD themes](CUSTOMIZING_THEMES.md) documents the supported PC override surface and keeps Canvas's Component Gallery authoritative for the renderer's HTML, CSS, and SVG subset.
+Xbox and PlayStation use the published theme. Those platforms do not pick up a loose style file.
 
-The full themes retain 18 unique provider channels and Minimalist retains 14. Removing the earlier status renderer does not remove inputs still used for environment or threat calculations.
+## If something looks wrong
 
-## Status effects
+Quit the game completely before you test again. A disabled plugin can leave old files in charge.
 
-Each theme publishes complete `effects.state` snapshots to `venworks.vwhud.<variant>.status` using schema `1`, `ci-ascii`, `startup: "latest"`, and Canvas's 4,096-character framed-event limit. The display puts buffs on one line and debuffs on the next two lines, eighteen icons to a line, and rotates a longer list every six seconds. Waiting and empty states stay explicit.
+If Canvas shows **UNSUPPORTED CONSUMER PROTOCOL**, the HUD and Canvas on that save are not the pair this release expects. Update Canvas to 1.0.4 or newer, remove duplicate or leftover copies, deploy, and start Starfield again. [Customizing themes](CUSTOMIZING_THEMES.md) has the same recovery in a little more detail.
 
-Candidate effect entries and source references remain separate from the submitted snapshot. Only `EVENT_SUBMITTED` commits the entries, references, signature, and timestamp. Missing prerequisites, invalid or oversized datagrams, and rejected sends retain the last submitted state and use a bounded half-second retry budget. An independent 60-second refresh remains armed even if no send succeeds. Save/load revisions reject stale scans and publish completions.
+The radar shows contacts Starfield has already told the HUD about. It does not find new life on its own.
 
-The consumer retains the newest complete valid status event before its HTML bridge is ready and reapplies it after readiness or bridge replacement. Malformed and foreign-topic events do not clear the last valid state. Final unload clears state and timers and ignores late events until a new lifecycle begins. `EVENT_SUBMITTED` proves registry acceptance only; it is not a delivery acknowledgement from the SWF.
+For a quick look at the status icons on PC, open the console and run:
 
-## HUD controls and updates
+`cgf "Venworks:CustomizableHUD:HudStatusProbe.ApplyGenericSet"`
 
-Themes declaratively suppress the Canvas HUD targets they replace. Canvas combines requests from multiple consumers, releases only the departing consumer's requests, follows engine-hidden state, and leaves game actions and shared event ingress active. Named native symbols, including the vehicle-exit glyph, remain host-owned adapters rather than copied controls.
+This applies one sample of each common buff and debuff. Fed and Hydrated wear off on their own. To clear the test spells, run:
 
-Frequent updates are ordinary changing inputs such as health, heading, and contact positions. Canvas validates each complete snapshot, retains existing display objects where possible, updates affected bindings in place, and reconciles repeated subtrees when their structure changes. Rejected data preserves the last valid display. These are implementation contracts, not measured latency or frame-rate claims.
+`cgf "Venworks:CustomizableHUD:HudStatusProbe.ClearGenericSet"`
 
-## Verification and acceptance
-
-The build compiles five consumer SWFs, three Papyrus scripts, and five real ESMs into isolated package inputs. Transactional packaging produces 15 Main BA2 archives, installs archive-only staging, and removes exact loose Interface and Script targets after successful verification. The Fully Loose Nexus ZIP is reconstructed from the verified Windows Main BA2 rather than loose staging. Verification checks exact inventories, source evidence, resource bytes, SWF contracts, archive bytes, and ZIP contents. The lifecycle diagnostic under [CanvasConsumer/diagnostics](../CanvasConsumer/diagnostics) compiles separately and is excluded from packages.
-
-Runtime acceptance remains separate. Each exact candidate package requires archive-only PC and PS5 testing for normal and large HUD modes, aiming and scanner transitions, health and oxygen, compass and radar response, status application/removal/recovery/paging, vehicle input and glyphs, ship visibility controls, menus, death/reload, save/load, 4K/8K, and representative ultrawide placement. Sustained activity must also confirm stable object and timer behavior. VWHUD-32 through VWHUD-36 track per-theme acceptance.
-
-VWHUD requires Canvas's `VWCANVAS_CONSUMER/3` host support and the Registry's `BuildCanvasDatagramBody` and `TryPublishCanvasDatagram` methods while continuing to render through `VWCANVAS_HTML/2`. The consumer build now rejects a Canvas source checkout missing any of those contracts. At runtime, the combination of `UNSUPPORTED CONSUMER PROTOCOL` in the Canvas display and a missing `BuildCanvasDatagramBody` Papyrus method establishes that the Canvas code loaded by that game process does not expose VWHUD's expected contract. It does not, without evidence from the affected installation, distinguish mixed package versions, overriding archives or loose files, or code retained by a process that was not restarted. Fully stop the game, verify the deployed Canvas and VWHUD bytes and their providers, redeploy Canvas 1.0.4 or newer, and restart before retesting. Downgrading the VWHUD consumer protocol would bypass required event and rendering behavior and is not a compatible repair.
+This release is still in beta while more people try it on large HUD mode, ultrawide screens, and consoles.

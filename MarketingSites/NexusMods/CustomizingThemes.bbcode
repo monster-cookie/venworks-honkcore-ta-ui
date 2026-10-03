@@ -1,0 +1,115 @@
+[size=3][b][u]Customizing themes[/u][/b][/size]
+You can recolor, move, or hide parts of Venworks Customizable HUD on PC. The five themes are Venworks, Trackers Alliance, Freestar Collective, Crimson Fleet, and Minimalist.
+
+Xbox and PlayStation play the theme as it was published. The steps below are for a PC install from Nexus Mods.
+
+[size=3][b][u]What to install first[/u][/b][/size]
+Enable these in this order:
+
+[list=1]
+[*]Venworks Core Utilities 2.1.8 or newer.[/*]
+[*]Venworks Canvas 1.0.4 or newer.[/*]
+[*]One HUD theme.[/*]
+[/list]
+
+Turn off any older copy of this HUD before you enable the new one. If an old copy left loose files behind, remove those too. A disabled plugin can still leave old files in the way.
+
+You do not need the Canvas Example.
+
+[size=3][b][u]Which Nexus download to use[/u][/b][/size]
+[b]Normal[/b] is the one most people want. It installs the theme plugin and one archive. Use it for playing, and for color and layout changes that live in a small style file.
+
+[b]Fully Loose Files[/b] unpacks the theme's pictures and pages into normal folders. Use it when you want to change the art or the page layout itself. Install Normal or Fully Loose, not both.
+
+[size=3][b][u]Where your theme lives[/u][/b][/size]
+Put files under the game's [b]Data[/b] directory:
+
+[list]
+[*][b]Venworks[/b] — [code]Interface/VenworksCanvas/Consumers/venworks.vwhud.vwks/[/code][/*]
+[*][b]Trackers Alliance[/b] — [code]Interface/VenworksCanvas/Consumers/venworks.vwhud.ta/[/code][/*]
+[*][b]Freestar Collective[/b] — [code]Interface/VenworksCanvas/Consumers/venworks.vwhud.fc/[/code][/*]
+[*][b]Crimson Fleet[/b] — [code]Interface/VenworksCanvas/Consumers/venworks.vwhud.cf/[/code][/*]
+[*][b]Minimalist[/b] — [code]Interface/VenworksCanvas/Consumers/venworks.vwhud.min/[/code][/*]
+[/list]
+
+[size=3][b][u]Change colors, size, and placement[/u][/b][/size]
+Every theme reads a file named [b]vwhud-overrides.css[/b] last. The Normal download keeps a blank copy inside the archive.
+
+Make a separate mod that contains only your copy of that file, and load the mod after the HUD. A Venworks example looks like this:
+
+[code]Interface/
+  VenworksCanvas/
+    Consumers/
+      venworks.vwhud.vwks/
+        vwhud-overrides.css[/code]
+
+This example turns the main accent gold and nudges the radar. Positions use a 1920 by 1080 layout. The game scales that layout to your screen.
+
+[code].color-accent-primary-1 {
+  color: #ffcc33;
+}
+
+.stroke-accent-primary-1 {
+  stroke: #ffcc33;
+}
+
+.vwhud-panel-radar {
+  left: 40px;
+  top: 24px;
+}[/code]
+
+To hide the equipment rail, use [url=https://github.com/monster-cookie/venworks-honkcore-ta-ui/blob/master/docs/REMOVING_EQUIPRAIL.md]Removing the equipment rail[/url]. The short version is:
+
+[code].vwhud-panel-equipment {
+  display: none;
+}[/code]
+
+These names are safe to keep using after updates:
+
+[list]
+[*][b].vwhud-panel-faction[/b] and [b].vwhud-panel-equipment[/b] on the four full themes.[/*]
+[*][b].vwhud-panel-radar[/b], [b].vwhud-panel-objective[/b], [b].vwhud-panel-environment[/b], [b].vwhud-panel-player[/b], [b].vwhud-panel-compass[/b], [b].vwhud-panel-threat[/b], [b].vwhud-panel-effects[/b], [b].vwhud-panel-scanner-hash[/b], and [b].vwhud-panel-scanner-data[/b] on every theme.[/*]
+[*][b].vwhud-alert-critical-health[/b] and [b].vwhud-prompt-vehicle-exit[/b].[/*]
+[*][b].vwhud-theme-venworks[/b], [b].vwhud-theme-trackers-alliance[/b], [b].vwhud-theme-freestar-collective[/b], [b].vwhud-theme-crimson-fleet[/b], or [b].vwhud-theme-minimalist[/b] on the whole page.[/*]
+[/list]
+
+Names such as [b].themed-node-4[/b] belong to the generated layout. They can change when the theme is rebuilt. Use the [b]vwhud-panel[/b] names in a style you want to keep.
+
+[size=3][b][u]Change the art or the page[/u][/b][/size]
+The Fully Loose download is the one to edit for that. Keep your edits in their own mod when you can. Updating the HUD can replace files that sit in the HUD's own folder.
+
+[list]
+[*][b]vwhud-overrides.css[/b] — Your colors, placement, text size, and hidden panels. Loaded last.[/*]
+[*][b]venworks.css[/b], [b]trackers-alliance.css[/b], [b]freestar-collective.css[/b], [b]crimson-fleet.css[/b], or [b]starfield.css[/b] — The theme's colors.[/*]
+[*][b]themed-layout.css[/b] or [b]minimalist-layout.css[/b] — The shipped sizes and positions. Edits here are easy to lose on update.[/*]
+[*][b]themed.html[/b] or [b]minimalist.html[/b] — The main page.[/*]
+[*][b]themed-*.html[/b] and [b]minimalist-*.html[/b] — Each panel.[/*]
+[*][b]assets/*.svg[/b] — Icons and logos.[/*]
+[*][b]normal.swf[/b] and [b]large.swf[/b] — The theme program. Changing those means a full rebuild.[/*]
+[*]The plugin and script files — Same. Leave them unless you are rebuilding the mod.[/*]
+[/list]
+
+Leave [b]data-vw-*[/b] names in place. Those names are how the page receives health, location, and the rest of the live info.
+
+Canvas draws a simpler page than a web browser. A few habits keep a custom page on screen:
+
+[list]
+[*]Start every page, including each panel file, with [b]<!doctype html>[/b] in lowercase letters.[/*]
+[*]Write tag names in lowercase.[/*]
+[*]Write [b]currentcolor[/b] in lowercase.[/*]
+[*]Give the page body [b]position: relative[/b] so the panels have a box to sit in.[/*]
+[/list]
+
+The [url=https://github.com/monster-cookie/venworks-canvas/blob/master/Documentation/CanvasComponentGallery.md]Canvas Component Gallery[/url] shows which tags and styles work. [url=https://github.com/monster-cookie/venworks-canvas/blob/master/Documentation/CreatingACanvasPlugin.md]Create a Canvas plugin from scratch[/url] is for a brand-new Canvas mod, not for recoloring this HUD.
+
+[size=3][b][u]See the change, or go back[/u][/b][/size]
+Quit Starfield completely, then start it again. The HUD reads these files at startup.
+
+After you update Canvas or the HUD, start once with your override mod turned off. When the plain theme looks right, turn the override back on and check anything you moved or recolored.
+
+To restore the default look, disable or delete the override mod. On a Fully Loose install, reinstall the clean package. The theme files come from the HUD download, not from the Canvas download.
+
+[size=3][b][u]If the HUD says the versions do not match[/u][/b][/size]
+You may see [b]UNSUPPORTED CONSUMER PROTOCOL[/b] on the Canvas screen. The Papyrus log may also say [b]Venworks:Canvas:Registry.BuildCanvasDatagramBody[/b] does not exist.
+
+Quit Starfield completely. In your mod manager, check that Canvas is 1.0.4 or newer, this HUD is the current theme, and you do not have two copies of either mod. Look for leftover loose files under [b]Interface[/b] and [b]Scripts[/b] from an older install. Deploy again, then start the game fresh.

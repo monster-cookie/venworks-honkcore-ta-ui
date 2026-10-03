@@ -7,6 +7,10 @@
 - https://creations.bethesda.net/en/starfield/details/03b616a3-1902-4b83-a109-fc176f658a69/Venworks_Customizable_HUD___Crimson_Fleet_Theme
 - https://creations.bethesda.net/en/starfield/details/9b635bf7-8c6b-4530-bdbd-0912903b336b/Venworks_Customizable_HUD___Freestar_Collective_Th
 
+## Version 2.1.1 (UNRELEASED)
+
+- Coming Soon :)
+
 ## Version 2.1.0 (October 3, 2026)
 
 This release rebuilds the HUD on Venworks Canvas. Install Venworks Canvas 1.0.4 and Venworks Core Utilities 2.1.8 before you enable a theme. Enable only one theme at a time.

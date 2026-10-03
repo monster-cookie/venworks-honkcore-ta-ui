@@ -1,18 +1,18 @@
 # Bethesda Creations publication handoff
 
-This directory contains description copy for the five VWHUD Canvas consumer Creations. Each theme requires Venworks Core and Venworks Canvas and keeps its own ESM identity and platform archive.
+These pages are the public descriptions for the five HUD themes on Bethesda Creations. Each theme needs Venworks Core and Venworks Canvas, and each theme keeps its own plugin.
 
-The description files use headings, paragraphs, lists, bold text, inline code, and bare URLs so they remain understandable in Bethesda surfaces that do not render full Markdown.
+The description files use headings, short paragraphs, lists, and plain web addresses so they still read clearly on Bethesda pages that show limited formatting.
 
 ## Before publication
 
-1. Merge and tag the release before assigning its public version.
-2. Confirm that Venworks Core Library 2.1.8 or newer and Venworks Canvas 1.0.4 or newer are listed as requirements in that order.
-3. Confirm that every theme has separate PC, Xbox, and PS5 packages containing its real ESM and matching Main BA2.
-4. Confirm that the BA2 contains only the theme's VWHUD consumer assets and scripts, and that the package contains no matching loose Interface or Script files. Canvas host movies and framework files belong to the Canvas package.
-5. Supply current, unedited screenshots from the exact candidate package.
-6. Keep runtime acceptance claims separate by platform and HUD mode.
-7. Publish only one VWHUD theme per installed setup.
-8. Keep PC source-customization guidance linked to the VWHUD guide; do not imply that Xbox or PlayStation 5 users can edit loose HTML, CSS, or SVG files.
+1. Merge and tag the release before you set the public version.
+2. List Venworks Core Library 2.1.8 or newer, then Venworks Canvas 1.0.4 or newer.
+3. Ship a separate PC, Xbox, and PlayStation 5 package for every theme, each with that theme's own plugin and matching archive.
+4. Keep Canvas in the Canvas download. A HUD package should contain that theme's own files.
+5. Use new screenshots from the package you are about to publish.
+6. Say which platforms and HUD modes have actually been played.
+7. Tell players to enable one theme.
+8. Point PC players at the customization guide. Xbox and PlayStation players use the theme as published.
 
-These files prepare copy only. They do not authorize or perform publication.
+These files are copy only. They do not publish the Creations.
