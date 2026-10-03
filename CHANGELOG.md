@@ -7,49 +7,18 @@
 - https://creations.bethesda.net/en/starfield/details/03b616a3-1902-4b83-a109-fc176f658a69/Venworks_Customizable_HUD___Crimson_Fleet_Theme
 - https://creations.bethesda.net/en/starfield/details/9b635bf7-8c6b-4530-bdbd-0912903b336b/Venworks_Customizable_HUD___Freestar_Collective_Th
 
-## Version 2.1.0 (Unreleased)
+## Version 2.1.0 (October 3, 2026)
 
-- Stack status icons in three lines. Buffs stay on the top line. Debuffs use the two lines under it.
-- Show a new or cleared generic status on the next one-second check. That check reads the affliction Active flag, or one cached ability spell when the flag is clear, and publishes on that tick. It does not walk every rank of every affliction.
-- Publish one HUD row per generic class. Thermal, cold, poisoning, radiation, bleeding, infection, injury, corrosive, and gas each stay a single row, checked with the ability spell rather than a walk of every magic effect. Food, drink, and rest stay as they are. Specific chem names such as Fortify Carry Weight are not HUD rows.
-- Add a playtest console command that applies one of each generic buff and debuff. Run `cgf "Venworks:CustomizableHUD:HudStatusProbe.ApplyGenericSet"`. `cgf "Venworks:CustomizableHUD:HudStatusProbe.ClearGenericSet"` removes the ability spells. Fed and Hydrated are consumed potions and wear off on their own.
-- Remove the STATUS buff and debuff count from beside the threat meter.
-- Remove the status page number. A longer list still rotates on the same lines.
-- Rebuild the theme when health, oxygen, CO2, or boost crosses a meter segment, not on every point. The raw point values stay off that rebuild, and the critical-health number still updates while that banner is up.
-- Publish the status buff and debuff list again.
-- Hold the first generic status snapshot until HUD registration watch alerts have been quiet, and skip a datagram that is already stale, so load publishes the effect list once.
-- Check the generic status classes once a second and publish from that check. The full magic-effect catalog walk is not scheduled.
-- Republish the last payload when the HUD opens, so an unchanged list no longer freezes the game or delays the HUD.
-- Stop rebuilding an unchanged status list on the live-weather poll, so the same icons no longer hitch the game every few seconds.
-- Rebuilt all five VWHUD themes to run as Venworks Canvas consumers instead of replacing the vanilla HUD directly.
-- Migrated theme presentation to HTML, CSS, and standard SVG, making layouts and artwork easier for web developers and mod authors to understand.
-- Replaced the old status bar with a compact themed effects display and automatic page rotation.
-- Improved status-effect recovery across startup, save loading, menu recreation, and temporarily unavailable HUD states.
-- Removed competing vanilla HUD movie replacements from VWHUD packages and isolated each theme’s assets within its own Canvas consumer namespace.
-- Added stable panel classes and a last-loaded `vwhud-overrides.css` file for PC color, placement, size, typography, and visibility overrides.
-- Changed build and release packaging to keep installed and committed staging archive-only while reconstructing the Nexus Fully Loose package from the verified Windows Main BA2.
-- Added a Canvas contract preflight and recovery guidance for diagnosing a deployed Canvas/VWHUD contract mismatch.
-- Write every theme document with the lowercase `<!doctype html>` preamble Canvas requires, so the theme can parse and hide the Canvas watch.
-- Use the lowercase `currentcolor` paint keyword in theme marks and icons. Canvas rejects `currentColor`.
-- Now requires Venworks Canvas 1.0.4 and Venworks Core Utilities 2.1.8.
-- Give the theme document a relative body so absolute panels have the containing block Canvas requires. A static body fails the theme with `absolute-containing-block-required`.
-- Publish favorite slots as `favorite.slot01` through `favorite.slot12`. The previous rewrite left the literal key `favorite.slot$1.hotkey`, which Canvas rejects.
-- Name the publish stage on a ready-callback failure. The chronomark shows `PUBLISH model`, `flags`, `effects`, `present`, or `setdata` with the Canvas access path.
-- Remove the full-screen helmet visor shapes. Themed panels now use the minimalist holographic plate: a dark rectangle, a theme-accent halo, and corner brackets.
-- Read compass and frequent environment fields only when the game object actually has them, so a missing property cannot abort the HUD update.
-- Ask Canvas to hide the fake watch and the lower-right health and ammo cluster.
-- Draw the top compass strip and the contact radar as Scaleform objects in the VWHUD movie again. Their ticks, labels, POI markers, and contacts are no longer HTML elements. Each POI marker is the game compass widget, placed on the strip and moved as the player turns. Copying that widget into a bitmap raises TypeError 2077 and aborts the update. Its added-to-stage hook is stopped so it cannot subscribe to control data.
-- Rebuild the HTML panels only when a displayed value changes. Compass and environment packets still move the strip and radar on every update, without rebuilding the document for an unchanged clock or hazard set.
-- Read player, inventory, favorite, and environment-effect fields only when the game object has them, matching the component gallery. A missing field was aborting the update, so health, level, credits, suit protection, and hazard rows stayed on their initial text.
-- Darken the panel plates so the text can be read over bright ground.
-- Read game data fields by name when the presence check misses them, so health, level, credits, suit protection, and hazard rows reach the panels. Copy compass marker fields the same way, and hide a marker whose frame is not the requested POI icon.
-- Show the game POI icon on the top compass strip. The strip calls the compass widget's location and frame methods the same way the pre-Canvas tape did, instead of leaving the generic dot in place.
-- Load each location icon after its compass frame is selected, and keep requesting it until the map-icon library finishes. The sealed-method test was skipping that call, so location markers stayed on the empty frame.
-- Load the game map-icon library from the Interface folder when the compass widget's own request does not finish, and draw that icon on the strip. The widget request looks beside the consumer movie, so cave, ship, and structure markers stayed on the empty frame.
-- Draw compass headings as shapes on a dark strip. The consumer movie has no `$MAIN_Font_Bold`, so NW and NE were missing-glyph bars, and the white map icons sat on the open sky. A location icon is kept when the widget frame has no loaded child.
-- Replace the generated Venworks crest with a trace of the canonical Venworks mark and wordmark. Each path stays under Canvas's 4096-character attribute limit so the logo cannot unload the HUD.
-- Hide the Scaleform compass strip and contact radar when their panel is missing or hidden. Skip a compass marker whose heading is missing or not a finite number, and reapply a cached location icon's frame when its state changes. Record a HUD update as sent only after Canvas accepts it.
-- Reject package cleanup that follows a junction nested under the module, and keep the package backup until payload cleanup finishes.
+This release rebuilds the HUD on Venworks Canvas. Install Venworks Canvas 1.0.4 and Venworks Core Utilities 2.1.8 before you enable a theme. Enable only one theme at a time.
+
+- All five themes (Venworks, Trackers Alliance, Freestar Collective, Crimson Fleet, and Minimalist) now draw through Canvas.
+- Theme layouts and art are ordinary HTML, CSS, and SVG. On PC, drop a `vwhud-overrides.css` file in last to change colors, placement, size, text, or to hide a panel. The panel names stay the same between updates.
+- If Canvas and this HUD are out of step, the install check says so and points at how to recover.
+- The full-screen helmet visor is gone. Panels are a dark plate with a colored glow and corner brackets, darkened so the text stays readable over bright ground. This is a work in progress I'm trying to move to a holographic looking display that will scale properly.
+- The status bar is a compact icon strip. Helpful effects sit on the top line. Harmful effects use the two lines under it.
+- Conditions such as heat, cold, poison, radiation, bleeding, infection, injury, corrosive damage, and gas each show as one icon. Food, drink, and rest still show as their own icons. Named chems, such as Fortify Carry Weight, do not get their own icon.
+- The compass strip shows real headings and the game’s own location icons (caves, ships, structures, and the rest) on a dark band, and they move as you turn. The contact radar is back as the familiar sweep. Both hide when you hide that panel.
+- For a quick in-game check of the status icons, open the console and run `cgf "Venworks:CustomizableHUD:HudStatusProbe.ApplyGenericSet"`. Run `cgf "Venworks:CustomizableHUD:HudStatusProbe.ClearGenericSet"` to clear that test set. Fed and Hydrated are real consumables and wear off on their own.
 
 ## Version 2.0.19 (September 1, 2026)
 
