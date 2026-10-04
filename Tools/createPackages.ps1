@@ -42,19 +42,19 @@ $archiveDefinitions = [ordered]@{
     FileSuffix = "Main.ba2"
     Format = "General"
     Compression = "None"
-    FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
+    FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
   }
   "Main_XBox" = [pscustomobject]@{
     FileSuffix = "Main_XBox.ba2"
     Format = "General"
     Compression = "None"
-    FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
+    FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
   }
   "Main_PS" = [pscustomobject]@{
     FileSuffix = "Main_PS.ba2"
     Format = "General"
     Compression = "None"
-    FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
+    FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
   }
 }
 

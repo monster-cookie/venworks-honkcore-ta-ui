@@ -76,7 +76,7 @@ function CopyResources([string]$Entry,[string]$Destination) {
   while ($pending.Count -gt 0) {
     $relative = $pending.Dequeue()
     if (!$seen.Add($relative)) { continue }
-    if ($relative -notmatch '^[a-z0-9][a-z0-9./-]*\.(html|css|svg)$' -or $relative -match '(^|/)\.\.?(/|$)') { throw "Invalid resource path: $relative" }
+    if ($relative -notmatch '^[a-z0-9][a-z0-9./-]*\.(html|css|svg|dds)$' -or $relative -match '(^|/)\.\.?(/|$)') { throw "Invalid resource path: $relative" }
     $source = if ($relative -eq 'index.html') { $Entry } else { Join-Path $sourceRoot $relative }
     [void](RequiredFile $source)
     $target = Join-Path $Destination $relative

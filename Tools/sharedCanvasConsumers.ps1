@@ -2,7 +2,8 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 function Get-CanvasResourceBytes([string]$Path) {
-  # Match the repository's LF resource contract even before Git normalizes a local edit.
+  # DDS is a binary resource. Text resources still match the repository LF contract before Git normalizes a local edit.
+  if ([IO.Path]::GetExtension($Path) -ceq '.dds') { return ,[IO.File]::ReadAllBytes($Path) }
   $text = [IO.File]::ReadAllText($Path).Replace("`r`n","`n").Replace("`r","`n")
   return ,([Text.UTF8Encoding]::new($false).GetBytes($text))
 }
@@ -20,7 +21,7 @@ function Get-CanvasConsumerSources([string]$RepositoryRoot,[string]$Key) {
   while ($pending.Count -gt 0) {
     $relative = $pending.Dequeue()
     if ($result.Contains($relative)) { continue }
-    if ($relative -notmatch '^[a-z0-9][a-z0-9./-]*\.(html|css|svg)$' -or $relative -match '(^|/)\.\.?(/|$)') { throw "Invalid Canvas resource path: $relative" }
+    if ($relative -notmatch '^[a-z0-9][a-z0-9./-]*\.(html|css|svg|dds)$' -or $relative -match '(^|/)\.\.?(/|$)') { throw "Invalid Canvas resource path: $relative" }
     $path = if ($relative -eq 'index.html') { Join-Path $RepositoryRoot "CanvasConsumer/variants/$Key/index.html" } else { Join-Path $RepositoryRoot "CanvasConsumer/resources/$relative" }
     if (!(Test-Path -LiteralPath $path -PathType Leaf)) { throw "Missing Canvas resource: $relative" }
     $result[$relative] = $path
