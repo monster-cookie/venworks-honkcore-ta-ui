@@ -267,6 +267,18 @@ package
          var local:Point = globalToLocal(slot.localToGlobal(new Point(0,0)));
          overlay.x = local.x;
          overlay.y = local.y;
+         overlay.scaleX = 1;
+         overlay.scaleY = 1;
+         if(overlay === this.compassTape && slot.scrollRect != null && slot.scrollRect.height > 0)
+         {
+            overlay.scaleX = slot.scrollRect.width / 826;
+            overlay.scaleY = slot.scrollRect.height / 48;
+         }
+         else if(overlay === this.contactRadar && slot.width > 0 && slot.height > 0)
+         {
+            overlay.scaleX = slot.width / 184;
+            overlay.scaleY = slot.height / 184;
+         }
       }
 
       private function applySlotVisibility(overlay:DisplayObject, slot:DisplayObject) : void
@@ -282,6 +294,23 @@ package
          overlay.visible = visibleSlot;
       }
 
+      // The compass slot is found first. Its scroll rect carries the viewport scale, so the 184 circle grows with it and the 228 plate does not match.
+      private function radarWidth(child:DisplayObject) : Boolean
+      {
+         if(child == null) return false;
+         var scale:Number = 1;
+         try
+         {
+            if(this.compassSlot != null && this.compassSlot.scrollRect != null && this.compassSlot.scrollRect.width > 0)
+               scale = this.compassSlot.scrollRect.width / 826;
+         }
+         catch(scrollError:*) {}
+         if(!isFinite(scale) || scale <= 0) scale = 1;
+         var expected:Number = 184 * scale;
+         var tolerance:Number = Math.max(2,3 * scale);
+         return Math.abs(child.width - expected) <= tolerance && Math.abs(child.height - expected) <= tolerance;
+      }
+
       private function findSlot(root:DisplayObject, compass:Boolean) : DisplayObject
       {
          var container:DisplayObjectContainer = root as DisplayObjectContainer;
@@ -293,8 +322,8 @@ package
             if(child !== this.compassTape && child !== this.contactRadar)
             {
                var sprite:Sprite = child as Sprite;
-               if(compass && sprite != null && sprite.scrollRect != null && Math.abs(sprite.scrollRect.width - 826) < 1 && Math.abs(sprite.scrollRect.height - 48) < 1) return sprite;
-               if(!compass && Math.abs(child.width - 184) < 2 && Math.abs(child.height - 184) < 2) return child;
+               if(compass && sprite != null && sprite.scrollRect != null && sprite.scrollRect.height >= 24 && sprite.scrollRect.width >= 400 && Math.abs(sprite.scrollRect.width / sprite.scrollRect.height - 826 / 48) < 0.08) return sprite;
+               if(!compass && this.radarWidth(child)) return child;
                var nested:DisplayObject = this.findSlot(child,compass);
                if(nested != null) return nested;
             }

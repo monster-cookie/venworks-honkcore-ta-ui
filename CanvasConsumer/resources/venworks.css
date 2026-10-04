@@ -13,7 +13,7 @@
 .color-state-caution-1 { color: #FFD800; }
 .color-state-clear-1 { color: #64E572; }
 .color-state-critical-1 { color: #FF3C54; }
-.fill-panel-background-1 { fill: #061722; }
+.fill-panel-background-1 { fill: #061722; color: #061722; }
 .paint-background-color-0d111400 { background-color: #0D111400; }
 .paint-background-color-0d1114b2 { background-color: #0D1114B2; }
 .paint-background-color-0d1114b8 { background-color: #0D1114B8; }
@@ -29,7 +29,7 @@
 .paint-color-ff3c54 { color: #FF3C54; }
 .paint-color-ffd800 { color: #FFD800; }
 .paint-color-ffffff { color: #FFFFFF; }
-.paint-fill-0d1114 { fill: #0D1114; }
+.paint-fill-0d1114 { fill: #0D1114; color: #0D1114; }
 .paint-fill-70cfe0 { fill: #70CFE0; }
 .paint-fill-none { fill: none; }
 .paint-stroke-d9e3e8 { stroke: #D9E3E8; }
