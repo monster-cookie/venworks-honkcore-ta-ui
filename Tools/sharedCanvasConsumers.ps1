@@ -63,18 +63,22 @@ function Get-CanvasConsumerBuildRecord([string]$RepositoryRoot,[string]$Key,[str
 function Get-CanvasConsumerBuildInventory([string]$RepositoryRoot,[string]$Key,[hashtable]$Record) {
   $namespace = 'venworks.vwhud.'+$Key.ToLowerInvariant()
   $prefix = "Interface/VenworksCanvas/Consumers/$namespace/"
+  $texturePrefix = "Textures/Interface/VenworksCanvas/Consumers/$namespace/"
   $resources = Get-CanvasConsumerSources $RepositoryRoot $Key
   $plugins = @($Record.Files.Keys | Where-Object { $_ -match '^[^/]+\.esm$' })
   if ($plugins.Count -ne 1) { throw "Invalid plugin evidence: $Key" }
-  $expected = @($resources.Keys | ForEach-Object { $prefix+$_ }) + @(($prefix+'normal.swf'),($prefix+'large.swf'),'Scripts/Venworks/CustomizableHUD/HudRegistrar.pex','Scripts/Venworks/CustomizableHUD/HudEffectsPublisher.pex','Scripts/Venworks/CustomizableHUD/HudStatusProbe.pex') + $plugins
+  $resourcePaths = @($resources.Keys | ForEach-Object { if ($_.EndsWith('.dds',[StringComparison]::OrdinalIgnoreCase)) { $texturePrefix+$_ } else { $prefix+$_ } })
+  $expected = $resourcePaths + @(($prefix+'normal.swf'),($prefix+'large.swf'),'Scripts/Venworks/CustomizableHUD/HudRegistrar.pex','Scripts/Venworks/CustomizableHUD/HudEffectsPublisher.pex','Scripts/Venworks/CustomizableHUD/HudStatusProbe.pex') + $plugins
   if ((($Record.Files.Keys | Sort-Object) -join "`n") -cne (($expected | Sort-Object) -join "`n")) { throw "Unexpected consumer build inventory: $Key" }
   foreach ($relative in $resources.Keys) {
+    $stored = if ($relative.EndsWith('.dds',[StringComparison]::OrdinalIgnoreCase)) { $texturePrefix+$relative } else { $prefix+$relative }
     $sourceHash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData((Get-CanvasResourceBytes $resources[$relative])))
-    if ($sourceHash -cne $Record.Files[$prefix+$relative]) { throw "Stale consumer resource: $Key/$relative" }
+    if ($sourceHash -cne $Record.Files[$stored]) { throw "Stale consumer resource: $Key/$relative" }
   }
   return [pscustomobject]@{
     Namespace = $namespace
     Prefix = $prefix
+    TexturePrefix = $texturePrefix
     Resources = $resources
     Plugin = [string]$plugins[0]
     Expected = @($expected)
@@ -148,8 +152,8 @@ function Assert-CanvasConsumerArchivePayload([string]$RepositoryRoot,[string]$Ke
       $archiveRelative = $entry.Name.Replace('\','/')
       if (!$recordPaths.ContainsKey($archiveRelative)) { throw "Consumer texture archive contains an undeclared entry: $Key/$suffix/$archiveRelative" }
       $declaredRelative = $recordPaths[$archiveRelative]
-      if (!$declaredRelative.StartsWith($inventory.Prefix,[StringComparison]::OrdinalIgnoreCase)) { throw "Consumer texture entry is outside its namespace: $Key/$archiveRelative" }
-      $sourceRelative = $declaredRelative.Substring($inventory.Prefix.Length)
+      if (!$declaredRelative.StartsWith($inventory.TexturePrefix,[StringComparison]::OrdinalIgnoreCase)) { throw "Consumer texture entry is outside its menu texture folder: $Key/$archiveRelative" }
+      $sourceRelative = $declaredRelative.Substring($inventory.TexturePrefix.Length)
       if (!$inventory.Resources.Contains($sourceRelative)) { throw "Consumer texture entry has no source resource: $Key/$sourceRelative" }
       $dds = Get-DdsFilePixels -Bytes (Get-CanvasResourceBytes $inventory.Resources[$sourceRelative])
       if ([int]$entry.Width -ne $dds.Width -or [int]$entry.Height -ne $dds.Height) { throw "Consumer texture dimensions differ: $Key/$suffix/$archiveRelative" }
@@ -198,7 +202,7 @@ function Get-CanvasConsumerLoosePackageFiles([string]$RepositoryRoot,[string]$Ke
     foreach ($entry in @(Get-DdsBa2Entries -Path $texturePath)) {
       $archiveRelative = $entry.Name.Replace('\','/')
       $declaredRelative = $recordPaths[$archiveRelative]
-      $sourceRelative = $declaredRelative.Substring($inventory.Prefix.Length)
+      $sourceRelative = $declaredRelative.Substring($inventory.TexturePrefix.Length)
       $sourceBytes = [byte[]](Get-CanvasResourceBytes $inventory.Resources[$sourceRelative])
       if ((Get-ByteArraySha256 -Bytes $sourceBytes) -cne $record.Files[$declaredRelative]) { throw "Consumer loose DDS source differs from build evidence: $Key/$sourceRelative" }
       $files.Add([pscustomobject]@{ EntryName=$archiveRelative; Bytes=$sourceBytes })

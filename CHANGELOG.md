@@ -11,7 +11,7 @@
 
 - Added smokey panel to make the other HUD panels pop and look semi holographicly painted.
 - Smoky plates need the matching Venworks Canvas update. Older Canvas builds leave the boot screen up when a plate image is present.
-- The smoke texture ships in each theme's Textures archive, beside the Main archive. 
+- The smoke texture ships in each theme's Textures archive at Textures/Interface, beside the Main archive. 
 
 ## Version 2.1.0 (October 3, 2026)
 
