@@ -26,9 +26,9 @@ Canvas's current loader contract fixes a consumer namespace to `Interface/Venwor
 | --- | --- |
 | `Tools/buildVariant.ps1` | Compile selected consumers and Papyrus scripts, assemble their ESMs, and write validated package inputs beneath `.work/canvas-payloads`. |
 | `Tools/verifyVariant.ps1` | Verify isolated pre-archive inputs or archive-only installed and committed payloads. |
-| `Tools/createPackages.ps1` | Transactionally create and install the PC, Xbox, and PS5 uncompressed General BA2 archives, then remove exact archive-shadowing loose files. |
-| `Tools/createReleasePackages.ps1` | Create five release ZIP shapes per selected theme, extracting the Fully Loose payload from the verified Windows Main BA2. |
-| `Tools/verifyCommittedRelease.ps1` | Validate scripts, repository contracts, resources, all five archive-only payloads, and all fifteen archives. |
+| `Tools/createPackages.ps1` | Transactionally create and install the PC, Xbox, and PS5 Main and Textures BA2 archives, then remove exact archive-shadowing loose files. |
+| `Tools/createReleasePackages.ps1` | Create five release ZIP shapes per selected theme, extracting the Fully Loose payload from the verified Windows Main and Textures archives. |
+| `Tools/verifyCommittedRelease.ps1` | Validate scripts, repository contracts, resources, all five archive-only payloads, and all thirty archives. |
 | `Tools/checkRepo.ps1` | Validate the five-theme configuration and selected payloads. |
 | `Tools/setupRepo.ps1` | Create local staging junctions for configured mod-manager destinations. |
 
@@ -60,7 +60,7 @@ Canvas's current loader contract fixes a consumer namespace to `Interface/Venwor
 
 `createPackages.ps1` creates and verifies every archive candidate before installation. It backs up existing managed artifacts and exact loose payload targets, installs the verified ESM and archives, removes only the loose files represented in the archives, and verifies that none remain. A failed transaction restores the prior managed and loose files and retains recovery material beneath `.work/package-transactions`; another package run stops until that retained transaction is inspected and removed. A successful transaction removes its isolated inputs and transaction directory.
 
-The committed release contains three BA2 files per theme: `Main`, `Main_XBox`, and `Main_PS`. All are uncompressed General archives and contain the consumer Interface tree plus the two compiled VWHUD scripts. The real ESM remains beside the archives, and no matching Interface or Script payload remains loose in `Staging-*`. `createReleasePackages.ps1` reads the verified Main BA2 entries when producing the Nexus Fully Loose Files ZIP, so release assembly does not require loose staging files. The full matrix contains 15 BA2 files and 25 ZIP files.
+The committed release contains six BA2 files per theme: uncompressed General `Main`, `Main_XBox`, and `Main_PS`, plus `Textures`, `Textures_XBox`, and `Textures_PS`. DDS files are excluded from the General archives and stored in the texture archives. The other consumer Interface files and the compiled VWHUD scripts stay in the General archives. The real ESM remains beside the archives, and no matching Interface or Script payload remains loose in `Staging-*`. `createReleasePackages.ps1` reads the verified Windows Main entries and the source DDS bytes checked against the Windows Textures archive when producing the Nexus Fully Loose Files ZIP, so release assembly does not require loose staging files. The full matrix contains 30 BA2 files and 25 ZIP files.
 
 ## Evidence boundaries
 

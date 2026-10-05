@@ -42,18 +42,26 @@ if ($LASTEXITCODE -ne 0 -or [string]::Join("`n", $archive2Owners) -cne 'Tools/cr
 }
 
 $packageSource = [IO.File]::ReadAllText((Join-Path $repositoryRoot 'Tools/createPackages.ps1'))
-foreach ($archiveTarget in @('Main', 'Main_XBox', 'Main_PS')) {
-  $pattern = '(?ms)^\s*"' + [regex]::Escape($archiveTarget) + '"\s*=\s*\[pscustomobject\]@\{(?<Definition>.*?)^\s*\}'
+$expectedPackageArchives = @(
+  @{ Name = 'Main'; Format = 'General'; Compression = 'None'; Filter = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2' }
+  @{ Name = 'Textures'; Format = 'DDS'; Compression = 'LZ4'; Filter = '-includeFilters=.*\\.*\.dds' }
+  @{ Name = 'Main_XBox'; Format = 'General'; Compression = 'None'; Filter = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2' }
+  @{ Name = 'Textures_XBox'; Format = 'XBoxDDS'; Compression = 'LZ4'; Filter = '-includeFilters=.*\\.*\.dds' }
+  @{ Name = 'Main_PS'; Format = 'General'; Compression = 'None'; Filter = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2' }
+  @{ Name = 'Textures_PS'; Format = 'DDS'; Compression = 'LZ4'; Filter = '-includeFilters=.*\\.*\.dds' }
+)
+foreach ($archiveTarget in $expectedPackageArchives) {
+  $pattern = '(?ms)^\s*"' + [regex]::Escape([string]$archiveTarget.Name) + '"\s*=\s*\[pscustomobject\]@\{(?<Definition>.*?)^\s*\}'
   $match = [regex]::Match($packageSource, $pattern)
-  if (!$match.Success -or $match.Groups['Definition'].Value -cnotmatch '(?m)^\s*Format\s*=\s*"General"\s*$' -or $match.Groups['Definition'].Value -cnotmatch '(?m)^\s*Compression\s*=\s*"None"\s*$') {
-    throw "Archive target '$archiveTarget' must use uncompressed General BA2 output."
+  $definition = if ($match.Success) { $match.Groups['Definition'].Value } else { '' }
+  if ($definition -cnotmatch ('(?m)^\s*Format\s*=\s*"' + [regex]::Escape([string]$archiveTarget.Format) + '"\s*$') -or
+      $definition -cnotmatch ('(?m)^\s*Compression\s*=\s*"' + [regex]::Escape([string]$archiveTarget.Compression) + '"\s*$') -or
+      $definition -cnotmatch ('(?m)^\s*FilterArgument\s*=\s*''' + [regex]::Escape([string]$archiveTarget.Filter) + '''\s*$')) {
+    throw "Archive target '$($archiveTarget.Name)' does not keep DDS files in the texture archives."
   }
-}
-if ($packageSource -match 'Textures(?:_XBox|_PS)?\.ba2') {
-  throw 'The consumer-only package pipeline must not create retired texture archive shapes.'
 }
 
 & (Join-Path $PSScriptRoot 'checkRepo.ps1') -Committed
 & (Join-Path $PSScriptRoot 'verifyVariant.ps1') -Committed
 
-Write-Host 'Verified all five committed Canvas consumer variants and their fifteen platform archives.'
+Write-Host 'Verified all five committed Canvas consumer variants and their thirty platform archives.'

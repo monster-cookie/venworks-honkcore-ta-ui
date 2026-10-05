@@ -55,7 +55,7 @@ if (!$SkipEnvironment) {
   }
 }
 
-$archiveTargets = @('Main', 'Main_XBox', 'Main_PS')
+$archiveTargets = @('Main', 'Textures', 'Main_XBox', 'Textures_XBox', 'Main_PS', 'Textures_PS')
 $Global:ReleaseVariants = @(
   [ModuleVariant]::new('TA', 'Trackers Alliance', 'Venworks - Customizable HUD - Trackers Alliance Theme', 'Venworks - HUD - TA Theme (Normal)', 'Venworks - HUD - TA Theme (Loose)', 'Venworks-CustomizableHUD-TrackersAlliance', './Staging-TA', "$ENV:MODULE_VARIANT_TA_PATH", $archiveTargets)
   [ModuleVariant]::new('FC', 'Freestar Collective', 'Venworks - Customizable HUD - Freestar Collective Theme', 'Venworks - HUD - FC Theme (Normal)', 'Venworks - HUD - FC Theme (Loose)', 'Venworks-CustomizableHUD-FreestarCollective', './Staging-FC', "$ENV:MODULE_VARIANT_FC_PATH", $archiveTargets)

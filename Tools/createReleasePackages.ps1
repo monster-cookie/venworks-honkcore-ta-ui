@@ -194,8 +194,11 @@ foreach ($variant in $variants) {
 
   $pluginName = "$($variant.PackageBaseName).esm"
   $mainName = "$($variant.PackageBaseName) - Main.ba2"
+  $texturesName = "$($variant.PackageBaseName) - Textures.ba2"
   $mainXboxName = "$($variant.PackageBaseName) - Main_XBox.ba2"
+  $texturesXboxName = "$($variant.PackageBaseName) - Textures_XBox.ba2"
   $mainPsName = "$($variant.PackageBaseName) - Main_PS.ba2"
+  $texturesPsName = "$($variant.PackageBaseName) - Textures_PS.ba2"
 
   $pluginPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $pluginName) -Description "$($variant.VariantName) plugin"
   $pluginFile = New-PackageFile -SourcePath $pluginPath -EntryName $pluginName
@@ -203,17 +206,29 @@ foreach ($variant in $variants) {
   $windowsArchiveFiles = @()
   if (@($packageSuffixes | Where-Object { $_ -in @('Nexus PC - Normal', 'Bethesda PC') }).Count -ne 0) {
     $mainPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $mainName) -Description "$($variant.VariantName) Windows Main archive"
-    $windowsArchiveFiles = @(New-PackageFile -SourcePath $mainPath -EntryName $mainName)
+    $texturesPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $texturesName) -Description "$($variant.VariantName) Windows Textures archive"
+    $windowsArchiveFiles = @(
+      (New-PackageFile -SourcePath $mainPath -EntryName $mainName),
+      (New-PackageFile -SourcePath $texturesPath -EntryName $texturesName)
+    )
   }
   $xboxArchiveFiles = @()
   if ('Bethesda Xbox' -in $packageSuffixes) {
     $mainXboxPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $mainXboxName) -Description "$($variant.VariantName) Xbox Main archive"
-    $xboxArchiveFiles = @(New-PackageFile -SourcePath $mainXboxPath -EntryName $mainXboxName)
+    $texturesXboxPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $texturesXboxName) -Description "$($variant.VariantName) Xbox Textures archive"
+    $xboxArchiveFiles = @(
+      (New-PackageFile -SourcePath $mainXboxPath -EntryName $mainXboxName),
+      (New-PackageFile -SourcePath $texturesXboxPath -EntryName $texturesXboxName)
+    )
   }
   $psArchiveFiles = @()
   if ('Bethesda PS5' -in $packageSuffixes) {
     $mainPsPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $mainPsName) -Description "$($variant.VariantName) PS5 Main archive"
-    $psArchiveFiles = @(New-PackageFile -SourcePath $mainPsPath -EntryName $mainPsName)
+    $texturesPsPath = Resolve-RequiredFile -Path (Join-Path $stagingPath $texturesPsName) -Description "$($variant.VariantName) PS5 Textures archive"
+    $psArchiveFiles = @(
+      (New-PackageFile -SourcePath $mainPsPath -EntryName $mainPsName),
+      (New-PackageFile -SourcePath $texturesPsPath -EntryName $texturesPsName)
+    )
   }
 
   $looseFiles = @()
