@@ -1,6 +1,6 @@
 # Repository agent guidance
 
-Read [repository context](AGENT-REPO-CONTEXT.md) when establishing the task. It holds this repository's toolchain, integrations, and non-secret identity settings. Load an optional linked procedure only when the corresponding operation is needed.
+Build, repository, GitHub, and Linear rules are the loaded `.grok/rules` files. Load an optional linked procedure only when the corresponding operation is needed.
 
 ## Work on the requested outcome
 
@@ -8,7 +8,7 @@ Read [repository context](AGENT-REPO-CONTEXT.md) when establishing the task. It 
 - Use existing authorization. Ask when missing information changes correctness, scope, compatibility, or a consequential action; investigate routine implementation choices yourself. Analysis or a plan alone does not authorize implementation.
 - Inspect the real implementation and its consumers. Preserve established contracts and unrelated user changes. Include supporting changes necessary for a complete result, without speculative abstractions or unrelated cleanup.
 - Missing runtime access limits what can be validated. It does not by itself prevent a well-supported implementation. Stop dependent work only when missing requirements or technical evidence prevent a sound decision; continue independent work.
-- Retrieve current external requirements when they govern the task. A configured tracker alone does not make every local task tracker-dependent. Use the [configured tracker and conventions](AGENT-REPO-CONTEXT.md#linear-project-management-and-issue-tracker) when needed.
+- Retrieve current external requirements when they govern the task. A configured tracker alone does not make every local task tracker-dependent. Use the [configured tracker and conventions](.grok/rules/linear.md) when needed.
 - Propose changes to agent-instruction files before editing them; apply only explicitly approved changes. New third-party dependencies, frameworks, build tools, package managers, and CI actions also require explicit approval.
 
 ## Verification and communication
@@ -27,7 +27,7 @@ Before retrying an interrupted edit or external action, inspect the resulting st
 
 ## External tools and identities
 
-Use the service configuration in [repository context](AGENT-REPO-CONTEXT.md). Verify the intended target and expected identity through the actual consuming connection before authenticated operations; do not infer the expected account solely from the active session. Reuse a correct session and reverify after authentication or target changes or ambiguous failures. Ordinary local inspection does not require credential discovery, and unavailable access blocks only dependent work.
+Use the service configuration in [`.grok/rules/github.md`](.grok/rules/github.md). Verify the intended target and expected identity through the actual consuming connection before authenticated operations; do not infer the expected account solely from the active session. Reuse a correct session and reverify after authentication or target changes or ambiguous failures. Ordinary local inspection does not require credential discovery, and unavailable access blocks only dependent work.
 
 Preserve personal browser, GitKraken, and ordinary CLI sessions. Use dedicated connections or process-scoped credentials for authorized setup and only explicitly permitted fallbacks with the same identity and target. Never silently switch to a personal account. Supply secrets through protected channels to the consumer, not through model-visible output, command arguments, logs, or repository files. A password-manager login does not verify a downstream account. Git authorship, Git transport, and hosting API authentication are separate boundaries; verify each when used.
 

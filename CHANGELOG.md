@@ -9,7 +9,7 @@
 
 ## Version 2.1.1 (UNRELEASED)
 
-- Coming Soon :)
+- Added smokey panel to make the other HUD panels pop and look semi holographicly painted. 
 
 ## Version 2.1.0 (October 3, 2026)
 
