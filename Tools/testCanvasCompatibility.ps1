@@ -20,11 +20,11 @@ try {
   [IO.File]::WriteAllText($registryPath, "String Function BuildCanvasDatagramBody()`nEndFunction`nOperationResult Function TryPublishCanvasDatagram()`nEndFunction")
   [IO.File]::WriteAllText($hostPath, 'private static const DATAGRAM_CONSUMER_PROTOCOL:String = "VWCANVAS_CONSUMER/3";')
   [IO.File]::WriteAllText($enginePath, 'if(param2.contract != "VWCANVAS_HTML/2") {}')
-  [IO.File]::WriteAllText($loaderPath, 'var textureUrl:String = "img://Textures/Interface/" + this.resourceRoot + String(this.activeItem.path);')
+  [IO.File]::WriteAllText($loaderPath, 'var dds:Object = CanvasDdsDecoder.read(bytes); loader.load(new URLRequest(this.resourceRoot + String(this.activeItem.path)));')
 
   Assert-VWHudCanvasCompatibility -CanvasProjectPath $fixtureRoot
 
-  [IO.File]::WriteAllText($loaderPath, 'loader.load(new URLRequest(this.resourceRoot + String(this.activeItem.path)));')
+  [IO.File]::WriteAllText($loaderPath, 'var textureUrl:String = "img://Textures/Interface/" + this.resourceRoot + String(this.activeItem.path);')
   try {
     Assert-VWHudCanvasCompatibility -CanvasProjectPath $fixtureRoot
     throw 'Canvas fixture without DDS menu texture load unexpectedly passed the VWHUD contract preflight.'
@@ -32,7 +32,7 @@ try {
   catch {
     if ($_.Exception.Message -cnotmatch 'Missing: DDS menu texture load') { throw }
   }
-  [IO.File]::WriteAllText($loaderPath, 'var textureUrl:String = "img://Textures/Interface/" + this.resourceRoot + String(this.activeItem.path);')
+  [IO.File]::WriteAllText($loaderPath, 'var dds:Object = CanvasDdsDecoder.read(bytes); loader.load(new URLRequest(this.resourceRoot + String(this.activeItem.path)));')
 
   [IO.File]::WriteAllText($hostPath, 'private static const CONSUMER_PROTOCOL:String = "VWCANVAS_CONSUMER/2";')
   try {

@@ -42,37 +42,37 @@ $archiveDefinitions = [ordered]@{
     FileSuffix = "Main.ba2"
     Format = "General"
     Compression = "None"
-    FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
+    FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\Textures\\.*|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
   }
   "Textures" = [pscustomobject]@{
     FileSuffix = "Textures.ba2"
     Format = "DDS"
     Compression = "LZ4"
-    FilterArgument = '-includeFilters=.*\\.*\.dds'
+    FilterArgument = '-includeFilters=.*\\Textures\\.*\.dds'
   }
   "Main_XBox" = [pscustomobject]@{
     FileSuffix = "Main_XBox.ba2"
     Format = "General"
     Compression = "None"
-    FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
+    FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\Textures\\.*|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
   }
   "Textures_XBox" = [pscustomobject]@{
     FileSuffix = "Textures_XBox.ba2"
     Format = "XBoxDDS"
     Compression = "LZ4"
-    FilterArgument = '-includeFilters=.*\\.*\.dds'
+    FilterArgument = '-includeFilters=.*\\Textures\\.*\.dds'
   }
   "Main_PS" = [pscustomobject]@{
     FileSuffix = "Main_PS.ba2"
     Format = "General"
     Compression = "None"
-    FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
+    FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\Textures\\.*|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
   }
   "Textures_PS" = [pscustomobject]@{
     FileSuffix = "Textures_PS.ba2"
     Format = "DDS"
     Compression = "LZ4"
-    FilterArgument = '-includeFilters=.*\\.*\.dds'
+    FilterArgument = '-includeFilters=.*\\Textures\\.*\.dds'
   }
 }
 

@@ -43,12 +43,12 @@ if ($LASTEXITCODE -ne 0 -or [string]::Join("`n", $archive2Owners) -cne 'Tools/cr
 
 $packageSource = [IO.File]::ReadAllText((Join-Path $repositoryRoot 'Tools/createPackages.ps1'))
 $expectedPackageArchives = @(
-  @{ Name = 'Main'; Format = 'General'; Compression = 'None'; Filter = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2' }
-  @{ Name = 'Textures'; Format = 'DDS'; Compression = 'LZ4'; Filter = '-includeFilters=.*\\.*\.dds' }
-  @{ Name = 'Main_XBox'; Format = 'General'; Compression = 'None'; Filter = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2' }
-  @{ Name = 'Textures_XBox'; Format = 'XBoxDDS'; Compression = 'LZ4'; Filter = '-includeFilters=.*\\.*\.dds' }
-  @{ Name = 'Main_PS'; Format = 'General'; Compression = 'None'; Filter = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2' }
-  @{ Name = 'Textures_PS'; Format = 'DDS'; Compression = 'LZ4'; Filter = '-includeFilters=.*\\.*\.dds' }
+  @{ Name = 'Main'; Format = 'General'; Compression = 'None'; Filter = '-excludeFilters=.*\\meta\.ini|.*\\Textures\\.*|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2' }
+  @{ Name = 'Textures'; Format = 'DDS'; Compression = 'LZ4'; Filter = '-includeFilters=.*\\Textures\\.*\.dds' }
+  @{ Name = 'Main_XBox'; Format = 'General'; Compression = 'None'; Filter = '-excludeFilters=.*\\meta\.ini|.*\\Textures\\.*|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2' }
+  @{ Name = 'Textures_XBox'; Format = 'XBoxDDS'; Compression = 'LZ4'; Filter = '-includeFilters=.*\\Textures\\.*\.dds' }
+  @{ Name = 'Main_PS'; Format = 'General'; Compression = 'None'; Filter = '-excludeFilters=.*\\meta\.ini|.*\\Textures\\.*|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2' }
+  @{ Name = 'Textures_PS'; Format = 'DDS'; Compression = 'LZ4'; Filter = '-includeFilters=.*\\Textures\\.*\.dds' }
 )
 foreach ($archiveTarget in $expectedPackageArchives) {
   $pattern = '(?ms)^\s*"' + [regex]::Escape([string]$archiveTarget.Name) + '"\s*=\s*\[pscustomobject\]@\{(?<Definition>.*?)^\s*\}'
@@ -57,7 +57,7 @@ foreach ($archiveTarget in $expectedPackageArchives) {
   if ($definition -cnotmatch ('(?m)^\s*Format\s*=\s*"' + [regex]::Escape([string]$archiveTarget.Format) + '"\s*$') -or
       $definition -cnotmatch ('(?m)^\s*Compression\s*=\s*"' + [regex]::Escape([string]$archiveTarget.Compression) + '"\s*$') -or
       $definition -cnotmatch ('(?m)^\s*FilterArgument\s*=\s*''' + [regex]::Escape([string]$archiveTarget.Filter) + '''\s*$')) {
-    throw "Archive target '$($archiveTarget.Name)' does not keep DDS files in the texture archives."
+    throw "Archive target '$($archiveTarget.Name)' does not keep the interface plate in the General archives and Textures-folder DDS files in the texture archives."
   }
 }
 

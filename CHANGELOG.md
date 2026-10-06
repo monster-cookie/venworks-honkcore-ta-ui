@@ -11,7 +11,7 @@
 
 - Added smokey panel to make the other HUD panels pop and look semi holographicly painted.
 - Smoky plates need the matching Venworks Canvas update. Older Canvas builds leave the boot screen up when a plate image is present.
-- The smoke texture ships in each theme's Textures archive at Textures/Interface, beside the Main archive, as BC3 like the game's menu icons. 
+- The smoke plate ships in the theme Main archive next to the HUD layout. The game would not open it from the Textures archive. A copy remains in each theme's Textures archive.
 
 ## Version 2.1.0 (October 3, 2026)
 

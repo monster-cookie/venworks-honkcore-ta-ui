@@ -79,10 +79,13 @@ function CopyResources([string]$Entry,[string]$InterfaceDestination,[string]$Tex
     if ($relative -notmatch '^[a-z0-9][a-z0-9./-]*\.(html|css|svg|dds)$' -or $relative -match '(^|/)\.\.?(/|$)') { throw "Invalid resource path: $relative" }
     $source = if ($relative -eq 'index.html') { $Entry } else { Join-Path $sourceRoot $relative }
     [void](RequiredFile $source)
-    $root = if ($relative.EndsWith('.dds',[StringComparison]::OrdinalIgnoreCase)) { $TextureDestination } else { $InterfaceDestination }
-    $target = Join-Path $root $relative
-    New-Item -ItemType Directory -Force ([IO.Path]::GetDirectoryName($target)) | Out-Null
-    [IO.File]::WriteAllBytes($target,(Get-CanvasResourceBytes $source))
+    $bytes = Get-CanvasResourceBytes $source
+    $roots = if ($relative.EndsWith('.dds',[StringComparison]::OrdinalIgnoreCase)) { @($InterfaceDestination, $TextureDestination) } else { @($InterfaceDestination) }
+    foreach ($root in $roots) {
+      $target = Join-Path $root $relative
+      New-Item -ItemType Directory -Force ([IO.Path]::GetDirectoryName($target)) | Out-Null
+      [IO.File]::WriteAllBytes($target, $bytes)
+    }
     if ($relative.EndsWith('.html')) {
       $text = [IO.File]::ReadAllText($source)
       foreach ($match in [regex]::Matches($text,'(?:src|href|data-vw-assets)="([^"]+)"')) {

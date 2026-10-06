@@ -20,7 +20,7 @@ function Assert-VWHudCanvasCompatibility {
   if ($htmlEngineText -cnotmatch 'param2\.contract\s*!=\s*"VWCANVAS_HTML/2"') { $missingCanvasContracts.Add('VWCANVAS_HTML/2 rendering support') }
   if ($registryText -cnotmatch 'String Function BuildCanvasDatagramBody\s*\(') { $missingCanvasContracts.Add('Registry.BuildCanvasDatagramBody') }
   if ($registryText -cnotmatch 'OperationResult Function TryPublishCanvasDatagram\s*\(') { $missingCanvasContracts.Add('Registry.TryPublishCanvasDatagram') }
-  if ($loaderText -cnotmatch 'img://Textures/Interface/') { $missingCanvasContracts.Add('DDS menu texture load') }
+  if ($loaderText -cnotmatch 'CanvasDdsDecoder\.read\(' -or $loaderText -cmatch 'img://') { $missingCanvasContracts.Add('DDS menu texture load') }
   if ($missingCanvasContracts.Count -ne 0) {
     throw "The selected Canvas checkout is incompatible with VWHUD. Missing: $([string]::Join(', ', $missingCanvasContracts)). Use a Venworks Canvas checkout that provides the missing contracts."
   }

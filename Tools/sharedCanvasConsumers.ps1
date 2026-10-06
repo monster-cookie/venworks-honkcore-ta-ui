@@ -67,13 +67,22 @@ function Get-CanvasConsumerBuildInventory([string]$RepositoryRoot,[string]$Key,[
   $resources = Get-CanvasConsumerSources $RepositoryRoot $Key
   $plugins = @($Record.Files.Keys | Where-Object { $_ -match '^[^/]+\.esm$' })
   if ($plugins.Count -ne 1) { throw "Invalid plugin evidence: $Key" }
-  $resourcePaths = @($resources.Keys | ForEach-Object { if ($_.EndsWith('.dds',[StringComparison]::OrdinalIgnoreCase)) { $texturePrefix+$_ } else { $prefix+$_ } })
-  $expected = $resourcePaths + @(($prefix+'normal.swf'),($prefix+'large.swf'),'Scripts/Venworks/CustomizableHUD/HudRegistrar.pex','Scripts/Venworks/CustomizableHUD/HudEffectsPublisher.pex','Scripts/Venworks/CustomizableHUD/HudStatusProbe.pex') + $plugins
+  $resourcePaths = [Collections.Generic.List[string]]::new()
+  foreach ($relative in @($resources.Keys)) {
+    if ($relative.EndsWith('.dds',[StringComparison]::OrdinalIgnoreCase)) {
+      $resourcePaths.Add($prefix + $relative)
+      $resourcePaths.Add($texturePrefix + $relative)
+    }
+    else { $resourcePaths.Add($prefix + $relative) }
+  }
+  $expected = @($resourcePaths) + @(($prefix+'normal.swf'),($prefix+'large.swf'),'Scripts/Venworks/CustomizableHUD/HudRegistrar.pex','Scripts/Venworks/CustomizableHUD/HudEffectsPublisher.pex','Scripts/Venworks/CustomizableHUD/HudStatusProbe.pex') + $plugins
   if ((($Record.Files.Keys | Sort-Object) -join "`n") -cne (($expected | Sort-Object) -join "`n")) { throw "Unexpected consumer build inventory: $Key" }
   foreach ($relative in $resources.Keys) {
-    $stored = if ($relative.EndsWith('.dds',[StringComparison]::OrdinalIgnoreCase)) { $texturePrefix+$relative } else { $prefix+$relative }
+    $storedPaths = if ($relative.EndsWith('.dds',[StringComparison]::OrdinalIgnoreCase)) { @(($prefix + $relative), ($texturePrefix + $relative)) } else { @($prefix + $relative) }
     $sourceHash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData((Get-CanvasResourceBytes $resources[$relative])))
-    if ($sourceHash -cne $Record.Files[$stored]) { throw "Stale consumer resource: $Key/$relative" }
+    foreach ($stored in $storedPaths) {
+      if ($sourceHash -cne $Record.Files[$stored]) { throw "Stale consumer resource: $Key/$relative" }
+    }
   }
   return [pscustomobject]@{
     Namespace = $namespace
@@ -109,8 +118,8 @@ function Assert-CanvasConsumerArchivePayload([string]$RepositoryRoot,[string]$Ke
   }
   $recordPaths = [Collections.Generic.Dictionary[string,string]]::new([StringComparer]::OrdinalIgnoreCase)
   foreach ($relative in $inventory.ArchivePayload) { $recordPaths.Add($relative.Replace('\','/'),$relative) }
-  $generalPayload = @($inventory.ArchivePayload | Where-Object { -not $_.EndsWith('.dds',[StringComparison]::OrdinalIgnoreCase) })
-  $texturePayload = @($inventory.ArchivePayload | Where-Object { $_.EndsWith('.dds',[StringComparison]::OrdinalIgnoreCase) })
+  $generalPayload = @($inventory.ArchivePayload | Where-Object { -not $_.StartsWith('Textures/',[StringComparison]::OrdinalIgnoreCase) })
+  $texturePayload = @($inventory.ArchivePayload | Where-Object { $_.StartsWith('Textures/',[StringComparison]::OrdinalIgnoreCase) })
   $pluginBase = [IO.Path]::GetFileNameWithoutExtension($inventory.Plugin)
   $archiveNames = [Collections.Generic.List[string]]::new()
   $movieFiles = @{}
