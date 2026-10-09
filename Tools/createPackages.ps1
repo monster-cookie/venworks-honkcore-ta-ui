@@ -42,37 +42,19 @@ $archiveDefinitions = [ordered]@{
     FileSuffix = "Main.ba2"
     Format = "General"
     Compression = "None"
-    FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\Textures\\.*|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
-  }
-  "Textures" = [pscustomobject]@{
-    FileSuffix = "Textures.ba2"
-    Format = "DDS"
-    Compression = "LZ4"
-    FilterArgument = '-includeFilters=.*\\Textures\\.*\.dds'
+    FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
   }
   "Main_XBox" = [pscustomobject]@{
     FileSuffix = "Main_XBox.ba2"
     Format = "General"
     Compression = "None"
-    FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\Textures\\.*|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
-  }
-  "Textures_XBox" = [pscustomobject]@{
-    FileSuffix = "Textures_XBox.ba2"
-    Format = "XBoxDDS"
-    Compression = "LZ4"
-    FilterArgument = '-includeFilters=.*\\Textures\\.*\.dds'
+    FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
   }
   "Main_PS" = [pscustomobject]@{
     FileSuffix = "Main_PS.ba2"
     Format = "General"
     Compression = "None"
-    FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\Textures\\.*|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
-  }
-  "Textures_PS" = [pscustomobject]@{
-    FileSuffix = "Textures_PS.ba2"
-    Format = "DDS"
-    Compression = "LZ4"
-    FilterArgument = '-includeFilters=.*\\Textures\\.*\.dds'
+    FilterArgument = '-excludeFilters=.*\\meta\.ini|.*\\.*\.dds|.*\\.*\.btc|.*\\.*\.esp|.*\\.*\.esm|.*\\.*\.ba2'
   }
 }
 
@@ -102,8 +84,7 @@ foreach ($variant in $variants) {
     if (!$archiveDefinitions.Contains([string]$_)) { throw "$($variant.VariantName) defines unknown archive target '$_'." }
     "$($variant.PackageBaseName) - $($archiveDefinitions[[string]$_].FileSuffix)"
   })
-  $expectedArchiveTargets = @('Main','Textures','Main_XBox','Textures_XBox','Main_PS','Textures_PS')
-  if ([string]::Join("`n", @($variant.ArchiveTargets)) -cne [string]::Join("`n", $expectedArchiveTargets) -or $archiveNames.Count -ne 6 -or @($archiveNames | Select-Object -Unique).Count -ne 6) { throw "$($variant.VariantName) must define the PC, Xbox, and PS5 Main and Textures archives." }
+  if ($archiveNames.Count -ne 3 -or @($archiveNames | Select-Object -Unique).Count -ne 3) { throw "$($variant.VariantName) must define three unique Main archive targets." }
   $operations.Add([pscustomobject]@{
     Key = $key
     Variant = $variant

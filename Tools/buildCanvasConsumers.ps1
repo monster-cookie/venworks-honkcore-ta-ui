@@ -68,7 +68,7 @@ foreach ($source in Get-ChildItem (Join-Path $repositoryRoot 'Papyrus/Venworks/C
   if ($LASTEXITCODE -ne 0) { throw "Papyrus compilation failed: $($source.Name)" }
 }
 
-function CopyResources([string]$Entry,[string]$InterfaceDestination,[string]$TextureDestination) {
+function CopyResources([string]$Entry,[string]$Destination) {
   $pending = [Collections.Generic.Queue[string]]::new()
   $seen = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
   $pending.Enqueue('index.html')
@@ -76,16 +76,12 @@ function CopyResources([string]$Entry,[string]$InterfaceDestination,[string]$Tex
   while ($pending.Count -gt 0) {
     $relative = $pending.Dequeue()
     if (!$seen.Add($relative)) { continue }
-    if ($relative -notmatch '^[a-z0-9][a-z0-9./-]*\.(html|css|svg|dds)$' -or $relative -match '(^|/)\.\.?(/|$)') { throw "Invalid resource path: $relative" }
+    if ($relative -notmatch '^[a-z0-9][a-z0-9./-]*\.(html|css|svg)$' -or $relative -match '(^|/)\.\.?(/|$)') { throw "Invalid resource path: $relative" }
     $source = if ($relative -eq 'index.html') { $Entry } else { Join-Path $sourceRoot $relative }
     [void](RequiredFile $source)
-    $bytes = Get-CanvasResourceBytes $source
-    $roots = if ($relative.EndsWith('.dds',[StringComparison]::OrdinalIgnoreCase)) { @($InterfaceDestination, $TextureDestination) } else { @($InterfaceDestination) }
-    foreach ($root in $roots) {
-      $target = Join-Path $root $relative
-      New-Item -ItemType Directory -Force ([IO.Path]::GetDirectoryName($target)) | Out-Null
-      [IO.File]::WriteAllBytes($target, $bytes)
-    }
+    $target = Join-Path $Destination $relative
+    New-Item -ItemType Directory -Force ([IO.Path]::GetDirectoryName($target)) | Out-Null
+    [IO.File]::WriteAllBytes($target,(Get-CanvasResourceBytes $source))
     if ($relative.EndsWith('.html')) {
       $text = [IO.File]::ReadAllText($source)
       foreach ($match in [regex]::Matches($text,'(?:src|href|data-vw-assets)="([^"]+)"')) {
@@ -110,8 +106,7 @@ foreach ($key in $VariantKeys | Select-Object -Unique) {
   try { & $java @arguments; if ($LASTEXITCODE -ne 0) { throw "Consumer compilation failed: $key" } }
   finally { Pop-Location }
   Copy-Item "$consumer/normal.swf" "$consumer/large.swf"
-  $textureRoot = Join-Path $payload "Textures/Interface/VenworksCanvas/Consumers/$namespace"
-  CopyResources (Join-Path $variantDirectory 'index.html') $consumer $textureRoot
+  CopyResources (Join-Path $variantDirectory 'index.html') $consumer
   New-Item -ItemType Directory (Join-Path $payload 'Scripts') | Out-Null
   Copy-Item (Join-Path $scriptCandidate '*') (Join-Path $payload 'Scripts') -Recurse
   $variant = @(Get-ModuleVariants -VariantKeys $key)[0]

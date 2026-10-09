@@ -48,8 +48,8 @@ foreach ($variant in $releaseVariants) {
   if (([string]$variant.NexusNormalDisplayName).Length -gt 50 -or ([string]$variant.NexusLooseDisplayName).Length -gt 50) {
     throw "Variant '$key' exceeds the Nexus display-name limit."
   }
-  if ([string]::Join("`n", @($variant.ArchiveTargets)) -cne [string]::Join("`n", @('Main', 'Textures', 'Main_XBox', 'Textures_XBox', 'Main_PS', 'Textures_PS'))) {
-    throw "Variant '$key' must publish the PC, Xbox, and PS5 Main and Textures archives."
+  if ([string]::Join("`n", @($variant.ArchiveTargets)) -cne [string]::Join("`n", @('Main', 'Main_XBox', 'Main_PS'))) {
+    throw "Variant '$key' must publish exactly the PC, Xbox, and PS5 Main archives."
   }
   if (@(Get-VariantReleasePackageSuffixes -Variant $variant).Count -ne 5) {
     throw "Variant '$key' must publish exactly five release package shapes."

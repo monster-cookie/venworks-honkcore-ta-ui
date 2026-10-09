@@ -2,8 +2,7 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 function Get-CanvasResourceBytes([string]$Path) {
-  # DDS is a binary resource. Text resources still match the repository LF contract before Git normalizes a local edit.
-  if ([IO.Path]::GetExtension($Path) -ceq '.dds') { return ,[IO.File]::ReadAllBytes($Path) }
+  # Text resources match the repository LF contract before Git normalizes a local edit.
   $text = [IO.File]::ReadAllText($Path).Replace("`r`n","`n").Replace("`r","`n")
   return ,([Text.UTF8Encoding]::new($false).GetBytes($text))
 }
@@ -21,7 +20,7 @@ function Get-CanvasConsumerSources([string]$RepositoryRoot,[string]$Key) {
   while ($pending.Count -gt 0) {
     $relative = $pending.Dequeue()
     if ($result.Contains($relative)) { continue }
-    if ($relative -notmatch '^[a-z0-9][a-z0-9./-]*\.(html|css|svg|dds)$' -or $relative -match '(^|/)\.\.?(/|$)') { throw "Invalid Canvas resource path: $relative" }
+    if ($relative -notmatch '^[a-z0-9][a-z0-9./-]*\.(html|css|svg)$' -or $relative -match '(^|/)\.\.?(/|$)') { throw "Invalid Canvas resource path: $relative" }
     $path = if ($relative -eq 'index.html') { Join-Path $RepositoryRoot "CanvasConsumer/variants/$Key/index.html" } else { Join-Path $RepositoryRoot "CanvasConsumer/resources/$relative" }
     if (!(Test-Path -LiteralPath $path -PathType Leaf)) { throw "Missing Canvas resource: $relative" }
     $result[$relative] = $path
@@ -63,31 +62,18 @@ function Get-CanvasConsumerBuildRecord([string]$RepositoryRoot,[string]$Key,[str
 function Get-CanvasConsumerBuildInventory([string]$RepositoryRoot,[string]$Key,[hashtable]$Record) {
   $namespace = 'venworks.vwhud.'+$Key.ToLowerInvariant()
   $prefix = "Interface/VenworksCanvas/Consumers/$namespace/"
-  $texturePrefix = "Textures/Interface/VenworksCanvas/Consumers/$namespace/"
   $resources = Get-CanvasConsumerSources $RepositoryRoot $Key
   $plugins = @($Record.Files.Keys | Where-Object { $_ -match '^[^/]+\.esm$' })
   if ($plugins.Count -ne 1) { throw "Invalid plugin evidence: $Key" }
-  $resourcePaths = [Collections.Generic.List[string]]::new()
-  foreach ($relative in @($resources.Keys)) {
-    if ($relative.EndsWith('.dds',[StringComparison]::OrdinalIgnoreCase)) {
-      $resourcePaths.Add($prefix + $relative)
-      $resourcePaths.Add($texturePrefix + $relative)
-    }
-    else { $resourcePaths.Add($prefix + $relative) }
-  }
-  $expected = @($resourcePaths) + @(($prefix+'normal.swf'),($prefix+'large.swf'),'Scripts/Venworks/CustomizableHUD/HudRegistrar.pex','Scripts/Venworks/CustomizableHUD/HudEffectsPublisher.pex','Scripts/Venworks/CustomizableHUD/HudStatusProbe.pex') + $plugins
+  $expected = @($resources.Keys | ForEach-Object { $prefix + $_ }) + @(($prefix+'normal.swf'),($prefix+'large.swf'),'Scripts/Venworks/CustomizableHUD/HudRegistrar.pex','Scripts/Venworks/CustomizableHUD/HudEffectsPublisher.pex','Scripts/Venworks/CustomizableHUD/HudStatusProbe.pex') + $plugins
   if ((($Record.Files.Keys | Sort-Object) -join "`n") -cne (($expected | Sort-Object) -join "`n")) { throw "Unexpected consumer build inventory: $Key" }
   foreach ($relative in $resources.Keys) {
-    $storedPaths = if ($relative.EndsWith('.dds',[StringComparison]::OrdinalIgnoreCase)) { @(($prefix + $relative), ($texturePrefix + $relative)) } else { @($prefix + $relative) }
     $sourceHash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData((Get-CanvasResourceBytes $resources[$relative])))
-    foreach ($stored in $storedPaths) {
-      if ($sourceHash -cne $Record.Files[$stored]) { throw "Stale consumer resource: $Key/$relative" }
-    }
+    if ($sourceHash -cne $Record.Files[$prefix+$relative]) { throw "Stale consumer resource: $Key/$relative" }
   }
   return [pscustomobject]@{
     Namespace = $namespace
     Prefix = $prefix
-    TexturePrefix = $texturePrefix
     Resources = $resources
     Plugin = [string]$plugins[0]
     Expected = @($expected)
@@ -118,8 +104,6 @@ function Assert-CanvasConsumerArchivePayload([string]$RepositoryRoot,[string]$Ke
   }
   $recordPaths = [Collections.Generic.Dictionary[string,string]]::new([StringComparer]::OrdinalIgnoreCase)
   foreach ($relative in $inventory.ArchivePayload) { $recordPaths.Add($relative.Replace('\','/'),$relative) }
-  $generalPayload = @($inventory.ArchivePayload | Where-Object { -not $_.StartsWith('Textures/',[StringComparison]::OrdinalIgnoreCase) })
-  $texturePayload = @($inventory.ArchivePayload | Where-Object { $_.StartsWith('Textures/',[StringComparison]::OrdinalIgnoreCase) })
   $pluginBase = [IO.Path]::GetFileNameWithoutExtension($inventory.Plugin)
   $archiveNames = [Collections.Generic.List[string]]::new()
   $movieFiles = @{}
@@ -128,7 +112,7 @@ function Assert-CanvasConsumerArchivePayload([string]$RepositoryRoot,[string]$Ke
     $archiveNames.Add($archiveName)
     $archivePath = Join-Path $Payload $archiveName
     $entries = @(Get-GeneralBa2Entries -Path $archivePath)
-    $wanted = @($generalPayload | ForEach-Object {$_.ToLowerInvariant()} | Sort-Object)
+    $wanted = @($inventory.ArchivePayload | ForEach-Object {$_.ToLowerInvariant()} | Sort-Object)
     $actual = @($entries.Name | ForEach-Object {$_.Replace('\','/').ToLowerInvariant()} | Sort-Object)
     if (($wanted -join "`n") -cne ($actual -join "`n")) { throw "Consumer archive inventory mismatch: $Key/$suffix" }
     foreach ($entry in $entries) {
@@ -141,34 +125,6 @@ function Assert-CanvasConsumerArchivePayload([string]$RepositoryRoot,[string]$Ke
       if ($suffix -ceq 'Main' -and ($archiveRelative.EndsWith('/normal.swf',[StringComparison]::OrdinalIgnoreCase) -or $archiveRelative.EndsWith('/large.swf',[StringComparison]::OrdinalIgnoreCase))) {
         $movieFiles[[IO.Path]::GetFileName($archiveRelative)] = $bytes
       }
-    }
-  }
-  foreach ($suffix in @('Textures','Textures_XBox','Textures_PS')) {
-    $archiveName = "$pluginBase - $suffix.ba2"
-    $archivePath = Join-Path $Payload $archiveName
-    $exists = Test-Path -LiteralPath $archivePath -PathType Leaf
-    if ($texturePayload.Count -eq 0) {
-      if ($exists) { throw "Consumer payload has a texture archive without a DDS resource: $Key/$suffix" }
-      continue
-    }
-    if (!$exists) { throw "Consumer DDS resource is missing from the texture archive: $Key/$suffix" }
-    $archiveNames.Add($archiveName)
-    $entries = @(Get-DdsBa2Entries -Path $archivePath)
-    $wanted = @($texturePayload | ForEach-Object {$_.ToLowerInvariant()} | Sort-Object)
-    $actual = @($entries.Name | ForEach-Object {$_.Replace('\','/').ToLowerInvariant()} | Sort-Object)
-    if (($wanted -join "`n") -cne ($actual -join "`n")) { throw "Consumer texture archive inventory mismatch: $Key/$suffix" }
-    foreach ($entry in $entries) {
-      $archiveRelative = $entry.Name.Replace('\','/')
-      if (!$recordPaths.ContainsKey($archiveRelative)) { throw "Consumer texture archive contains an undeclared entry: $Key/$suffix/$archiveRelative" }
-      $declaredRelative = $recordPaths[$archiveRelative]
-      if (!$declaredRelative.StartsWith($inventory.TexturePrefix,[StringComparison]::OrdinalIgnoreCase)) { throw "Consumer texture entry is outside its menu texture folder: $Key/$archiveRelative" }
-      $sourceRelative = $declaredRelative.Substring($inventory.TexturePrefix.Length)
-      if (!$inventory.Resources.Contains($sourceRelative)) { throw "Consumer texture entry has no source resource: $Key/$sourceRelative" }
-      $dds = Get-DdsFilePixels -Bytes (Get-CanvasResourceBytes $inventory.Resources[$sourceRelative])
-      if ([int]$entry.Width -ne $dds.Width -or [int]$entry.Height -ne $dds.Height) { throw "Consumer texture dimensions differ: $Key/$suffix/$archiveRelative" }
-      $archivePixels = [byte[]](Read-DdsBa2EntryBytes -Entry $entry)
-      $sourcePixels = [byte[]]$dds.Pixels
-      if ((Get-ByteArraySha256 -Bytes $archivePixels) -cne (Get-ByteArraySha256 -Bytes $sourcePixels)) { throw "Consumer texture pixels differ: $Key/$suffix/$archiveRelative" }
     }
   }
   $actualFiles = @(Get-ChildItem -LiteralPath $Payload -Recurse -File | ForEach-Object {[IO.Path]::GetRelativePath($Payload,$_.FullName).Replace('\','/')})
@@ -199,25 +155,10 @@ function Get-CanvasConsumerLoosePackageFiles([string]$RepositoryRoot,[string]$Ke
   Assert-CanvasConsumerArchivePayload $RepositoryRoot $Key $Payload $Evidence
   $record = Get-CanvasConsumerBuildRecord $RepositoryRoot $Key $Evidence
   $inventory = Get-CanvasConsumerBuildInventory $RepositoryRoot $Key $record
-  $pluginBase = [IO.Path]::GetFileNameWithoutExtension($inventory.Plugin)
-  $recordPaths = [Collections.Generic.Dictionary[string,string]]::new([StringComparer]::OrdinalIgnoreCase)
-  foreach ($relative in $inventory.ArchivePayload) { $recordPaths.Add($relative.Replace('\','/'),$relative) }
-  $files = [Collections.Generic.List[object]]::new()
-  foreach ($entry in @(Get-GeneralBa2Entries -Path (Join-Path $Payload "$pluginBase - Main.ba2"))) {
-    $files.Add([pscustomobject]@{ EntryName=$entry.Name.Replace('\','/'); Bytes=[byte[]](Read-GeneralBa2EntryBytes -Entry $entry) })
+  $archivePath = Join-Path $Payload ([IO.Path]::GetFileNameWithoutExtension($inventory.Plugin)+' - Main.ba2')
+  foreach ($entry in @(Get-GeneralBa2Entries -Path $archivePath)) {
+    [pscustomobject]@{ EntryName=$entry.Name.Replace('\','/'); Bytes=[byte[]](Read-GeneralBa2EntryBytes -Entry $entry) }
   }
-  $texturePath = Join-Path $Payload "$pluginBase - Textures.ba2"
-  if (Test-Path -LiteralPath $texturePath -PathType Leaf) {
-    foreach ($entry in @(Get-DdsBa2Entries -Path $texturePath)) {
-      $archiveRelative = $entry.Name.Replace('\','/')
-      $declaredRelative = $recordPaths[$archiveRelative]
-      $sourceRelative = $declaredRelative.Substring($inventory.TexturePrefix.Length)
-      $sourceBytes = [byte[]](Get-CanvasResourceBytes $inventory.Resources[$sourceRelative])
-      if ((Get-ByteArraySha256 -Bytes $sourceBytes) -cne $record.Files[$declaredRelative]) { throw "Consumer loose DDS source differs from build evidence: $Key/$sourceRelative" }
-      $files.Add([pscustomobject]@{ EntryName=$archiveRelative; Bytes=$sourceBytes })
-    }
-  }
-  return @($files)
 }
 
 function Write-CanvasConsumerEvidence([string]$RepositoryRoot,[string]$Key,[string]$Payload,[string]$Destination) {

@@ -30,4 +30,3 @@ body { position: relative; width: 1920px; height: 1080px; color: #F4FBFF; font-f
 .threat-label { position: absolute; left: 4px; top: 1px; width: 312px; height: 20px; text-align: center; font-size: 11px; }
 .threat-stripe { position: absolute; left: 0px; top: 21px; width: 320px; height: 3px; background-color: transparent; }
 img { object-fit: contain; }
-.panel-smoke { opacity: 0.44; object-fit: fill; }
