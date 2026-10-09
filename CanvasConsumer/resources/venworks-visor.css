@@ -1,12 +1,15 @@
 .stroke-visor-amber { stroke: #E6C36A; }
 .stroke-visor-cyan { stroke: #7FE7FF; }
 .background-color-visor-track { background-color: #7FE7FF2E; }
-.vwhud-theme-venworks .threat-clear { background-color: transparent; height: 16px; }
-.vwhud-theme-venworks .threat-caution { background-color: transparent; height: 16px; }
-.vwhud-theme-venworks .threat-danger { background-color: transparent; height: 16px; }
-.vwhud-theme-venworks .threat-critical { background-color: transparent; height: 16px; }
-.vwhud-theme-venworks .threat-label { top: 0px; height: 14px; font-size: 9px; }
-.vwhud-theme-venworks .threat-stripe { top: 13px; height: 3px; }
+.color-state-danger-1 { color: #FF7B21; }
+.vwhud-theme-venworks .threat-clear { background-color: transparent; height: 12px; }
+.vwhud-theme-venworks .threat-caution { background-color: transparent; height: 12px; }
+.vwhud-theme-venworks .threat-danger { background-color: transparent; height: 12px; }
+.vwhud-theme-venworks .threat-critical { background-color: transparent; height: 12px; }
+.vwhud-theme-venworks .threat-label { top: 0px; height: 12px; font-size: 8px; }
+.vwhud-theme-venworks .threat-stripe { top: 0px; height: 0px; }
+.vwhud-theme-venworks .effects-message { top: 0px; left: 0px; width: 180px; height: 32px; }
+.vwhud-theme-venworks .effects-list { top: 0px; left: 0px; width: 180px; height: 630px; }
 .vw-arc-frame { position: absolute; left: 0px; top: 0px; width: 1920px; height: 1080px; z-index: 1; }
 .vw-arc-frame-svg { position: absolute; left: 0px; top: 0px; width: 1920px; height: 1080px; z-index: 1; }
 .vw-arc-logo { position: absolute; left: -18px; top: 12px; width: 136px; height: 136px; z-index: 120; }
@@ -26,11 +29,12 @@
 .vw-arc-quest-text { position: absolute; left: 12px; top: 4px; width: 440px; height: 32px; z-index: 2; font-size: 14px; text-align: left; }
 .vw-arc-compass { position: absolute; left: 0px; top: 6px; width: 780px; height: 100px; z-index: 110; }
 .vw-arc-compass-slot { position: absolute; left: 0px; top: 0px; width: 780px; height: 100px; z-index: 3; overflow: hidden; }
-.vw-arc-threat { position: absolute; left: 0px; top: 108px; width: 780px; height: 24px; z-index: 111; }
-.vw-arc-threat-host { position: absolute; left: 230px; top: 2px; width: 320px; height: 20px; z-index: 2; }
-.vw-arc-effects { position: absolute; left: 0px; top: 148px; width: 780px; height: 120px; z-index: 108; }
-.vw-arc-effects-host { position: absolute; left: 30px; top: 36px; width: 720px; height: 80px; z-index: 1; }
-.vw-arc-player { position: absolute; left: 12px; top: -8px; width: 400px; height: 248px; z-index: 100; }
+.vw-arc-threat { position: absolute; left: 0px; top: 2px; width: 780px; height: 28px; z-index: 111; }
+.vw-arc-threat-host { position: absolute; left: 230px; top: 0px; width: 320px; height: 12px; z-index: 2; }
+.vw-arc-threat-meter { position: absolute; left: 200px; top: 13px; width: 380px; height: 10px; z-index: 3; }
+.vw-arc-effects { position: absolute; left: -300px; top: 220px; width: 200px; height: 640px; z-index: 108; }
+.vw-arc-effects-host { position: absolute; left: 12px; top: 0px; width: 180px; height: 630px; z-index: 2; }
+.vw-arc-player { position: absolute; left: 0px; top: 0px; width: 400px; height: 248px; z-index: 100; }
 .vw-arc-player-frame { position: absolute; left: 0px; top: 0px; width: 400px; height: 248px; z-index: 0; }
 .vw-arc-p-time-label { position: absolute; left: 28px; top: 6px; width: 78px; height: 16px; z-index: 2; font-size: 8px; }
 .vw-arc-p-time { position: absolute; left: 108px; top: 4px; width: 72px; height: 18px; z-index: 2; font-size: 11px; }
@@ -58,10 +62,8 @@
 .vw-arc-p-mass-value { position: absolute; left: 76px; top: 174px; width: 90px; height: 16px; z-index: 2; font-size: 9px; }
 .vw-arc-p-mass-pct { position: absolute; left: 300px; top: 174px; width: 64px; height: 16px; z-index: 2; font-size: 10px; text-align: right; }
 .vw-arc-p-mass { position: absolute; left: 118px; top: 194px; width: 170px; height: 8px; z-index: 1; }
-.vw-arc-planet { position: absolute; left: -12px; top: -8px; width: 360px; height: 270px; z-index: 100; }
+.vw-arc-planet { position: absolute; left: 0px; top: 0px; width: 360px; height: 270px; z-index: 100; }
 .vw-arc-planet-frame { position: absolute; left: 0px; top: 0px; width: 360px; height: 270px; z-index: 0; }
-.vw-arc-planet-arc { position: absolute; left: 300px; top: 40px; width: 48px; height: 160px; z-index: 1; }
-.vw-arc-planet-arc-inner { position: absolute; left: 308px; top: 52px; width: 40px; height: 140px; z-index: 1; }
 .vw-arc-e-title { position: absolute; left: 8px; top: 4px; width: 140px; height: 16px; z-index: 2; font-size: 11px; }
 .vw-arc-e-local { position: absolute; left: 200px; top: 6px; width: 40px; height: 14px; z-index: 2; font-size: 8px; text-align: right; }
 .vw-arc-e-time { position: absolute; left: 244px; top: 4px; width: 56px; height: 16px; z-index: 2; font-size: 11px; text-align: right; }
