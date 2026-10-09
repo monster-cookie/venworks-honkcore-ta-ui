@@ -40,12 +40,14 @@ package
       private var iconUrls:Array;
       private var iconAttempt:int;
       private var iconWait:int;
+      private var visor:Boolean;
 
-      public function VWHudCompassTape(width:Number, height:Number)
+      public function VWHudCompassTape(width:Number, height:Number, visor:Boolean = false)
       {
          super();
          this.widthPx = width;
          this.heightPx = height;
+         this.visor = visor;
          mouseEnabled = false;
          mouseChildren = false;
          this.labels = [];
@@ -54,11 +56,14 @@ package
          catch(defineError:*) { this.markerType = null; }
          try { this.markerUtility = getDefinitionByName("Shared.MapMarkerUtils") as Class; }
          catch(utilityError:*) { this.markerUtility = null; }
-         var plate:Shape = new Shape();
-         plate.graphics.beginFill(0x0D1114,0.88);
-         plate.graphics.drawRect(0,0,width,height);
-         plate.graphics.endFill();
-         addChild(plate);
+         if(!visor)
+         {
+            var plate:Shape = new Shape();
+            plate.graphics.beginFill(0x0D1114,0.88);
+            plate.graphics.drawRect(0,0,width,height);
+            plate.graphics.endFill();
+            addChild(plate);
+         }
          this.ticks = new Shape();
          addChild(this.ticks);
          var index:int = 0;
@@ -75,11 +80,20 @@ package
             ++index;
          }
          var caret:Shape = new Shape();
-         caret.graphics.beginFill(0xFFB51B,1);
-         caret.graphics.moveTo(width / 2 - 4,0);
-         caret.graphics.lineTo(width / 2 + 4,0);
-         caret.graphics.lineTo(width / 2,7);
-         caret.graphics.endFill();
+         if(visor)
+         {
+            caret.graphics.lineStyle(1.5,0xFFB51B,1);
+            caret.graphics.moveTo(width / 2,4);
+            caret.graphics.lineTo(width / 2,18);
+         }
+         else
+         {
+            caret.graphics.beginFill(0xFFB51B,1);
+            caret.graphics.moveTo(width / 2 - 4,0);
+            caret.graphics.lineTo(width / 2 + 4,0);
+            caret.graphics.lineTo(width / 2,7);
+            caret.graphics.endFill();
+         }
          addChild(caret);
          index = 0;
          while(index < MARKERS)
@@ -98,6 +112,16 @@ package
             ++index;
          }
          this.update(0,null);
+      }
+
+      public function designWidth() : Number
+      {
+         return this.widthPx;
+      }
+
+      public function designHeight() : Number
+      {
+         return this.heightPx;
       }
 
       public function update(direction:Number, markers:Array) : void
@@ -128,13 +152,23 @@ package
          event.stopImmediatePropagation();
       }
 
+      private function across(unit:Number) : Number
+      {
+         return this.widthPx * (0.5 + unit * (this.visor ? 0.47 : 0.5));
+      }
+
+      private function along(unit:Number) : Number
+      {
+         return 18 + 34 * unit * unit;
+      }
+
       private function drawTicks(direction:Number) : void
       {
          var center:Number = this.degrees(direction * 180 / Math.PI);
          var first:Number = Math.floor((center - 60) / 5) * 5;
          var labelIndex:int = 0;
          this.ticks.graphics.clear();
-         this.ticks.graphics.lineStyle(1,0x62DDF2,0.72);
+         this.ticks.graphics.lineStyle(1,this.visor ? 0x7FE7FF : 0x62DDF2,this.visor ? 0.9 : 0.72);
          var heading:Number = first;
          while(heading <= center + 65)
          {
@@ -144,17 +178,20 @@ package
                var absolute:int = Math.round(this.degrees(heading));
                var major:Boolean = absolute % 45 == 0;
                var medium:Boolean = absolute % 15 == 0;
-               var x:Number = this.widthPx / 2 + delta / 60 * this.widthPx / 2;
+               var unit:Number = delta / 60;
+               var x:Number = this.across(unit);
                var tickHeight:Number = major ? 10 : medium ? 7 : 4;
-               this.ticks.graphics.moveTo(x,this.heightPx - tickHeight);
-               this.ticks.graphics.lineTo(x,this.heightPx);
+               var tickStart:Number = this.visor ? this.along(unit) : this.heightPx - tickHeight;
+               var tickEnd:Number = this.visor ? tickStart + tickHeight : this.heightPx;
+               this.ticks.graphics.moveTo(x,tickStart);
+               this.ticks.graphics.lineTo(x,tickEnd);
                if(major && labelIndex < this.labels.length)
                {
                   var host:Sprite = this.labels[labelIndex] as Sprite;
                   var headingName:String = String(HEADINGS[int(Math.round(absolute / 45)) % 8]);
                   this.drawHeading(Shape(host.getChildAt(0)),headingName);
                   host.x = x - (headingName.length > 1 ? 7 : 3);
-                  host.y = this.heightPx - 12;
+                  host.y = this.visor ? tickStart - 16 : this.heightPx - 12;
                   host.visible = true;
                   ++labelIndex;
                }
@@ -186,8 +223,9 @@ package
                var host:Sprite = entry.host as Sprite;
                try
                {
-                  host.x = this.widthPx / 2 + delta / (Math.PI / 3) * this.widthPx / 2;
-                  host.y = 20;
+                  var markerUnit:Number = delta / (Math.PI / 3);
+                  host.x = this.across(markerUnit);
+                  host.y = this.visor ? this.along(markerUnit) + 16 : 20;
                   host.alpha = this.clamp(VWHudViewModel.field(source,"fDistanceAlpha"),0,1,1);
                   host.scaleX = host.scaleY = 0.48 * this.clamp(VWHudViewModel.field(source,"fDistanceScale"),0.5,1.5,1);
                   this.paintMarker(entry,source);

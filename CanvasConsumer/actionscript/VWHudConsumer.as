@@ -49,7 +49,7 @@ package
          this.bridge = detail.html;
          this.model = new VWHudViewModel();
          this.conditions = new VWHudConditions();
-         this.compassTape = new VWHudCompassTape(826,48);
+         this.compassTape = new VWHudCompassTape(VWHudVariant.VISOR ? 780 : 826,VWHudVariant.VISOR ? 100 : 48,VWHudVariant.VISOR);
          this.contactRadar = new VWHudContactRadar(184);
          addChild(this.compassTape);
          addChild(this.contactRadar);
@@ -271,8 +271,8 @@ package
          overlay.scaleY = 1;
          if(overlay === this.compassTape && slot.scrollRect != null && slot.scrollRect.height > 0)
          {
-            overlay.scaleX = slot.scrollRect.width / 826;
-            overlay.scaleY = slot.scrollRect.height / 48;
+            overlay.scaleX = slot.scrollRect.width / this.compassTape.designWidth();
+            overlay.scaleY = slot.scrollRect.height / this.compassTape.designHeight();
          }
          else if(overlay === this.contactRadar && slot.width > 0 && slot.height > 0)
          {
@@ -301,14 +301,24 @@ package
          var scale:Number = 1;
          try
          {
-            if(this.compassSlot != null && this.compassSlot.scrollRect != null && this.compassSlot.scrollRect.width > 0)
-               scale = this.compassSlot.scrollRect.width / 826;
+            if(this.compassSlot != null && this.compassSlot.scrollRect != null && this.compassSlot.scrollRect.width > 0 && this.compassTape != null && this.compassTape.designWidth() > 0)
+               scale = this.compassSlot.scrollRect.width / this.compassTape.designWidth();
          }
          catch(scrollError:*) {}
          if(!isFinite(scale) || scale <= 0) scale = 1;
          var expected:Number = 184 * scale;
          var tolerance:Number = Math.max(2,3 * scale);
          return Math.abs(child.width - expected) <= tolerance && Math.abs(child.height - expected) <= tolerance;
+      }
+
+      private function compassSlotShape(sprite:Sprite) : Boolean
+      {
+         if(sprite == null || sprite.scrollRect == null) return false;
+         var slotWidth:Number = sprite.scrollRect.width;
+         var slotHeight:Number = sprite.scrollRect.height;
+         if(slotHeight < 24 || slotWidth < 400) return false;
+         var ratio:Number = slotWidth / slotHeight;
+         return Math.abs(ratio - 826 / 48) < 0.08 || Math.abs(ratio - 780 / 100) < 0.08;
       }
 
       private function findSlot(root:DisplayObject, compass:Boolean) : DisplayObject
@@ -322,7 +332,7 @@ package
             if(child !== this.compassTape && child !== this.contactRadar)
             {
                var sprite:Sprite = child as Sprite;
-               if(compass && sprite != null && sprite.scrollRect != null && sprite.scrollRect.height >= 24 && sprite.scrollRect.width >= 400 && Math.abs(sprite.scrollRect.width / sprite.scrollRect.height - 826 / 48) < 0.08) return sprite;
+               if(compass && this.compassSlotShape(sprite)) return sprite;
                if(!compass && this.radarWidth(child)) return child;
                var nested:DisplayObject = this.findSlot(child,compass);
                if(nested != null) return nested;

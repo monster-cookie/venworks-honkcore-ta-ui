@@ -10,6 +10,7 @@
 ## Version 2.1.1 (UNRELEASED)
 
 - Added a smoky panel wash so the other HUD panels pop and look semi-holographically painted. The wash is each theme's panel color, partly see-through.
+- Venworks theme: the flat plates are now a line-and-arc visor. The compass is an arc, the crest sits at the upper right, the player and planet readouts meet their corners, and the equipment rail is an arc of icons.
 - Grouped affliction icons now follow one representative spell each. Rank spells are no longer tracked, so the registrar no longer fills its script list past the Papyrus limit.
 
 ## Version 2.1.0 (October 3, 2026)

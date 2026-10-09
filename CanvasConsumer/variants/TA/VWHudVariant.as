@@ -6,5 +6,6 @@ package
       public static const NAMESPACE:String = "venworks.vwhud.ta";
       public static const LOGO:String = "assets/trackers-alliance-logo.svg";
       public static const MINIMALIST:Boolean = false;
+      public static const VISOR:Boolean = false;
    }
 }

@@ -1,0 +1,29 @@
+<!doctype html><html><head><title>VWHUD</title></head><body>
+<vw-hud-target target="canvas.watch" disabled="true"></vw-hud-target>
+<vw-hud-target target="player.meters" disabled="true"></vw-hud-target>
+<div class="vw-arc-frame" data-vw-anchor="top-left">
+<svg class="vw-arc-frame-svg paint-fill-none stroke-visor-cyan" viewBox="0 0 1920 1080" stroke-width="1.25" fill-opacity="0" stroke-opacity="0.45"><path d="M 70 200 C 220 420 220 700 70 900"></path></svg>
+<svg class="vw-arc-frame-svg paint-fill-none stroke-visor-cyan" viewBox="0 0 1920 1080" stroke-width="1" fill-opacity="0" stroke-opacity="0.22"><path d="M 96 250 C 190 440 190 680 96 860"></path></svg>
+<svg class="vw-arc-frame-svg paint-fill-none stroke-visor-amber" viewBox="0 0 1920 1080" stroke-width="1.25" fill-opacity="0" stroke-opacity="0.4"><path d="M 1850 200 C 1700 420 1700 700 1850 900"></path></svg>
+<svg class="vw-arc-frame-svg paint-fill-none stroke-visor-amber" viewBox="0 0 1920 1080" stroke-width="1" fill-opacity="0" stroke-opacity="0.2"><path d="M 1824 250 C 1730 440 1730 680 1824 860"></path></svg>
+</div>
+<vw-include src="venworks-logo.html"></vw-include>
+<vw-include src="venworks-radar.html"></vw-include>
+<vw-include src="venworks-quest.html"></vw-include>
+<vw-include src="venworks-planet.html"></vw-include>
+<vw-include src="venworks-player.html"></vw-include>
+<vw-include src="venworks-equipment.html"></vw-include>
+<vw-include src="venworks-compass.html"></vw-include>
+<vw-include src="venworks-threat.html"></vw-include>
+<vw-include src="venworks-effects.html"></vw-include>
+<vw-include src="themed-scanner-hash-panel.html"></vw-include>
+<vw-include src="themed-scanner-data-panel.html"></vw-include>
+<div class="themed-node-211 vwhud-alert-critical-health" data-vw-anchor="top-center" data-vw-visible="condition.criticalhealth">
+<svg class="themed-node-212 paint-fill-none stroke-state-critical-1" viewBox="0 0 320 70" stroke-width="1.5" fill-opacity="0" stroke-opacity="0.9"><rect x="1" y="1" width="318" height="68"></rect></svg>
+<span class="themed-node-213 color-state-critical-1">CRITICAL HEALTH</span>
+<span class="themed-node-214 color-foreground-primary-1" data-vw-template="HEALTH {player.health:integer}/{player.maxhealth:integer}"></span>
+</div>
+<div class="themed-node-215 vwhud-prompt-vehicle-exit" data-vw-anchor="bottom-center" data-vw-visible="condition.invehicle"><span class="themed-node-216 color-foreground-primary-1">$EXIT HOLD</span>
+<vw-symbol class="themed-node-217" name="vehicle-exit-prompt"></vw-symbol>
+</div>
+</body></html>
