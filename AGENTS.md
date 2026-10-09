@@ -21,7 +21,7 @@ Report the result, relevant checks actually performed, and material limitations.
 
 Describe the final behavior and actual validation in PRs using the repository's template when present. Use a small diagram with real component names only when it makes a relationship clearer than prose. Keep it aligned with the final implementation and use existing rendering tools when needed; a simple change does not need a diagram or a new rendering service.
 
-Use `.work` for disposable project artifacts when practical. Keep secrets and authentication state out of the repository and reports.
+Put helper scripts, logs, notes, and other disposable task files in `.work`. Do not put them in the user Temp directory. `.work` is gitignored, so the full script stays inside the project. Keep secrets and authentication state out of `.work`, the repository, and reports.
 
 Before retrying an interrupted edit or external action, inspect the resulting state. An uncertain outcome is not evidence that nothing happened.
 
