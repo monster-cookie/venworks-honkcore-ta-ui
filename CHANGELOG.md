@@ -9,7 +9,7 @@
 
 ## Version 2.1.1 (UNRELEASED)
 
-- Added a smoky panel wash so the other HUD panels pop and look semi-holographically painted. Each wash is a theme-colored SVG fill.
+- Added a smoky panel wash so the other HUD panels pop and look semi-holographically painted. The wash is each theme's panel color, partly see-through.
 - Grouped affliction icons now follow one representative spell each. Rank spells are no longer tracked, so the registrar no longer fills its script list past the Papyrus limit.
 
 ## Version 2.1.0 (October 3, 2026)
