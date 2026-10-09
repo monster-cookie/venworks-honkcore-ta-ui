@@ -1,7 +1,7 @@
 {
   "Schema": "VWHUD_CANVAS_BUILD/1",
   "Variant": "MIN",
-  "SourceDigest": "D72A2F51F6C8C75AAA4F359C947535C0C3FA11277BB14970632A86380C5C1BAA",
+  "SourceDigest": "DFD0069A0F3C619811AED09617C0ADC2D6A12B057C3900143E6B579F62C7DC64",
   "Files": {
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.min/assets/effect-accuracy.svg": "09E7FCA6266B80756DC91CEAA3EE4193E60E1B0BD3845C918D1C8A0D3BE19548",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.min/assets/effect-addiction.svg": "BEDF5BD84E43CC1A550EB6FB65E86D4F60F879E63D790F77817D35454F89C442",
@@ -38,7 +38,7 @@
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.min/effects.html": "A3301755AE28DE1B4731BB5E260A5F3D8FAC26430A59F6FEAD114DC181AA7ACD",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.min/hud.css": "C3005D68032680044ED06C9B1315C8A34E464045E0CE77D80DB916570F7BF9D9",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.min/index.html": "9E117CC60AD5E9A10287225C39E69CA59A63A83163B8D932917AF46D505C4049",
-    "Interface/VenworksCanvas/Consumers/venworks.vwhud.min/large.swf": "33952655372737C5D37796E01097B45AF6501D3F8EF071C641878F34A9C97F52",
+    "Interface/VenworksCanvas/Consumers/venworks.vwhud.min/large.swf": "999F52EF3D155C7AF8510983938215A1FF3ACB0A4873193F78C4D3993D788A62",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.min/minimalist-compass.html": "BABD496F259F6398651470CF2700D5A6B323D3D078108949224E06CA86A9B437",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.min/minimalist-layout.css": "2FEAF95DED043C4E4930AD9FA7EFFDFD976AAF86B4E3E3743CB9EC83B41FFAAF",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.min/minimalist-planet-data-panel.html": "D5487DBD0E36F32D3F0EC8E0319AA85DF22D4BC4C319E18E8E3C1C76374E5CF8",
@@ -50,16 +50,16 @@
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.min/minimalist-status-effect-screen.html": "5827688B2E46C400E3C2AC7FC9C102DFCA2AF030270B72D7A181810534E87EA2",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.min/minimalist-threat-meter.html": "CE952128C003DFB48E2A2B59BA79E0330ED456D888A03A561198EA5EA04E87F1",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.min/minimalist.html": "C1B9FD0E748539F9D3EF413BE9CA8E20EA83E95DF6D19B80C2DE7584DC672DDC",
-    "Interface/VenworksCanvas/Consumers/venworks.vwhud.min/normal.swf": "33952655372737C5D37796E01097B45AF6501D3F8EF071C641878F34A9C97F52",
+    "Interface/VenworksCanvas/Consumers/venworks.vwhud.min/normal.swf": "999F52EF3D155C7AF8510983938215A1FF3ACB0A4873193F78C4D3993D788A62",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.min/radar-content.html": "A5A49AA8C695610BF840E7521A60BB3E78FBEC04C00CE7E22D1E1479484339C8",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.min/scanner-data.html": "DA82B1C9B4E6BF325B0A76977291641139E2027788A85AF4E20EB0BD92D7C53B",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.min/scanner-hash.html": "ADD737300D732DBDA09DE7B2FD4E3DFAAC7426C5DCAADAB726B21345AA5CABF5",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.min/starfield.css": "220E2EDF13E8F145841A9EA7B65734CCD966B9399453F10871A2C59B26124492",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.min/threat-content.html": "71DA0CB324D0522C75D4A02859F896F0B761B4FF4DEF9C16807DA463BDAB898E",
     "Interface/VenworksCanvas/Consumers/venworks.vwhud.min/vwhud-overrides.css": "73AF0337F5DCF737142D997A51FDEC1F876161473697D979F9A99AB9A2A00CCF",
-    "Scripts/Venworks/CustomizableHUD/HudEffectsPublisher.pex": "E479967C7742CDAD985D3D7C26E3C0B038F9C12735AC45E725CDE603655DC5E5",
-    "Scripts/Venworks/CustomizableHUD/HudRegistrar.pex": "E7287A10C8EAC2B0CEB8AF1876C502C26A1440B1F692175BA15BB6695420EDCA",
-    "Scripts/Venworks/CustomizableHUD/HudStatusProbe.pex": "EA7ED22B9996F92BDEE91209D1B9FBC5BFEA7044705FDDC41A974753EF63C317",
+    "Scripts/Venworks/CustomizableHUD/HudEffectsPublisher.pex": "87F5D50EB7101E1C90F3C27E122A5C59BF9672EA7D3F02B3037BAD6A78B38C1B",
+    "Scripts/Venworks/CustomizableHUD/HudRegistrar.pex": "5C0117BE56579589D5557D756EBF34C2CA274D71CBD615843ED944B1E42AD234",
+    "Scripts/Venworks/CustomizableHUD/HudStatusProbe.pex": "EC1ADD48B7FE0B608D53A74E6640661A93839911C19AFDF95A975D1B176438C7",
     "Venworks-CustomizableHUD-Minimalist.esm": "0241900C9CF690740901172A062D9A7FEB5FF25175E21FA6170D797EE603D699"
   }
 }
