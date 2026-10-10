@@ -6,5 +6,6 @@ package
       public static const NAMESPACE:String = "venworks.vwhud.vwks";
       public static const LOGO:String = "assets/venworks-logo.svg";
       public static const MINIMALIST:Boolean = false;
+      public static const VISOR:Boolean = true;
    }
 }

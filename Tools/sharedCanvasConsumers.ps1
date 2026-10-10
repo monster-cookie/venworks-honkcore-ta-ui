@@ -2,7 +2,7 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 function Get-CanvasResourceBytes([string]$Path) {
-  # Match the repository's LF resource contract even before Git normalizes a local edit.
+  # Text resources match the repository LF contract before Git normalizes a local edit.
   $text = [IO.File]::ReadAllText($Path).Replace("`r`n","`n").Replace("`r","`n")
   return ,([Text.UTF8Encoding]::new($false).GetBytes($text))
 }
@@ -65,7 +65,7 @@ function Get-CanvasConsumerBuildInventory([string]$RepositoryRoot,[string]$Key,[
   $resources = Get-CanvasConsumerSources $RepositoryRoot $Key
   $plugins = @($Record.Files.Keys | Where-Object { $_ -match '^[^/]+\.esm$' })
   if ($plugins.Count -ne 1) { throw "Invalid plugin evidence: $Key" }
-  $expected = @($resources.Keys | ForEach-Object { $prefix+$_ }) + @(($prefix+'normal.swf'),($prefix+'large.swf'),'Scripts/Venworks/CustomizableHUD/HudRegistrar.pex','Scripts/Venworks/CustomizableHUD/HudEffectsPublisher.pex','Scripts/Venworks/CustomizableHUD/HudStatusProbe.pex') + $plugins
+  $expected = @($resources.Keys | ForEach-Object { $prefix + $_ }) + @(($prefix+'normal.swf'),($prefix+'large.swf'),'Scripts/Venworks/CustomizableHUD/HudRegistrar.pex','Scripts/Venworks/CustomizableHUD/HudEffectsPublisher.pex','Scripts/Venworks/CustomizableHUD/HudStatusProbe.pex') + $plugins
   if ((($Record.Files.Keys | Sort-Object) -join "`n") -cne (($expected | Sort-Object) -join "`n")) { throw "Unexpected consumer build inventory: $Key" }
   foreach ($relative in $resources.Keys) {
     $sourceHash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData((Get-CanvasResourceBytes $resources[$relative])))
@@ -104,10 +104,11 @@ function Assert-CanvasConsumerArchivePayload([string]$RepositoryRoot,[string]$Ke
   }
   $recordPaths = [Collections.Generic.Dictionary[string,string]]::new([StringComparer]::OrdinalIgnoreCase)
   foreach ($relative in $inventory.ArchivePayload) { $recordPaths.Add($relative.Replace('\','/'),$relative) }
+  $pluginBase = [IO.Path]::GetFileNameWithoutExtension($inventory.Plugin)
   $archiveNames = [Collections.Generic.List[string]]::new()
   $movieFiles = @{}
   foreach ($suffix in @('Main','Main_XBox','Main_PS')) {
-    $archiveName = [IO.Path]::GetFileNameWithoutExtension($inventory.Plugin)+" - $suffix.ba2"
+    $archiveName = "$pluginBase - $suffix.ba2"
     $archiveNames.Add($archiveName)
     $archivePath = Join-Path $Payload $archiveName
     $entries = @(Get-GeneralBa2Entries -Path $archivePath)

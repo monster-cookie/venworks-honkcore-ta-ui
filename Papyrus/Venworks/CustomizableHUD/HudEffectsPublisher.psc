@@ -54,12 +54,8 @@ Int[] CachedMagicEffectIds
 MagicEffect[] CachedMagicEffects
 SQ_ENV_AfflictionsScript CachedAfflictionQuest
 Bool AfflictionQuestCached = False
-; Resolved once per load. The one-second poll reads Active or one probe spell. It does not walk every rank.
+; One representative spell per generic class. Resolved once per load. Rank spells are not stored.
 Bool ClassListsReady = False
-ENV_AfflictionScript[] CachedClassAfflictions
-String[] CachedClassEntries
-Spell[] CachedClassSpells
-Int[] CachedClassSpellOwners
 Spell CachedThermalProbe
 Spell CachedColdProbe
 Spell CachedPoisonProbe
@@ -225,10 +221,6 @@ Event Actor.OnPlayerLoadGame(Actor akSender)
   AfflictionQuestCached = False
   CachedAfflictionQuest = None
   ClassListsReady = False
-  CachedClassAfflictions = None
-  CachedClassEntries = None
-  CachedClassSpells = None
-  CachedClassSpellOwners = None
   CachedThermalProbe = None
   CachedColdProbe = None
   CachedPoisonProbe = None
@@ -690,7 +682,7 @@ Function FinishEffectBuild(EffectSnapshot candidate, Bool rejected)
   EndIf
 EndFunction
 
-; SQ_ENV spell lists are the generic classes. One row per class. Presence is the Active flag or one probe spell.
+; One representative spell per class. A hit sets that icon. Rank spells are not consulted.
 String[] Function AppendActiveAfflictions(String[] entries, Actor player, ENV_AfflictionScript[] sources, String[] sourceEntries)
   entries = AppendOneClassAffliction(entries, player, sources, sourceEntries, "D:Thermal")
   entries = AppendOneClassAffliction(entries, player, sources, sourceEntries, "D:Cold")
@@ -709,15 +701,6 @@ String[] Function AppendOneClassAffliction(String[] entries, Actor player, ENV_A
   If (!ContainsEffectEntry(entries, entry))
     entries.Add(entry)
   EndIf
-  Int index = 0
-  While (CachedClassAfflictions != None && CachedClassEntries != None && index < CachedClassAfflictions.Length && index < CachedClassEntries.Length)
-    ENV_AfflictionScript affliction = CachedClassAfflictions[index]
-    If (CachedClassEntries[index] == entry && affliction != None && affliction.Active)
-      sources.Add(affliction)
-      sourceEntries.Add(entry)
-    EndIf
-    index += 1
-  EndWhile
   Return entries
 EndFunction
 
@@ -742,19 +725,10 @@ String Function AfflictionClassEntry(String afflictionId)
 EndFunction
 
 Bool Function HasAfflictionSpell(Actor player, ENV_AfflictionScript affliction)
-  If (player == None || affliction == None || affliction.AfflictionSpellList == None)
+  If (player == None || affliction == None)
     Return False
   EndIf
-  FormList spellList = affliction.AfflictionSpellList
-  Int index = 0
-  While (index < spellList.GetSize())
-    Spell rankSpell = spellList.GetAt(index) as Spell
-    If (rankSpell != None && player.HasSpell(rankSpell))
-      Return True
-    EndIf
-    index += 1
-  EndWhile
-  Return False
+  Return affliction.Active
 EndFunction
 
 ; Named weather spells are the status-menu rows and stay on the one-second poll. Snow and sandstorm use the five-second weather sample, because those spells are added after the hazard is already visible.
@@ -1085,10 +1059,8 @@ Function PublishNextEffectPacket()
   ; The independent timer 34 remains armed on every failure, including terminal rejection.
 EndFunction
 
-; Resolves SQ_ENV rank spells once. Later polls do not call FormList.GetAt.
+; Resolves one representative spell per generic class. Later polls call HasSpell on those spells only.
 Function EnsureClassLists()
-  SQ_ENV_AfflictionsScript afflictionQuest
-  ENV_AfflictionScript[] afflictions
   If (ClassListsReady)
     Return
   EndIf
@@ -1110,87 +1082,40 @@ Function EnsureClassLists()
   If (CachedInjuryProbe == None)
     CachedInjuryProbe = Game.GetFormFromFile(0x002BDD23, "Starfield.esm") as Spell
   EndIf
-  afflictionQuest = ResolveAfflictionQuest()
-  If (afflictionQuest == None || afflictionQuest.AfflictionData == None)
-    Return
+  If (CachedLungProbe == None)
+    CachedLungProbe = ResolveLungProbe()
   EndIf
-  CachedClassAfflictions = new ENV_AfflictionScript[0]
-  CachedClassEntries = new String[0]
-  CachedClassSpells = new Spell[0]
-  CachedClassSpellOwners = new Int[0]
-  afflictions = afflictionQuest.AfflictionData
-  Int index = 0
-  While (index < afflictions.Length)
-    RememberClassAffliction(afflictions[index])
-    index += 1
-  EndWhile
-  ClassListsReady = True
-  LogUserInformational(ModuleName, "EnsureClassLists", "CLASS_LISTS_CACHED | Afflictions=" + CachedClassAfflictions.Length + " | Spells=" + CachedClassSpells.Length)
+  ClassListsReady = CachedThermalProbe != None && CachedColdProbe != None && CachedPoisonProbe != None && CachedRadiationProbe != None && CachedInfectionProbe != None && CachedInjuryProbe != None
+  If (ClassListsReady)
+    LogUserInformational(ModuleName, "EnsureClassLists", "CLASS_PROBES_READY")
+  EndIf
 EndFunction
 
-Function RememberClassAffliction(ENV_AfflictionScript affliction)
-  String entry = ""
-  FormList spellList
-  Int owner = 0
+Spell Function ResolveLungProbe()
+  SQ_ENV_AfflictionsScript afflictionQuest = ResolveAfflictionQuest()
+  ENV_AfflictionScript[] afflictions
   Int index = 0
-  Int size = 0
-  If (affliction == None)
-    Return
+  If (afflictionQuest == None || afflictionQuest.AfflictionData == None)
+    Return None
   EndIf
-  entry = AfflictionClassEntry(affliction.ID)
-  If (entry == "")
-    Return
-  EndIf
-  owner = CachedClassAfflictions.Length
-  CachedClassAfflictions.Add(affliction)
-  CachedClassEntries.Add(entry)
-  spellList = affliction.AfflictionSpellList
-  If (spellList == None)
-    Return
-  EndIf
-  size = spellList.GetSize()
-  While (index < size)
-    Spell rankSpell = spellList.GetAt(index) as Spell
-    If (rankSpell != None)
-      CachedClassSpells.Add(rankSpell)
-      CachedClassSpellOwners.Add(owner)
-      If (entry == "D:Lung Damage" && CachedLungProbe == None)
-        CachedLungProbe = rankSpell
-      EndIf
+  afflictions = afflictionQuest.AfflictionData
+  While (index < afflictions.Length)
+    ENV_AfflictionScript affliction = afflictions[index]
+    If (affliction != None && affliction.ID == "LungDamage" && affliction.AfflictionSpellList != None && affliction.AfflictionSpellList.GetSize() > 0)
+      Return affliction.AfflictionSpellList.GetAt(0) as Spell
     EndIf
     index += 1
   EndWhile
+  Return None
 EndFunction
 
-; Gameplay sets Active on gain and clears it on cure, including higher ranks. A direct AddSpell leaves Active clear, so the probe spells cover that path.
+; The representative spell is the icon. A higher rank does not have its own row.
 Bool Function ClassIsPresent(Actor player, String entry)
-  Int index = 0
   If (player == None || entry == "")
     Return False
   EndIf
   EnsureClassLists()
-  While (CachedClassAfflictions != None && CachedClassEntries != None && index < CachedClassAfflictions.Length && index < CachedClassEntries.Length)
-    ENV_AfflictionScript affliction = CachedClassAfflictions[index]
-    If (CachedClassEntries[index] == entry && affliction != None && affliction.Active && AfflictionStillHasSpell(player, index))
-      Return True
-    EndIf
-    index += 1
-  EndWhile
   Return ProbeIsPresent(player, entry)
-EndFunction
-
-Bool Function AfflictionStillHasSpell(Actor player, Int owner)
-  Int index = 0
-  While (CachedClassSpells != None && CachedClassSpellOwners != None && index < CachedClassSpells.Length && index < CachedClassSpellOwners.Length)
-    If (CachedClassSpellOwners[index] == owner)
-      Spell rankSpell = CachedClassSpells[index]
-      If (rankSpell != None && player.HasSpell(rankSpell))
-        Return True
-      EndIf
-    EndIf
-    index += 1
-  EndWhile
-  Return False
 EndFunction
 
 Bool Function ProbeIsPresent(Actor player, String entry)

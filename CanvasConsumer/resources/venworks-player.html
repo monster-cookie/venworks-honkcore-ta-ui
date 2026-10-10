@@ -1,0 +1,32 @@
+<!doctype html><html><head><title>VWHUD</title></head><body>
+<div class="vw-arc-player vwhud-panel-player" data-vw-anchor="bottom-left" data-vw-visible="condition.always">
+<svg class="vw-arc-player-frame paint-fill-none stroke-visor-cyan" viewBox="0 0 400 248" stroke-width="1.25" fill-opacity="0" stroke-opacity="0.85"><path d="M 2 22 L 2 160 M 2 160 C 2 246 80 246 170 246 M 170 246 L 240 246 M 2 22 L 70 22"></path></svg>
+<svg class="vw-arc-player-frame paint-fill-none stroke-visor-amber" viewBox="0 0 400 248" stroke-width="1" fill-opacity="0" stroke-opacity="0.45"><path d="M 16 140 C 16 234 72 234 160 234"></path></svg>
+<span class="vw-arc-p-time-label color-foreground-muted-1">UNIVERSAL</span>
+<span class="vw-arc-p-time color-foreground-primary-1" data-vw-template="{player.universaltime:time24}"></span>
+<span class="vw-arc-p-credits color-accent-secondary-1" data-vw-template="CR {credits:integer}"></span>
+<span class="vw-arc-p-serial-label color-foreground-muted-1">SERIAL</span>
+<span class="vw-arc-p-serial color-foreground-primary-1" data-vw-template="{player.serial:raw}"></span>
+<span class="vw-arc-p-digi color-foreground-primary-1" data-vw-visible="condition.digipicksavailable" data-vw-template="DIGI {player.digipicks:integer}"></span>
+<span class="vw-arc-p-xp-label color-accent-primary-1">XP</span>
+<span class="vw-arc-p-xp-level color-accent-secondary-1" data-vw-template="LVL {player.level:integer}"></span>
+<span class="vw-arc-p-xp-value color-foreground-primary-1" data-vw-template="{player.xppercentage:percent}"></span>
+<vw-meter class="vw-arc-p-xp color-accent-primary-1 background-color-visor-track" value="player.xppercentage" min="0" max="100" segments="16" gap="2" direction="right" partial="true"></vw-meter>
+<span class="vw-arc-p-health-label color-meter-health-1">HEALTH</span>
+<span class="vw-arc-p-health-value color-foreground-primary-1" data-vw-template="{player.healthpercentage:percent}"></span>
+<vw-meter class="vw-arc-p-health color-meter-health-1 background-color-visor-track" value="player.healthpercentage" min="0" max="100" segments="16" gap="2" direction="right" partial="true"></vw-meter>
+<span class="vw-arc-p-o2-label color-meter-oxygen-1">O2</span>
+<span class="vw-arc-p-o2-value color-foreground-primary-1" data-vw-template="{player.oxygenpercentage:percent}"></span>
+<span class="vw-arc-p-co2-label color-meter-carbondioxide-1">CO2</span>
+<span class="vw-arc-p-co2-value color-foreground-primary-1" data-vw-template="{player.carbondioxidepercentage:percent}"></span>
+<vw-meter class="vw-arc-p-o2 color-meter-oxygen-1 background-color-visor-track" value="player.oxygenpercentage" min="0" max="100" segments="16" gap="2" direction="right" partial="true"></vw-meter>
+<vw-meter class="vw-arc-p-co2 color-meter-carbondioxide-1 background-color-visor-track" value="player.carbondioxidepercentage" min="0" max="100" segments="16" gap="2" direction="right" partial="true"></vw-meter>
+<span class="vw-arc-p-boost-label color-meter-boost-1">BOOST</span>
+<span class="vw-arc-p-boost-value color-foreground-primary-1" data-vw-template="{boost.percentage:percent}"></span>
+<vw-meter class="vw-arc-p-boost color-meter-boost-1 background-color-visor-track" value="boost.percentage" min="0" max="100" segments="16" gap="2" direction="right" partial="true"></vw-meter>
+<span class="vw-arc-p-mass-label color-state-clear-1">MASS</span>
+<span class="vw-arc-p-mass-value color-foreground-primary-1" data-vw-template="{carry.current:integer}/{carry.maximum:integer}"></span>
+<span class="vw-arc-p-mass-pct color-foreground-primary-1" data-vw-template="{carry.percentage:percent}"></span>
+<vw-meter class="vw-arc-p-mass color-state-clear-1 background-color-visor-track" value="carry.percentage" min="0" max="100" segments="16" gap="2" direction="right" partial="true"></vw-meter>
+</div>
+</body></html>

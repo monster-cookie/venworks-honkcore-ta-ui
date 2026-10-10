@@ -5,7 +5,7 @@ package
    {
       private static const HEADINGS:Array = ["N","NE","E","SE","S","SW","W","NW"];
 
-      // One 720px line holds 18 icons. Debuffs occupy the next two lines. The 35px pitch keeps the third line above the critical-health alert.
+      // One 720px line holds 18 icons. Debuffs occupy the next two lines. The 35px pitch keeps the third line above the critical-health alert. The visor stacks those same three groups in columns on the right arch.
       public static const BUFF_COLUMNS:int = 18;
 
       public static const DEBUFF_COLUMNS:int = 18;
@@ -15,6 +15,8 @@ package
       public static const COLUMN_STRIDE:int = 40;
 
       public static const ROW_STRIDE:int = 35;
+
+      public static const VISOR_STRIDE:int = 36;
 
       public static function update(data:Object, tactical:Object, pulse:int, scanning:Boolean) : void
       {
@@ -44,8 +46,8 @@ package
          for each(row in data.buffrows)
          {
             var buff:Object = effectRow(row,true);
-            buff.x = column * COLUMN_STRIDE;
-            buff.y = 0;
+            buff.x = VWHudVariant.VISOR ? 0 : column * COLUMN_STRIDE;
+            buff.y = VWHudVariant.VISOR ? column * VISOR_STRIDE : 0;
             effects.push(buff);
             column++;
          }
@@ -54,8 +56,8 @@ package
          {
             var debuff:Object = effectRow(row,false);
             var line:int = int(column / DEBUFF_COLUMNS);
-            debuff.x = (column % DEBUFF_COLUMNS) * COLUMN_STRIDE;
-            debuff.y = (1 + line) * ROW_STRIDE;
+            debuff.x = VWHudVariant.VISOR ? (1 + line) * COLUMN_STRIDE : (column % DEBUFF_COLUMNS) * COLUMN_STRIDE;
+            debuff.y = VWHudVariant.VISOR ? (column % DEBUFF_COLUMNS) * VISOR_STRIDE : (1 + line) * ROW_STRIDE;
             effects.push(debuff);
             column++;
          }
