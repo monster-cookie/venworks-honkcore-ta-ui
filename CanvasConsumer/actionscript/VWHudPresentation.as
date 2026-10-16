@@ -5,7 +5,7 @@ package
    {
       private static const HEADINGS:Array = ["N","NE","E","SE","S","SW","W","NW"];
 
-      // One 720px line holds 18 icons. Debuffs occupy the next two lines. The 35px pitch keeps the third line above the critical-health alert. The visor uses two separate arcs whose inner icons sit 150px off the 1240px host center.
+      // One 720px line holds 18 icons. Debuffs occupy the next two lines. The 35px pitch keeps the third line above the critical-health alert. The visor stacks each group on its own vertical arc, 150px off the host center.
       public static const BUFF_COLUMNS:int = 18;
 
       public static const DEBUFF_COLUMNS:int = 18;
@@ -22,19 +22,24 @@ package
 
       public static const VISOR_ARC_GAP:int = 150;
 
-      public static const VISOR_ARC_PITCH:int = 42;
+      public static const VISOR_ARC_PITCH:int = 36;
 
       public static const VISOR_ARC_COLUMNS:int = 10;
 
-      // Icon centers start 150px from x=620 and step outward. The outer icon of a full row drops 64px.
+      public static const VISOR_ARC_BOW:int = 32;
+
+      public static const VISOR_ARC_TOP:int = 78;
+
+      // Icon centers start 150px from x=620 and step down. The middle of the column bows 32px outward.
       public static function visorArcPoint(index:int, count:int, right:Boolean, line:int) : Object
       {
          var slots:int = count < 1 ? 1 : count;
          var place:int = index < 0 ? 0 : index >= slots ? slots - 1 : index;
-         var dist:Number = VISOR_ARC_GAP + place * VISOR_ARC_PITCH;
-         var drop:Number = place / (VISOR_ARC_COLUMNS - 1);
-         var iconCenter:Number = right ? VISOR_ARC_CENTER + dist : VISOR_ARC_CENTER - dist;
-         return {x:int(Math.round(iconCenter - 18)), y:int(Math.round(28 + 64 * drop * drop + line * 44))};
+         var along:Number = place / (VISOR_ARC_COLUMNS - 1);
+         var bow:Number = VISOR_ARC_BOW * 4 * along * (1 - along);
+         var iconCenterX:Number = right ? VISOR_ARC_CENTER + VISOR_ARC_GAP + bow + line * 48 : VISOR_ARC_CENTER - VISOR_ARC_GAP - bow - line * 48;
+         var iconCenterY:Number = VISOR_ARC_TOP + place * VISOR_ARC_PITCH;
+         return {x:int(Math.round(iconCenterX - 18)), y:int(Math.round(iconCenterY - 18))};
       }
 
       public static function update(data:Object, tactical:Object, pulse:int, scanning:Boolean) : void
