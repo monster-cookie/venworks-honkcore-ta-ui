@@ -5,7 +5,7 @@ package
    {
       private static const HEADINGS:Array = ["N","NE","E","SE","S","SW","W","NW"];
 
-      // One 720px line holds 18 icons. Debuffs occupy the next two lines. The 35px pitch keeps the third line above the critical-health alert. The visor stacks each group on its own vertical arc, 150px off the host center.
+      // One 720px line holds 18 icons. Debuffs occupy the next two lines. The 35px pitch keeps the third line above the critical-health alert. The visor stacks each group on its own vertical arc, 300px off the host center.
       public static const BUFF_COLUMNS:int = 18;
 
       public static const DEBUFF_COLUMNS:int = 18;
@@ -20,7 +20,7 @@ package
 
       public static const VISOR_ARC_CENTER:int = 620;
 
-      public static const VISOR_ARC_GAP:int = 150;
+      public static const VISOR_ARC_GAP:int = 300;
 
       public static const VISOR_ARC_PITCH:int = 36;
 
@@ -30,7 +30,7 @@ package
 
       public static const VISOR_ARC_TOP:int = 78;
 
-      // Icon centers start 150px from x=620 and step down. The middle of the column bows 32px outward.
+      // Icon centers start 300px from x=620 and step down. The middle of the column bows 32px outward.
       public static function visorArcPoint(index:int, count:int, right:Boolean, line:int) : Object
       {
          var slots:int = count < 1 ? 1 : count;

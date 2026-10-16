@@ -72,8 +72,8 @@ package
          {
             require(icons.effectrows[0].x > icons.effectrows[1].x,"buffs run outward on the left arc");
             require(icons.effectrows[2].x < icons.effectrows[3].x,"debuffs run outward on the right arc");
-            require(icons.effectrows[0].x + 18 == VWHudPresentation.VISOR_ARC_CENTER - VWHudPresentation.VISOR_ARC_GAP,"buffs start 150px left of center");
-            require(icons.effectrows[2].x + 18 == VWHudPresentation.VISOR_ARC_CENTER + VWHudPresentation.VISOR_ARC_GAP,"debuffs start 150px right of center");
+            require(icons.effectrows[0].x + 18 == VWHudPresentation.VISOR_ARC_CENTER - VWHudPresentation.VISOR_ARC_GAP,"buffs start the arc gap left of center");
+            require(icons.effectrows[2].x + 18 == VWHudPresentation.VISOR_ARC_CENTER + VWHudPresentation.VISOR_ARC_GAP,"debuffs start the arc gap right of center");
             require(icons.effectrows[0].x + 36 < VWHudPresentation.VISOR_ARC_CENTER - 80 && icons.effectrows[2].x > VWHudPresentation.VISOR_ARC_CENTER + 80,"the two arcs leave the center open");
          }
          var wrapped:Object = {buffrows:[{label:"Fed"}],debuffrows:[]};
