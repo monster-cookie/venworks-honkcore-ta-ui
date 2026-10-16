@@ -107,6 +107,7 @@ package
          this.setText("environment.hazard.thermalshortstatus","WAITING");
          this.setText("environment.hazard.corrosiveshortstatus","WAITING");
          this.setText("environment.hazard.radiationshortstatus","WAITING");
+         this.setText("quest.name","");
          this.setText("quest.objective","");
          this.resetChangedSources();
       }
@@ -167,7 +168,7 @@ package
          if(source == "location.name" || source == "environment.solartransitioncountdown" ||
             source == "player.serial" ||
             source == "power.key" || source == "power.name" ||
-            source == "quest.objective" ||
+            source == "quest.name" || source == "quest.objective" ||
             source == "weapon.name" || source == "weapon.icon" || source == "weapon.ammotype" ||
             source == "weapon.explosivelabel" ||
             source == "diagnostic.inventoryprovider" || source == "diagnostic.powernameprovider" ||
@@ -261,38 +262,92 @@ package
          return copy;
       }
 
+      private static const QUEST_NAME_FIELDS:Array = ["sQuestName","strQuestName","sMissionName","strMissionName","sTrackedQuestName","strTrackedQuestName"];
+
       public static function resolveTrackedObjective(param1:Object) : String
+      {
+         return trackedQuest(param1).objective;
+      }
+
+      public static function resolveTrackedQuestName(param1:Object) : String
+      {
+         return trackedQuest(param1).name;
+      }
+
+      private static function trackedQuest(param1:Object) : Object
       {
          var markers:Array = collection(param1,"aMissionMarkers");
          var marker:Object = null;
          var text:String = "";
+         var objective:String = "";
          var fallback:String = "";
+         var name:String = questName(param1);
          var index:int = 0;
-         if(markers == null)
-         {
-            return "";
-         }
-         while(index < markers.length)
+         while(markers != null && index < markers.length)
          {
             marker = markers[index];
-            if(marker != null && marker.strText !== undefined && marker.strText !== null)
+            if(name.length == 0) name = questName(marker);
+            text = markerText(marker);
+            if(text.length != 0)
             {
-               text = String(marker.strText).replace(/^\s+|\s+$/g,"");
-               if(text.length != 0)
-               {
-                  if(marker.bShouldShowText === true)
-                  {
-                     return text;
-                  }
-                  if(fallback.length == 0)
-                  {
-                     fallback = text;
-                  }
-               }
+               if(marker != null && marker.bShouldShowText === true && objective.length == 0) objective = text;
+               else if(fallback.length == 0) fallback = text;
             }
             ++index;
          }
-         return fallback;
+         if(objective.length == 0) objective = fallback;
+         var split:Array = splitLines(objective);
+         if(split.length > 1)
+         {
+            if(name.length == 0) name = String(split[0]).replace(/^\s+|\s+$/g,"");
+            objective = String(split[split.length - 1]).replace(/^\s+|\s+$/g,"");
+         }
+         if(name == objective) name = "";
+         return {name:name,objective:objective};
+      }
+
+      private static function questName(param1:Object) : String
+      {
+         var index:int = 0;
+         var text:String = "";
+         while(param1 != null && index < QUEST_NAME_FIELDS.length)
+         {
+            text = field(param1,QUEST_NAME_FIELDS[index]) == null ? "" : String(field(param1,QUEST_NAME_FIELDS[index])).replace(/^\s+|\s+$/g,"");
+            if(text.length != 0) return text;
+            ++index;
+         }
+         return "";
+      }
+
+      private static function markerText(param1:Object) : String
+      {
+         if(param1 == null || param1.strText === undefined || param1.strText === null) return "";
+         return String(param1.strText).replace(/^\s+|\s+$/g,"");
+      }
+
+      private static function splitLines(param1:String) : Array
+      {
+         var lines:Array = [];
+         var rest:String = param1 == null ? "" : param1;
+         var cut:int = 0;
+         var newline:int = 0;
+         var carriage:int = 0;
+         while(rest.length > 0)
+         {
+            newline = rest.indexOf("\n");
+            carriage = rest.indexOf("\r");
+            cut = newline;
+            if(carriage >= 0 && (cut < 0 || carriage < cut)) cut = carriage;
+            if(cut < 0)
+            {
+               lines.push(rest);
+               break;
+            }
+            lines.push(rest.substring(0,cut));
+            rest = rest.substring(cut + 1);
+            if(rest.length > 0 && rest.charAt(0) == "\n") rest = rest.substring(1);
+         }
+         return lines;
       }
 
       public function get currentCompassData() : Object
@@ -471,6 +526,7 @@ package
             return;
          }
          compassData = param1 == null ? null : param1.data;
+         this.setText("quest.name",resolveTrackedQuestName(compassData));
          this.setText("quest.objective",resolveTrackedObjective(compassData));
          tacticalAwareness.updateCompass(compassData);
          dispatchEvent(new Event(COMPASS_CHANGE));

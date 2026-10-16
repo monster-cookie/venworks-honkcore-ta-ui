@@ -70,15 +70,17 @@ package
          require(icons.effectrows[3].icon == "assets/effect-fallbackdebuff.svg" && icons.effectrows[3].y == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(1,2,true,0).y : VWHudPresentation.ROW_STRIDE),"unknown debuff stays on the debuff line");
          if(VWHudVariant.VISOR)
          {
-            require(icons.effectrows[0].x > icons.effectrows[1].x && icons.effectrows[0].x < 600,"buffs run outward along the left of the center arc");
-            require(icons.effectrows[2].x < icons.effectrows[3].x && icons.effectrows[2].x > 580,"debuffs run outward along the right of the center arc");
-            require(icons.effectrows[1].y > icons.effectrows[0].y + 40,"outer buffs drop along the arc");
+            require(icons.effectrows[0].x > icons.effectrows[1].x,"buffs run outward on the left arc");
+            require(icons.effectrows[2].x < icons.effectrows[3].x,"debuffs run outward on the right arc");
+            require(icons.effectrows[0].x + 18 == VWHudPresentation.VISOR_ARC_CENTER - VWHudPresentation.VISOR_ARC_GAP,"buffs start 150px left of center");
+            require(icons.effectrows[2].x + 18 == VWHudPresentation.VISOR_ARC_CENTER + VWHudPresentation.VISOR_ARC_GAP,"debuffs start 150px right of center");
+            require(icons.effectrows[0].x + 36 < VWHudPresentation.VISOR_ARC_CENTER - 80 && icons.effectrows[2].x > VWHudPresentation.VISOR_ARC_CENTER + 80,"the two arcs leave the center open");
          }
          var wrapped:Object = {buffrows:[{label:"Fed"}],debuffrows:[]};
          for(var wrapIndex:int = 0; wrapIndex < 19; wrapIndex++) wrapped.debuffrows.push({label:"Injury"});
          VWHudPresentation.update(wrapped,null,0,false);
          require(wrapped.effectrows[0].y == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(0,1,false,0).y : 0) && wrapped.effectrows[1].y == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(0,18,true,0).y : VWHudPresentation.ROW_STRIDE) && wrapped.effectrows[1].x == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(0,18,true,0).x : 0),"a buff keeps the top line when debuffs are present");
-         require(wrapped.effectrows[19].x == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(0,1,true,1).x : 0) && wrapped.effectrows[19].y == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(0,1,true,1).y : VWHudPresentation.ROW_STRIDE * 2),"the nineteenth debuff starts the second debuff line");
+         require(wrapped.effectrows[19].x == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(8,VWHudPresentation.VISOR_ARC_COLUMNS,true,1).x : 0) && wrapped.effectrows[19].y == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(8,VWHudPresentation.VISOR_ARC_COLUMNS,true,1).y : VWHudPresentation.ROW_STRIDE * 2),"the nineteenth debuff starts the second debuff line");
          if(VWHudVariant.VISOR) require(wrapped.effectrows[0].x < wrapped.effectrows[1].x && wrapped.effectrows[19].y > wrapped.effectrows[1].y,"the second debuff line stays on the right of the center arc");
          var weather:Object = {buffrows:[],debuffrows:[{label:"FREEZING COLD AND SNOW"},{label:"Dehydrated"},{label:"Malnourished"}]};
          VWHudPresentation.update(weather,null,0,false);
@@ -90,6 +92,12 @@ package
          VWHudPresentation.update(classes,null,0,false);
          require(classes.effectrows[0].icon == "assets/effect-radiation.svg" && classes.effectrows[1].icon == "assets/effect-infection.svg" && classes.effectrows[2].icon == "assets/effect-injury.svg","affliction classes use their icons");
          require(classes.effectrows[3].icon == "assets/effect-corrosive.svg" && classes.effectrows[4].icon == "assets/effect-gas.svg","corrosive and gas use their class icons");
+         var namedQuest:Object = {aMissionMarkers:[{strText:"ONE SMALL STEP\nGO TO THE LODGE",bShouldShowText:true}]};
+         require(VWHudViewModel.resolveTrackedQuestName(namedQuest) == "ONE SMALL STEP" && VWHudViewModel.resolveTrackedObjective(namedQuest) == "GO TO THE LODGE","a two-line marker keeps the quest name above the waypoint");
+         var titledQuest:Object = {sQuestName:"ONE SMALL STEP",aMissionMarkers:[{strText:"GO TO THE LODGE",bShouldShowText:true}]};
+         require(VWHudViewModel.resolveTrackedQuestName(titledQuest) == "ONE SMALL STEP" && VWHudViewModel.resolveTrackedObjective(titledQuest) == "GO TO THE LODGE","a quest name field stays with the waypoint");
+         var waypointOnly:Object = {aMissionMarkers:[{strText:"GO TO THE LODGE",bShouldShowText:true}]};
+         require(VWHudViewModel.resolveTrackedQuestName(waypointOnly) == "" && VWHudViewModel.resolveTrackedObjective(waypointOnly) == "GO TO THE LODGE","a waypoint alone does not invent a quest name");
          return "PASS: VWHUD consumer lifecycle and effects adapter assertions";
       }
 

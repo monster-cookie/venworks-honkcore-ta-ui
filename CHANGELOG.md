@@ -10,7 +10,7 @@
 ## Version 2.1.1 (UNRELEASED)
 
 - Added a smoky panel wash so the other HUD panels pop and look semi-holographically painted. The wash is each theme's panel color, partly see-through.
-- Venworks theme: the flat plates are now a line-and-arc visor. The compass is an inverted arc with the threat reading as a bar above it, the crest sits in the upper-right corner, and the player and planet readouts sit in the lower corners. Helpful status icons arc across the left of center and harmful icons arc across the right. The equipment rail is a bracketed arc of each favorite's name. A contained smoke wash sits behind the crest, the corner readouts, a slim status arc, and the equipment rail so the lines stay readable without covering the view.
+- Venworks theme: the flat plates are now a line-and-arc visor. The compass is an inverted arc with the threat reading as a bar above it, the crest sits in the upper-right corner, and the player and planet readouts are square tabbed plates in the lower corners. Helpful status icons sit on an arc left of center and harmful icons sit on a separate arc right of center, each starting about 150px from the middle. The equipment rail follows the favorite icons. The quest line shows the quest name above the waypoint when the compass provides it.
 - Grouped affliction icons now follow one representative spell each. Rank spells are no longer tracked, so the registrar no longer fills its script list past the Papyrus limit.
 
 ## Version 2.1.0 (October 3, 2026)

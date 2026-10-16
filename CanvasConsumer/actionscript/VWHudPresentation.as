@@ -5,7 +5,7 @@ package
    {
       private static const HEADINGS:Array = ["N","NE","E","SE","S","SW","W","NW"];
 
-      // One 720px line holds 18 icons. Debuffs occupy the next two lines. The 35px pitch keeps the third line above the critical-health alert. The visor lays the same groups on a center arc: buffs to the left, debuffs to the right.
+      // One 720px line holds 18 icons. Debuffs occupy the next two lines. The 35px pitch keeps the third line above the critical-health alert. The visor uses two separate arcs whose inner icons sit 150px off the 1240px host center.
       public static const BUFF_COLUMNS:int = 18;
 
       public static const DEBUFF_COLUMNS:int = 18;
@@ -18,15 +18,23 @@ package
 
       public static const VISOR_STRIDE:int = 36;
 
-      // Icon centers sit on y = 58 + 96*(dist/524)^2, with the arc midpoint at x=600.
+      public static const VISOR_ARC_CENTER:int = 620;
+
+      public static const VISOR_ARC_GAP:int = 150;
+
+      public static const VISOR_ARC_PITCH:int = 42;
+
+      public static const VISOR_ARC_COLUMNS:int = 10;
+
+      // Icon centers start 150px from x=620 and step outward. The outer icon of a full row drops 64px.
       public static function visorArcPoint(index:int, count:int, right:Boolean, line:int) : Object
       {
          var slots:int = count < 1 ? 1 : count;
-         var t:Number = slots <= 1 ? 0 : index / (slots - 1);
-         var dist:Number = 56 + t * 468;
-         var iconCenter:Number = right ? 600 + dist : 600 - dist;
-         var drop:Number = dist / 524;
-         return {x:int(Math.round(iconCenter - 18)), y:int(Math.round(40 + 96 * drop * drop + line * 46))};
+         var place:int = index < 0 ? 0 : index >= slots ? slots - 1 : index;
+         var dist:Number = VISOR_ARC_GAP + place * VISOR_ARC_PITCH;
+         var drop:Number = place / (VISOR_ARC_COLUMNS - 1);
+         var iconCenter:Number = right ? VISOR_ARC_CENTER + dist : VISOR_ARC_CENTER - dist;
+         return {x:int(Math.round(iconCenter - 18)), y:int(Math.round(28 + 64 * drop * drop + line * 44))};
       }
 
       public static function update(data:Object, tactical:Object, pulse:int, scanning:Boolean) : void
@@ -54,13 +62,14 @@ package
          var effects:Array = [];
          var row:Object;
          var column:int = 0;
-         var buffCount:int = data.buffrows == null ? 0 : data.buffrows.length;
          for each(row in data.buffrows)
          {
             var buff:Object = effectRow(row,true);
             if(VWHudVariant.VISOR)
             {
-               var buffPoint:Object = visorArcPoint(column,buffCount,false,0);
+               var buffLine:int = int(column / VISOR_ARC_COLUMNS);
+               var buffIndex:int = column % VISOR_ARC_COLUMNS;
+               var buffPoint:Object = visorArcPoint(buffIndex,VISOR_ARC_COLUMNS,false,buffLine);
                buff.x = buffPoint.x;
                buff.y = buffPoint.y;
             }
@@ -73,17 +82,15 @@ package
             column++;
          }
          column = 0;
-         var debuffCount:int = data.debuffrows == null ? 0 : data.debuffrows.length;
          for each(row in data.debuffrows)
          {
             var debuff:Object = effectRow(row,false);
-            var line:int = int(column / DEBUFF_COLUMNS);
-            var lineIndex:int = column % DEBUFF_COLUMNS;
+            var debuffColumns:int = VWHudVariant.VISOR ? VISOR_ARC_COLUMNS : DEBUFF_COLUMNS;
+            var line:int = int(column / debuffColumns);
+            var lineIndex:int = column % debuffColumns;
             if(VWHudVariant.VISOR)
             {
-               var lineCount:int = debuffCount - line * DEBUFF_COLUMNS;
-               if(lineCount > DEBUFF_COLUMNS) lineCount = DEBUFF_COLUMNS;
-               var debuffPoint:Object = visorArcPoint(lineIndex,lineCount,true,line);
+               var debuffPoint:Object = visorArcPoint(lineIndex,VISOR_ARC_COLUMNS,true,line);
                debuff.x = debuffPoint.x;
                debuff.y = debuffPoint.y;
             }
