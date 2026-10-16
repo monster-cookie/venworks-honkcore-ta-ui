@@ -60,6 +60,8 @@ package
       private var universalTimeDiagnostic:String = "UT: LOCAL ENV FREQUENT DATA NOT RECEIVED";
       private var digipickDiagnostic:String = "DIGIPICK: PLAYER INVENTORY DATA NOT RECEIVED";
       private var compassData:Object;
+      private var activeQuestName:String = "";
+      private var activeQuestId:* = null;
       private var tacticalAwareness:VWHudTacticalModel;
       private var disposed:Boolean = false;
 
@@ -133,6 +135,7 @@ package
             case "PersonalEffectsData": this.onPersonalEffectsData(event); break;
             case "StarmapSystemBodyInfoProvider": this.onStarmapSystemBodyInfoData(event); break;
             case "HudCompassData": this.onRadarCompassData(event); break;
+            case "QuestUpdateData": this.onQuestUpdateData(event); break;
          }
       }
 
@@ -263,6 +266,49 @@ package
       }
 
       private static const QUEST_NAME_FIELDS:Array = ["sQuestName","strQuestName","sMissionName","strMissionName","sTrackedQuestName","strTrackedQuestName"];
+      private static const QUEST_UPDATE_SET_ACTIVE:uint = 1;
+      private static const QUEST_UPDATE_SET_INACTIVE:uint = 2;
+
+      public static function nextQuestTitle(param1:String, param2:*, param3:Object) : Object
+      {
+         var name:String = param1 == null ? "" : param1;
+         var id:* = param2;
+         var updates:Array = collection(param3,"QuestUpdatesA");
+         var index:int = 0;
+         var update:Object = null;
+         var type:uint = 0;
+         var title:String = "";
+         while(updates != null && index < updates.length)
+         {
+            update = updates[index];
+            if(update != null)
+            {
+               type = uint(update.uType);
+               title = update.strQuestName == null ? "" : String(update.strQuestName).replace(/^\s+|\s+$/g,"");
+               if(type == QUEST_UPDATE_SET_INACTIVE)
+               {
+                  if(sameQuest(id,update.uQuestID))
+                  {
+                     name = "";
+                     id = null;
+                  }
+               }
+               else if(title.length != 0 && (type == QUEST_UPDATE_SET_ACTIVE || update.bActiveQuest === true || sameQuest(id,update.uQuestID)))
+               {
+                  name = title;
+                  if(update.uQuestID != null) id = update.uQuestID;
+               }
+            }
+            ++index;
+         }
+         return {name:name,id:id};
+      }
+
+      private static function sameQuest(param1:*, param2:*) : Boolean
+      {
+         if(param1 == null || param2 == null) return false;
+         return String(param1) == String(param2);
+      }
 
       public static function resolveTrackedObjective(param1:Object) : String
       {
@@ -519,6 +565,26 @@ package
          dispatchEvent(new Event(TACTICAL_AWARENESS_CHANGE));
       }
 
+      private function onQuestUpdateData(param1:Object) : void
+      {
+         if(this.disposed)
+         {
+            return;
+         }
+         var next:Object = nextQuestTitle(this.activeQuestName,this.activeQuestId,param1 == null ? null : param1.data);
+         this.activeQuestName = next.name == null ? "" : String(next.name);
+         this.activeQuestId = next.id;
+         this.publishQuestText();
+         this.notifyChanged();
+      }
+
+      private function publishQuestText() : void
+      {
+         var compassName:String = resolveTrackedQuestName(compassData);
+         this.setText("quest.name",this.activeQuestName.length != 0 ? this.activeQuestName : compassName);
+         this.setText("quest.objective",resolveTrackedObjective(compassData));
+      }
+
       private function onRadarCompassData(param1:Object) : void
       {
          if(this.disposed)
@@ -526,8 +592,7 @@ package
             return;
          }
          compassData = param1 == null ? null : param1.data;
-         this.setText("quest.name",resolveTrackedQuestName(compassData));
-         this.setText("quest.objective",resolveTrackedObjective(compassData));
+         this.publishQuestText();
          tacticalAwareness.updateCompass(compassData);
          dispatchEvent(new Event(COMPASS_CHANGE));
          dispatchEvent(new Event(TACTICAL_AWARENESS_CHANGE));

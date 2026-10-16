@@ -98,6 +98,14 @@ package
          require(VWHudViewModel.resolveTrackedQuestName(titledQuest) == "ONE SMALL STEP" && VWHudViewModel.resolveTrackedObjective(titledQuest) == "GO TO THE LODGE","a quest name field stays with the waypoint");
          var waypointOnly:Object = {aMissionMarkers:[{strText:"GO TO THE LODGE",bShouldShowText:true}]};
          require(VWHudViewModel.resolveTrackedQuestName(waypointOnly) == "" && VWHudViewModel.resolveTrackedObjective(waypointOnly) == "GO TO THE LODGE","a waypoint alone does not invent a quest name");
+         var trackedQuest:Object = VWHudViewModel.nextQuestTitle("",null,{QuestUpdatesA:[{uType:1,uQuestID:42,strQuestName:"ONE SMALL STEP"}]});
+         require(trackedQuest.name == "ONE SMALL STEP" && trackedQuest.id == 42,"the active quest update supplies the quest title");
+         var renamedQuest:Object = VWHudViewModel.nextQuestTitle(trackedQuest.name,trackedQuest.id,{QuestUpdatesA:[{uType:8,uQuestID:42,strQuestName:"THE OLD NEIGHBORHOOD",bActiveQuest:true}]});
+         require(renamedQuest.name == "THE OLD NEIGHBORHOOD","a later update for the tracked quest replaces the title");
+         var otherQuest:Object = VWHudViewModel.nextQuestTitle(renamedQuest.name,renamedQuest.id,{QuestUpdatesA:[{uType:2,uQuestID:99}]});
+         require(otherQuest.name == "THE OLD NEIGHBORHOOD","clearing a different quest leaves the tracked title");
+         var clearedQuest:Object = VWHudViewModel.nextQuestTitle(otherQuest.name,otherQuest.id,{QuestUpdatesA:[{uType:2,uQuestID:42}]});
+         require(clearedQuest.name == "" && clearedQuest.id == null,"clearing the tracked quest removes the title");
          return "PASS: VWHUD consumer lifecycle and effects adapter assertions";
       }
 
