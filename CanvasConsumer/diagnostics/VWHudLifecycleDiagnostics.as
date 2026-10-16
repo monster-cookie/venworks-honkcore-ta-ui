@@ -64,18 +64,25 @@ package
          require(debuffAdapter.advancePage() && debuffAdapter.view().debuffrows.length == 1 && debuffAdapter.view().debuffrows[0].label == "D37" && debuffAdapter.view().buffrows.length == 0,"debuffs page after two lines");
          var icons:Object = {buffrows:[{label:"Fortify Carry Weight"},{label:"Uncatalogued Buff"}],debuffrows:[{label:"Bleeding"},{label:"Uncatalogued Debuff"}]};
          VWHudPresentation.update(icons,null,0,false);
-         require(icons.effectrows[0].icon == "assets/effect-weight.svg" && icons.effectrows[0].x == 0 && icons.effectrows[0].y == 0,"carry weight uses the weight icon on the buff line");
-         require(icons.effectrows[1].icon == "assets/effect-fallbackbuff.svg" && icons.effectrows[1].y == (VWHudVariant.VISOR ? VWHudPresentation.VISOR_STRIDE : 0),"unknown buff stays on the buff line");
-         require(icons.effectrows[2].icon == "assets/effect-bleed.svg" && icons.effectrows[2].x == (VWHudVariant.VISOR ? VWHudPresentation.COLUMN_STRIDE : 0) && icons.effectrows[2].y == (VWHudVariant.VISOR ? 0 : VWHudPresentation.ROW_STRIDE),"bleeding starts the first debuff line");
-         require(icons.effectrows[3].icon == "assets/effect-fallbackdebuff.svg" && icons.effectrows[3].y == (VWHudVariant.VISOR ? VWHudPresentation.VISOR_STRIDE : VWHudPresentation.ROW_STRIDE),"unknown debuff stays on the debuff line");
+         require(icons.effectrows[0].icon == "assets/effect-weight.svg" && icons.effectrows[0].x == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(0,2,false,0).x : 0) && icons.effectrows[0].y == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(0,2,false,0).y : 0),"carry weight uses the weight icon on the buff line");
+         require(icons.effectrows[1].icon == "assets/effect-fallbackbuff.svg" && icons.effectrows[1].y == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(1,2,false,0).y : 0),"unknown buff stays on the buff line");
+         require(icons.effectrows[2].icon == "assets/effect-bleed.svg" && icons.effectrows[2].x == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(0,2,true,0).x : 0) && icons.effectrows[2].y == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(0,2,true,0).y : VWHudPresentation.ROW_STRIDE),"bleeding starts the first debuff line");
+         require(icons.effectrows[3].icon == "assets/effect-fallbackdebuff.svg" && icons.effectrows[3].y == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(1,2,true,0).y : VWHudPresentation.ROW_STRIDE),"unknown debuff stays on the debuff line");
+         if(VWHudVariant.VISOR)
+         {
+            require(icons.effectrows[0].x > icons.effectrows[1].x && icons.effectrows[0].x < 600,"buffs run outward along the left of the center arc");
+            require(icons.effectrows[2].x < icons.effectrows[3].x && icons.effectrows[2].x > 580,"debuffs run outward along the right of the center arc");
+            require(icons.effectrows[1].y > icons.effectrows[0].y + 40,"outer buffs drop along the arc");
+         }
          var wrapped:Object = {buffrows:[{label:"Fed"}],debuffrows:[]};
          for(var wrapIndex:int = 0; wrapIndex < 19; wrapIndex++) wrapped.debuffrows.push({label:"Injury"});
          VWHudPresentation.update(wrapped,null,0,false);
-         require(wrapped.effectrows[0].y == 0 && wrapped.effectrows[1].y == (VWHudVariant.VISOR ? 0 : VWHudPresentation.ROW_STRIDE) && wrapped.effectrows[1].x == (VWHudVariant.VISOR ? VWHudPresentation.COLUMN_STRIDE : 0),"a buff keeps the top line when debuffs are present");
-         require(wrapped.effectrows[19].x == (VWHudVariant.VISOR ? VWHudPresentation.COLUMN_STRIDE * 2 : 0) && wrapped.effectrows[19].y == (VWHudVariant.VISOR ? 0 : VWHudPresentation.ROW_STRIDE * 2),"the nineteenth debuff starts the second debuff line");
+         require(wrapped.effectrows[0].y == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(0,1,false,0).y : 0) && wrapped.effectrows[1].y == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(0,18,true,0).y : VWHudPresentation.ROW_STRIDE) && wrapped.effectrows[1].x == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(0,18,true,0).x : 0),"a buff keeps the top line when debuffs are present");
+         require(wrapped.effectrows[19].x == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(0,1,true,1).x : 0) && wrapped.effectrows[19].y == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(0,1,true,1).y : VWHudPresentation.ROW_STRIDE * 2),"the nineteenth debuff starts the second debuff line");
+         if(VWHudVariant.VISOR) require(wrapped.effectrows[0].x < wrapped.effectrows[1].x && wrapped.effectrows[19].y > wrapped.effectrows[1].y,"the second debuff line stays on the right of the center arc");
          var weather:Object = {buffrows:[],debuffrows:[{label:"FREEZING COLD AND SNOW"},{label:"Dehydrated"},{label:"Malnourished"}]};
          VWHudPresentation.update(weather,null,0,false);
-         require(weather.effectrows[0].icon == "assets/effect-cold.svg" && weather.effectrows[0].y == (VWHudVariant.VISOR ? 0 : VWHudPresentation.ROW_STRIDE) && weather.effectrows[1].icon == "assets/effect-dehydrated.svg" && weather.effectrows[2].icon == "assets/effect-malnourished.svg","weather and sustenance rows use their class icons on the debuff line");
+         require(weather.effectrows[0].icon == "assets/effect-cold.svg" && weather.effectrows[0].y == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(0,3,true,0).y : VWHudPresentation.ROW_STRIDE) && weather.effectrows[1].icon == "assets/effect-dehydrated.svg" && weather.effectrows[2].icon == "assets/effect-malnourished.svg","weather and sustenance rows use their class icons on the debuff line");
          var storm:Object = {buffrows:[],debuffrows:[{label:"Sandstorm"},{label:"Cold"}]};
          VWHudPresentation.update(storm,null,0,false);
          require(storm.effectrows[0].icon == "assets/effect-sandstorm.svg" && storm.effectrows[1].icon == "assets/effect-cold.svg","sandstorm and cold use their weather icons");

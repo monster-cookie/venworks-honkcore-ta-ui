@@ -5,7 +5,7 @@ package
    {
       private static const HEADINGS:Array = ["N","NE","E","SE","S","SW","W","NW"];
 
-      // One 720px line holds 18 icons. Debuffs occupy the next two lines. The 35px pitch keeps the third line above the critical-health alert. The visor stacks those same three groups in columns on the right arch.
+      // One 720px line holds 18 icons. Debuffs occupy the next two lines. The 35px pitch keeps the third line above the critical-health alert. The visor lays the same groups on a center arc: buffs to the left, debuffs to the right.
       public static const BUFF_COLUMNS:int = 18;
 
       public static const DEBUFF_COLUMNS:int = 18;
@@ -17,6 +17,17 @@ package
       public static const ROW_STRIDE:int = 35;
 
       public static const VISOR_STRIDE:int = 36;
+
+      // Icon centers sit on y = 58 + 96*(dist/524)^2, with the arc midpoint at x=600.
+      public static function visorArcPoint(index:int, count:int, right:Boolean, line:int) : Object
+      {
+         var slots:int = count < 1 ? 1 : count;
+         var t:Number = slots <= 1 ? 0 : index / (slots - 1);
+         var dist:Number = 56 + t * 468;
+         var iconCenter:Number = right ? 600 + dist : 600 - dist;
+         var drop:Number = dist / 524;
+         return {x:int(Math.round(iconCenter - 18)), y:int(Math.round(40 + 96 * drop * drop + line * 46))};
+      }
 
       public static function update(data:Object, tactical:Object, pulse:int, scanning:Boolean) : void
       {
@@ -43,21 +54,44 @@ package
          var effects:Array = [];
          var row:Object;
          var column:int = 0;
+         var buffCount:int = data.buffrows == null ? 0 : data.buffrows.length;
          for each(row in data.buffrows)
          {
             var buff:Object = effectRow(row,true);
-            buff.x = VWHudVariant.VISOR ? 0 : column * COLUMN_STRIDE;
-            buff.y = VWHudVariant.VISOR ? column * VISOR_STRIDE : 0;
+            if(VWHudVariant.VISOR)
+            {
+               var buffPoint:Object = visorArcPoint(column,buffCount,false,0);
+               buff.x = buffPoint.x;
+               buff.y = buffPoint.y;
+            }
+            else
+            {
+               buff.x = column * COLUMN_STRIDE;
+               buff.y = 0;
+            }
             effects.push(buff);
             column++;
          }
          column = 0;
+         var debuffCount:int = data.debuffrows == null ? 0 : data.debuffrows.length;
          for each(row in data.debuffrows)
          {
             var debuff:Object = effectRow(row,false);
             var line:int = int(column / DEBUFF_COLUMNS);
-            debuff.x = VWHudVariant.VISOR ? (1 + line) * COLUMN_STRIDE : (column % DEBUFF_COLUMNS) * COLUMN_STRIDE;
-            debuff.y = VWHudVariant.VISOR ? (column % DEBUFF_COLUMNS) * VISOR_STRIDE : (1 + line) * ROW_STRIDE;
+            var lineIndex:int = column % DEBUFF_COLUMNS;
+            if(VWHudVariant.VISOR)
+            {
+               var lineCount:int = debuffCount - line * DEBUFF_COLUMNS;
+               if(lineCount > DEBUFF_COLUMNS) lineCount = DEBUFF_COLUMNS;
+               var debuffPoint:Object = visorArcPoint(lineIndex,lineCount,true,line);
+               debuff.x = debuffPoint.x;
+               debuff.y = debuffPoint.y;
+            }
+            else
+            {
+               debuff.x = lineIndex * COLUMN_STRIDE;
+               debuff.y = (1 + line) * ROW_STRIDE;
+            }
             effects.push(debuff);
             column++;
          }
