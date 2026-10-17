@@ -106,6 +106,10 @@ package
          require(otherQuest.name == "THE OLD NEIGHBORHOOD","clearing a different quest leaves the tracked title");
          var clearedQuest:Object = VWHudViewModel.nextQuestTitle(otherQuest.name,otherQuest.id,{QuestUpdatesA:[{uType:2,uQuestID:42}]});
          require(clearedQuest.name == "" && clearedQuest.id == null,"clearing the tracked quest removes the title");
+         var missionList:Object = {aQuests:[{sName:"Failure to Communicate",bActive:false,aObjectives:[{sName:"LISTEN",bActive:false}]},{sName:"One Small Step",bActive:true,aObjectives:[{sName:"GO TO THE LODGE (MAST DISTRICT)",bActive:true}]}]};
+         require(VWHudViewModel.resolveActiveMissionTitle(missionList) == "ONE SMALL STEP","the tracked mission supplies the title above its waypoint");
+         var objectiveTracked:Object = {aQuests:[{sName:"One Small Step",bActive:false,aObjectives:[{sName:"GO TO THE LODGE (MAST DISTRICT)",bActive:true}]}]};
+         require(VWHudViewModel.resolveActiveMissionTitle(objectiveTracked) == "ONE SMALL STEP","an active objective keeps its mission title");
          return "PASS: VWHUD consumer lifecycle and effects adapter assertions";
       }
 

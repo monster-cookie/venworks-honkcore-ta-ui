@@ -62,6 +62,7 @@ package
       private var compassData:Object;
       private var activeQuestName:String = "";
       private var activeQuestId:* = null;
+      private var missionTitle:String = "";
       private var tacticalAwareness:VWHudTacticalModel;
       private var disposed:Boolean = false;
 
@@ -136,6 +137,7 @@ package
             case "StarmapSystemBodyInfoProvider": this.onStarmapSystemBodyInfoData(event); break;
             case "HudCompassData": this.onRadarCompassData(event); break;
             case "QuestUpdateData": this.onQuestUpdateData(event); break;
+            case "QuestData": this.onQuestData(event); break;
          }
       }
 
@@ -302,6 +304,39 @@ package
             ++index;
          }
          return {name:name,id:id};
+      }
+
+      public static function resolveActiveMissionTitle(param1:Object) : String
+      {
+         var quests:Array = collection(param1,"aQuests");
+         var index:int = 0;
+         var quest:Object = null;
+         var objectives:Array = null;
+         var objectiveIndex:int = 0;
+         var titled:String = "";
+         while(quests != null && index < quests.length)
+         {
+            quest = quests[index];
+            if(quest != null && quest.aObjectives is Array)
+            {
+               if(quest.bActive === true) return missionLabel(quest.sName);
+               objectives = collection(quest,"aObjectives");
+               objectiveIndex = 0;
+               while(objectives != null && objectiveIndex < objectives.length)
+               {
+                  if(objectives[objectiveIndex] != null && objectives[objectiveIndex].bActive === true) titled = missionLabel(quest.sName);
+                  ++objectiveIndex;
+               }
+            }
+            ++index;
+         }
+         return titled;
+      }
+
+      private static function missionLabel(param1:*) : String
+      {
+         var title:String = param1 == null ? "" : String(param1).replace(/^\s+|\s+$/g,"");
+         return title.toUpperCase();
       }
 
       private static function sameQuest(param1:*, param2:*) : Boolean
@@ -565,6 +600,19 @@ package
          dispatchEvent(new Event(TACTICAL_AWARENESS_CHANGE));
       }
 
+      private function onQuestData(param1:Object) : void
+      {
+         if(this.disposed)
+         {
+            return;
+         }
+         var data:Object = param1 == null ? null : param1.data;
+         if(data == null || collection(data,"aQuests") == null) return;
+         this.missionTitle = resolveActiveMissionTitle(data);
+         this.publishQuestText();
+         this.notifyChanged();
+      }
+
       private function onQuestUpdateData(param1:Object) : void
       {
          if(this.disposed)
@@ -581,7 +629,10 @@ package
       private function publishQuestText() : void
       {
          var compassName:String = resolveTrackedQuestName(compassData);
-         this.setText("quest.name",this.activeQuestName.length != 0 ? this.activeQuestName : compassName);
+         var title:String = this.missionTitle;
+         if(title.length == 0) title = this.activeQuestName;
+         if(title.length == 0) title = compassName;
+         this.setText("quest.name",title);
          this.setText("quest.objective",resolveTrackedObjective(compassData));
       }
 
