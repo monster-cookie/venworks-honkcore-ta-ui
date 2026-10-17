@@ -1,0 +1,9 @@
+<!doctype html><html><head><title>VWHUD</title></head><body>
+<div class="vw-arc-threat vwhud-panel-threat" data-vw-anchor="top-center" data-vw-visible="condition.always">
+<div class="vw-arc-threat-host"><vw-include src="threat-content.html"></vw-include></div>
+<vw-meter class="vw-arc-threat-meter color-state-clear-1 background-color-visor-track" value="threat.score" min="0" max="100" segments="18" gap="2" direction="right" partial="true" data-vw-visible="threat.clear"></vw-meter>
+<vw-meter class="vw-arc-threat-meter color-state-caution-1 background-color-visor-track" value="threat.score" min="0" max="100" segments="18" gap="2" direction="right" partial="true" data-vw-visible="threat.caution"></vw-meter>
+<vw-meter class="vw-arc-threat-meter color-state-danger-1 background-color-visor-track" value="threat.score" min="0" max="100" segments="18" gap="2" direction="right" partial="true" data-vw-visible="threat.danger"></vw-meter>
+<vw-meter class="vw-arc-threat-meter color-state-critical-1 background-color-visor-track" value="threat.score" min="0" max="100" segments="18" gap="2" direction="right" partial="true" data-vw-visible="threat.critical"></vw-meter>
+</div>
+</body></html>

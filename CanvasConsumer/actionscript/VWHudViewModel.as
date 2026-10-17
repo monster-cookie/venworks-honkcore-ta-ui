@@ -60,6 +60,9 @@ package
       private var universalTimeDiagnostic:String = "UT: LOCAL ENV FREQUENT DATA NOT RECEIVED";
       private var digipickDiagnostic:String = "DIGIPICK: PLAYER INVENTORY DATA NOT RECEIVED";
       private var compassData:Object;
+      private var activeQuestName:String = "";
+      private var activeQuestId:* = null;
+      private var missionTitle:String = "";
       private var tacticalAwareness:VWHudTacticalModel;
       private var disposed:Boolean = false;
 
@@ -107,6 +110,7 @@ package
          this.setText("environment.hazard.thermalshortstatus","WAITING");
          this.setText("environment.hazard.corrosiveshortstatus","WAITING");
          this.setText("environment.hazard.radiationshortstatus","WAITING");
+         this.setText("quest.name","");
          this.setText("quest.objective","");
          this.resetChangedSources();
       }
@@ -132,6 +136,8 @@ package
             case "PersonalEffectsData": this.onPersonalEffectsData(event); break;
             case "StarmapSystemBodyInfoProvider": this.onStarmapSystemBodyInfoData(event); break;
             case "HudCompassData": this.onRadarCompassData(event); break;
+            case "QuestUpdateData": this.onQuestUpdateData(event); break;
+            case "QuestData": this.onQuestData(event); break;
          }
       }
 
@@ -167,7 +173,7 @@ package
          if(source == "location.name" || source == "environment.solartransitioncountdown" ||
             source == "player.serial" ||
             source == "power.key" || source == "power.name" ||
-            source == "quest.objective" ||
+            source == "quest.name" || source == "quest.objective" ||
             source == "weapon.name" || source == "weapon.icon" || source == "weapon.ammotype" ||
             source == "weapon.explosivelabel" ||
             source == "diagnostic.inventoryprovider" || source == "diagnostic.powernameprovider" ||
@@ -261,38 +267,168 @@ package
          return copy;
       }
 
-      public static function resolveTrackedObjective(param1:Object) : String
+      private static const QUEST_NAME_FIELDS:Array = ["sQuestName","strQuestName","sMissionName","strMissionName","sTrackedQuestName","strTrackedQuestName"];
+      private static const QUEST_UPDATE_SET_ACTIVE:uint = 1;
+      private static const QUEST_UPDATE_SET_INACTIVE:uint = 2;
+
+      public static function nextQuestTitle(param1:String, param2:*, param3:Object) : Object
       {
-         var markers:Array = collection(param1,"aMissionMarkers");
-         var marker:Object = null;
-         var text:String = "";
-         var fallback:String = "";
+         var name:String = param1 == null ? "" : param1;
+         var id:* = param2;
+         var updates:Array = collection(param3,"QuestUpdatesA");
          var index:int = 0;
-         if(markers == null)
+         var update:Object = null;
+         var type:uint = 0;
+         var title:String = "";
+         while(updates != null && index < updates.length)
          {
-            return "";
-         }
-         while(index < markers.length)
-         {
-            marker = markers[index];
-            if(marker != null && marker.strText !== undefined && marker.strText !== null)
+            update = updates[index];
+            if(update != null)
             {
-               text = String(marker.strText).replace(/^\s+|\s+$/g,"");
-               if(text.length != 0)
+               type = uint(update.uType);
+               title = update.strQuestName == null ? "" : String(update.strQuestName).replace(/^\s+|\s+$/g,"");
+               if(type == QUEST_UPDATE_SET_INACTIVE)
                {
-                  if(marker.bShouldShowText === true)
+                  if(sameQuest(id,update.uQuestID))
                   {
-                     return text;
+                     name = "";
+                     id = null;
                   }
-                  if(fallback.length == 0)
-                  {
-                     fallback = text;
-                  }
+               }
+               else if(title.length != 0 && (type == QUEST_UPDATE_SET_ACTIVE || update.bActiveQuest === true || sameQuest(id,update.uQuestID)))
+               {
+                  name = title;
+                  if(update.uQuestID != null) id = update.uQuestID;
                }
             }
             ++index;
          }
-         return fallback;
+         return {name:name,id:id};
+      }
+
+      public static function resolveActiveMissionTitle(param1:Object) : String
+      {
+         var quests:Array = collection(param1,"aQuests");
+         var index:int = 0;
+         var quest:Object = null;
+         var objectives:Array = null;
+         var objectiveIndex:int = 0;
+         var titled:String = "";
+         while(quests != null && index < quests.length)
+         {
+            quest = quests[index];
+            if(quest != null && quest.aObjectives is Array)
+            {
+               if(quest.bActive === true) return missionLabel(quest.sName);
+               objectives = collection(quest,"aObjectives");
+               objectiveIndex = 0;
+               while(objectives != null && objectiveIndex < objectives.length)
+               {
+                  if(objectives[objectiveIndex] != null && objectives[objectiveIndex].bActive === true) titled = missionLabel(quest.sName);
+                  ++objectiveIndex;
+               }
+            }
+            ++index;
+         }
+         return titled;
+      }
+
+      private static function missionLabel(param1:*) : String
+      {
+         var title:String = param1 == null ? "" : String(param1).replace(/^\s+|\s+$/g,"");
+         return title.toUpperCase();
+      }
+
+      private static function sameQuest(param1:*, param2:*) : Boolean
+      {
+         if(param1 == null || param2 == null) return false;
+         return String(param1) == String(param2);
+      }
+
+      public static function resolveTrackedObjective(param1:Object) : String
+      {
+         return trackedQuest(param1).objective;
+      }
+
+      public static function resolveTrackedQuestName(param1:Object) : String
+      {
+         return trackedQuest(param1).name;
+      }
+
+      private static function trackedQuest(param1:Object) : Object
+      {
+         var markers:Array = collection(param1,"aMissionMarkers");
+         var marker:Object = null;
+         var text:String = "";
+         var objective:String = "";
+         var fallback:String = "";
+         var name:String = questName(param1);
+         var index:int = 0;
+         while(markers != null && index < markers.length)
+         {
+            marker = markers[index];
+            if(name.length == 0) name = questName(marker);
+            text = markerText(marker);
+            if(text.length != 0)
+            {
+               if(marker != null && marker.bShouldShowText === true && objective.length == 0) objective = text;
+               else if(fallback.length == 0) fallback = text;
+            }
+            ++index;
+         }
+         if(objective.length == 0) objective = fallback;
+         var split:Array = splitLines(objective);
+         if(split.length > 1)
+         {
+            if(name.length == 0) name = String(split[0]).replace(/^\s+|\s+$/g,"");
+            objective = String(split[split.length - 1]).replace(/^\s+|\s+$/g,"");
+         }
+         if(name == objective) name = "";
+         return {name:name,objective:objective};
+      }
+
+      private static function questName(param1:Object) : String
+      {
+         var index:int = 0;
+         var text:String = "";
+         while(param1 != null && index < QUEST_NAME_FIELDS.length)
+         {
+            text = field(param1,QUEST_NAME_FIELDS[index]) == null ? "" : String(field(param1,QUEST_NAME_FIELDS[index])).replace(/^\s+|\s+$/g,"");
+            if(text.length != 0) return text;
+            ++index;
+         }
+         return "";
+      }
+
+      private static function markerText(param1:Object) : String
+      {
+         if(param1 == null || param1.strText === undefined || param1.strText === null) return "";
+         return String(param1.strText).replace(/^\s+|\s+$/g,"");
+      }
+
+      private static function splitLines(param1:String) : Array
+      {
+         var lines:Array = [];
+         var rest:String = param1 == null ? "" : param1;
+         var cut:int = 0;
+         var newline:int = 0;
+         var carriage:int = 0;
+         while(rest.length > 0)
+         {
+            newline = rest.indexOf("\n");
+            carriage = rest.indexOf("\r");
+            cut = newline;
+            if(carriage >= 0 && (cut < 0 || carriage < cut)) cut = carriage;
+            if(cut < 0)
+            {
+               lines.push(rest);
+               break;
+            }
+            lines.push(rest.substring(0,cut));
+            rest = rest.substring(cut + 1);
+            if(rest.length > 0 && rest.charAt(0) == "\n") rest = rest.substring(1);
+         }
+         return lines;
       }
 
       public function get currentCompassData() : Object
@@ -464,6 +600,42 @@ package
          dispatchEvent(new Event(TACTICAL_AWARENESS_CHANGE));
       }
 
+      private function onQuestData(param1:Object) : void
+      {
+         if(this.disposed)
+         {
+            return;
+         }
+         var data:Object = param1 == null ? null : param1.data;
+         if(data == null || collection(data,"aQuests") == null) return;
+         this.missionTitle = resolveActiveMissionTitle(data);
+         this.publishQuestText();
+         this.notifyChanged();
+      }
+
+      private function onQuestUpdateData(param1:Object) : void
+      {
+         if(this.disposed)
+         {
+            return;
+         }
+         var next:Object = nextQuestTitle(this.activeQuestName,this.activeQuestId,param1 == null ? null : param1.data);
+         this.activeQuestName = next.name == null ? "" : String(next.name);
+         this.activeQuestId = next.id;
+         this.publishQuestText();
+         this.notifyChanged();
+      }
+
+      private function publishQuestText() : void
+      {
+         var compassName:String = resolveTrackedQuestName(compassData);
+         var title:String = this.missionTitle;
+         if(title.length == 0) title = this.activeQuestName;
+         if(title.length == 0) title = compassName;
+         this.setText("quest.name",title);
+         this.setText("quest.objective",resolveTrackedObjective(compassData));
+      }
+
       private function onRadarCompassData(param1:Object) : void
       {
          if(this.disposed)
@@ -471,7 +643,7 @@ package
             return;
          }
          compassData = param1 == null ? null : param1.data;
-         this.setText("quest.objective",resolveTrackedObjective(compassData));
+         this.publishQuestText();
          tacticalAwareness.updateCompass(compassData);
          dispatchEvent(new Event(COMPASS_CHANGE));
          dispatchEvent(new Event(TACTICAL_AWARENESS_CHANGE));
