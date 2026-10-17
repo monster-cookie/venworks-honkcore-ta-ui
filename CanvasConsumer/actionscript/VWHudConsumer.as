@@ -274,10 +274,15 @@ package
             overlay.scaleX = slot.scrollRect.width / this.compassTape.designWidth();
             overlay.scaleY = slot.scrollRect.height / this.compassTape.designHeight();
          }
-         else if(overlay === this.contactRadar && slot.width > 0 && slot.height > 0)
+         else if(overlay === this.contactRadar)
          {
-            overlay.scaleX = slot.width / 184;
-            overlay.scaleY = slot.height / 184;
+            var slotWidth:Number = this.measuredSpan(slot,true);
+            var slotHeight:Number = this.measuredSpan(slot,false);
+            if(slotWidth > 0 && slotHeight > 0)
+            {
+               overlay.scaleX = slotWidth / 184;
+               overlay.scaleY = slotHeight / 184;
+            }
          }
       }
 
@@ -308,7 +313,24 @@ package
          if(!isFinite(scale) || scale <= 0) scale = 1;
          var expected:Number = 184 * scale;
          var tolerance:Number = Math.max(2,3 * scale);
-         return Math.abs(child.width - expected) <= tolerance && Math.abs(child.height - expected) <= tolerance;
+         return Math.abs(this.measuredSpan(child,true) - expected) <= tolerance && Math.abs(this.measuredSpan(child,false) - expected) <= tolerance;
+      }
+
+      // An empty slot has no painted bounds, so Flash reports its width as 0. The scroll rect is the authored size.
+      private function measuredSpan(child:DisplayObject, horizontal:Boolean) : Number
+      {
+         var span:Number = 0;
+         try
+         {
+            var rect:Object = child.scrollRect;
+            if(rect != null)
+            {
+               span = horizontal ? Number(rect.width) : Number(rect.height);
+            }
+         }
+         catch(rectError:*) { span = 0; }
+         if(!isFinite(span) || span <= 0) span = horizontal ? child.width : child.height;
+         return isFinite(span) && span > 0 ? span : 0;
       }
 
       private function compassSlotShape(sprite:Sprite) : Boolean

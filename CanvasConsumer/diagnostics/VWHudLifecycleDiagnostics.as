@@ -110,6 +110,14 @@ package
          require(VWHudViewModel.resolveActiveMissionTitle(missionList) == "ONE SMALL STEP","the tracked mission supplies the title above its waypoint");
          var objectiveTracked:Object = {aQuests:[{sName:"One Small Step",bActive:false,aObjectives:[{sName:"GO TO THE LODGE (MAST DISTRICT)",bActive:true}]}]};
          require(VWHudViewModel.resolveActiveMissionTitle(objectiveTracked) == "ONE SMALL STEP","an active objective keeps its mission title");
+         var parkedShip:Object = VWHudContactRadar.describeContact({uiHandle:3,uiMarkerIconType:10,fHeading:1,fDistanceToPlayer:400},false);
+         require(parkedShip != null && parkedShip.structure === true && parkedShip.fraction == 0.4,"a parked ship inside scanner range is a radar contact");
+         require(VWHudContactRadar.describeContact({uiHandle:4,uiMarkerIconType:10,fHeading:1,fDistanceToPlayer:5000},false) == null,"a ship beyond scanner range stays off the radar");
+         var hostile:Object = VWHudContactRadar.describeContact({uiHandle:5,uiMarkerIconType:5,fHeading:0.2},false);
+         require(hostile != null && hostile.enemy === true && hostile.fraction == 0.72,"a hostile with a heading still plots when distance is absent");
+         require(VWHudContactRadar.describeContact({uiHandle:6,uiMarkerIconType:7,fHeading:0.2,fDistanceToPlayer:20},false) == null,"a location marker is not a radar contact");
+         var companion:Object = VWHudContactRadar.describeContact({uiHandle:8,uiMarkerIconType:8,fHeading:0.4,fDistance:0.25},false);
+         require(companion != null && companion.enemy === false && companion.fraction == 0.25,"a companion uses normalized compass distance when meters are absent");
          return "PASS: VWHUD consumer lifecycle and effects adapter assertions";
       }
 
