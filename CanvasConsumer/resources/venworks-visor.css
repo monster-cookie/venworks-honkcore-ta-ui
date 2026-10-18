@@ -41,12 +41,12 @@
 .vw-arc-player { position: absolute; left: -40px; top: 16px; width: 400px; height: 248px; z-index: 100; }
 .vw-arc-player-smoke { position: absolute; left: 0px; top: 0px; width: 400px; height: 248px; z-index: 0; }
 .vw-arc-player-frame { position: absolute; left: 0px; top: 0px; width: 400px; height: 248px; z-index: 1; }
-.vw-arc-p-time-label { position: absolute; left: 28px; top: 6px; width: 78px; height: 16px; z-index: 2; font-size: 8px; }
-.vw-arc-p-time { position: absolute; left: 108px; top: 4px; width: 72px; height: 18px; z-index: 2; font-size: 11px; }
-.vw-arc-p-credits { position: absolute; left: 190px; top: 4px; width: 120px; height: 18px; z-index: 2; font-size: 11px; text-align: right; }
+.vw-arc-p-time-label { position: absolute; left: 18px; top: 4px; width: 72px; height: 16px; z-index: 2; font-size: 8px; }
+.vw-arc-p-time { position: absolute; left: 90px; top: 2px; width: 46px; height: 18px; z-index: 2; font-size: 11px; }
+.vw-arc-p-digi { position: absolute; left: 142px; top: 2px; width: 80px; height: 18px; z-index: 2; font-size: 11px; text-align: center; }
+.vw-arc-p-credits { position: absolute; left: 224px; top: 2px; width: 162px; height: 18px; z-index: 2; font-size: 11px; text-align: right; }
 .vw-arc-p-serial-label { position: absolute; left: 28px; top: 26px; width: 48px; height: 16px; z-index: 2; font-size: 8px; }
-.vw-arc-p-serial { position: absolute; left: 78px; top: 24px; width: 150px; height: 18px; z-index: 2; font-size: 10px; }
-.vw-arc-p-digi { position: absolute; left: 240px; top: 24px; width: 90px; height: 18px; z-index: 2; font-size: 10px; text-align: right; }
+.vw-arc-p-serial { position: absolute; left: 78px; top: 24px; width: 280px; height: 18px; z-index: 2; font-size: 10px; }
 .vw-arc-p-xp-label { position: absolute; left: 28px; top: 50px; width: 36px; height: 16px; z-index: 2; font-size: 9px; }
 .vw-arc-p-xp-level { position: absolute; left: 64px; top: 50px; width: 52px; height: 16px; z-index: 2; font-size: 9px; }
 .vw-arc-p-xp-value { position: absolute; left: 300px; top: 48px; width: 64px; height: 16px; z-index: 2; font-size: 10px; text-align: right; }
