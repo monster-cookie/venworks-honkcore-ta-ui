@@ -70,34 +70,34 @@
 .vw-arc-planet { position: absolute; left: 52px; top: 34px; width: 360px; height: 270px; z-index: 100; }
 .vw-arc-planet-smoke { position: absolute; left: 0px; top: 0px; width: 360px; height: 270px; z-index: 0; }
 .vw-arc-planet-frame { position: absolute; left: 0px; top: 0px; width: 360px; height: 270px; z-index: 1; }
-.vw-arc-e-title { position: absolute; left: 52px; top: 4px; width: 140px; height: 16px; z-index: 2; font-size: 11px; }
-.vw-arc-e-local { position: absolute; left: 200px; top: 6px; width: 40px; height: 14px; z-index: 2; font-size: 8px; text-align: right; }
-.vw-arc-e-time { position: absolute; left: 244px; top: 4px; width: 56px; height: 16px; z-index: 2; font-size: 11px; text-align: right; }
-.vw-arc-e-sun { position: absolute; left: 24px; top: 24px; width: 220px; height: 16px; z-index: 2; font-size: 9px; }
-.vw-arc-e-name { position: absolute; left: 8px; top: 42px; width: 250px; height: 20px; z-index: 2; font-size: 13px; }
-.vw-arc-e-o2-label { position: absolute; left: 8px; top: 68px; width: 40px; height: 12px; z-index: 2; font-size: 8px; }
-.vw-arc-e-o2 { position: absolute; left: 8px; top: 82px; width: 64px; height: 16px; z-index: 2; font-size: 11px; }
-.vw-arc-e-temp-label { position: absolute; left: 80px; top: 68px; width: 50px; height: 12px; z-index: 2; font-size: 8px; }
-.vw-arc-e-temp { position: absolute; left: 80px; top: 82px; width: 76px; height: 16px; z-index: 2; font-size: 11px; }
-.vw-arc-e-grav-label { position: absolute; left: 164px; top: 68px; width: 50px; height: 12px; z-index: 2; font-size: 8px; }
-.vw-arc-e-grav { position: absolute; left: 164px; top: 82px; width: 64px; height: 16px; z-index: 2; font-size: 11px; }
-.vw-arc-e-hazard-title { position: absolute; left: 8px; top: 108px; width: 120px; height: 16px; z-index: 2; font-size: 10px; }
-.vw-arc-e-suit-label { position: absolute; left: 8px; top: 128px; width: 40px; height: 14px; z-index: 2; font-size: 8px; }
-.vw-arc-e-suit-status { position: absolute; left: 50px; top: 128px; width: 120px; height: 14px; z-index: 2; font-size: 8px; }
-.vw-arc-e-suit-value { position: absolute; left: 176px; top: 126px; width: 48px; height: 16px; z-index: 2; font-size: 10px; text-align: right; }
-.vw-arc-e-suit { position: absolute; left: 8px; top: 146px; width: 216px; height: 8px; z-index: 1; }
-.vw-arc-e-air-label { position: absolute; left: 4px; top: 174px; width: 44px; height: 14px; z-index: 2; font-size: 8px; text-align: center; }
-.vw-arc-e-air-status { position: absolute; left: 0px; top: 246px; width: 52px; height: 14px; z-index: 2; font-size: 7px; text-align: center; }
-.vw-arc-e-air { position: absolute; left: 16px; top: 190px; width: 18px; height: 52px; z-index: 1; }
-.vw-arc-e-heat-label { position: absolute; left: 66px; top: 174px; width: 44px; height: 14px; z-index: 2; font-size: 8px; text-align: center; }
-.vw-arc-e-heat-status { position: absolute; left: 62px; top: 246px; width: 52px; height: 14px; z-index: 2; font-size: 7px; text-align: center; }
-.vw-arc-e-heat { position: absolute; left: 78px; top: 190px; width: 18px; height: 52px; z-index: 1; }
-.vw-arc-e-corr-label { position: absolute; left: 128px; top: 174px; width: 44px; height: 14px; z-index: 2; font-size: 8px; text-align: center; }
-.vw-arc-e-corr-status { position: absolute; left: 124px; top: 246px; width: 52px; height: 14px; z-index: 2; font-size: 7px; text-align: center; }
-.vw-arc-e-corr { position: absolute; left: 140px; top: 190px; width: 18px; height: 52px; z-index: 1; }
-.vw-arc-e-rad-label { position: absolute; left: 190px; top: 174px; width: 44px; height: 14px; z-index: 2; font-size: 8px; text-align: center; }
-.vw-arc-e-rad-status { position: absolute; left: 186px; top: 246px; width: 52px; height: 14px; z-index: 2; font-size: 7px; text-align: center; }
-.vw-arc-e-rad { position: absolute; left: 202px; top: 190px; width: 18px; height: 52px; z-index: 1; }
+.vw-arc-e-title { position: absolute; left: 92px; top: 4px; width: 140px; height: 16px; z-index: 2; font-size: 11px; }
+.vw-arc-e-local { position: absolute; left: 240px; top: 6px; width: 40px; height: 14px; z-index: 2; font-size: 8px; text-align: right; }
+.vw-arc-e-time { position: absolute; left: 284px; top: 4px; width: 50px; height: 16px; z-index: 2; font-size: 11px; text-align: right; }
+.vw-arc-e-sun { position: absolute; left: 64px; top: 24px; width: 200px; height: 16px; z-index: 2; font-size: 9px; }
+.vw-arc-e-name { position: absolute; left: 48px; top: 50px; width: 250px; height: 20px; z-index: 2; font-size: 13px; }
+.vw-arc-e-o2-label { position: absolute; left: 48px; top: 76px; width: 40px; height: 12px; z-index: 2; font-size: 8px; }
+.vw-arc-e-o2 { position: absolute; left: 48px; top: 90px; width: 64px; height: 16px; z-index: 2; font-size: 11px; }
+.vw-arc-e-temp-label { position: absolute; left: 120px; top: 76px; width: 50px; height: 12px; z-index: 2; font-size: 8px; }
+.vw-arc-e-temp { position: absolute; left: 120px; top: 90px; width: 76px; height: 16px; z-index: 2; font-size: 11px; }
+.vw-arc-e-grav-label { position: absolute; left: 204px; top: 76px; width: 50px; height: 12px; z-index: 2; font-size: 8px; }
+.vw-arc-e-grav { position: absolute; left: 204px; top: 90px; width: 64px; height: 16px; z-index: 2; font-size: 11px; }
+.vw-arc-e-hazard-title { position: absolute; left: 48px; top: 116px; width: 120px; height: 16px; z-index: 2; font-size: 10px; }
+.vw-arc-e-suit-label { position: absolute; left: 48px; top: 136px; width: 40px; height: 14px; z-index: 2; font-size: 8px; }
+.vw-arc-e-suit-status { position: absolute; left: 90px; top: 136px; width: 120px; height: 14px; z-index: 2; font-size: 8px; }
+.vw-arc-e-suit-value { position: absolute; left: 216px; top: 134px; width: 48px; height: 16px; z-index: 2; font-size: 10px; text-align: right; }
+.vw-arc-e-suit { position: absolute; left: 48px; top: 154px; width: 216px; height: 8px; z-index: 1; }
+.vw-arc-e-air-label { position: absolute; left: 44px; top: 182px; width: 44px; height: 14px; z-index: 2; font-size: 8px; text-align: center; }
+.vw-arc-e-air-status { position: absolute; left: 40px; top: 246px; width: 52px; height: 14px; z-index: 2; font-size: 7px; text-align: center; }
+.vw-arc-e-air { position: absolute; left: 56px; top: 198px; width: 18px; height: 52px; z-index: 1; }
+.vw-arc-e-heat-label { position: absolute; left: 106px; top: 182px; width: 44px; height: 14px; z-index: 2; font-size: 8px; text-align: center; }
+.vw-arc-e-heat-status { position: absolute; left: 102px; top: 246px; width: 52px; height: 14px; z-index: 2; font-size: 7px; text-align: center; }
+.vw-arc-e-heat { position: absolute; left: 118px; top: 198px; width: 18px; height: 52px; z-index: 1; }
+.vw-arc-e-corr-label { position: absolute; left: 168px; top: 182px; width: 44px; height: 14px; z-index: 2; font-size: 8px; text-align: center; }
+.vw-arc-e-corr-status { position: absolute; left: 164px; top: 246px; width: 52px; height: 14px; z-index: 2; font-size: 7px; text-align: center; }
+.vw-arc-e-corr { position: absolute; left: 180px; top: 198px; width: 18px; height: 52px; z-index: 1; }
+.vw-arc-e-rad-label { position: absolute; left: 230px; top: 182px; width: 44px; height: 14px; z-index: 2; font-size: 8px; text-align: center; }
+.vw-arc-e-rad-status { position: absolute; left: 226px; top: 246px; width: 52px; height: 14px; z-index: 2; font-size: 7px; text-align: center; }
+.vw-arc-e-rad { position: absolute; left: 242px; top: 198px; width: 18px; height: 52px; z-index: 1; }
 .vw-arc-rail { position: absolute; left: 56px; top: -63px; width: 300px; height: 700px; z-index: 102; }
 .vw-arc-rail-curve { position: absolute; left: 0px; top: 0px; width: 300px; height: 620px; z-index: 1; }
 .vw-arc-fname { position: absolute; width: 108px; height: 18px; z-index: 4; font-size: 10px; text-align: right; overflow: hidden; }
