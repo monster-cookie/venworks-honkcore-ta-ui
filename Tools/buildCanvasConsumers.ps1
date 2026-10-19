@@ -106,6 +106,8 @@ foreach ($key in $VariantKeys | Select-Object -Unique) {
   try { & $java @arguments; if ($LASTEXITCODE -ne 0) { throw "Consumer compilation failed: $key" } }
   finally { Pop-Location }
   Copy-Item "$consumer/normal.swf" "$consumer/large.swf"
+  Copy-Item "$consumer/normal.swf" "$consumer/normal.gfx"
+  Copy-Item "$consumer/large.swf" "$consumer/large.gfx"
   CopyResources (Join-Path $variantDirectory 'index.html') $consumer
   New-Item -ItemType Directory (Join-Path $payload 'Scripts') | Out-Null
   Copy-Item (Join-Path $scriptCandidate '*') (Join-Path $payload 'Scripts') -Recurse
