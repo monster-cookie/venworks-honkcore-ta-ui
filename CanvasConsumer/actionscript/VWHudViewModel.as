@@ -160,7 +160,7 @@ package
             if(value != null && value.known === true)
             {
                var published:String = key;
-               var favorite:Array = key.match(/^favorite\.([0-9][0-9])\.(name|detail|hotkey)$/);
+               var favorite:Array = key.match(/^favorite\.([0-9][0-9])\.(name|detail|hotkey|loaded|spare)$/);
                if(favorite != null) published = "favorite.slot" + favorite[1] + "." + favorite[2];
                result[published] = value.value;
             }
