@@ -27,8 +27,7 @@ $payloadRootPath = [IO.Path]::GetFullPath($PayloadRoot).TrimEnd([IO.Path]::Direc
 if (!$payloadRootPath.StartsWith($workRoot+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)) { throw 'Package input must be beneath the repository .work directory.' }
 
 if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction SilentlyContinue)) {
-  if ($Committed) { . (Join-Path $PSScriptRoot 'sharedConfig.ps1') -SkipEnvironment }
-  else { . (Join-Path $PSScriptRoot 'sharedConfig.ps1') }
+  . (Join-Path $PSScriptRoot 'sharedConfig.ps1')
 }
 . (Join-Path $PSScriptRoot 'sharedCanvasConsumers.ps1')
 . (Join-Path $PSScriptRoot 'sharedPackageTransactions.ps1')

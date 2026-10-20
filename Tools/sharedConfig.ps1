@@ -1,7 +1,5 @@
 [CmdletBinding()]
-param(
-  [switch]$SkipEnvironment
-)
+param()
 
 $PSNativeCommandUseErrorActionPreference = $true
 $ErrorActionPreference = 'Stop'
@@ -40,19 +38,17 @@ class ModuleVariant {
   }
 }
 
-if (!$SkipEnvironment) {
-  if (![System.IO.File]::Exists('.env')) {
-    throw 'A configured .env file is required for local staging operations.'
-  }
+if (![System.IO.File]::Exists('.env')) {
+  throw 'A configured .env file is required.'
+}
 
-  foreach ($line in Get-Content -LiteralPath '.env') {
-    if ($line -notmatch '^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$') {
-      continue
-    }
-    $name = $Matches[1]
-    $value = $Matches[2].Trim().Trim('"')
-    Set-Item -Path "env:$name" -Value $value
+foreach ($line in Get-Content -LiteralPath '.env') {
+  if ($line -notmatch '^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$') {
+    continue
   }
+  $name = $Matches[1]
+  $value = $Matches[2].Trim().Trim('"')
+  Set-Item -Path "env:$name" -Value $value
 }
 
 $archiveTargets = @('Main', 'Main_XBox', 'Main_PS')

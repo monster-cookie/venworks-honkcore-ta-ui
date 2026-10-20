@@ -19,7 +19,7 @@ $repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 . (Join-Path $PSScriptRoot 'sharedCanvasConsumers.ps1')
 . (Join-Path $PSScriptRoot 'sharedCanvasCompatibility.ps1')
 if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction SilentlyContinue)) {
-  . (Join-Path $PSScriptRoot 'sharedConfig.ps1') -SkipEnvironment
+  . (Join-Path $PSScriptRoot 'sharedConfig.ps1')
 }
 $workRoot = Join-Path $repositoryRoot '.work'
 $outputRoot = [IO.Path]::GetFullPath($OutputDirectory)

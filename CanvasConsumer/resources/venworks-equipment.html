@@ -85,17 +85,11 @@
 <img class="vw-arc-f12w color-accent-primary-1" data-vw-visible="condition.favorite12weapon" src="assets/weapon.svg" alt="weapon"></img>
 <img class="vw-arc-f12p color-accent-secondary-1" data-vw-visible="condition.favorite12power" src="assets/scanner.svg" alt="scanner"></img>
 <img class="vw-arc-f12i color-foreground-primary-1" data-vw-visible="condition.favorite12item" src="assets/cargo.svg" alt="cargo"></img>
-<svg class="vw-arc-wframe paint-fill-none stroke-visor-cyan" viewBox="0 0 168 96" stroke-width="1" fill-opacity="0" stroke-opacity="0.55"><rect x="1" y="1" width="166" height="94" rx="8" ry="8"></rect></svg>
+<svg class="vw-arc-wframe paint-fill-none stroke-visor-cyan" viewBox="0 0 200 116" stroke-width="1" fill-opacity="0" stroke-opacity="0.55"><rect x="1" y="1" width="198" height="114" rx="6" ry="6"></rect><path d="M 1 68 L 199 68"></path><path d="M 100 68 L 100 115"></path></svg>
 <vw-symbol class="vw-arc-wicon color-accent-primary-1" name="weapon-icon" value="weapon.icon"></vw-symbol>
-<span class="vw-arc-wname color-foreground-primary-1" data-vw-template="{weapon.name:raw}"></span>
 <span class="vw-arc-wclip color-accent-primary-1" data-vw-visible="condition.weaponhasammo" data-vw-template="{weapon.clipammo:integer}"></span>
-<span class="vw-arc-wslash color-accent-primary-1" data-vw-visible="condition.weaponhasammo">/</span>
+<span class="vw-arc-wloaded color-foreground-muted-1" data-vw-visible="condition.weaponhasammo">LOADED</span>
 <span class="vw-arc-wreserve color-accent-primary-1" data-vw-visible="condition.weaponhasammo" data-vw-template="{weapon.reserveammo:integer}"></span>
-<span class="vw-arc-wammo color-foreground-muted-1" data-vw-visible="condition.weaponhasammo" data-vw-template="{weapon.ammotype:raw}"></span>
-<img class="vw-arc-exicon color-state-caution-1" src="assets/warning.svg" alt="warning"></img>
-<span class="vw-arc-exlabel color-state-caution-1" data-vw-template="{weapon.explosivelabel:raw}"></span>
-<span class="vw-arc-excount color-state-caution-1" data-vw-visible="condition.weaponhasexplosive" data-vw-template="{weapon.explosivecount:integer}"></span>
-<img class="vw-arc-picon color-accent-secondary-1" src="assets/scanner.svg" alt="scanner"></img>
-<span class="vw-arc-pname color-accent-secondary-1" data-vw-template="{power.name:raw}"></span>
+<span class="vw-arc-wspare color-foreground-muted-1" data-vw-visible="condition.weaponhasammo">SPARE</span>
 </div>
 </body></html>

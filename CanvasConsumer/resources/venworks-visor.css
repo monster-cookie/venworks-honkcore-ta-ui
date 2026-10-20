@@ -191,15 +191,9 @@
 .vw-arc-f12w { position: absolute; left: 241px; top: 533px; width: 22px; height: 22px; z-index: 3; }
 .vw-arc-f12p { position: absolute; left: 241px; top: 533px; width: 22px; height: 22px; z-index: 3; }
 .vw-arc-f12i { position: absolute; left: 241px; top: 533px; width: 22px; height: 22px; z-index: 3; }
-.vw-arc-wframe { position: absolute; left: 4px; top: 580px; width: 168px; height: 96px; z-index: 2; }
-.vw-arc-wicon { position: absolute; left: 12px; top: 588px; width: 20px; height: 20px; z-index: 3; }
-.vw-arc-wname { position: absolute; left: 36px; top: 588px; width: 128px; height: 18px; z-index: 3; font-size: 9px; }
-.vw-arc-wclip { position: absolute; left: 12px; top: 610px; width: 32px; height: 14px; z-index: 3; font-size: 9px; }
-.vw-arc-wslash { position: absolute; left: 44px; top: 610px; width: 8px; height: 14px; z-index: 3; font-size: 9px; }
-.vw-arc-wreserve { position: absolute; left: 52px; top: 610px; width: 36px; height: 14px; z-index: 3; font-size: 9px; }
-.vw-arc-wammo { position: absolute; left: 92px; top: 610px; width: 72px; height: 14px; z-index: 3; font-size: 8px; }
-.vw-arc-exicon { position: absolute; left: 12px; top: 628px; width: 14px; height: 14px; z-index: 3; }
-.vw-arc-exlabel { position: absolute; left: 30px; top: 626px; width: 100px; height: 16px; z-index: 3; font-size: 8px; }
-.vw-arc-excount { position: absolute; left: 132px; top: 626px; width: 28px; height: 16px; z-index: 3; font-size: 8px; }
-.vw-arc-picon { position: absolute; left: 12px; top: 648px; width: 14px; height: 14px; z-index: 3; }
-.vw-arc-pname { position: absolute; left: 30px; top: 646px; width: 130px; height: 16px; z-index: 3; font-size: 8px; }
+.vw-arc-wframe { position: absolute; left: 16px; top: 576px; width: 200px; height: 116px; z-index: 2; }
+.vw-arc-wicon { position: absolute; left: 88px; top: 582px; width: 56px; height: 56px; z-index: 3; }
+.vw-arc-wclip { position: absolute; left: 16px; top: 648px; width: 100px; height: 18px; z-index: 3; font-size: 14px; text-align: center; }
+.vw-arc-wloaded { position: absolute; left: 16px; top: 666px; width: 100px; height: 12px; z-index: 3; font-size: 7px; text-align: center; }
+.vw-arc-wreserve { position: absolute; left: 116px; top: 648px; width: 100px; height: 18px; z-index: 3; font-size: 14px; text-align: center; }
+.vw-arc-wspare { position: absolute; left: 116px; top: 666px; width: 100px; height: 12px; z-index: 3; font-size: 7px; text-align: center; }

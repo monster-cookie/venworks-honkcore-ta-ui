@@ -20,7 +20,7 @@ $repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 
 if (!(Test-Path Variable:Global:SharedConfigurationLoaded) -or !$Global:SharedConfigurationLoaded) {
   Write-Host -ForegroundColor Green "Importing release variant configuration"
-  . "$PSScriptRoot/sharedConfig.ps1" -SkipEnvironment
+  . "$PSScriptRoot/sharedConfig.ps1"
 }
 . (Join-Path $PSScriptRoot 'sharedCanvasConsumers.ps1')
 Add-Type -AssemblyName System.IO.Compression.FileSystem

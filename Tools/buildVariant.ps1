@@ -22,7 +22,7 @@ Set-StrictMode -Version Latest
 if ($Committed) { Write-Verbose '-Committed is retained for command compatibility; builds always use isolated package inputs.' }
 $repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 
-if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction SilentlyContinue)) { . (Join-Path $PSScriptRoot 'sharedConfig.ps1') -SkipEnvironment }
+if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction SilentlyContinue)) { . (Join-Path $PSScriptRoot 'sharedConfig.ps1') }
 . (Join-Path $PSScriptRoot 'sharedCanvasConsumers.ps1')
 
 $variants = @(Get-ModuleVariants -VariantKeys $VariantKeys)

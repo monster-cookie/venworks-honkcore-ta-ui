@@ -36,4 +36,4 @@ When compiled output, consumer resources, expected hashes, or packages change, r
 ./Tools/createReleasePackages.ps1 -VariantKeys VWKS,TA,FC,CF,MIN -OutputDirectory .work/release-candidates
 ```
 
-`-Committed` on packaging and verification selects the tracked `Staging-*` directories and bypasses local `.env` loading. Without it, packaging and installed-payload verification require the configured staging junctions and operate on their physical mod-manager destinations. Compilation always writes isolated inputs beneath `.work`; it does not place loose files in either destination.
+`-Committed` selects the tracked `Staging-*` directories. Every pipeline entry point loads the repository `.env` from the working directory. Without `-Committed`, packaging and installed-payload verification use the configured staging junctions and operate on their physical mod-manager destinations. Compilation always writes isolated inputs beneath `.work`; it does not place loose files in either destination.

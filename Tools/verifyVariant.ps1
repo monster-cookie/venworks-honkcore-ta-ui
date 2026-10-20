@@ -15,12 +15,7 @@ Set-StrictMode -Version Latest
 $repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 
 if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction SilentlyContinue)) {
-  if ($Committed -or $PreArchiveMutation) {
-    . (Join-Path $PSScriptRoot 'sharedConfig.ps1') -SkipEnvironment
-  }
-  else {
-    . (Join-Path $PSScriptRoot 'sharedConfig.ps1')
-  }
+  . (Join-Path $PSScriptRoot 'sharedConfig.ps1')
 }
 . (Join-Path $PSScriptRoot 'sharedCanvasConsumers.ps1')
 if ([string]::IsNullOrWhiteSpace($PayloadRoot)) { $PayloadRoot = Join-Path $repositoryRoot '.work/canvas-payloads' }
