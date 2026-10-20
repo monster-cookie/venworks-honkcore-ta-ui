@@ -43,7 +43,7 @@ foreach ($variant in @(Get-ModuleVariants -VariantKeys $VariantKeys)) {
     }
     $junction = Get-Item -LiteralPath $payload
     $physical = [IO.Path]::GetFullPath($variant.PluginModulePath)
-    if ($junction.LinkType -ne 'Junction' -or @($junction.Target).Count -ne 1 -or [IO.Path]::GetFullPath([string]$junction.Target[0]) -ine $physical) {
+    if ($junction.LinkType -ne 'Junction' -or @($junction.Target).Count -ne 1 -or [IO.Path]::GetFullPath([string]@($junction.Target)[0]) -ine $physical) {
       throw "$($variant.VariantName) staging junction does not match its configured module directory."
     }
     $payload = $physical
