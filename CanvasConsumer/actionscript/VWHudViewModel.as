@@ -56,9 +56,14 @@ package
       private var oxygenActivity:Number = 0;
       private var favoriteNames:Array;
       private var favoriteDetails:Array;
+      private var favoriteAmmoCounts:Array;
+      private var favoriteItemCounts:Array;
+      private var favoriteIsWeapon:Array;
+      private var favoriteIsPower:Array;
       private var buttonKeyHelper:VWHudControlMap;
       private var universalTimeDiagnostic:String = "UT: LOCAL ENV FREQUENT DATA NOT RECEIVED";
       private var digipickDiagnostic:String = "DIGIPICK: PLAYER INVENTORY DATA NOT RECEIVED";
+      private var inventoryTraceSummary:String = "";
       private var compassData:Object;
       private var activeQuestName:String = "";
       private var activeQuestId:* = null;
@@ -78,6 +83,10 @@ package
          exposureRandom = [0,0,0,0];
          favoriteNames = [];
          favoriteDetails = [];
+         favoriteAmmoCounts = [];
+         favoriteItemCounts = [];
+         favoriteIsWeapon = [];
+         favoriteIsPower = [];
          tacticalAwareness = new VWHudTacticalModel();
          buttonKeyHelper = new VWHudControlMap();
          exposureTimer = new Timer(EXPOSURE_UPDATE_MS);
@@ -169,6 +178,10 @@ package
          if(/^favorite\.(0[1-9]|1[0-2])\.(name|detail|hotkey)$/.test(source))
          {
             return "string";
+         }
+         if(/^favorite\.(0[1-9]|1[0-2])\.(loaded|spare)$/.test(source))
+         {
+            return "number";
          }
          if(source == "location.name" || source == "environment.solartransitioncountdown" ||
             source == "player.serial" ||
@@ -867,6 +880,7 @@ package
          {
             this.clearValue("weapon.ammotype");
             this.setText("diagnostic.inventoryprovider","PLAYERINVENTORYDATA RECEIVED — ITEM DATA UNAVAILABLE");
+            this.traceInventorySubscription(param1.data,null);
             this.notifyChanged();
             return;
          }
@@ -910,6 +924,7 @@ package
             this.clearValue("weapon.ammotype");
             this.setText("diagnostic.inventoryprovider","PLAYERINVENTORYDATA RECEIVED — " + equippedWeaponCount.toString() + " EQUIPPED WEAPON — NO AMMO NAME");
          }
+         this.traceInventorySubscription(param1.data,items);
          this.notifyChanged();
       }
 
@@ -971,6 +986,10 @@ package
                }
                favoriteNames[index] = name.length == 0 ? "UNNAMED" : name;
                favoriteDetails[index] = detail;
+               favoriteIsPower[index] = field(item,"bIsPower") === true;
+               favoriteIsWeapon[index] = favoriteIsPower[index] !== true && ammoName.length != 0;
+               favoriteAmmoCounts[index] = ammoCount;
+               favoriteItemCounts[index] = count;
             }
             ++index;
          }
@@ -1163,6 +1182,7 @@ package
             key == "carry.current" || key == "carry.maximum" ||
             key == "power.current" || key == "power.maximum" ||
             key == "weapon.clipammo" || key == "weapon.totalammo" || key == "weapon.reserveammo" ||
+            /^favorite\.(0[1-9]|1[0-2])\.(loaded|spare)$/.test(key) ||
             key == "weapon.explosivecount" || key == "environment.hazard.effectcount" ||
             key == "environment.hazard.airwaterlevel" || key == "environment.hazard.thermallevel" ||
             key == "environment.hazard.corrosivelevel" || key == "environment.hazard.radiationlevel")
@@ -1687,8 +1707,14 @@ package
             slotLabel = this.formatFavoriteSlot(index);
             favoriteNames[index - 1] = "EMPTY";
             favoriteDetails[index - 1] = "";
+            favoriteAmmoCounts[index - 1] = NaN;
+            favoriteItemCounts[index - 1] = NaN;
+            favoriteIsWeapon[index - 1] = false;
+            favoriteIsPower[index - 1] = false;
             this.setText("favorite." + slotLabel + ".name","EMPTY");
             this.setText("favorite." + slotLabel + ".detail","");
+            this.clearValue("favorite." + slotLabel + ".loaded");
+            this.clearValue("favorite." + slotLabel + ".spare");
             ++index;
          }
       }
@@ -1716,7 +1742,54 @@ package
             detail = String(favoriteDetails[index]);
             this.setText("favorite." + slotLabel + ".name",name);
             this.setText("favorite." + slotLabel + ".detail",detail);
+            this.publishFavoriteAmmo(index,slotLabel,name);
             ++index;
+         }
+      }
+
+      private function publishFavoriteAmmo(index:int, slotLabel:String, name:String) : void
+      {
+         var loadedKey:String = "favorite." + slotLabel + ".loaded";
+         var spareKey:String = "favorite." + slotLabel + ".spare";
+         var weaponRecord:Object = values["weapon.name"];
+         var clipRecord:Object = values["weapon.clipammo"];
+         var reserveRecord:Object = values["weapon.reserveammo"];
+         var weaponName:String = "";
+         var ammo:Number = Number(favoriteAmmoCounts[index]);
+         var count:Number = Number(favoriteItemCounts[index]);
+         var equipped:Boolean = false;
+         var isPower:Boolean = Boolean(favoriteIsPower[index]);
+         var isWeapon:Boolean = Boolean(favoriteIsWeapon[index]);
+         this.clearValue(loadedKey);
+         this.clearValue(spareKey);
+         if(weaponRecord != null && weaponRecord.known)
+         {
+            weaponName = this.cleanFavoriteText(weaponRecord.value);
+         }
+         equipped = weaponName.length != 0 && name.toLowerCase() == weaponName.toLowerCase();
+         if(equipped)
+         {
+            isWeapon = true;
+         }
+         if(!isWeapon)
+         {
+            if(!isPower && !isNaN(count) && isFinite(count) && count > 1)
+            {
+               this.setFinite(spareKey,Math.max(0,count));
+            }
+            return;
+         }
+         if(equipped && clipRecord != null && clipRecord.known)
+         {
+            this.setFinite(loadedKey,clipRecord.value);
+         }
+         if(equipped && reserveRecord != null && reserveRecord.known)
+         {
+            this.setFinite(spareKey,reserveRecord.value);
+         }
+         else if(!isNaN(ammo) && isFinite(ammo))
+         {
+            this.setFinite(spareKey,Math.max(0,ammo));
          }
       }
 
@@ -1745,6 +1818,151 @@ package
       private function formatNormalized(param1:Number) : String
       {
          return Math.round(Math.max(0,Math.min(1,param1)) * 100).toString() + "%";
+      }
+
+      private function traceInventorySubscription(data:Object, items:Array) : void
+      {
+         var lines:Array = null;
+         var summary:String = null;
+         var chosen:Array = null;
+         var entry:Object = null;
+         var index:int = 0;
+         try
+         {
+            lines = [];
+            lines.push("VWHUD TRACE | inventory | items=" + (items == null ? "null" : items.length.toString()) +
+               " | root=" + this.listFieldNames(data,24) +
+               " | rootprobe=" + this.inventoryProbe(data));
+            if(items != null)
+            {
+               chosen = this.chooseInventoryTraceItems(items);
+               while(index < chosen.length)
+               {
+                  entry = chosen[index];
+                  lines.push("VWHUD TRACE | inventory | " + this.describeInventoryTraceItem(entry.item,int(entry.index)));
+                  ++index;
+               }
+            }
+            summary = lines.join("\n");
+            if(summary == this.inventoryTraceSummary)
+            {
+               return;
+            }
+            this.inventoryTraceSummary = summary;
+            index = 0;
+            while(index < lines.length)
+            {
+               trace(String(lines[index]));
+               ++index;
+            }
+         }
+         catch(traceError:*)
+         {
+            trace("VWHUD TRACE | inventory | error=" + String(traceError).substr(0,180));
+         }
+      }
+
+      private function chooseInventoryTraceItems(items:Array) : Array
+      {
+         var chosen:Array = [];
+         var used:Object = {};
+         var index:int = 0;
+         var item:Object = null;
+         while(index < items.length && chosen.length < 3)
+         {
+            item = items[index];
+            if(item != null && field(item,"bIsEquipped") === true)
+            {
+               chosen.push({item:item,index:index});
+               used[index] = true;
+            }
+            ++index;
+         }
+         index = 0;
+         while(index < items.length && chosen.length < 3)
+         {
+            if(used[index] !== true && items[index] != null)
+            {
+               chosen.push({item:items[index],index:index});
+            }
+            ++index;
+         }
+         return chosen;
+      }
+
+      private function describeInventoryTraceItem(item:Object, index:int) : String
+      {
+         var nested:Array = [];
+         var name:String = null;
+         var value:* = null;
+         var text:String = null;
+         if(item == null)
+         {
+            return "item=" + index.toString() + " | NULL";
+         }
+         for(name in item)
+         {
+            value = item[name];
+            if(value != null && typeof value == "object" && !(value is Array) && nested.length < 4)
+            {
+               nested.push(name + "{" + this.listFieldNames(value,12) + " probe=" + this.inventoryProbe(value) + "}");
+            }
+         }
+         this.appendNamedInventoryObject(nested,item,"WeaponInfo");
+         this.appendNamedInventoryObject(nested,item,"ArmorInfo");
+         text = "item=" + index.toString() +
+            " | name=" + this.formatDiagnosticValue(field(item,"sName")) +
+            " | equipped=" + this.formatDiagnosticValue(field(item,"bIsEquipped")) +
+            " | keys=" + this.listFieldNames(item,24) +
+            " | probe=" + this.inventoryProbe(item);
+         if(nested.length != 0)
+         {
+            text += " | nested=" + nested.join(" ; ");
+         }
+         return text.length > 700 ? text.substring(0,700) + "..." : text;
+      }
+
+      private function appendNamedInventoryObject(nested:Array, item:Object, name:String) : void
+      {
+         var value:* = field(item,name);
+         var index:int = 0;
+         if(value == null || typeof value != "object" || value is Array || nested.length >= 6)
+         {
+            return;
+         }
+         while(index < nested.length)
+         {
+            if(String(nested[index]).indexOf(name + "{") == 0)
+            {
+               return;
+            }
+            ++index;
+         }
+         nested.push(name + "{" + this.listFieldNames(value,12) + " probe=" + this.inventoryProbe(value) + "}");
+      }
+
+      private function inventoryProbe(target:Object) : String
+      {
+         var names:Array = ["sIcon","sIconName","sIconPath","sIconLinkageName","sTexture","sTexturePath","sModel","sModelPath","sPlugin","sPluginName","sModName","sFile","sFileName","sEditorID","EditorID","uFormID","uHandleID"];
+         var found:Array = [];
+         var index:int = 0;
+         var name:String = null;
+         var value:* = null;
+         if(target == null)
+         {
+            return "NULL";
+         }
+         while(index < names.length)
+         {
+            name = String(names[index]);
+            value = field(target,name);
+            if(value !== undefined && value !== null)
+            {
+               found.push(name + "=" + this.formatDiagnosticValue(value));
+            }
+            ++index;
+         }
+         return found.length == 0 ? "NONE" : found.join(" | ");
       }
 
       private function listFieldNames(param1:Object, param2:int) : String
