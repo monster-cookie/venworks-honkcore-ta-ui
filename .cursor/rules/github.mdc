@@ -1,0 +1,6 @@
+---
+description: GitHub publishing, authentication, and commit identity
+alwaysApply: false
+---
+
+@.cursor/rules/github.md

@@ -58,6 +58,10 @@ jobs:
           lfs: true
           persist-credentials: false
 
+      - name: Write the required environment file
+        shell: pwsh
+        run: [IO.File]::WriteAllText((Join-Path $env:GITHUB_WORKSPACE '.env'), '')
+
       - name: Verify committed Canvas consumer release
         shell: pwsh
         run: ./Tools/verifyCommittedRelease.ps1
@@ -70,7 +74,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          . ./Tools/sharedConfig.ps1 -SkipEnvironment
+          . ./Tools/sharedConfig.ps1
           $variant = @(Get-ModuleVariants -VariantKeys TA)[0]
           $unexpectedPath = Join-Path $variant.StagingFolderPath "codex-ci-$([guid]::NewGuid().ToString('N')).esm"
           $PSNativeCommandUseErrorActionPreference = $false
@@ -87,24 +91,9 @@ jobs:
           }
           $global:LASTEXITCODE = 0
 
-      - name: Verify committed entry point bypasses local environment
+      - name: Verify committed entry point loads the environment file
         shell: pwsh
         run: ./Tools/checkRepo.ps1 -Committed
-
-      - name: Verify committed packaging reaches the explicit Archive2 check
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $env:TOOL_PATH_ARCHIVER = $null
-          $output = @(& pwsh -NoProfile -File ./Tools/createPackages.ps1 -VariantKeys TA -Committed 2>&1)
-          if ($LASTEXITCODE -eq 0 -or ($output -join "`n") -notmatch 'TOOL_PATH_ARCHIVER must name') {
-            $output | ForEach-Object { Write-Host $_ }
-            throw 'Committed packaging did not reach the explicit Archive2 environment check.'
-          }
-          if (($output -join "`n") -match '\.env file') {
-            throw 'Committed packaging attempted to load local environment configuration.'
-          }
-          $global:LASTEXITCODE = 0
 
   package-release:
     name: Package Release Smoke Test
@@ -133,6 +122,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
+          [IO.File]::WriteAllText((Join-Path $env:GITHUB_WORKSPACE '.env'), '')
           $releaseRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts/ci-release'
           & "$env:GITHUB_WORKSPACE/Tools/createReleasePackages.ps1" -OutputDirectory $releaseRoot
           $releaseFiles = @(Get-ChildItem -LiteralPath $releaseRoot -File -Filter '*.zip')
@@ -143,7 +133,7 @@ jobs:
             throw 'One or more release ZIPs are empty.'
           }
 
-          . "$env:GITHUB_WORKSPACE/Tools/sharedConfig.ps1" -SkipEnvironment
+          . "$env:GITHUB_WORKSPACE/Tools/sharedConfig.ps1"
           $expectedNames = @(
             foreach ($variant in $Global:ReleaseVariants) {
               foreach ($suffix in @(Get-VariantReleasePackageSuffixes -Variant $variant)) {

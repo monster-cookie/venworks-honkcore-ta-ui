@@ -32,7 +32,7 @@ Canvas's current loader contract fixes a consumer namespace to `Interface/Venwor
 | `Tools/checkRepo.ps1` | Validate the five-theme configuration and selected payloads. |
 | `Tools/setupRepo.ps1` | Create local staging junctions for configured mod-manager destinations. |
 
-`-Committed` on packaging and verification selects the tracked `Staging-*` directories and bypasses local `.env` loading. Without it, packaging and installed-payload verification require the configured staging junctions and operate on their physical mod-manager destinations. Compilation always writes isolated inputs beneath `.work`; it does not place loose files in either destination.
+`-Committed` selects the tracked `Staging-*` directories. Every pipeline entry point loads the repository `.env` from the working directory. Without `-Committed`, packaging and installed-payload verification use the configured staging junctions and operate on their physical mod-manager destinations. Compilation always writes isolated inputs beneath `.work`; it does not place loose files in either destination.
 
 ## Build consumers
 

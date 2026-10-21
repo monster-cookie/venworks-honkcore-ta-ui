@@ -27,8 +27,7 @@ $payloadRootPath = [IO.Path]::GetFullPath($PayloadRoot).TrimEnd([IO.Path]::Direc
 if (!$payloadRootPath.StartsWith($workRoot+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)) { throw 'Package input must be beneath the repository .work directory.' }
 
 if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction SilentlyContinue)) {
-  if ($Committed) { . (Join-Path $PSScriptRoot 'sharedConfig.ps1') -SkipEnvironment }
-  else { . (Join-Path $PSScriptRoot 'sharedConfig.ps1') }
+  . (Join-Path $PSScriptRoot 'sharedConfig.ps1')
 }
 . (Join-Path $PSScriptRoot 'sharedCanvasConsumers.ps1')
 . (Join-Path $PSScriptRoot 'sharedPackageTransactions.ps1')
@@ -78,7 +77,7 @@ foreach ($variant in $variants) {
     if ([string]::IsNullOrWhiteSpace($variant.PluginModulePath) -or !(Test-Path -LiteralPath $variant.PluginModulePath -PathType Container)) { throw "$($variant.VariantName) configured physical module directory is missing." }
     $junction = Get-Item -LiteralPath $stagingPath
     $installPath = [IO.Path]::GetFullPath($variant.PluginModulePath)
-    if ($junction.LinkType -ne 'Junction' -or @($junction.Target).Count -ne 1 -or [IO.Path]::GetFullPath([string]$junction.Target[0]) -ine $installPath) { throw "$($variant.VariantName) staging junction does not match its configured physical module directory." }
+    if ($junction.LinkType -ne 'Junction' -or @($junction.Target).Count -ne 1 -or [IO.Path]::GetFullPath([string]@($junction.Target)[0]) -ine $installPath) { throw "$($variant.VariantName) staging junction does not match its configured physical module directory." }
   }
   $archiveNames = @($variant.ArchiveTargets | ForEach-Object {
     if (!$archiveDefinitions.Contains([string]$_)) { throw "$($variant.VariantName) defines unknown archive target '$_'." }
@@ -151,7 +150,7 @@ try {
   foreach ($operation in $operations) {
     if (!$operation.Committed) {
       $junction = Get-Item -LiteralPath $operation.StagingPath
-      if ($junction.LinkType -ne 'Junction' -or @($junction.Target).Count -ne 1 -or [IO.Path]::GetFullPath([string]$junction.Target[0]) -ine [IO.Path]::GetFullPath($operation.InstallPath)) { throw "$($operation.Key) staging junction changed during packaging." }
+      if ($junction.LinkType -ne 'Junction' -or @($junction.Target).Count -ne 1 -or [IO.Path]::GetFullPath([string]@($junction.Target)[0]) -ine [IO.Path]::GetFullPath($operation.InstallPath)) { throw "$($operation.Key) staging junction changed during packaging." }
     }
     Backup-VWHudPackageOperation -Operation $operation -BackupRoot $backupRoot
     $installed.Add($operation)

@@ -11,6 +11,6 @@ Choose the smallest complete change that fits the repository's language, archite
 
 An unavailable runtime limits execution evidence, not necessarily implementation. Proceed when source and contract evidence support the change; report the runtime gap. If a missing platform fact is essential to correctness, investigate or ask about that fact before making the dependent change.
 
-Use the shared [verification guidance](../../../AGENTS.md#verification-and-communication) with the repository's [build and verification entry points](../../../AGENT-REPO-CONTEXT.md#build-and-verification-entry-points). Choose checks that exercise the changed behavior within the available environment.
+Use the shared [verification guidance](../../../AGENTS.md#verification-and-communication) with the loaded [build rule](../../../.grok/rules/build.md). Choose checks that exercise the changed behavior within the available environment.
 
 Return the behavior changed, actual verification, and material remaining risks. Include manual acceptance steps when needed; a separate testing artifact is not required for every edit. Delivery and authentication follow the repository's shared boundaries, without expanding the task.

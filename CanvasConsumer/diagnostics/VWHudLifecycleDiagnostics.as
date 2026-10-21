@@ -64,18 +64,27 @@ package
          require(debuffAdapter.advancePage() && debuffAdapter.view().debuffrows.length == 1 && debuffAdapter.view().debuffrows[0].label == "D37" && debuffAdapter.view().buffrows.length == 0,"debuffs page after two lines");
          var icons:Object = {buffrows:[{label:"Fortify Carry Weight"},{label:"Uncatalogued Buff"}],debuffrows:[{label:"Bleeding"},{label:"Uncatalogued Debuff"}]};
          VWHudPresentation.update(icons,null,0,false);
-         require(icons.effectrows[0].icon == "assets/effect-weight.svg" && icons.effectrows[0].x == 0 && icons.effectrows[0].y == 0,"carry weight uses the weight icon on the buff line");
-         require(icons.effectrows[1].icon == "assets/effect-fallbackbuff.svg" && icons.effectrows[1].y == 0,"unknown buff stays on the buff line");
-         require(icons.effectrows[2].icon == "assets/effect-bleed.svg" && icons.effectrows[2].x == 0 && icons.effectrows[2].y == VWHudPresentation.ROW_STRIDE,"bleeding starts the first debuff line");
-         require(icons.effectrows[3].icon == "assets/effect-fallbackdebuff.svg" && icons.effectrows[3].y == VWHudPresentation.ROW_STRIDE,"unknown debuff stays on the debuff line");
+         require(icons.effectrows[0].icon == "assets/effect-weight.svg" && icons.effectrows[0].x == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(0,2,false,0).x : 0) && icons.effectrows[0].y == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(0,2,false,0).y : 0),"carry weight uses the weight icon on the buff line");
+         require(icons.effectrows[1].icon == "assets/effect-fallbackbuff.svg" && icons.effectrows[1].y == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(1,2,false,0).y : 0),"unknown buff stays on the buff line");
+         require(icons.effectrows[2].icon == "assets/effect-bleed.svg" && icons.effectrows[2].x == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(0,2,true,0).x : 0) && icons.effectrows[2].y == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(0,2,true,0).y : VWHudPresentation.ROW_STRIDE),"bleeding starts the first debuff line");
+         require(icons.effectrows[3].icon == "assets/effect-fallbackdebuff.svg" && icons.effectrows[3].y == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(1,2,true,0).y : VWHudPresentation.ROW_STRIDE),"unknown debuff stays on the debuff line");
+         if(VWHudVariant.VISOR)
+         {
+            require(icons.effectrows[0].x > icons.effectrows[1].x,"buffs run outward on the left arc");
+            require(icons.effectrows[2].x < icons.effectrows[3].x,"debuffs run outward on the right arc");
+            require(icons.effectrows[0].x + 18 == VWHudPresentation.VISOR_ARC_CENTER - VWHudPresentation.VISOR_ARC_GAP,"buffs start the arc gap left of center");
+            require(icons.effectrows[2].x + 18 == VWHudPresentation.VISOR_ARC_CENTER + VWHudPresentation.VISOR_ARC_GAP,"debuffs start the arc gap right of center");
+            require(icons.effectrows[0].x + 36 < VWHudPresentation.VISOR_ARC_CENTER - 80 && icons.effectrows[2].x > VWHudPresentation.VISOR_ARC_CENTER + 80,"the two arcs leave the center open");
+         }
          var wrapped:Object = {buffrows:[{label:"Fed"}],debuffrows:[]};
          for(var wrapIndex:int = 0; wrapIndex < 19; wrapIndex++) wrapped.debuffrows.push({label:"Injury"});
          VWHudPresentation.update(wrapped,null,0,false);
-         require(wrapped.effectrows[0].y == 0 && wrapped.effectrows[1].y == VWHudPresentation.ROW_STRIDE && wrapped.effectrows[1].x == 0,"a buff keeps the top line when debuffs are present");
-         require(wrapped.effectrows[19].x == 0 && wrapped.effectrows[19].y == VWHudPresentation.ROW_STRIDE * 2,"the nineteenth debuff starts the second debuff line");
+         require(wrapped.effectrows[0].y == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(0,1,false,0).y : 0) && wrapped.effectrows[1].y == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(0,18,true,0).y : VWHudPresentation.ROW_STRIDE) && wrapped.effectrows[1].x == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(0,18,true,0).x : 0),"a buff keeps the top line when debuffs are present");
+         require(wrapped.effectrows[19].x == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(8,VWHudPresentation.VISOR_ARC_COLUMNS,true,1).x : 0) && wrapped.effectrows[19].y == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(8,VWHudPresentation.VISOR_ARC_COLUMNS,true,1).y : VWHudPresentation.ROW_STRIDE * 2),"the nineteenth debuff starts the second debuff line");
+         if(VWHudVariant.VISOR) require(wrapped.effectrows[0].x < wrapped.effectrows[1].x && wrapped.effectrows[19].y > wrapped.effectrows[1].y,"the second debuff line stays on the right of the center arc");
          var weather:Object = {buffrows:[],debuffrows:[{label:"FREEZING COLD AND SNOW"},{label:"Dehydrated"},{label:"Malnourished"}]};
          VWHudPresentation.update(weather,null,0,false);
-         require(weather.effectrows[0].icon == "assets/effect-cold.svg" && weather.effectrows[0].y == VWHudPresentation.ROW_STRIDE && weather.effectrows[1].icon == "assets/effect-dehydrated.svg" && weather.effectrows[2].icon == "assets/effect-malnourished.svg","weather and sustenance rows use their class icons on the debuff line");
+         require(weather.effectrows[0].icon == "assets/effect-cold.svg" && weather.effectrows[0].y == (VWHudVariant.VISOR ? VWHudPresentation.visorArcPoint(0,3,true,0).y : VWHudPresentation.ROW_STRIDE) && weather.effectrows[1].icon == "assets/effect-dehydrated.svg" && weather.effectrows[2].icon == "assets/effect-malnourished.svg","weather and sustenance rows use their class icons on the debuff line");
          var storm:Object = {buffrows:[],debuffrows:[{label:"Sandstorm"},{label:"Cold"}]};
          VWHudPresentation.update(storm,null,0,false);
          require(storm.effectrows[0].icon == "assets/effect-sandstorm.svg" && storm.effectrows[1].icon == "assets/effect-cold.svg","sandstorm and cold use their weather icons");
@@ -83,6 +92,32 @@ package
          VWHudPresentation.update(classes,null,0,false);
          require(classes.effectrows[0].icon == "assets/effect-radiation.svg" && classes.effectrows[1].icon == "assets/effect-infection.svg" && classes.effectrows[2].icon == "assets/effect-injury.svg","affliction classes use their icons");
          require(classes.effectrows[3].icon == "assets/effect-corrosive.svg" && classes.effectrows[4].icon == "assets/effect-gas.svg","corrosive and gas use their class icons");
+         var namedQuest:Object = {aMissionMarkers:[{strText:"ONE SMALL STEP\nGO TO THE LODGE",bShouldShowText:true}]};
+         require(VWHudViewModel.resolveTrackedQuestName(namedQuest) == "ONE SMALL STEP" && VWHudViewModel.resolveTrackedObjective(namedQuest) == "GO TO THE LODGE","a two-line marker keeps the quest name above the waypoint");
+         var titledQuest:Object = {sQuestName:"ONE SMALL STEP",aMissionMarkers:[{strText:"GO TO THE LODGE",bShouldShowText:true}]};
+         require(VWHudViewModel.resolveTrackedQuestName(titledQuest) == "ONE SMALL STEP" && VWHudViewModel.resolveTrackedObjective(titledQuest) == "GO TO THE LODGE","a quest name field stays with the waypoint");
+         var waypointOnly:Object = {aMissionMarkers:[{strText:"GO TO THE LODGE",bShouldShowText:true}]};
+         require(VWHudViewModel.resolveTrackedQuestName(waypointOnly) == "" && VWHudViewModel.resolveTrackedObjective(waypointOnly) == "GO TO THE LODGE","a waypoint alone does not invent a quest name");
+         var trackedQuest:Object = VWHudViewModel.nextQuestTitle("",null,{QuestUpdatesA:[{uType:1,uQuestID:42,strQuestName:"ONE SMALL STEP"}]});
+         require(trackedQuest.name == "ONE SMALL STEP" && trackedQuest.id == 42,"the active quest update supplies the quest title");
+         var renamedQuest:Object = VWHudViewModel.nextQuestTitle(trackedQuest.name,trackedQuest.id,{QuestUpdatesA:[{uType:8,uQuestID:42,strQuestName:"THE OLD NEIGHBORHOOD",bActiveQuest:true}]});
+         require(renamedQuest.name == "THE OLD NEIGHBORHOOD","a later update for the tracked quest replaces the title");
+         var otherQuest:Object = VWHudViewModel.nextQuestTitle(renamedQuest.name,renamedQuest.id,{QuestUpdatesA:[{uType:2,uQuestID:99}]});
+         require(otherQuest.name == "THE OLD NEIGHBORHOOD","clearing a different quest leaves the tracked title");
+         var clearedQuest:Object = VWHudViewModel.nextQuestTitle(otherQuest.name,otherQuest.id,{QuestUpdatesA:[{uType:2,uQuestID:42}]});
+         require(clearedQuest.name == "" && clearedQuest.id == null,"clearing the tracked quest removes the title");
+         var missionList:Object = {aQuests:[{sName:"Failure to Communicate",bActive:false,aObjectives:[{sName:"LISTEN",bActive:false}]},{sName:"One Small Step",bActive:true,aObjectives:[{sName:"GO TO THE LODGE (MAST DISTRICT)",bActive:true}]}]};
+         require(VWHudViewModel.resolveActiveMissionTitle(missionList) == "ONE SMALL STEP","the tracked mission supplies the title above its waypoint");
+         var objectiveTracked:Object = {aQuests:[{sName:"One Small Step",bActive:false,aObjectives:[{sName:"GO TO THE LODGE (MAST DISTRICT)",bActive:true}]}]};
+         require(VWHudViewModel.resolveActiveMissionTitle(objectiveTracked) == "ONE SMALL STEP","an active objective keeps its mission title");
+         var parkedShip:Object = VWHudContactRadar.describeContact({uiHandle:3,uiMarkerIconType:10,fHeading:1,fDistanceToPlayer:400},false);
+         require(parkedShip != null && parkedShip.structure === true && parkedShip.fraction == 0.4,"a parked ship inside scanner range is a radar contact");
+         require(VWHudContactRadar.describeContact({uiHandle:4,uiMarkerIconType:10,fHeading:1,fDistanceToPlayer:5000},false) == null,"a ship beyond scanner range stays off the radar");
+         var hostile:Object = VWHudContactRadar.describeContact({uiHandle:5,uiMarkerIconType:5,fHeading:0.2},false);
+         require(hostile != null && hostile.enemy === true && hostile.fraction == 0.72,"a hostile with a heading still plots when distance is absent");
+         require(VWHudContactRadar.describeContact({uiHandle:6,uiMarkerIconType:7,fHeading:0.2,fDistanceToPlayer:20},false) == null,"a location marker is not a radar contact");
+         var companion:Object = VWHudContactRadar.describeContact({uiHandle:8,uiMarkerIconType:8,fHeading:0.4,fDistance:0.25},false);
+         require(companion != null && companion.enemy === false && companion.fraction == 0.25,"a companion uses normalized compass distance when meters are absent");
          return "PASS: VWHUD consumer lifecycle and effects adapter assertions";
       }
 
