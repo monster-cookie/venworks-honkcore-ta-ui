@@ -218,9 +218,7 @@
 .vw-arc-wframe { position: absolute; left: 4px; top: 580px; width: 168px; height: 96px; z-index: 2; }
 .vw-arc-wicon { position: absolute; left: 12px; top: 588px; width: 20px; height: 20px; z-index: 3; }
 .vw-arc-wname { position: absolute; left: 36px; top: 588px; width: 128px; height: 18px; z-index: 3; font-size: 9px; }
-.vw-arc-wclip { position: absolute; left: 12px; top: 610px; width: 32px; height: 14px; z-index: 3; font-size: 9px; }
-.vw-arc-wslash { position: absolute; left: 44px; top: 610px; width: 8px; height: 14px; z-index: 3; font-size: 9px; }
-.vw-arc-wreserve { position: absolute; left: 52px; top: 610px; width: 36px; height: 14px; z-index: 3; font-size: 9px; }
+.vw-arc-wclip { position: absolute; left: 12px; top: 610px; width: 76px; height: 14px; z-index: 3; font-size: 9px; }
 .vw-arc-wammo { position: absolute; left: 92px; top: 610px; width: 72px; height: 14px; z-index: 3; font-size: 8px; }
 .vw-arc-exicon { position: absolute; left: 12px; top: 628px; width: 14px; height: 14px; z-index: 3; }
 .vw-arc-exlabel { position: absolute; left: 30px; top: 626px; width: 100px; height: 16px; z-index: 3; font-size: 8px; }
