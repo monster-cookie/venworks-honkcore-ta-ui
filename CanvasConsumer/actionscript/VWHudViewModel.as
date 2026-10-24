@@ -64,6 +64,7 @@ package
       private var universalTimeDiagnostic:String = "UT: LOCAL ENV FREQUENT DATA NOT RECEIVED";
       private var digipickDiagnostic:String = "DIGIPICK: PLAYER INVENTORY DATA NOT RECEIVED";
       private var inventoryTraceSummary:String = "";
+      private var favoriteIconTraceSummary:String = "";
       private var compassData:Object;
       private var activeQuestName:String = "";
       private var activeQuestId:* = null;
@@ -160,7 +161,7 @@ package
             if(value != null && value.known === true)
             {
                var published:String = key;
-               var favorite:Array = key.match(/^favorite\.([0-9][0-9])\.(name|detail|hotkey|loaded|spare)$/);
+               var favorite:Array = key.match(/^favorite\.([0-9][0-9])\.(name|detail|hotkey|loaded|spare|icon)$/);
                if(favorite != null) published = "favorite.slot" + favorite[1] + "." + favorite[2];
                result[published] = value.value;
             }
@@ -175,7 +176,7 @@ package
       public static function getKind(param1:String) : String
       {
          var source:String = normalizeSource(param1);
-         if(/^favorite\.(0[1-9]|1[0-2])\.(name|detail|hotkey)$/.test(source))
+         if(/^favorite\.(0[1-9]|1[0-2])\.(name|detail|hotkey|icon)$/.test(source))
          {
             return "string";
          }
@@ -258,6 +259,21 @@ package
          // Some game data objects report a field as absent to the in operator and still return it by name.
          try { return param1[param2]; }
          catch(missingError:*) { return null; }
+      }
+
+      public static function weaponIconLinkage(item:Object) : String
+      {
+         var image:Object = field(item,"iconImage");
+         var fixture:* = image == null ? null : field(image,"iFixtureType");
+         var fixtureNumber:Number = fixture == null ? NaN : Number(fixture);
+         var rawName:* = image == null ? null : field(image,"sImageName");
+         var rawDirectory:* = image == null ? null : field(image,"sDirectory");
+         var name:String = rawName == null ? "" : String(rawName).replace(/[\r\n\t]+/g," ").replace(/^\s+|\s+$/g,"");
+         var directory:String = rawDirectory == null ? "" : String(rawDirectory).replace(/[\r\n\t]+/g," ").replace(/^\s+|\s+$/g,"").toLowerCase();
+         // FavoritesEntry treats iFixtureType 2 as ImageFixture.FT_SYMBOL and loads sDirectory + ".swf".
+         if(!isFinite(fixtureNumber) || int(fixtureNumber) != 2 || !/^[A-Za-z0-9_]{1,128}$/.test(name)) return "";
+         if(name.substr(0,5) == "CCSUP" || directory == "weaponicons") return name;
+         return "";
       }
 
       public static function collection(param1:Object, param2:String) : Array
@@ -987,14 +1003,37 @@ package
                favoriteNames[index] = name.length == 0 ? "UNNAMED" : name;
                favoriteDetails[index] = detail;
                favoriteIsPower[index] = field(item,"bIsPower") === true;
-               favoriteIsWeapon[index] = favoriteIsPower[index] !== true && ammoName.length != 0;
+               var linkage:String = weaponIconLinkage(item);
+               favoriteIsWeapon[index] = favoriteIsPower[index] !== true && (ammoName.length != 0 || linkage.length != 0);
                favoriteAmmoCounts[index] = ammoCount;
                favoriteItemCounts[index] = count;
+               if(linkage.length != 0) this.setText("favorite." + slotLabel + ".icon",linkage);
             }
             ++index;
          }
+         this.traceFavoriteIcons(favorites);
          this.refreshFavoriteSlotText();
          this.notifyChanged();
+      }
+
+      private function traceFavoriteIcons(favorites:Array) : void
+      {
+         var parts:Array = [];
+         var index:int = 0;
+         var limit:int = Math.min(favorites.length,3);
+         var item:Object = null;
+         var image:Object = null;
+         while(index < limit)
+         {
+            item = favorites[index];
+            image = item == null ? null : field(item,"iconImage");
+            parts.push(index.toString() + ":" + (image == null ? "none" : String(field(image,"iFixtureType")) + "/" + String(field(image,"sDirectory")) + "/" + String(field(image,"sImageName"))));
+            ++index;
+         }
+         var summary:String = parts.join(" | ");
+         if(summary == this.favoriteIconTraceSummary) return;
+         this.favoriteIconTraceSummary = summary;
+         trace("VWHUD TRACE | favorite icon | " + summary);
       }
 
       private function onControlMapData(param1:Object) : void
@@ -1713,6 +1752,7 @@ package
             favoriteIsPower[index - 1] = false;
             this.setText("favorite." + slotLabel + ".name","EMPTY");
             this.setText("favorite." + slotLabel + ".detail","");
+            this.clearValue("favorite." + slotLabel + ".icon");
             this.clearValue("favorite." + slotLabel + ".loaded");
             this.clearValue("favorite." + slotLabel + ".spare");
             ++index;
