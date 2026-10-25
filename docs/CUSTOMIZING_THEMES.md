@@ -92,7 +92,7 @@ The Fully Loose download is the one to edit for that. Keep your edits in their o
 | `themed.html` or `minimalist.html` | The main page. |
 | `themed-*.html` and `minimalist-*.html` | Each panel. |
 | `assets/*.svg` | Icons and logos. |
-| `normal.swf` and `large.swf` | The theme program. Changing those means a full rebuild. |
+| `normal.swf`, `large.swf`, `normal.gfx`, and `large.gfx` | The theme program. The `.gfx` files are the same bytes as the matching `.swf`. Changing those means a full rebuild. |
 | The plugin and script files | Same. Leave them unless you are rebuilding the mod. |
 
 Leave `data-vw-*` names in place. Those names are how the page receives health, location, and the rest of the live info.

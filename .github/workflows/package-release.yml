@@ -103,6 +103,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
+          [IO.File]::WriteAllText((Join-Path $env:GITHUB_WORKSPACE '.env'), '')
 
           $releaseRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts/release'
           & "$env:GITHUB_WORKSPACE/Tools/createReleasePackages.ps1" `
@@ -144,7 +145,8 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
 
-          . "$env:GITHUB_WORKSPACE/Tools/sharedConfig.ps1" -SkipEnvironment
+          [IO.File]::WriteAllText((Join-Path $env:GITHUB_WORKSPACE '.env'), '')
+          . "$env:GITHUB_WORKSPACE/Tools/sharedConfig.ps1"
           foreach ($variant in $Global:ReleaseVariants) {
             $key = $variant.VariantKey.ToLowerInvariant()
             "$($key)_nexus_normal_display_name=$($variant.NexusNormalDisplayName)" >> $env:GITHUB_OUTPUT
@@ -245,7 +247,8 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
 
-          . "$env:GITHUB_WORKSPACE/Tools/sharedConfig.ps1" -SkipEnvironment
+          [IO.File]::WriteAllText((Join-Path $env:GITHUB_WORKSPACE '.env'), '')
+          . "$env:GITHUB_WORKSPACE/Tools/sharedConfig.ps1"
           $releaseRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts/release'
           $expectedPackageNames = [System.Collections.Generic.List[string]]::new()
 

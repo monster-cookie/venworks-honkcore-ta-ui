@@ -1,0 +1,35 @@
+<!doctype html><html><head><title>VWHUD</title></head><body>
+<div class="vw-arc-planet vwhud-panel-environment" data-vw-anchor="bottom-right" data-vw-visible="condition.always">
+<svg class="vw-arc-planet-smoke" viewBox="0 0 360 270"><path class="fill-panel-background-1" d="M 8 2 L 346 2 L 346 258 L 8 258 Z" stroke-width="0" fill-opacity="0.78" stroke-opacity="0"></path></svg>
+<svg class="vw-arc-planet-frame vw-arc-planet-amber paint-fill-none stroke-visor-amber" viewBox="500 0 520 288" stroke-width="1.75" fill-opacity="0" stroke-opacity="0.95"><path d="M 1012 8 C 1012 38 1004 48 996 48 L 636 48 C 620 48 608 82 608 120 L 608 190 C 608 240 568 280 518 280 L 514 280"></path></svg>
+<svg class="vw-arc-planet-frame vw-arc-planet-amber paint-fill-none stroke-visor-cyan" viewBox="500 0 520 288" stroke-width="1.35" fill-opacity="0" stroke-opacity="0.9"><path d="M 1012 8 C 1012 54 1004 80 996 80 L 636 80 C 620 80 608 100 608 120"></path></svg>
+<span class="vw-arc-e-title color-accent-primary-1">PLANET DATA</span>
+<span class="vw-arc-e-local color-foreground-muted-1">LOCAL</span>
+<span class="vw-arc-e-time color-foreground-primary-1" data-vw-template="{environment.localtime:time24}"></span>
+<span class="vw-arc-e-sun color-foreground-primary-1" data-vw-template="{environment.solartransitioncountdown:raw}"></span>
+<span class="vw-arc-e-name color-foreground-primary-1" data-vw-template="{location.name:raw}"></span>
+<span class="vw-arc-e-o2-label color-foreground-muted-1">O2</span>
+<span class="vw-arc-e-o2 color-foreground-primary-1" data-vw-template="{environment.oxygenpercentage:percent}"></span>
+<span class="vw-arc-e-temp-label color-foreground-muted-1">TEMP</span>
+<span class="vw-arc-e-temp color-foreground-primary-1" data-vw-template="{environment.temperature:temperature}"></span>
+<span class="vw-arc-e-grav-label color-foreground-muted-1">GRAV</span>
+<span class="vw-arc-e-grav color-foreground-primary-1" data-vw-template="{environment.gravity:gravity}"></span>
+<span class="vw-arc-e-hazard-title color-accent-primary-1">HAZARDS</span>
+<span class="vw-arc-e-suit-label color-accent-primary-1">SUIT</span>
+<span class="vw-arc-e-suit-status color-state-caution-1" data-vw-template="{environment.protectionstatus:raw}"></span>
+<span class="vw-arc-e-suit-value color-foreground-primary-1" data-vw-template="{environment.protectionpercentage:percent}"></span>
+<vw-meter class="vw-arc-e-suit color-accent-primary-1 background-color-visor-track" value="environment.protectionlevel" min="0" max="1" segments="16" gap="2" direction="right" partial="true"></vw-meter>
+<span class="vw-arc-e-air-label color-accent-primary-1">AIR</span>
+<span class="vw-arc-e-air-status color-foreground-primary-1" data-vw-template="{environment.hazard.airwatershortstatus:raw}"></span>
+<vw-meter class="vw-arc-e-air color-accent-primary-1 background-color-visor-track" value="environment.hazard.airwaterexposurelevel" min="0" max="1" segments="8" gap="1" direction="up" partial="true"></vw-meter>
+<span class="vw-arc-e-heat-label color-state-caution-1">HEAT</span>
+<span class="vw-arc-e-heat-status color-foreground-primary-1" data-vw-template="{environment.hazard.thermalshortstatus:raw}"></span>
+<vw-meter class="vw-arc-e-heat color-state-caution-1 background-color-visor-track" value="environment.hazard.thermalexposurelevel" min="0" max="1" segments="8" gap="1" direction="up" partial="true"></vw-meter>
+<span class="vw-arc-e-corr-label color-state-caution-1">CORR</span>
+<span class="vw-arc-e-corr-status color-foreground-primary-1" data-vw-template="{environment.hazard.corrosiveshortstatus:raw}"></span>
+<vw-meter class="vw-arc-e-corr color-state-caution-1 background-color-visor-track" value="environment.hazard.corrosiveexposurelevel" min="0" max="1" segments="8" gap="1" direction="up" partial="true"></vw-meter>
+<span class="vw-arc-e-rad-label color-state-critical-1">RAD</span>
+<span class="vw-arc-e-rad-status color-foreground-primary-1" data-vw-template="{environment.hazard.radiationshortstatus:raw}"></span>
+<vw-meter class="vw-arc-e-rad color-state-critical-1 background-color-visor-track" value="environment.hazard.radiationexposurelevel" min="0" max="1" segments="8" gap="1" direction="up" partial="true"></vw-meter>
+</div>
+</body></html>

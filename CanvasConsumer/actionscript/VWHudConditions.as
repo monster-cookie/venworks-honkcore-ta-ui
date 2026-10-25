@@ -210,7 +210,7 @@ package
                slotLabel = this.formatFavoriteSlot(index + 1);
                populated = item != null;
                isPower = populated && VWHudViewModel.field(item,"bIsPower") === true;
-               isWeapon = populated && !isPower && this.cleanName(VWHudViewModel.field(item,"sAmmoName")).length != 0;
+               isWeapon = populated && !isPower && (this.cleanName(VWHudViewModel.field(item,"sAmmoName")).length != 0 || VWHudViewModel.weaponIconLinkage(item).length != 0);
                favoriteNames[index] = populated ? this.cleanName(VWHudViewModel.field(item,"sName")) : "";
                favoritePowers[index] = isPower;
                favoriteWeapons[index] = isWeapon;

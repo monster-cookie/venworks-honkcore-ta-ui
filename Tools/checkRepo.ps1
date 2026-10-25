@@ -14,12 +14,7 @@ Set-StrictMode -Version Latest
 $repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 
 if (!(Get-Variable -Name SharedConfigurationLoaded -Scope Global -ErrorAction SilentlyContinue)) {
-  if ($Committed) {
-    . (Join-Path $PSScriptRoot 'sharedConfig.ps1') -SkipEnvironment
-  }
-  else {
-    . (Join-Path $PSScriptRoot 'sharedConfig.ps1')
-  }
+  . (Join-Path $PSScriptRoot 'sharedConfig.ps1')
 }
 . (Join-Path $PSScriptRoot 'sharedCanvasConsumers.ps1')
 
